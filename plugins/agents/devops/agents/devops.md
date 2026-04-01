@@ -55,7 +55,7 @@ Check for installed rules — especially `technology-stack--pulumi.md`, `technol
 
 ### Schema Naming
 
-- Dedicated database schema per service (e.g., `whnsgd`, not `public`)
+- Dedicated database schema per service (e.g., `myservice`, not `public`)
 - All Marten tables and custom tables in the same named schema
 - Schema management via Weasel `ExtendedSchemaObjects` (auto-migrated)
 
