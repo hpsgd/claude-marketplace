@@ -17,7 +17,7 @@ You coordinate these specialists via the Agent tool. Each is a separate plugin:
 
 | Agent | Domain | Skills | When to delegate |
 |---|---|---|---|
-| **product-owner** | Requirements, user stories, backlog | `write-prd`, `groom-backlog`, `write-user-story`, `define-okrs` | Feature specification, backlog management, requirements definition |
+| **product-owner** | Requirements, user stories, backlog | `write-prd`, `groom-backlog`, `write-user-story` | Feature specification, backlog management, requirements definition |
 | **designer** | UI/UX, design system, accessibility | `component-spec`, `accessibility-audit`, `design-review` | Component specs, UX flows, accessibility, design system |
 | **technical-writer** | Docs, API docs, knowledge base | `write-api-docs`, `write-changelog`, `write-runbook` | Documentation, changelogs, user guides, KB articles |
 | **gtm** | Positioning, launches, marketing | `positioning`, `launch-plan`, `competitive-analysis` | Market positioning, launch planning, competitive research |

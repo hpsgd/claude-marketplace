@@ -24,6 +24,11 @@ Pick what you need, or copy a block to install a whole category.
 /plugin install technology-stack@hpsgd
 ```
 
+**Coordinator:**
+```
+/plugin install coordinator@hpsgd
+```
+
 **Product team agents:**
 ```
 /plugin install cpo@hpsgd
@@ -55,6 +60,7 @@ Pick what you need, or copy a block to install a whole category.
 /plugin install thinking@hpsgd
 /plugin install workflow-tools@hpsgd
 /plugin install technology-stack@hpsgd
+/plugin install coordinator@hpsgd
 /plugin install cpo@hpsgd
 /plugin install product-owner@hpsgd
 /plugin install designer@hpsgd
@@ -111,6 +117,7 @@ Copy into your project's `.claude/settings.json` (or `settings.local.json` for p
     "thinking@hpsgd": true,
     "workflow-tools@hpsgd": true,
     "technology-stack@hpsgd": true,
+    "coordinator@hpsgd": true,
     "cpo@hpsgd": true,
     "product-owner@hpsgd": true,
     "designer@hpsgd": true,
@@ -148,14 +155,20 @@ Plugins activate automatically. Skills are available as slash commands (e.g., `/
 | `workflow-tools` | Skills + Agent | Code review, PR creation skills, and reviewer agent |
 | `technology-stack` | Rules | JasperFx, Next.js, Pulumi, Moon, SonarCloud, event sourcing conventions |
 
+### Coordinator
+
+| Plugin | Agent | Skills |
+|---|---|---|
+| `coordinator` | CEO/founder proxy — cross-team coordination, strategic decisions spanning CPO and CTO | `decompose-initiative`, `define-okrs` |
+
 ### Product team agents
 
 Each agent is a separate plugin — install only the ones you need.
 
 | Plugin | Agent | Skills |
 |---|---|---|
-| `cpo` | Chief Product Officer — coordinates product team, escalates to CTO for technical concerns | `decompose-initiative` |
-| `product-owner` | Requirements, user stories, acceptance criteria, backlog prioritisation | `write-prd`, `groom-backlog`, `write-user-story`, `define-okrs` |
+| `cpo` | Chief Product Officer — coordinates product team, escalates to CTO for technical concerns | — |
+| `product-owner` | Requirements, user stories, acceptance criteria, backlog prioritisation | `write-prd`, `groom-backlog`, `write-user-story` |
 | `designer` | UI/UX design, design system, accessibility, component specs | `component-spec`, `accessibility-audit`, `design-review` |
 | `technical-writer` | API docs, user guides, changelogs, knowledge base, runbooks | `write-api-docs`, `write-changelog`, `write-runbook` |
 | `gtm` | Positioning, launch strategy, content marketing, competitive analysis | `positioning`, `launch-plan`, `competitive-analysis` |
@@ -207,30 +220,37 @@ Agents are organised as two teams reporting to the human:
 
 ```
 Human (CEO/Founder)
-├── CPO
-│   ├── product-owner
-│   ├── designer
-│   ├── technical-writer
-│   ├── gtm
-│   └── support
-└── CTO
-    ├── architect
-    ├── react-developer
-    ├── dotnet-developer
-    ├── python-developer
-    ├── qa-engineer
-    ├── devops
-    ├── security-engineer
-    └── data-engineer
+└── Coordinator (proxy)
+    ├── CPO
+    │   ├── product-owner
+    │   ├── designer
+    │   ├── technical-writer
+    │   ├── gtm
+    │   └── support
+    └── CTO
+        ├── architect
+        ├── react-developer
+        ├── dotnet-developer
+        ├── python-developer
+        ├── qa-engineer
+        ├── devops
+        ├── security-engineer
+        └── data-engineer
 ```
 
 Leads coordinate their teams and escalate cross-domain issues to the human. When the CPO hits a technical question, they say "this needs the CTO's input." When leads conflict, both present their case and the human decides.
 
 ## Creating a new plugin
 
-1. Create the plugin directory:
+1. Create the plugin directory under the appropriate category:
    ```
-   plugins/my-plugin/
+   plugins/foundations/my-rules-plugin/    # For rules, standards, methodology
+   plugins/agents/my-agent-plugin/         # For role-based agents with skills
+   ```
+
+   Plugin structure:
+   ```
+   plugins/<category>/<name>/
    ├── .claude-plugin/plugin.json   # Required
    ├── skills/                      # Optional
    │   └── my-skill/SKILL.md
@@ -238,6 +258,7 @@ Leads coordinate their teams and escalate cross-domain issues to the human. When
    │   └── my-agent.md
    ├── rules/                       # Optional: installed into projects
    │   └── my-rules.md
+   ├── templates/                   # Optional: reference templates
    └── hooks/                       # Optional: if you have rules to install
        └── hooks.json
    ```
@@ -267,9 +288,11 @@ Leads coordinate their teams and escalate cross-domain issues to the human. When
    ```json
    {
      "name": "my-plugin",
-     "source": "my-plugin",
+     "source": "agents/my-plugin",
      "description": "What it does",
-     "version": "1.0.0"
+     "version": "0.1.0",
+     "category": "agents",
+     "tags": ["relevant", "tags"]
    }
    ```
 
@@ -300,6 +323,26 @@ Use `.claude/settings.local.json` for personal preferences that shouldn't affect
 }
 ```
 
+## Complementary plugins
+
+These external marketplaces provide capabilities that complement ours — install alongside for broader coverage:
+
+- [obra/superpowers](https://github.com/obra/superpowers) — TDD enforcement, systematic debugging, parallel agent dispatch
+- [anthropics/skills](https://github.com/anthropics/skills) — Official skill standards, document creation (docx, pdf, pptx, xlsx)
+- [anthropics/claude-plugins-official](https://github.com/anthropics/claude-plugins-official) — Official Anthropic reference plugins
+- [EveryInc/compound-engineering-plugin](https://github.com/EveryInc/compound-engineering-plugin) — Research agents, multi-lens code review, design sync
+- [mintmcp/agent-security](https://github.com/mintmcp/agent-security) — Secrets scanning hooks (pre-submission credential blocking)
+
 ## Acknowledgements
 
-The thinking plugin — particularly the ISC methodology, algorithm phases, first principles, council, red team, and creative skills — draws on concepts and methodologies from [PAI (Personal AI Infrastructure)](https://github.com/danielmiessler/Personal_AI_Infrastructure) by Daniel Miessler. The AI steering rules and writing style rules were also informed by patterns developed within the PAI framework.
+This marketplace incorporates concepts and methodologies from:
+
+- [PAI (Personal AI Infrastructure)](https://github.com/danielmiessler/Personal_AI_Infrastructure) by Daniel Miessler — ISC methodology, algorithm phases, first principles, council, red team, creative skills, AI steering rules, writing style rules
+- [romiluz13/cc10x](https://github.com/romiluz13/cc10x) — Phase contracts, proof reconciliation, multi-signal quality scoring, failure caps, scenario contracts, evidence arrays
+- [obra/superpowers](https://github.com/obra/superpowers) — TDD iron law, systematic debugging methodology, parallel agent dispatch protocol
+- [EveryInc/compound-engineering-plugin](https://github.com/EveryInc/compound-engineering-plugin) — Multi-lens review patterns, adversarial analysis, confidence calibration, design iteration
+- [shinpr/claude-code-workflows](https://github.com/shinpr/claude-code-workflows) — Technical designer gates, agreement-first pattern, task decomposition, work planning
+- [rsmdt/the-startup](https://github.com/rsmdt/the-startup) — Constitution governance, 3Cs validation framework, NEEDS CLARIFICATION markers, drift detection
+- [withzombies/hyperpowers](https://github.com/withzombies/hyperpowers) — Parallel agent orchestration protocol, markdown-first state management
+- [Equilateral-AI/equilateral-agents-open-core](https://github.com/Equilateral-AI/equilateral-agents-open-core) — Standards injection, knowledge harvest methodology
+- [adrianpuiu/specification-document-generator](https://github.com/adrianpuiu/specification-document-generator) — Anti-slop protocol, evidence-based architecture, citation trails

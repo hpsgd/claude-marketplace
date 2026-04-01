@@ -1,6 +1,6 @@
 ---
 name: write-prd
-description: Write a Product Requirements Document from rough notes or a feature idea. Produces a structured PRD with problem statement, user stories, acceptance criteria, and scope.
+description: Write a Product Requirements Document from rough notes or a feature idea. Produces a structured PRD with problem validation, user definition, RICE prioritisation, acceptance criteria, and scope.
 argument-hint: "[feature idea or rough notes]"
 user-invocable: true
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep
@@ -8,52 +8,160 @@ allowed-tools: Read, Write, Edit, Bash, Glob, Grep
 
 Write a PRD for $ARGUMENTS.
 
-## PRD Structure
+Follow every step below. Do not skip sections. Mark unknowns with `[NEEDS CLARIFICATION: question]` rather than guessing.
 
-### 1. Problem Statement
-- What problem are we solving?
-- Who has this problem?
-- How do they solve it today?
-- Why is the current solution inadequate?
+---
 
-### 2. Target User
-- Who specifically is this for? (not "everyone")
-- What's their context when they encounter the problem?
-- What's their technical sophistication?
+## Mandatory Process
 
-### 3. Success Metrics
-- How will we know this succeeded?
-- Leading indicators (can measure immediately)
-- Lagging indicators (measure over time)
-- What does failure look like?
+### Step 1: Problem Validation
 
-### 4. User Stories
-For each story:
+Before writing anything, answer these four questions. If you cannot answer them from the input, mark them `[NEEDS CLARIFICATION]` and proceed with assumptions stated explicitly.
+
+1. **What problem are we solving?** State the problem in one sentence. Not the solution, not the feature — the problem.
+2. **Who has this problem?** Name the specific user segment. "Everyone" is not an answer. "Mid-market SaaS ops managers handling 50-200 integrations" is.
+3. **How do they solve it today?** Describe the current workaround, even if it is "they don't." Include the cost of the current approach (time, money, frustration, risk).
+4. **What evidence do we have?** List concrete evidence: support tickets, user interviews, analytics data, churn reasons, competitor adoption. If none exists, state "No direct evidence — this is a hypothesis" and flag it as a risk.
+
+**Anti-patterns to avoid:**
+- "Users want X" without evidence of the underlying problem
+- Solution-first PRDs that describe a feature without establishing the problem
+- Problems that affect a theoretically large audience but have no supporting data
+- Conflating "interesting to build" with "valuable to users"
+
+### Step 2: Target User Definition
+
+Define the primary user precisely. Include all of:
+
+- **Role/title**: What they call themselves
+- **Context**: When and where they encounter the problem (not just who they are, but what situation they are in)
+- **Technical sophistication**: Can they write code? Use APIs? Or do they need a GUI for everything?
+- **Frequency**: How often do they encounter this problem? (Daily pain vs. quarterly annoyance determines urgency)
+- **Current tools**: What is in their workflow today that this will interact with?
+
+If there is a secondary user (e.g., an admin who configures something that an end-user consumes), define them too, but mark the primary user clearly.
+
+### Step 3: RICE Prioritisation
+
+Score the initiative before investing in detailed requirements. This forces honest assessment of value vs. effort.
+
+| Factor | Score | Reasoning |
+|--------|-------|-----------|
+| **Reach** | _N users/quarter_ | How many users/accounts will this affect in the next quarter? Use real numbers from analytics, not guesses. If unknown, state the assumption. |
+| **Impact** | _3/2/1/0.5/0.25_ | 3 = massive (transforms workflow), 2 = high (significant improvement), 1 = medium (noticeable), 0.5 = low (minor), 0.25 = minimal |
+| **Confidence** | _100%/80%/50%_ | 100% = we have data. 80% = strong signals but some assumptions. 50% = educated guess. |
+| **Effort** | _person-weeks_ | Total effort across all disciplines (design, eng, QA). Round up, never down. |
+
+**RICE Score** = (Reach x Impact x Confidence) / Effort
+
+State the score. Compare it to other recent initiatives if context is available. A score below 1.0 should trigger a conversation about whether to proceed.
+
+### Step 4: Success Metrics
+
+Define exactly how we will know this succeeded. Every PRD must have at least one leading and one lagging indicator.
+
+**Leading indicators** (measurable within the first week):
+- Adoption rate: what percentage of eligible users try the feature?
+- Activation rate: what percentage complete the core action?
+- Error rate: does usage produce errors or support tickets?
+
+**Lagging indicators** (measurable after 4-8 weeks):
+- Retention impact: do users who adopt this feature retain better?
+- Task completion: is the underlying job-to-be-done faster/easier to measure?
+- Revenue impact: does this affect conversion, expansion, or churn?
+
+**Failure definition**: State explicitly what failure looks like. "Less than 10% adoption after 4 weeks" or "no measurable change in time-to-complete" — be specific enough that you can make a kill decision.
+
+### Step 5: User Stories with ISC Acceptance Criteria
+
+Write user stories for every behaviour in scope. Each story follows this format:
+
 ```
-As a [user type], I want [action] so that [outcome].
+### US-[N]: [Short title]
 
-Acceptance criteria:
-- [ ] [Verifiable criterion 1]
-- [ ] [Verifiable criterion 2]
+As a [specific user type], I want [concrete action] so that [measurable outcome].
+
+**Acceptance Criteria:**
+- [ ] [I] — Independent: testable without other criteria
+- [ ] [S] — Small: one verifiable behaviour
+- [ ] [C] — Complete: includes the boundary condition
+
+**Edge cases:**
+- What happens when [empty state]?
+- What happens when [error condition]?
+- What happens when [concurrent access]?
 ```
 
-Apply the ISC Splitting Test to every acceptance criterion — each must be independently verifiable.
+**ISC Splitting Test**: Every acceptance criterion must pass all three:
+- **Independent**: Can be verified on its own without setting up other criteria first
+- **Small**: Tests exactly one behaviour, not a compound "A and B and C"
+- **Complete**: Specifies what happens at the boundaries, not just the happy path
 
-### 5. Scope
-- **In scope**: What's included in this release
-- **Out of scope**: What's deliberately deferred (and why)
-- **Anti-requirements**: What we're explicitly NOT doing
+If a criterion fails the ISC test, split it until each part passes.
 
-### 6. Edge Cases and Open Questions
-- What happens in unusual scenarios?
-- What decisions still need to be made?
-- What assumptions are we making that might be wrong?
+### Step 6: Scope Definition
 
-### 7. Technical Notes (optional)
-- Any known technical constraints
-- Dependencies on other systems or teams
-- Suggested approach (if the author has one) — clearly marked as suggestion, not requirement
+**In scope**: List every capability included in this release. Be specific — "user can filter" is vague; "user can filter by date range, status, and assignee" is specific.
 
-## Output
+**Out of scope**: List what is deliberately excluded AND state why for each item. Common reasons:
+- "Deferred to v2 — valuable but not essential for initial validation"
+- "Separate initiative — tracked in [reference]"
+- "Descoped due to effort — RICE score drops below threshold with this included"
 
-Write the PRD to a file. Suggest a filename based on the feature: `docs/prd-[feature-name].md`
+**Anti-requirements**: Things we are explicitly NOT doing, even though someone might expect them. These prevent scope creep by making exclusions visible.
+
+### Step 7: Open Questions and Risks
+
+Every PRD has unknowns. List them honestly.
+
+| Question | Impact if wrong | Owner | Due date |
+|----------|----------------|-------|----------|
+| _Specific question_ | _What happens if our assumption is incorrect_ | _Who will answer this_ | _When we need the answer by_ |
+
+### Step 8: Technical Constraints (if known)
+
+This section is optional but encouraged. Include only hard constraints, not implementation suggestions.
+
+- **Dependencies**: Other systems, teams, or APIs this relies on
+- **Performance requirements**: Latency, throughput, or scale expectations
+- **Compliance**: Regulatory or security constraints
+- **Data requirements**: What data is needed that may not exist yet
+
+Mark any technical suggestions clearly as `[SUGGESTION — not a requirement]` to avoid constraining engineering prematurely.
+
+---
+
+## Quality Checklist
+
+Before finalising the PRD, verify:
+
+- [ ] Problem is stated without referencing the solution
+- [ ] Target user is specific enough that you could recruit them for a user test
+- [ ] RICE score is calculated with stated assumptions
+- [ ] Every acceptance criterion passes the ISC Splitting Test
+- [ ] At least one leading and one lagging success metric defined
+- [ ] Failure condition is explicitly defined
+- [ ] Out-of-scope items include reasoning
+- [ ] All unknowns are captured with owners and due dates
+- [ ] No implementation details masquerading as requirements
+- [ ] PRD is understandable by someone who was not in the room when it was discussed
+
+---
+
+## Output Format
+
+Write the PRD to `docs/prd-[feature-name].md`. Use the structure above as the document structure. Include the RICE score in the document header as metadata:
+
+```
+# PRD: [Feature Name]
+
+| Field | Value |
+|-------|-------|
+| Author | [name] |
+| Status | Draft |
+| RICE Score | [N] |
+| Target release | [quarter or date] |
+| Last updated | [date] |
+```
+
+Every `[NEEDS CLARIFICATION]` marker is a follow-up item. List them all in a summary at the end of the document under "## Open Items Requiring Clarification."

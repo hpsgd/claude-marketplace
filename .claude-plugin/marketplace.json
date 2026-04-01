@@ -59,6 +59,14 @@
       "tags": ["code-review", "pr", "workflow"]
     },
     {
+      "name": "coordinator",
+      "source": "agents/coordinator",
+      "description": "CEO/founder proxy — cross-team coordination, OKRs, initiative decomposition, strategic decisions spanning CPO and CTO",
+      "version": "0.1.0",
+      "category": "agents",
+      "tags": ["coordination", "okrs", "strategy", "leadership"]
+    },
+    {
       "name": "cpo",
       "source": "agents/cpo",
       "description": "Chief Product Officer — coordinates product, design, content, GTM, and support teams",
