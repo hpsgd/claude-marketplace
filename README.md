@@ -4,9 +4,36 @@ A centralized marketplace for sharing Claude Code plugins, instructions, and con
 
 ## Quick start
 
-### 1. Add the marketplace to your project
+### 1. Add the marketplace
 
-Add this to your project's `.claude/settings.json`:
+```
+/plugin marketplace add hpsgd/claude-marketplace
+```
+
+### 2. Install plugins
+
+```
+/plugin install coding-standards@hpsgd
+/plugin install workflow-tools@hpsgd
+/plugin install security-compliance@hpsgd
+/plugin install writing-style@hpsgd
+/plugin install technology-stack@hpsgd
+/plugin install thinking@hpsgd
+```
+
+Then reload:
+
+```
+/reload-plugins
+```
+
+### 3. Start using them
+
+Plugins activate automatically. Skills are available as slash commands (e.g., `/hpsgd:code-review`) or are auto-invoked by Claude when relevant.
+
+### Alternative: manual configuration
+
+You can also configure the marketplace directly in `.claude/settings.json`:
 
 ```json
 {
@@ -17,16 +44,7 @@ Add this to your project's `.claude/settings.json`:
         "repo": "hpsgd/claude-marketplace"
       }
     }
-  }
-}
-```
-
-### 2. Enable plugins
-
-Add the plugins you want to `.claude/settings.json`:
-
-```json
-{
+  },
   "enabledPlugins": {
     "coding-standards@hpsgd": true,
     "workflow-tools@hpsgd": true,
@@ -37,10 +55,6 @@ Add the plugins you want to `.claude/settings.json`:
   }
 }
 ```
-
-### 3. Start using them
-
-Plugins activate automatically. Skills are available as slash commands (e.g., `/hpsgd:code-review`) or are auto-invoked by Claude when relevant.
 
 ## Available plugins
 
