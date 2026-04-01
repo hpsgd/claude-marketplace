@@ -56,7 +56,7 @@ paths:
 
 ## Module system
 - ESM only — no CommonJS
-- One-liner re-export configs where possible (e.g., `export { default } from '@hps.gd/eslint-config/base'`)
+- One-liner re-export configs where possible (e.g., `export { default } from '@org/eslint-config/base'`)
 
 ## Error handling
 - Use typed errors or error classes rather than throwing strings

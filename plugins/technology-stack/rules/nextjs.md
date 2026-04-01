@@ -29,7 +29,7 @@ src/components/
 
 ## Component conventions
 - App-specific components: import via barrel `import { Button, Hero } from '@/components'`
-- Shared UI library components: import directly from the package `import { Button } from '@hps.gd/ui'` (not via the app barrel)
+- Shared UI library components: import directly from the package `import { Button } from '@org/ui'` (not via the app barrel)
 - Combine type and value imports: `import { Component, type Props } from '@/components'`
 - Component variants use `variant` prop (not `background`, `style`, etc.)
 - `Button` renders `<Link>` when `href` is provided, `<button>` otherwise

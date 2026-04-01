@@ -12,13 +12,64 @@ A centralized marketplace for sharing Claude Code plugins, instructions, and con
 
 ### 2. Install plugins
 
+Pick what you need, or copy a block to install a whole category.
+
+**Core (rules + thinking skills):**
 ```
 /plugin install coding-standards@hpsgd
-/plugin install workflow-tools@hpsgd
-/plugin install security-compliance@hpsgd
 /plugin install writing-style@hpsgd
-/plugin install technology-stack@hpsgd
+/plugin install security-compliance@hpsgd
 /plugin install thinking@hpsgd
+/plugin install workflow-tools@hpsgd
+/plugin install technology-stack@hpsgd
+```
+
+**Product team agents:**
+```
+/plugin install cpo@hpsgd
+/plugin install product-owner@hpsgd
+/plugin install designer@hpsgd
+/plugin install technical-writer@hpsgd
+/plugin install gtm@hpsgd
+/plugin install support@hpsgd
+```
+
+**Engineering team agents:**
+```
+/plugin install cto@hpsgd
+/plugin install architect@hpsgd
+/plugin install react-developer@hpsgd
+/plugin install dotnet-developer@hpsgd
+/plugin install python-developer@hpsgd
+/plugin install qa-engineer@hpsgd
+/plugin install devops@hpsgd
+/plugin install security-engineer@hpsgd
+/plugin install data-engineer@hpsgd
+```
+
+**Everything at once:**
+```
+/plugin install coding-standards@hpsgd
+/plugin install writing-style@hpsgd
+/plugin install security-compliance@hpsgd
+/plugin install thinking@hpsgd
+/plugin install workflow-tools@hpsgd
+/plugin install technology-stack@hpsgd
+/plugin install cpo@hpsgd
+/plugin install product-owner@hpsgd
+/plugin install designer@hpsgd
+/plugin install technical-writer@hpsgd
+/plugin install gtm@hpsgd
+/plugin install support@hpsgd
+/plugin install cto@hpsgd
+/plugin install architect@hpsgd
+/plugin install react-developer@hpsgd
+/plugin install dotnet-developer@hpsgd
+/plugin install python-developer@hpsgd
+/plugin install qa-engineer@hpsgd
+/plugin install devops@hpsgd
+/plugin install security-engineer@hpsgd
+/plugin install data-engineer@hpsgd
 ```
 
 Then reload:
@@ -27,108 +78,104 @@ Then reload:
 /reload-plugins
 ```
 
+### Alternative: JSON configuration
+
+Copy into your project's `.claude/settings.json` (or `settings.local.json` for personal use):
+
+<details>
+<summary>Core plugins only</summary>
+
+```json
+{
+  "enabledPlugins": {
+    "coding-standards@hpsgd": true,
+    "writing-style@hpsgd": true,
+    "security-compliance@hpsgd": true,
+    "thinking@hpsgd": true,
+    "workflow-tools@hpsgd": true,
+    "technology-stack@hpsgd": true
+  }
+}
+```
+</details>
+
+<details>
+<summary>Everything</summary>
+
+```json
+{
+  "enabledPlugins": {
+    "coding-standards@hpsgd": true,
+    "writing-style@hpsgd": true,
+    "security-compliance@hpsgd": true,
+    "thinking@hpsgd": true,
+    "workflow-tools@hpsgd": true,
+    "technology-stack@hpsgd": true,
+    "cpo@hpsgd": true,
+    "product-owner@hpsgd": true,
+    "designer@hpsgd": true,
+    "technical-writer@hpsgd": true,
+    "gtm@hpsgd": true,
+    "support@hpsgd": true,
+    "cto@hpsgd": true,
+    "architect@hpsgd": true,
+    "react-developer@hpsgd": true,
+    "dotnet-developer@hpsgd": true,
+    "python-developer@hpsgd": true,
+    "qa-engineer@hpsgd": true,
+    "devops@hpsgd": true,
+    "security-engineer@hpsgd": true,
+    "data-engineer@hpsgd": true
+  }
+}
+```
+</details>
+
 ### 3. Start using them
 
 Plugins activate automatically. Skills are available as slash commands (e.g., `/hpsgd:code-review`) or are auto-invoked by Claude when relevant.
 
-### Alternative: manual configuration
-
-You can also configure the marketplace directly in `.claude/settings.json`:
-
-```json
-{
-  "extraKnownMarketplaces": {
-    "hpsgd": {
-      "source": {
-        "source": "github",
-        "repo": "hpsgd/claude-marketplace"
-      }
-    }
-  },
-  "enabledPlugins": {
-    "coding-standards@hpsgd": true,
-    "workflow-tools@hpsgd": true,
-    "security-compliance@hpsgd": true,
-    "writing-style@hpsgd": true,
-    "technology-stack@hpsgd": true,
-    "thinking@hpsgd": true
-  }
-}
-```
-
 ## Available plugins
 
-### coding-standards
-Language-generic conventions for TypeScript, .NET, Python, plus git workflow and AI behavioral rules.
+### Core plugins
 
-| Component | Type | Description |
-|-----------|------|-------------|
-| `typescript.md` | Rule (installed) | TypeScript conventions: strict mode, ESM, Prettier, naming, imports |
-| `dotnet.md` | Rule (installed) | .NET/C# conventions: project structure, package management, API design, dependency abstraction |
-| `python.md` | Rule (installed) | Python 3.14+: Ruff, mypy strict, frozen dataclasses, BDD testing hierarchy |
-| `testing.md` | Rule (installed) | General testing principles: AAA pattern, assertions, test data, external dependency abstraction |
-| `git-and-ci.md` | Rule (installed) | Conventional Commits, squash merges, branch model, pre-push verification, no force pushing |
-| `architecture.md` | Rule (installed) | General architecture: file focus, feature-slicing, shared configuration |
-| `ai-steering.md` | Rule (installed) | Behavioral rules: surgical fixes, verify before asserting, minimal scope, no lint suppression |
-| `review-standards` | Skill | Auto-invoked during code review — general quality and writing style |
-| `review-typescript` | Skill | Auto-invoked for `.ts`/`.tsx` files — TypeScript and Next.js conventions |
-| `review-dotnet` | Skill | Auto-invoked for `.cs` files — .NET/C# conventions |
-| `review-python` | Skill | Auto-invoked for `.py` files — Python conventions |
-| `review-git` | Skill | Auto-invoked during PR/commit workflows — git conventions |
+| Plugin | Type | Description |
+|---|---|---|
+| `coding-standards` | Rules + Skills | TypeScript, .NET, Python conventions, git workflow, testing, architecture, AI steering. 7 rules, 5 review skills |
+| `writing-style` | Rules + Skills | AI tell avoidance, banned vocabulary, sentence structure, 15-point editing checklist |
+| `security-compliance` | Rules + Skills | Security baseline rules and deep security audit skill |
+| `thinking` | Skills | 11 skills: ISC, algorithm, first-principles, council, red-team, creative, iterative-depth, scientific-method, learning, wisdom, health-check |
+| `workflow-tools` | Skills + Agent | Code review, PR creation skills, and reviewer agent |
+| `technology-stack` | Rules | JasperFx, Next.js, Pulumi, Moon, SonarCloud, event sourcing conventions |
 
-### workflow-tools
-Skills and agents for common development workflows.
+### Product team agents
 
-| Component | Type | Description |
-|-----------|------|-------------|
-| `code-review` | Skill | Structured code review process (`/hpsgd:code-review`) |
-| `pr-create` | Skill | Create PRs following team conventions (`/hpsgd:pr-create`) |
-| `reviewer` | Agent | Dedicated code review subagent |
+Each agent is a separate plugin — install only the ones you need.
 
-### security-compliance
-Security baseline rules and audit capabilities.
+| Plugin | Agent | Skills |
+|---|---|---|
+| `cpo` | Chief Product Officer — coordinates product team, escalates to CTO for technical concerns | `decompose-initiative` |
+| `product-owner` | Requirements, user stories, acceptance criteria, backlog prioritisation | `write-prd`, `groom-backlog`, `write-user-story`, `define-okrs` |
+| `designer` | UI/UX design, design system, accessibility, component specs | `component-spec`, `accessibility-audit`, `design-review` |
+| `technical-writer` | API docs, user guides, changelogs, knowledge base, runbooks | `write-api-docs`, `write-changelog`, `write-runbook` |
+| `gtm` | Positioning, launch strategy, content marketing, competitive analysis | `positioning`, `launch-plan`, `competitive-analysis` |
+| `support` | Ticket triage, feedback synthesis, knowledge base, bug escalation | `write-kb-article`, `feedback-synthesis`, `triage-tickets` |
 
-| Component | Type | Description |
-|-----------|------|-------------|
-| `security-baseline.md` | Rule (installed) | Input validation, auth, secrets, bot protection, container security, dependency abstraction |
-| `security-audit` | Skill | Deep security audit (`/hpsgd:security-audit`) |
+### Engineering team agents
 
-### writing-style
-Tone, voice, and communication guidelines.
+Each agent is a separate plugin — install only the ones you need.
 
-| Component | Type | Description |
-|-----------|------|-------------|
-| `tone-and-voice.md` | Rule (installed) | Comprehensive AI tell avoidance: banned vocabulary (73+ words, 40+ phrases), sentence structure, punctuation rules, document structure, 15-point editing checklist |
-| `style-guide` | Skill | Auto-invoked when writing documentation or copy |
-
-### thinking
-Structured thinking and reasoning skills.
-
-| Component | Type | Description |
-|-----------|------|-------------|
-| `first-principles` | Skill | Deconstruct to fundamental truths and rebuild (`/hpsgd:first-principles`) |
-| `iterative-depth` | Skill | Multi-lens analysis — 3-5 structured passes through a problem (`/hpsgd:iterative-depth`) |
-| `creative` | Skill | Divergent ideation with forced diversity techniques (`/hpsgd:creative`) |
-| `council` | Skill | Structured debate between 4 expert perspectives (`/hpsgd:council`) |
-| `red-team` | Skill | Adversarial stress-testing — decompose, steelman, then attack (`/hpsgd:red-team`) |
-| `scientific-method` | Skill | Goal → observe → hypothesise → experiment → measure → iterate (`/hpsgd:scientific-method`) |
-| `isc` | Skill | Decompose requests into Identifiable, Specific, Verifiable Criteria with effort tiers and splitting tests (`/hpsgd:isc`) |
-| `algorithm` | Skill | Seven-phase execution: observe → think → plan → build → execute → verify → learn (`/hpsgd:algorithm`) |
-| `learning` | Skill | Capture, categorise, and recall learnings — failures, corrections, patterns (`/hpsgd:learning`) |
-| `wisdom` | Skill | Build domain-specific wisdom frames with confidence levels and cross-domain synthesis (`/hpsgd:wisdom`) |
-| `health-check` | Skill | Project health report — installed rules, memory state, wisdom frame health (`/hpsgd:health-check`) |
-
-### technology-stack
-Framework-specific conventions — enable the ones relevant to your project.
-
-| Component | Type | Description |
-|-----------|------|-------------|
-| `jasperfx.md` | Rule (installed) | Wolverine endpoints/handlers/cascading chains, Marten event sourcing/projections, Alba integration tests |
-| `nextjs.md` | Rule (installed) | Next.js App Router, atomic design, content-collections, Storybook, Tailwind, server/client patterns |
-| `pulumi.md` | Rule (installed) | Pulumi IaC: encrypted config, cross-stack secrets, key rotation, auto-discovery, deployment pipeline |
-| `moonrepo.md` | Rule (installed) | Moon task orchestration, tag-based tasks, generators, git hooks, MCP integration |
-| `event-sourcing.md` | Rule (installed) | Cross-language CQRS/ES: lifecycle events, aggregates, cascading handlers, projections, context flow |
-| `sonarcloud.md` | Rule (installed) | SonarCloud quality gate: PR enforcement, lcov coverage integration, configuration |
+| Plugin | Agent | Skills |
+|---|---|---|
+| `cto` | Chief Technology Officer — coordinates engineering team, escalates to CPO for product concerns | — |
+| `architect` | System design, ADRs, technology evaluation, API strategy | `write-adr`, `evaluate-technology`, `system-design`, `api-design` |
+| `react-developer` | React/Next.js: TypeScript, Tailwind, content-collections, Vitest | `component-from-spec`, `performance-audit` |
+| `dotnet-developer` | .NET/C#: Wolverine, Marten, event sourcing, CQRS, Alba testing | `write-endpoint`, `write-handler` |
+| `python-developer` | Python: Ruff, mypy, BDD (pytest-bdd), Hypothesis, DDD | `write-feature-spec`, `write-schema` |
+| `qa-engineer` | Test strategy, test automation, quality gates, coverage | `test-strategy`, `generate-tests`, `write-bug-report` |
+| `devops` | IaC, CI/CD, deployment, monitoring, incident response | `write-pipeline`, `write-dockerfile`, `incident-response` |
+| `security-engineer` | Threat modelling, security audits, compliance, vulnerability management | `threat-model`, `security-review`, `dependency-audit` |
+| `data-engineer` | Data pipelines, analytics, event tracking, metrics | `event-tracking-plan`, `write-query`, `data-model` |
 
 ## How it works
 
@@ -153,6 +200,31 @@ For instructions that apply **in specific contexts** — code review checklists,
 | "Use this tone in all communications" | Rule (installed) |
 | "When working on API files, follow these patterns" | Skill with `paths:` filter |
 | "Security checklist for all PRs" | Skill (invoked during review) |
+
+### Agent coordination model
+
+Agents are organised as two teams reporting to the human:
+
+```
+Human (CEO/Founder)
+├── CPO
+│   ├── product-owner
+│   ├── designer
+│   ├── technical-writer
+│   ├── gtm
+│   └── support
+└── CTO
+    ├── architect
+    ├── react-developer
+    ├── dotnet-developer
+    ├── python-developer
+    ├── qa-engineer
+    ├── devops
+    ├── security-engineer
+    └── data-engineer
+```
+
+Leads coordinate their teams and escalate cross-domain issues to the human. When the CPO hits a technical question, they say "this needs the CTO's input." When leads conflict, both present their case and the human decides.
 
 ## Creating a new plugin
 
@@ -195,7 +267,7 @@ For instructions that apply **in specific contexts** — code review checklists,
    ```json
    {
      "name": "my-plugin",
-     "source": "./plugins/my-plugin",
+     "source": "my-plugin",
      "description": "What it does",
      "version": "1.0.0"
    }
@@ -208,7 +280,7 @@ For instructions that apply **in specific contexts** — code review checklists,
 ### Per-project overrides
 Projects can override marketplace rules by creating their own `.claude/rules/` files. Project-level rules take precedence.
 
-### Disabling entire plugins
+### Disabling specific plugins
 Remove or set to `false` in your project's `.claude/settings.json`:
 ```json
 {

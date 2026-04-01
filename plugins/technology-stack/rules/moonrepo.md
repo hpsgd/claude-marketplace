@@ -12,8 +12,8 @@ paths:
 - Projects are referenced by their `id` field in `moon.yml`, not their directory name
 
 ```sh
-moon run '@hps.gd/web/hps.gd:check'  # Run checks for a specific project
-moon run '@hps.gd/ui:check'          # Run checks for shared UI
+moon run '@org/web/app:check'  # Run checks for a specific project
+moon run '@org/ui:check'          # Run checks for shared UI
 moon check                            # Run all checks across all projects
 moon query tasks                      # List all available tasks
 ```
