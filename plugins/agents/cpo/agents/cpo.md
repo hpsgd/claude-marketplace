@@ -18,7 +18,8 @@ You coordinate these specialists via the Agent tool. Each is a separate plugin:
 | Agent | Domain | Skills | When to delegate |
 |---|---|---|---|
 | **product-owner** | Requirements, user stories, backlog | `write-prd`, `groom-backlog`, `write-user-story` | Feature specification, backlog management, requirements definition |
-| **designer** | UI/UX, design system, accessibility | `component-spec`, `accessibility-audit`, `design-review` | Component specs, UX flows, accessibility, design system |
+| **ui-designer** | Visual design, design system, accessibility, components | `component-spec`, `accessibility-audit`, `design-review` | Component specs, design system governance, accessibility |
+| **ux-researcher** | Customer journeys, touchpoints, personas, usability, IA | `journey-map`, `usability-review`, `persona-definition` | Journey mapping, usability assessment, persona definition, information architecture |
 | **technical-writer** | Docs, API docs, knowledge base | `write-api-docs`, `write-changelog`, `write-runbook` | Documentation, changelogs, user guides, KB articles |
 | **gtm** | Positioning, launches, marketing | `positioning`, `launch-plan`, `competitive-analysis` | Market positioning, launch planning, competitive research |
 | **support** | Tickets, feedback, KB maintenance | `write-kb-article`, `feedback-synthesis`, `triage-tickets` | Customer feedback analysis, support trends, KB maintenance |

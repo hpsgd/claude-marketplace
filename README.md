@@ -33,7 +33,8 @@ Pick what you need, or copy a block to install a whole category.
 ```
 /plugin install cpo@hpsgd
 /plugin install product-owner@hpsgd
-/plugin install designer@hpsgd
+/plugin install ui-designer@hpsgd
+/plugin install ux-researcher@hpsgd
 /plugin install technical-writer@hpsgd
 /plugin install gtm@hpsgd
 /plugin install support@hpsgd
@@ -46,6 +47,7 @@ Pick what you need, or copy a block to install a whole category.
 /plugin install react-developer@hpsgd
 /plugin install dotnet-developer@hpsgd
 /plugin install python-developer@hpsgd
+/plugin install qa-lead@hpsgd
 /plugin install qa-engineer@hpsgd
 /plugin install devops@hpsgd
 /plugin install security-engineer@hpsgd
@@ -63,7 +65,8 @@ Pick what you need, or copy a block to install a whole category.
 /plugin install coordinator@hpsgd
 /plugin install cpo@hpsgd
 /plugin install product-owner@hpsgd
-/plugin install designer@hpsgd
+/plugin install ui-designer@hpsgd
+/plugin install ux-researcher@hpsgd
 /plugin install technical-writer@hpsgd
 /plugin install gtm@hpsgd
 /plugin install support@hpsgd
@@ -72,6 +75,7 @@ Pick what you need, or copy a block to install a whole category.
 /plugin install react-developer@hpsgd
 /plugin install dotnet-developer@hpsgd
 /plugin install python-developer@hpsgd
+/plugin install qa-lead@hpsgd
 /plugin install qa-engineer@hpsgd
 /plugin install devops@hpsgd
 /plugin install security-engineer@hpsgd
@@ -120,7 +124,8 @@ Copy into your project's `.claude/settings.json` (or `settings.local.json` for p
     "coordinator@hpsgd": true,
     "cpo@hpsgd": true,
     "product-owner@hpsgd": true,
-    "designer@hpsgd": true,
+    "ui-designer@hpsgd": true,
+    "ux-researcher@hpsgd": true,
     "technical-writer@hpsgd": true,
     "gtm@hpsgd": true,
     "support@hpsgd": true,
@@ -129,6 +134,7 @@ Copy into your project's `.claude/settings.json` (or `settings.local.json` for p
     "react-developer@hpsgd": true,
     "dotnet-developer@hpsgd": true,
     "python-developer@hpsgd": true,
+    "qa-lead@hpsgd": true,
     "qa-engineer@hpsgd": true,
     "devops@hpsgd": true,
     "security-engineer@hpsgd": true,
@@ -169,7 +175,8 @@ Each agent is a separate plugin — install only the ones you need.
 |---|---|---|
 | `cpo` | Chief Product Officer — coordinates product team, escalates to CTO for technical concerns | — |
 | `product-owner` | Requirements, user stories, acceptance criteria, backlog prioritisation | `write-prd`, `groom-backlog`, `write-user-story` |
-| `designer` | UI/UX design, design system, accessibility, component specs | `component-spec`, `accessibility-audit`, `design-review` |
+| `ui-designer` | Visual design, design system, component specs, accessibility | `component-spec`, `accessibility-audit`, `design-review` |
+| `ux-researcher` | Customer journeys, touchpoints, personas, usability, information architecture | `journey-map`, `usability-review`, `persona-definition` |
 | `technical-writer` | API docs, user guides, changelogs, knowledge base, runbooks | `write-api-docs`, `write-changelog`, `write-runbook` |
 | `gtm` | Positioning, launch strategy, content marketing, competitive analysis | `positioning`, `launch-plan`, `competitive-analysis` |
 | `support` | Ticket triage, feedback synthesis, knowledge base, bug escalation | `write-kb-article`, `feedback-synthesis`, `triage-tickets` |
@@ -185,7 +192,8 @@ Each agent is a separate plugin — install only the ones you need.
 | `react-developer` | React/Next.js: TypeScript, Tailwind, content-collections, Vitest | `component-from-spec`, `performance-audit` |
 | `dotnet-developer` | .NET/C#: Wolverine, Marten, event sourcing, CQRS, Alba testing | `write-endpoint`, `write-handler` |
 | `python-developer` | Python: Ruff, mypy, BDD (pytest-bdd), Hypothesis, DDD | `write-feature-spec`, `write-schema` |
-| `qa-engineer` | Test strategy, test automation, quality gates, coverage | `test-strategy`, `generate-tests`, `write-bug-report` |
+| `qa-lead` | Test strategy, acceptance criteria, 3 amigos, edge case identification | `test-strategy` |
+| `qa-engineer` | Test automation, test execution, coverage analysis, bug investigation | `generate-tests`, `write-bug-report` |
 | `devops` | IaC, CI/CD, deployment, monitoring, incident response | `write-pipeline`, `write-dockerfile`, `incident-response` |
 | `security-engineer` | Threat modelling, security audits, compliance, vulnerability management | `threat-model`, `security-review`, `dependency-audit` |
 | `data-engineer` | Data pipelines, analytics, event tracking, metrics | `event-tracking-plan`, `write-query`, `data-model` |
