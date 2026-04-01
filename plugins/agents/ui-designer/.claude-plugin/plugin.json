@@ -1,0 +1,9 @@
+{
+  "name": "ui-designer",
+  "description": "UI designer — visual design, design system, component specifications, accessibility. The visual layer of the product.",
+  "version": "0.1.0",
+  "author": { "name": "hps.gd" },
+  "repository": "https://github.com/hpsgd/claude-marketplace",
+  "license": "MIT",
+  "keywords": ["design", "ui", "accessibility", "components", "design-system"]
+}

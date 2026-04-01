@@ -68,8 +68,9 @@ For any cross-team initiative:
 
 **CTO team workstreams:**
 - Architecture: System design, API contracts, data model, ADRs
+- QA Lead: Acceptance criteria, test strategy, edge cases (participates in 3 amigos)
 - Development: Implementation (which stack — react/dotnet/python?)
-- QA: Test strategy, test plan, quality gates
+- QA Engineer: Automated acceptance tests, integration tests, e2e tests
 - DevOps: Infrastructure, deployment, monitoring
 - Security: Threat model, security review checkpoints
 - Data: Event tracking, analytics, dashboards
@@ -82,20 +83,24 @@ Map which workstreams depend on others:
 |---|---|---|
 | Design | Product requirements | Development |
 | Architecture | Product requirements | Development, DevOps |
-| Development | Design specs, Architecture decisions | QA |
-| QA | Development implementation | Release |
+| QA Lead (acceptance criteria) | Product requirements | QA Engineer, Development |
+| QA Engineer (acceptance tests) | QA Lead acceptance criteria, Architecture | Development (TDD — tests before code) |
+| Development | Design specs, Architecture, QA acceptance tests | QA execution |
+| QA execution (integration, e2e) | Development implementation | Release |
 | GTM | Working feature | Launch |
 
 ### 4. Sequence the Work
 
-Propose an order that minimises blocking:
+The 3 amigos pattern: product, architecture, and QA define requirements together before development starts.
 
-1. **Product + Architecture** (parallel — define what and how)
+1. **Product + Architecture + QA Lead** (3 amigos — define WHAT, HOW, and HOW TO VERIFY)
 2. **Design + Security threat model** (parallel — needs requirements from step 1)
-3. **Development + QA test planning** (parallel — QA plans while dev builds)
-4. **QA execution + DevOps deployment prep**
+3. **QA Engineer writes acceptance tests → Developers write failing unit tests → Developers make tests pass** (TDD — tests first, then implementation)
+4. **QA execution** (integration, e2e) **+ DevOps deployment prep**
 5. **Content + GTM + Support preparation**
 6. **Launch**
+
+The critical insight: QA is involved TWICE — the QA Lead in step 1 (planning) and the QA Engineer in steps 3-4 (implementation and execution). Development does not start until acceptance tests exist.
 
 ### 5. Delegate to Leads
 

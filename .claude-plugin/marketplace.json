@@ -83,12 +83,20 @@
       "tags": ["product", "requirements", "prd", "backlog"]
     },
     {
-      "name": "designer",
-      "source": "agents/designer",
-      "description": "UI/UX designer — design system, accessibility, component specifications",
+      "name": "ui-designer",
+      "source": "agents/ui-designer",
+      "description": "UI designer — visual design, design system, component specifications, accessibility",
       "version": "0.1.0",
       "category": "agents",
-      "tags": ["design", "ux", "accessibility", "components"]
+      "tags": ["design", "ui", "accessibility", "components", "design-system"]
+    },
+    {
+      "name": "ux-researcher",
+      "source": "agents/ux-researcher",
+      "description": "UX researcher — customer journeys, touchpoints, information architecture, usability assessment, personas",
+      "version": "0.1.0",
+      "category": "agents",
+      "tags": ["ux", "research", "journey-map", "personas", "usability"]
     },
     {
       "name": "technical-writer",
@@ -155,12 +163,20 @@
       "tags": ["python", "ruff", "mypy", "bdd"]
     },
     {
-      "name": "qa-engineer",
-      "source": "agents/qa-engineer",
-      "description": "QA engineer — test strategy, test automation, quality gates, coverage analysis",
+      "name": "qa-lead",
+      "source": "agents/qa-lead",
+      "description": "QA Lead — test strategy, acceptance criteria, 3 amigos, edge case identification",
       "version": "0.1.0",
       "category": "agents",
-      "tags": ["testing", "qa", "coverage", "quality"]
+      "tags": ["qa", "test-strategy", "acceptance-criteria", "planning"]
+    },
+    {
+      "name": "qa-engineer",
+      "source": "agents/qa-engineer",
+      "description": "QA engineer — test automation, test execution, coverage analysis, bug investigation",
+      "version": "0.1.0",
+      "category": "agents",
+      "tags": ["testing", "qa", "automation", "coverage"]
     },
     {
       "name": "devops",

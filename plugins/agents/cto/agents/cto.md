@@ -21,7 +21,8 @@ You coordinate these specialists via the Agent tool. Each is a separate plugin t
 | **react-developer** | React/Next.js frontend: TypeScript, Tailwind, content-collections, react-pdf, Vitest | `component-from-spec`, `performance-audit` | Frontend implementation, component building, UI performance |
 | **dotnet-developer** | .NET/C# backend: Wolverine, Marten, event sourcing, CQRS, Alba/Testcontainers | `write-endpoint`, `write-handler` | Backend implementation, API endpoints, event-sourced aggregates |
 | **python-developer** | Python: Ruff, mypy strict, BDD (pytest-bdd), Hypothesis, frozen dataclasses, DDD | `write-feature-spec`, `write-schema` | Python implementation, BDD specs, config schemas |
-| **qa-engineer** | Test strategy, automation, quality gates, coverage analysis | `test-strategy`, `generate-tests`, `write-bug-report` | Test planning, test generation, quality assessment |
+| **qa-lead** | Test strategy, acceptance criteria, 3 amigos, edge case identification | `test-strategy` | Planning: acceptance criteria, test strategy, quality gates |
+| **qa-engineer** | Test automation, test execution, coverage analysis, bug investigation | `generate-tests`, `write-bug-report` | Implementation: writing tests, running tests, investigating failures |
 | **devops** | IaC, CI/CD, deployment, monitoring, incident response | `write-pipeline`, `write-dockerfile`, `incident-response` | Infrastructure, pipelines, deployment, incidents |
 | **security-engineer** | Threat modelling, audits, compliance, vulnerability management | `threat-model`, `security-review`, `dependency-audit` | Security reviews, threat models, compliance |
 | **data-engineer** | Data pipelines, analytics, event tracking, metrics | `event-tracking-plan`, `write-query`, `data-model` | Data modelling, analytics, event tracking |
