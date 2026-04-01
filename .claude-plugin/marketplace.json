@@ -12,170 +12,170 @@
   "plugins": [
     {
       "name": "coding-standards",
-      "source": "coding-standards",
+      "source": "foundations/coding-standards",
       "description": "Shared coding conventions for TypeScript, .NET, Python, plus git workflow, testing, architecture, and AI steering rules",
       "version": "0.1.0",
-      "category": "standards",
+      "category": "foundations",
       "tags": ["typescript", "dotnet", "python", "conventions", "testing", "git"]
     },
     {
-      "name": "workflow-tools",
-      "source": "workflow-tools",
-      "description": "Code review, PR creation, and other workflow skills and agents",
-      "version": "0.1.0",
-      "category": "productivity",
-      "tags": ["code-review", "pr", "workflow"]
-    },
-    {
-      "name": "security-compliance",
-      "source": "security-compliance",
-      "description": "Security baseline rules and audit skills for maintaining secure code",
-      "version": "0.1.0",
-      "category": "security",
-      "tags": ["security", "owasp", "audit", "compliance"]
-    },
-    {
       "name": "writing-style",
-      "source": "writing-style",
+      "source": "foundations/writing-style",
       "description": "Tone of voice, writing style, AI tell avoidance, and communication guidelines",
       "version": "0.1.0",
-      "category": "writing",
+      "category": "foundations",
       "tags": ["writing", "tone", "ai-detection", "style-guide"]
     },
     {
+      "name": "security-compliance",
+      "source": "foundations/security-compliance",
+      "description": "Security baseline rules and audit skills for maintaining secure code",
+      "version": "0.1.0",
+      "category": "foundations",
+      "tags": ["security", "owasp", "audit", "compliance"]
+    },
+    {
       "name": "thinking",
-      "source": "thinking",
+      "source": "foundations/thinking",
       "description": "Structured thinking and reasoning skills — first principles, ISC, algorithm, council, red team, and more",
       "version": "0.1.0",
-      "category": "thinking",
+      "category": "foundations",
       "tags": ["reasoning", "first-principles", "red-team", "isc", "algorithm"]
     },
     {
       "name": "technology-stack",
-      "source": "technology-stack",
+      "source": "foundations/technology-stack",
       "description": "Framework-specific conventions for JasperFx, Pulumi, Moon, Next.js, SonarCloud, and event sourcing",
       "version": "0.1.0",
-      "category": "frameworks",
+      "category": "foundations",
       "tags": ["wolverine", "marten", "nextjs", "pulumi", "moonrepo", "event-sourcing"]
     },
     {
+      "name": "workflow-tools",
+      "source": "agents/workflow-tools",
+      "description": "Code review, PR creation, and other workflow skills and agents",
+      "version": "0.1.0",
+      "category": "agents",
+      "tags": ["code-review", "pr", "workflow"]
+    },
+    {
       "name": "cpo",
-      "source": "cpo",
+      "source": "agents/cpo",
       "description": "Chief Product Officer — coordinates product, design, content, GTM, and support teams",
       "version": "0.1.0",
-      "category": "product-agents",
+      "category": "agents",
       "tags": ["product", "leadership", "strategy"]
     },
     {
       "name": "product-owner",
-      "source": "product-owner",
+      "source": "agents/product-owner",
       "description": "Product owner — requirements, user stories, acceptance criteria, backlog prioritisation",
       "version": "0.1.0",
-      "category": "product-agents",
+      "category": "agents",
       "tags": ["product", "requirements", "prd", "backlog"]
     },
     {
       "name": "designer",
-      "source": "designer",
+      "source": "agents/designer",
       "description": "UI/UX designer — design system, accessibility, component specifications",
       "version": "0.1.0",
-      "category": "product-agents",
+      "category": "agents",
       "tags": ["design", "ux", "accessibility", "components"]
     },
     {
       "name": "technical-writer",
-      "source": "technical-writer",
+      "source": "agents/technical-writer",
       "description": "Technical writer — API docs, user guides, changelogs, knowledge base, runbooks",
       "version": "0.1.0",
-      "category": "product-agents",
+      "category": "agents",
       "tags": ["documentation", "api-docs", "changelog"]
     },
     {
       "name": "gtm",
-      "source": "gtm",
+      "source": "agents/gtm",
       "description": "Go-to-market specialist — positioning, launch strategy, content marketing, competitive analysis",
       "version": "0.1.0",
-      "category": "product-agents",
+      "category": "agents",
       "tags": ["marketing", "positioning", "launch"]
     },
     {
       "name": "support",
-      "source": "support",
+      "source": "agents/support",
       "description": "Customer support — ticket triage, feedback synthesis, knowledge base, bug escalation",
       "version": "0.1.0",
-      "category": "product-agents",
+      "category": "agents",
       "tags": ["support", "tickets", "feedback"]
     },
     {
       "name": "cto",
-      "source": "cto",
+      "source": "agents/cto",
       "description": "Chief Technology Officer — coordinates architecture, development, QA, DevOps, security, and data engineering",
       "version": "0.1.0",
-      "category": "engineering-agents",
+      "category": "agents",
       "tags": ["engineering", "leadership", "technical"]
     },
     {
       "name": "architect",
-      "source": "architect",
+      "source": "agents/architect",
       "description": "Software architect — system design, ADRs, technology evaluation, API strategy",
       "version": "0.1.0",
-      "category": "engineering-agents",
+      "category": "agents",
       "tags": ["architecture", "design", "adr", "api"]
     },
     {
       "name": "react-developer",
-      "source": "react-developer",
+      "source": "agents/react-developer",
       "description": "React/Next.js developer — TypeScript, Tailwind, content-collections, react-pdf, Vitest",
       "version": "0.1.0",
-      "category": "engineering-agents",
+      "category": "agents",
       "tags": ["react", "nextjs", "typescript", "frontend"]
     },
     {
       "name": "dotnet-developer",
-      "source": "dotnet-developer",
+      "source": "agents/dotnet-developer",
       "description": ".NET/C# developer — Wolverine, Marten, event sourcing, CQRS, Alba testing",
       "version": "0.1.0",
-      "category": "engineering-agents",
+      "category": "agents",
       "tags": ["dotnet", "csharp", "wolverine", "marten"]
     },
     {
       "name": "python-developer",
-      "source": "python-developer",
+      "source": "agents/python-developer",
       "description": "Python developer — strict typing, Ruff, mypy, BDD, Hypothesis, DDD",
       "version": "0.1.0",
-      "category": "engineering-agents",
+      "category": "agents",
       "tags": ["python", "ruff", "mypy", "bdd"]
     },
     {
       "name": "qa-engineer",
-      "source": "qa-engineer",
+      "source": "agents/qa-engineer",
       "description": "QA engineer — test strategy, test automation, quality gates, coverage analysis",
       "version": "0.1.0",
-      "category": "engineering-agents",
+      "category": "agents",
       "tags": ["testing", "qa", "coverage", "quality"]
     },
     {
       "name": "devops",
-      "source": "devops",
+      "source": "agents/devops",
       "description": "DevOps / platform engineer — IaC, CI/CD, deployment, monitoring, incident response",
       "version": "0.1.0",
-      "category": "engineering-agents",
+      "category": "agents",
       "tags": ["devops", "infrastructure", "cicd", "deployment"]
     },
     {
       "name": "security-engineer",
-      "source": "security-engineer",
+      "source": "agents/security-engineer",
       "description": "Security engineer — threat modelling, security audits, compliance, vulnerability management",
       "version": "0.1.0",
-      "category": "engineering-agents",
+      "category": "agents",
       "tags": ["security", "threat-model", "compliance"]
     },
     {
       "name": "data-engineer",
-      "source": "data-engineer",
+      "source": "agents/data-engineer",
       "description": "Data engineer — data pipelines, analytics, event tracking, metrics, data modelling",
       "version": "0.1.0",
-      "category": "engineering-agents",
+      "category": "agents",
       "tags": ["data", "analytics", "pipelines", "metrics"]
     }
   ]
