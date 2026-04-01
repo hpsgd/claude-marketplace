@@ -1,0 +1,68 @@
+{
+  "name": "hpsgd",
+  "description": "Centralized marketplace for sharing Claude Code plugins, instructions, and configurations across teams",
+  "owner": {
+    "name": "hps.gd",
+    "email": "hello@hps.gd"
+  },
+  "metadata": {
+    "version": "0.1.0",
+    "pluginRoot": "./plugins"
+  },
+  "plugins": [
+    {
+      "name": "coding-standards",
+      "source": "coding-standards",
+      "description": "Shared coding conventions for TypeScript, .NET, Python, plus git workflow, testing, architecture, and AI steering rules",
+      "version": "0.1.0",
+      "category": "standards",
+      "tags": ["typescript", "dotnet", "python", "conventions", "testing", "git"],
+      "homepage": "https://github.com/hpsgd/claude-marketplace#coding-standards"
+    },
+    {
+      "name": "workflow-tools",
+      "source": "workflow-tools",
+      "description": "Code review, PR creation, and other workflow skills and agents",
+      "version": "0.1.0",
+      "category": "productivity",
+      "tags": ["code-review", "pr", "workflow", "agents"],
+      "homepage": "https://github.com/hpsgd/claude-marketplace#workflow-tools"
+    },
+    {
+      "name": "security-compliance",
+      "source": "security-compliance",
+      "description": "Security baseline rules and audit skills for maintaining secure code",
+      "version": "0.1.0",
+      "category": "security",
+      "tags": ["security", "owasp", "audit", "compliance"],
+      "homepage": "https://github.com/hpsgd/claude-marketplace#security-compliance"
+    },
+    {
+      "name": "writing-style",
+      "source": "writing-style",
+      "description": "Tone of voice, writing style, AI tell avoidance, and communication guidelines",
+      "version": "0.1.0",
+      "category": "writing",
+      "tags": ["writing", "tone", "ai-detection", "style-guide"],
+      "homepage": "https://github.com/hpsgd/claude-marketplace#writing-style"
+    },
+    {
+      "name": "thinking",
+      "source": "thinking",
+      "description": "Structured thinking and reasoning skills — first principles, iterative depth, creative ideation, council debates, red team, scientific method, ISC, and algorithm",
+      "version": "0.1.0",
+      "category": "thinking",
+      "tags": ["reasoning", "first-principles", "red-team", "isc", "algorithm", "decision-making"],
+      "homepage": "https://github.com/hpsgd/claude-marketplace#thinking"
+    },
+    {
+      "name": "technology-stack",
+      "source": "technology-stack",
+      "description": "Framework-specific conventions for JasperFx (Wolverine/Marten), Pulumi, Moon, Next.js, SonarCloud, and event sourcing",
+      "version": "0.1.0",
+      "category": "frameworks",
+      "tags": ["wolverine", "marten", "nextjs", "pulumi", "moonrepo", "event-sourcing", "sonarcloud"],
+      "homepage": "https://github.com/hpsgd/claude-marketplace#technology-stack"
+    }
+  ]
+}

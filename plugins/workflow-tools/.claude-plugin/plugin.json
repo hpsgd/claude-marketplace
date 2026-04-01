@@ -1,0 +1,9 @@
+{
+  "name": "workflow-tools",
+  "description": "Code review, PR creation, and other workflow skills and agents",
+  "version": "0.1.0",
+  "author": { "name": "hps.gd" },
+  "repository": "https://github.com/hpsgd/claude-marketplace",
+  "license": "MIT",
+  "keywords": ["code-review", "pr", "workflow", "agents"]
+}
