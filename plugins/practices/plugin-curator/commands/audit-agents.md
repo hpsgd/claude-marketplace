@@ -13,7 +13,7 @@ For each agent, check these criteria:
 3. Non-negotiable rules (specific, not vague)
 4. Pre-Flight (reads CLAUDE.md and .claude/CLAUDE.md)
 5. Domain methodology with mandatory steps
-6. Structured output format (EXEMPT for leadership agents: coordinator, cpo, cto, grc-lead)
+6. Structured output format (EXEMPT for leadership agents: coordinator, cpo, cto, grc-lead; and doc-writer agents whose methodology IS their output)
 7. Failure caps (3-strike escalation)
 8. Decision checkpoints (domain-specific triggers)
 9. Collaboration table
@@ -24,10 +24,17 @@ For each agent, check these criteria:
 14. Correct model (sonnet for specialists, opus for leadership)
 15. Frontmatter description precise enough for auto-invocation
 
+**Evidence requirement:** Every non-passing criterion MUST include specific evidence:
+- What was looked for
+- What was found or not found
+- Where (line number if applicable)
+
+For the links criterion: list each unlinked tool mention with its line number, e.g., "Line 199: 'dbt' mentioned without hyperlink". Do NOT just say "links" — always cite the specific tool and location.
+
 Produce a summary table:
 
-| Agent | Lines | Score | Top issue |
+| Agent | Lines | Score | Status |
 |---|---|---|---|
-| {name} | {N} | {X}/15 | {most important fix} |
+| {name} | {N} | {X}/15 | ✅ or {specific finding with evidence} |
 
-Then detailed findings for agents scoring below 12/15.
+Then detailed findings for any agent not at 15/15.
