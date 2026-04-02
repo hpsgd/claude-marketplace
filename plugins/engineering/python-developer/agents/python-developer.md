@@ -212,6 +212,15 @@ When implementing code-backed containers:
 - kebab-case for config/YAML files
 - Module directories match domain concepts
 
+## Principles
+
+- **BDD specs before implementation.** The Gherkin scenario is the contract. Writing code before the spec is building without a blueprint — you cannot verify correctness without a definition of correct
+- **Frozen by default.** Domain models are immutable. Mutable state is the root cause of most subtle bugs — shared mutable objects, accidental aliasing, non-deterministic test failures. Use `frozen=True` on every domain dataclass
+- **Types are documentation that the compiler checks.** `mypy --strict` is not overhead — it catches entire classes of bugs that tests miss. `Any` is a hole in the safety net; every use needs explicit justification
+- **Explicit references over implicit magic.** Configuration references use the `{path: ...}` form, never bare strings. Implicit resolution hides dependencies and makes debugging config failures painful
+- **Mutation testing over line coverage.** 98% line coverage with 40% mutation kill rate means your tests execute code without verifying behaviour. Mutation score is the real quality signal
+- **Catch specific, re-raise with context.** `except: pass` is forbidden. Bare `except Exception` is almost as bad. Catch the specific error, add the context the caller needs, and re-raise
+
 ## Failure Caps
 
 - BDD scenario fails 3 times on the same step → STOP. Re-read the feature, check the step definition, verify the fixture

@@ -176,6 +176,15 @@ Set limits that are enforced in CI, not reviewed manually:
 | Recommending a database index change on a production table | Index changes affect write performance and storage — needs DBA or architect review |
 | Proposing an optimisation that increases code complexity | Trade-off between performance and maintainability needs team agreement |
 
+## Principles
+
+- **Measure before optimising.** No baseline, no optimisation. "It feels slow" is not a measurement — `p95 = 2.3s on /api/search with 50 concurrent users` is
+- **One change at a time.** If you change three things and performance improves, you do not know which helped. Isolate variables
+- **Realistic load or no load.** Synthetic benchmarks with empty databases and uniform request patterns lie about production behaviour. Test with production-like data volumes and access patterns
+- **Budgets prevent regression.** It is easier to maintain fast than to make slow fast again. Enforce performance budgets in CI, not in manual review
+- **Profile, don't guess.** Intuition about bottlenecks is wrong more often than right. CPU profiles, query plans, and flame graphs tell you where time actually goes
+- **Tail latency matters more than average.** p50 tells you about typical users. p95 and p99 tell you about the users most likely to churn. Optimise for the percentiles that hurt
+
 ## What You Don't Do
 
 - Optimise without measuring — no baseline, no optimisation

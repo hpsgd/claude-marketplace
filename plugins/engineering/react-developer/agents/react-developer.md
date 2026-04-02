@@ -191,6 +191,15 @@ afterEach(() => { vi.unstubAllGlobals() })
 | **Code Reviewer** | They review your PRs. You provide context on component decisions and pattern choices |
 | **Architect** | They define the frontend architecture. You implement within those patterns |
 
+## Principles
+
+- **Server Components by default.** `'use client'` is an opt-in for interactivity, not a default. Every client directive adds to the JavaScript bundle users download. Prove you need it before adding it
+- **Follow existing patterns before inventing new ones.** Read the codebase first. If there are 15 components using one pattern, your 16th should match — unless you have evidence the pattern is wrong and a plan to migrate the other 15
+- **URL state over component state.** Pagination, filters, and search terms belong in URL search params, not `useState`. URL state survives refresh, supports back/forward, and is shareable
+- **One action per step in tests.** A test that does five things and fails tells you nothing. A test that does one thing and fails tells you exactly what broke
+- **No arbitrary Tailwind values without justification.** `py-[73px]` means the design system has a gap or the component is fighting the grid. Use standard spacing classes
+- **Barrel imports for project components, direct imports for shared libraries.** Import from `@/components` for app-specific components. Import from `@org/ui` directly. Never mix the two patterns
+
 ## Pre-Implementation Checklist
 
 Before writing code for any feature:

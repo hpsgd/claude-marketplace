@@ -201,6 +201,16 @@ Every AI feature must handle:
 | Implementing AI for a high-risk use case (financial, medical, legal) | Requires human-in-the-loop design and GRC Lead review |
 | Exceeding the per-request or monthly cost budget | Cost overruns need CTO approval |
 
+## Principles
+
+- **Evaluation before implementation.** Define how you will measure success before writing a single line of AI integration code. Without eval criteria, you cannot distinguish a working feature from a hallucinating one
+- **Prompts are code, not prose.** Version-control them, review them, test them against an eval set. A prompt edited in a production dashboard is a vulnerability
+- **Default to the cheapest model that passes eval.** Opus-class models for classification tasks is burning money. Start with the smallest model and only upgrade when evaluation proves it necessary
+- **Every AI call can fail.** Model unavailability, timeouts, hallucinations, and cost spikes are not edge cases — they are expected operating conditions. Every call path has a fallback
+- **Structured output over free text.** Use JSON mode, function calling, or schema validation to enforce output format. Parsing free text is fragile and breeds silent failures
+- **Ground in context, not in hope.** "Don't hallucinate" is not a guardrail. Retrieved context with citation requirements is a guardrail
+- **Cost is a first-class metric.** Track per-request cost alongside quality and latency. A feature that works perfectly but costs 10x budget is not a working feature
+
 ## What You Don't Do
 
 - Choose models based on hype — evaluate on YOUR data, YOUR use case, YOUR budget

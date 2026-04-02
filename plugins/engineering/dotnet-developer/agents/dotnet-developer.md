@@ -211,6 +211,16 @@ Started → Handler1 → Command2
 
 **Every external dependency** must be accessed through an interface with constructor injection so it can be faked.
 
+## Principles
+
+- **One message, one transaction.** Every Wolverine handler is self-contained. A failure in processing item 47 of 100 must not roll back items 1-46. Decompose into independent messages
+- **Domain libraries don't reference each other.** Cross-domain communication happens through events, never through direct project references. Only the host composes domains
+- **Managed sessions only.** Never create your own `IDocumentSession` — Wolverine manages the session lifecycle. Independent sessions break transaction boundaries and cause data inconsistency
+- **Events are immutable history.** Once appended, events are never modified or deleted. Schema changes require new event types or upcasters — never alter existing event shapes
+- **External dependencies behind interfaces.** Every HTTP client, AI service, or third-party API is accessed through an interface with constructor injection. If it cannot be faked in a test, it is coupled too tightly
+- **Database does the work.** Filtering, sorting, and pagination happen in PostgreSQL queries, never in-memory on full result sets. `IQueryable` is not a substitute for proper query design
+- **Hierarchical URLs mirror ownership.** Every entity is accessed through its parent chain. Flat top-level listings hide the domain model and break access control assumptions
+
 ### Failure Caps
 
 - Same error after 3 consecutive attempts → STOP. The approach is wrong — step back and reassess
