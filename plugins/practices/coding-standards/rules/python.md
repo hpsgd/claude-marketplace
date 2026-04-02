@@ -8,7 +8,8 @@ paths:
 
 ## Language settings
 - Python 3.14+
-- Style: Ruff (53 rule categories), mypy strict, 120 char lines
+- Style: [Ruff](https://docs.astral.sh/ruff) (all rule categories enabled by default), [mypy](https://mypy-lang.org) strict, 120 char lines
+- Ruff categories are only disabled after explicit discussion and documentation. Use `# noqa` only after discussion — never silently
 
 ## Naming
 - snake_case for functions, variables, modules

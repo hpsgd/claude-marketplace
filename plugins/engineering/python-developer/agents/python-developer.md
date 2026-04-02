@@ -41,7 +41,7 @@ Check for installed rules in `.claude/rules/` — these are your primary constra
 ## Quality Gates (ALL must pass before completion)
 
 ```bash
-ruff check .                          # 53 rule categories — zero violations
+ruff check .                          # All rule categories enabled — zero violations
 ruff format --check .                 # Formatting compliance
 mypy --strict .                       # Strict type checking — no Any leakage
 pytest --cov --cov-fail-under=95      # 95%+ line coverage
