@@ -8,13 +8,34 @@ allowed-tools: Read, Write, Edit, Bash, Glob, Grep
 
 Write a PRD for $ARGUMENTS.
 
+Based on current best practices from Marty Cagan (SVPG), Lenny Rachitsky, Shreyas Doshi, and Teresa Torres. The PRD is an alignment document, not a contract — it forces clarity of thought and communicates intent.
+
 Follow every step below. Do not skip sections. Mark unknowns with `[NEEDS CLARIFICATION: question]` rather than guessing.
+
+### Size the document first
+
+Match PRD weight to decision weight:
+
+| Effort | Format | Sections required |
+|---|---|---|
+| < 1 week | Ticket with acceptance criteria | Problem + criteria + scope only |
+| 1-4 weeks | One-pager | Steps 1-6 below |
+| 1+ month | Full PRD | All steps below |
+| Quarter+ | Full PRD + strategy context | All steps + link to OKRs and roadmap |
 
 ---
 
 ## Mandatory Process
 
-### Step 1: Problem Validation
+### Step 1: Context and Strategic Fit
+
+Before the problem statement, establish WHY this work matters NOW:
+
+- **Strategic alignment** — which company OKR or product goal does this support? If it doesn't connect to a goal, why are we considering it?
+- **Why now** — what changed that makes this urgent? Market shift, customer feedback volume, competitive pressure, technical enabler, or contractual obligation?
+- **What happens if we don't do this** — the cost of inaction. If the answer is "nothing much changes," question whether this belongs in the roadmap
+
+### Step 2: Problem Validation
 
 Before writing anything, answer these four questions. If you cannot answer them from the input, mark them `[NEEDS CLARIFICATION]` and proceed with assumptions stated explicitly.
 
@@ -29,7 +50,7 @@ Before writing anything, answer these four questions. If you cannot answer them 
 - Problems that affect a theoretically large audience but have no supporting data
 - Conflating "interesting to build" with "valuable to users"
 
-### Step 2: Target User Definition
+### Step 3: Target User Definition
 
 Define the primary user precisely. Include all of:
 
@@ -41,7 +62,7 @@ Define the primary user precisely. Include all of:
 
 If there is a secondary user (e.g., an admin who configures something that an end-user consumes), define them too, but mark the primary user clearly.
 
-### Step 3: RICE Prioritisation
+### Step 4: RICE Prioritisation
 
 Score the initiative before investing in detailed requirements. This forces honest assessment of value vs. effort.
 
@@ -56,7 +77,7 @@ Score the initiative before investing in detailed requirements. This forces hone
 
 State the score. Compare it to other recent initiatives if context is available. A score below 1.0 should trigger a conversation about whether to proceed.
 
-### Step 4: Success Metrics
+### Step 5: Success Metrics
 
 Define exactly how we will know this succeeded. Every PRD must have at least one leading and one lagging indicator.
 
@@ -70,9 +91,16 @@ Define exactly how we will know this succeeded. Every PRD must have at least one
 - Task completion: is the underlying job-to-be-done faster/easier to measure?
 - Revenue impact: does this affect conversion, expansion, or churn?
 
+**Guardrail metrics** (must NOT get worse):
+- Existing feature usage: does this change break or degrade existing workflows?
+- Performance: does page load or API latency regress?
+- Support volume: does this generate more support tickets than it resolves?
+
+Guardrails protect against second-order effects. A feature that improves adoption but increases support volume by 3x is not a success.
+
 **Failure definition**: State explicitly what failure looks like. "Less than 10% adoption after 4 weeks" or "no measurable change in time-to-complete" — be specific enough that you can make a kill decision.
 
-### Step 5: User Stories with ISC Acceptance Criteria
+### Step 6: User Stories with ISC Acceptance Criteria
 
 Write user stories for every behaviour in scope. Each story follows this format:
 
@@ -99,7 +127,7 @@ As a [specific user type], I want [concrete action] so that [measurable outcome]
 
 If a criterion fails the ISC test, split it until each part passes.
 
-### Step 6: Scope Definition
+### Step 7: Scope Definition
 
 **In scope**: List every capability included in this release. Be specific — "user can filter" is vague; "user can filter by date range, status, and assignee" is specific.
 
@@ -110,15 +138,38 @@ If a criterion fails the ISC test, split it until each part passes.
 
 **Anti-requirements**: Things we are explicitly NOT doing, even though someone might expect them. These prevent scope creep by making exclusions visible.
 
-### Step 7: Open Questions and Risks
+### Step 8: Risks and Pre-Mortem
 
-Every PRD has unknowns. List them honestly.
+Imagine the feature shipped and failed. What went wrong? This is a pre-mortem (Shreyas Doshi's emphasis — anticipate failure before it happens).
+
+**Four risk categories** (Marty Cagan's framework):
+
+| Risk type | Question | Assessment |
+|---|---|---|
+| **Value risk** | Will users actually want this? | [evidence for/against] |
+| **Usability risk** | Can they figure out how to use it? | [complexity assessment] |
+| **Feasibility risk** | Can we build it with current tech/team/timeline? | [technical assessment] |
+| **Business viability risk** | Does this work for the business? (legal, financial, strategic) | [business assessment] |
+
+**Open questions:**
 
 | Question | Impact if wrong | Owner | Due date |
-|----------|----------------|-------|----------|
+|---|---|---|---|
 | _Specific question_ | _What happens if our assumption is incorrect_ | _Who will answer this_ | _When we need the answer by_ |
 
-### Step 8: Technical Constraints (if known)
+**Reversibility:** Is this decision easily reversible (feature flag, config change) or hard to reverse (data migration, public API, pricing change)? Reversible decisions can be made faster with less certainty. Irreversible decisions need more evidence.
+
+### Step 9: Launch Plan
+
+How will this reach users?
+
+- **Rollout strategy:** Big bang / percentage rollout / beta → GA / feature flag
+- **Rollback criteria:** What signals would trigger a rollback? (error rate, support volume, performance regression)
+- **Monitoring:** What dashboards or alerts need to be in place before launch?
+- **Communication:** Who needs to know? (support team, sales team, existing customers, marketing)
+- **Documentation:** What docs need to be created or updated before launch?
+
+### Step 10: Technical Constraints (if known)
 
 This section is optional but encouraged. Include only hard constraints, not implementation suggestions.
 
@@ -135,13 +186,18 @@ Mark any technical suggestions clearly as `[SUGGESTION — not a requirement]` t
 
 Before finalising the PRD, verify:
 
+- [ ] Strategic fit stated — connects to a company OKR or product goal
+- [ ] "Why now" is answered — urgency or timing is clear
 - [ ] Problem is stated without referencing the solution
 - [ ] Target user is specific enough that you could recruit them for a user test
 - [ ] RICE score is calculated with stated assumptions
 - [ ] Every acceptance criterion passes the ISC Splitting Test
-- [ ] At least one leading and one lagging success metric defined
+- [ ] At least one leading, one lagging, and one guardrail metric defined
 - [ ] Failure condition is explicitly defined
 - [ ] Out-of-scope items include reasoning
+- [ ] Four risk categories assessed (value, usability, feasibility, viability)
+- [ ] Reversibility assessed
+- [ ] Launch plan includes rollback criteria
 - [ ] All unknowns are captured with owners and due dates
 - [ ] No implementation details masquerading as requirements
 - [ ] PRD is understandable by someone who was not in the room when it was discussed
