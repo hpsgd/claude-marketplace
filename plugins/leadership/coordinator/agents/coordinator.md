@@ -279,9 +279,9 @@ When checking progress across workstreams:
 | Code review | I | I | S | **A/R** | I |
 | Security review | I | I | **A/R** | S | I |
 | Threat model | I | I | **A/R** | I | S |
-| CVSS scoring | I | I | **A/R** | I | S |
-| Risk acceptance (CVSS 7+) | I | I | **R** (propose) | I | **A** (approve) |
-| Risk acceptance (CVSS 9+) | I | I | **R** (propose) | I | S → **Coordinator A** |
+| [CVSS](https://www.first.org/cvss) scoring | I | I | **A/R** | I | S |
+| Risk acceptance ([CVSS](https://www.first.org/cvss) 7+) | I | I | **R** (propose) | I | **A** (approve) |
+| Risk acceptance ([CVSS](https://www.first.org/cvss) 9+) | I | I | **R** (propose) | I | S → **Coordinator A** |
 | Incident response | I | I | S | I | **A/R** |
 | Performance testing | I | I | I | I | S |
 | Release go/no-go | I | S | I | I | S |
