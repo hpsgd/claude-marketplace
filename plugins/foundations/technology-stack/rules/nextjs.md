@@ -6,7 +6,7 @@ paths:
   - "**/next.config.*"
 ---
 
-# Next.js & React Conventions
+# [Next.js](https://nextjs.org) & React Conventions
 
 ## Framework
 - Next.js with App Router
@@ -50,7 +50,7 @@ page-route/
 ```
 
 ## Content management
-- Use content-collections for structured content with Zod schemas and MDX transforms
+- Use [content-collections](https://www.content-collections.dev) for structured content with Zod schemas and MDX transforms
 - Content in markdown files with frontmatter, accessed via typed helpers
 - Numeric prefix ordering for ordered content: `01-first.md`, `02-second.md`
 - `_index.md` for collection-level introductions
@@ -58,12 +58,12 @@ page-route/
 - Token replacement (e.g., `THE COMPANY` → actual company name) in transforms
 
 ## Styling
-- Tailwind CSS via PostCSS
+- [Tailwind CSS](https://tailwindcss.com) via PostCSS
 - Prefer standard Tailwind classes over arbitrary values: `py-18` not `py-[72px]`
 - Class-based dark mode via `prefers-color-scheme`
 - `clsx` for conditional classes
 
-## Storybook
+## [Storybook](https://storybook.js.org)
 - Stories co-located alongside components
 - Style guide as MDX docs pages in the UI library
 - Style guide is the source of truth for visual and content decisions
@@ -81,7 +81,7 @@ page-route/
 - Use `DebouncedSearch` for text filters (URL param → server refetch)
 - Each paginated table uses a unique query param name to avoid collisions
 
-## PDF generation (react-pdf)
+## PDF generation ([react-pdf](https://react-pdf.org))
 
 When generating PDFs server-side via `@react-pdf/renderer`:
 

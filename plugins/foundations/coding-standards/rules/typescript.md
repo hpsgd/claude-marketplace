@@ -14,11 +14,11 @@ paths:
 - Monorepo tsconfig pattern: root `tsconfig.json` extends `tsconfig.options.json` (shared compiler options), each workspace has its own tsconfig referenced via `references`
 
 ## Formatting
-- Prettier — single quotes, `quoteProps: 'consistent'`, JSX single quotes, one attribute per line
+- [Prettier](https://prettier.io) — single quotes, `quoteProps: 'consistent'`, JSX single quotes, one attribute per line
 - 2 spaces indentation, LF line endings, UTF-8, max line length 120
 - Two Prettier presets: base (no plugins) for packages/libraries, tailwind (base + Tailwind class sorting + import organizing) for applications
 
-## ESLint
+## [ESLint](https://eslint.org)
 - Shared ESLint configuration in a dedicated package with presets:
   - **base**: `typescript-eslint` `recommendedTypeChecked` + `eslint-config-prettier` + `projectService: true`
   - **nextjs**: base + `eslint-config-next` (core-web-vitals + typescript)

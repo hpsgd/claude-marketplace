@@ -2,7 +2,7 @@
 description: SonarCloud code quality enforcement and configuration
 ---
 
-# SonarCloud
+# [SonarCloud](https://sonarcloud.io)
 
 ## Quality gate
 - Enforced on PRs — PRs cannot merge unless the quality gate passes
@@ -16,7 +16,7 @@ description: SonarCloud code quality enforcement and configuration
 - Coverage output: `coverage/lcov.info` (gitignored, consumed by SonarCloud)
 
 ## Coverage integration
-- TypeScript: Vitest with `@vitest/coverage-v8` generates lcov
+- TypeScript: [Vitest](https://vitest.dev) with `@vitest/coverage-v8` generates lcov
 - The SonarCloud workflow (`.github/workflows/sonarcloud.yml`) runs tests with coverage, then scans
 
 ## Configuration

@@ -6,7 +6,7 @@ paths:
   - "**/Pulumi.yaml"
 ---
 
-# Pulumi IaC Conventions
+# [Pulumi](https://www.pulumi.com) IaC Conventions
 
 ## Project structure
 - All infrastructure managed with Pulumi (TypeScript, ESM)

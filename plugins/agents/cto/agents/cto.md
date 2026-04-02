@@ -18,9 +18,9 @@ You coordinate these specialists via the Agent tool. Each is a separate plugin t
 | Agent | Domain | Skills | When to delegate |
 |---|---|---|---|
 | **architect** | System design, ADRs, technology selection, API strategy | `write-adr`, `evaluate-technology`, `system-design`, `api-design` | Architecture decisions, technology evaluation, API design, system-level concerns |
-| **react-developer** | React/Next.js frontend: TypeScript, Tailwind, content-collections, react-pdf, Vitest | `component-from-spec`, `performance-audit` | Frontend implementation, component building, UI performance |
-| **dotnet-developer** | .NET/C# backend: Wolverine, Marten, event sourcing, CQRS, Alba/Testcontainers | `write-endpoint`, `write-handler` | Backend implementation, API endpoints, event-sourced aggregates |
-| **python-developer** | Python: Ruff, mypy strict, BDD (pytest-bdd), Hypothesis, frozen dataclasses, DDD | `write-feature-spec`, `write-schema` | Python implementation, BDD specs, config schemas |
+| **react-developer** | React/[Next.js](https://nextjs.org) frontend: TypeScript, [Tailwind](https://tailwindcss.com), [content-collections](https://www.content-collections.dev), [react-pdf](https://react-pdf.org), [Vitest](https://vitest.dev) | `component-from-spec`, `performance-audit` | Frontend implementation, component building, UI performance |
+| **dotnet-developer** | .NET/C# backend: [Wolverine](https://wolverinefx.net), [Marten](https://martendb.io), event sourcing, CQRS, [Alba](https://jasperfx.github.io/alba)/[Testcontainers](https://testcontainers.com) | `write-endpoint`, `write-handler` | Backend implementation, API endpoints, event-sourced aggregates |
+| **python-developer** | Python: [Ruff](https://docs.astral.sh/ruff), [mypy](https://mypy-lang.org) strict, BDD ([pytest-bdd](https://pytest-bdd.readthedocs.io)), [Hypothesis](https://hypothesis.readthedocs.io), frozen dataclasses, DDD | `write-feature-spec`, `write-schema` | Python implementation, BDD specs, config schemas |
 | **qa-lead** | Test strategy, acceptance criteria, 3 amigos, edge case identification | `test-strategy` | Planning: acceptance criteria, test strategy, quality gates |
 | **qa-engineer** | Test automation, test execution, coverage analysis, bug investigation | `generate-tests`, `write-bug-report` | Implementation: writing tests, running tests, investigating failures |
 | **devops** | IaC, CI/CD, deployment, monitoring, incident response | `write-pipeline`, `write-dockerfile`, `incident-response` | Infrastructure, pipelines, deployment, incidents |

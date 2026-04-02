@@ -41,8 +41,8 @@ feature/my-thing ──squash──> main
 
 ## Pre-push verification (monorepos)
 - Run full CI across ALL projects, not just the one you changed
-- In Moon monorepos: `moon ci` checks web apps, packages, AND services
-- Known gotchas: Storybook artifacts may need cleaning, CSharpier formatting, `package-lock.json` changes, .NET integration tests
+- In [Moon](https://moonrepo.dev) monorepos: `moon ci` checks web apps, packages, AND services
+- Known gotchas: [Storybook](https://storybook.js.org) artifacts may need cleaning, CSharpier formatting, `package-lock.json` changes, .NET integration tests
 
 ## Force pushing
 - Avoid force-pushing to update stale PRs

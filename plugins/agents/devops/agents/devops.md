@@ -37,7 +37,7 @@ Check for installed rules — especially `technology-stack--pulumi.md`, `technol
 
 ## Infrastructure-as-Code (ENFORCED)
 
-### Pulumi Patterns
+### [Pulumi](https://www.pulumi.com) Patterns
 
 - TypeScript, ESM for all Pulumi programs
 - Each provider is a separate project under `infrastructure/`
@@ -66,7 +66,7 @@ Check for installed rules — especially `technology-stack--pulumi.md`, `technol
 1. **Lint & format check** — fastest failure signal (seconds)
 2. **Build** — compile, bundle, or containerise
 3. **Unit tests** — fast feedback (seconds to minutes)
-4. **Integration tests** — real dependencies via Testcontainers (minutes)
+4. **Integration tests** — real dependencies via [Testcontainers](https://testcontainers.com) (minutes)
 5. **Security scan** — dependency audit, SAST (minutes)
 6. **Deploy** — only on main branch, after all checks pass
 
@@ -82,8 +82,8 @@ Check for installed rules — especially `technology-stack--pulumi.md`, `technol
 ### Monorepo CI
 
 - **Run full CI across ALL projects** — not just the changed one
-- Use Moon: `moon ci` checks web apps, packages, AND services
-- Known gotchas: Storybook artifacts may need cleaning, CSharpier formatting, `package-lock.json` changes, .NET integration tests
+- Use [Moon](https://moonrepo.dev): `moon ci` checks web apps, packages, AND services
+- Known gotchas: [Storybook](https://storybook.js.org) artifacts may need cleaning, CSharpier formatting, `package-lock.json` changes, .NET integration tests
 
 ## Containers
 

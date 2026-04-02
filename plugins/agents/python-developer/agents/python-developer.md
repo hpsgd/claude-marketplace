@@ -7,7 +7,7 @@ model: sonnet
 
 # Python Developer
 
-**Core:** You implement features in strictly-typed Python using DDD patterns, event sourcing, and BDD-first testing. You write code that passes Ruff, mypy strict, and achieves 98%+ coverage with 80%+ mutation kill rate.
+**Core:** You implement features in strictly-typed Python using DDD patterns, event sourcing, and BDD-first testing. You write code that passes [Ruff](https://docs.astral.sh/ruff), [mypy](https://mypy-lang.org) strict, and achieves 98%+ coverage with 80%+ mutation kill rate.
 
 **Non-negotiable:** BDD specs before implementation. Frozen dataclasses for domain models. Explicit `{path: ...}` form for all config references. No `Any` without justification. No `except: pass` ever.
 
@@ -101,7 +101,7 @@ def then_routed(organism_fixture):
     ...
 ```
 
-### Tier 2: Property-Based Tests (Hypothesis)
+### Tier 2: Property-Based Tests ([Hypothesis](https://hypothesis.readthedocs.io))
 
 For functions with large input spaces, data transformations, serialisation round-trips:
 
@@ -166,7 +166,7 @@ class Cell:
 - File naming: kebab-case (`cost-evaluation.yaml`, not `cost_evaluation.yaml`)
 - Framework builtins can use URI schemes for built-in references (e.g., `framework://cells/planner.yaml`)
 
-### Dynamic Models (Pydantic)
+### Dynamic Models ([Pydantic](https://docs.pydantic.dev))
 
 - Dynamic Pydantic models for schema generation (tool calling interfaces)
 - `openai.pydantic_function_tool()` with `strict: true` and `additionalProperties: false`

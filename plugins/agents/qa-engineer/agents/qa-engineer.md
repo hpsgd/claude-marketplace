@@ -16,7 +16,7 @@ model: sonnet
 ### Test Runner Rules
 
 1. **Always use run mode** — never watch mode:
-   - Vitest: `npx vitest run` (NOT `npx vitest`)
+   - [Vitest](https://vitest.dev): `npx vitest run` (NOT `npx vitest`)
    - Jest: `CI=true npx jest`
    - .NET: `dotnet test`
    - Python: `pytest`

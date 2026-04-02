@@ -16,12 +16,12 @@ paths:
 - Keep test coverage for changed files above 80%
 - Extract pure functions for testability
 
-## Vitest (TypeScript)
+## [Vitest](https://vitest.dev) (TypeScript)
 - Import from `vitest`: `import { describe, expect, it, vi } from 'vitest'`
 - Module mocking: `vi.hoisted()` + `vi.mock()` for module-level mocks
 - Global stubs: `vi.stubGlobal()` for `fetch`, `document`, etc. Clean up with `vi.unstubAllGlobals()` in `afterEach`
 - No jsdom: tests run in Node — mock DOM APIs via `vi.stubGlobal` when needed
-- Coverage: `@vitest/coverage-v8` with lcov output (consumed by SonarCloud)
+- Coverage: `@vitest/coverage-v8` with lcov output (consumed by [SonarCloud](https://sonarcloud.io))
 
 ## Writing tests
 - Each test should verify one behavior — keep tests focused

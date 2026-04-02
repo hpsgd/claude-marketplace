@@ -4,7 +4,7 @@ paths:
   - "**/*.cs"
 ---
 
-# JasperFx — Wolverine & Marten
+# JasperFx — [Wolverine](https://wolverinefx.net) & [Marten](https://martendb.io)
 
 ## Wolverine Endpoints
 
@@ -60,7 +60,7 @@ Started → Handler1 → Command2
 
 ## Integration Testing with Alba
 
-- Full HTTP request/response cycle via Alba + Testcontainers PostgreSQL
+- Full HTTP request/response cycle via [Alba](https://jasperfx.github.io/alba) + [Testcontainers](https://testcontainers.com) PostgreSQL
 - Each domain has its own `AppFixture` subclass for domain-specific service replacements
 - Base class: `IntegrationContext` provides fixture, `IDocumentSession`, `IMessageBus`
 - Register stub external dependencies (e.g., `StubContentFetcher`, stub `IChatClient`) in the fixture

@@ -79,7 +79,7 @@ Acceptance criteria:
 3. **Scope word test:** Contains "all", "every", "complete"? Enumerate
 4. **Domain boundary test:** Crosses UI/API/data boundaries? One per boundary
 
-### Step 4: Prioritisation (RICE)
+### Step 4: Prioritisation ([RICE](https://www.intercom.com/blog/rice-simple-prioritization-for-product-managers))
 
 For each backlog item:
 

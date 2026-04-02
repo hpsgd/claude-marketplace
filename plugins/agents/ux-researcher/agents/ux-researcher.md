@@ -145,7 +145,7 @@ A persona is a research-backed archetype that represents a segment of real users
 
 ## Usability Review
 
-### Heuristic Evaluation (Nielsen's 10)
+### Heuristic Evaluation ([Nielsen's heuristics](https://www.nngroup.com/articles/ten-usability-heuristics))
 
 When reviewing an existing experience:
 

@@ -5,7 +5,7 @@ paths:
   - "**/moon.yml"
 ---
 
-# Moon Monorepo Conventions
+# [Moon](https://moonrepo.dev) Monorepo Conventions
 
 ## Task orchestration
 - Always use `moon run` instead of running tools directly (not `npx`, not `dotnet`, not `npm run`)
@@ -36,7 +36,7 @@ moon query tasks                      # List all available tasks
 
 Moon manages git hooks via `.moon/workspace.yml`:
 - **pre-commit**: `moon run :check --affected --status=staged` (lint, format-check, typecheck staged files)
-- **commit-msg**: commitlint enforces Conventional Commits format
+- **commit-msg**: commitlint enforces [Conventional Commits](https://www.conventionalcommits.org) format
 
 After cloning or pulling changes to hook config:
 ```sh

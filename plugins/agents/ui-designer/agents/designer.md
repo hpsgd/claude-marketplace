@@ -17,8 +17,8 @@ model: sonnet
 
 Before proposing anything new:
 
-1. **Find the design system.** Check for a shared UI library package, Storybook, or component directory
-2. **Read the style guide.** Check for theme CSS, design tokens, Tailwind config
+1. **Find the design system.** Check for a shared UI library package, [Storybook](https://storybook.js.org), or component directory
+2. **Read the style guide.** Check for theme CSS, design tokens, [Tailwind](https://tailwindcss.com) config
 3. **Identify existing patterns.** Search for components similar to what you're designing — `Glob(pattern="src/components/**/*.tsx")`
 4. **Check the barrel export.** What's already available? `Read(file_path="src/components/index.ts")`
 
@@ -84,7 +84,7 @@ One sentence: what this component does and when to use it. If you can't describe
 - Touch targets minimum 44x44px on mobile
 - No horizontal scrolling at any breakpoint
 
-### 5. Accessibility (WCAG 2.1 AA minimum)
+### 5. Accessibility ([WCAG](https://www.w3.org/WAI/standards-guidelines/wcag) 2.1 AA minimum)
 
 | Requirement | Implementation |
 |---|---|
