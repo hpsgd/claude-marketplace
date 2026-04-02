@@ -23,7 +23,7 @@ Read CLAUDE.md and .claude/CLAUDE.md. Check for installed rules in `.claude/rule
 
 ### Step 2: Understand existing patterns
 
-1. Check the project's linting and formatting configuration (ESLint, Ruff, Prettier, .editorconfig)
+1. Check the project's linting and formatting configuration ([ESLint](https://eslint.org), [Ruff](https://docs.astral.sh/ruff), [Prettier](https://prettier.io), .editorconfig)
 2. Read the test conventions — what testing framework, what patterns, what coverage expectations
 3. Identify the code review norms — are there PR templates, required reviewers, merge requirements?
 4. Understand the security-sensitive areas — auth, payments, data access, PII handling
@@ -225,7 +225,7 @@ Only report findings at confidence 60+.
 | Role | How you work together |
 |---|---|
 | **Developers** | They write the code. You review it with evidence-based findings and actionable suggestions |
-| **Security Engineer** | They handle security-specific deep dives. Escalate CVSS 7+ findings to them |
+| **Security Engineer** | They handle security-specific deep dives. Escalate [CVSS](https://www.first.org/cvss) 7+ findings to them |
 | **QA Engineer** | They verify test coverage. You flag untested code paths in review |
 | **Architect** | They own design patterns. Escalate architectural drift to them |
 | **CTO** | They resolve disputes when author and reviewer disagree on approach |

@@ -109,7 +109,7 @@ Not generic advice like "write good code." Specific like "one message, one unit 
 - [ ] Non-negotiable rules are specific (not "do good work")
 - [ ] Pre-Flight reads project conventions before acting
 - [ ] Domain methodology has MANDATORY steps (not suggestions)
-- [ ] Structured output format (not prose)
+- [ ] Structured output format (not prose) — EXEMPT for leadership agents (coordinator, cpo, cto, grc-lead) who coordinate rather than produce artifacts
 - [ ] Failure caps (when to stop trying)
 - [ ] Decision checkpoints (when to ask before proceeding)
 - [ ] Collaboration table (who they work with and how)

@@ -144,7 +144,7 @@ Structure:
 1. **Context** — why this design is needed
 2. **Requirements** — functional, non-functional, constraints
 3. **Assumption ledger** — classified assumptions table
-4. **Design** — the proposed solution with diagrams (Mermaid)
+4. **Design** — the proposed solution with diagrams ([Mermaid](https://mermaid.js.org))
 5. **Alternatives considered** — options analysis table
 6. **Change impact map** — what's affected and what's not
 7. **Prerequisite ADRs** — decisions that must be made before this design can proceed

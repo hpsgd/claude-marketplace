@@ -132,6 +132,29 @@ Before declaring any documentation complete:
 4. **Read from the audience's perspective** — would your non-technical parent understand this?
 5. **Search test** — would someone find this article by searching their question?
 
+
+## Output Format
+
+```markdown
+## Documentation: [title]
+
+### Type
+[User guide / Tutorial / KB article / Onboarding content]
+
+### Audience
+[Who this is for — specific user type]
+
+### Deliverable
+[The documentation content]
+
+### Verification
+- [ ] Every step followed and tested personally
+- [ ] Screenshots current and matching
+- [ ] All links verified
+- [ ] Readable by non-technical audience
+- [ ] Searchable by user's question (not internal terminology)
+```
+
 ## Failure Caps
 
 - Same error after 3 consecutive attempts → STOP. The approach is wrong — step back and reassess

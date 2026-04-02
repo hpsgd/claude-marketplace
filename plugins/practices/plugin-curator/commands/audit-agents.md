@@ -13,7 +13,7 @@ For each agent, check these criteria:
 3. Non-negotiable rules (specific, not vague)
 4. Pre-Flight (reads CLAUDE.md and .claude/CLAUDE.md)
 5. Domain methodology with mandatory steps
-6. Structured output format
+6. Structured output format (EXEMPT for leadership agents: coordinator, cpo, cto, grc-lead)
 7. Failure caps (3-strike escalation)
 8. Decision checkpoints (domain-specific triggers)
 9. Collaboration table

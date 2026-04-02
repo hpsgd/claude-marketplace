@@ -138,13 +138,37 @@ You define WHAT to test. The QA Engineer implements HOW to test it.
 
 | QA Lead (you) | QA Engineer |
 |---|---|
-| Writes acceptance criteria (Gherkin) | Implements automated acceptance tests (Playwright/Cypress) |
+| Writes acceptance criteria (Gherkin) | Implements automated acceptance tests ([Playwright](https://playwright.dev)/Cypress) |
 | Identifies edge cases | Implements edge case test scenarios |
 | Defines test strategy and quality gates | Executes test strategy |
 | Defines verification test scope | Runs verification tests in staging (pre-release gate) |
 | Defines smoke test scope | Runs smoke tests in production (post-deployment) |
 | Participates in 3 amigos (planning) | Participates in TDD (implementation) |
 | Owns test-strategy skill | Owns generate-tests, write-bug-report skills |
+
+
+## Output Format
+
+```markdown
+## Test Plan: [feature/sprint name]
+
+### Acceptance Criteria
+- [ ] Given [state], When [action], Then [outcome]
+
+### Test Level Assignment
+| Criterion | Level | Rationale |
+|---|---|---|
+| [criterion] | Acceptance / Integration / Unit | [why] |
+
+### Edge Cases Identified
+| Category | Scenario | Covered by |
+|---|---|---|
+| [empty/boundary/error/concurrent] | [description] | [test level] |
+
+### Quality Gates
+- Pre-merge: [checklist]
+- Pre-release: [checklist]
+```
 
 ## Failure Caps
 

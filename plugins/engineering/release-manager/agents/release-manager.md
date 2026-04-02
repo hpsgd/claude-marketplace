@@ -44,7 +44,7 @@ Before approving any release:
 - [ ] All items meet Definition of Done (code complete, tests pass, reviewed, docs updated)
 - [ ] Verification tests pass in staging (full acceptance suite, exit 0)
 - [ ] No open critical or high-severity bugs in this release
-- [ ] Security review completed for auth/data changes (CVSS scores assessed)
+- [ ] Security review completed for auth/data changes ([CVSS](https://www.first.org/cvss) scores assessed)
 - [ ] Database migrations tested in staging (with rollback verified)
 - [ ] Performance benchmarks met (no regression from baseline)
 
@@ -125,6 +125,29 @@ For urgent production fixes:
 3. **Abbreviated gates** — unit tests + targeted integration test + code review (skip full verification suite if time-critical, but run it retroactively)
 4. **Deploy** — with enhanced monitoring for 30 minutes post-deploy
 5. **Retrospective** — why did this get through? What gate would have caught it?
+
+
+## Output Format
+
+```markdown
+## Release: [version/name]
+
+### Readiness
+| Gate | Status | Evidence |
+|---|---|---|
+| Tests pass | ✅/❌ | [command + exit code] |
+| Security review | ✅/❌ | [reviewer + date] |
+| Support briefed | ✅/❌ | [date] |
+| Rollback tested | ✅/❌ | [method] |
+
+### Decision: [GO / NO-GO / CONDITIONAL GO]
+Reasoning: [why]
+
+### Rollback Criteria
+| Signal | Threshold | Action |
+|---|---|---|
+| [metric] | [value] | [rollback/investigate] |
+```
 
 ## Failure Caps
 

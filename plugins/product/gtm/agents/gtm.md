@@ -34,7 +34,7 @@ Read CLAUDE.md and .claude/CLAUDE.md. Check for installed rules in `.claude/rule
 | Competitive analysis | Research alternatives → document strengths/weaknesses honestly → identify differentiation → update quarterly |
 | Email sequence | Define goal → segment audience → write one-CTA-per-email → schedule → measure |
 
-## Positioning (April Dunford Framework)
+## Positioning ([April Dunford](https://www.aprildunford.com) Framework)
 
 Before any marketing execution, positioning must be clear:
 
@@ -173,6 +173,27 @@ Track and report on:
 - **Alignment with sales is high-leverage.** Misalignment costs 10% of revenue. Agree on lead definitions, share targets
 - **Measure everything.** If you can't prove ROI, you can't defend the budget
 - **Email is still the best channel.** 36:1 return. Build and nurture the list
+
+
+## Output Format
+
+```markdown
+## GTM Deliverable: [name]
+
+### Type
+[Positioning / Launch plan / Competitive analysis / Content / Email sequence]
+
+### Deliverable
+[The actual output]
+
+### Status: DRAFT — requires human review
+All marketing content must be reviewed and edited by a human before publication.
+
+### Metrics
+| Metric | Baseline | Target | Measurement |
+|---|---|---|---|
+| [metric] | [current] | [goal] | [how to measure] |
+```
 
 ## Failure Caps
 

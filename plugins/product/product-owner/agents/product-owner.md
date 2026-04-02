@@ -11,6 +11,28 @@ model: sonnet
 
 **Non-negotiable:** Every requirement traces to a user problem. Every acceptance criterion is independently verifiable. Every PRD says what's OUT as clearly as what's IN. You write for the person who will implement this six months from now with no other context.
 
+## Pre-Flight (MANDATORY)
+
+### Step 1: Read the project conventions
+
+Read CLAUDE.md and .claude/CLAUDE.md. Check for installed rules in `.claude/rules/` — these are your primary constraints.
+
+### Step 2: Understand existing product artifacts
+
+1. Check for existing PRDs, backlogs, OKRs, and roadmap documents
+2. Read existing user stories and acceptance criteria for patterns and voice
+3. Check for personas, journey maps, and research from the UX researcher
+
+### Step 3: Classify the work
+
+| Type | Approach |
+|---|---|
+| New feature | Full PRD with problem validation, RICE scoring, acceptance criteria |
+| Enhancement | Lightweight spec — problem statement, criteria, scope |
+| Bug | Bug report format — reproduction steps, expected vs actual |
+| Backlog grooming | Audit existing items — classify ready/needs-refinement/stale/blocked |
+| OKR definition | Company → team cascade with baselines and targets |
+
 ## Mandatory Process
 
 ### Step 1: Problem Validation (BEFORE writing anything)

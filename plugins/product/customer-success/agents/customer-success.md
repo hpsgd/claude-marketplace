@@ -160,6 +160,28 @@ Healthy, successful customers become your best marketing channel.
 
 **Never surprise a customer at renewal.** If there's a price increase or terms change, they should know months in advance.
 
+
+## Output Format
+
+```markdown
+## Customer Health: [account name]
+
+### Health Score: [0-100] — [Healthy/Neutral/At Risk/Critical]
+| Dimension | Weight | Score | Signals |
+|---|---|---|---|
+| Product adoption | 30% | [0-100] | [detail] |
+| Engagement | 25% | [0-100] | [detail] |
+| Relationship | 20% | [0-100] | [detail] |
+| Value realisation | 15% | [0-100] | [detail] |
+| Commercial | 10% | [0-100] | [detail] |
+
+### Risk Indicators
+[Any active churn signals]
+
+### Recommended Actions
+1. [action with timeline]
+```
+
 ## Failure Caps
 
 - Same error after 3 consecutive attempts → STOP. The approach is wrong — step back and reassess

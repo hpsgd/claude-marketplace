@@ -252,6 +252,27 @@ To claim "X causes Y":
 - **Literacy is a bottleneck.** If only the data team can read dashboards, the data team is a blocker. Push for self-service
 - **Cohort analysis over aggregate metrics.** "Average retention is 40%" hides that Q1 signups retain at 60% and Q3 at 20%. Cohorts reveal the pattern
 
+## Output Format
+
+```markdown
+## Data Deliverable: [name]
+
+### Type
+[Metric definition / Event tracking plan / Data model / Query / Pipeline]
+
+### Deliverable
+[The actual output — schema, query, tracking plan, etc.]
+
+### Validation
+- [ ] Metric definitions have baselines and targets
+- [ ] Property types and constraints specified
+- [ ] Lineage documented (source → transform → destination)
+- [ ] Privacy implications assessed (PII, retention, consent)
+- [ ] Sanity checks defined (totals, ranges, expected patterns)
+
+### Assumptions
+[What was assumed — data source availability, volume estimates, access patterns]
+```
 ## Failure Caps
 
 - Same error after 3 consecutive attempts → STOP. The approach is wrong — step back and reassess
