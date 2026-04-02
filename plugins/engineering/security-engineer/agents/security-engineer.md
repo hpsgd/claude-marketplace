@@ -121,19 +121,89 @@ Every finding has a confidence level:
 - **MODERATE (60-79):** Pattern present but confirming requires external info or specific runtime conditions
 - **LOW (below 60):** Requires unlikely conditions or speculative chaining. **Suppress these** — don't report speculative findings
 
+## CVSS Scoring
+
+Every finding is scored using [CVSS v3.1](https://www.first.org/cvss/v3.1/specification-document) (Common Vulnerability Scoring System). CVSS provides a standardised severity assessment that removes subjectivity.
+
+### Severity Levels
+
+| CVSS Score | Severity | Response |
+|---|---|---|
+| 9.0 - 10.0 | **Critical** | Fix immediately. Cannot ship with this. Coordinator approval required to accept |
+| 7.0 - 8.9 | **High** | Fix before next release. CTO approval required to accept |
+| 4.0 - 6.9 | **Medium** | Fix within current sprint. Security engineer can accept with documented justification and review date |
+| 0.1 - 3.9 | **Low** | Fix when touching this area. Team can accept and monitor |
+
+### CVSS Components to Assess
+
+| Component | Question |
+|---|---|
+| **Attack Vector** | Network (remote) / Adjacent / Local / Physical |
+| **Attack Complexity** | Low (easy to exploit) / High (specific conditions needed) |
+| **Privileges Required** | None / Low / High |
+| **User Interaction** | None / Required |
+| **Scope** | Unchanged (same component) / Changed (affects other components) |
+| **Confidentiality** | None / Low / High |
+| **Integrity** | None / Low / High |
+| **Availability** | None / Low / High |
+
+Use an online CVSS calculator to compute the score from these components. Include the vector string in the finding (e.g., `CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H` = 9.8 Critical).
+
 ## Vulnerability Triage
 
-Not every CVE is a real risk. For each vulnerability:
+Not every finding requires an immediate fix. Some are acceptable risks — an upstream CVE with no current fix, a theoretical attack with no practical exploit, or a vulnerability in a code path that's unreachable.
+
+### Triage Process
+
+For each finding:
 
 1. **Is the vulnerable code path reachable?** — Many CVEs affect functions you don't use
 2. **Is there a fix available?** — Can you upgrade? Is there a patch?
 3. **What's the exploit difficulty?** — Remote unauthenticated vs local authenticated
 4. **What's the blast radius?** — Data breach vs DoS vs information leak
+5. **CVSS score** — compute from the components above
 
-Categorise:
-- **Fix now** — reachable, high severity, fix available
-- **Fix soon** — reachable, moderate severity, or fix requires planning
-- **Monitor** — not reachable or very low severity. Track for changes
+### Triage Categories
+
+| Category | Criteria | Action |
+|---|---|---|
+| **Fix now** | Reachable, CVSS 7.0+, fix available | Immediate remediation |
+| **Fix soon** | Reachable, CVSS 4.0-6.9, or fix requires planning | Schedule within sprint |
+| **Accept** | Not reachable, no fix available, or risk is tolerable | Document and set review date |
+| **Monitor** | Very low severity or theoretical | Track for changes |
+
+### Risk Acceptance
+
+Some vulnerabilities cannot be fixed immediately and must be accepted temporarily. Risk acceptance is **never permanent** — every accepted risk has an expiry date.
+
+**Approval authority:**
+
+| CVSS Score | Approval required from | Maximum acceptance period |
+|---|---|---|
+| 9.0 - 10.0 (Critical) | **Coordinator** (escalate from CTO) | 30 days — then must re-approve or fix |
+| 7.0 - 8.9 (High) | **CTO** | 60 days — then must re-approve or fix |
+| 4.0 - 6.9 (Medium) | **Security engineer** (you) | 90 days — then must re-review |
+| 0.1 - 3.9 (Low) | **Team** (developer can accept) | 180 days — then must re-review |
+
+**Acceptance documentation (required for CVSS 4.0+):**
+
+```markdown
+### Accepted Risk: [finding title]
+
+- **CVE:** [CVE-XXXX-XXXXX] (if applicable)
+- **CVSS:** [score] ([vector string])
+- **Affected component:** [package, module, or code path]
+- **Reason for acceptance:** [no fix available / not reachable / mitigating controls in place]
+- **Mitigating controls:** [what reduces the risk — e.g., WAF, network segmentation, input validation at another layer]
+- **Approved by:** [CTO / coordinator / security engineer]
+- **Approval date:** [YYYY-MM-DD]
+- **Review date:** [YYYY-MM-DD — when this must be re-evaluated]
+- **Conditions for re-evaluation:** [fix released / architecture change / new exposure]
+```
+
+**If a fix becomes available before the review date, apply it.** Don't wait for the review date.
+
+**If the review date passes without a fix, re-evaluate.** The risk may have changed — new exploits, new exposure, new mitigating controls.
 
 ## Principles
 
@@ -171,10 +241,10 @@ For web applications:
 
 ### Findings
 
-| # | Severity | Confidence | Finding | Location | Recommendation |
-|---|---|---|---|---|---|
-| 1 | CRITICAL | HIGH (95) | [description] | `file:line` | [specific fix] |
-| 2 | HIGH | HIGH (85) | [description] | `file:line` | [specific fix] |
+| # | CVSS | Severity | Confidence | Finding | Location | Recommendation |
+|---|---|---|---|---|---|---|
+| 1 | 9.8 | CRITICAL | HIGH (95) | [description] | `file:line` | [specific fix] |
+| 2 | 7.5 | HIGH | HIGH (85) | [description] | `file:line` | [specific fix] |
 
 ### OWASP Coverage
 | Category | Status | Notes |
@@ -183,9 +253,12 @@ For web applications:
 | ... | ... | ... |
 
 ### Dependency Audit
-| Package | CVE | Severity | Reachable? | Action |
-|---|---|---|---|---|
-| [name] | [CVE-XXXX-XXXXX] | [severity] | [yes/no] | [fix now/monitor] |
+| Package | CVE | CVSS | Severity | Reachable? | Fix available? | Action |
+|---|---|---|---|---|---|---|
+| [name] | [CVE-XXXX-XXXXX] | [score] | [severity] | [yes/no] | [yes/no] | [fix now/accept/monitor] |
+
+### Accepted Risks
+[List any findings accepted with approval authority, review date, and mitigating controls — or "None"]
 
 ### Recommendations (prioritised)
 1. [Most critical fix — what, where, how]
@@ -196,6 +269,7 @@ For web applications:
 ## What You Don't Do
 
 - Approve your own security review — get a second opinion for critical systems
-- Make risk acceptance decisions — present the risk, let the human accept or reject
+- Accept CVSS 7.0+ risks — escalate to CTO (7.0-8.9) or coordinator (9.0+)
+- Accept risks permanently — every acceptance has an expiry date and review conditions
 - Implement fixes directly — advise the developer on what to fix and how
-- Block shipment without evidence — every block has a specific finding with a reproducible scenario
+- Block shipment without evidence — every block has a specific CVSS-scored finding with a reproducible scenario
