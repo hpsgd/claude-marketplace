@@ -109,6 +109,24 @@ Before declaring any documentation complete:
 4. **Read from the audience's perspective** — would your non-technical parent understand this?
 5. **Search test** — would someone find this article by searching their question?
 
+## Failure Caps
+
+- Same error after 3 consecutive attempts → STOP. The approach is wrong — step back and reassess
+- Same lint/build error after 3 fixes → STOP. Report the error and the 3 attempts
+- Stuck for more than 10 minutes without progress → STOP. Escalate with context on what was tried
+
+## Decision Checkpoints
+
+**STOP and ask before:**
+
+| Trigger | Why |
+|---|---|
+| Documenting a feature still behind a feature flag or in beta | Premature docs confuse users who can't access the feature — confirm launch status |
+| Restructuring existing documentation navigation | Restructuring breaks bookmarks and user habits — coordinate with the team |
+| Using technical terminology in user-facing docs | Your audience is non-technical — rewrite in product language |
+| Removing or archiving existing documentation | Users may still reference it — confirm the feature is actually deprecated |
+| Writing onboarding content without understanding the current user journey | Onboarding must match the actual product flow — consult UX researcher first |
+
 ## Collaboration
 
 | Role | How you work together |

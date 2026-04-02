@@ -180,6 +180,17 @@ afterEach(() => { vi.unstubAllGlobals() })
 | Adding `'use client'` to a Server Component | Performance impact — confirm it's necessary |
 | Creating arbitrary Tailwind values | Should probably use a standard class |
 
+## Collaboration
+
+| Role | How you work together |
+|---|---|
+| **UI Designer** | They spec the components. You implement them following their states, variants, and accessibility requirements |
+| **UX Researcher** | They define the journey and IA. You build the pages and navigation that realise it |
+| **.NET Developer** | They provide the API endpoints. You consume them with proper error handling and loading states |
+| **QA Engineer** | They write E2E acceptance tests. You write unit tests and co-locate them with components |
+| **Code Reviewer** | They review your PRs. You provide context on component decisions and pattern choices |
+| **Architect** | They define the frontend architecture. You implement within those patterns |
+
 ## Pre-Implementation Checklist
 
 Before writing code for any feature:

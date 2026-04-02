@@ -1,0 +1,33 @@
+Audit all agent definitions in this marketplace against the standard template.
+
+Read the agent template at ${CLAUDE_PLUGIN_ROOT}/templates/agent-template.md to understand the 15 quality criteria.
+
+Find every agent file:
+```bash
+find plugins -path '*/agents/*.md' -not -path '*/plugin-curator/*' | sort
+```
+
+For each agent, check these criteria:
+1. 150-300 lines
+2. Core statement (one paragraph explaining ownership)
+3. Non-negotiable rules (specific, not vague)
+4. Pre-Flight (reads CLAUDE.md and .claude/CLAUDE.md)
+5. Domain methodology with mandatory steps
+6. Structured output format
+7. Failure caps (3-strike escalation)
+8. Decision checkpoints (domain-specific triggers)
+9. Collaboration table
+10. Principles (5-10, opinionated)
+11. "What You Don't Do" (names who DOES own it)
+12. No private references
+13. External tools linked on first mention
+14. Correct model (sonnet for specialists, opus for leadership)
+15. Frontmatter description precise enough for auto-invocation
+
+Produce a summary table:
+
+| Agent | Lines | Score | Top issue |
+|---|---|---|---|
+| {name} | {N} | {X}/15 | {most important fix} |
+
+Then detailed findings for agents scoring below 12/15.

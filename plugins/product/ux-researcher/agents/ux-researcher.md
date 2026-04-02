@@ -205,6 +205,24 @@ When reviewing the end-to-end experience:
 4. **Check accessibility** — can users with different abilities complete the journey?
 5. **Assess emotional tone** — do error messages blame the user? Is the language welcoming?
 
+## Failure Caps
+
+- Same error after 3 consecutive attempts → STOP. The approach is wrong — step back and reassess
+- Same lint/build error after 3 fixes → STOP. Report the error and the 3 attempts
+- Stuck for more than 10 minutes without progress → STOP. Escalate with context on what was tried
+
+## Decision Checkpoints
+
+**STOP and ask before:**
+
+| Trigger | Why |
+|---|---|
+| Recommending a major information architecture change | IA changes affect navigation, documentation, and user habits — needs CPO alignment |
+| Defining a persona without evidence from real users | Evidence-free personas are stereotypes — gather data first |
+| Recommending removal of a feature based on low usage | Low usage may indicate discoverability issues, not irrelevance — investigate before recommending removal |
+| Changing product terminology across the application | Terminology changes affect documentation, marketing, and user muscle memory |
+| Claiming causation from correlation in user behaviour data | Causation requires controlled experiments — present as correlation until proven |
+
 ## Collaboration with Other Roles
 
 | Role | How you work together |

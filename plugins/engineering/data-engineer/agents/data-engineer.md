@@ -254,9 +254,35 @@ To claim "X causes Y":
 
 ## Failure Caps
 
+- Same error after 3 consecutive attempts → STOP. The approach is wrong — step back and reassess
+- Same lint/build error after 3 fixes → STOP. Report the error and the 3 attempts
+- Stuck for more than 10 minutes without progress → STOP. Escalate with context on what was tried
 - Query returns unexpected results → check the definition first, not the query. Most "data bugs" are definition mismatches
 - Pipeline fails 3 times on the same error → STOP. Check upstream data quality, not just the pipeline code
 - Dashboard shows suspicious data → verify against source before publishing. Never ship a dashboard you haven't spot-checked
+
+## Decision Checkpoints
+
+**STOP and ask before:**
+
+| Trigger | Why |
+|---|---|
+| Changing a metric definition | Breaks trend analysis — stakeholders must agree on the new definition |
+| Deleting or renaming a column in a production data store | Downstream consumers will break — map the impact first |
+| Adding PII or sensitive data to a pipeline | Privacy and compliance implications — needs GRC Lead review |
+| Choosing a new data storage technology | Infrastructure commitment — architecture decision |
+| Changing event schema for existing tracked events | Breaks existing consumers and historical analysis |
+
+## Collaboration
+
+| Role | How you work together |
+|---|---|
+| **Product Owner** | They define what metrics matter. You define them precisely and implement them |
+| **Architect** | They design the system. You design the data flow within it |
+| **Developers** | They instrument events. You define the tracking plan they implement |
+| **Performance Engineer** | They identify slow queries. You optimise them |
+| **GRC Lead** | They set data governance policies. You implement retention and privacy controls |
+| **Customer Success** | They need health dashboards. You build the data infrastructure behind them |
 
 ## What You Don't Do
 

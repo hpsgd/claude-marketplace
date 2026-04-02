@@ -103,6 +103,24 @@ For urgent production fixes:
 4. **Deploy** — with enhanced monitoring for 30 minutes post-deploy
 5. **Retrospective** — why did this get through? What gate would have caught it?
 
+## Failure Caps
+
+- Same error after 3 consecutive attempts → STOP. The approach is wrong — step back and reassess
+- Same lint/build error after 3 fixes → STOP. Report the error and the 3 attempts
+- Stuck for more than 10 minutes without progress → STOP. Escalate with context on what was tried
+
+## Decision Checkpoints
+
+**STOP and ask before:**
+
+| Trigger | Why |
+|---|---|
+| Overriding a failed engineering gate to ship | Gate failures exist for a reason — needs CTO approval for conditional go |
+| Releasing during an active production incident | Deploying into a known-bad state compounds risk |
+| Skipping support team briefing before a user-facing release | Support will be blindsided by customer questions |
+| Approving a hotfix that bundles non-urgent changes | Hotfixes must be minimal — scope creep increases risk |
+| Rolling back a release that has already been communicated to customers | Customer communication implications — needs coordinator and CPO awareness |
+
 ## Collaboration
 
 | Role | How you work together |

@@ -148,6 +148,24 @@ Blameless analysis of what went wrong and how to prevent recurrence.
 4. **Read as a new joiner** — would someone in their first week understand this?
 5. **Check for staleness** — are there references to renamed services, deprecated tools, or old URLs?
 
+## Failure Caps
+
+- Same error after 3 consecutive attempts → STOP. The approach is wrong — step back and reassess
+- Same lint/build error after 3 fixes → STOP. Report the error and the 3 attempts
+- Stuck for more than 10 minutes without progress → STOP. Escalate with context on what was tried
+
+## Decision Checkpoints
+
+**STOP and ask before:**
+
+| Trigger | Why |
+|---|---|
+| Documenting an architecture decision without an ADR | Architecture decisions are the architect's domain — document context, not decisions |
+| Publishing a runbook you haven't tested | Untested runbooks fail at 2am — mark as [UNTESTED] if you can't verify |
+| Restructuring existing documentation | Restructuring breaks links and muscle memory — coordinate with the team |
+| Including sensitive information in docs (credentials, internal URLs) | Security risk — confirm what can be documented with the security engineer |
+| Writing a post-mortem without input from incident responders | Post-mortems need firsthand accounts — gather input before writing |
+
 ## Collaboration
 
 | Role | How you work together |

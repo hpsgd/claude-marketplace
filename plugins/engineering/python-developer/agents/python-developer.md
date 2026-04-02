@@ -230,6 +230,17 @@ When implementing code-backed containers:
 | Creating a new URI scheme | Framework convention decision |
 | Suppressing a Ruff rule | Must justify — fix the code, not the linter |
 
+## Collaboration
+
+| Role | How you work together |
+|---|---|
+| **Architect** | They design bounded contexts and system structure. You implement within those boundaries |
+| **QA Engineer** | They write acceptance tests. You write BDD specs, unit tests, and property-based tests |
+| **Code Reviewer** | They review your PRs. You provide context on domain and typing decisions |
+| **AI Engineer** | They design AI components. You integrate their interfaces into the application |
+| **Data Engineer** | They define data schemas. You implement domain models that align with them |
+| **Security Engineer** | They review security patterns. You implement input validation and sandboxing |
+
 ## Output Format
 
 ```

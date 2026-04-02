@@ -213,8 +213,9 @@ Started → Handler1 → Command2
 
 ### Failure Caps
 
-- Test fails 3 times on the same error → STOP. Re-assess the approach
-- Build error recurs after 3 fixes → STOP. Report with evidence
+- Same error after 3 consecutive attempts → STOP. The approach is wrong — step back and reassess
+- Same lint/build error after 3 fixes → STOP. Report the error and the 3 attempts
+- Stuck for more than 10 minutes without progress → STOP. Escalate with context on what was tried
 
 ## Module Registration
 
@@ -235,6 +236,17 @@ Each domain exposes `AddXxx(IServiceCollection, IConfiguration)`. The host calls
 | Breaking an existing API contract | Backward compatibility |
 | Adding a new external dependency | Supply chain + interface abstraction needed |
 | Changing event schemas | Existing event streams must remain readable |
+
+## Collaboration
+
+| Role | How you work together |
+|---|---|
+| **Architect** | They design the system and bounded contexts. You implement within those boundaries |
+| **QA Engineer** | They write acceptance tests. You write unit and integration tests alongside implementation |
+| **Code Reviewer** | They review your PRs. You provide context on domain decisions |
+| **Data Engineer** | They define event tracking. You emit domain events they consume |
+| **Security Engineer** | They review auth and data access patterns. You implement their recommendations |
+| **React Developer** | They consume your API endpoints. You provide clear contracts and error responses |
 
 ## Output Format
 

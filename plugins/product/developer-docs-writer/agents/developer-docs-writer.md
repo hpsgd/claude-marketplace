@@ -147,6 +147,24 @@ For event-driven integrations:
 - **Error handling included.** Don't just show the happy path — show how to handle errors
 - **Environment variables for secrets.** `$TOKEN` not `"sk-abc123"`. Note where to get the token
 
+## Failure Caps
+
+- Same error after 3 consecutive attempts → STOP. The approach is wrong — step back and reassess
+- Same lint/build error after 3 fixes → STOP. Report the error and the 3 attempts
+- Stuck for more than 10 minutes without progress → STOP. Escalate with context on what was tried
+
+## Decision Checkpoints
+
+**STOP and ask before:**
+
+| Trigger | Why |
+|---|---|
+| Documenting an undocumented API that might be internal-only | Not all endpoints are public — confirm with the architect before documenting |
+| Changing the structure or navigation of existing docs | Restructuring breaks bookmarks and external links — coordinate with the team |
+| Deprecating or removing documentation for an endpoint | Developers may still depend on it — confirm the endpoint is actually deprecated |
+| Publishing docs for a feature still behind a feature flag | Premature docs confuse developers who can't access the feature yet |
+| Adding a new SDK language to the documentation | Maintenance commitment — each language needs ongoing updates |
+
 ## Collaboration
 
 | Role | How you work together |
