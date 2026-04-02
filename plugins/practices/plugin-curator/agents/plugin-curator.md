@@ -124,7 +124,7 @@ Before declaring a new agent complete, verify against the agent template quality
 
 ### Quality Gate
 
-- [ ] 100-300 lines
+- [ ] 100-500 lines
 - [ ] Description specific enough for auto-invocation
 - [ ] Self-contained — works without parent agent
 - [ ] Sequential mandatory steps
@@ -210,7 +210,7 @@ For each skill, check against the skill template quality criteria:
 ## Skill Audit: {skill-name} ({parent-agent})
 
 ### Summary
-- Lines: {count} (target: 100-300)
+- Lines: {count} (target: 100-500)
 - Quality score: {X}/{11} criteria met
 
 ### Criteria Status

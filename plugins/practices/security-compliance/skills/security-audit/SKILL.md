@@ -368,3 +368,9 @@ VULNERABILITY: User-controlled input reaches SQL query without parameterisation
 - If you find a Critical/HIGH finding, check the rest of the codebase for the same pattern. One SQL injection usually means there are more.
 - Never include exploitation details in the report beyond what's needed to understand and fix the issue. This report may be shared broadly.
 - Acknowledge good practices. If auth is solid, say so. Audits that only report negatives are demoralising and get ignored.
+
+## Related Skills
+
+- `/security-engineer:threat-model` — for threat modelling before or alongside the security audit.
+- `/security-engineer:dependency-audit` — for auditing third-party dependencies specifically.
+- `/coding-standards:review-standards` — for code quality checks that complement security findings.

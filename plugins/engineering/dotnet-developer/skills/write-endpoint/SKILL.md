@@ -356,3 +356,7 @@ Deliver:
 3. Unit test for handler logic
 4. Integration test for HTTP round-trip
 5. Evidence that tests pass (command + exit code)
+
+## Related Skills
+
+- `/dotnet-developer:write-handler` — endpoints delegate to handlers. Write the endpoint first (HTTP contract), then the handler (business logic).

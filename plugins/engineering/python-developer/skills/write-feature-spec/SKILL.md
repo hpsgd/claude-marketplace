@@ -305,3 +305,7 @@ Deliver:
 3. Shared steps moved to `conftest.py` if reusable
 4. Property-based companion test if applicable
 5. Evidence that tests pass (command + exit code)
+
+## Related Skills
+
+- `/python-developer:write-schema` — when the feature involves configuration or data contracts, write the schema after the feature spec defines the behaviour.

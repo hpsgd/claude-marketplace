@@ -219,3 +219,8 @@ For every finding, provide:
 ## Checklist Results
 [Include the completed checklist from Step 2 with Pass/Fail/N/A filled in]
 ```
+
+## Related Skills
+
+- `/ui-designer:component-spec` — when accessibility failures require component changes, update the component spec to include the fix.
+- `/ui-designer:design-review` — accessibility findings should be included in design reviews.

@@ -199,3 +199,9 @@ When to revisit: [under what conditions this becomes the best option]
 - Don't filter ideas by what's been tried before. If something was tried and failed, ask why it failed — the reason might no longer apply.
 - Quantity enables quality. Generate broadly in Step 3, evaluate ruthlessly in Step 4. Mixing generation and evaluation kills creativity.
 - Name every option. A named option is easier to discuss, reference, and decide on than "Option 3." Names should be descriptive and memorable.
+
+## Related Skills
+
+- `/council` — when creative exploration produces multiple strong options, convene a council to debate which to pursue.
+- `/first-principles` — when creative options feel constrained, decompose the problem to find assumptions that can be removed.
+- `/red-team` — stress-test the recommended option before committing.

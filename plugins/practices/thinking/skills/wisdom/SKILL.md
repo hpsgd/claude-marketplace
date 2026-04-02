@@ -102,3 +102,63 @@ Assess each frame periodically:
 - **Growing**: Updated within 7 days, 10+ observations — actively learning
 - **Stable**: Updated within 30 days — mature and reliable
 - **Stale**: Not updated in 30+ days — may need review or retirement
+
+## Rules
+
+- **Confidence must be earned.** A new observation starts at 50%. It takes 5+ consistent observations to reach crystallised (85%+). Never assign high confidence to a single data point.
+- **Anti-patterns need root causes.** "Don't do X" without explaining why is a rule, not wisdom. Always include the root cause: "Don't mock the database because it masks real integration failures."
+- **Update, don't duplicate.** When a new observation matches an existing principle, increment its observation count and confidence — don't create a new entry.
+- **Cross-domain principles are the most valuable.** A principle that appears in 3+ domains is a fundamental truth. Flag and promote these.
+- **Stale frames are worse than no frames.** A wisdom frame that hasn't been updated in 30+ days may be actively misleading. Review or archive.
+- **Predictions must be falsifiable.** "When X happens, Y usually follows" must specify what "usually" means (e.g., 8 of 10 times). Vague predictions are superstition.
+
+## Output Format
+
+### When recording:
+```markdown
+## Wisdom Updated: [domain]
+
+**Observation type:** [principle/contextual-rule/prediction/anti-pattern]
+**Added:** "[observation text]"
+**Confidence:** [N]% (based on [M] observations)
+**Frame status:** [Growing/Stable]
+**Saved to:** [file path]
+```
+
+### When querying:
+```markdown
+## Wisdom: [domain]
+
+### Applicable Principles (sorted by confidence)
+| Confidence | Principle | Observations |
+|---|---|---|
+| [N]% | [principle] | [count] |
+
+### Relevant Anti-Patterns
+- [anti-pattern] — root cause: [cause]
+
+### Predictions for Current Context
+| Pattern | Likely Response | Confidence |
+|---|---|---|
+| [request pattern] | [right response] | [N]% |
+```
+
+### When synthesising:
+```markdown
+## Cross-Domain Synthesis
+
+### Universal Principles (appear in 2+ domains)
+| Principle | Domains | Avg Confidence |
+|---|---|---|
+| [principle] | [domain1, domain2] | [N]% |
+
+### Recurring Anti-Patterns
+| Anti-Pattern | Domains | Root Cause |
+|---|---|---|
+| [pattern] | [domains] | [common cause] |
+```
+
+## Related Skills
+
+- `/learning` — individual learnings feed into wisdom frames. When 5+ learnings form a pattern, crystallise them here.
+- `/health-check` — audits wisdom frame health as part of the project health report.

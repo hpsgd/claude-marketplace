@@ -208,3 +208,41 @@ Output the complete plan as a document with:
 - The launch day checklist is a sequential run-of-show, not a grab bag. Order matters.
 - If the feature can't be feature-flagged, say so — and adjust the rollout strategy to account for the higher risk.
 - Always define what "success" looks like in numbers before launching. If you can't measure it, you can't evaluate it.
+
+## Output Format
+
+```markdown
+## Launch Plan: [feature name]
+
+### Launch Tier: [1/2/3] — [rationale]
+
+### Pre-Launch Checklist
+| # | Item | Owner | Due | Status |
+|---|---|---|---|---|
+| 1 | [task] | [person] | [date] | Pending/Done |
+
+### Rollout Strategy
+- **Stage 1:** [% of users, date, criteria to advance]
+- **Stage 2:** [% of users, date, criteria]
+- **Full rollout:** [date, criteria]
+
+### Launch Day Run-of-Show
+| Time | Action | Owner | Notes |
+|---|---|---|---|
+| [HH:MM] | [action] | [person] | [detail] |
+
+### Communication Plan
+| Audience | Channel | Message | Owner | When |
+|---|---|---|---|---|
+| [audience] | [channel] | [key message] | [person] | [date] |
+
+### Success Metrics
+| Metric | Target | Measurement method | Review date |
+|---|---|---|---|
+| [metric] | [number] | [how measured] | [when] |
+
+### Post-Launch Review
+- **Scheduled:** [date, 1–2 weeks post-launch]
+- **Attendees:** [who]
+- **Review template:** metrics vs targets, user feedback, incidents, next steps
+```

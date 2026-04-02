@@ -93,3 +93,21 @@ Report: learning density, unresolved issues, pattern candidates.
 ### Recommendations
 [specific actions to improve coverage]
 ```
+
+## Anti-Patterns
+
+See Rules below — health-check is diagnostic, not procedural, so anti-patterns are expressed as rules rather than a separate list.
+
+## Rules
+
+- **Check, don't assume.** Every health-check item must be verified with a tool call (ls, grep, read). Do not report based on memory of what was installed.
+- **Report what IS, not what SHOULD BE.** A health check describes current state. Recommendations go in a separate section, not mixed with findings.
+- **Never fabricate coverage.** If a section has no data (e.g., no wisdom frames exist), report "none found" — do not skip the section.
+- **Staleness is a finding.** A rule installed 6 months ago with no updates is worth flagging. A memory referencing a deleted file is worth flagging.
+- **Quantify everything.** "Some rules installed" is not a finding. "7 rules installed (5 from marketplace, 2 project-specific, 1 stale)" is.
+- **Privacy-aware.** Memory files may contain user preferences or feedback. Report counts and types, not contents, unless the user asks for detail.
+
+## Related Skills
+
+- `/learning` — the learning system this health check audits. Use to capture new learnings.
+- `/wisdom` — the wisdom frame system this health check audits. Use to record or query wisdom.

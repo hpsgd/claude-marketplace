@@ -218,3 +218,7 @@ Present the groomed backlog as a structured document:
 ```
 
 Write the output to a file if the backlog is file-based. Otherwise, present it directly.
+
+## Related Skills
+
+- `/product-owner:write-user-story` — expand high-priority backlog items into detailed user stories with acceptance criteria.

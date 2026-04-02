@@ -225,3 +225,5 @@ Deliver:
 5. Root cause analysis (or investigation plan if ongoing)
 6. Post-mortem document (for SEV-1/SEV-2)
 7. Prioritised action items with owners and deadlines
+
+Use the runbook template (`templates/runbook.md`) for creating runbooks referenced during incidents.

@@ -229,3 +229,8 @@ Scenario: [Edge case]
 ```
 
 Write the output to a file if writing more than 3 stories: `docs/stories-[feature-name].md`.
+
+## Related Skills
+
+- `/product-owner:groom-backlog` — groom the backlog to identify which items need user stories written.
+- `/product-owner:write-prd` — user stories implement requirements from the PRD. Reference the PRD for context.

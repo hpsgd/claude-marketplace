@@ -178,3 +178,8 @@ End with explicit guidance:
 ## Output Format
 
 Present the spec as a single structured document using the sections above. If a section is not applicable to this component, include it with "N/A — [reason]" rather than omitting it. Missing sections cause implementation gaps.
+
+## Related Skills
+
+- `/ui-designer:design-review` — review the implemented component against this spec.
+- `/ui-designer:accessibility-audit` — audit the component for WCAG compliance after implementation.

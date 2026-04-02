@@ -274,3 +274,8 @@ Style preferences, minor inconsistencies, optimisations.
 - **Approve**: No blockers, suggestions are minor
 - **Approve with changes**: No blockers, but suggestions should be addressed in a follow-up
 - **Request changes**: Has blockers that must be fixed before merge
+
+## Related Skills
+
+- `/ui-designer:component-spec` — review the design against the component spec to catch deviations.
+- `/ui-designer:accessibility-audit` — run an accessibility audit alongside the design review for UI changes.

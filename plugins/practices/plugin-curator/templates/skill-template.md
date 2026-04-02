@@ -60,14 +60,14 @@ Each step should produce a verifiable output. -->
 ---
 
 <!-- QUALITY CRITERIA (used by plugin-curator audit):
-- [ ] 100-300 lines
+- [ ] 100-500 lines (under 100 is a stub; over 500 is trying to be an agent)
 - [ ] Description specific enough for auto-invocation matching
 - [ ] Self-contained — works without reading the parent agent first
 - [ ] Sequential mandatory steps (not suggestions or options)
 - [ ] Each step produces a verifiable output
 - [ ] Rules section with specific imperatives and anti-patterns
 - [ ] Structured output format (not "present your findings")
-- [ ] References related skills where appropriate
+- [ ] References related skills where a genuine workflow dependency exists (not just shared parent)
 - [ ] Generic examples only (no private/internal references)
 - [ ] External tools linked on first mention
 - [ ] argument-hint tells user what to provide

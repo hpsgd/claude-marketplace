@@ -249,3 +249,7 @@ Rank every finding by impact:
 2. [Second highest]
 3. [Third highest]
 ```
+
+## Related Skills
+
+- `/react-developer:component-from-spec` — when performance issues require rebuilding a component, use the component spec skill to design the replacement.

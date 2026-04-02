@@ -95,3 +95,49 @@ If the user has the learning skill available, capture insights there.
 - **Mark progress immediately** — update criteria as they pass, not at the end
 - **Document decisions** — non-obvious choices documented as they're made
 - **Stay within scope** — the criteria define the work. Don't expand beyond them
+
+## Output Format
+
+```markdown
+## Execution: [task name]
+
+### Phase 1: OBSERVE
+**Effort level:** [Standard/Extended/Advanced/Deep/Comprehensive]
+**ISC Count:** [N] criteria
+
+#### Ideal State Criteria
+- [ ] ISC-1: [criterion]
+- [ ] ISC-2: [criterion]
+- [ ] ISC-N: [criterion]
+
+### Phase 2: THINK
+**Riskiest assumptions:**
+1. [assumption] — impact if wrong: [impact]
+
+**Premortem failures:**
+1. [failure mode] — mitigation: [action]
+
+### Phase 3: PLAN
+[Sequenced work items]
+
+### Phase 5: EXECUTE
+Progress: [X]/[N] criteria met
+- [x] ISC-1: [evidence]
+- [ ] ISC-2: [in progress]
+
+### Phase 6: VERIFY
+| Criterion | Status | Evidence |
+|---|---|---|
+| ISC-1 | ✅ | [tool output or file reference] |
+| ISC-2 | ✅ | [evidence] |
+
+### Phase 7: LEARN
+- [What went well]
+- [What to do differently]
+```
+
+## Related Skills
+
+- `/isc` — the criteria decomposition methodology used in Phase 1. Use for the Splitting Test.
+- `/learning` — capture insights from Phase 7 for future reference.
+- `/scientific-method` — for investigation tasks where the goal is understanding rather than building.

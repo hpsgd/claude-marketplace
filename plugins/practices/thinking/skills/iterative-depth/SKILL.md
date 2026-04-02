@@ -182,3 +182,8 @@ State a clear recommendation with:
 - Don't anchor on the first lens. The purpose of multi-lens analysis is to challenge your initial perspective, not confirm it. If every lens agrees with the first one, you're not trying hard enough.
 - State your confidence level honestly. An analysis with "Medium confidence due to missing user data" is more useful than one with false certainty.
 - The synthesis matters more than any individual lens. Spend at least as much effort on Step 4 as on any single lens in Step 3.
+
+## Related Skills
+
+- `/council` — when iterative-depth reveals irreconcilable tensions between lenses, convene a council to debate the trade-offs.
+- `/first-principles` — when a lens reveals that the problem framing itself is wrong, decompose to fundamentals.

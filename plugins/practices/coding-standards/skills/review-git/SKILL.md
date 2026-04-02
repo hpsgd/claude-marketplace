@@ -1,6 +1,8 @@
 ---
 name: review-git
-description: Review git conventions — commit messages, PR titles, branch model. Auto-invoked during PR and commit workflows.
+description: "Review git conventions — commit messages, PR titles, branch model, and content date integrity. Auto-invoked during PR and commit workflows."
+argument-hint: "[PR number, commit range, or branch to review]"
+user-invocable: true
 allowed-tools: Read, Grep, Glob, Bash
 ---
 
@@ -190,3 +192,8 @@ This matters for content-heavy repositories (blogs, documentation sites, changel
 ## Zero-Finding Gate
 
 If all conventions are followed: "No findings. Git review complete — all commits and PR metadata follow team conventions." Do not manufacture findings.
+
+## Related Skills
+
+- `/coding-standards:review-standards` — cross-cutting quality and writing style checks. Complements git convention review.
+- Language-specific reviews (`/coding-standards:review-dotnet`, `/coding-standards:review-python`, `/coding-standards:review-typescript`) — run alongside for code quality checks.

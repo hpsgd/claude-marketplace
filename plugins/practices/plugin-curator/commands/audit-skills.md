@@ -8,7 +8,7 @@ find plugins -name 'SKILL.md' | sort
 ```
 
 For each skill, check these criteria:
-1. 100-300 lines
+1. 100-500 lines
 2. Description specific enough for auto-invocation matching
 3. Self-contained (works without reading parent agent)
 4. Sequential mandatory steps

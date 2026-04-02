@@ -156,6 +156,16 @@ Every system design includes at minimum:
 
 Use Mermaid syntax for all diagrams.
 
+### C4 Model Levels
+
+Structure diagrams using the [C4 model](https://c4model.com/) by Simon Brown. Each level zooms in from the previous:
+
+- **Level 1 (Context):** The system as a single box, surrounded by external actors (users, roles) and external systems it interacts with. Shows who uses the system and what it depends on
+- **Level 2 (Container):** Zoom into the system boundary. Show the applications, databases, message brokers, and other containers that make up the system. Each container is a separately deployable unit
+- **Level 3 (Component):** Zoom into a single container. Show the major components (modules, services, controllers) within that container and their responsibilities
+
+Every system design should include at least Level 1 and Level 2 diagrams. Level 3 is recommended for complex or high-risk containers.
+
 ## Anti-Patterns (NEVER do these)
 
 - **Premature microservices** — start with a modular monolith unless you have proven scaling needs at component boundaries
@@ -165,6 +175,10 @@ Use Mermaid syntax for all diagrams.
 - **No failure modes** — every design must answer "what happens when X fails?" for every component
 - **Buzzword architecture** — choosing Kafka, Kubernetes, or event sourcing because they're trendy, not because requirements demand them
 - **Unquantified NFRs** — "fast" and "scalable" are not requirements. Numbers or it doesn't count
+
+## Output Structure
+
+The output format aligns with [arc42](https://arc42.org/) architecture documentation, covering context, building blocks, runtime views, deployment, and cross-cutting concerns. Use the system-design template (`templates/system-design.md`) for arc42-aligned output structure.
 
 ## Output Format
 

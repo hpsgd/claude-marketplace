@@ -285,3 +285,8 @@ COMMENT ON COLUMN users.name IS 'PII: full name. Retention: account lifetime + 3
 ## Open Questions
 [Decisions that need product/business input before finalising]
 ```
+
+## Related Skills
+
+- `/data-engineer:write-query` — queries operate on this data model. Define the model first, then write queries against it.
+- `/data-engineer:event-tracking-plan` — event data feeds into the model. Align event schemas with the data model.

@@ -33,8 +33,8 @@ Before writing any schema:
    ```
 
 3. **Identify the validation library:**
-   - JSON Schema with `jsonschema` or `referencing`
-   - Pydantic v2 with `model_validate`
+   - JSON Schema with [`jsonschema`](https://python-jsonschema.readthedocs.io/) or [`referencing`](https://referencing.readthedocs.io/)
+   - [Pydantic](https://docs.pydantic.dev/) v2 with `model_validate`
    - Both (Pydantic generates JSON Schema via `model_json_schema()`)
 
 ### Step 2: JSON Schema Design
@@ -393,3 +393,8 @@ Deliver:
 2. Validation tests — at least 3 valid inputs, 3 invalid inputs
 3. Example configuration file showing valid usage
 4. Migration notes if replacing or evolving an existing schema
+
+## Related Skills
+
+- `/python-developer:write-feature-spec` — for defining the feature behaviour that the schema validates. Write the spec first, then the schema.
+- `/architect:api-design` — for API contract design that schemas enforce.

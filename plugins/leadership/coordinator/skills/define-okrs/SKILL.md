@@ -186,3 +186,7 @@ At the end of the period, each KR is scored on a 0-1 scale:
 ```
 
 Write the output to a file: `docs/okrs-[team-or-initiative]-[period].md`.
+
+## Related Skills
+
+- `/coordinator:decompose-initiative` — decompose the initiative into workstreams before defining OKRs. Decompose first (who does what), then define OKRs (how we measure success).

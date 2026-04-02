@@ -221,3 +221,8 @@ Write the PRD to `docs/prd-[feature-name].md`. Use the structure above as the do
 ```
 
 Every `[NEEDS CLARIFICATION]` marker is a follow-up item. List them all in a summary at the end of the document under "## Open Items Requiring Clarification."
+
+## Related Skills
+
+- `/product-owner:write-user-story` — break the PRD into implementable user stories with acceptance criteria.
+- `/product-owner:groom-backlog` — prioritise the resulting stories into the backlog using RICE scoring.

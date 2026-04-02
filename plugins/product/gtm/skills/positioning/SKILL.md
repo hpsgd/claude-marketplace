@@ -214,3 +214,8 @@ After completing the positioning, test it against these questions. If the answer
 - The customer's language always wins over internal jargon. If customers call it "email blasts," don't position around "campaign orchestration."
 - Positioning must be revisited when: you launch a major feature, a competitor shifts strategy, your target customer changes, or your win/loss reasons change.
 - Good positioning makes marketing, sales, and product decisions easier. If it doesn't help the team make decisions, it's not specific enough.
+
+## Related Skills
+
+- `/gtm:competitive-analysis` — run a competitive analysis before positioning to understand the landscape you're positioning against.
+- `/gtm:launch-plan` — positioning feeds directly into launch messaging and materials.

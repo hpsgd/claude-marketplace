@@ -1,6 +1,8 @@
 ---
 name: review-typescript
-description: Review TypeScript and Next.js code against team conventions. Auto-invoked when reviewing .ts/.tsx files.
+description: "Review TypeScript and Next.js code against team conventions — type safety, component patterns, API routes, testing, and bundle hygiene. Auto-invoked when reviewing .ts/.tsx files."
+argument-hint: "[files, PR, or git range to review]"
+user-invocable: true
 allowed-tools: Read, Grep, Glob, Bash
 paths:
   - "**/*.ts"
@@ -184,3 +186,8 @@ Skip if the project does not use Tailwind.
 ## Zero-Finding Gate
 
 If everything passes, say so: "No findings. TypeScript review complete — all changed files comply with team standards." Do not invent issues.
+
+## Related Skills
+
+- `/coding-standards:review-standards` — cross-cutting quality and writing style checks that apply to all languages. Run alongside this review.
+- `/coding-standards:review-git` — commit message and PR conventions. Run when reviewing a PR.

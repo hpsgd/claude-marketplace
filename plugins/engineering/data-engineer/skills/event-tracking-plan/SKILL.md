@@ -225,3 +225,8 @@ For each event, specify where in the code to add tracking:
 3. `report_exported` (value)
 4. `subscription_upgraded` (revenue)
 ```
+
+## Related Skills
+
+- `/data-engineer:data-model` — event schemas must align with the data model. Define or update the model when adding new events.
+- `/data-engineer:write-query` — tracked events become queryable data. The tracking plan defines what analysts can later query.

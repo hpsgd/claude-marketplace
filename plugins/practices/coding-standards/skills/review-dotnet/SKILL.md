@@ -1,6 +1,8 @@
 ---
 name: review-dotnet
-description: Review .NET / C# code against team conventions. Auto-invoked when reviewing .cs files.
+description: "Review .NET / C# code against team conventions — messaging architecture, API design, testing, dependency management, and analyser compliance. Auto-invoked when reviewing .cs files."
+argument-hint: "[files, PR, or git range to review]"
+user-invocable: true
 allowed-tools: Read, Grep, Glob, Bash
 paths:
   - "**/*.cs"
@@ -181,3 +183,8 @@ The foundational rule: every message handler performs exactly one unit of work. 
 ## Zero-Finding Gate
 
 If all checks pass: "No findings. .NET review complete — all changed files comply with team conventions." Do not fabricate issues.
+
+## Related Skills
+
+- `/coding-standards:review-standards` — cross-cutting quality and writing style checks that apply to all languages. Run alongside this review.
+- `/coding-standards:review-git` — commit message and PR conventions. Run when reviewing a PR.

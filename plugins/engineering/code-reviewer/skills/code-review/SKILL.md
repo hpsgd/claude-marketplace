@@ -184,3 +184,7 @@ If the code is clean, say so. "No findings across all four passes. The change is
 - "Consider whether..." is not a finding. Either it is a problem or it is not.
 - Performance concerns without measurement or obvious complexity analysis are noise.
 - Style preferences that are not codified in team standards are not findings.
+
+## Related Skills
+
+- `/code-reviewer:pr-create` — for creating PRs after review is complete or when the user needs to submit their changes.

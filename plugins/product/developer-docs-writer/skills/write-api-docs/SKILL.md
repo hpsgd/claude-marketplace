@@ -305,3 +305,12 @@ If any endpoint accepts file uploads, document:
 - If the implementation disagrees with an OpenAPI spec, document the implementation and flag the discrepancy.
 - If an endpoint has undocumented behaviour (e.g., it returns different fields based on permissions), document it — these are the things developers waste hours discovering.
 - Write for the developer who has never seen this API before. They should be able to make their first successful request within 5 minutes of reading.
+
+## Output Format
+
+The output is one instance of the endpoint template from Step 4 per endpoint, wrapped by the overview sections from Step 3. See Step 3 and Step 4 above for the exact structure.
+
+## Related Skills
+
+- `/developer-docs-writer:write-sdk-guide` — for SDK-level documentation that wraps the API. Write the API reference first, then the SDK guide.
+- `/developer-docs-writer:write-integration-guide` — for step-by-step integration tutorials that use the API.

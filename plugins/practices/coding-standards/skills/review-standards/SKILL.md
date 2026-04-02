@@ -1,6 +1,8 @@
 ---
 name: review-standards
-description: Review code changes against general quality and writing style standards. Auto-invoked during code review for cross-cutting concerns.
+description: "Review code changes against general quality and writing style standards — cross-cutting concerns that apply to every language and file type. Auto-invoked during code review."
+argument-hint: "[files, PR, or git range to review]"
+user-invocable: true
 allowed-tools: Read, Grep, Glob, Bash
 ---
 
@@ -132,3 +134,8 @@ Severity levels:
 ## Zero-Finding Gate
 
 If you find zero issues, state that explicitly: "No findings. All changed files pass general standards review." Do not manufacture findings to appear thorough.
+
+## Related Skills
+
+- Language-specific reviews for deeper checks: `/coding-standards:review-dotnet`, `/coding-standards:review-python`, `/coding-standards:review-typescript`
+- `/coding-standards:review-git` — commit message and PR conventions. Run alongside when reviewing PRs.

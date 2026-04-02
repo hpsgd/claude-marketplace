@@ -251,3 +251,7 @@ Deliver:
 3. Export from the appropriate barrel file (`index.ts`)
 4. Any extracted sub-components (skeleton, empty state)
 5. Evidence that tests pass (command + exit code)
+
+## Related Skills
+
+- `/ui-designer:component-spec` — this skill consumes the component spec as input. Write the spec first, then build the component from it.

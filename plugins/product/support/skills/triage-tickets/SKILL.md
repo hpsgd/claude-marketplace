@@ -159,3 +159,8 @@ After the table, list:
 - Always preserve the user's original language in the summary — do not sanitise or corporate-speak their words.
 - If a ticket contains multiple issues, split it into separate entries in the triage table.
 - Every Critical and High ticket MUST have a recommended next action, not just a routing destination.
+
+## Related Skills
+
+- `/support:feedback-synthesis` — after triaging a batch, synthesise recurring themes into product feedback.
+- `/support:write-kb-article` — when triage reveals a common user issue, write a KB article to reduce future ticket volume.

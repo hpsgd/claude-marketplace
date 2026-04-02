@@ -243,3 +243,7 @@ Deliver:
 2. Any supporting scripts referenced by the pipeline
 3. `.dockerignore` or equivalent if building containers
 4. Brief explanation of stage ordering and caching decisions
+
+## Related Skills
+
+- `/devops:write-dockerfile` — pipelines that build containers need a Dockerfile. Ensure the pipeline's build stage matches the Dockerfile's target.

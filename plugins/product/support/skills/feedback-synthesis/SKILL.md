@@ -128,3 +128,8 @@ List any single data points that didn't fit into themes but are worth noting (no
 - Quantify everything. "Users are unhappy" is not a finding. "23 of 45 feedback items (51%) express frustration with search" is.
 - Distinguish between what users say they want (stated needs) and what their behaviour suggests they need (latent needs). Note the distinction when relevant.
 - If the sample size is small (<30 data points), caveat conclusions explicitly: "Based on a small sample — validate before acting."
+
+## Related Skills
+
+- `/support:triage-tickets` — triaged tickets are the primary input for feedback synthesis. Triage first, then synthesise.
+- `/support:write-kb-article` — when synthesis reveals a recurring user problem, write a KB article to address it.

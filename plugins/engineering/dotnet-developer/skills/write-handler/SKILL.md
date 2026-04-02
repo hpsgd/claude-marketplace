@@ -362,3 +362,7 @@ Deliver:
 3. Unit test with NSubstitute mocks
 4. Integration test via Alba or message invocation
 5. Evidence that tests pass (command + exit code)
+
+## Related Skills
+
+- `/dotnet-developer:write-endpoint` — handlers are invoked by endpoints. If the handler needs a new HTTP entry point, create the endpoint first.

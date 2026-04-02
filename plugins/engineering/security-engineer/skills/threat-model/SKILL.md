@@ -239,3 +239,10 @@ After mitigations, reassess:
 - Next review: [date or trigger event]
 - Review triggers: [new features, architecture changes, incidents]
 ```
+
+## Related Skills
+
+- `/security-engineer:security-review` — validate that modelled threats have adequate mitigations in the code.
+- `/security-engineer:dependency-audit` — check that third-party components in the threat surface aren't themselves vulnerable.
+
+Use the threat model template (`templates/threat-model.md`) for consistent output structure.

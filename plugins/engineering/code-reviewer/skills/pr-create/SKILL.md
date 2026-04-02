@@ -186,3 +186,7 @@ Files changed: N
 - **Many small commits**: Summarise the overall change. The individual commit messages inform the description but the PR title captures the whole.
 - **Draft PRs**: If the user says "draft" or "WIP", add `--draft` to the `gh pr create` command.
 - **Cross-repo PRs**: If the base is on a different fork, use `--repo` and `--head` flags appropriately.
+
+## Related Skills
+
+- `/code-reviewer:code-review` — run a code review before creating the PR to catch issues early.

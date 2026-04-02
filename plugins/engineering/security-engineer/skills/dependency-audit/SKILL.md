@@ -98,6 +98,7 @@ Classify every vulnerability into one of four categories:
 - Every "Accept" has an owner and a review date. Accepted risks don't disappear — they're re-evaluated
 - "Fix now" means stop what you're doing and fix it. Not "add to backlog"
 - If a vulnerability has no fix available and IS reachable, evaluate workarounds (remove the dependency, add input validation upstream, use an alternative)
+- Use [SLSA](https://slsa.dev/) (Supply-chain Levels for Software Artifacts) as the framework for verifying supply chain integrity — assess dependencies against SLSA levels for build provenance and source integrity
 
 ### Step 5: CVE Assessment Detail
 
@@ -218,3 +219,8 @@ Flag any licenses incompatible with the project's license:
 - **Database version:** [date of vulnerability database]
 - **Command output:** [summary or link to full output]
 ```
+
+## Related Skills
+
+- `/security-engineer:threat-model` — dependency vulnerabilities are attack surface. Feed high-severity findings into the threat model.
+- `/security-engineer:security-review` — when a vulnerable dependency is used in security-sensitive code, review the usage patterns.

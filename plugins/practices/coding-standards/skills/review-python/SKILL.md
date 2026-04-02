@@ -1,6 +1,8 @@
 ---
 name: review-python
-description: Review Python code against team conventions. Auto-invoked when reviewing .py files.
+description: "Review Python code against team conventions — type safety, data modelling, testing, linting, configuration, and code structure. Auto-invoked when reviewing .py files."
+argument-hint: "[files, PR, or git range to review]"
+user-invocable: true
 allowed-tools: Read, Grep, Glob, Bash
 paths:
   - "**/*.py"
@@ -223,3 +225,8 @@ Tests follow a BDD-style hierarchy: describe the context, then the behavior.
 ## Zero-Finding Gate
 
 If everything passes: "No findings. Python review complete — all changed files comply with team standards." Do not invent issues to appear thorough.
+
+## Related Skills
+
+- `/coding-standards:review-standards` — cross-cutting quality and writing style checks that apply to all languages. Run alongside this review.
+- `/coding-standards:review-git` — commit message and PR conventions. Run when reviewing a PR.

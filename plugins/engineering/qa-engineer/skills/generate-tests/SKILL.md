@@ -248,3 +248,8 @@ Deliver:
 2. Any required test fixtures or factories
 3. Evidence table with commands and exit codes
 4. List of any test cases intentionally deferred (with justification)
+
+## Related Skills
+
+- `/qa-engineer:write-bug-report` — when tests reveal defects, write a structured bug report.
+- `/qa-lead:test-strategy` — for defining the overall test strategy before generating individual tests.

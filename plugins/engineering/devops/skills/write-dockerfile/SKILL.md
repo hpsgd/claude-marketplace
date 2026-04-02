@@ -292,3 +292,7 @@ Deliver:
 2. `.dockerignore` file
 3. Brief explanation of stage strategy and base image choice
 4. Any `docker-compose.yml` additions needed for local development
+
+## Related Skills
+
+- `/devops:write-pipeline` — the CI/CD pipeline builds and pushes the Docker image. Update the pipeline when the Dockerfile changes.

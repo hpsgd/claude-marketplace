@@ -254,3 +254,10 @@ Choose one and apply consistently:
 ## Versioning
 [Strategy and migration plan]
 ```
+
+## Related Skills
+
+- `/architect:system-design` — the API contract defined here feeds into the system design. Design the API first, then the system that implements it.
+- `/architect:write-adr` — document significant API design decisions (e.g., REST vs GraphQL, pagination strategy) as ADRs.
+
+Use the api-design template (`templates/api-design.md`) as the output structure.

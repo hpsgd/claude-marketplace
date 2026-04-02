@@ -128,3 +128,8 @@ KB articles are living documents. Include this maintenance note at the bottom:
 - **Staleness check**: If this article has not been verified in 90 days, flag it for review.
 - **Helpfulness tracking**: If available, track article views vs. support tickets on the same topic. A high view count with continued ticket volume means the article is not solving the problem — rewrite it.
 - **Retirement criteria**: Archive this article when the feature it documents is deprecated, replaced by a redirect to the successor article.
+
+## Related Skills
+
+- `/support:triage-tickets` — KB articles reduce ticket volume. When a triaged topic has high recurrence, write an article.
+- `/support:feedback-synthesis` — feedback synthesis identifies the topics that most need KB coverage.

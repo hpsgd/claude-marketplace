@@ -132,3 +132,8 @@ Write to the project's ADR directory (check for existing location: `docs/adr/`, 
 File naming: `NNNN-kebab-case-title.md` (e.g., `0005-use-postgresql-bytea-for-content.md`)
 
 After writing, update any index file if one exists.
+
+## Related Skills
+
+- `/architect:evaluate-technology` — use when the ADR requires a technology comparison. Evaluate first, then record the decision as an ADR.
+- `/architect:system-design` — system designs often produce ADR-worthy decisions. Reference ADRs from the system design's key decisions table.

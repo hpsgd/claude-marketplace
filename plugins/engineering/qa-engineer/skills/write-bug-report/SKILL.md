@@ -169,3 +169,7 @@ $ echo $?
 ## Output
 
 Deliver the complete bug report using the template above. Every field must be filled or explicitly marked as "under investigation". Empty sections are not acceptable.
+
+## Related Skills
+
+- `/qa-engineer:generate-tests` — when tests reveal defects, write a bug report. When a bug is fixed, add a regression test.

@@ -125,3 +125,10 @@ Not every feature needs all levels. A utility function needs unit tests. A payme
 ### Recommendations
 [Prioritised improvements]
 ```
+
+## Related Skills
+
+- `/qa-engineer:generate-tests` — generate individual tests based on this strategy. Define strategy first, then generate tests.
+- `/qa-engineer:write-bug-report` — for documenting defects found during test execution.
+
+Use the test strategy template (`templates/test-strategy.md`) for consistent output structure.

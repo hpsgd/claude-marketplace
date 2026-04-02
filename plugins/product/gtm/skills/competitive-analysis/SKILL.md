@@ -78,7 +78,7 @@ Rules for competitor research:
 - **Strengths must be honest.** Dismissing competitors' strengths is dangerous. If they're winning deals, there's a reason.
 - **Weaknesses must be specific.** "Bad UX" is not a weakness. "Requires a 45-minute setup wizard with 23 configuration fields before first use" is.
 - **Pricing must be current.** State the date you checked. Pricing changes.
-- **Evidence over opinion.** Cite user reviews, G2/Capterra ratings, public complaints, documented limitations — not your gut feeling.
+- **Evidence over opinion.** Cite user reviews, [G2](https://www.g2.com)/[Capterra](https://www.capterra.com) ratings, public complaints, documented limitations — not your gut feeling.
 
 ## Step 3 — Build the comparison table
 
@@ -193,3 +193,8 @@ Deliver the analysis in this order:
 - Be honest about where you lose. The analysis is for internal strategy, not marketing copy. Lying to yourself is the most expensive kind of lying.
 - Update this analysis quarterly. Competitive landscapes change. A 6-month-old competitive analysis is a liability, not an asset.
 - When information is unavailable, say so. "Unknown" is better than a guess presented as fact.
+
+## Related Skills
+
+- `/gtm:positioning` — use competitive analysis findings to sharpen positioning. Analysis informs where you differentiate; positioning articulates it.
+- `/gtm:launch-plan` — competitive context shapes launch messaging and timing.

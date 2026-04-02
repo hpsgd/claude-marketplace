@@ -113,3 +113,12 @@ Request: "Update the README, fix the broken links, and remove references to Chri
 - [ ] ISC-3: No references to "Chris" in README (`grep -i chris README.md` returns nothing)
 - [ ] ISC-4: No changes to files other than README.md
 - [ ] ISC-5: Content unrelated to the update is unchanged (diff shows only targeted changes)
+
+## Output Format
+
+The output is the ISC checklist produced in Step 5 — each criterion as a checkable item with its verification command. See the example in Step 5 above.
+
+## Related Skills
+
+- `/algorithm` — ISC decomposition is Phase 1 of the algorithm. Use the full algorithm for execution after defining criteria.
+- `/scientific-method` — when criteria require investigation or experimentation to verify.

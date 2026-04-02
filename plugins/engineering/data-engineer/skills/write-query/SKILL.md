@@ -79,6 +79,15 @@ Before joining tables, understand the data:
 - Check for partitioning — always filter on the partition key first (cost and performance)
 - Check for data freshness — when was the table last updated?
 
+### dbt Projects
+
+If working in a [dbt](https://www.getdbt.com/) project, follow the [dbt style guide](https://docs.getdbt.com/best-practices/how-we-style/0-how-we-style-our-dbt-projects):
+
+- **Model naming conventions:** `stg_` (staging), `int_` (intermediate), `fct_` (fact), `dim_` (dimension)
+- **Use `ref()` and `source()`** instead of direct table references — never hardcode schema-qualified table names
+- **Materialisation strategy:** views for staging models, tables for mart models, incremental for large fact tables
+- **One model per file,** one CTE per logical step, with a final `SELECT` at the end
+
 ### Step 4: Query Architecture (CTEs over subqueries)
 
 Structure every query using CTEs for readability:
@@ -314,3 +323,8 @@ Deliver:
 2. Sanity check queries (at least 2)
 3. Expected result shape (columns, approximate row count, sample values)
 4. Any caveats or limitations of the analysis
+
+## Related Skills
+
+- `/data-engineer:data-model` — understand the data model before writing queries against it.
+- `/data-engineer:event-tracking-plan` — when querying event data, check the tracking plan for schema definitions and expected values.

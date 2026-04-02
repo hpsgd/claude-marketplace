@@ -1,12 +1,16 @@
 ---
 name: style-guide
-description: Apply writing style and tone guidelines when creating documentation, commit messages, PR descriptions, or user-facing text
+description: "Apply writing style and tone guidelines when creating or reviewing documentation, commit messages, PR descriptions, error messages, or user-facing text. Produces specific rewrites for every violation found."
+argument-hint: "[text to review, or 'review' to check recent output]"
+user-invocable: true
 allowed-tools: Read, Grep, Glob
 ---
 
-Apply these writing standards to all text output: documentation, commit messages, PR descriptions, comments, UI copy, error messages, and any user-facing text. When reviewing existing text, check against every rule and suggest specific rewrites.
+Apply these writing standards to all text output. When reviewing existing text, check against every rule and provide specific rewrites — not abstract feedback.
 
-## Core Principles
+## Step 1: Apply core principles (mandatory)
+
+Every piece of text must pass these five tests:
 
 1. **Say it directly.** Lead with the point. No preamble, no throat-clearing.
 2. **Say it once.** If you have made the point, move on.
@@ -14,12 +18,14 @@ Apply these writing standards to all text output: documentation, commit messages
 4. **Say it actively.** The subject does the action. Not "the file was deleted" but "the script deletes the file."
 5. **Say it plainly.** If a simpler word works, use it.
 
-## Quick Reference — Word Substitutions
+## Step 2: Scan for banned words and phrases (mandatory)
+
+### Word substitutions
 
 Replace the left column with the right:
 
 | Do not write | Write instead |
-|-------------|---------------|
+|---|---|
 | utilize | use |
 | implement | build |
 | facilitate | help, enable |
@@ -36,13 +42,10 @@ Replace the left column with the right:
 | game-changing | (describe the actual change) |
 | best practices | (say what the practice is) |
 | deep dive | look at, examine, review |
-| at the end of the day | (cut the phrase) |
 | in order to | to |
 | it should be noted | (cut — just state the thing) |
 | going forward | from now on, next |
-| a myriad of | many |
-| a plethora of | many |
-| utilize | use |
+| a myriad of / a plethora of | many |
 | optimal | best |
 | prior to | before |
 | subsequent to | after |
@@ -50,7 +53,7 @@ Replace the left column with the right:
 | due to the fact that | because |
 | at this point in time | now |
 
-## Banned Words — Hard Stops
+### Banned words — hard stops
 
 Flag every occurrence. These are AI tells and corporate filler:
 
@@ -60,109 +63,54 @@ Flag every occurrence. These are AI tells and corporate filler:
 
 No exceptions. If you find one, rewrite the sentence.
 
-## Banned Phrases — Hard Stops
-
-Flag every occurrence:
+### Banned phrases — hard stops
 
 - "It's important to note" / "It's worth mentioning" — just state the fact
-- "In today's world" / "In the modern era" / "In this day and age" — cut
+- "In today's world" / "In the modern era" — cut
 - "At its core" / "At the heart of" — state what it is directly
 - "This allows us to" / "This enables us to" — state what it does
 - "When it comes to" — cut and restructure
-- "As mentioned earlier/above" — if the reader needs the info, repeat it briefly
-- "Without further ado" — cut
-- "Let's take a look at" — just present it
-- "It goes without saying" — then do not say it
-- "Needless to say" — then do not say it
+- "As mentioned earlier/above" — repeat the info briefly if needed
+- "Without further ado" / "Let's take a look at" — just present it
+- "It goes without saying" / "Needless to say" — then don't say it
+- "Additionally" / "Furthermore" / "Moreover" — just state the next point
 
-## Sentence Structure Rules
+**Output:** List of violations found with exact locations and rewrites.
 
-1. **Active voice** — the subject performs the action:
-   - Wrong: "The configuration is loaded by the service on startup"
-   - Right: "The service loads the configuration on startup"
+## Step 3: Check sentence structure (mandatory)
 
-2. **No participial phrase openers** — do not start sentences with -ing constructions:
-   - Wrong: "Leveraging the new API, the client fetches data faster"
-   - Right: "The client fetches data faster with the new API"
-   - Wrong: "Running the migration script, the database schema updates"
-   - Right: "The migration script updates the database schema"
+| Rule | Check | Wrong | Right |
+|---|---|---|---|
+| **Active voice** | Subject performs the action | "The configuration is loaded by the service" | "The service loads the configuration" |
+| **No -ing openers** | Don't start with participial phrases | "Leveraging the new API, the client..." | "The client fetches data faster with the new API" |
+| **Sentence length** | Flag sentences over 30 words | [split into two] | [two shorter sentences] |
+| **One idea per sentence** | Split "and" connecting independent clauses | "It validates input and sends the response" | "It validates input. Then it sends the response." |
+| **Front-load key terms** | Put the subject early | "For the purpose of improving reliability, we added retry logic" | "Retry logic improves reliability" |
+| **Parallel structure** | List items use the same grammatical form | "handles auth, is logging requests, and data validation" | "handles auth, logs requests, and validates data" |
 
-3. **Vary sentence length** — mix short and medium sentences. Three consecutive sentences of the same length feel monotonous. A short sentence after a long one adds punch.
+**Output:** Structure violations with specific rewrites.
 
-4. **One idea per sentence** — if a sentence has "and" connecting two independent clauses, split it into two sentences. Compound sentences that span three lines are not sentences; they are paragraphs pretending.
+## Step 4: Check punctuation and formatting (mandatory)
 
-5. **Front-load the important word** — put the subject or key term early:
-   - Wrong: "For the purpose of improving reliability, we added retry logic"
-   - Right: "Retry logic improves reliability"
+| Rule | Limit | Action |
+|---|---|---|
+| **Em dashes** | Max 2 per document | Replace extras with periods, commas, or parentheses |
+| **Semicolons** | Use sparingly | Most should be two separate sentences |
+| **Exclamation marks** | Max 1 per document (0 is better) | They reduce credibility, not increase excitement |
+| **Oxford comma** | Always | "Red, white, and blue" not "Red, white and blue" |
+| **Paragraphs** | 1–4 sentences | A full-screen paragraph is not a paragraph |
+| **Code references** | Backticks for code | `function_name`, not function_name |
+| **Links** | Descriptive text | "See the [deployment guide](url)" not "[here](url)" |
+| **Headings** | No skipped levels | `##` then `###`, never `##` then `####` |
 
-6. **Parallel structure** — list items use the same grammatical form:
-   - Wrong: "The system handles authentication, is logging requests, and data validation"
-   - Right: "The system handles authentication, logs requests, and validates data"
+**Output:** Formatting violations with corrections.
 
-## Punctuation Rules
-
-1. **Em dashes** — maximum 2 per document. More than that means you are using them as a crutch. Replace extras with periods, commas, or parentheses.
-
-2. **Semicolons** — use sparingly. Most semicolon usage should be two separate sentences instead. Acceptable in lists where items contain commas.
-
-3. **Exclamation marks** — maximum 1 per document. Zero is better. They do not make text more exciting; they make it less credible.
-
-4. **Oxford comma** — always use it. "Red, white, and blue" not "Red, white and blue."
-
-5. **Quotation marks** — use double quotes for direct quotes, single quotes for terms used in a special sense or code references in prose (not in code blocks).
-
-## Paragraph Structure
-
-1. **Lead with the point** — the first sentence of a paragraph states its purpose. Supporting detail follows. Do not build up to the point.
-
-2. **Short paragraphs** — 1-4 sentences. A paragraph that fills a full screen is not a paragraph.
-
-3. **No transition padding** — do not start paragraphs with "Additionally", "Furthermore", "Moreover", "In addition", "That being said". Just state the next point.
-
-4. **Headings over transitions** — if you need to signal a topic change, use a heading, not a transitional sentence.
-
-## Formatting for Technical Writing
-
-1. **Code references** — use backticks for inline code, function names, file names, commands, and variable names. Do not use backticks for emphasis.
-
-2. **Lists** — use bullet points for unordered items, numbered lists for sequential steps. Do not use numbered lists for non-sequential items.
-
-3. **Headings** — use heading levels correctly. `##` for sections, `###` for subsections. Do not skip levels.
-
-4. **Links** — descriptive link text. "See the [deployment guide](url)" not "Click [here](url)".
-
-5. **Tables** — use tables for structured comparison. Do not use tables for single-column lists.
-
-## Reviewing Text — Checklist
-
-When asked to review documentation, copy, or any prose, check in this order:
-
-1. [ ] **Banned words scan** — grep or search for every word in the banned list
-2. [ ] **Banned phrases scan** — search for every phrase in the banned list
-3. [ ] **Passive voice** — read each sentence and check whether the subject acts or is acted upon
-4. [ ] **Participial openers** — check first word of each sentence for -ing forms
-5. [ ] **Sentence length** — flag sentences over 30 words
-6. [ ] **Paragraph length** — flag paragraphs over 5 sentences
-7. [ ] **Em dash count** — count total, flag if more than 2
-8. [ ] **Filler phrases** — "in order to", "it should be noted", etc.
-9. [ ] **Accuracy** — do code references match the actual codebase? Do links work?
-10. [ ] **Clarity** — could a new team member understand this on first read?
-11. [ ] **Conciseness** — can anything be cut without losing meaning?
-12. [ ] **Parallel structure** — are list items grammatically consistent?
-
-For each finding, provide:
-- The exact text that violates the rule
-- Which rule it violates
-- A specific rewrite
-
-Do not give abstract feedback ("make it more concise"). Rewrite the specific sentence.
-
-## Context-Specific Guidance
+## Step 5: Apply context-specific rules (mandatory)
 
 ### Commit messages
 - Imperative mood: "Add feature" not "Added feature"
 - First line under 70 characters
-- Body explains WHY, not WHAT
+- Body explains WHY, not WHAT (the diff shows WHAT)
 
 ### PR descriptions
 - Lead with the problem being solved
@@ -177,10 +125,46 @@ Do not give abstract feedback ("make it more concise"). Rewrite the specific sen
 ### API documentation
 - Start with what the endpoint does (one sentence)
 - Parameters: name, type, required/optional, constraints
-- Response: shape, status codes, error format
-- Example request and response
+- Include example request and response
 
 ### README files
 - First paragraph: what it is and why you would use it
 - Quick start: fewest steps to working code
-- No badges wall — one line of badges maximum
+- One line of badges maximum
+
+**Output:** Context-specific violations with rewrites.
+
+## Rules
+
+- **Rewrite, don't describe.** "Make it more concise" is not feedback. Rewrite the specific sentence.
+- **Every finding needs the exact text, the violated rule, and a specific rewrite.** No exceptions.
+- **Zero findings is valid.** If the text follows all rules, say so. Do not manufacture findings.
+- **Apply proportionally.** A quick Slack message doesn't need the full checklist. A published doc does.
+- **Preserve the author's voice.** Fix violations without rewriting the entire personality out of the text. The goal is clarity, not homogeneity.
+
+## Output Format
+
+```markdown
+## Style Review: [what was reviewed]
+
+### Findings
+
+| # | Rule violated | Original text | Rewrite |
+|---|---|---|---|
+| 1 | [rule] | "[exact text]" | "[specific rewrite]" |
+| 2 | [rule] | "[text]" | "[rewrite]" |
+
+### Summary
+- Total findings: [count]
+- Banned words: [count]
+- Structure issues: [count]
+- Formatting issues: [count]
+- Context-specific: [count]
+
+### Overall assessment
+[One sentence: is the text ready to publish, or does it need a revision pass?]
+```
+
+## Related Skills
+
+- `/coding-standards:review-standards` — for code-level quality standards (naming, structure, comments). Style-guide covers prose; review-standards covers code.

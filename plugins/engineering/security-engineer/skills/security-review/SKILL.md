@@ -10,7 +10,7 @@ Security review $ARGUMENTS.
 
 ## 6-Scan Protocol (sequential — every scan is MANDATORY)
 
-Execute all six scans in order. Do not skip a scan because you think it doesn't apply. Evidence of execution is required for each scan.
+Execute all six scans in order. Do not skip a scan because you think it doesn't apply. Evidence of execution is required for each scan. Use [OWASP ASVS 4.0](https://owasp.org/www-project-application-security-verification-standard/) as the comprehensive security verification standard (286 requirements across 14 categories, 3 verification levels).
 
 ### Scan 1: Input Validation
 
@@ -223,3 +223,10 @@ Every finding has a confidence level. This prevents false positives from polluti
 2. [Second priority]
 3. [Third priority]
 ```
+
+## Related Skills
+
+- `/security-engineer:threat-model` — review findings inform the threat model. Update threat mitigations based on review results.
+- `/security-engineer:dependency-audit` — run alongside the security review to catch vulnerable dependencies.
+
+Use the security review template (`templates/security-review.md`) for consistent output structure.
