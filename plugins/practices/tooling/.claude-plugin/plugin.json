@@ -1,0 +1,17 @@
+{
+  "name": "tooling",
+  "description": "Organisational tooling conventions — which tool for which function. Auto-loaded rules ensure agents reference the correct tools (GitHub Issues not Jira, SonarCloud not CodeClimate, etc.).",
+  "version": "0.1.0",
+  "category": "practices",
+  "agents": [],
+  "skills": [],
+  "rules": ["rules/tooling-conventions.md"],
+  "templates": ["templates/tooling-register.md"],
+  "hooks": {
+    "SessionStart": [
+      {
+        "command": "bash ${CLAUDE_PLUGIN_ROOT}/../../scripts/install-rules.sh ${CLAUDE_PLUGIN_ROOT}"
+      }
+    ]
+  }
+}

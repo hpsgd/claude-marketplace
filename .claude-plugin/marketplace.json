@@ -94,6 +94,19 @@
       ]
     },
     {
+      "name": "tooling",
+      "source": "./plugins/practices/tooling",
+      "description": "Organisational tooling conventions — which tool for which function. Ensures agents reference the correct tools.",
+      "version": "0.1.0",
+      "category": "practices",
+      "tags": [
+        "tooling",
+        "conventions",
+        "github",
+        "infrastructure"
+      ]
+    },
+    {
       "name": "coordinator",
       "source": "./plugins/leadership/coordinator",
       "description": "CEO/founder proxy — cross-team coordination, OKRs, initiative decomposition, strategic decisions spanning CPO and CTO",
