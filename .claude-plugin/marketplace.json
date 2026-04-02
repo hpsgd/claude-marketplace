@@ -81,6 +81,20 @@
       ]
     },
     {
+      "name": "plugin-curator",
+      "source": "practices/plugin-curator",
+      "description": "Plugin curator — creates, reviews, and maintains agents, skills, and rules. Enforces structural consistency.",
+      "version": "0.1.0",
+      "category": "practices",
+      "tags": [
+        "meta",
+        "curator",
+        "consistency",
+        "templates",
+        "audit"
+      ]
+    },
+    {
       "name": "coordinator",
       "source": "leadership/coordinator",
       "description": "CEO/founder proxy — cross-team coordination, OKRs, initiative decomposition, strategic decisions spanning CPO and CTO",

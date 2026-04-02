@@ -22,6 +22,7 @@ Pick what you need, or copy a block to install a whole category.
 /plugin install thinking@hpsgd
 /plugin install code-reviewer@hpsgd
 /plugin install technology-stack@hpsgd
+/plugin install plugin-curator@hpsgd
 ```
 
 **Coordinator:**
@@ -141,6 +142,7 @@ Copy into your project's `.claude/settings.json` (or `settings.local.json` for p
     "thinking@hpsgd": true,
     "code-reviewer@hpsgd": true,
     "technology-stack@hpsgd": true,
+    "plugin-curator@hpsgd": true,
     "coordinator@hpsgd": true,
     "cpo@hpsgd": true,
     "product-owner@hpsgd": true,
@@ -188,6 +190,7 @@ Plugins activate automatically. Skills are available as slash commands (e.g., `/
 | `thinking` | Skills | 11 skills: ISC, algorithm, first-principles, council, red-team, creative, iterative-depth, scientific-method, learning, wisdom, health-check |
 | `code-reviewer` | Skills + Agent | Multi-pass code review with quality scoring, and PR creation |
 | `technology-stack` | Rules | JasperFx, Next.js, Pulumi, Moon, SonarCloud, event sourcing conventions |
+| `plugin-curator` | Agent + Skills | Marketplace maintenance — create agents/skills, audit consistency, enforce templates |
 
 ### Coordinator
 
