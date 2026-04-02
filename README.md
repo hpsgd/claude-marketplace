@@ -291,12 +291,31 @@ Human (CEO/Founder)
 
 Leads coordinate their teams and escalate cross-domain issues to the human. When the CPO hits a technical question, they say "this needs the CTO's input." When leads conflict, both present their case and the human decides.
 
+## Troubleshooting
+
+### marketplace.json source paths
+
+Plugin source paths in `marketplace.json` must be prefixed with `./plugins/` (the full relative path from the repo root). Do NOT use `pluginRoot` in metadata — it doesn't resolve correctly with local directory marketplaces.
+
+```json
+{
+  "name": "my-plugin",
+  "source": "./plugins/engineering/my-plugin"
+}
+```
+
+### Skills not available via `/` slash commands
+
+Plugin skills are invoked by Claude automatically (when the description matches the context) or by asking Claude to use them (e.g., "audit all agents using the plugin-curator"). The `/plugin-name:skill-name` slash command syntax may not work for all plugin-provided skills. This is a Claude Code limitation, not a marketplace issue.
+
 ## Creating a new plugin
 
 1. Create the plugin directory under the appropriate category:
    ```
-   plugins/foundations/my-rules-plugin/    # For rules, standards, methodology
-   plugins/agents/my-agent-plugin/         # For role-based agents with skills
+   plugins/leadership/my-leader/       # Coordination and C-level agents
+   plugins/product/my-product-agent/   # Customer-facing, product, design, content
+   plugins/engineering/my-eng-agent/   # Technical implementation agents
+   plugins/practices/my-practice/      # Standards, methodology, cross-cutting rules
    ```
 
    Plugin structure:
