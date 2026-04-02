@@ -118,6 +118,20 @@
       ]
     },
     {
+      "name": "grc-lead",
+      "source": "leadership/grc-lead",
+      "description": "GRC Lead — governance, risk management, regulatory compliance, AI governance, audit readiness",
+      "version": "0.1.0",
+      "category": "leadership",
+      "tags": [
+        "governance",
+        "risk",
+        "compliance",
+        "ai-governance",
+        "audit"
+      ]
+    },
+    {
       "name": "product-owner",
       "source": "product/product-owner",
       "description": "Product owner — requirements, user stories, acceptance criteria, backlog prioritisation",
@@ -288,6 +302,20 @@
       ]
     },
     {
+      "name": "ai-engineer",
+      "source": "engineering/ai-engineer",
+      "description": "AI/ML engineer — prompt engineering, model evaluation, RAG pipelines, embeddings, AI feature implementation",
+      "version": "0.1.0",
+      "category": "engineering",
+      "tags": [
+        "ai",
+        "ml",
+        "llm",
+        "prompt-engineering",
+        "rag"
+      ]
+    },
+    {
       "name": "qa-lead",
       "source": "engineering/qa-lead",
       "description": "QA Lead — test strategy, acceptance criteria, 3 amigos, edge case identification",
@@ -311,6 +339,32 @@
         "qa",
         "automation",
         "coverage"
+      ]
+    },
+    {
+      "name": "release-manager",
+      "source": "engineering/release-manager",
+      "description": "Release manager — release coordination, deployment scheduling, rollback decisions, go/no-go gates",
+      "version": "0.1.0",
+      "category": "engineering",
+      "tags": [
+        "release",
+        "deployment",
+        "rollback",
+        "coordination"
+      ]
+    },
+    {
+      "name": "performance-engineer",
+      "source": "engineering/performance-engineer",
+      "description": "Performance engineer — load testing, profiling, capacity planning, performance budgets",
+      "version": "0.1.0",
+      "category": "engineering",
+      "tags": [
+        "performance",
+        "load-testing",
+        "profiling",
+        "capacity-planning"
       ]
     },
     {

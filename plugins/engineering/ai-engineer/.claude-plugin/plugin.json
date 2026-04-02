@@ -1,0 +1,19 @@
+{
+  "name": "ai-engineer",
+  "description": "AI/ML engineer — prompt engineering, model evaluation, RAG pipelines, embeddings, AI feature implementation.",
+  "version": "0.1.0",
+  "author": {
+    "name": "hps.gd"
+  },
+  "repository": "https://github.com/hpsgd/claude-marketplace",
+  "license": "MIT",
+  "keywords": [
+    "ai",
+    "ml",
+    "llm",
+    "prompt-engineering",
+    "rag",
+    "embeddings",
+    "model-evaluation"
+  ]
+}

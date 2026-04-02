@@ -1,0 +1,17 @@
+{
+  "name": "release-manager",
+  "description": "Release manager — release coordination, deployment scheduling, rollback decisions, release notes, and go/no-go gates.",
+  "version": "0.1.0",
+  "author": {
+    "name": "hps.gd"
+  },
+  "repository": "https://github.com/hpsgd/claude-marketplace",
+  "license": "MIT",
+  "keywords": [
+    "release",
+    "deployment",
+    "rollback",
+    "coordination",
+    "go-no-go"
+  ]
+}

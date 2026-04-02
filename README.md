@@ -43,6 +43,11 @@ Pick what you need, or copy a block to install a whole category.
 /plugin install customer-success@hpsgd
 ```
 
+**Governance:**
+```
+/plugin install grc-lead@hpsgd
+```
+
 **Engineering team agents:**
 ```
 /plugin install cto@hpsgd
@@ -50,11 +55,15 @@ Pick what you need, or copy a block to install a whole category.
 /plugin install react-developer@hpsgd
 /plugin install dotnet-developer@hpsgd
 /plugin install python-developer@hpsgd
+/plugin install ai-engineer@hpsgd
 /plugin install qa-lead@hpsgd
 /plugin install qa-engineer@hpsgd
+/plugin install release-manager@hpsgd
+/plugin install performance-engineer@hpsgd
 /plugin install devops@hpsgd
 /plugin install security-engineer@hpsgd
 /plugin install data-engineer@hpsgd
+/plugin install code-reviewer@hpsgd
 ```
 
 **Everything at once:**
@@ -76,16 +85,21 @@ Pick what you need, or copy a block to install a whole category.
 /plugin install gtm@hpsgd
 /plugin install support@hpsgd
 /plugin install customer-success@hpsgd
+/plugin install grc-lead@hpsgd
 /plugin install cto@hpsgd
 /plugin install architect@hpsgd
 /plugin install react-developer@hpsgd
 /plugin install dotnet-developer@hpsgd
 /plugin install python-developer@hpsgd
+/plugin install ai-engineer@hpsgd
 /plugin install qa-lead@hpsgd
 /plugin install qa-engineer@hpsgd
+/plugin install release-manager@hpsgd
+/plugin install performance-engineer@hpsgd
 /plugin install devops@hpsgd
 /plugin install security-engineer@hpsgd
 /plugin install data-engineer@hpsgd
+/plugin install code-reviewer@hpsgd
 ```
 
 Then reload:
@@ -138,16 +152,21 @@ Copy into your project's `.claude/settings.json` (or `settings.local.json` for p
     "gtm@hpsgd": true,
     "support@hpsgd": true,
     "customer-success@hpsgd": true,
+    "grc-lead@hpsgd": true,
     "cto@hpsgd": true,
     "architect@hpsgd": true,
     "react-developer@hpsgd": true,
     "dotnet-developer@hpsgd": true,
     "python-developer@hpsgd": true,
+    "ai-engineer@hpsgd": true,
     "qa-lead@hpsgd": true,
     "qa-engineer@hpsgd": true,
+    "release-manager@hpsgd": true,
+    "performance-engineer@hpsgd": true,
     "devops@hpsgd": true,
     "security-engineer@hpsgd": true,
-    "data-engineer@hpsgd": true
+    "data-engineer@hpsgd": true,
+    "code-reviewer@hpsgd": true
   }
 }
 ```
@@ -174,7 +193,8 @@ Plugins activate automatically. Skills are available as slash commands (e.g., `/
 
 | Plugin | Agent | Skills |
 |---|---|---|
-| `coordinator` | CEO/founder proxy — cross-team coordination, strategic decisions spanning CPO and CTO | `decompose-initiative`, `define-okrs` |
+| `coordinator` | CEO/founder proxy — cross-team coordination, strategic decisions spanning CPO, CTO, and GRC Lead | `decompose-initiative`, `define-okrs` |
+| `grc-lead` | Governance, risk, compliance — regulatory, AI governance, audit readiness, policy management | `risk-assessment`, `compliance-audit`, `ai-governance` |
 
 ### Product team agents
 
@@ -204,11 +224,15 @@ Each agent is a separate plugin — install only the ones you need.
 | `react-developer` | React/Next.js: TypeScript, Tailwind, content-collections, Vitest | `component-from-spec`, `performance-audit` |
 | `dotnet-developer` | .NET/C#: Wolverine, Marten, event sourcing, CQRS, Alba testing | `write-endpoint`, `write-handler` |
 | `python-developer` | Python: Ruff, mypy, BDD (pytest-bdd), Hypothesis, DDD | `write-feature-spec`, `write-schema` |
+| `ai-engineer` | AI/ML: prompt engineering, model evaluation, RAG, embeddings | `prompt-design`, `model-evaluation`, `rag-pipeline` |
 | `qa-lead` | Test strategy, acceptance criteria, 3 amigos, edge case identification | `test-strategy` |
-| `qa-engineer` | Test automation, test execution, coverage analysis, bug investigation | `generate-tests`, `write-bug-report` |
+| `qa-engineer` | Test automation, E2E acceptance tests, coverage, bug investigation | `generate-tests`, `write-bug-report` |
+| `release-manager` | Release coordination, go/no-go, rollback, deployment scheduling | `release-plan`, `rollback-assessment` |
+| `performance-engineer` | Load testing, profiling, capacity planning, performance budgets | `load-test-plan`, `performance-profile`, `capacity-plan` |
 | `devops` | IaC, CI/CD, deployment, monitoring, incident response | `write-pipeline`, `write-dockerfile`, `incident-response` |
-| `security-engineer` | Threat modelling, security audits, compliance, vulnerability management | `threat-model`, `security-review`, `dependency-audit` |
-| `data-engineer` | Data pipelines, analytics, event tracking, metrics | `event-tracking-plan`, `write-query`, `data-model` |
+| `security-engineer` | Threat modelling, security audits, CVSS scoring, vulnerability management | `threat-model`, `security-review`, `dependency-audit` |
+| `data-engineer` | Data pipelines, analytics, event tracking, metrics, data lineage | `event-tracking-plan`, `write-query`, `data-model` |
+| `code-reviewer` | Multi-pass code review with quality scoring and adversarial analysis | `code-review`, `pr-create` |
 
 ## How it works
 
@@ -243,19 +267,23 @@ Human (CEO/Founder)
 └── Coordinator (proxy)
     ├── CPO
     │   ├── product-owner
-    │   ├── designer
-    │   ├── technical-writer
+    │   ├── ui-designer
+    │   ├── ux-researcher
+    │   ├── user-docs-writer
+    │   ├── developer-docs-writer
+    │   ├── internal-docs-writer
     │   ├── gtm
-    │   └── support
-    └── CTO
-        ├── architect
-        ├── react-developer
-        ├── dotnet-developer
-        ├── python-developer
-        ├── qa-engineer
-        ├── devops
-        ├── security-engineer
-        └── data-engineer
+    │   ├── support
+    │   └── customer-success
+    ├── CTO
+    │   ├── architect
+    │   ├── react-developer, dotnet-developer, python-developer, ai-engineer
+    │   ├── qa-lead, qa-engineer
+    │   ├── release-manager, performance-engineer
+    │   ├── devops, security-engineer, data-engineer
+    │   └── code-reviewer
+    └── GRC Lead
+        └── (governance, risk, compliance, AI governance)
 ```
 
 Leads coordinate their teams and escalate cross-domain issues to the human. When the CPO hits a technical question, they say "this needs the CTO's input." When leads conflict, both present their case and the human decides.
