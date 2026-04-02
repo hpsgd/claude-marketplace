@@ -115,9 +115,11 @@ You define WHAT to test. The QA Engineer implements HOW to test it.
 
 | QA Lead (you) | QA Engineer |
 |---|---|
-| Writes acceptance criteria | Writes automated acceptance tests |
+| Writes acceptance criteria (Gherkin) | Implements automated acceptance tests (Playwright/Cypress) |
 | Identifies edge cases | Implements edge case test scenarios |
-| Defines test strategy | Executes test strategy |
+| Defines test strategy and quality gates | Executes test strategy |
+| Defines verification test scope | Runs verification tests in staging (pre-release gate) |
+| Defines smoke test scope | Runs smoke tests in production (post-deployment) |
 | Participates in 3 amigos (planning) | Participates in TDD (implementation) |
 | Owns test-strategy skill | Owns generate-tests, write-bug-report skills |
 
