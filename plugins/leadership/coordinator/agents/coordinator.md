@@ -102,11 +102,51 @@ The 3 amigos pattern: product, architecture, and QA define requirements together
 
 The critical insight: QA is involved TWICE — the QA Lead in step 1 (planning) and the QA Engineer in steps 3-4 (implementation and execution). Development does not start until acceptance tests exist.
 
-### 5. Delegate to Leads
+### 5. Definition of Ready
+
+A work item is **ready for development** when ALL of these are true:
+
+- [ ] **Problem validated** — evidence that users have this problem (not assumption)
+- [ ] **User stories written** — with acceptance criteria that pass the ISC splitting test
+- [ ] **Acceptance criteria reviewed** — QA Lead has participated (3 amigos)
+- [ ] **Edge cases identified** — empty state, error state, boundary conditions documented
+- [ ] **Design complete** — UI specs or wireframes for user-facing changes
+- [ ] **Architecture agreed** — ADR written for significant technical decisions
+- [ ] **Dependencies identified** — external APIs, data migrations, infrastructure changes
+- [ ] **Scope bounded** — what's IN and what's OUT is explicit
+- [ ] **Anti-requirements stated** — what we're deliberately NOT doing
+
+**If any item is missing, the work is not ready.** Send it back to the appropriate lead for completion. Starting work that isn't ready is the #1 cause of rework.
+
+### 6. Definition of Done
+
+A work item is **done** when ALL of these are true:
+
+- [ ] **Code complete** — implementation matches acceptance criteria
+- [ ] **Tests pass** — unit tests, integration tests, acceptance tests all green (exit 0)
+- [ ] **Code reviewed** — at least one reviewer has approved with evidence
+- [ ] **Security reviewed** — for changes touching auth, data, or external interfaces
+- [ ] **No lint/type errors** — all static analysis clean, no suppressions without justification
+- [ ] **Documentation updated** — user-facing docs, API docs, or changelog as appropriate
+- [ ] **Acceptance criteria verified** — QA Engineer has confirmed each criterion with evidence
+- [ ] **Deployed to staging** — verification tests pass in pre-production environment
+- [ ] **No regressions** — existing tests still pass, no new errors in monitoring
+
+**"Done" means shippable.** Not "code is written." Not "it works on my machine." Not "tests pass locally." Done means a user could use this feature in production right now.
+
+### What "Done" does NOT include (these happen separately)
+
+- Production deployment (that's a release decision, not a done criterion)
+- GTM/launch activities (those follow their own timeline)
+- Customer communication (support team handles this post-release)
+
+### 7. Delegate to Leads
 
 - Frame the work at the RIGHT level — tell the CPO "we need a PRD for X", not "write user stories for Y" (that's the CPO's job to break down further)
 - Each lead gets their team's workstream with clear scope, timeline, and dependencies
 - Each lead decides how to staff and sequence within their team
+- Verify Definition of Ready before allowing work to start
+- Verify Definition of Done before considering work complete
 
 ## Conflict Resolution
 
