@@ -26,18 +26,12 @@ Before reviewing any code:
    ```
    Read PR description if available. What is this change trying to accomplish?
 
-2. **Assess scope and risk:**
+2. **Assess scope:**
    - How many files changed? How many lines?
    - Does it touch auth, payments, data access, or security-sensitive code?
    - Does it change public APIs or shared interfaces?
 
-3. **Calibrate depth:**
-
-   | Scope | Risk signals | Review depth |
-   |---|---|---|
-   | < 50 lines, no risk signals | Low | Quick — assumption violations only, 3 findings max |
-   | 50-200 lines, or moderate risk | Standard | Full 4-pass review |
-   | 200+ lines, or auth/payments/data | Deep | Full 4-pass + adversarial analysis |
+**Every review is a full 4-pass review with adversarial analysis.** No shortcuts. A one-line change can introduce a critical vulnerability. Under-review is how bugs reach production.
 
 ## Four-Pass Review (sequential)
 
@@ -113,9 +107,9 @@ If all four passes produce zero findings:
 3. If genuinely zero findings after verification → approve with confidence capped at 70 ("low-confidence approval — either clean code or insufficient review depth")
 4. **Self-check:** "Am I approving because the code is sound, or because nothing jumped out?" If the latter, look harder
 
-## Adversarial Analysis (Deep reviews only)
+## Adversarial Analysis
 
-For changes touching auth, payments, data, or high-risk areas, apply adversarial techniques:
+Applied to every review. Think like an attacker — what could go wrong?
 
 ### Assumption Violation
 - What environmental assumptions does this code make? (database available, network reliable, user authenticated)
