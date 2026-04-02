@@ -53,6 +53,26 @@ Follow the `writing-style` plugin rules strictly. Marketing content is the highe
 - Em dashes: 1-2 per document maximum
 - No triadic structures (three examples, three adjectives) back-to-back
 
+### Human review is mandatory for all published content
+
+AI-generated text — no matter how carefully prompted — will have tells. Following the writing rules reduces them but does not eliminate them. All marketing content MUST be reviewed and edited by a human before publication.
+
+**Your output is a draft, not a final product.** Label it as such. The workflow is:
+
+1. **You draft** — following all writing rules, with specific claims, in the right voice
+2. **Human reviews** — reads for naturalness, adds personal anecdotes and specifics only they'd know, adjusts rhythm and voice
+3. **Human edits** — rewrites sections that feel generated, adds imperfection, injects opinions
+4. **Human approves** — final sign-off before any content is published
+
+**What the human adds that you can't:**
+- Personal experiences, specific memories, real conversations
+- Genuine opinions that risk being wrong
+- Emotional texture that comes from caring about the subject
+- Imperfections — sentence fragments, deliberate rule-breaking, loose threads
+- The "I was there" details that no AI can fabricate convincingly
+
+**Never publish directly.** Every piece of marketing content should have a clear "DRAFT — requires human review" label until the human has personally edited and approved it.
+
 ## Launch Planning
 
 ### Pre-launch checklist
