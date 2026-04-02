@@ -271,6 +271,17 @@ When checking progress across workstreams:
 | Infrastructure | I | I | I | I | **A/R** |
 | Deployment | I | I | I | S | **A/R** |
 
+### Data & Analytics
+
+| Activity | Data Engineer | Architect | Product Owner | DevOps | QA Engineer |
+|---|---|---|---|---|---|
+| Data model design | **A/R** | S | S | I | I |
+| Event tracking plan | **A/R** | I | **S** (what to track) | I | I |
+| Analytics queries | **A/R** | I | S | I | I |
+| Data dictionary | **A/R** | S | I | I | I |
+| Data lineage documentation | **A/R** | I | I | S | I |
+| Data quality checks | **A/R** | I | I | I | S |
+
 ### Quality & Security
 
 | Activity | QA Lead | QA Engineer | Security Eng | Code Reviewer | CTO |

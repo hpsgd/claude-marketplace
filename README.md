@@ -184,8 +184,8 @@ Plugins activate automatically. Skills are available as slash commands (e.g., `/
 
 | Plugin | Type | Description |
 |---|---|---|
-| `coding-standards` | Rules + Skills | TypeScript, .NET, Python conventions, git workflow, testing, architecture, AI steering. 7 rules, 5 review skills |
-| `writing-style` | Rules + Skills | AI tell avoidance, banned vocabulary, sentence structure, 15-point editing checklist |
+| `coding-standards` | Rules + Skills | TypeScript, .NET, Python conventions, git workflow, testing, architecture, AI steering. 10 rules, 5 review skills |
+| `writing-style` | Rules + Skills | AI tell avoidance, banned vocabulary, sentence structure, 15-point editing checklist. Skill: `style-guide` |
 | `security-compliance` | Rules + Skills | Security baseline rules and deep security audit skill |
 | `thinking` | Skills | 11 skills: ISC, algorithm, first-principles, council, red-team, creative, iterative-depth, scientific-method, learning, wisdom, health-check |
 | `code-reviewer` | Skills + Agent | Multi-pass code review with quality scoring, and PR creation |
@@ -196,8 +196,8 @@ Plugins activate automatically. Skills are available as slash commands (e.g., `/
 
 | Plugin | Agent | Skills |
 |---|---|---|
-| `coordinator` | CEO/founder proxy — cross-team coordination, strategic decisions spanning CPO, CTO, and GRC Lead | `decompose-initiative`, `define-okrs` |
-| `grc-lead` | Governance, risk, compliance — regulatory, AI governance, audit readiness, policy management | `risk-assessment`, `compliance-audit`, `ai-governance` |
+| `coordinator` | CEO/founder proxy — cross-team coordination, strategic decisions spanning CPO, CTO, and GRC Lead | `decompose-initiative`, `define-okrs`, `write-spec`, `bootstrap-project` |
+| `grc-lead` | Governance, risk, compliance — regulatory, AI governance, audit readiness, policy management | `risk-assessment`, `compliance-audit`, `ai-governance-review`, `write-dpia` |
 
 ### Product team agents
 
@@ -206,15 +206,15 @@ Each agent is a separate plugin — install only the ones you need.
 | Plugin | Agent | Skills |
 |---|---|---|
 | `cpo` | Chief Product Officer — coordinates product team, escalates to CTO for technical concerns | — |
-| `product-owner` | Requirements, user stories, acceptance criteria, backlog prioritisation | `write-prd`, `groom-backlog`, `write-user-story` |
-| `ui-designer` | Visual design, design system, component specs, accessibility | `component-spec`, `accessibility-audit`, `design-review` |
-| `ux-researcher` | Customer journeys, touchpoints, personas, usability, information architecture | `journey-map`, `usability-review`, `persona-definition` |
-| `user-docs-writer` | User guides, tutorials, KB articles, onboarding content | `write-user-guide`, `write-kb-article`, `write-onboarding` |
-| `developer-docs-writer` | API references, SDK guides, integration tutorials | `write-api-docs`, `write-sdk-guide`, `write-integration-guide` |
+| `product-owner` | Requirements, user stories, acceptance criteria, backlog prioritisation | `write-prd`, `groom-backlog`, `write-user-story`, `write-jtbd`, `write-story-map` |
+| `ui-designer` | Visual design, design system, component specs, accessibility | `component-spec`, `accessibility-audit`, `design-review`, `design-tokens` |
+| `ux-researcher` | Customer journeys, touchpoints, personas, usability, information architecture | `journey-map`, `usability-review`, `persona-definition`, `usability-test-plan`, `service-blueprint` |
+| `user-docs-writer` | User guides, tutorials, KB articles, onboarding content | `write-user-guide`, `write-kb-article`, `write-onboarding`, `content-strategy` |
+| `developer-docs-writer` | API references, SDK guides, integration tutorials | `write-api-docs`, `write-sdk-guide`, `write-integration-guide`, `write-migration-guide` |
 | `internal-docs-writer` | Architecture docs, runbooks, changelogs, post-mortems | `write-runbook`, `write-changelog`, `write-architecture-doc` |
-| `gtm` | Positioning, launch strategy, content marketing, competitive analysis | `positioning`, `launch-plan`, `competitive-analysis` |
+| `gtm` | Positioning, launch strategy, content marketing, competitive analysis | `positioning`, `launch-plan`, `competitive-analysis`, `write-battle-card` |
 | `support` | Ticket triage, feedback synthesis, knowledge base, bug escalation | `write-kb-article`, `feedback-synthesis`, `triage-tickets` |
-| `customer-success` | Health monitoring, churn prevention, expansion, onboarding quality | `health-assessment`, `churn-analysis`, `expansion-plan` |
+| `customer-success` | Health monitoring, churn prevention, expansion, onboarding quality | `health-assessment`, `churn-analysis`, `expansion-plan`, `write-qbr`, `write-onboarding-playbook` |
 
 ### Engineering team agents
 
@@ -228,12 +228,12 @@ Each agent is a separate plugin — install only the ones you need.
 | `dotnet-developer` | .NET/C#: Wolverine, Marten, event sourcing, CQRS, Alba testing | `write-endpoint`, `write-handler` |
 | `python-developer` | Python: Ruff, mypy, BDD (pytest-bdd), Hypothesis, DDD | `write-feature-spec`, `write-schema` |
 | `ai-engineer` | AI/ML: prompt engineering, model evaluation, RAG, embeddings | `prompt-design`, `model-evaluation`, `rag-pipeline` |
-| `qa-lead` | Test strategy, acceptance criteria, 3 amigos, edge case identification | `test-strategy` |
+| `qa-lead` | Test strategy, acceptance criteria, 3 amigos, edge case identification | `test-strategy`, `write-acceptance-criteria` |
 | `qa-engineer` | Test automation, E2E acceptance tests, coverage, bug investigation | `generate-tests`, `write-bug-report` |
 | `release-manager` | Release coordination, go/no-go, rollback, deployment scheduling | `release-plan`, `rollback-assessment` |
 | `performance-engineer` | Load testing, profiling, capacity planning, performance budgets | `load-test-plan`, `performance-profile`, `capacity-plan` |
-| `devops` | IaC, CI/CD, deployment, monitoring, incident response | `write-pipeline`, `write-dockerfile`, `incident-response` |
-| `security-engineer` | Threat modelling, security audits, CVSS scoring, vulnerability management | `threat-model`, `security-review`, `dependency-audit` |
+| `devops` | IaC, CI/CD, deployment, monitoring, incident response | `write-pipeline`, `write-dockerfile`, `incident-response`, `write-iac`, `write-slo` |
+| `security-engineer` | Threat modelling, security audits, CVSS scoring, vulnerability management | `threat-model`, `security-review`, `dependency-audit`, `supply-chain-audit` |
 | `data-engineer` | Data pipelines, analytics, event tracking, metrics, data lineage | `event-tracking-plan`, `write-query`, `data-model` |
 | `code-reviewer` | Multi-pass code review with quality scoring and adversarial analysis | `code-review`, `pr-create` |
 

@@ -48,7 +48,8 @@ Map the initiative across both teams. Not every workstream applies to every init
 |---|---|---|---|
 | Architecture | architect | System design, API contracts, data model, ADRs | [Yes/No] |
 | Development | [developer role] | Implementation, code review, technical spikes | [Yes/No] |
-| QA | qa-engineer | Test strategy, test plan, quality gates | [Yes/No] |
+| QA Planning | qa-lead | Test strategy, acceptance criteria, quality gates | [Yes/No] |
+| QA Execution | qa-engineer | Automated tests, test execution, bug reports | [Yes/No] |
 | DevOps | devops | Infrastructure changes, deployment plan, monitoring | [Yes/No] |
 | Security | security-engineer | Threat model, security review checkpoints | [Yes/No] |
 | Data | data-engineer | Event tracking plan, analytics, dashboard updates | [Yes/No] |
