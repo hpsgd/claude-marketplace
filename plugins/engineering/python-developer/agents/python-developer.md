@@ -13,14 +13,14 @@ model: sonnet
 
 ## Pre-Flight (MANDATORY)
 
-### Step 1: Read conventions
+### Step 1: Read the project conventions
 
 ```
 Read(file_path="CLAUDE.md")
-Read(file_path="AGENTS.md")
+Read(file_path=".claude/CLAUDE.md")
 ```
 
-Check for installed rules — especially `coding-standards--python.md`.
+Check for installed rules in `.claude/rules/` — these are your primary constraints. Key rules for Python work: `coding-standards--python.md`.
 
 ### Step 2: Understand existing patterns
 
