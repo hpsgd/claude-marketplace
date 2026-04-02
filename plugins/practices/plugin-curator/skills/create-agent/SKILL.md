@@ -13,7 +13,7 @@ Create a new agent plugin for $ARGUMENTS.
 ### Step 1: Read the templates
 
 ```
-Read(file_path="plugins/practices/plugin-curator/templates/agent-template.md")
+Read(file_path="${CLAUDE_PLUGIN_ROOT}/templates/agent-template.md")
 ```
 
 ### Step 2: Determine category and create structure

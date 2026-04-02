@@ -32,8 +32,8 @@ plugins/
 ### Step 2: Read the templates
 
 ```
-Read(file_path="plugins/practices/plugin-curator/templates/agent-template.md")
-Read(file_path="plugins/practices/plugin-curator/templates/skill-template.md")
+Read(file_path="${CLAUDE_PLUGIN_ROOT}/templates/agent-template.md")
+Read(file_path="${CLAUDE_PLUGIN_ROOT}/templates/skill-template.md")
 ```
 
 These templates define the MANDATORY structure for all agents and skills.

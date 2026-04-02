@@ -13,7 +13,7 @@ Create a new skill for $ARGUMENTS.
 ### Step 1: Read the template
 
 ```
-Read(file_path="plugins/practices/plugin-curator/templates/skill-template.md")
+Read(file_path="${CLAUDE_PLUGIN_ROOT}/templates/skill-template.md")
 ```
 
 ### Step 2: Create the skill directory and SKILL.md

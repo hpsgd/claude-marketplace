@@ -1,18 +1,17 @@
 {
   "name": "hpsgd",
-  "description": "Centralized marketplace for sharing Claude Code plugins, instructions, and configurations across teams",
   "owner": {
     "name": "hps.gd",
     "email": "hello@hps.gd"
   },
   "metadata": {
-    "version": "0.1.0",
-    "pluginRoot": "./plugins"
+    "description": "Centralized marketplace for sharing Claude Code plugins, instructions, and configurations across teams",
+    "version": "0.1.0"
   },
   "plugins": [
     {
       "name": "coding-standards",
-      "source": "practices/coding-standards",
+      "source": "./plugins/practices/coding-standards",
       "description": "Shared coding conventions for TypeScript, .NET, Python, plus git workflow, testing, architecture, and AI steering rules",
       "version": "0.1.0",
       "category": "practices",
@@ -27,7 +26,7 @@
     },
     {
       "name": "writing-style",
-      "source": "practices/writing-style",
+      "source": "./plugins/practices/writing-style",
       "description": "Tone of voice, writing style, AI tell avoidance, and communication guidelines",
       "version": "0.1.0",
       "category": "practices",
@@ -40,7 +39,7 @@
     },
     {
       "name": "security-compliance",
-      "source": "practices/security-compliance",
+      "source": "./plugins/practices/security-compliance",
       "description": "Security baseline rules and audit skills for maintaining secure code",
       "version": "0.1.0",
       "category": "practices",
@@ -53,7 +52,7 @@
     },
     {
       "name": "thinking",
-      "source": "practices/thinking",
+      "source": "./plugins/practices/thinking",
       "description": "Structured thinking and reasoning skills — first principles, ISC, algorithm, council, red team, and more",
       "version": "0.1.0",
       "category": "practices",
@@ -67,7 +66,7 @@
     },
     {
       "name": "technology-stack",
-      "source": "practices/technology-stack",
+      "source": "./plugins/practices/technology-stack",
       "description": "Framework-specific conventions for JasperFx, Pulumi, Moon, Next.js, SonarCloud, and event sourcing",
       "version": "0.1.0",
       "category": "practices",
@@ -82,7 +81,7 @@
     },
     {
       "name": "plugin-curator",
-      "source": "practices/plugin-curator",
+      "source": "./plugins/practices/plugin-curator",
       "description": "Plugin curator — creates, reviews, and maintains agents, skills, and rules. Enforces structural consistency.",
       "version": "0.1.0",
       "category": "practices",
@@ -96,7 +95,7 @@
     },
     {
       "name": "coordinator",
-      "source": "leadership/coordinator",
+      "source": "./plugins/leadership/coordinator",
       "description": "CEO/founder proxy — cross-team coordination, OKRs, initiative decomposition, strategic decisions spanning CPO and CTO",
       "version": "0.1.0",
       "category": "leadership",
@@ -109,7 +108,7 @@
     },
     {
       "name": "cpo",
-      "source": "leadership/cpo",
+      "source": "./plugins/leadership/cpo",
       "description": "Chief Product Officer — coordinates product, design, content, GTM, and support teams",
       "version": "0.1.0",
       "category": "leadership",
@@ -121,7 +120,7 @@
     },
     {
       "name": "cto",
-      "source": "leadership/cto",
+      "source": "./plugins/leadership/cto",
       "description": "Chief Technology Officer — coordinates architecture, development, QA, DevOps, security, and data engineering",
       "version": "0.1.0",
       "category": "leadership",
@@ -133,7 +132,7 @@
     },
     {
       "name": "grc-lead",
-      "source": "leadership/grc-lead",
+      "source": "./plugins/leadership/grc-lead",
       "description": "GRC Lead — governance, risk management, regulatory compliance, AI governance, audit readiness",
       "version": "0.1.0",
       "category": "leadership",
@@ -147,7 +146,7 @@
     },
     {
       "name": "product-owner",
-      "source": "product/product-owner",
+      "source": "./plugins/product/product-owner",
       "description": "Product owner — requirements, user stories, acceptance criteria, backlog prioritisation",
       "version": "0.1.0",
       "category": "product",
@@ -160,7 +159,7 @@
     },
     {
       "name": "ui-designer",
-      "source": "product/ui-designer",
+      "source": "./plugins/product/ui-designer",
       "description": "UI designer — visual design, design system, component specifications, accessibility",
       "version": "0.1.0",
       "category": "product",
@@ -174,7 +173,7 @@
     },
     {
       "name": "ux-researcher",
-      "source": "product/ux-researcher",
+      "source": "./plugins/product/ux-researcher",
       "description": "UX researcher — customer journeys, touchpoints, information architecture, usability assessment, personas",
       "version": "0.1.0",
       "category": "product",
@@ -188,7 +187,7 @@
     },
     {
       "name": "user-docs-writer",
-      "source": "product/user-docs-writer",
+      "source": "./plugins/product/user-docs-writer",
       "description": "User documentation writer — guides, tutorials, knowledge base, onboarding. Product language for non-technical audiences.",
       "version": "0.1.0",
       "category": "product",
@@ -201,7 +200,7 @@
     },
     {
       "name": "developer-docs-writer",
-      "source": "product/developer-docs-writer",
+      "source": "./plugins/product/developer-docs-writer",
       "description": "Developer documentation writer — API references, SDK guides, integration tutorials, code examples.",
       "version": "0.1.0",
       "category": "product",
@@ -214,7 +213,7 @@
     },
     {
       "name": "internal-docs-writer",
-      "source": "product/internal-docs-writer",
+      "source": "./plugins/product/internal-docs-writer",
       "description": "Internal documentation writer — architecture docs, runbooks, changelogs, onboarding, post-mortems.",
       "version": "0.1.0",
       "category": "product",
@@ -227,7 +226,7 @@
     },
     {
       "name": "gtm",
-      "source": "product/gtm",
+      "source": "./plugins/product/gtm",
       "description": "Go-to-market specialist — positioning, launch strategy, content marketing, competitive analysis",
       "version": "0.1.0",
       "category": "product",
@@ -239,7 +238,7 @@
     },
     {
       "name": "support",
-      "source": "product/support",
+      "source": "./plugins/product/support",
       "description": "Customer support — ticket triage, feedback synthesis, knowledge base, bug escalation",
       "version": "0.1.0",
       "category": "product",
@@ -251,7 +250,7 @@
     },
     {
       "name": "customer-success",
-      "source": "product/customer-success",
+      "source": "./plugins/product/customer-success",
       "description": "Customer Success Manager — health monitoring, churn prevention, expansion, onboarding quality",
       "version": "0.1.0",
       "category": "product",
@@ -265,7 +264,7 @@
     },
     {
       "name": "architect",
-      "source": "engineering/architect",
+      "source": "./plugins/engineering/architect",
       "description": "Software architect — system design, ADRs, technology evaluation, API strategy",
       "version": "0.1.0",
       "category": "engineering",
@@ -278,7 +277,7 @@
     },
     {
       "name": "react-developer",
-      "source": "engineering/react-developer",
+      "source": "./plugins/engineering/react-developer",
       "description": "React/Next.js developer — TypeScript, Tailwind, content-collections, react-pdf, Vitest",
       "version": "0.1.0",
       "category": "engineering",
@@ -291,7 +290,7 @@
     },
     {
       "name": "dotnet-developer",
-      "source": "engineering/dotnet-developer",
+      "source": "./plugins/engineering/dotnet-developer",
       "description": ".NET/C# developer — Wolverine, Marten, event sourcing, CQRS, Alba testing",
       "version": "0.1.0",
       "category": "engineering",
@@ -304,7 +303,7 @@
     },
     {
       "name": "python-developer",
-      "source": "engineering/python-developer",
+      "source": "./plugins/engineering/python-developer",
       "description": "Python developer — strict typing, Ruff, mypy, BDD, Hypothesis, DDD",
       "version": "0.1.0",
       "category": "engineering",
@@ -317,7 +316,7 @@
     },
     {
       "name": "ai-engineer",
-      "source": "engineering/ai-engineer",
+      "source": "./plugins/engineering/ai-engineer",
       "description": "AI/ML engineer — prompt engineering, model evaluation, RAG pipelines, embeddings, AI feature implementation",
       "version": "0.1.0",
       "category": "engineering",
@@ -331,7 +330,7 @@
     },
     {
       "name": "qa-lead",
-      "source": "engineering/qa-lead",
+      "source": "./plugins/engineering/qa-lead",
       "description": "QA Lead — test strategy, acceptance criteria, 3 amigos, edge case identification",
       "version": "0.1.0",
       "category": "engineering",
@@ -344,7 +343,7 @@
     },
     {
       "name": "qa-engineer",
-      "source": "engineering/qa-engineer",
+      "source": "./plugins/engineering/qa-engineer",
       "description": "QA engineer — test automation, test execution, coverage analysis, bug investigation",
       "version": "0.1.0",
       "category": "engineering",
@@ -357,7 +356,7 @@
     },
     {
       "name": "release-manager",
-      "source": "engineering/release-manager",
+      "source": "./plugins/engineering/release-manager",
       "description": "Release manager — release coordination, deployment scheduling, rollback decisions, go/no-go gates",
       "version": "0.1.0",
       "category": "engineering",
@@ -370,7 +369,7 @@
     },
     {
       "name": "performance-engineer",
-      "source": "engineering/performance-engineer",
+      "source": "./plugins/engineering/performance-engineer",
       "description": "Performance engineer — load testing, profiling, capacity planning, performance budgets",
       "version": "0.1.0",
       "category": "engineering",
@@ -383,7 +382,7 @@
     },
     {
       "name": "devops",
-      "source": "engineering/devops",
+      "source": "./plugins/engineering/devops",
       "description": "DevOps / platform engineer — IaC, CI/CD, deployment, monitoring, incident response",
       "version": "0.1.0",
       "category": "engineering",
@@ -396,7 +395,7 @@
     },
     {
       "name": "security-engineer",
-      "source": "engineering/security-engineer",
+      "source": "./plugins/engineering/security-engineer",
       "description": "Security engineer — threat modelling, security audits, compliance, vulnerability management",
       "version": "0.1.0",
       "category": "engineering",
@@ -408,7 +407,7 @@
     },
     {
       "name": "data-engineer",
-      "source": "engineering/data-engineer",
+      "source": "./plugins/engineering/data-engineer",
       "description": "Data engineer — data pipelines, analytics, event tracking, metrics, data modelling",
       "version": "0.1.0",
       "category": "engineering",
@@ -421,7 +420,7 @@
     },
     {
       "name": "code-reviewer",
-      "source": "engineering/code-reviewer",
+      "source": "./plugins/engineering/code-reviewer",
       "description": "Code review agent with multi-pass review, quality scoring, and PR creation skills",
       "version": "0.1.0",
       "category": "engineering",

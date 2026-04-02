@@ -13,7 +13,7 @@ Audit $ARGUMENTS against the skill template quality criteria.
 ### Step 1: Read the template
 
 ```
-Read(file_path="plugins/practices/plugin-curator/templates/skill-template.md")
+Read(file_path="${CLAUDE_PLUGIN_ROOT}/templates/skill-template.md")
 ```
 
 ### Step 2: Read the skill(s) to audit
