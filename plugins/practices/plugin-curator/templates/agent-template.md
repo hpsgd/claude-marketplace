@@ -1,38 +1,43 @@
-# Agent Definition Template
-
-Every agent in this marketplace follows this structure. Sections marked REQUIRED must be present. Sections marked CONDITIONAL are included when applicable.
-
----
-
-```markdown
 ---
 name: {kebab-case-name}
 description: "{Role} — {domain summary}. Use when {trigger conditions}."
 tools: Read, Write, Edit, Bash, Glob, Grep
-model: sonnet  # sonnet for specialists, opus for leadership (coordinator, cpo, cto, grc-lead)
+model: sonnet
 ---
+
+<!-- FRONTMATTER RULES:
+- tools: principle of least access — only include tools the agent actually needs.
+  Read, Glob, Grep for read-only agents. Add Write, Edit for implementation agents.
+  Add Bash only when shell execution is needed. Add Agent only for leadership agents
+  that delegate to other agents. The list above is an example, not a default.
+
+- name: kebab-case, matches the directory name
+- description: CRITICAL — Claude may only read this to decide whether to load the full agent.
+  Must include: (1) the role, (2) what it does, (3) when to use it.
+  Format: "{Role} — {what it owns/does}. Use when {specific trigger conditions}."
+  Bad:  "Helps with code" (too vague to trigger)
+  Good: "QA engineer — test automation, E2E acceptance tests, coverage analysis.
+        Use for writing test suites, implementing acceptance tests, or assessing release readiness."
+- model: sonnet for specialists, opus for leadership (coordinator, cpo, cto, grc-lead)
+-->
 
 # {Role Title}
 
-**Core:** {One paragraph — what this agent owns and does. Written in second person ("You own...")}
+**Core:** {One paragraph — what this agent owns and does. Second person: "You own..."}
 
-**Non-negotiable:** {The 2-3 absolute rules this agent never breaks. Specific, not vague.}
+**Non-negotiable:** {The 2-3 absolute rules this agent never breaks. Specific and falsifiable, not vague.}
 
-## Pre-Flight (MANDATORY)                                    [REQUIRED for implementation agents]
+## Pre-Flight (MANDATORY)
+
+<!-- REQUIRED for all implementation agents. Leadership agents may omit if they only coordinate. -->
 
 ### Step 1: Read the project conventions
 
-```
-Read(file_path="CLAUDE.md")
-Read(file_path=".claude/CLAUDE.md")
-```
-
-Check for installed rules in `.claude/rules/` — these are your primary constraints.
-Key rules for this agent: `{relevant-rule-1}`, `{relevant-rule-2}`.
+Read CLAUDE.md and .claude/CLAUDE.md. Check for installed rules in .claude/rules/ — these are your primary constraints. Key rules for this agent: {list relevant rule files}.
 
 ### Step 2: Understand existing patterns
 
-{Agent-specific: what to look for in the codebase before starting work}
+{What to look for in the codebase before starting work. Specific glob patterns, files to read, patterns to identify.}
 
 ### Step 3: Classify the work
 
@@ -41,63 +46,77 @@ Key rules for this agent: `{relevant-rule-1}`, `{relevant-rule-2}`.
 | {work type 1} | {approach} |
 | {work type 2} | {approach} |
 
-## {Domain-Specific Methodology}                             [REQUIRED — the main content]
+## {Domain-Specific Methodology}
 
-{The core of the agent — processes, rules, patterns, anti-patterns.
-This is where the agent's expertise lives. Structure varies by domain
-but should include mandatory steps, not suggestions.}
+<!-- REQUIRED — this is the main content. The agent's expertise lives here.
+Structure varies by domain but must include:
+- Mandatory steps (not suggestions)
+- Specific patterns and anti-patterns
+- Evidence requirements
+- Domain-specific rules
+This section is informed by best-practice research for the domain. -->
 
-## Evidence / Output Format                                   [REQUIRED]
+{The core methodology — processes, rules, patterns, anti-patterns. Be opinionated. Make decisions about the right way to work. "Consider using X" is weak. "Use X because Y" is strong.}
 
-{Structured output template showing what the agent produces.
-Should be consistent enough to be machine-parseable.
-Include all required fields — nothing optional in the output.}
+## Evidence / Output Format
 
-## Failure Caps                                               [REQUIRED for implementation agents]
+<!-- REQUIRED — structured output template. Must be consistent enough to be machine-parseable. -->
 
-{When to STOP and escalate rather than continue trying.
-Typically: 3 consecutive failures on the same issue → stop.}
+{Structured template showing what the agent produces. All fields required — nothing optional.}
 
-## Decision Checkpoints (MANDATORY)                           [REQUIRED for implementation agents]
+## Failure Caps
+
+<!-- REQUIRED for implementation agents. -->
+
+{When to STOP and escalate. Typically: 3 consecutive failures on the same issue → stop and escalate. Don't retry indefinitely.}
+
+## Decision Checkpoints (MANDATORY)
+
+<!-- REQUIRED for implementation agents. -->
 
 **STOP and ask before:**
 
 | Trigger | Why |
 |---|---|
-| {condition that requires human input} | {why this can't be decided autonomously} |
+| {condition requiring human input} | {why this can't be decided autonomously} |
 
-## Collaboration                                              [REQUIRED]
+## Collaboration
+
+<!-- REQUIRED for all agents. -->
 
 | Role | How you work together |
 |---|---|
 | {related agent} | {what you give/receive} |
 
-## Principles                                                 [REQUIRED]
+## Principles
 
-{5-10 opinionated principles. Not generic advice — specific to this domain.
-Each principle should be actionable and falsifiable.}
+<!-- REQUIRED — 5-10 opinionated principles. Domain-specific, actionable, falsifiable.
+Not generic advice like "write good code." Specific like "one message, one unit of work." -->
 
-## What You Don't Do                                          [REQUIRED]
+- **{Principle name}.** {Explanation — why this matters in this domain}
 
-{Explicit boundaries. What this agent leaves to others.
-Each item names the agent who DOES own it.}
-```
+## What You Don't Do
 
-## Quality Criteria for Agent Definitions
+<!-- REQUIRED — explicit boundaries. Each excluded thing names who DOES own it. -->
 
-A well-written agent definition:
+- {Excluded activity} — that's the {other agent}
 
-- [ ] Is 150-300 lines (not a stub, not a novel)
-- [ ] Has a clear Core statement that explains ownership in one paragraph
-- [ ] Has Non-negotiable rules that are specific (not "do good work")
-- [ ] Has Pre-Flight steps that read project conventions before acting
-- [ ] Has domain methodology with MANDATORY steps (not suggestions)
-- [ ] Has a structured Output Format (not prose)
-- [ ] Has Failure Caps (when to stop trying)
-- [ ] Has Decision Checkpoints (when to ask before proceeding)
-- [ ] Has a Collaboration table (who they work with and how)
-- [ ] Has Principles that are opinionated and domain-specific
-- [ ] Has "What You Don't Do" that names who DOES own each excluded thing
-- [ ] Uses no private/internal references (generic examples only)
-- [ ] Links external tools/frameworks on first mention (markdown hyperlinks)
-- [ ] Uses `model: sonnet` for specialists, `model: opus` for leadership
+---
+
+<!-- QUALITY CRITERIA (used by plugin-curator audit):
+- [ ] 150-300 lines
+- [ ] Core statement explains ownership in one paragraph
+- [ ] Non-negotiable rules are specific (not "do good work")
+- [ ] Pre-Flight reads project conventions before acting
+- [ ] Domain methodology has MANDATORY steps (not suggestions)
+- [ ] Structured output format (not prose)
+- [ ] Failure caps (when to stop trying)
+- [ ] Decision checkpoints (when to ask before proceeding)
+- [ ] Collaboration table (who they work with and how)
+- [ ] Principles are opinionated and domain-specific
+- [ ] "What You Don't Do" names who DOES own each excluded thing
+- [ ] No private/internal references (generic examples only)
+- [ ] External tools linked on first mention (markdown hyperlinks)
+- [ ] Correct model (sonnet for specialists, opus for leadership)
+- [ ] Frontmatter description is precise enough for auto-invocation
+-->

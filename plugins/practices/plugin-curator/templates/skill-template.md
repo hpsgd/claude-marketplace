@@ -1,28 +1,40 @@
-# Skill Definition Template
-
-Every skill in this marketplace follows this structure. Skills are standalone — they work without the parent agent's context.
-
----
-
-```markdown
 ---
 name: {kebab-case-name}
-description: "{What this skill does — one sentence, specific enough for auto-invocation matching}."
+description: "{What this skill does — specific enough for auto-invocation matching}."
 argument-hint: "[{what the user provides}]"
 user-invocable: true
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep
-paths:                              # CONDITIONAL — only if the skill auto-triggers on specific files
-  - "**/*.{ext}"
 ---
+
+<!-- FRONTMATTER RULES:
+- allowed-tools: principle of least access — only include tools the skill actually needs.
+  Read-only skills: Read, Glob, Grep. Skills that create files: add Write, Edit.
+  Skills that run commands: add Bash. The list above is an example, not a default.
+
+- name: kebab-case, matches the directory name
+- description: CRITICAL — Claude may only read this to decide whether to invoke the skill.
+  Must be specific enough that Claude can match user intent to this skill.
+  Bad:  "Helps with testing" (too vague — matches everything)
+  Good: "Write a BDD feature specification in Gherkin with step definitions.
+        Use for defining behaviour before implementation in Python projects."
+  Include: (1) what it produces, (2) when to use it, (3) any file type triggers
+- argument-hint: tells the user what to provide. Wrapped in [brackets].
+- user-invocable: true if the user can call it directly via /plugin:skill-name
+- allowed-tools: only the tools this skill needs
+- paths: (OPTIONAL) add if the skill should auto-trigger on specific file types
+  Example: paths: ["**/*.py"] for Python-specific skills
+-->
 
 # {Skill Title}
 
-{One paragraph: what this skill does for $ARGUMENTS. Reference related skills if applicable.}
+{One paragraph: what this skill does for $ARGUMENTS. Reference related skills if applicable — e.g., "This skill implements the acceptance criteria defined by the `/test-strategy` skill."}
 
-## Step 1: {First mandatory step}                            [Steps are REQUIRED and sequential]
+## Step 1: {First mandatory step}
 
-{What to do, how to do it, what evidence to produce.
-Steps are mandatory and blocking — you cannot skip to a later step.}
+<!-- Steps are REQUIRED, sequential, and blocking. Cannot skip to a later step.
+Each step should produce a verifiable output. -->
+
+{What to do, how to do it, what evidence to produce.}
 
 ## Step 2: {Second mandatory step}
 
@@ -32,30 +44,32 @@ Steps are mandatory and blocking — you cannot skip to a later step.}
 
 {...}
 
-## Rules                                                      [REQUIRED]
+## Rules
 
-{Specific rules for this skill. Written as imperatives.
-Include anti-patterns: what NOT to do and why.}
+<!-- REQUIRED — specific imperatives and anti-patterns. Not suggestions. -->
 
-## Output Format                                              [REQUIRED]
+- {Rule as imperative — "Always X" or "Never Y"}
+- {Anti-pattern — "Don't X because Y. Instead, Z."}
 
-{Structured template showing exactly what the skill produces.
-Should include all fields — nothing left to interpretation.}
-```
+## Output Format
 
-## Quality Criteria for Skill Definitions
+<!-- REQUIRED — structured template. All fields present, nothing left to interpretation. -->
 
-A well-written skill definition:
+{Exact template showing what the skill produces.}
 
-- [ ] Is 100-300 lines (not a stub, not a novel)
-- [ ] Has a description specific enough for auto-invocation matching
-- [ ] Is self-contained — works without reading the parent agent first
-- [ ] Has sequential, mandatory steps (not suggestions or options)
+---
+
+<!-- QUALITY CRITERIA (used by plugin-curator audit):
+- [ ] 100-300 lines
+- [ ] Description specific enough for auto-invocation matching
+- [ ] Self-contained — works without reading the parent agent first
+- [ ] Sequential mandatory steps (not suggestions or options)
 - [ ] Each step produces a verifiable output
-- [ ] Has Rules section with specific imperatives and anti-patterns
-- [ ] Has a structured Output Format (not "present your findings")
-- [ ] References related skills where appropriate (e.g., "see `/isc` for criteria decomposition")
-- [ ] Uses generic examples (no private/internal references)
-- [ ] Links external tools/frameworks on first mention
-- [ ] Has `argument-hint` that tells the user what to provide
-- [ ] Has `paths` filter if the skill should auto-trigger on specific file types
+- [ ] Rules section with specific imperatives and anti-patterns
+- [ ] Structured output format (not "present your findings")
+- [ ] References related skills where appropriate
+- [ ] Generic examples only (no private/internal references)
+- [ ] External tools linked on first mention
+- [ ] argument-hint tells user what to provide
+- [ ] Frontmatter description is precise enough for auto-invocation
+-->
