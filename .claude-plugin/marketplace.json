@@ -195,12 +195,12 @@
       "tags": ["data", "analytics", "pipelines", "metrics"]
     },
     {
-      "name": "workflow-tools",
-      "source": "engineering/workflow-tools",
-      "description": "Code review, PR creation, and other workflow skills and agents",
+      "name": "code-reviewer",
+      "source": "engineering/code-reviewer",
+      "description": "Code review agent with multi-pass review, quality scoring, and PR creation skills",
       "version": "0.1.0",
       "category": "engineering",
-      "tags": ["code-review", "pr", "workflow"]
+      "tags": ["code-review", "pr", "quality", "review"]
     }
   ]
 }

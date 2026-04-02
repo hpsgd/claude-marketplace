@@ -20,7 +20,7 @@ Pick what you need, or copy a block to install a whole category.
 /plugin install writing-style@hpsgd
 /plugin install security-compliance@hpsgd
 /plugin install thinking@hpsgd
-/plugin install workflow-tools@hpsgd
+/plugin install code-reviewer@hpsgd
 /plugin install technology-stack@hpsgd
 ```
 
@@ -60,7 +60,7 @@ Pick what you need, or copy a block to install a whole category.
 /plugin install writing-style@hpsgd
 /plugin install security-compliance@hpsgd
 /plugin install thinking@hpsgd
-/plugin install workflow-tools@hpsgd
+/plugin install code-reviewer@hpsgd
 /plugin install technology-stack@hpsgd
 /plugin install coordinator@hpsgd
 /plugin install cpo@hpsgd
@@ -102,7 +102,7 @@ Copy into your project's `.claude/settings.json` (or `settings.local.json` for p
     "writing-style@hpsgd": true,
     "security-compliance@hpsgd": true,
     "thinking@hpsgd": true,
-    "workflow-tools@hpsgd": true,
+    "code-reviewer@hpsgd": true,
     "technology-stack@hpsgd": true
   }
 }
@@ -119,7 +119,7 @@ Copy into your project's `.claude/settings.json` (or `settings.local.json` for p
     "writing-style@hpsgd": true,
     "security-compliance@hpsgd": true,
     "thinking@hpsgd": true,
-    "workflow-tools@hpsgd": true,
+    "code-reviewer@hpsgd": true,
     "technology-stack@hpsgd": true,
     "coordinator@hpsgd": true,
     "cpo@hpsgd": true,
@@ -158,7 +158,7 @@ Plugins activate automatically. Skills are available as slash commands (e.g., `/
 | `writing-style` | Rules + Skills | AI tell avoidance, banned vocabulary, sentence structure, 15-point editing checklist |
 | `security-compliance` | Rules + Skills | Security baseline rules and deep security audit skill |
 | `thinking` | Skills | 11 skills: ISC, algorithm, first-principles, council, red-team, creative, iterative-depth, scientific-method, learning, wisdom, health-check |
-| `workflow-tools` | Skills + Agent | Code review, PR creation skills, and reviewer agent |
+| `code-reviewer` | Skills + Agent | Multi-pass code review with quality scoring, and PR creation |
 | `technology-stack` | Rules | JasperFx, Next.js, Pulumi, Moon, SonarCloud, event sourcing conventions |
 
 ### Coordinator

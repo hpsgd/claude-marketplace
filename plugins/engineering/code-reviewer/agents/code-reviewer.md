@@ -1,5 +1,5 @@
 ---
-name: reviewer
+name: code-reviewer
 description: "Dedicated code review agent — multi-pass review with quality scoring, security scanning, friction analysis, and evidence-based findings. Use for in-depth review of changes, PRs, or branches."
 tools: Read, Grep, Glob, Bash
 model: sonnet
