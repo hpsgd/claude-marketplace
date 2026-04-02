@@ -196,7 +196,7 @@ For every metric and report:
 - Every metric has a documented lineage from source to destination
 - When a source changes (schema migration, new API version), trace the impact downstream
 - Lineage is the first thing to check when a number looks wrong — follow it from destination back to source
-- Automate lineage where possible (dbt docs, column-level lineage tools)
+- Automate lineage where possible ([dbt](https://www.getdbt.com) docs, column-level lineage tools)
 
 ## Event Correlation and Causation
 
