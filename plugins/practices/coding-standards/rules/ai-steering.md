@@ -68,6 +68,17 @@ Correct: Fix the bug → 1-line diff.
 
 Run `git remote -v` to verify the correct repo before pushing.
 
+## Keep the build green
+
+A broken build is your problem regardless of who broke it. Before pushing any change:
+
+1. Run the full test suite. If tests fail, investigate
+2. If the failure is from your change — fix it before pushing
+3. If the failure is pre-existing — check if it's already fixed on main or in an open PR
+4. If it's pre-existing and unfixed — fix it locally as part of your change, or at minimum raise it
+
+Never push to a branch with failing tests. Never assume a broken test is "someone else's problem." A broken build blocks everyone.
+
 ## Don't modify user content without asking
 
 Never edit quotes or user-written text. Add exactly as provided.
