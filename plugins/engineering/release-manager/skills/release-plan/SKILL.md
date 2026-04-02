@@ -180,4 +180,6 @@ Reasoning: [why, citing gate results]
 
 - `/release-manager:rollback-assessment` — before releasing, define the rollback plan. Every release plan should have a corresponding rollback assessment.
 
+Track [DORA metrics](https://dora.dev/) across releases: deployment frequency, lead time, change failure rate, and time to restore. These are the industry-standard measures of release process health.
+
 Use the release checklist template (`templates/release-checklist.md`) and rollback plan template (`templates/rollback-plan.md`) for consistent output structure.

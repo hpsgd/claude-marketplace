@@ -212,3 +212,5 @@ Write the output to a file: `docs/story-map-[feature].md`.
 - `/product-owner:write-user-story` — write detailed user stories (with Gherkin acceptance criteria) for individual tasks from the map.
 - `/product-owner:groom-backlog` — prioritise the mapped stories within the backlog.
 - `/coordinator:decompose-initiative` — decompose a large initiative before mapping individual features.
+
+Use the story map template (`templates/story-map.md`) for output structure.

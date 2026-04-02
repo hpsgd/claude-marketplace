@@ -263,3 +263,5 @@ Last updated: [date]
 
 - `/developer-docs-writer:write-api-docs` — write the API reference for the new version. The migration guide gets developers to the new version; the API docs help them use it.
 - `/release-manager:release-plan` — migration is part of the release. The release plan should reference this migration guide and allocate time for customer migration support.
+
+Use the migration guide template (`templates/migration-guide.md`) for output structure.

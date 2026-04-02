@@ -228,3 +228,5 @@ Last updated: [date]
 
 - `/devops:incident-response` — incidents consume error budget. Every incident post-mortem should reference how much error budget was consumed and whether the budget policy was triggered.
 - `/performance-engineer:capacity-plan` — capacity directly affects availability SLOs. Under-provisioned services will burn through error budget during traffic spikes.
+
+Use the SLO definition template (`templates/slo-definition.md`) for output structure.

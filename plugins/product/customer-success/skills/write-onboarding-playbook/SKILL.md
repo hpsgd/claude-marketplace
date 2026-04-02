@@ -202,3 +202,5 @@ Last updated: [date]
 
 - `/customer-success:health-assessment` — health score tracks onboarding progress. A red health score during onboarding triggers escalation per the milestone table.
 - `/customer-success:churn-analysis` — onboarding failure is a top churn cause. Failed onboarding playbooks feed directly into churn root cause analysis.
+
+Use the onboarding playbook template (`templates/onboarding-playbook.md`) for output structure.

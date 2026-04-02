@@ -161,6 +161,8 @@ Choose one and apply consistently:
 | Header | `Accept: application/vnd.api.v2+json` | Internal APIs, fine-grained versioning |
 | No versioning | Additive changes only | Early-stage, small team, single consumer |
 
+For GraphQL APIs, use the graphql-schema template (`templates/graphql-schema.md`) which covers Relay pagination, mutation patterns, and schema evolution. Reference the [GraphQL Best Practices](https://graphql.org/learn/best-practices/) and [Relay Server Specification](https://relay.dev/docs/guides/graphql-server-specification/).
+
 **Rules:**
 - Additive changes (new fields, new endpoints) do NOT require a new version
 - Breaking changes (field removal, type change, semantic change) require a new version

@@ -225,3 +225,5 @@ Last updated: [date]
 
 - `/ux-researcher:journey-map` — the customer-facing layer of the blueprint. If a journey map exists, use it as the foundation and add the backstage lanes.
 - `/ux-researcher:usability-review` — for deep-diving into specific frontstage touchpoints that the blueprint identifies as high-friction.
+
+Use the service blueprint template (`templates/service-blueprint.md`) for output structure.

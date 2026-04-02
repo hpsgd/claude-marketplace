@@ -1,12 +1,12 @@
 ---
 name: accessibility-audit
-description: Audit a component, page, or codebase for WCAG 2.1 AA accessibility compliance. Includes automated pattern detection, severity classification, and remediation recommendations.
+description: Audit a component, page, or codebase for WCAG 2.2 AA accessibility compliance. Includes automated pattern detection, severity classification, and remediation recommendations.
 argument-hint: "[component, page, or directory to audit]"
 user-invocable: true
 allowed-tools: Read, Bash, Glob, Grep
 ---
 
-Audit $ARGUMENTS for accessibility compliance against WCAG 2.1 AA.
+Audit $ARGUMENTS for accessibility compliance against WCAG 2.2 AA (published October 2023, supersedes 2.1).
 
 This audit uses code analysis to find violations. It is not a substitute for manual testing with screen readers and keyboard, but it catches the most common and highest-impact issues.
 
@@ -90,7 +90,7 @@ grep -rn 'toast\|Toast\|notification\|Notification\|alert\|Alert\|snackbar' --in
 
 ## Step 2: Manual Checklist Audit
 
-After running automated checks, review against the full WCAG 2.1 AA checklist, organised by principle.
+After running automated checks, review against the full WCAG 2.2 AA checklist, organised by principle. WCAG 2.2 adds three new AA criteria (2.4.11, 2.5.7, 2.5.8) — these are included in the Operable section below.
 
 ### Perceivable
 
@@ -122,6 +122,9 @@ After running automated checks, review against the full WCAG 2.1 AA checklist, o
 | O9 | Focus indicator is visible on all interactive elements | 2.4.7 | Tab through every focusable element | |
 | O10 | Touch targets are at least 44x44px | 2.5.5 | Verify button/link sizes on mobile | |
 | O11 | No time limits, or user can extend/disable them | 2.2.1 | Check for session timeouts, auto-advancing content | |
+| O12 | Focused element is not entirely hidden by author-created content | 2.4.11 | Tab through page, verify focused element is always at least partially visible | |
+| O13 | Functionality via dragging can also be achieved with a single pointer without dragging | 2.5.7 | For every drag interaction, verify an alternative (e.g. buttons, tap-to-move) exists | |
+| O14 | Touch/click targets are at least 24x24 CSS pixels (with allowed exceptions) | 2.5.8 | Measure interactive element sizes; inline links and browser-default controls are exempt | |
 
 ### Understandable
 
@@ -177,7 +180,7 @@ For every finding, provide:
 # Accessibility Audit: [Target]
 
 **Date:** [date]
-**Standard:** WCAG 2.1 Level AA
+**Standard:** WCAG 2.2 Level AA
 **Scope:** [what was audited]
 
 ## Summary

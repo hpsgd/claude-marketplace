@@ -238,6 +238,8 @@ Rules:
 
 ## Output
 
+Pipeline design affects all four [DORA metrics](https://dora.dev/): deployment frequency (how often the pipeline runs), lead time for changes (pipeline duration), change failure rate (test/gate effectiveness), and time to restore service (rollback speed).
+
 Deliver:
 1. Complete pipeline configuration file (`.github/workflows/*.yml` or equivalent)
 2. Any supporting scripts referenced by the pipeline

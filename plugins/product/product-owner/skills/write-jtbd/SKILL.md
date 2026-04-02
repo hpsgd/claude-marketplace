@@ -244,3 +244,5 @@ Write the output to a file: `docs/jtbd-[area].md`.
 
 - `/product-owner:write-prd` — JTBD informs the PRD problem statement. The core job becomes the "problem" section; underserved outcomes become requirements.
 - `/ux-researcher:persona-definition` — personas and jobs are complementary lenses. Personas describe who; jobs describe why.
+
+Use the JTBD canvas template (`templates/jtbd-canvas.md`) for output structure.

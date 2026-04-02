@@ -258,3 +258,5 @@ Deliver:
 
 - `/devops:write-pipeline` — the CI/CD pipeline deploys the infrastructure. Add `terraform plan` to PR checks and `terraform apply` to the deploy stage.
 - `/devops:write-dockerfile` — containers run on the infrastructure this module provisions. Coordinate instance types, networking, and security groups.
+
+Use the Terraform module template (`templates/terraform-module/`) for output structure.
