@@ -23,8 +23,10 @@ For each skill, check these criteria:
 
 Produce a summary table:
 
-| Skill | Agent | Lines | Score | Top issue |
+| Agent | Skill | Lines | Score | Top issue |
 |---|---|---|---|---|
-| {name} | {parent} | {N} | {X}/12 | {issue} |
+| {parent} | {name} | {N} | {X}/12 | {issue} |
+
+Sort by agent name, then skill name within each agent.
 
 Flag empty skill directories (placeholder dirs without SKILL.md content).

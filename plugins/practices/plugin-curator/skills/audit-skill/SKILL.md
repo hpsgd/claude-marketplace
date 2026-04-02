@@ -37,10 +37,12 @@ Also check:
 When auditing "all", produce a summary table:
 
 ```markdown
-| Skill | Agent | Lines | Score | Top issue |
+| Agent | Skill | Lines | Score | Top issue |
 |---|---|---|---|---|
-| {name} | {parent} | {N} | {X}/11 | {issue} |
+| {parent} | {name} | {N} | {X}/12 | {issue} |
 ```
+
+Sort by agent name, then skill name within each agent.
 
 Flag empty skill directories separately:
 
