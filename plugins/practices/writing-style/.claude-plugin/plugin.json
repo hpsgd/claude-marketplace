@@ -2,8 +2,15 @@
   "name": "writing-style",
   "description": "Tone of voice, writing style, AI tell avoidance, and communication guidelines",
   "version": "0.1.0",
-  "author": { "name": "hps.gd" },
+  "author": {
+    "name": "hps.gd"
+  },
   "repository": "https://github.com/hpsgd/claude-marketplace",
   "license": "MIT",
-  "keywords": ["writing", "tone", "ai-detection", "style-guide"]
+  "keywords": [
+    "writing",
+    "tone",
+    "ai-detection",
+    "style-guide"
+  ]
 }

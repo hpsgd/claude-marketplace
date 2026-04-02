@@ -2,8 +2,15 @@
   "name": "security-compliance",
   "description": "Security baseline rules and audit skills for maintaining secure code",
   "version": "0.1.0",
-  "author": { "name": "hps.gd" },
+  "author": {
+    "name": "hps.gd"
+  },
   "repository": "https://github.com/hpsgd/claude-marketplace",
   "license": "MIT",
-  "keywords": ["security", "owasp", "audit", "compliance"]
+  "keywords": [
+    "security",
+    "owasp",
+    "audit",
+    "compliance"
+  ]
 }

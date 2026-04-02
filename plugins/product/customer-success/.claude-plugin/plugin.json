@@ -1,0 +1,18 @@
+{
+  "name": "customer-success",
+  "description": "Customer Success Manager — health monitoring, churn prevention, expansion, onboarding quality, proactive customer engagement",
+  "version": "0.1.0",
+  "author": {
+    "name": "hps.gd"
+  },
+  "repository": "https://github.com/hpsgd/claude-marketplace",
+  "license": "MIT",
+  "keywords": [
+    "customer-success",
+    "churn",
+    "retention",
+    "expansion",
+    "health-score",
+    "onboarding"
+  ]
+}

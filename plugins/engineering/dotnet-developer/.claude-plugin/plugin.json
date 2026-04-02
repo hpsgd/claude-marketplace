@@ -1,1 +1,17 @@
-{"name":"dotnet-developer","description":".NET/C# developer — Wolverine, Marten, event sourcing, CQRS, Alba/Testcontainers testing","version":"0.1.0","author":{"name":"hps.gd"},"repository":"https://github.com/hpsgd/claude-marketplace","license":"MIT","keywords":["dotnet","csharp","wolverine","marten","event-sourcing"]}
+{
+  "name": "dotnet-developer",
+  "description": ".NET/C# developer — Wolverine, Marten, event sourcing, CQRS, Alba/Testcontainers testing",
+  "version": "0.1.0",
+  "author": {
+    "name": "hps.gd"
+  },
+  "repository": "https://github.com/hpsgd/claude-marketplace",
+  "license": "MIT",
+  "keywords": [
+    "dotnet",
+    "csharp",
+    "wolverine",
+    "marten",
+    "event-sourcing"
+  ]
+}

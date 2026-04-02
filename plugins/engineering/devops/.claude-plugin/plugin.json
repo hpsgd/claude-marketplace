@@ -1,1 +1,17 @@
-{"name":"devops","description":"DevOps / platform engineer — IaC, CI/CD, deployment, monitoring, incident response","version":"0.1.0","author":{"name":"hps.gd"},"repository":"https://github.com/hpsgd/claude-marketplace","license":"MIT","keywords":["devops","infrastructure","cicd","deployment","monitoring"]}
+{
+  "name": "devops",
+  "description": "DevOps / platform engineer — IaC, CI/CD, deployment, monitoring, incident response",
+  "version": "0.1.0",
+  "author": {
+    "name": "hps.gd"
+  },
+  "repository": "https://github.com/hpsgd/claude-marketplace",
+  "license": "MIT",
+  "keywords": [
+    "devops",
+    "infrastructure",
+    "cicd",
+    "deployment",
+    "monitoring"
+  ]
+}

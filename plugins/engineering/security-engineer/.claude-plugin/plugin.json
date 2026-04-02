@@ -1,1 +1,16 @@
-{"name":"security-engineer","description":"Security engineer — threat modelling, security audits, compliance, vulnerability management","version":"0.1.0","author":{"name":"hps.gd"},"repository":"https://github.com/hpsgd/claude-marketplace","license":"MIT","keywords":["security","threat-model","compliance","vulnerability"]}
+{
+  "name": "security-engineer",
+  "description": "Security engineer — threat modelling, security audits, compliance, vulnerability management",
+  "version": "0.1.0",
+  "author": {
+    "name": "hps.gd"
+  },
+  "repository": "https://github.com/hpsgd/claude-marketplace",
+  "license": "MIT",
+  "keywords": [
+    "security",
+    "threat-model",
+    "compliance",
+    "vulnerability"
+  ]
+}

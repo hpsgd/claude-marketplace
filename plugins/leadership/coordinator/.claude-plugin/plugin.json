@@ -2,8 +2,16 @@
   "name": "coordinator",
   "description": "CEO/founder proxy — cross-team coordination, OKRs, initiative decomposition, strategic decisions that span CPO and CTO domains",
   "version": "0.1.0",
-  "author": { "name": "hps.gd" },
+  "author": {
+    "name": "hps.gd"
+  },
   "repository": "https://github.com/hpsgd/claude-marketplace",
   "license": "MIT",
-  "keywords": ["coordination", "okrs", "strategy", "leadership", "initiative"]
+  "keywords": [
+    "coordination",
+    "okrs",
+    "strategy",
+    "leadership",
+    "initiative"
+  ]
 }

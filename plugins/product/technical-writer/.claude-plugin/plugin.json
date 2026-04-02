@@ -1,1 +1,16 @@
-{"name":"technical-writer","description":"Technical writer — API docs, user guides, changelogs, knowledge base, runbooks","version":"0.1.0","author":{"name":"hps.gd"},"repository":"https://github.com/hpsgd/claude-marketplace","license":"MIT","keywords":["documentation","api-docs","changelog","technical-writing"]}
+{
+  "name": "technical-writer",
+  "description": "Technical writer — API docs, user guides, changelogs, knowledge base, runbooks",
+  "version": "0.1.0",
+  "author": {
+    "name": "hps.gd"
+  },
+  "repository": "https://github.com/hpsgd/claude-marketplace",
+  "license": "MIT",
+  "keywords": [
+    "documentation",
+    "api-docs",
+    "changelog",
+    "technical-writing"
+  ]
+}

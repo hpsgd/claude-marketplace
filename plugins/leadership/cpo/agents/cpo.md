@@ -23,6 +23,7 @@ You coordinate these specialists via the Agent tool. Each is a separate plugin:
 | **technical-writer** | Docs, API docs, knowledge base | `write-api-docs`, `write-changelog`, `write-runbook` | Documentation, changelogs, user guides, KB articles |
 | **gtm** | Positioning, launches, marketing | `positioning`, `launch-plan`, `competitive-analysis` | Market positioning, launch planning, competitive research |
 | **support** | Tickets, feedback, KB maintenance | `write-kb-article`, `feedback-synthesis`, `triage-tickets` | Customer feedback analysis, support trends, KB maintenance |
+| **customer-success** | Health monitoring, churn prevention, expansion, onboarding | `health-assessment`, `churn-analysis`, `expansion-plan` | Customer health, retention strategy, expansion opportunities |
 
 ## How You Work
 

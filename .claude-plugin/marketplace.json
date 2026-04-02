@@ -16,7 +16,14 @@
       "description": "Shared coding conventions for TypeScript, .NET, Python, plus git workflow, testing, architecture, and AI steering rules",
       "version": "0.1.0",
       "category": "practices",
-      "tags": ["typescript", "dotnet", "python", "conventions", "testing", "git"]
+      "tags": [
+        "typescript",
+        "dotnet",
+        "python",
+        "conventions",
+        "testing",
+        "git"
+      ]
     },
     {
       "name": "writing-style",
@@ -24,7 +31,12 @@
       "description": "Tone of voice, writing style, AI tell avoidance, and communication guidelines",
       "version": "0.1.0",
       "category": "practices",
-      "tags": ["writing", "tone", "ai-detection", "style-guide"]
+      "tags": [
+        "writing",
+        "tone",
+        "ai-detection",
+        "style-guide"
+      ]
     },
     {
       "name": "security-compliance",
@@ -32,7 +44,12 @@
       "description": "Security baseline rules and audit skills for maintaining secure code",
       "version": "0.1.0",
       "category": "practices",
-      "tags": ["security", "owasp", "audit", "compliance"]
+      "tags": [
+        "security",
+        "owasp",
+        "audit",
+        "compliance"
+      ]
     },
     {
       "name": "thinking",
@@ -40,7 +57,13 @@
       "description": "Structured thinking and reasoning skills — first principles, ISC, algorithm, council, red team, and more",
       "version": "0.1.0",
       "category": "practices",
-      "tags": ["reasoning", "first-principles", "red-team", "isc", "algorithm"]
+      "tags": [
+        "reasoning",
+        "first-principles",
+        "red-team",
+        "isc",
+        "algorithm"
+      ]
     },
     {
       "name": "technology-stack",
@@ -48,7 +71,14 @@
       "description": "Framework-specific conventions for JasperFx, Pulumi, Moon, Next.js, SonarCloud, and event sourcing",
       "version": "0.1.0",
       "category": "practices",
-      "tags": ["wolverine", "marten", "nextjs", "pulumi", "moonrepo", "event-sourcing"]
+      "tags": [
+        "wolverine",
+        "marten",
+        "nextjs",
+        "pulumi",
+        "moonrepo",
+        "event-sourcing"
+      ]
     },
     {
       "name": "coordinator",
@@ -56,7 +86,12 @@
       "description": "CEO/founder proxy — cross-team coordination, OKRs, initiative decomposition, strategic decisions spanning CPO and CTO",
       "version": "0.1.0",
       "category": "leadership",
-      "tags": ["coordination", "okrs", "strategy", "leadership"]
+      "tags": [
+        "coordination",
+        "okrs",
+        "strategy",
+        "leadership"
+      ]
     },
     {
       "name": "cpo",
@@ -64,7 +99,11 @@
       "description": "Chief Product Officer — coordinates product, design, content, GTM, and support teams",
       "version": "0.1.0",
       "category": "leadership",
-      "tags": ["product", "leadership", "strategy"]
+      "tags": [
+        "product",
+        "leadership",
+        "strategy"
+      ]
     },
     {
       "name": "cto",
@@ -72,7 +111,11 @@
       "description": "Chief Technology Officer — coordinates architecture, development, QA, DevOps, security, and data engineering",
       "version": "0.1.0",
       "category": "leadership",
-      "tags": ["engineering", "leadership", "technical"]
+      "tags": [
+        "engineering",
+        "leadership",
+        "technical"
+      ]
     },
     {
       "name": "product-owner",
@@ -80,7 +123,12 @@
       "description": "Product owner — requirements, user stories, acceptance criteria, backlog prioritisation",
       "version": "0.1.0",
       "category": "product",
-      "tags": ["product", "requirements", "prd", "backlog"]
+      "tags": [
+        "product",
+        "requirements",
+        "prd",
+        "backlog"
+      ]
     },
     {
       "name": "ui-designer",
@@ -88,7 +136,13 @@
       "description": "UI designer — visual design, design system, component specifications, accessibility",
       "version": "0.1.0",
       "category": "product",
-      "tags": ["design", "ui", "accessibility", "components", "design-system"]
+      "tags": [
+        "design",
+        "ui",
+        "accessibility",
+        "components",
+        "design-system"
+      ]
     },
     {
       "name": "ux-researcher",
@@ -96,7 +150,13 @@
       "description": "UX researcher — customer journeys, touchpoints, information architecture, usability assessment, personas",
       "version": "0.1.0",
       "category": "product",
-      "tags": ["ux", "research", "journey-map", "personas", "usability"]
+      "tags": [
+        "ux",
+        "research",
+        "journey-map",
+        "personas",
+        "usability"
+      ]
     },
     {
       "name": "technical-writer",
@@ -104,7 +164,11 @@
       "description": "Technical writer — API docs, user guides, changelogs, knowledge base, runbooks",
       "version": "0.1.0",
       "category": "product",
-      "tags": ["documentation", "api-docs", "changelog"]
+      "tags": [
+        "documentation",
+        "api-docs",
+        "changelog"
+      ]
     },
     {
       "name": "gtm",
@@ -112,7 +176,11 @@
       "description": "Go-to-market specialist — positioning, launch strategy, content marketing, competitive analysis",
       "version": "0.1.0",
       "category": "product",
-      "tags": ["marketing", "positioning", "launch"]
+      "tags": [
+        "marketing",
+        "positioning",
+        "launch"
+      ]
     },
     {
       "name": "support",
@@ -120,7 +188,25 @@
       "description": "Customer support — ticket triage, feedback synthesis, knowledge base, bug escalation",
       "version": "0.1.0",
       "category": "product",
-      "tags": ["support", "tickets", "feedback"]
+      "tags": [
+        "support",
+        "tickets",
+        "feedback"
+      ]
+    },
+    {
+      "name": "customer-success",
+      "source": "product/customer-success",
+      "description": "Customer Success Manager — health monitoring, churn prevention, expansion, onboarding quality",
+      "version": "0.1.0",
+      "category": "product",
+      "tags": [
+        "customer-success",
+        "churn",
+        "retention",
+        "expansion",
+        "health-score"
+      ]
     },
     {
       "name": "architect",
@@ -128,7 +214,12 @@
       "description": "Software architect — system design, ADRs, technology evaluation, API strategy",
       "version": "0.1.0",
       "category": "engineering",
-      "tags": ["architecture", "design", "adr", "api"]
+      "tags": [
+        "architecture",
+        "design",
+        "adr",
+        "api"
+      ]
     },
     {
       "name": "react-developer",
@@ -136,7 +227,12 @@
       "description": "React/Next.js developer — TypeScript, Tailwind, content-collections, react-pdf, Vitest",
       "version": "0.1.0",
       "category": "engineering",
-      "tags": ["react", "nextjs", "typescript", "frontend"]
+      "tags": [
+        "react",
+        "nextjs",
+        "typescript",
+        "frontend"
+      ]
     },
     {
       "name": "dotnet-developer",
@@ -144,7 +240,12 @@
       "description": ".NET/C# developer — Wolverine, Marten, event sourcing, CQRS, Alba testing",
       "version": "0.1.0",
       "category": "engineering",
-      "tags": ["dotnet", "csharp", "wolverine", "marten"]
+      "tags": [
+        "dotnet",
+        "csharp",
+        "wolverine",
+        "marten"
+      ]
     },
     {
       "name": "python-developer",
@@ -152,7 +253,12 @@
       "description": "Python developer — strict typing, Ruff, mypy, BDD, Hypothesis, DDD",
       "version": "0.1.0",
       "category": "engineering",
-      "tags": ["python", "ruff", "mypy", "bdd"]
+      "tags": [
+        "python",
+        "ruff",
+        "mypy",
+        "bdd"
+      ]
     },
     {
       "name": "qa-lead",
@@ -160,7 +266,12 @@
       "description": "QA Lead — test strategy, acceptance criteria, 3 amigos, edge case identification",
       "version": "0.1.0",
       "category": "engineering",
-      "tags": ["qa", "test-strategy", "acceptance-criteria", "planning"]
+      "tags": [
+        "qa",
+        "test-strategy",
+        "acceptance-criteria",
+        "planning"
+      ]
     },
     {
       "name": "qa-engineer",
@@ -168,7 +279,12 @@
       "description": "QA engineer — test automation, test execution, coverage analysis, bug investigation",
       "version": "0.1.0",
       "category": "engineering",
-      "tags": ["testing", "qa", "automation", "coverage"]
+      "tags": [
+        "testing",
+        "qa",
+        "automation",
+        "coverage"
+      ]
     },
     {
       "name": "devops",
@@ -176,7 +292,12 @@
       "description": "DevOps / platform engineer — IaC, CI/CD, deployment, monitoring, incident response",
       "version": "0.1.0",
       "category": "engineering",
-      "tags": ["devops", "infrastructure", "cicd", "deployment"]
+      "tags": [
+        "devops",
+        "infrastructure",
+        "cicd",
+        "deployment"
+      ]
     },
     {
       "name": "security-engineer",
@@ -184,7 +305,11 @@
       "description": "Security engineer — threat modelling, security audits, compliance, vulnerability management",
       "version": "0.1.0",
       "category": "engineering",
-      "tags": ["security", "threat-model", "compliance"]
+      "tags": [
+        "security",
+        "threat-model",
+        "compliance"
+      ]
     },
     {
       "name": "data-engineer",
@@ -192,7 +317,12 @@
       "description": "Data engineer — data pipelines, analytics, event tracking, metrics, data modelling",
       "version": "0.1.0",
       "category": "engineering",
-      "tags": ["data", "analytics", "pipelines", "metrics"]
+      "tags": [
+        "data",
+        "analytics",
+        "pipelines",
+        "metrics"
+      ]
     },
     {
       "name": "code-reviewer",
@@ -200,7 +330,12 @@
       "description": "Code review agent with multi-pass review, quality scoring, and PR creation skills",
       "version": "0.1.0",
       "category": "engineering",
-      "tags": ["code-review", "pr", "quality", "review"]
+      "tags": [
+        "code-review",
+        "pr",
+        "quality",
+        "review"
+      ]
     }
   ]
 }

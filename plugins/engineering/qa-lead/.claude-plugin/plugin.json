@@ -2,8 +2,16 @@
   "name": "qa-lead",
   "description": "QA Lead — test strategy, acceptance criteria, 3 amigos participation. Works with product and architecture during planning to define what to test and how to verify.",
   "version": "0.1.0",
-  "author": { "name": "hps.gd" },
+  "author": {
+    "name": "hps.gd"
+  },
   "repository": "https://github.com/hpsgd/claude-marketplace",
   "license": "MIT",
-  "keywords": ["qa", "test-strategy", "acceptance-criteria", "3-amigos", "planning"]
+  "keywords": [
+    "qa",
+    "test-strategy",
+    "acceptance-criteria",
+    "3-amigos",
+    "planning"
+  ]
 }

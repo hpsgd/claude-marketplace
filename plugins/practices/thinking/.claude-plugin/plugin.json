@@ -2,8 +2,17 @@
   "name": "thinking",
   "description": "Structured thinking and reasoning skills — first principles, iterative depth, creative ideation, council debates, red team, scientific method, ISC, and algorithm",
   "version": "0.1.0",
-  "author": { "name": "hps.gd" },
+  "author": {
+    "name": "hps.gd"
+  },
   "repository": "https://github.com/hpsgd/claude-marketplace",
   "license": "MIT",
-  "keywords": ["reasoning", "first-principles", "red-team", "isc", "algorithm", "decision-making"]
+  "keywords": [
+    "reasoning",
+    "first-principles",
+    "red-team",
+    "isc",
+    "algorithm",
+    "decision-making"
+  ]
 }

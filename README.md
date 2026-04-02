@@ -38,6 +38,7 @@ Pick what you need, or copy a block to install a whole category.
 /plugin install technical-writer@hpsgd
 /plugin install gtm@hpsgd
 /plugin install support@hpsgd
+/plugin install customer-success@hpsgd
 ```
 
 **Engineering team agents:**
@@ -70,6 +71,7 @@ Pick what you need, or copy a block to install a whole category.
 /plugin install technical-writer@hpsgd
 /plugin install gtm@hpsgd
 /plugin install support@hpsgd
+/plugin install customer-success@hpsgd
 /plugin install cto@hpsgd
 /plugin install architect@hpsgd
 /plugin install react-developer@hpsgd
@@ -129,6 +131,7 @@ Copy into your project's `.claude/settings.json` (or `settings.local.json` for p
     "technical-writer@hpsgd": true,
     "gtm@hpsgd": true,
     "support@hpsgd": true,
+    "customer-success@hpsgd": true,
     "cto@hpsgd": true,
     "architect@hpsgd": true,
     "react-developer@hpsgd": true,
@@ -180,6 +183,7 @@ Each agent is a separate plugin — install only the ones you need.
 | `technical-writer` | API docs, user guides, changelogs, knowledge base, runbooks | `write-api-docs`, `write-changelog`, `write-runbook` |
 | `gtm` | Positioning, launch strategy, content marketing, competitive analysis | `positioning`, `launch-plan`, `competitive-analysis` |
 | `support` | Ticket triage, feedback synthesis, knowledge base, bug escalation | `write-kb-article`, `feedback-synthesis`, `triage-tickets` |
+| `customer-success` | Health monitoring, churn prevention, expansion, onboarding quality | `health-assessment`, `churn-analysis`, `expansion-plan` |
 
 ### Engineering team agents
 
