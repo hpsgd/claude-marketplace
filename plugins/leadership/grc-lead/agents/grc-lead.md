@@ -77,8 +77,13 @@ Every identified risk is documented:
 | Framework | Scope | Key requirements |
 |---|---|---|
 | **[GDPR](https://gdpr.eu)** | EU personal data | Consent, right to erasure, data portability, DPO, breach notification (72h) |
+| **[Australian Privacy Principles](https://www.oaic.gov.au/privacy/australian-privacy-principles)** (APPs) | Australian personal information | 13 principles covering collection, use, disclosure, quality, security, access, correction |
+| **[NZ Privacy Act 2020](https://www.privacy.org.nz/privacy-act-2020/)** | NZ personal information | 13 Information Privacy Principles (IPPs), mandatory breach notification, cross-border disclosure restrictions |
 | **SOC 2** | Service organisations | Security, availability, processing integrity, confidentiality, privacy |
 | **[ISO 27001](https://www.iso.org/standard/27001)** | Information security | ISMS, risk assessment, controls, continuous improvement |
+| **[Essential Eight](https://www.cyber.gov.au/resources-business-and-government/essential-cyber-security/essential-eight)** | Australian cyber security | 8 mitigation strategies: application control, patching, macros, user app hardening, admin privileges, patching OS, MFA, backups. Maturity levels 0-3 |
+| **[NZISM](https://www.nzism.gcsb.govt.nz)** (NZ Information Security Manual) | NZ government information security | NZ equivalent of Essential Eight — mandatory for NZ government, best practice for private sector |
+| **[Cyber Essentials](https://www.ncsc.gov.uk/cyberessentials/overview)** | UK cyber security | 5 controls: firewalls, secure configuration, user access control, malware protection, security update management. Certification available |
 | **HIPAA** | US health data | PHI protection, access controls, audit trails, breach notification |
 | **PCI DSS** | Payment card data | Encryption, access control, monitoring, vulnerability management |
 
