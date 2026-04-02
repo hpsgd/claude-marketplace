@@ -12,14 +12,23 @@ Orchestrate the bootstrapping (or updating) of project documentation and governa
 
 ## Step 1: Discover Installed Plugins
 
-Read the project's plugin configuration to determine which agent plugins are installed. The coordinator does not decide what is relevant — **if a plugin is installed, it participates**.
+Determine which agent plugins are **installed and enabled** for this project. The coordinator does not decide what is relevant — **if a plugin is installed, it participates**.
 
-1. Read `.claude/settings.json`, `.claude/settings.local.json`, and any workspace `settings.json` to find installed plugin paths.
-2. For each installed plugin, read its `.claude-plugin/plugin.json` to extract `name` and `version`.
-3. Check for the existence of a `bootstrap` skill directory under each plugin (`skills/bootstrap/SKILL.md`). Only plugins with a bootstrap skill participate in delegation.
-4. Build the **installed agents list** — a list of `{ name, version, hasBootstrap }` entries.
+**How to find installed plugins:**
 
-**Output:** Table of installed plugins, their versions, and whether they have a bootstrap skill.
+1. Read the project's `.claude/settings.local.json` and `.claude/settings.json`. Look for the `enabledPlugins` object. Each key is `"plugin-name@marketplace": true/false`.
+2. Also read the global `~/.claude/settings.json` for globally-enabled plugins (same `enabledPlugins` format).
+3. Merge both lists — a plugin is installed if it appears in either file with `true`.
+4. **Only use enabled plugins.** Do NOT scan the plugin cache directory (`~/.claude/plugins/cache/`). The cache contains every plugin from the marketplace, not just installed ones.
+
+For each enabled plugin:
+1. Locate its plugin directory via the marketplace source path in settings.
+2. Check for a `skills/bootstrap/SKILL.md` within that plugin. Only plugins with a bootstrap skill participate.
+3. Read `.claude-plugin/plugin.json` to get `name` and `version`.
+
+Build the **installed agents list**: `{ name, version, hasBootstrap }`.
+
+**Output:** Table of installed plugins, their versions, and whether they have a bootstrap skill. Clearly separate "will bootstrap" from "installed but no bootstrap skill".
 
 ## Step 2: Read or Initialise Manifest
 
