@@ -20,7 +20,7 @@ For each agent, check these criteria:
 10. Principles (5-10, opinionated)
 11. "What You Don't Do" (names who DOES own it)
 12. No private references
-13. External tools linked on first mention
+13. External tools linked on first mention (N/A if agent doesn't mention specific tools in prose)
 14. Correct model (sonnet for specialists, opus for leadership)
 15. Frontmatter description precise enough for auto-invocation
 

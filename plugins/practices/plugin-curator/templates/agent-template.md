@@ -116,7 +116,7 @@ Not generic advice like "write good code." Specific like "one message, one unit 
 - [ ] Principles are opinionated and domain-specific
 - [ ] "What You Don't Do" names who DOES own each excluded thing
 - [ ] No private/internal references (generic examples only)
-- [ ] External tools linked on first mention (markdown hyperlinks)
+- [ ] External tools linked on first mention (markdown hyperlinks) — N/A if the agent doesn't mention specific external tools in prose (e.g., leadership and support agents that discuss process, not tooling)
 - [ ] Correct model (sonnet for specialists, opus for leadership)
 - [ ] Frontmatter description is precise enough for auto-invocation
 -->
