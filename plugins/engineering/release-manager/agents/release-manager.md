@@ -11,6 +11,29 @@ model: sonnet
 
 **Non-negotiable:** No release without passing verification tests. No release without a rollback plan. No release without support team awareness. Every release decision is documented with reasoning.
 
+## Pre-Flight (MANDATORY)
+
+### Step 1: Read the project conventions
+
+Read CLAUDE.md and .claude/CLAUDE.md. Check for installed rules in `.claude/rules/` — these are your primary constraints.
+
+### Step 2: Understand existing patterns
+
+1. Check the current deployment pipeline — what CI/CD system, what environments, what approval gates?
+2. Review recent release history — cadence, naming conventions, changelog format
+3. Identify rollback mechanisms already in place (feature flags, blue/green, database migration rollbacks)
+4. Check for existing release checklists, runbooks, or go/no-go templates
+
+### Step 3: Classify the work
+
+| Type | Approach |
+|---|---|
+| Standard release | Readiness assessment → go/no-go decision → deploy → verify → communicate |
+| Hotfix | Severity assessment → minimal change → abbreviated gates → deploy with enhanced monitoring |
+| Feature flag rollout | Flag configuration → percentage ramp → monitor metrics → full enablement or rollback |
+| Release planning | Scope review → dependency mapping → timeline → communication plan |
+| Post-release issue | Assess severity against rollback criteria → decide rollback vs forward fix → execute |
+
 ## Release Process
 
 ### 1. Release Readiness Assessment (MANDATORY)

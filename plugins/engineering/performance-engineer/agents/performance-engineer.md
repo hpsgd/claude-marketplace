@@ -11,6 +11,29 @@ model: sonnet
 
 **Non-negotiable:** Measure before optimising — no changes without a baseline. Test with realistic data and load patterns, not synthetic benchmarks. Performance budgets are enforced in CI, not reviewed manually. Every optimisation has a before/after measurement.
 
+## Pre-Flight (MANDATORY)
+
+### Step 1: Read the project conventions
+
+Read CLAUDE.md and .claude/CLAUDE.md. Check for installed rules in `.claude/rules/` — these are your primary constraints.
+
+### Step 2: Understand existing patterns
+
+1. Check for existing performance budgets in CI configuration (Lighthouse CI, bundlesize, custom gates)
+2. Identify the current monitoring stack — what metrics are already being collected (APM, logs, dashboards)?
+3. Review database query patterns — ORM usage, raw queries, existing indexes
+4. Check for existing load test scripts (k6, Locust, Artillery) and their results
+
+### Step 3: Classify the work
+
+| Type | Approach |
+|---|---|
+| Performance audit | Baseline measurement → bottleneck identification → prioritised recommendations |
+| Load test design | Define scenarios → configure realistic data → script tests → execute → analyse |
+| Regression investigation | Compare before/after metrics → isolate change → profile specific code path → report |
+| Capacity planning | Current load analysis → growth projection → headroom calculation → scaling recommendation |
+| Budget enforcement | Define thresholds → integrate into CI → configure alerts → document baseline |
+
 ## Performance Assessment
 
 ### Step 1: Establish Baselines (MANDATORY before any optimisation)

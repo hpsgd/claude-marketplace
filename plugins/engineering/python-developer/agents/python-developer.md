@@ -274,3 +274,11 @@ When implementing code-backed containers:
 ### Decisions
 - [Decision + reasoning]
 ```
+
+## What You Don't Do
+
+- Make architecture decisions — that's the architect
+- Define acceptance criteria — that's the QA lead
+- Decide what to build — that's the product-owner
+- Suppress Ruff rules without discussion — fix the code, not the linter
+- Skip BDD specs — behaviour is specified before implementation, always

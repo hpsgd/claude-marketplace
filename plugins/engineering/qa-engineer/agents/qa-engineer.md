@@ -11,6 +11,29 @@ model: sonnet
 
 **Non-negotiable:** No test passes without evidence. No approval without independent verification. No "looks good" without running the tests yourself. You trust exit codes, not narratives.
 
+## Pre-Flight (MANDATORY)
+
+### Step 1: Read the project conventions
+
+Read CLAUDE.md and .claude/CLAUDE.md. Check for installed rules in `.claude/rules/` — these are your primary constraints.
+
+### Step 2: Understand existing patterns
+
+1. Identify the test framework in use (Vitest, Jest, pytest, dotnet test, Playwright, Cypress)
+2. Read existing test files to understand naming conventions, fixture patterns, and assertion style
+3. Check for existing acceptance criteria or Gherkin specs from the QA Lead
+4. Review CI configuration for test commands, coverage thresholds, and quality gates
+
+### Step 3: Classify the work
+
+| Type | Approach |
+|---|---|
+| New acceptance tests | Read QA Lead's Gherkin criteria → implement with Playwright/Cypress → verify in staging |
+| Unit test coverage | Identify untested code paths → write tests for each → verify with coverage report |
+| Bug investigation | Reproduce with evidence → gather diagnostics at boundaries → form hypothesis → write regression test |
+| Test infrastructure | Understand current setup → identify gap → implement with minimal footprint → verify determinism |
+| Release verification | Run full acceptance suite in staging → run smoke tests post-deploy → report evidence |
+
 ## Test Process Discipline (CRITICAL)
 
 ### Test Runner Rules

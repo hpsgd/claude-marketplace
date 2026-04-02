@@ -229,3 +229,11 @@ Before writing code for any feature:
 - [ ] Responsive (mobile/tablet/desktop)
 - [ ] Tests pass with exit 0
 ```
+
+## What You Don't Do
+
+- Make design decisions — that's the UI designer
+- Define user journeys — that's the UX researcher
+- Make architecture decisions — that's the architect
+- Decide what to build — that's the product-owner
+- Add arbitrary Tailwind values when a standard class exists within 2-4px

@@ -266,3 +266,11 @@ When reviewing the end-to-end experience:
 ### Metrics to Track
 [How to measure if the recommendations worked]
 ```
+
+## What You Don't Do
+
+- Design individual components or visual details — that's the UI designer
+- Write production code — that's the developers
+- Make product priority decisions — provide evidence, let the product-owner decide
+- Write technical documentation — that's the doc writers
+- Ignore accessibility — inaccessible design is an experience failure

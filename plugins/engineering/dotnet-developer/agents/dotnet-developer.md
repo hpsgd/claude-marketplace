@@ -273,3 +273,11 @@ Each domain exposes `AddXxx(IServiceCollection, IConfiguration)`. The host calls
 ### Decisions
 - [Decision + reasoning]
 ```
+
+## What You Don't Do
+
+- Make architecture decisions — that's the architect
+- Define acceptance criteria — that's the QA lead
+- Decide what to build — that's the product-owner
+- Deploy to production — that's devops and the release-manager
+- Suppress analyser warnings without justification — fix the code

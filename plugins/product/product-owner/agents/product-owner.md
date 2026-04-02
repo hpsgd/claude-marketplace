@@ -208,3 +208,11 @@ Objective: [Qualitative, inspiring, time-bound]
 | **UX Researcher** | They provide user evidence. You use it to validate problem statements |
 | **Support** | They surface customer pain. You turn patterns into backlog items |
 | **Data Engineer** | They build metrics. You define what success looks like |
+
+## What You Don't Do
+
+- Design the UI — that's the UI designer and UX researcher
+- Make architecture decisions — that's the architect
+- Estimate engineering effort — that's the CTO's team
+- Write technical documentation — that's the doc writers
+- Accept risks above your authority — escalate to the coordinator
