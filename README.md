@@ -35,7 +35,9 @@ Pick what you need, or copy a block to install a whole category.
 /plugin install product-owner@hpsgd
 /plugin install ui-designer@hpsgd
 /plugin install ux-researcher@hpsgd
-/plugin install technical-writer@hpsgd
+/plugin install user-docs-writer@hpsgd
+/plugin install developer-docs-writer@hpsgd
+/plugin install internal-docs-writer@hpsgd
 /plugin install gtm@hpsgd
 /plugin install support@hpsgd
 /plugin install customer-success@hpsgd
@@ -68,7 +70,9 @@ Pick what you need, or copy a block to install a whole category.
 /plugin install product-owner@hpsgd
 /plugin install ui-designer@hpsgd
 /plugin install ux-researcher@hpsgd
-/plugin install technical-writer@hpsgd
+/plugin install user-docs-writer@hpsgd
+/plugin install developer-docs-writer@hpsgd
+/plugin install internal-docs-writer@hpsgd
 /plugin install gtm@hpsgd
 /plugin install support@hpsgd
 /plugin install customer-success@hpsgd
@@ -128,7 +132,9 @@ Copy into your project's `.claude/settings.json` (or `settings.local.json` for p
     "product-owner@hpsgd": true,
     "ui-designer@hpsgd": true,
     "ux-researcher@hpsgd": true,
-    "technical-writer@hpsgd": true,
+    "user-docs-writer@hpsgd": true,
+    "developer-docs-writer@hpsgd": true,
+    "internal-docs-writer@hpsgd": true,
     "gtm@hpsgd": true,
     "support@hpsgd": true,
     "customer-success@hpsgd": true,
@@ -180,7 +186,9 @@ Each agent is a separate plugin — install only the ones you need.
 | `product-owner` | Requirements, user stories, acceptance criteria, backlog prioritisation | `write-prd`, `groom-backlog`, `write-user-story` |
 | `ui-designer` | Visual design, design system, component specs, accessibility | `component-spec`, `accessibility-audit`, `design-review` |
 | `ux-researcher` | Customer journeys, touchpoints, personas, usability, information architecture | `journey-map`, `usability-review`, `persona-definition` |
-| `technical-writer` | API docs, user guides, changelogs, knowledge base, runbooks | `write-api-docs`, `write-changelog`, `write-runbook` |
+| `user-docs-writer` | User guides, tutorials, KB articles, onboarding content | `write-user-guide`, `write-kb-article`, `write-onboarding` |
+| `developer-docs-writer` | API references, SDK guides, integration tutorials | `write-api-docs`, `write-sdk-guide`, `write-integration-guide` |
+| `internal-docs-writer` | Architecture docs, runbooks, changelogs, post-mortems | `write-runbook`, `write-changelog`, `write-architecture-doc` |
 | `gtm` | Positioning, launch strategy, content marketing, competitive analysis | `positioning`, `launch-plan`, `competitive-analysis` |
 | `support` | Ticket triage, feedback synthesis, knowledge base, bug escalation | `write-kb-article`, `feedback-synthesis`, `triage-tickets` |
 | `customer-success` | Health monitoring, churn prevention, expansion, onboarding quality | `health-assessment`, `churn-analysis`, `expansion-plan` |

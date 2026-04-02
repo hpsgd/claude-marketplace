@@ -159,14 +159,41 @@
       ]
     },
     {
-      "name": "technical-writer",
-      "source": "product/technical-writer",
-      "description": "Technical writer — API docs, user guides, changelogs, knowledge base, runbooks",
+      "name": "user-docs-writer",
+      "source": "product/user-docs-writer",
+      "description": "User documentation writer — guides, tutorials, knowledge base, onboarding. Product language for non-technical audiences.",
+      "version": "0.1.0",
+      "category": "product",
+      "tags": [
+        "documentation",
+        "user-guides",
+        "tutorials",
+        "knowledge-base"
+      ]
+    },
+    {
+      "name": "developer-docs-writer",
+      "source": "product/developer-docs-writer",
+      "description": "Developer documentation writer — API references, SDK guides, integration tutorials, code examples.",
       "version": "0.1.0",
       "category": "product",
       "tags": [
         "documentation",
         "api-docs",
+        "sdk",
+        "developer-experience"
+      ]
+    },
+    {
+      "name": "internal-docs-writer",
+      "source": "product/internal-docs-writer",
+      "description": "Internal documentation writer — architecture docs, runbooks, changelogs, onboarding, post-mortems.",
+      "version": "0.1.0",
+      "category": "product",
+      "tags": [
+        "documentation",
+        "architecture",
+        "runbooks",
         "changelog"
       ]
     },

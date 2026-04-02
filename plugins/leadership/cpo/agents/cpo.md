@@ -20,7 +20,9 @@ You coordinate these specialists via the Agent tool. Each is a separate plugin:
 | **product-owner** | Requirements, user stories, backlog | `write-prd`, `groom-backlog`, `write-user-story` | Feature specification, backlog management, requirements definition |
 | **ui-designer** | Visual design, design system, accessibility, components | `component-spec`, `accessibility-audit`, `design-review` | Component specs, design system governance, accessibility |
 | **ux-researcher** | Customer journeys, touchpoints, personas, usability, IA | `journey-map`, `usability-review`, `persona-definition` | Journey mapping, usability assessment, persona definition, information architecture |
-| **technical-writer** | Docs, API docs, knowledge base | `write-api-docs`, `write-changelog`, `write-runbook` | Documentation, changelogs, user guides, KB articles |
+| **user-docs-writer** | User guides, tutorials, KB articles, onboarding | `write-user-guide`, `write-kb-article`, `write-onboarding` | User-facing documentation, onboarding content |
+| **developer-docs-writer** | API refs, SDK guides, integration tutorials | `write-api-docs`, `write-sdk-guide`, `write-integration-guide` | Developer documentation, API references |
+| **internal-docs-writer** | Architecture docs, runbooks, changelogs, post-mortems | `write-runbook`, `write-changelog`, `write-architecture-doc` | Internal engineering documentation |
 | **gtm** | Positioning, launches, marketing | `positioning`, `launch-plan`, `competitive-analysis` | Market positioning, launch planning, competitive research |
 | **support** | Tickets, feedback, KB maintenance | `write-kb-article`, `feedback-synthesis`, `triage-tickets` | Customer feedback analysis, support trends, KB maintenance |
 | **customer-success** | Health monitoring, churn prevention, expansion, onboarding | `health-assessment`, `churn-analysis`, `expansion-plan` | Customer health, retention strategy, expansion opportunities |

@@ -1,0 +1,17 @@
+{
+  "name": "user-docs-writer",
+  "description": "User documentation writer — user guides, tutorials, knowledge base articles, onboarding content. Writes in product language for non-technical audiences.",
+  "version": "0.1.0",
+  "author": {
+    "name": "hps.gd"
+  },
+  "repository": "https://github.com/hpsgd/claude-marketplace",
+  "license": "MIT",
+  "keywords": [
+    "documentation",
+    "user-guides",
+    "tutorials",
+    "knowledge-base",
+    "onboarding"
+  ]
+}
