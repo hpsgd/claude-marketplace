@@ -8,14 +8,17 @@ allowed-tools: Read, Write, Edit, Bash, Glob, Grep
 
 # Retrospective
 
-Analyse conversation transcripts to extract learnings. Use `$ARGUMENTS` to control what to analyse:
+Analyse conversation transcripts to extract learnings. Use `$ARGUMENTS` to control what to do:
 
-- **`current`** — analyse the current session's transcript so far
-- **`summary`** — review all accumulated learnings and show metrics
-- **`patterns`** — detect recurring patterns across sessions (3+ instances)
-- **`{session-id}`** — analyse a specific past session
+- **`current`** — analyse the current session's transcript (Steps 1–4)
+- **`latest`** — analyse the most recent completed session (Steps 1–4)
+- **`summary`** — show accumulated metrics and trends (runs `generate-metrics.py`)
+- **`patterns`** — detect recurring patterns across all sessions (runs `detect-patterns.py`, then Step 5)
+- **`signals`** — classify queued ambiguous signals and evolve regex patterns (Step 3 only)
+- **`full`** — run everything: analyse latest session, classify signals, detect patterns, generate metrics (Steps 1–6)
+- **`{session-id}`** — analyse a specific past session (Steps 1–4)
 
-This skill is also triggered automatically by the SessionStart hook, which analyses the most recent completed session.
+This skill is also triggered automatically by the SessionStart hook, which runs the analysis scripts on the previous session. Use this skill manually when you want to run analysis mid-session, review metrics, or trigger pattern detection and rule proposals.
 
 ## Step 1: Locate transcript
 
