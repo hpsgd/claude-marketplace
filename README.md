@@ -2,6 +2,93 @@
 
 A centralized marketplace for sharing Claude Code plugins, instructions, and configurations across your team.
 
+## Thinking skills — the core of the marketplace
+
+The `thinking` plugin is the most important piece. It provides structured reasoning skills, a learning system that improves over time, and project bootstrapping. Install it first.
+
+```
+/plugin install thinking@hpsgd
+```
+
+### Reasoning skills
+
+Invoke with `/thinking:skill-name` or let Claude auto-invoke when the context matches.
+
+| Skill | What it does | When to use |
+|---|---|---|
+| `/thinking:algorithm` | Seven-phase execution: observe → think → plan → adapt → execute → verify → learn | Any non-trivial task that benefits from systematic execution |
+| `/thinking:isc` | Decompose into Identifiable, Specific, Verifiable Criteria | Start of any task — ensures nothing is missed |
+| `/thinking:first-principles` | Deconstruct to fundamental truths, challenge assumptions, rebuild | When stuck or challenging inherited constraints |
+| `/thinking:council` | Structured debate between 4 expert perspectives | Weighing options, making decisions |
+| `/thinking:red-team` | Adversarial stress-testing of an idea or plan | Validating a decision before committing |
+| `/thinking:creative` | Divergent ideation with wild card options | Need novel solutions or multiple distinct approaches |
+| `/thinking:iterative-depth` | Multi-lens analysis from different perspectives | Requirements analysis, architecture decisions |
+| `/thinking:scientific-method` | Goal → hypothesise → experiment → measure → iterate | Debugging, validating assumptions |
+
+### Learning system
+
+The thinking plugin includes a self-improving learning loop that analyses your sessions, detects corrections, and writes rules to prevent repeated mistakes.
+
+| Skill | What it does |
+|---|---|
+| `/thinking:retrospective full` | Analyse transcripts, classify signals, detect patterns, generate metrics, write learned rules |
+| `/thinking:retrospective latest` | Analyse the most recent completed session |
+| `/thinking:retrospective summary` | Show accumulated metrics and correction rate trends |
+| `/thinking:retrospective patterns` | Detect recurring correction patterns across sessions |
+| `/thinking:retrospective signals` | Classify ambiguous messages and evolve regex patterns |
+| `/thinking:learning` | Capture a learning in the moment (manual) |
+| `/thinking:wisdom` | Record or query crystallised patterns from accumulated experience |
+| `/thinking:health-check` | Audit the project's Claude Code setup — plugins, rules, memory, learnings |
+| `/thinking:propose-improvement` | Propose a PR against the marketplace based on a detected pattern |
+
+**How the learning loop works:**
+
+```
+Every message → regex classifier (async, ~5ms) → correction/praise/unclassified
+                                                          ↓
+New session start → analyse previous transcript → extract corrections/reversals
+                  → detect patterns (3+ instances) → generate metrics
+                  → inject recent learnings into context (so Claude remembers)
+                                                          ↓
+/thinking:retrospective → Claude classifies ambiguous signals
+                        → writes learned rules to .claude/rules/ (immediate effect)
+                        → evolves regex patterns (self-improving)
+                        → proposes upstream PRs when patterns mature (5+ instances)
+```
+
+## Agent overview
+
+The marketplace provides a full virtual team organised under a coordinator:
+
+```
+Human (CEO/Founder)
+└── Coordinator
+    ├── CPO
+    │   ├── product-owner — PRDs, user stories, JTBD, story mapping, backlog
+    │   ├── ui-designer — component specs, design tokens, accessibility, design review
+    │   ├── ux-researcher — personas, journey maps, usability testing, service blueprints
+    │   ├── user-docs-writer — user guides, KB articles, onboarding, content strategy
+    │   ├── developer-docs-writer — API docs, SDK guides, integration guides, migration guides
+    │   ├── internal-docs-writer — architecture docs, runbooks, changelogs
+    │   ├── gtm — positioning, launch plans, competitive analysis, battle cards
+    │   ├── support — ticket triage, feedback synthesis, KB articles
+    │   └── customer-success — health scoring, churn analysis, expansion, QBRs, onboarding
+    ├── CTO
+    │   ├── architect — system design, ADRs, API design, technology evaluation
+    │   ├── react-developer, dotnet-developer, python-developer, ai-engineer
+    │   ├── qa-lead — test strategy, acceptance criteria
+    │   ├── qa-engineer — test generation, bug reports
+    │   ├── release-manager — release plans, rollback assessment
+    │   ├── performance-engineer — load testing, profiling, capacity planning
+    │   ├── devops — pipelines, Dockerfiles, IaC, SLOs, incident response
+    │   ├── security-engineer — threat models, security reviews, dependency/supply-chain audits
+    │   ├── data-engineer — data models, event tracking, queries
+    │   └── code-reviewer — multi-pass review, PR creation
+    └── GRC Lead — risk assessment, compliance audit, AI governance, DPIA
+```
+
+Each agent has specialised skills, templates, and a bootstrap skill for project scaffolding. Install only what you need — each agent is a separate plugin.
+
 ## Quick start
 
 ### 1. Add the marketplace
@@ -15,22 +102,27 @@ A centralized marketplace for sharing Claude Code plugins, instructions, and con
 Pick what you need, or copy a block to install a whole category.
 
 **Core (rules + thinking skills):**
+
 ```
 /plugin install coding-standards@hpsgd
 /plugin install writing-style@hpsgd
 /plugin install security-compliance@hpsgd
 /plugin install thinking@hpsgd
+/plugin install tooling@hpsgd
 /plugin install code-reviewer@hpsgd
 /plugin install technology-stack@hpsgd
 /plugin install plugin-curator@hpsgd
 ```
 
-**Coordinator:**
+**Coordinator + governance:**
+
 ```
 /plugin install coordinator@hpsgd
+/plugin install grc-lead@hpsgd
 ```
 
 **Product team agents:**
+
 ```
 /plugin install cpo@hpsgd
 /plugin install product-owner@hpsgd
@@ -42,51 +134,11 @@ Pick what you need, or copy a block to install a whole category.
 /plugin install gtm@hpsgd
 /plugin install support@hpsgd
 /plugin install customer-success@hpsgd
-```
-
-**Governance:**
-```
-/plugin install grc-lead@hpsgd
 ```
 
 **Engineering team agents:**
-```
-/plugin install cto@hpsgd
-/plugin install architect@hpsgd
-/plugin install react-developer@hpsgd
-/plugin install dotnet-developer@hpsgd
-/plugin install python-developer@hpsgd
-/plugin install ai-engineer@hpsgd
-/plugin install qa-lead@hpsgd
-/plugin install qa-engineer@hpsgd
-/plugin install release-manager@hpsgd
-/plugin install performance-engineer@hpsgd
-/plugin install devops@hpsgd
-/plugin install security-engineer@hpsgd
-/plugin install data-engineer@hpsgd
-/plugin install code-reviewer@hpsgd
-```
 
-**Everything at once:**
 ```
-/plugin install coding-standards@hpsgd
-/plugin install writing-style@hpsgd
-/plugin install security-compliance@hpsgd
-/plugin install thinking@hpsgd
-/plugin install code-reviewer@hpsgd
-/plugin install technology-stack@hpsgd
-/plugin install coordinator@hpsgd
-/plugin install cpo@hpsgd
-/plugin install product-owner@hpsgd
-/plugin install ui-designer@hpsgd
-/plugin install ux-researcher@hpsgd
-/plugin install user-docs-writer@hpsgd
-/plugin install developer-docs-writer@hpsgd
-/plugin install internal-docs-writer@hpsgd
-/plugin install gtm@hpsgd
-/plugin install support@hpsgd
-/plugin install customer-success@hpsgd
-/plugin install grc-lead@hpsgd
 /plugin install cto@hpsgd
 /plugin install architect@hpsgd
 /plugin install react-developer@hpsgd
@@ -100,7 +152,6 @@ Pick what you need, or copy a block to install a whole category.
 /plugin install devops@hpsgd
 /plugin install security-engineer@hpsgd
 /plugin install data-engineer@hpsgd
-/plugin install code-reviewer@hpsgd
 ```
 
 Then reload:
@@ -123,11 +174,13 @@ Copy into your project's `.claude/settings.json` (or `settings.local.json` for p
     "writing-style@hpsgd": true,
     "security-compliance@hpsgd": true,
     "thinking@hpsgd": true,
+    "tooling@hpsgd": true,
     "code-reviewer@hpsgd": true,
     "technology-stack@hpsgd": true
   }
 }
 ```
+
 </details>
 
 <details>
@@ -140,6 +193,7 @@ Copy into your project's `.claude/settings.json` (or `settings.local.json` for p
     "writing-style@hpsgd": true,
     "security-compliance@hpsgd": true,
     "thinking@hpsgd": true,
+    "tooling@hpsgd": true,
     "code-reviewer@hpsgd": true,
     "technology-stack@hpsgd": true,
     "plugin-curator@hpsgd": true,
@@ -172,27 +226,35 @@ Copy into your project's `.claude/settings.json` (or `settings.local.json` for p
   }
 }
 ```
+
 </details>
 
-### 3. Start using them
+### 3. Bootstrap a project
 
-Plugins activate automatically. Skills are available as slash commands (e.g., `/hpsgd:code-review`) or are auto-invoked by Claude when relevant.
+After installing plugins, scaffold your project with domain-specific docs, CLAUDE.md files, and templates:
 
-## Available plugins
+```
+/coordinator:bootstrap-project my-project
+```
+
+This delegates to each installed agent's bootstrap skill, creating a `docs/` structure with per-domain documentation and conventions. Idempotent — safe to re-run after adding new plugins.
+
+## All plugins
 
 ### Core plugins
 
 | Plugin | Type | Description |
 |---|---|---|
 | `coding-standards` | Rules + Skills | TypeScript, .NET, Python conventions, git workflow, testing, architecture, AI steering. 10 rules, 5 review skills |
-| `writing-style` | Rules + Skills | AI tell avoidance, banned vocabulary, sentence structure, 15-point editing checklist. Skill: `style-guide` |
+| `writing-style` | Rules + Skills | AI tell avoidance, banned vocabulary, sentence structure, markdown formatting, 15-point editing checklist. Skill: `style-guide` |
 | `security-compliance` | Rules + Skills | Security baseline rules and deep security audit skill |
-| `thinking` | Skills | 11 skills: ISC, algorithm, first-principles, council, red-team, creative, iterative-depth, scientific-method, learning, wisdom, health-check |
+| `thinking` | Skills + Hooks | Reasoning skills, learning system, project health checks. 15 skills, self-improving feedback loop |
+| `tooling` | Rules | Organisational tooling conventions — ensures agents reference the correct tools |
 | `code-reviewer` | Skills + Agent | Multi-pass code review with quality scoring, and PR creation |
 | `technology-stack` | Rules | JasperFx, Next.js, Pulumi, Moon, SonarCloud, event sourcing conventions |
 | `plugin-curator` | Agent + Skills | Marketplace maintenance — create agents/skills, audit consistency, enforce templates |
 
-### Coordinator
+### Coordinator + governance
 
 | Plugin | Agent | Skills |
 |---|---|---|
@@ -200,8 +262,6 @@ Plugins activate automatically. Skills are available as slash commands (e.g., `/
 | `grc-lead` | Governance, risk, compliance — regulatory, AI governance, audit readiness, policy management | `risk-assessment`, `compliance-audit`, `ai-governance-review`, `write-dpia` |
 
 ### Product team agents
-
-Each agent is a separate plugin — install only the ones you need.
 
 | Plugin | Agent | Skills |
 |---|---|---|
@@ -217,8 +277,6 @@ Each agent is a separate plugin — install only the ones you need.
 | `customer-success` | Health monitoring, churn prevention, expansion, onboarding quality | `health-assessment`, `churn-analysis`, `expansion-plan`, `write-qbr`, `write-onboarding-playbook` |
 
 ### Engineering team agents
-
-Each agent is a separate plugin — install only the ones you need.
 
 | Plugin | Agent | Skills |
 |---|---|---|
@@ -244,11 +302,13 @@ Each agent is a separate plugin — install only the ones you need.
 Claude Code plugins natively support **tools, agents, skills, and output styles**. But team **instructions** (coding standards, security rules, writing guidelines) need a different mechanism. This marketplace uses two complementary approaches:
 
 #### 1. Rules (installed via hook)
+
 For instructions that should **always be active** — coding conventions, security baselines, writing style. These are `.md` files in each plugin's `rules/` directory. A `SessionStart` hook automatically copies them into your project's `.claude/rules/` directory with a namespace prefix (e.g., `coding-standards--typescript.md`).
 
 **Best for:** org-wide standards, conventions, compliance rules
 
 #### 2. Skills (auto-invoked by context)
+
 For instructions that apply **in specific contexts** — code review checklists, security audit procedures, PR templates. These are skills that Claude auto-invokes when the context matches.
 
 **Best for:** workflow-specific guidance, path-specific rules, on-demand tools
@@ -261,35 +321,19 @@ For instructions that apply **in specific contexts** — code review checklists,
 | "When working on API files, follow these patterns" | Skill with `paths:` filter |
 | "Security checklist for all PRs" | Skill (invoked during review) |
 
-### Agent coordination model
+### The learning system
 
-Agents are organised as two teams reporting to the human:
+The thinking plugin includes hooks that fire on every session:
 
-```
-Human (CEO/Founder)
-└── Coordinator (proxy)
-    ├── CPO
-    │   ├── product-owner
-    │   ├── ui-designer
-    │   ├── ux-researcher
-    │   ├── user-docs-writer
-    │   ├── developer-docs-writer
-    │   ├── internal-docs-writer
-    │   ├── gtm
-    │   ├── support
-    │   └── customer-success
-    ├── CTO
-    │   ├── architect
-    │   ├── react-developer, dotnet-developer, python-developer, ai-engineer
-    │   ├── qa-lead, qa-engineer
-    │   ├── release-manager, performance-engineer
-    │   ├── devops, security-engineer, data-engineer
-    │   └── code-reviewer
-    └── GRC Lead
-        └── (governance, risk, compliance, AI governance)
-```
+- **`UserPromptSubmit` (async)** — classifies every user message via regex. Catches corrections, praise, and approach changes. Queues ambiguous messages for Claude to classify during `/thinking:retrospective`.
+- **`SessionStart`** — analyses the previous session's transcript, detects patterns, generates metrics, and injects recent learnings into context.
 
-Leads coordinate their teams and escalate cross-domain issues to the human. When the CPO hits a technical question, they say "this needs the CTO's input." When leads conflict, both present their case and the human decides.
+Learnings flow through two paths:
+
+1. **Path 1 (local, immediate):** Learned rules written to `.claude/rules/learned--*.md` take effect next session.
+2. **Path 2 (shared, upstream):** When patterns recur (5+ instances), `/thinking:propose-improvement` proposes a PR against the marketplace repo with evidence.
+
+The regex classifier is self-evolving — each retrospective that classifies an ambiguous message extracts a new regex pattern and writes it to `.claude/learnings/signals/patterns.json`, which the classifier loads on every subsequent message.
 
 ## Troubleshooting
 
@@ -311,6 +355,7 @@ Plugin skills are invoked by Claude automatically (when the description matches 
 ## Creating a new plugin
 
 1. Create the plugin directory under the appropriate category:
+
    ```
    plugins/leadership/my-leader/       # Coordination and C-level agents
    plugins/product/my-product-agent/   # Customer-facing, product, design, content
@@ -319,6 +364,7 @@ Plugin skills are invoked by Claude automatically (when the description matches 
    ```
 
    Plugin structure:
+
    ```
    plugins/<category>/<name>/
    ├── .claude-plugin/plugin.json   # Required
@@ -334,6 +380,7 @@ Plugin skills are invoked by Claude automatically (when the description matches 
    ```
 
 2. If your plugin has rules, add the install hook in `hooks/hooks.json`:
+
    ```json
    {
      "hooks": {
@@ -355,6 +402,7 @@ Plugin skills are invoked by Claude automatically (when the description matches 
    `${CLAUDE_PLUGIN_ROOT}` is automatically set by Claude Code to the plugin's installation directory. `$CLAUDE_PROJECT_DIR` points to the consuming project's root.
 
 3. Register the plugin in `.claude-plugin/marketplace.json`:
+
    ```json
    {
      "name": "my-plugin",
@@ -371,10 +419,13 @@ Plugin skills are invoked by Claude automatically (when the description matches 
 ## Customization
 
 ### Per-project overrides
+
 Projects can override marketplace rules by creating their own `.claude/rules/` files. Project-level rules take precedence.
 
 ### Disabling specific plugins
+
 Remove or set to `false` in your project's `.claude/settings.json`:
+
 ```json
 {
   "enabledPlugins": {
@@ -384,7 +435,9 @@ Remove or set to `false` in your project's `.claude/settings.json`:
 ```
 
 ### Local overrides (not committed)
+
 Use `.claude/settings.local.json` for personal preferences that shouldn't affect the team:
+
 ```json
 {
   "enabledPlugins": {
