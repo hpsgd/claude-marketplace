@@ -104,7 +104,7 @@ Read the existing `patterns.json` (create if missing), append new patterns, and 
 
 **Output:** Classified signal count by type + number of new patterns added.
 
-## Step 4: Interpret and write learnings (mandatory)
+## Step 4: Interpret, write learnings, and apply local rules (mandatory)
 
 For each event extracted by the script AND each classified signal, interpret it into a learning:
 
@@ -136,7 +136,51 @@ Ask: *What did the assistant do right that should be reinforced?*
 
 Only record successes that are non-obvious — approaches that worked but might not be the default choice. "Wrote code that compiled" is not worth recording. "Used a single bundled PR instead of splitting, and the user confirmed that was the right call" is.
 
-**Output:** Classified learnings with rules and scope.
+### Path 1: Write local learned rules (immediate effect)
+
+For every HIGH severity correction and every recurring pattern, write a **learned rule** to `.claude/rules/` so it takes effect immediately (next session, or even mid-session if Claude Code hot-reloads rules).
+
+```bash
+# Check existing learned rules
+ls .claude/rules/learned--*.md 2>/dev/null
+```
+
+Write the rule file:
+
+```markdown
+---
+description: "[one-line description of what this rule prevents]"
+alwaysApply: true
+---
+
+# Learned: [short title]
+
+[imperative rule statement]
+
+**Why:** [what went wrong without this rule — the specific incident]
+
+**Evidence:** [session ID, date, correction summary]
+```
+
+File naming: `.claude/rules/learned--{kebab-case-topic}.md`
+
+Examples:
+- `.claude/rules/learned--verify-before-declaring-complete.md`
+- `.claude/rules/learned--route-multi-agent-through-coordinator.md`
+- `.claude/rules/learned--check-installed-plugins-not-cache.md`
+
+**Scope determines location:**
+- **Project-specific** → `.claude/rules/learned--{topic}.md` (project root)
+- **Universal** → `~/.claude/rules/learned--{topic}.md` (global, applies to all projects)
+
+**Rules for writing learned rules:**
+- One rule per file. Don't combine multiple learnings into one rule.
+- The description must be specific enough that Claude can match it to relevant situations.
+- Always include the evidence (session ID + what happened). This helps when reviewing whether the rule is still relevant.
+- Check for existing learned rules on the same topic. Update rather than duplicate.
+- If a learned rule contradicts a marketplace rule, the learned rule takes precedence locally — but flag it for Path 2 (upstream PR) to resolve the conflict.
+
+**Output:** Classified learnings with rules and scope + list of learned rule files written.
 
 ## Step 5: Check for patterns (mandatory for `patterns` mode)
 
@@ -165,28 +209,96 @@ Save the pattern to `.claude/learnings/patterns/{pattern-id}.json`.
 
 **Output:** Pattern table with proposed changes.
 
-## Step 6: Propose changes (when patterns reach threshold)
+## Step 6: Path 2 — Propose upstream PR (when patterns reach threshold)
 
-When a pattern has 5+ instances OR the user approves a 3+ instance pattern:
+When a pattern has 5+ instances, OR the user approves a 3+ instance pattern, OR a learned rule contradicts a marketplace rule — propose a PR against the marketplace repo to share the improvement.
 
-1. Draft the proposed change (new rule, agent modification, or skill update)
-2. Show the change to the user with the evidence (which sessions, which corrections)
-3. If approved, create a PR branch and apply the change
-4. Include metrics in the PR description
+### 6a. Draft the change
+
+Determine what needs to change in the marketplace:
+
+| Learning type | Marketplace change |
+|---|---|
+| Repeated correction about approach | New rule in the relevant plugin's `rules/` directory |
+| Pattern in a specific agent's domain | Update to the agent definition or skill |
+| Regex pattern that catches a new class of correction | Update to `scripts/classify-message.py` seed patterns |
+| Learned rule that should be shared | Move from `.claude/rules/learned--*.md` to the marketplace plugin's `rules/` |
+
+### 6b. Present to user for approval
 
 ```markdown
-### Proposed change
+### Proposed upstream change
 
 **Pattern:** [name] (observed [N] times across [M] sessions)
-**Change type:** [new rule | rule update | agent update | skill update]
-**Target file:** [path]
-**Evidence:** [list of session IDs and correction summaries]
+**Local rule:** `.claude/rules/learned--{topic}.md` (already active locally)
+**Change type:** [new marketplace rule | skill update | agent update | script update]
+**Target file in marketplace:** [path relative to marketplace repo root]
+**Evidence:**
+- Session [id1] ([date]): [correction summary]
+- Session [id2] ([date]): [correction summary]
+- Session [id3] ([date]): [correction summary]
 
 **Proposed content:**
-[the actual rule/change to add]
+[the actual change — full file content or diff]
+
+Submit as PR? (Y/n)
 ```
 
-**Output:** Proposed change with evidence, ready for user approval.
+### 6c. Create the PR
+
+If approved:
+
+1. Determine the marketplace repo location. Check:
+   - The `source` field in `~/.claude/settings.json` under `extraKnownMarketplaces`
+   - Fall back to asking the user for the repo path
+
+2. Create a branch and apply the change:
+   ```bash
+   cd <marketplace-repo>
+   git checkout -b learning/learned--{topic}
+   # Write or edit the target file
+   git add <target-file>
+   git commit -m "feat: learned rule — {topic}
+
+   Pattern observed {N} times across {M} sessions.
+   Evidence: {session IDs}
+
+   Co-Authored-By: Claude Opus 4.6 (1M context) <noreply@anthropic.com>"
+   ```
+
+3. Push and create the PR:
+   ```bash
+   git push -u origin learning/learned--{topic}
+   gh pr create --title "Learning: {topic}" --body "$(cat <<'PREOF'
+   ## Summary
+
+   This change was proposed by the learning system based on observed patterns.
+
+   **Pattern:** {description}
+   **Instances:** {N} across {M} sessions (first seen: {date}, last seen: {date})
+   **Local rule:** Has been active locally as `.claude/rules/learned--{topic}.md`
+
+   ## Evidence
+
+   {table of session IDs, dates, and correction summaries}
+
+   ## Change
+
+   {description of what changed and why}
+
+   ---
+   Generated by `/thinking:retrospective` — the marketplace learning system.
+   PREOF
+   )"
+   ```
+
+4. Update the pattern status in `.claude/learnings/patterns/{pattern-id}.json`:
+   - Set `"status": "pr_submitted"`
+   - Record the PR URL
+
+5. Optionally remove the local learned rule if the PR is merged (the marketplace rule supersedes it).
+
+**Output:** PR URL + updated pattern status.
 
 ## Rules
 
@@ -197,6 +309,9 @@ When a pattern has 5+ instances OR the user approves a 3+ instance pattern:
 - **Patterns are more valuable than incidents.** One correction is an event. Three corrections about the same thing are a pattern. Patterns become rules.
 - **Never record user-specific information.** Learnings capture what went wrong and how to fix it, not personal details about the user.
 - **The 1-hour rule.** The SessionStart hook analyses the previous session, which gives at least a session-gap delay. This is intentional — it allows delayed corrections (where the user realises later something was wrong) to be captured in the same transcript.
+- **Path 1 is immediate, Path 2 is shared.** Always write a local learned rule first (Path 1) so it takes effect immediately. Only propose an upstream PR (Path 2) when the pattern has enough evidence to justify sharing it. A learned rule that works locally for one session is not ready for the marketplace.
+- **Local rules take precedence.** If a learned rule contradicts a marketplace rule, the local rule wins. But flag the conflict for Path 2 resolution — either the marketplace rule is wrong (PR to fix) or the local context is special (keep local only).
+- **Clean up after merge.** When a Path 2 PR is merged, the corresponding local learned rule becomes redundant. Remove it — the marketplace rule now handles it for everyone.
 
 ## Output Format
 
