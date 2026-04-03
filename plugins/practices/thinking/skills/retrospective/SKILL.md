@@ -39,7 +39,7 @@ For `summary` or `patterns`: skip to Step 3 or Step 4.
 Run the analysis script:
 
 ```bash
-python3 scripts/analyse-session.py <transcript.jsonl> \
+python3 ${CLAUDE_PLUGIN_ROOT}/scripts/analyse-session.py <transcript.jsonl> \
     --project-dir .claude/learnings \
     --global-dir ~/.claude/learnings \
     --json

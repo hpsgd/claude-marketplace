@@ -6,11 +6,11 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/../../scripts/learning-hook.sh \"${CLAUDE_PLUGIN_ROOT}\" \"$CLAUDE_PROJECT_DIR\""
+            "command": "bash ${CLAUDE_PLUGIN_ROOT}/scripts/learning-hook.sh \"${CLAUDE_PLUGIN_ROOT}\" \"$CLAUDE_PROJECT_DIR\""
           },
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/../../scripts/learning-readback.sh"
+            "command": "bash ${CLAUDE_PLUGIN_ROOT}/scripts/learning-readback.sh"
           }
         ]
       }
@@ -21,7 +21,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 ${CLAUDE_PLUGIN_ROOT}/../../scripts/classify-message.py",
+            "command": "python3 ${CLAUDE_PLUGIN_ROOT}/scripts/classify-message.py",
             "async": true
           }
         ]
