@@ -1,2 +1,7 @@
 docs/
 TODO.md
+
+# Runtime data (per-project, not marketplace content)
+.claude/rules/
+.claude/learnings/
+__pycache__/
