@@ -71,3 +71,21 @@ if [ -f "$ANALYSE_SCRIPT" ]; then
         --global-dir "$GLOBAL_LEARNINGS" \
         >/dev/null 2>&1 || true
 fi
+
+# Run pattern detection (scans all accumulated sessions)
+PATTERNS_SCRIPT="$SCRIPT_DIR/detect-patterns.py"
+if [ -f "$PATTERNS_SCRIPT" ]; then
+    python3 "$PATTERNS_SCRIPT" \
+        --project-dir "$PROJECT_LEARNINGS" \
+        --global-dir "$GLOBAL_LEARNINGS" \
+        >/dev/null 2>&1 || true
+fi
+
+# Generate metrics summary
+METRICS_SCRIPT="$SCRIPT_DIR/generate-metrics.py"
+if [ -f "$METRICS_SCRIPT" ]; then
+    python3 "$METRICS_SCRIPT" \
+        --project-dir "$PROJECT_LEARNINGS" \
+        --global-dir "$GLOBAL_LEARNINGS" \
+        >/dev/null 2>&1 || true
+fi
