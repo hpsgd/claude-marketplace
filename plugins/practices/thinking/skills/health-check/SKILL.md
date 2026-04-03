@@ -12,18 +12,23 @@ Generate a health report for the current project's Claude Code setup. If $ARGUME
 
 ### 1. Installed Rules
 
-Scan `.claude/rules/` for installed marketplace rules:
+Scan **both** global and project-level rules:
 
 ```bash
-ls -la .claude/rules/
+# Global rules (apply to all projects)
+ls -la ~/.claude/rules/ 2>/dev/null
+
+# Project-level rules (this project only)
+ls -la .claude/rules/ 2>/dev/null
 ```
 
-For each rule file:
-- Which plugin installed it (from the namespace prefix)
+Check global (`~/.claude/rules/`) **first** — plugins installed globally write rules there. Then check project-level (`.claude/rules/`). For each rule file:
+- Which plugin installed it (from the namespace prefix, e.g., `coding-standards--`)
+- Whether it's a learned rule (`learned--` prefix)
 - When it was last updated (file modification time)
-- Whether the source rule is newer than the installed copy
+- Whether the source rule in the plugin is newer than the installed copy
 
-Report: total count, breakdown by plugin, any stale copies.
+Report: total count, breakdown by source (marketplace vs learned), global vs project-level, any stale copies.
 
 ### 2. Project Configuration
 
