@@ -18,9 +18,11 @@ from collections import Counter, defaultdict
 from datetime import datetime, timezone
 from pathlib import Path
 
-# --- Correction signal patterns ---
+# --- Seed patterns (hardcoded baseline) ---
+# The retrospective skill adds learned patterns to
+# .claude/learnings/signals/patterns.json at runtime.
 
-CORRECTION_SIGNALS = [
+SEED_CORRECTION = [
     # Explicit rejection
     r"\bno[,.]?\s+(not |don't |that's not |wrong)",
     r"^no[,.\s-]",
@@ -42,9 +44,7 @@ CORRECTION_SIGNALS = [
     r"\bagain[,:]",
 ]
 
-CORRECTION_PATTERNS = [re.compile(p, re.IGNORECASE) for p in CORRECTION_SIGNALS]
-
-APPROACH_CHANGE_SIGNALS = [
+SEED_APPROACH_CHANGE = [
     r"\bdifferent approach",
     r"\bchange (of |in )?direction",
     r"\bslight change",
@@ -55,9 +55,7 @@ APPROACH_CHANGE_SIGNALS = [
     r"\bon second thought",
 ]
 
-APPROACH_PATTERNS = [re.compile(p, re.IGNORECASE) for p in APPROACH_CHANGE_SIGNALS]
-
-ACCEPTANCE_SIGNALS = [
+SEED_ACCEPTANCE = [
     r"^(ok|okay|good|great|perfect|nice|done|thanks|yep|yes|y|lgtm|ship it)",
     r"\bthat('s| is) (good|great|perfect|right|correct|fine|exactly)",
     r"\bkeep going",
@@ -65,7 +63,32 @@ ACCEPTANCE_SIGNALS = [
     r"\bnext\b",
 ]
 
-ACCEPTANCE_PATTERNS = [re.compile(p, re.IGNORECASE) for p in ACCEPTANCE_SIGNALS]
+
+def load_analysis_patterns(project_dir: str | None) -> dict[str, list[re.Pattern]]:
+    """Load seed patterns + any learned patterns from the project."""
+    learned = {"correction": [], "approach_change": [], "acceptance": []}
+
+    if project_dir:
+        patterns_file = Path(project_dir) / ".claude" / "learnings" / "signals" / "patterns.json"
+        if patterns_file.exists():
+            try:
+                with open(patterns_file) as f:
+                    data = json.load(f)
+                for key in learned:
+                    for p in data.get(key, []):
+                        try:
+                            re.compile(p, re.IGNORECASE)
+                            learned[key].append(p)
+                        except re.error:
+                            pass
+            except (json.JSONDecodeError, OSError):
+                pass
+
+    return {
+        "correction": [re.compile(p, re.IGNORECASE) for p in SEED_CORRECTION + learned["correction"]],
+        "approach_change": [re.compile(p, re.IGNORECASE) for p in SEED_APPROACH_CHANGE + learned["approach_change"]],
+        "acceptance": [re.compile(p, re.IGNORECASE) for p in SEED_ACCEPTANCE + learned["acceptance"]],
+    }
 
 
 def parse_jsonl(path: str) -> list[dict]:
@@ -184,7 +207,7 @@ def extract_file_modifications(tool_uses: list[dict]) -> dict[str, list[dict]]:
     return dict(file_mods)
 
 
-def detect_corrections(turns: list[dict]) -> list[dict]:
+def detect_corrections(turns: list[dict], patterns: dict[str, list[re.Pattern]]) -> list[dict]:
     """Find user messages that correct the assistant."""
     corrections = []
 
@@ -205,8 +228,8 @@ def detect_corrections(turns: list[dict]) -> list[dict]:
             continue
 
         # Check for correction signals
-        is_correction = any(p.search(text) for p in CORRECTION_PATTERNS)
-        is_approach_change = any(p.search(text) for p in APPROACH_PATTERNS)
+        is_correction = any(p.search(text) for p in patterns["correction"])
+        is_approach_change = any(p.search(text) for p in patterns["approach_change"])
 
         if is_correction:
             corrections.append({
@@ -249,7 +272,7 @@ def detect_file_reversals(file_mods: dict[str, list[dict]]) -> list[dict]:
     return reversals
 
 
-def detect_successes(turns: list[dict]) -> list[dict]:
+def detect_successes(turns: list[dict], self_patterns: dict[str, list[re.Pattern]]) -> list[dict]:
     """Find assistant work that was accepted without correction."""
     successes = []
     seen_user_uuids = set()
@@ -267,8 +290,8 @@ def detect_successes(turns: list[dict]) -> list[dict]:
                 if user_uuid in seen_user_uuids:
                     break
                 text = turns[j]["text"]
-                is_accepted = any(p.search(text) for p in ACCEPTANCE_PATTERNS)
-                is_correction = any(p.search(text) for p in CORRECTION_PATTERNS)
+                is_accepted = any(p.search(text) for p in self_patterns["acceptance"])
+                is_correction = any(p.search(text) for p in self_patterns["correction"])
 
                 if is_accepted and not is_correction:
                     seen_user_uuids.add(user_uuid)
@@ -337,11 +360,22 @@ def compute_metrics(entries: list[dict], turns: list[dict],
     }
 
 
-def analyse_session(jsonl_path: str) -> dict:
+def analyse_session(jsonl_path: str, project_dir: str | None = None) -> dict:
     """Main analysis function."""
     entries = parse_jsonl(jsonl_path)
     if not entries:
         return {"error": "No entries found in transcript"}
+
+    # Load seed + learned patterns
+    # Infer project dir from the transcript's cwd if not provided
+    if not project_dir:
+        for entry in entries:
+            cwd = entry.get("cwd")
+            if cwd:
+                project_dir = cwd
+                break
+
+    patterns = load_analysis_patterns(project_dir)
 
     # Extract session metadata
     session_id = None
@@ -355,9 +389,9 @@ def analyse_session(jsonl_path: str) -> dict:
     tool_uses = extract_tool_uses(entries)
     file_mods = extract_file_modifications(tool_uses)
 
-    corrections = detect_corrections(turns)
+    corrections = detect_corrections(turns, patterns)
     reversals = detect_file_reversals(file_mods)
-    successes = detect_successes(turns)
+    successes = detect_successes(turns, patterns)
     metrics = compute_metrics(entries, turns, corrections, reversals, successes)
 
     # Combine all events

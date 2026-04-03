@@ -72,7 +72,37 @@ Update the signal's `type` and `rating` fields, and set `confidence` to `"claude
 
 This is why the system doesn't need an external AI API — you ARE the AI doing the classification.
 
-**Output:** Classified signal count by type.
+### Update the regex patterns (mandatory after classifying)
+
+For each message you classified that the regex missed, **extract a pattern that would catch similar messages in the future** and add it to `.claude/learnings/signals/patterns.json`.
+
+The patterns file has this structure:
+
+```json
+{
+  "correction": ["\\bfeels (arbitrary|wrong|off)\\b", "\\bunderestimating\\b"],
+  "praise": [],
+  "approach_change": ["\\bi think (we|you) should\\b"],
+  "not_correction": []
+}
+```
+
+For each unclassified message you classified:
+1. Identify the **key phrase** that signals the intent (e.g., "feels arbitrary" → correction)
+2. Write a regex pattern that would match it and similar phrasings
+3. Test the pattern mentally against a few examples — would it false-positive on normal instructions?
+4. If the pattern is safe (low false-positive risk), add it to the appropriate category
+
+Read the existing `patterns.json` (create if missing), append new patterns, and write it back. The `classify-message.py` script loads this file on every run, so new patterns take effect immediately.
+
+**Rules for pattern generation:**
+- Patterns must be **general enough** to catch variations but **specific enough** to avoid false positives
+- `\bfeels (arbitrary|wrong|off|unnecessary)\b` is good — catches a class of pushback
+- `\bfeels\b` alone is too broad — would match "it feels responsive"
+- Always use `\b` word boundaries to prevent partial matches
+- Test against the original message AND imagine 3 other messages — would they match correctly?
+
+**Output:** Classified signal count by type + number of new patterns added.
 
 ## Step 4: Interpret and write learnings (mandatory)
 

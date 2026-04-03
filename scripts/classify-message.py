@@ -17,17 +17,17 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-# --- Fast regex pre-filter ---
-# Catches obvious cases. Ambiguous messages get queued for Claude
-# to classify during the retrospective (which IS Claude).
+# --- Seed patterns (hardcoded baseline) ---
+# These are the starting set. The retrospective skill adds learned
+# patterns to .claude/learnings/signals/patterns.json at runtime.
 
-CLEARLY_NOT_CORRECTION = [
+SEED_NOT_CORRECTION = [
     r"^(ok|okay|yes|y|yep|yeah|sure|go ahead|lgtm|ship it|commit|push|done|thanks|good|great|perfect|nice)\b",
     r"^/",  # Slash commands
     r"^!",  # Shell escapes
 ]
 
-CLEARLY_CORRECTION = [
+SEED_CORRECTION = [
     r"^no[,.\s]",
     r"\bthat'?s (not |wrong|incorrect)",
     r"\bstop (doing|that|it)",
@@ -39,7 +39,7 @@ CLEARLY_CORRECTION = [
     r"\bnot that\b",
 ]
 
-CLEARLY_PRAISE = [
+SEED_PRAISE = [
     r"\b(excellent|brilliant|amazing|awesome|fantastic|wonderful)\b",
     r"\bthat'?s (exactly|precisely|perfect)",
     r"\bgreat (work|job)\b",
@@ -47,7 +47,7 @@ CLEARLY_PRAISE = [
     r"\blove (it|this|that)\b",
 ]
 
-APPROACH_CHANGE = [
+SEED_APPROACH_CHANGE = [
     r"\bdifferent approach",
     r"\bchange (of |in )?direction",
     r"\bslight change",
@@ -57,24 +57,56 @@ APPROACH_CHANGE = [
     r"\bactually[,.]?\s+(let'?s|i think|i'?d)",
 ]
 
-CLEARLY_NOT_PATTERNS = [re.compile(p, re.IGNORECASE) for p in CLEARLY_NOT_CORRECTION]
-CLEARLY_YES_PATTERNS = [re.compile(p, re.IGNORECASE) for p in CLEARLY_CORRECTION]
-PRAISE_PATTERNS = [re.compile(p, re.IGNORECASE) for p in CLEARLY_PRAISE]
-APPROACH_PATTERNS = [re.compile(p, re.IGNORECASE) for p in APPROACH_CHANGE]
+
+def load_patterns(project_dir: str) -> dict[str, list[re.Pattern]]:
+    """Load seed patterns + any learned patterns from the project.
+
+    Learned patterns live in .claude/learnings/signals/patterns.json:
+    {
+        "correction": ["\\bfeels (arbitrary|wrong)\\b", ...],
+        "praise": [...],
+        "approach_change": [...],
+        "not_correction": [...]
+    }
+    """
+    learned = {"correction": [], "praise": [], "approach_change": [], "not_correction": []}
+
+    patterns_file = Path(project_dir) / ".claude" / "learnings" / "signals" / "patterns.json"
+    if patterns_file.exists():
+        try:
+            with open(patterns_file) as f:
+                data = json.load(f)
+            for key in learned:
+                for p in data.get(key, []):
+                    try:
+                        re.compile(p, re.IGNORECASE)  # Validate before using
+                        learned[key].append(p)
+                    except re.error:
+                        pass  # Skip invalid patterns
+        except (json.JSONDecodeError, OSError):
+            pass
+
+    # Combine seed + learned, compile
+    return {
+        "not_correction": [re.compile(p, re.IGNORECASE) for p in SEED_NOT_CORRECTION + learned["not_correction"]],
+        "correction": [re.compile(p, re.IGNORECASE) for p in SEED_CORRECTION + learned["correction"]],
+        "praise": [re.compile(p, re.IGNORECASE) for p in SEED_PRAISE + learned["praise"]],
+        "approach_change": [re.compile(p, re.IGNORECASE) for p in SEED_APPROACH_CHANGE + learned["approach_change"]],
+    }
 
 
-def classify(prompt: str) -> dict | None:
+def classify(prompt: str, patterns: dict[str, list[re.Pattern]]) -> dict | None:
     """Fast regex classification. Returns result or None if ambiguous."""
-    if any(p.search(prompt) for p in CLEARLY_NOT_PATTERNS):
+    if any(p.search(prompt) for p in patterns["not_correction"]):
         return None  # Clearly not interesting — don't record at all
 
-    if any(p.search(prompt) for p in CLEARLY_YES_PATTERNS):
+    if any(p.search(prompt) for p in patterns["correction"]):
         return {"rating": 3, "type": "correction", "confidence": "regex"}
 
-    if any(p.search(prompt) for p in PRAISE_PATTERNS):
+    if any(p.search(prompt) for p in patterns["praise"]):
         return {"rating": 9, "type": "praise", "confidence": "regex"}
 
-    if any(p.search(prompt) for p in APPROACH_PATTERNS):
+    if any(p.search(prompt) for p in patterns["approach_change"]):
         return {"rating": 4, "type": "approach_change", "confidence": "regex"}
 
     # Ambiguous — queue for Claude to classify during retrospective
@@ -113,7 +145,10 @@ def main():
     if prompt.startswith("<") and ">" in prompt[:50]:
         sys.exit(0)
 
-    result = classify(prompt)
+    # Load seed + learned patterns
+    patterns = load_patterns(cwd)
+
+    result = classify(prompt, patterns)
 
     if result is None:
         sys.exit(0)  # Not interesting or clearly positive — skip
