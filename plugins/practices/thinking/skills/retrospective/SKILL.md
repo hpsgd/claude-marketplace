@@ -51,9 +51,32 @@ Read the JSON output and present the results.
 
 **Output:** Metrics summary table and event list.
 
-## Step 3: Interpret and classify (mandatory)
+## Step 3: Classify queued signals (mandatory)
 
-For each event extracted by the script, interpret it into a learning:
+The `UserPromptSubmit` hook captures every user message and classifies obvious cases via regex. Messages that are ambiguous are queued as `"type": "unclassified"` in `.claude/learnings/signals/pending.jsonl`.
+
+Read the pending signals file:
+
+```bash
+cat .claude/learnings/signals/pending.jsonl
+```
+
+For each `unclassified` signal, read the `prompt_preview` and classify it yourself:
+- **correction** (rating 2-4): user is correcting, rejecting, or redirecting your work
+- **frustration** (rating 1-3): user is expressing dissatisfaction
+- **praise** (rating 8-10): user is expressing approval
+- **direction** (rating 5-6): user is giving new instructions (neutral, not correcting)
+- **neutral** (rating 5-7): none of the above
+
+Update the signal's `type` and `rating` fields, and set `confidence` to `"claude"`. Write the updated signals back.
+
+This is why the system doesn't need an external AI API — you ARE the AI doing the classification.
+
+**Output:** Classified signal count by type.
+
+## Step 4: Interpret and write learnings (mandatory)
+
+For each event extracted by the script AND each classified signal, interpret it into a learning:
 
 ### For corrections (HIGH severity):
 
@@ -85,7 +108,7 @@ Only record successes that are non-obvious — approaches that worked but might 
 
 **Output:** Classified learnings with rules and scope.
 
-## Step 4: Check for patterns (mandatory for `patterns` mode)
+## Step 5: Check for patterns (mandatory for `patterns` mode)
 
 Read all session analysis files from `.claude/learnings/sessions/` and `~/.claude/learnings/sessions/`.
 
@@ -112,7 +135,7 @@ Save the pattern to `.claude/learnings/patterns/{pattern-id}.json`.
 
 **Output:** Pattern table with proposed changes.
 
-## Step 5: Propose changes (when patterns reach threshold)
+## Step 6: Propose changes (when patterns reach threshold)
 
 When a pattern has 5+ instances OR the user approves a 3+ instance pattern:
 

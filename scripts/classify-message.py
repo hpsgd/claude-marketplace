@@ -2,29 +2,29 @@
 """Classify a user message for sentiment/correction signals.
 
 Reads hook payload from stdin (UserPromptSubmit event).
-Uses OpenRouter API with Haiku for fast AI classification.
-Falls back to regex patterns if no API key is available.
+Uses fast regex for obvious cases (corrections, praise).
+Queues ambiguous messages for later classification by Claude
+during the retrospective analysis (which runs inside Claude
+and doesn't need an external API).
 
-Writes classified signals to .claude/learnings/signals/pending.jsonl
+Writes to .claude/learnings/signals/pending.jsonl
 """
 
 import json
 import os
 import re
 import sys
-import urllib.request
-import urllib.error
 from datetime import datetime, timezone
 from pathlib import Path
 
 # --- Fast regex pre-filter ---
-# These catch obvious cases without needing AI inference.
-# If none match, and we have an API key, we call the AI model.
+# Catches obvious cases. Ambiguous messages get queued for Claude
+# to classify during the retrospective (which IS Claude).
 
 CLEARLY_NOT_CORRECTION = [
     r"^(ok|okay|yes|y|yep|yeah|sure|go ahead|lgtm|ship it|commit|push|done|thanks|good|great|perfect|nice)\b",
     r"^/",  # Slash commands
-    r"^\d+$",  # Pure numbers (could be ratings — handled separately)
+    r"^!",  # Shell escapes
 ]
 
 CLEARLY_CORRECTION = [
@@ -34,67 +34,54 @@ CLEARLY_CORRECTION = [
     r"\bdon'?t (do|use|add|create|write|delete|remove|change)",
     r"\bnot what i (asked|meant|wanted|said)",
     r"\bi (already|just) (said|told|asked)",
-    r"\bwhy (did you|are you|is it)",
+    r"\bwhy (did you|are you|is it)\b.*\?",
+    r"\bwrong\b",
+    r"\bnot that\b",
+]
+
+CLEARLY_PRAISE = [
+    r"\b(excellent|brilliant|amazing|awesome|fantastic|wonderful)\b",
+    r"\bthat'?s (exactly|precisely|perfect)",
+    r"\bgreat (work|job)\b",
+    r"\bwell done\b",
+    r"\blove (it|this|that)\b",
+]
+
+APPROACH_CHANGE = [
+    r"\bdifferent approach",
+    r"\bchange (of |in )?direction",
+    r"\bslight change",
+    r"\bscrap (that|this)",
+    r"\bstart over",
+    r"\bon second thought",
+    r"\bactually[,.]?\s+(let'?s|i think|i'?d)",
 ]
 
 CLEARLY_NOT_PATTERNS = [re.compile(p, re.IGNORECASE) for p in CLEARLY_NOT_CORRECTION]
 CLEARLY_YES_PATTERNS = [re.compile(p, re.IGNORECASE) for p in CLEARLY_CORRECTION]
+PRAISE_PATTERNS = [re.compile(p, re.IGNORECASE) for p in CLEARLY_PRAISE]
+APPROACH_PATTERNS = [re.compile(p, re.IGNORECASE) for p in APPROACH_CHANGE]
 
 
-def classify_with_regex(prompt: str) -> dict | None:
+def classify(prompt: str) -> dict | None:
     """Fast regex classification. Returns result or None if ambiguous."""
     if any(p.search(prompt) for p in CLEARLY_NOT_PATTERNS):
-        return {"rating": 7, "type": "neutral", "confidence": "regex", "reason": "acceptance pattern"}
+        return None  # Clearly not interesting — don't record at all
 
     if any(p.search(prompt) for p in CLEARLY_YES_PATTERNS):
-        return {"rating": 3, "type": "correction", "confidence": "regex", "reason": "correction pattern"}
+        return {"rating": 3, "type": "correction", "confidence": "regex"}
 
-    return None  # Ambiguous — needs AI classification
+    if any(p.search(prompt) for p in PRAISE_PATTERNS):
+        return {"rating": 9, "type": "praise", "confidence": "regex"}
 
+    if any(p.search(prompt) for p in APPROACH_PATTERNS):
+        return {"rating": 4, "type": "approach_change", "confidence": "regex"}
 
-def classify_with_ai(prompt: str, api_key: str) -> dict | None:
-    """AI classification using OpenRouter (Haiku for speed)."""
-    system_prompt = """You are a sentiment classifier for AI assistant interactions.
-Classify the user's message as one of:
-- CORRECTION: The user is correcting, rejecting, or redirecting the assistant's work
-- FRUSTRATION: The user is frustrated or expressing dissatisfaction
-- PRAISE: The user is expressing approval or satisfaction
-- DIRECTION: The user is giving new instructions (neutral, not correcting)
-- NEUTRAL: None of the above
+    # Ambiguous — queue for Claude to classify during retrospective
+    if len(prompt) > 20:  # Skip very short messages
+        return {"rating": 5, "type": "unclassified", "confidence": "needs_review"}
 
-Respond with ONLY a JSON object:
-{"type": "correction|frustration|praise|direction|neutral", "rating": 1-10, "reason": "brief explanation"}
-
-Rating scale: 1=very negative, 5=neutral, 10=very positive.
-A correction is 2-4. Frustration is 1-3. Praise is 8-10. Direction is 5-6. Neutral is 5-7."""
-
-    body = json.dumps({
-        "model": "anthropic/claude-haiku-4-5-20251001",
-        "messages": [
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": f"Classify this message:\n\n{prompt[:500]}"},
-        ],
-        "max_tokens": 100,
-        "temperature": 0,
-    }).encode("utf-8")
-
-    req = urllib.request.Request(
-        "https://openrouter.ai/api/v1/chat/completions",
-        data=body,
-        headers={
-            "Authorization": f"Bearer {api_key}",
-            "Content-Type": "application/json",
-        },
-    )
-
-    try:
-        with urllib.request.urlopen(req, timeout=5) as resp:
-            result = json.loads(resp.read())
-            content = result["choices"][0]["message"]["content"]
-            # Parse the JSON response
-            return json.loads(content)
-    except (urllib.error.URLError, json.JSONDecodeError, KeyError, TimeoutError):
-        return None
+    return None
 
 
 def write_signal(signal: dict, project_dir: str):
@@ -118,39 +105,28 @@ def main():
     session_id = payload.get("session_id", "")
     cwd = payload.get("cwd", os.getcwd())
 
-    # Skip very short messages and slash commands
-    if len(prompt) < 4 or prompt.startswith("/"):
+    # Skip very short messages and commands
+    if len(prompt) < 4 or prompt.startswith("/") or prompt.startswith("!"):
         sys.exit(0)
 
-    # Skip messages that are clearly system-generated
+    # Skip system-generated messages (XML tags)
     if prompt.startswith("<") and ">" in prompt[:50]:
         sys.exit(0)
 
-    # Step 1: Try fast regex classification
-    result = classify_with_regex(prompt)
+    result = classify(prompt)
 
-    # Step 2: If ambiguous, try AI classification
     if result is None:
-        api_key = os.environ.get("OPENROUTER_API_KEY", "")
-        if api_key:
-            result = classify_with_ai(prompt, api_key)
+        sys.exit(0)  # Not interesting or clearly positive — skip
 
-    # Step 3: If still unclassified, default to neutral
-    if result is None:
-        result = {"rating": 5, "type": "neutral", "confidence": "default", "reason": "unclassified"}
-
-    # Only record non-neutral signals (corrections, frustration, praise)
-    if result.get("type") in ("correction", "frustration", "praise"):
-        signal = {
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-            "session_id": session_id,
-            "type": result["type"],
-            "rating": result.get("rating", 5),
-            "reason": result.get("reason", ""),
-            "confidence": result.get("confidence", "ai"),
-            "prompt_preview": prompt[:200],
-        }
-        write_signal(signal, cwd)
+    signal = {
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "session_id": session_id,
+        "type": result["type"],
+        "rating": result["rating"],
+        "confidence": result["confidence"],
+        "prompt_preview": prompt[:300],
+    }
+    write_signal(signal, cwd)
 
 
 if __name__ == "__main__":
