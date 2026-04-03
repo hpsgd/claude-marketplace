@@ -42,6 +42,10 @@ SEED_CORRECTION = [
     r"\bi (already|just) (said|told|asked|mentioned)",
     r"\bas i said",
     r"\bagain[,:]",
+    # Learned from session ca9272e6 (2026-04-03):
+    r"\b(feels?|seems?) (arbitrary|wrong|off|unnecessary|forced|weird)\b",
+    r"\bi think (we|you)'?re (underestimating|overestimating|missing|ignoring)",
+    r"\bi think (both|all|neither)\b.{0,20}(need|want|should|important)",
 ]
 
 SEED_APPROACH_CHANGE = [
@@ -53,6 +57,9 @@ SEED_APPROACH_CHANGE = [
     r"\bstart over",
     r"\bforget (that|what i said)",
     r"\bon second thought",
+    # Learned from session ca9272e6 (2026-04-03):
+    r"\bi think (it'?s|that'?s|this is) deeper",
+    r"\byou'?re underestimating",
 ]
 
 SEED_ACCEPTANCE = [
@@ -127,15 +134,19 @@ def extract_conversation_turns(entries: list[dict]) -> list[dict]:
         if isinstance(content, str):
             text = content
         elif isinstance(content, list):
+            has_tool_result = False
             for block in content:
                 if isinstance(block, dict):
                     if block.get("type") == "text":
                         text += block.get("text", "") + "\n"
                     elif block.get("type") == "tool_result":
-                        # Tool results are not user speech
-                        pass
+                        has_tool_result = True
+                        # Tool results are not user speech — skip
+            # If the message is ONLY tool results with no text, skip entirely
+            if has_tool_result and not text.strip():
+                continue
 
-        # Skip empty or tool-result-only messages
+        # Skip empty messages
         text = text.strip()
         if not text:
             continue
@@ -145,6 +156,13 @@ def extract_conversation_turns(entries: list[dict]) -> list[dict]:
             clean = re.sub(r"<[^>]+>", " ", text).strip()
             clean = re.sub(r"\s+", " ", clean)
             if not clean or len(clean) < 3:
+                continue
+            # Skip messages that look like tool output, file paths, or IDs
+            if re.match(r"^(toolu_|/private/|/tmp/|/Users/|[a-f0-9]{8,})", clean):
+                continue
+            # Skip messages that are mostly non-word characters (JSON, paths)
+            word_chars = len(re.findall(r"[a-zA-Z]", clean))
+            if word_chars < len(clean) * 0.4:
                 continue
             text = clean
 

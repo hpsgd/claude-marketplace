@@ -37,6 +37,12 @@ SEED_CORRECTION = [
     r"\bwhy (did you|are you|is it)\b.*\?",
     r"\bwrong\b",
     r"\bnot that\b",
+    # Learned from session ca9272e6 (2026-04-03):
+    r"\b(feels?|seems?) (arbitrary|wrong|off|unnecessary|forced|weird)\b",
+    r"\bi think (we|you)'?re (underestimating|overestimating|missing|ignoring)",
+    r"\bi think (both|all|neither)\b.{0,20}(need|want|should|important)",
+    r"\bcan'?t we\b.{0,30}\binstead\b",
+    r"\brather than\b.{0,30}\bwhy not\b",
 ]
 
 SEED_PRAISE = [
@@ -55,6 +61,9 @@ SEED_APPROACH_CHANGE = [
     r"\bstart over",
     r"\bon second thought",
     r"\bactually[,.]?\s+(let'?s|i think|i'?d)",
+    # Learned from session ca9272e6 (2026-04-03):
+    r"\bi think (it'?s|that'?s|this is) deeper",
+    r"\byou'?re underestimating",
 ]
 
 
