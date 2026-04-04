@@ -97,6 +97,54 @@ if principles:
     fi
 done
 
+# --- Plugin version change detection ---
+# Check if any installed plugin versions have changed since last reconciliation
+RECONCILE_SNAPSHOT="$HOME/.claude/learnings/reconcile-snapshot.json"
+LEARNED_RULES_EXIST=false
+for dir in "$HOME/.claude/rules" "$PROJECT_DIR/.claude/rules"; do
+    if ls "$dir"/learned--*.md >/dev/null 2>&1; then
+        LEARNED_RULES_EXIST=true
+        break
+    fi
+done
+
+if [ "$LEARNED_RULES_EXIST" = true ]; then
+    VERSION_CHANGED=$(python3 -c "
+import json, os, glob
+
+# Build current plugin version map from installed rules (plugin name from prefix)
+current_rules = set()
+for d in ['$HOME/.claude/rules', '$PROJECT_DIR/.claude/rules']:
+    for f in glob.glob(os.path.join(d, '*.md')):
+        basename = os.path.basename(f)
+        if not basename.startswith('learned--'):
+            # Extract plugin name from prefix (e.g., 'coding-standards' from 'coding-standards--python.md')
+            parts = basename.split('--', 1)
+            if len(parts) == 2:
+                current_rules.add(parts[0])
+
+# Compare against snapshot
+snapshot_file = '$RECONCILE_SNAPSHOT'
+if not os.path.exists(snapshot_file):
+    # No snapshot yet — if there are both learned and marketplace rules, nudge
+    if current_rules:
+        print('new')
+else:
+    try:
+        with open(snapshot_file) as f:
+            snapshot = json.load(f)
+        old_rules = set(snapshot.get('marketplace_plugins', []))
+        if current_rules != old_rules:
+            print('changed')
+    except:
+        print('new')
+" 2>/dev/null)
+
+    if [ -n "$VERSION_CHANGED" ]; then
+        output="${output}Plugin rules have changed since last reconciliation. Run /thinking:reconcile-rules to check if any learned rules are now superseded.\n"
+    fi
+fi
+
 # Only output if we have something (keep context clean)
 if [ -n "$output" ]; then
     echo "<learning-context>"

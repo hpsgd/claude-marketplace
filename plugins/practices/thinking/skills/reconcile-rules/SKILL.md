@@ -94,6 +94,26 @@ rm .claude/rules/learned--{topic}.md
 
 Report what was removed.
 
+After cleanup, update the reconciliation snapshot so the SessionStart hook won't nudge again until plugins change:
+
+```bash
+python3 -c "
+import json, os, glob
+plugins = set()
+for d in [os.path.expanduser('~/.claude/rules'), '.claude/rules']:
+    for f in glob.glob(os.path.join(d, '*.md')):
+        basename = os.path.basename(f)
+        if not basename.startswith('learned--'):
+            parts = basename.split('--', 1)
+            if len(parts) == 2:
+                plugins.add(parts[0])
+snapshot = {'marketplace_plugins': sorted(plugins), 'reconciled_at': '$(date -u +%Y-%m-%dT%H:%M:%SZ)'}
+os.makedirs(os.path.expanduser('~/.claude/learnings'), exist_ok=True)
+with open(os.path.expanduser('~/.claude/learnings/reconcile-snapshot.json'), 'w') as f:
+    json.dump(snapshot, f, indent=2)
+"
+```
+
 **Do NOT remove rules the user hasn't explicitly approved.** Present the list, wait for confirmation, then act.
 
 ## Rules
