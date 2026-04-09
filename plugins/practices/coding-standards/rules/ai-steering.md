@@ -91,6 +91,18 @@ Never suppress lint warnings silently. Fix the code to match the rules. If a sup
 
 Don't ask "should I continue?" or "would you like me to proceed?" Just keep working until told to stop or until you genuinely need a decision.
 
+## Don't defer quality issues
+
+When quality tools reveal problems (mypy errors, coverage gaps, lint violations, failing tests), fix them in the current session. Don't suggest "these are pre-existing" or "this is a separate task for a future session." If the user can see the issue, they expect it fixed now.
+
+## Delete dead code — don't keep it around
+
+When code is no longer used (features removed, endpoints torn down, modules replaced), delete the files entirely. Don't keep them "for reference" or "in case we need them later." Git history preserves everything. Dead files add confusion, lint noise, and false coverage targets.
+
+## Route multi-agent work through the coordinator
+
+When implementation work spans multiple files or contexts, dispatch through the CTO (engineering) or coordinator (cross-domain). Don't start writing code directly. The coordinator produces dispatch plans with the right specialist agents, dependencies, and sequencing. Bypassing it means the wrong agent does the work and conventions are missed.
+
 ## Use structured choices for decisions
 
 When presenting options to the user, use AskUserQuestion with structured options and consequences — not prose like "1. A or B? 2. X or Y?" Each option should describe what happens if chosen.
