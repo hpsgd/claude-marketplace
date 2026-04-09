@@ -25,12 +25,25 @@ path_to_hash() {
     echo "$1" | sed 's|^/||; s|[^a-zA-Z0-9]|-|g'
 }
 
-# Collect transcript dirs: current project + any git worktrees
+# Collect transcript dirs: current project + worktrees (active and removed).
+#
+# Active worktrees come from git worktree list. Removed worktrees are
+# discovered via breadcrumb files: each worktree session writes a
+# "parent-project" file to its transcript dir on SessionStart. The
+# learning hook scans all transcript dirs for breadcrumbs pointing to
+# this project, so deleted worktree transcripts are still found.
 TRANSCRIPT_DIRS=()
 MAIN_HASH=$(path_to_hash "$PROJECT_DIR")
 MAIN_HASH_DIR="$CLAUDE_PROJECTS_DIR/-$MAIN_HASH"
 [ -d "$MAIN_HASH_DIR" ] && TRANSCRIPT_DIRS+=("$MAIN_HASH_DIR")
 
+# Write breadcrumb for the current session so future runs can find it.
+# For the main project this is redundant but harmless.
+if [ -d "$MAIN_HASH_DIR" ]; then
+    echo "$PROJECT_DIR" > "$MAIN_HASH_DIR/parent-project"
+fi
+
+# Active worktrees (git worktree list)
 if command -v git >/dev/null 2>&1 && git -C "$PROJECT_DIR" rev-parse --git-dir >/dev/null 2>&1; then
     while IFS= read -r wt_path; do
         wt_hash=$(path_to_hash "$wt_path")
@@ -38,6 +51,19 @@ if command -v git >/dev/null 2>&1 && git -C "$PROJECT_DIR" rev-parse --git-dir >
         [ -d "$wt_dir" ] && [ "$wt_dir" != "$MAIN_HASH_DIR" ] && TRANSCRIPT_DIRS+=("$wt_dir")
     done < <(git -C "$PROJECT_DIR" worktree list --porcelain | sed -n 's/^worktree //p')
 fi
+
+# Removed worktrees (breadcrumb scan). Resolve the main project path
+# to handle symlinks/trailing slashes consistently.
+RESOLVED_PROJECT=$(cd "$PROJECT_DIR" 2>/dev/null && pwd -P)
+for breadcrumb in "$CLAUDE_PROJECTS_DIR"/*/parent-project; do
+    [ -f "$breadcrumb" ] || continue
+    bc_dir=$(dirname "$breadcrumb")
+    # Skip dirs we already have
+    [[ " ${TRANSCRIPT_DIRS[*]} " == *" $bc_dir "* ]] && continue
+    bc_project=$(cat "$breadcrumb")
+    RESOLVED_BC=$(cd "$bc_project" 2>/dev/null && pwd -P 2>/dev/null || echo "$bc_project")
+    [ "$RESOLVED_BC" = "$RESOLVED_PROJECT" ] && TRANSCRIPT_DIRS+=("$bc_dir")
+done
 
 if [ ${#TRANSCRIPT_DIRS[@]} -eq 0 ]; then
     exit 0

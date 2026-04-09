@@ -22,25 +22,39 @@ This skill is also triggered automatically by the SessionStart hook, which runs 
 
 ## Step 1: Locate transcript
 
-Claude stores transcripts at `~/.claude/projects/-{PATH_HASH}/` where PATH_HASH replaces all non-alphanumeric characters with `-`. Worktree sessions get a different hash than the main project, so you need to check all of them.
+Claude stores transcripts at `~/.claude/projects/-{PATH_HASH}/` where PATH_HASH replaces all non-alphanumeric characters with `-`. Worktree sessions get a different hash than the main project, so you need to check all of them, including worktrees that have been removed.
 
 ```bash
 # Hash: strip leading /, replace non-alphanumeric with -
 path_to_hash() { echo "$1" | sed 's|^/||; s|[^a-zA-Z0-9]|-|g'; }
 
-# Build list of transcript dirs: this project + its worktrees
-MAIN_HASH_DIR="$HOME/.claude/projects/-$(path_to_hash "$PWD")"
+PROJECTS_DIR="$HOME/.claude/projects"
+MAIN_HASH_DIR="$PROJECTS_DIR/-$(path_to_hash "$PWD")"
 
-# git worktree list gives us the paths of all worktrees for this repo
+# Write a breadcrumb so future sessions can find this transcript dir
+# even after the worktree is removed
+[ -d "$MAIN_HASH_DIR" ] && echo "$PWD" > "$MAIN_HASH_DIR/parent-project"
+
+# 1. Active worktrees (git worktree list)
 ALL_DIRS=("$MAIN_HASH_DIR")
 for wt in $(git worktree list --porcelain 2>/dev/null | sed -n 's/^worktree //p'); do
-  wt_dir="$HOME/.claude/projects/-$(path_to_hash "$wt")"
+  wt_dir="$PROJECTS_DIR/-$(path_to_hash "$wt")"
   [ "$wt_dir" != "$MAIN_HASH_DIR" ] && ALL_DIRS+=("$wt_dir")
 done
 
-# Filter to dirs that actually exist
+# 2. Removed worktrees (breadcrumb scan)
+RESOLVED_PWD=$(pwd -P)
+for bc in "$PROJECTS_DIR"/*/parent-project; do
+  [ -f "$bc" ] || continue
+  bc_dir=$(dirname "$bc")
+  bc_project=$(cat "$bc")
+  resolved_bc=$(cd "$bc_project" 2>/dev/null && pwd -P || echo "$bc_project")
+  [ "$resolved_bc" = "$RESOLVED_PWD" ] && ALL_DIRS+=("$bc_dir")
+done
+
+# Filter to existing dirs, deduplicate
 TRANSCRIPT_DIRS=()
-for d in "${ALL_DIRS[@]}"; do
+for d in $(printf '%s\n' "${ALL_DIRS[@]}" | sort -u); do
   [ -d "$d" ] && TRANSCRIPT_DIRS+=("$d")
 done
 ```
