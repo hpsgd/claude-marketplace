@@ -1,0 +1,8 @@
+{
+  "name": "claude-marketplace",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Claude Code plugin marketplace",
+  "repository": "https://github.com/hpsgd/claude-marketplace.git",
+  "license": "Unlicense"
+}

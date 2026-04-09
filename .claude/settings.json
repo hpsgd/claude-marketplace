@@ -1,0 +1,17 @@
+{
+  "extraKnownMarketplaces": {
+    "hpsgd": {
+      "source": {
+        "source": "git",
+        "url": "https://github.com/hpsgd/claude-marketplace.git"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "coding-standards@hpsgd": true,
+    "writing-style@hpsgd": true,
+    "thinking@hpsgd": true,
+    "tooling@hpsgd": true,
+    "plugin-curator@hpsgd": true
+  }
+}
