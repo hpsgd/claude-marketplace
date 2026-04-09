@@ -1,7 +1,7 @@
 {
   "name": "architect",
   "description": "Software architect — system design, ADRs, technology evaluation, API strategy, migration planning",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "author": {
     "name": "hps.gd"
   },
