@@ -12,42 +12,58 @@ PROJECT_DIR="${2:-$(pwd)}"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 ANALYSE_SCRIPT="$SCRIPT_DIR/analyse-session.py"
 
-# Determine the project hash directory for transcripts
-PROJECT_HASH_DIR=""
+# Determine transcript directories for this project and its worktrees.
+# Claude stores transcripts at ~/.claude/projects/-{PATH_HASH}/ where
+# PATH_HASH replaces all non-alphanumeric chars with -.
 CLAUDE_PROJECTS_DIR="$HOME/.claude/projects"
 
 if [ ! -d "$CLAUDE_PROJECTS_DIR" ]; then
     exit 0
 fi
 
-# The project hash is the project path with / replaced by -
-PROJECT_PATH_HASH=$(echo "$PROJECT_DIR" | sed 's|^/||; s|/|-|g')
-PROJECT_HASH_DIR="$CLAUDE_PROJECTS_DIR/-$PROJECT_PATH_HASH"
+path_to_hash() {
+    echo "$1" | sed 's|^/||; s|[^a-zA-Z0-9]|-|g'
+}
 
-if [ ! -d "$PROJECT_HASH_DIR" ]; then
+# Collect transcript dirs: current project + any git worktrees
+TRANSCRIPT_DIRS=()
+MAIN_HASH=$(path_to_hash "$PROJECT_DIR")
+MAIN_HASH_DIR="$CLAUDE_PROJECTS_DIR/-$MAIN_HASH"
+[ -d "$MAIN_HASH_DIR" ] && TRANSCRIPT_DIRS+=("$MAIN_HASH_DIR")
+
+if command -v git >/dev/null 2>&1 && git -C "$PROJECT_DIR" rev-parse --git-dir >/dev/null 2>&1; then
+    while IFS= read -r wt_path; do
+        wt_hash=$(path_to_hash "$wt_path")
+        wt_dir="$CLAUDE_PROJECTS_DIR/-$wt_hash"
+        [ -d "$wt_dir" ] && [ "$wt_dir" != "$MAIN_HASH_DIR" ] && TRANSCRIPT_DIRS+=("$wt_dir")
+    done < <(git -C "$PROJECT_DIR" worktree list --porcelain | sed -n 's/^worktree //p')
+fi
+
+if [ ${#TRANSCRIPT_DIRS[@]} -eq 0 ]; then
     exit 0
 fi
 
-# Find the most recent JSONL file that is NOT the current session
-# Sort by modification time, skip files modified in the last 60 seconds (likely current session)
+# Find the most recent JSONL file across all transcript dirs that is
+# NOT the current session (skip files modified in the last 60 seconds)
 CURRENT_TIME=$(date +%s)
 LATEST_JSONL=""
 LATEST_MTIME=0
 
-for jsonl in "$PROJECT_HASH_DIR"/*.jsonl; do
-    [ -f "$jsonl" ] || continue
-    MTIME=$(stat -f %m "$jsonl" 2>/dev/null || stat -c %Y "$jsonl" 2>/dev/null || echo 0)
-    AGE=$((CURRENT_TIME - MTIME))
+for hash_dir in "${TRANSCRIPT_DIRS[@]}"; do
+    for jsonl in "$hash_dir"/*.jsonl; do
+        [ -f "$jsonl" ] || continue
+        MTIME=$(stat -f %m "$jsonl" 2>/dev/null || stat -c %Y "$jsonl" 2>/dev/null || echo 0)
+        AGE=$((CURRENT_TIME - MTIME))
 
-    # Skip files modified in the last 60 seconds (likely the current session being written to)
-    if [ "$AGE" -lt 60 ]; then
-        continue
-    fi
+        if [ "$AGE" -lt 60 ]; then
+            continue
+        fi
 
-    if [ "$MTIME" -gt "$LATEST_MTIME" ]; then
-        LATEST_MTIME=$MTIME
-        LATEST_JSONL=$jsonl
-    fi
+        if [ "$MTIME" -gt "$LATEST_MTIME" ]; then
+            LATEST_MTIME=$MTIME
+            LATEST_JSONL=$jsonl
+        fi
+    done
 done
 
 if [ -z "$LATEST_JSONL" ]; then

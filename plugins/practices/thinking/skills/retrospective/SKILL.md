@@ -22,14 +22,31 @@ This skill is also triggered automatically by the SessionStart hook, which runs 
 
 ## Step 1: Locate transcript
 
+Claude stores transcripts at `~/.claude/projects/-{PATH_HASH}/` where PATH_HASH replaces all non-alphanumeric characters with `-`. Worktree sessions get a different hash than the main project, so you need to check all of them.
+
 ```bash
-# Find the project's transcript directory
-PROJECT_HASH=$(echo "$PWD" | sed 's|^/||; s|/|-|g')
-TRANSCRIPT_DIR="$HOME/.claude/projects/-$PROJECT_HASH"
+# Hash: strip leading /, replace non-alphanumeric with -
+path_to_hash() { echo "$1" | sed 's|^/||; s|[^a-zA-Z0-9]|-|g'; }
+
+# Build list of transcript dirs: this project + its worktrees
+MAIN_HASH_DIR="$HOME/.claude/projects/-$(path_to_hash "$PWD")"
+
+# git worktree list gives us the paths of all worktrees for this repo
+ALL_DIRS=("$MAIN_HASH_DIR")
+for wt in $(git worktree list --porcelain 2>/dev/null | sed -n 's/^worktree //p'); do
+  wt_dir="$HOME/.claude/projects/-$(path_to_hash "$wt")"
+  [ "$wt_dir" != "$MAIN_HASH_DIR" ] && ALL_DIRS+=("$wt_dir")
+done
+
+# Filter to dirs that actually exist
+TRANSCRIPT_DIRS=()
+for d in "${ALL_DIRS[@]}"; do
+  [ -d "$d" ] && TRANSCRIPT_DIRS+=("$d")
+done
 ```
 
-For `current`: find the most recently modified `.jsonl` file in `$TRANSCRIPT_DIR`.
-For a specific session: look for `$TRANSCRIPT_DIR/{session-id}.jsonl`.
+For `current`: find the most recently modified `.jsonl` file across all `$TRANSCRIPT_DIRS`.
+For a specific session: search all `$TRANSCRIPT_DIRS` for `{session-id}.jsonl`.
 For `summary` or `patterns`: skip to Step 3 or Step 4.
 
 **Output:** Path to the transcript file, or list of available sessions.

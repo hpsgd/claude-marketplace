@@ -1,0 +1,86 @@
+{
+  "generated_at": "2026-04-09T05:12:48.941828+00:00",
+  "sessions_total": 10,
+  "days_with_data": 2,
+  "daily": {
+    "2026-04-09": {
+      "sessions": 3,
+      "duration_minutes": 2844,
+      "user_turns": 22,
+      "assistant_turns": 182,
+      "corrections_immediate": 4,
+      "corrections_approach": 0,
+      "corrections_reversals": 6,
+      "corrections_total": 10,
+      "successes": 7,
+      "input_tokens": 869,
+      "output_tokens": 111507
+    },
+    "2026-04-03": {
+      "sessions": 7,
+      "duration_minutes": 7343,
+      "user_turns": 657,
+      "assistant_turns": 1776,
+      "corrections_immediate": 54,
+      "corrections_approach": 2,
+      "corrections_reversals": 107,
+      "corrections_total": 163,
+      "successes": 96,
+      "input_tokens": 215036,
+      "output_tokens": 1670417
+    }
+  },
+  "rolling_7d": {
+    "window": 7,
+    "days_available": 2,
+    "avg_sessions_per_day": 5.0,
+    "avg_corrections_per_day": 86.5,
+    "avg_successes_per_day": 51.5,
+    "avg_correction_rate": 0.2548,
+    "avg_duration_minutes": 1019,
+    "total_tokens": {
+      "input": 215905,
+      "output": 1781924
+    }
+  },
+  "rolling_30d": {
+    "window": 30,
+    "days_available": 2,
+    "avg_sessions_per_day": 5.0,
+    "avg_corrections_per_day": 86.5,
+    "avg_successes_per_day": 51.5,
+    "avg_correction_rate": 0.2548,
+    "avg_duration_minutes": 1019,
+    "total_tokens": {
+      "input": 215905,
+      "output": 1781924
+    }
+  },
+  "all_time": {
+    "window": 2,
+    "days_available": 2,
+    "avg_sessions_per_day": 5.0,
+    "avg_corrections_per_day": 86.5,
+    "avg_successes_per_day": 51.5,
+    "avg_correction_rate": 0.2548,
+    "avg_duration_minutes": 1019,
+    "total_tokens": {
+      "input": 215905,
+      "output": 1781924
+    }
+  },
+  "trend": {
+    "trend": "insufficient_data",
+    "days": 2
+  },
+  "signals": {
+    "total_signals": 9,
+    "by_type": {
+      "unclassified": 9
+    },
+    "by_confidence": {
+      "needs_review": 9
+    },
+    "unclassified": 9
+  }
+}
