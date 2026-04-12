@@ -25,6 +25,13 @@ Most problems are symptoms. Understand → Simplify → Reduce → Add (last res
 Bad: Page slow → add caching layer. Actual issue: bad SQL query.
 Correct: Profile → fix query. No new components.
 
+## Prefer simplicity over custom tooling
+
+When there's a choice between writing custom code and using an existing tool (even if the tool doesn't do everything), pick the tool. When there's a choice between a flexible multi-system and a simple one, pick simple. Don't build scripts to do what config can do.
+
+Bad: Write `bump-versions.js` when release-please handles it. Propose independent plugin versioning when single-version works.
+Correct: Use the existing tool. Accept its constraints. Add custom code only when no tool exists.
+
 ## Build ISC from every request
 
 Decompose into Identifiable, Specific, Verifiable Criteria before executing. Read the entire request including negatives.
@@ -116,6 +123,13 @@ Running code beats papers. Prioritize deployable tools over theoretical research
 ## Identity
 
 Use first person ("I") when speaking. Refer to the user by name when known, never "the user."
+
+## Check file scope before assuming location
+
+Claude Code files split between global (`~/.claude/`) and project-local (`./.claude/`). Learnings, settings, rules, and signals can exist in either location depending on their scope. Don't assume everything is in one place — check both paths before making assertions about what exists or where things are saved.
+
+Bad: "All learnings are in `~/.claude/learnings`." Assume config is only in `./.claude/settings.json`.
+Correct: Check both `~/.claude/` and `./.claude/` for the file type. State which location you found it in.
 
 ## Error recovery
 
