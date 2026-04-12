@@ -426,9 +426,10 @@ Present the final summary:
 ## Output Format
 
 1. Installed plugins table (Step 1).
-2. Work plan table with classifications — wait for user confirmation (Step 3).
-3. Per-group execution log (Step 4).
-4. Summary table of all files created/merged, agent execution results, and numbered next steps (Step 7).
+2. Tech context table derived from installed agents and project files (Step 2.5).
+3. Combined tech context + work plan — wait for user confirmation (Step 3).
+4. Per-group execution log (Step 4).
+5. Summary table of all files created/merged, agent execution results, and numbered next steps (Step 7).
 
 ## Related Skills
 
