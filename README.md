@@ -39,6 +39,7 @@ The thinking plugin includes a self-improving learning loop that analyses your s
 | `/thinking:learning` | Capture a learning in the moment (manual) |
 | `/thinking:wisdom` | Record or query crystallised patterns from accumulated experience |
 | `/thinking:health-check` | Audit the project's Claude Code setup — plugins, rules, memory, learnings |
+| `/thinking:review-settings` | Audit settings.json files for broad permissions, overlaps, and redundancy |
 | `/thinking:propose-improvement` | Propose a PR against the marketplace based on a detected pattern |
 
 **How the learning loop works:**
