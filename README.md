@@ -88,7 +88,7 @@ Human (CEO/Founder)
     └── GRC Lead — risk assessment, compliance audit, AI governance, DPIA
 ```
 
-Each agent has specialised skills, templates, and a bootstrap skill for project scaffolding. Install only what you need — each agent is a separate plugin.
+Each agent has specialised skills, templates, and a bootstrap skill for project scaffolding. The coordinator's `bootstrap-project` skill orchestrates all agents, assembles a tech context from your installed language plugins, and confirms it before scaffolding. Install only what you need — each agent is a separate plugin.
 
 ## Quick start
 
