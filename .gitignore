@@ -4,5 +4,11 @@ TODO.md
 # Runtime data (per-project, not marketplace content)
 .claude/settings.local.json
 .claude/rules/
+
+# Learnings: sessions, signals, and patterns contain user prompt text
+.claude/learnings/sessions/
+.claude/learnings/signals/
+.claude/learnings/patterns/
+
 __pycache__/
 node_modules/
