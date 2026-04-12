@@ -288,13 +288,13 @@ This delegates to each installed agent's bootstrap skill, creating a `docs/` str
 | `python-developer` | Python: Ruff, mypy, BDD (pytest-bdd), Hypothesis, DDD | `write-feature-spec`, `write-schema` |
 | `ai-engineer` | AI/ML: prompt engineering, model evaluation, RAG, embeddings | `prompt-design`, `model-evaluation`, `rag-pipeline` |
 | `qa-lead` | Test strategy, acceptance criteria, 3 amigos, edge case identification | `test-strategy`, `write-acceptance-criteria` |
-| `qa-engineer` | Test automation, E2E acceptance tests, coverage, bug investigation | `generate-tests`, `write-bug-report` |
+| `qa-engineer` | Test automation, E2E acceptance tests, coverage, bug investigation | `bootstrap`, `generate-tests`, `write-bug-report` |
 | `release-manager` | Release coordination, go/no-go, rollback, deployment scheduling | `release-plan`, `rollback-assessment` |
 | `performance-engineer` | Load testing, profiling, capacity planning, performance budgets | `load-test-plan`, `performance-profile`, `capacity-plan` |
 | `devops` | IaC, CI/CD, deployment, monitoring, incident response | `write-pipeline`, `write-dockerfile`, `incident-response`, `write-iac`, `write-slo` |
 | `security-engineer` | Threat modelling, security audits, CVSS scoring, vulnerability management | `threat-model`, `security-review`, `dependency-audit`, `supply-chain-audit` |
 | `data-engineer` | Data pipelines, analytics, event tracking, metrics, data lineage | `event-tracking-plan`, `write-query`, `data-model` |
-| `code-reviewer` | Multi-pass code review with quality scoring and adversarial analysis | `code-review`, `pr-create` |
+| `code-reviewer` | Multi-pass code review with quality scoring and adversarial analysis | `bootstrap`, `code-review`, `pr-create` |
 
 ## How it works
 

@@ -60,6 +60,71 @@ Each entry in `agents` looks like:
 
 **Output:** Manifest state — new or loaded with N existing agent entries.
 
+## Step 2.5: Assemble Tech Context
+
+Derive the project's technology stack from two sources: installed agents (primary) and existing project files (override).
+
+### Agent-to-stack mapping
+
+Use this lookup table to derive defaults from installed language/framework agents:
+
+| Installed agent | Languages | Test framework | Linter/formatter | Type checker | Frameworks |
+|---|---|---|---|---|---|
+| react-developer | TypeScript | Vitest | ESLint, Prettier | TypeScript strict | Next.js, Tailwind |
+| python-developer | Python | pytest | Ruff | mypy strict | Pydantic |
+| dotnet-developer | C# | xUnit | CSharpier | Roslyn analysers | Wolverine, Marten |
+| ai-engineer | (adds to above) | + LLM eval tests | — | — | OpenRouter |
+| data-engineer | (adds to above) | + data pipeline tests | — | — | — |
+
+If no language agents are installed, the tech context is empty — skip this step.
+
+### Project file overrides
+
+For existing projects (or `bootstrap update`), scan for files that indicate different choices:
+
+| File | Signal | Override |
+|---|---|---|
+| `package.json` with `"jest"` | Jest installed | Test framework → Jest (not Vitest) |
+| `package.json` with `"cypress"` | Cypress installed | E2E framework → Cypress (not Playwright) |
+| `jest.config.*` | Jest config present | Test framework → Jest |
+| `vitest.config.*` | Vitest config present | Test framework → Vitest (confirms default) |
+| `pytest.ini` or `[tool.pytest]` in pyproject.toml | pytest config | Confirms default |
+| `.github/workflows/*.yml` | CI exists | Note existing CI — don't duplicate |
+
+Project file signals take precedence over agent defaults.
+
+### Common defaults (always included)
+
+These come from the tooling conventions, not from agents:
+
+| Category | Default | Source |
+|---|---|---|
+| CI/CD | GitHub Actions | tooling conventions |
+| Code quality | SonarCloud | tooling conventions |
+| Frontend hosting | Vercel | tooling conventions |
+| E2E framework | Playwright | react-developer (if installed) |
+
+### Assemble the context table
+
+Combine agent defaults, project overrides, and common defaults into a single table:
+
+```markdown
+### Tech Context
+
+| Category | Value | Source |
+|---|---|---|
+| Languages | Python, TypeScript | python-developer, react-developer |
+| Test frameworks | pytest, Vitest | python-developer, react-developer |
+| E2E framework | Playwright | react-developer |
+| Linters | Ruff, ESLint | python-developer, react-developer |
+| Type checkers | mypy, TypeScript strict | python-developer, react-developer |
+| Frameworks | Next.js, Pydantic | react-developer, python-developer |
+| CI/CD | GitHub Actions | tooling conventions |
+| Code quality | SonarCloud | tooling conventions |
+```
+
+**Output:** Tech context table ready for user confirmation in Step 3.
+
 ## Step 3: Determine Work Plan
 
 Compare the installed agents list (Step 1) against the manifest (Step 2) to classify each agent:
@@ -73,10 +138,21 @@ Compare the installed agents list (Step 1) against the manifest (Step 2) to clas
 
 If `$ARGUMENTS` contains `--force`, treat all agents with bootstrap skills as **New**.
 
-Present the work plan to the user before proceeding:
+Present the tech context (from Step 2.5) and work plan together for user confirmation:
 
 ```markdown
-### Bootstrap Work Plan
+### Tech Context (derived from installed agents + project files)
+
+| Category | Value | Source |
+|---|---|---|
+| Languages | Python, TypeScript | python-developer, react-developer |
+| Test frameworks | pytest, Vitest | python-developer, react-developer |
+| E2E framework | Playwright | react-developer |
+| Linters | Ruff, ESLint | python-developer, react-developer |
+| CI/CD | GitHub Actions | tooling conventions |
+| ... | ... | ... |
+
+### Work Plan
 
 | Agent | Status | Action |
 |---|---|---|
@@ -85,10 +161,12 @@ Present the work plan to the user before proceeding:
 | qa-lead | v2.0 (current) | Skip |
 | ... | ... | ... |
 
-Proceed? (Y/n)
+Proceed with this context and work plan? (Y / adjust / n)
 ```
 
-**Output:** Classified work plan table. Wait for user confirmation.
+If the user says **adjust**, ask what to change in the tech context table. Use their adjusted version for all subsequent steps. If they say **Y**, proceed with the derived context.
+
+**Output:** Confirmed tech context + classified work plan. Wait for user confirmation before proceeding.
 
 ## Step 4: Delegate to Agent Bootstraps
 
@@ -99,18 +177,32 @@ Invoke each agent's `bootstrap` skill in dependency order. Groups execute sequen
 | Group | Agents | Rationale |
 |---|---|---|
 | **1 — Foundations** | coding-standards, architect | Standards and architecture inform everything else |
-| **2 — Engineering domains** | qa-lead, security-engineer, devops, release-manager, performance-engineer | Core engineering practices depend on foundations |
+| **2 — Engineering domains** | qa-lead, qa-engineer, security-engineer, devops, release-manager, performance-engineer, code-reviewer | Core engineering practices depend on foundations |
 | **3 — Stack-specific** | python-developer, dotnet-developer, react-developer, data-engineer, ai-engineer | Stack implementations depend on standards and practices |
 | **4 — Product domains** | product-owner, ui-designer, ux-researcher | Product work builds on the engineering foundation |
 | **5 — Content** | developer-docs-writer, user-docs-writer, internal-docs-writer | Documentation follows product and engineering decisions |
 | **6 — Market & customer** | gtm, support, customer-success | Go-to-market and support build on product definition |
 | **7 — Governance** | grc-lead | Governance wraps around everything else |
 
+### Passing tech context
+
+Include the confirmed tech context table (from Step 3) in every agent bootstrap invocation. Add it as context at the start of the invocation:
+
+> **Tech context for this project:**
+>
+> [paste the confirmed tech context table here]
+>
+> Use this to inform your framework and tooling choices. If a category is not listed, it is not relevant to this project.
+
+Agents that don't use tech context (most domain bootstraps) will ignore it. Agents that do (qa-engineer, code-reviewer, devops, coding-standards) will use it to make informed decisions about which frameworks, linters, and CI jobs to scaffold.
+
+### Invoking bootstraps
+
 For each agent that needs bootstrapping:
 
 1. **Skip** agents classified as "Current" or "No bootstrap".
-2. **New agents:** Invoke the agent's `bootstrap` skill. The agent creates its domain directory under `docs/` and writes its own `CLAUDE.md` and domain-specific files.
-3. **Updated agents (merge mode):** Invoke the agent's `bootstrap` skill with a merge instruction. The agent must:
+2. **New agents:** Invoke the agent's `bootstrap` skill with the tech context. The agent creates its domain directory under `docs/` and writes its own `CLAUDE.md` and domain-specific files.
+3. **Updated agents (merge mode):** Invoke the agent's `bootstrap` skill with the tech context and a merge instruction. The agent must:
    - Read existing files in its domain directory.
    - Compare with its current template.
    - Add missing sections or files.
@@ -320,7 +412,8 @@ Present the final summary:
 ## Rules
 
 - **Delegate, don't generate.** The coordinator never creates domain-specific files itself. Each agent's `bootstrap` skill is responsible for its own domain directory and `CLAUDE.md`. The coordinator only produces shared cross-cutting artifacts (listed in Step 5).
-- **Plugin installation determines participation.** Do not detect or guess the tech stack. If a plugin is installed, it participates. If it is not installed, it does not. The user controls relevance by installing and uninstalling plugins.
+- **Plugin installation determines participation.** If a plugin is installed, it participates. If it is not installed, it does not. The user controls relevance by installing and uninstalling plugins.
+- **Tech context flows downward.** The coordinator assembles tech context from installed agents and project files, confirms it with the user, and passes it to every agent bootstrap. Agents use it or ignore it as appropriate.
 - **Idempotent by default.** The manifest tracks what has been done. Re-runs only process new or updated agents. Use `--force` to re-run everything. Never duplicate work.
 - **Safe merge, never overwrite.** When updating existing files, review existing content and merge in missing sections. Never clobber existing files. Existing content represents decisions already made.
 - **Every coordinator-generated file gets the marker comment.** `<!-- Generated by bootstrap-project. Review and customize. -->` at the top. Agent-generated files follow their own conventions.
