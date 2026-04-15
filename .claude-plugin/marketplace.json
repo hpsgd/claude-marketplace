@@ -443,6 +443,48 @@
         "quality",
         "review"
       ]
+    },
+    {
+      "name": "analyst",
+      "source": "./plugins/research/analyst",
+      "description": "Research and business intelligence agents — web research with source attribution, and company/market analysis from public sources",
+      "version": "0.1.0",
+      "category": "research",
+      "tags": [
+        "research",
+        "osint",
+        "business-intelligence",
+        "competitive-analysis",
+        "market-research"
+      ]
+    },
+    {
+      "name": "investigator",
+      "source": "./plugins/research/investigator",
+      "description": "OSINT investigation agents — domain and infrastructure intel, and people/entity investigation with mandatory ethical authorisation gates",
+      "version": "0.1.0",
+      "category": "research",
+      "tags": [
+        "osint",
+        "investigation",
+        "domain-intel",
+        "people-research",
+        "public-records"
+      ]
+    },
+    {
+      "name": "workflow-tools",
+      "source": "./plugins/engineering/workflow-tools",
+      "description": "Utility skills for common engineering workflow patterns — content retrieval with four-tier escalation strategy (WebFetch → curl → Playwright → BrightData)",
+      "version": "0.1.0",
+      "category": "engineering",
+      "tags": [
+        "workflow",
+        "scraping",
+        "content-retrieval",
+        "playwright",
+        "brightdata"
+      ]
     }
   ]
 }

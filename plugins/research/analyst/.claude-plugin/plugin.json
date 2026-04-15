@@ -1,0 +1,17 @@
+{
+  "name": "analyst",
+  "description": "Research and business intelligence agents — web research with source attribution, and company/market analysis from public sources.",
+  "version": "0.1.0",
+  "author": {
+    "name": "hps.gd"
+  },
+  "repository": "https://github.com/hpsgd/claude-marketplace",
+  "license": "Unlicense",
+  "keywords": [
+    "research",
+    "osint",
+    "business-intelligence",
+    "competitive-analysis",
+    "market-research"
+  ]
+}

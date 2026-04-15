@@ -1,0 +1,17 @@
+{
+  "name": "workflow-tools",
+  "description": "Utility skills for common engineering workflow patterns — content retrieval with escalating fallback strategies.",
+  "version": "0.1.0",
+  "author": {
+    "name": "hps.gd"
+  },
+  "repository": "https://github.com/hpsgd/claude-marketplace",
+  "license": "Unlicense",
+  "keywords": [
+    "workflow",
+    "scraping",
+    "content-retrieval",
+    "web-fetching",
+    "automation"
+  ]
+}

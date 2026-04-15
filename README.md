@@ -85,7 +85,13 @@ Human (CEO/Founder)
     │   ├── security-engineer — threat models, security reviews, dependency/supply-chain audits
     │   ├── data-engineer — data models, event tracking, queries
     │   └── code-reviewer — multi-pass review, PR creation
-    └── GRC Lead — risk assessment, compliance audit, AI governance, DPIA
+    ├── GRC Lead — risk assessment, compliance audit, AI governance, DPIA
+    └── Research (cross-cutting)
+        ├── open-source-researcher — web research, topic synthesis, source attribution
+        ├── business-analyst — company research, competitive analysis, market sizing
+        ├── content-analyst — content analysis, framing assessment, source credibility
+        ├── osint-analyst — domain/IP/infrastructure investigation (ethical gate required)
+        └── investigator — people and entity investigation (full authorisation gate required)
 ```
 
 Each agent has specialised skills, templates, and a bootstrap skill for project scaffolding. The coordinator's `bootstrap-project` skill orchestrates all agents, assembles a tech context from your installed language plugins, and confirms it before scaffolding. Install only what you need — each agent is a separate plugin.
@@ -135,6 +141,19 @@ Pick what you need, or copy a block to install a whole category.
 /plugin install gtm@hpsgd
 /plugin install support@hpsgd
 /plugin install customer-success@hpsgd
+```
+
+**Research agents:**
+
+```
+/plugin install analyst@hpsgd
+/plugin install investigator@hpsgd
+```
+
+**Engineering utilities:**
+
+```
+/plugin install workflow-tools@hpsgd
 ```
 
 **Engineering team agents:**
@@ -223,7 +242,10 @@ Copy into your project's `.claude/settings.json` (or `settings.local.json` for p
     "devops@hpsgd": true,
     "security-engineer@hpsgd": true,
     "data-engineer@hpsgd": true,
-    "code-reviewer@hpsgd": true
+    "code-reviewer@hpsgd": true,
+    "analyst@hpsgd": true,
+    "investigator@hpsgd": true,
+    "workflow-tools@hpsgd": true
   }
 }
 ```
@@ -277,6 +299,16 @@ This delegates to each installed agent's bootstrap skill, creating a `docs/` str
 | `support` | Ticket triage, feedback synthesis, knowledge base, bug escalation | `write-kb-article`, `feedback-synthesis`, `triage-tickets` |
 | `customer-success` | Health monitoring, churn prevention, expansion, onboarding quality | `health-assessment`, `churn-analysis`, `expansion-plan`, `write-qbr`, `write-onboarding-playbook` |
 
+### Research agents
+
+| Plugin | Agent | Skills |
+|---|---|---|
+| `analyst` | **open-source-researcher** — web research, topic synthesis, source attribution | `web-research`, `deep-research` |
+| `analyst` | **business-analyst** — company lookup, competitive analysis, market sizing, public-data due diligence | `company-lookup`, `competitive-analysis`, `market-sizing`, `due-diligence` |
+| `analyst` | **content-analyst** — content analysis, framing, sentiment, source credibility | `content-analysis`, `source-credibility` |
+| `investigator` | **osint-analyst** — domain intel, IP/infrastructure analysis, entity digital footprint | `domain-intel`, `ip-intel`, `entity-footprint` |
+| `investigator` | **investigator** — people lookup, identity verification, social media, public records, beneficial ownership (full authorisation gate required) | `people-lookup`, `identity-verification`, `social-media-footprint`, `public-records`, `corporate-ownership` |
+
 ### Engineering team agents
 
 | Plugin | Agent | Skills |
@@ -292,7 +324,9 @@ This delegates to each installed agent's bootstrap skill, creating a `docs/` str
 | `release-manager` | Release coordination, go/no-go, rollback, deployment scheduling | `release-plan`, `rollback-assessment` |
 | `performance-engineer` | Load testing, profiling, capacity planning, performance budgets | `load-test-plan`, `performance-profile`, `capacity-plan` |
 | `devops` | IaC, CI/CD, deployment, monitoring, incident response | `write-pipeline`, `write-dockerfile`, `incident-response`, `write-iac`, `write-slo` |
-| `security-engineer` | Threat modelling, security audits, CVSS scoring, vulnerability management | `threat-model`, `security-review`, `dependency-audit`, `supply-chain-audit` |
+| `security-engineer` | Threat modelling, security audits, CVSS scoring, vulnerability management | `threat-model`, `security-review`, `dependency-audit`, `supply-chain-audit`, `recon`, `web-assessment` |
+| `security-engineer` | **prompt-injection-tester** — adversarial testing of LLM applications across 7 attack categories | — |
+| `workflow-tools` | — | `content-retrieval` — four-tier URL retrieval (WebFetch → curl → Playwright → BrightData) |
 | `data-engineer` | Data pipelines, analytics, event tracking, metrics, data lineage | `event-tracking-plan`, `write-query`, `data-model` |
 | `code-reviewer` | Multi-pass code review with quality scoring and adversarial analysis | `bootstrap`, `code-review`, `pr-create` |
 

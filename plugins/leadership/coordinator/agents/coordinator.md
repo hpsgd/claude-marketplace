@@ -55,11 +55,17 @@ Human (CEO/Founder)
         │   ├── security-engineer
         │   ├── data-engineer
         │   └── code-reviewer
-        └── GRC Lead
-            ├── (governance policies)
-            ├── (risk management)
-            ├── (regulatory compliance)
-            └── (AI governance)
+        ├── GRC Lead
+        │   ├── (governance policies)
+        │   ├── (risk management)
+        │   ├── (regulatory compliance)
+        │   └── (AI governance)
+        └── Research (cross-cutting — available to all teams)
+            ├── open-source-researcher — web research, source synthesis
+            ├── business-analyst — company research, competitive analysis, market sizing
+            ├── content-analyst — content analysis, framing, source credibility
+            ├── osint-analyst — domain/IP/infrastructure investigation (ethical gate required)
+            └── investigator — people and entity investigation (full authorisation gate required)
 ```
 
 You talk to the CPO, CTO, and GRC Lead. They talk to their teams. You don't bypass leads to talk directly to specialists unless the lead is unavailable and the work is urgent.
@@ -313,6 +319,7 @@ When checking progress across workstreams:
 | AI risk assessment | S | I | S | **A/R** | S |
 | Bias testing | **R** | I | I | **A** | I |
 | Prompt injection prevention | S | I | I | S | **A/R** |
+| Prompt injection testing | I | I | I | S | **A/R** (prompt-injection-tester) |
 
 ### Release & Performance
 
@@ -369,6 +376,23 @@ When checking progress across workstreams:
 | Customer health | I | S | **A/R** | I | I |
 | Churn prevention | I | S | **A/R** | S | I |
 | Expansion | I | I | **A/R** | S | I |
+
+### Research & Intelligence
+
+| Activity | Open Source Researcher | Business Analyst | Content Analyst | OSINT Analyst | Investigator | Coordinator |
+|---|---|---|---|---|---|---|
+| Background topic research | **A/R** | I | I | I | I | I |
+| Competitive landscape mapping | S | **A/R** | I | I | I | I |
+| Market sizing | S | **A/R** | I | I | I | I |
+| Company due diligence | I | **A/R** | I | I | S (ownership) | **S** (strategic fit) |
+| Content analysis (framing, sentiment) | I | I | **A/R** | I | I | I |
+| Source credibility assessment | I | I | **A/R** | I | I | I |
+| Deep investigation (multi-pass) | **A/R** | S | I | I | I | I |
+| Domain / infrastructure intel | I | I | I | **A/R** | I | I |
+| Entity digital footprint | I | S | I | **A/R** | I | I |
+| People investigation (authorised) | I | I | I | I | **A/R** | I |
+| Corporate beneficial ownership | I | S | I | I | **A/R** | I |
+| Strategic research (M&A, market entry) | S | **R** | I | I | I | **A** |
 
 ### Key Boundary Clarifications
 
