@@ -14,6 +14,20 @@ Before writing, search the codebase for existing implementations of this compone
 
 ## Mandatory Specification Structure
 
+### 0. Design system decision (MANDATORY — before writing the spec)
+
+Search for existing components that overlap with this request. Then make an explicit decision:
+
+| Decision | When to use | What it means for this spec |
+|---|---|---|
+| **Reuse** | An existing component already handles this use case | Don't write a new spec. Document how to use the existing component for this scenario. Link to its spec. |
+| **Extend** | An existing component is close but needs new variants, props, or states | Write a spec that extends the existing component. Reference the original spec. Only document what's new. |
+| **Create** | No existing component covers this use case | Write a full spec from scratch. |
+
+State the decision with justification: "**Decision: Create** — searched for existing upload components, found `FileInput` but it doesn't support drag-and-drop or progress indication. A new component is needed."
+
+If the decision is Reuse, stop here — the output is a usage guide, not a new spec.
+
 ### 1. Purpose and Usage Context
 
 Write exactly two things:
