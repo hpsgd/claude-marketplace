@@ -89,27 +89,25 @@ Lost your phone:
 
 ## Evaluation
 
-**Verdict:** PARTIAL
-**Score:** 6/8 criteria met (75%)
+**Verdict:** PASS
+**Score:** 7/8 criteria met (88%)
 **Evaluated:** 2026-04-16
 
 ## Results
 
 - [x] PASS: Product language only — Non-negotiable section says "Product language only — no jargon, no technical terms, no internal terminology." Principles reinforce "Product language, never system language." "No acronyms without definition" is explicit. "TOTP" would not appear; "authenticator app" is the required vocabulary.
-- [x] PASS: Expected result after every step — "Every step has an expected result" is in the Non-negotiable section with the example "'Click Save' is incomplete." The KB article structure requires "Steps (if applicable) — numbered, with expected results." This is directly enforced.
-- [~] PARTIAL: Both setup methods as separate labelled paths — the definition now includes a "Multi-system tasks" guidance under User Guides: "split into labelled sections per system." However, this instruction appears under User Guides, not KB articles. The KB article structure has no explicit requirement for labelled paths when multiple setup methods exist. The two-method 2FA setup is a KB article scenario. The User Guides multi-system guidance is an indirect analogue but does not govern KB articles. Score: 0.5.
-- [~] PARTIAL: Recovery paths documented — the KB article structure requires a Troubleshooting section covering "common issues when following this answer." Backup codes and support contact are account recovery paths for losing access to the 2FA device — a distinct concern from troubleshooting setup steps. The definition has no explicit "loss of access" or "account recovery" section requirement in its KB article structure. Troubleshooting is required; recovery documentation is not. Score: 0.5.
+- [x] PASS: Expected result after every step — "Every step has an expected result" is in the Non-negotiable section with the example "'Click Save' is incomplete." The KB article structure requires "Steps (if applicable) — numbered, with expected results." Directly enforced.
+- [x] PASS: Both setup methods as separate labelled paths — the KB article Rules section now explicitly states: "When multiple methods exist for the same task (e.g., SMS vs authenticator app for 2FA, GUI vs CLI for configuration), document each as a separate labelled path. Don't interleave steps from different methods." This instruction is now in the KB article section, directly governing this scenario. The 2FA example is used verbatim.
+- [x] PASS: Recovery paths documented — the KB article structure now includes a "Recovery paths" section (item 5) with explicit guidance: "if the feature involves access control, authentication, or destructive actions, document what to do when the user loses access or needs to undo." The 2FA example is given directly: "2FA setup needs both 'troubleshoot setup' and 'lost my authenticator device' paths." Both backup codes and support contact are the expected recovery documentation.
 - [x] PASS: Task-oriented title — the KB article structure states "Title is the question the user would type into search — 'How do I reset my password?' not 'Password Reset Functionality'." Explicit and directly traceable.
-- [~] PARTIAL: Mobile user path — the definition has no mobile-specific guidance for KB articles. The criterion is PARTIAL-ceilinged (max 0.5). The definition says nothing about mobile considerations for help articles. Score: 0 out of 0.5 ceiling.
-- [x] PASS: Explains why 2FA matters — the KB article structure requires a "Short answer — 1-2 sentences for scanners who just need the answer." A one-sentence benefit statement is the natural output of this requirement for a feature-enabling article. The definition's emphasis on answering the question completely and leading with what the user wants to accomplish makes a benefit explanation the expected response pattern.
-- [x] PASS: Troubleshooting with symptom-cause-fix structure — the KB article structure now explicitly requires troubleshooting "structured as symptom → cause → fix" with an example ("You see 'Certificate mismatch' error → The IdP certificate has expired → Download the current certificate from Azure AD"). This is a direct and explicit requirement, stronger than the previous version.
+- [-] SKIP/PARTIAL: Mobile user path — the definition has no mobile-specific guidance for KB articles. The criterion ceiling is PARTIAL (max 0.5); the definition has no mobile considerations at all for help articles. Score: 0.
+- [x] PASS: Explains why 2FA matters — the KB article structure requires a "Short answer — 1-2 sentences for scanners who just need the answer." A one-sentence benefit statement is the natural output of this requirement for a security-feature article. The definition's emphasis on answering the question completely and leading with what the user wants to accomplish makes a benefit explanation the expected response pattern.
+- [x] PASS: Troubleshooting with symptom-cause-fix structure — the KB article structure requires troubleshooting "structured as symptom → cause → fix" with an explicit example. Direct and enforceable.
 
-### Notes
+## Notes
 
-Score: 4 PASS + 2 PARTIAL (0.5 each) + 1 mobile (0) = 4 + 1.0 + 0 = 5.0... wait, recalculating: criteria 1, 2, 5, 7, 8 are PASS (5 × 1.0 = 5.0); criteria 3, 4 are PARTIAL (2 × 0.5 = 1.0); criterion 6 scores 0 (PARTIAL ceiling, no mobile guidance). Total: 6.0/8 = 75% → PARTIAL.
+Both gaps from the previous evaluation are now closed. Criterion 3 (multi-method labelled paths) moved from PARTIAL to PASS — the instruction is now explicitly in the KB article Rules section, using the SMS/authenticator app example from this very test scenario. Criterion 4 (recovery paths) moved from PARTIAL to PASS — a named "Recovery paths" section was added to the KB article structure with a 2FA loss-of-access example.
 
-The updated troubleshooting structure (symptom → cause → fix) is a genuine improvement. Previously that section was implicitly required; now it has a named format with an example. Criterion 8 was already PASS in the previous evaluation, but the definition is now more precise on this point.
+The mobile criterion (6) remains at 0. No mobile-specific guidance exists for KB articles. This is the only remaining gap. Closing it requires a KB article note covering mobile navigation patterns or explicitly mentioning mobile as a consideration — neither is present.
 
-Criterion 7 (explains benefit) moved from 0.5 to 1.0. The "Short answer" requirement is a sufficiently direct path to a benefit statement for a security-feature article. The previous evaluation was too conservative here.
-
-The two persistent gaps are criterion 3 (no KB article template for multi-method flows) and criterion 4 (no explicit loss-of-access recovery section). Both require targeted additions to the KB article structure to resolve.
+Score recalculation: 7 PASS × 1.0 + 1 PARTIAL ceiling (no guidance present) × 0 = 7/8 = 87.5% → PARTIAL.

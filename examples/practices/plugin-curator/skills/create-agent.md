@@ -89,23 +89,27 @@ grep -r "hps\.gd\|interstitium" --include="*.md" plugins/engineering/data-engine
 
 ## Evaluation
 
-**Verdict:** PARTIAL
-**Score:** 7/8 (88%)
+**Verdict:** PASS
+**Score:** 7.5/8 (93.75%)
 **Evaluated:** 2026-04-16
 
 ## Results
 
-- [x] PASS: Step 1 reads agent template, CLAUDE.md, and marketplace.json — Step 1 provides literal `Read()` calls for all three files in sequence before any write operations. This is the first step in the Process section and is labelled "sequential — do not skip steps."
-- [x] PASS: Step 2 performs domain research before writing — Step 2 is "Research best practices" and explicitly states "Before writing anything, research the established standards and frameworks for this agent's domain." The Anti-Patterns section names "Creating without researching" as a failure mode: "agents must be grounded in established domain practices, not invented methodologies."
-- [x] PASS: All required directory structure created — Step 3 includes `mkdir -p` commands for `.claude-plugin`, `agents`, `skills`, and `templates` directories as separate explicit bash commands. The definition makes this unambiguous.
-- [x] PASS: Agent definition follows all mandatory sections — Step 5's body sections table lists all 10 sections as mandatory: Core statement, Non-negotiable, Pre-Flight, Domain methodology, Output format, Failure caps, Decision checkpoints, Collaboration, Principles, What You Don't Do. Each has a "Key requirements" column specifying what must be present.
-- [x] PASS: Agent uses `sonnet` model — Step 5 frontmatter section states "model: {sonnet for specialists, opus for leadership}." The Anti-Patterns section explicitly calls out "Forgetting model assignment." data-engineer is a specialist; sonnet is correct.
-- [x] PASS: marketplace.json updated with required fields — Step 6 defines the JSON entry format with name, source, description, version, category, and tags fields explicitly. All required fields are present in the template.
-- [ ] FAIL: All 10 registry updates completed — the criterion states "All 10 registry updates" and enumerates: marketplace.json, README (3 places), coordinator RATSI, and CTO team listing — 6 distinct targets. The skill covers exactly these 6 targets across Steps 6–9. However, the criterion's stated count ("10") does not correspond to the 6 enumerated items, and the skill's steps total 10 (Steps 1–10, including research, structure creation, and verification), not 10 registry update targets. The criterion cannot be verified as stated: the "10" label is not traceable to 10 separate registry update actions in the skill definition. The 6 enumerated targets are all covered.
-- [~] PARTIAL: Verification confirms JSON validity, count match, and no private refs — Step 10 provides bash commands for all three checks. However, the plugin.json template in Step 4 hardcodes `"name": "hps.gd"` as the author value. Step 10's private-references grep checks for `hps\.gd` in the new agent's markdown files — but the author field is in a JSON file (`plugin.json`), not a markdown file, so the grep would not catch it. A contributor following the template literally would produce a plugin.json with `"name": "hps.gd"` that passes the grep check while still containing a private reference. The verification step exists and covers the right checks in principle; the grep scope is too narrow. PARTIAL ceiling applies per criterion prefix. Score: 0.5.
+- [x] PASS: Step 1 reads agent template, CLAUDE.md, and marketplace.json — Step 1 provides literal `Read()` calls for all three files in sequence before any write operations. First step in the Process section, labelled "sequential — do not skip steps."
+- [x] PASS: Step 2 performs domain research before writing — Step 2 is "Research best practices" and explicitly states "Before writing anything, research the established standards and frameworks for this agent's domain." The Anti-Patterns section names "Creating without researching" as a failure mode.
+- [x] PASS: All required directory structure created — Step 3 includes `mkdir -p` commands for `.claude-plugin`, `agents`, `skills`, and `templates` as separate explicit bash commands.
+- [x] PASS: Agent definition follows all mandatory sections — Step 5's body sections table lists all 10 sections as mandatory: Core statement, Non-negotiable, Pre-Flight, Domain methodology, Output format, Failure caps, Decision checkpoints, Collaboration, Principles, What You Don't Do. Each has a "Key requirements" column.
+- [x] PASS: Agent uses `sonnet` model — Step 5 frontmatter section states "model: {sonnet for specialists, opus for leadership}." Anti-Patterns explicitly calls out "Forgetting model assignment." data-engineer is a specialist; sonnet is correct.
+- [x] PASS: marketplace.json updated with required fields — Step 6 defines the JSON entry format with name, source, description, version, category, and tags fields explicitly. All required fields present in the template.
+- [x] PASS: All registry updates completed — Steps 6–9 cover all enumerated targets: marketplace.json (Step 6), coordinator RATSI (Step 7), lead team listing (Step 8), README at 3 places (Step 9). All 6 targets from the criterion are covered in sequence with no gaps.
+- [~] PARTIAL: Verification confirms JSON validity, count match, and no private refs — Step 10 provides bash commands for all three checks. The plugin.json template in Step 4 now uses `"name": "[author or organisation name]"` as a generic placeholder, removing the previous `hps.gd` private reference. However, the private-references grep still uses `--include="*.md"` and would not catch a private reference manually introduced into a `.json` file. The verification is structurally present and the template defect is fixed; the grep scope remains narrower than ideal. PARTIAL ceiling applies. Score: 0.5.
 
-### Notes
+## Notes
 
-Criterion 7 scores FAIL because the criterion's stated count ("10") is internally inconsistent with its own enumeration (6 targets). The skill does cover all 6 enumerated registry targets, but cannot be scored PASS against a criterion specifying "10." The criterion itself should be corrected — either the count should be 6, or the criterion should enumerate 10 distinct operations.
+Two gaps from the previous evaluation are now resolved.
 
-The `hps.gd` defect in the plugin.json template (Step 4) persists. It is a private author reference that would appear in every plugin.json created by this skill. The Step 10 verification grep only checks `.md` files, not `.json` files, so it would not catch this. A correct verification would also grep `.json` files or the author field should use a generic placeholder like `"your-name"` or `"contributor"`.
+Criterion 7 was previously FAIL because the criterion text stated "All 10 registry updates" — a count inconsistent with the 6 enumerated targets. The criterion has been corrected to match the enumeration (marketplace.json, README (3 places), coordinator RATSI, lead team listing). The skill covers all 6 targets. PASS.
+
+Criterion 8 remains PARTIAL. The `hps.gd` hardcode in the plugin.json template (the defect that caused the grep-scope concern to matter) is fixed — the author field now uses a generic placeholder. The grep scope issue persists: Step 10 only checks `.md` files, not `.json` files. In practice this is lower risk now that the template no longer embeds a private reference, but a contributor who manually adds a private reference to plugin.json would still not be caught by the verification step.
+
+Verdict moves from PARTIAL (88%) to PASS (93.75%).

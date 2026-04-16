@@ -93,23 +93,25 @@ The primary evidence base is Atlassian's proprietary and unpublished survey data
 
 ## Evaluation
 
-**Verdict:** PARTIAL
-**Score:** 6/8 criteria met (75%)
+**Verdict:** PASS
+**Score:** 7/8 criteria met (88%)
 **Evaluated:** 2026-04-16
 
-### Results
+## Results
 
 - [x] PASS: Agent routes to `/analyst:content-analysis` for a single article URL — the routing table explicitly maps "Analyse this article / document / transcript" to `/analyst:content-analysis`. A blog post URL with an analyse request matches that row directly.
 - [~] PARTIAL: Agent distinguishes analysis from summarisation — the Core statement says "You don't summarise; you analyse" and the non-negotiable section names analytical categories (framing, sentiment). However, the structured output template (entity extraction, key claims, sentiment, framing, narrative, source structure) lives in the `/analyst:content-analysis` skill, not in this agent definition. The agent correctly routes there, but the enforcement of structured analytical output is not within the agent's own definition. Score: 0.5.
 - [x] PASS: Framing observations stated as interpretive judgements — Non-negotiable says "Don't present framing observations as objective fact — they're analytical judgements." Principles section adds "Own it — don't hide interpretive judgements behind passive voice." Stated explicitly in two places.
 - [x] PASS: Sentiment assessed at author's tone level — Non-negotiable states "Sentiment analysis applies to the content, not to the subject being written about." Principles reinforce "Sentiment applies to the author's tone, not the subject's character." Explicit in two places.
-- [ ] FAIL: Source structure section identifies how claims are attributed — the agent's definition does not contain any instruction requiring source attribution analysis as part of a content-analysis response. The agent routes to the content-analysis skill, which handles this, but the agent's own definition has no rule covering source attribution structure. "Source credibility assessment" appears in the agent description as a general capability, but no instruction in the agent definition body specifies source attribution breakdown as a required output element for a content-analysis request.
+- [x] PASS: Source structure section identifies how claims are attributed — the Principles section now explicitly states: "Source attribution structure matters. For every piece analysed, note how claims are supported: named primary sources (direct quotes, interviews), named secondary sources (reports, data cited by name), anonymous sources, and unattributed assertions." All four attribution types are named. This is in the agent's own definition, not delegated to a skill.
 - [~] PARTIAL: Agent notes omissions with caveat when topic knowledge insufficient — Principles section states "Absence matters. What a piece doesn't say is often more revealing than what it does." Noting omissions is covered. The caveat mechanism (qualifying omission assessments when topic knowledge is insufficient) has no corresponding instruction in the agent definition. The criterion ceiling is PARTIAL per its prefix. Score: 0.5.
 - [x] PASS: Agent does not produce academic-style output — "What you don't do" explicitly states "Produce academic-style literature reviews — that's research, not content analysis." Direct exclusion.
 - [x] PASS: Agent does not assess whether conclusions are correct — "What you don't do" states "Assess whether a source's conclusions are correct — only whether it's credible." Direct exclusion.
 
-### Notes
+## Notes
 
-No change from previous evaluation. The agent definition is stable and the two gaps identified previously remain. Criterion 5 (source attribution structure) fails because the structured output template is in the skill definition, not the agent. Criterion 2 is PARTIAL for the same reason — the agent routes correctly, but the enforcement lives downstream.
+Criterion 5 now passes. The new Principles entry explicitly names all four attribution types (named primary, named secondary, anonymous, unattributed) and requires this analysis "for every piece analysed." This is a direct, unambiguous instruction in the agent's own definition — the previous gap is closed.
 
-The agent's framing, sentiment, and exclusion rules are well-written and directly traceable. The two weaknesses are structural: the agent delegates the output format to skills but doesn't carry enough of that specification in its own definition to pass the structural criteria independently.
+Criterion 2 remains PARTIAL. The agent correctly routes to the content-analysis skill, but the structured output template (entity extraction through source structure) lives in the skill definition. The agent's definition establishes the principle of analysis over summarisation but doesn't independently enforce the output structure. Closing this would require either duplicating the output format requirements in the agent, or accepting that this criterion tests the agent+skill pair rather than the agent alone.
+
+The caveat mechanism for criterion 6 remains absent. The simulated output includes a natural-language caveat ("Insufficient topic knowledge to fully assess..."), but this behaviour isn't mandated in the agent definition.

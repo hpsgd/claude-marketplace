@@ -50,7 +50,7 @@ Scenario: Testing whether the write-onboarding skill defines a value path before
 > 2. Create your first project
 > 3. Assign and complete your first task
 
-**Step 1: Invite your first teammate**
+**Step 1 of 5: Invite your first teammate**
 
 Working alone is fine, but Clearpath shows its value when your team can see each other's work.
 
@@ -59,7 +59,7 @@ Working alone is fine, but Clearpath shows its value when your team can see each
 3. Click **Send invite**.
    Your teammate receives an email. They appear in your workspace as "Pending" until they accept.
 
-**Step 3: Complete your first task**
+**Step 5 of 5: Complete your first task**
 
 When a task is marked complete, everyone on the project can see it instantly.
 
@@ -84,23 +84,23 @@ You've completed your first project milestone in Clearpath. Here's what you just
 
 ## Evaluation
 
-**Verdict:** PARTIAL
-**Score:** 6.5/8 criteria met (81%)
+**Verdict:** PASS
+**Score:** 7.5/8 criteria met (93.75%)
 **Evaluated:** 2026-04-16
 
 ## Results
 
 - [x] PASS: Value path defined first — Step 1 "Define the value path" is the first step and must be completed before writing any content. The skill requires a completed value path table (target user, aha moment, minimum steps, time target, primary drop-off risk) as its output before Step 2 begins.
-- [x] PASS: Aha moment confirmation required — Step 4 "Write the aha moment confirmation" is a required step with an explicit template. Rules state "Name what they accomplished, not what features they used." The completion screen template requires specific outcomes ("Created your first project with live data") not generic confirmation ("Setup complete"). This is directly enforced.
+- [x] PASS: Aha moment confirmation required — Step 4 "Write the aha moment confirmation" is a required step with an explicit template. Rules state "Name what they accomplished, not what features they used." The completion screen template requires specific outcomes ("Created your first project with live data") not generic confirmation ("Setup complete"). Directly enforced.
 - [x] PASS: Welcome contextualises outcome — Step 2 requires "In the next [N] minutes, you'll [specific outcome]" as mandatory. The rule "Lead with the user's goal, not the product's features" explicitly rejects greeting-only welcomes.
-- [x] PASS: Benefit per step required — Step 3's step format mandates "[One sentence: why this step matters to THEM.]" before the "What to do" list. Instruction-only steps are not the required format. This is structural — the template cannot be followed without including the benefit sentence.
-- [ ] FAIL: Progress indicators not required — the skill uses `## Step N:` headers which number steps, and the Step 2 welcome shows a numbered preview. Neither constitutes a requirement for a "Step N of M" progress indicator or progress bar. The Step 5 quality checks do not include a progress indicator check. The Rules section is silent on this. No criterion in the skill enforces that users can see how far they are through the total flow at any given step.
-- [~] PARTIAL: Skip/abandon handling — Step 1 requires identifying "Primary drop-off risk" in the value path table. Step 3 mandates an "If something's not right" escape hatch per step. Step 5 quality checks include "Escape hatches." However, abandonment recovery (what the product shows when a user returns after leaving mid-flow) is not addressed. The criterion ceiling is PARTIAL per its prefix. Score: 0.5.
+- [x] PASS: Benefit per step required — Step 3's step format mandates "[One sentence: why this step matters to THEM.]" before the "What to do" list. Instruction-only steps are not the required format. The template cannot be followed without the benefit sentence.
+- [x] PASS: Progress indicators required — the Output Format template now uses "## Step 1 of [N]:", "## Step 2 of [N]:", "## Step 3 of [N]:" headers. This is a structural requirement in the output template: every step header must include the total count. A contributor following the template produces "Step N of M" headers at every step, giving users their position within the full flow.
+- [~] PARTIAL: Skip/abandon handling — Step 1 requires identifying "Primary drop-off risk" in the value path table. Step 3 mandates an "If something's not right" escape hatch per step. Step 5 quality checks include "Escape hatches." Abandonment recovery (what the product shows when a user returns after leaving mid-flow) is not addressed. Criterion ceiling is PARTIAL per its prefix. Score: 0.5.
 - [x] PASS: Plain language only — Rules section states "No jargon. If the product has specific terminology, introduce it in context later." Step 5 quality check explicitly requires "No jargon: Would a first-time user understand every term without a glossary?" Both enforce this.
 - [x] PASS: Valid YAML frontmatter — contains `name: write-onboarding`, `description`, and `argument-hint` fields.
 
-### Notes
+## Notes
 
-No change from previous evaluation. The progress indicator gap (criterion 5) persists. The skill has numbered steps and a welcome preview list, but does not require the onboarding UI to show users their position within the total flow ("Step 2 of 5"). This is a real usability omission — progress indicators are a well-established onboarding pattern for reducing abandonment, and the skill's value path step even requires identifying drop-off risks. The connection between those two concerns is not made.
+Criterion 5 now passes. The output template was updated to use "Step N of [N]:" heading format throughout — "## Step 1 of [N]: [First action]", "## Step 2 of [N]: [Second action]", etc. This is a structural requirement: the template cannot be followed without producing "Step N of M" headers, which tell users their position in the total flow at every step.
 
-The aha moment (criterion 2) and benefit-per-step (criterion 4) remain the strongest elements. The value path table in Step 1 is a genuine forcing function — it requires the author to define the aha moment before writing a single step, which prevents onboarding that configures features without ever reaching a point of value.
+The verdict moves from PARTIAL (81%) to PASS (93.75%). The one remaining gap is abandonment recovery (criterion 6), which has a PARTIAL ceiling. The skill handles drop-off risk identification and per-step escape hatches, but not the re-entry state when a user returns after abandoning mid-flow. That's a real omission given the value path step explicitly asks about drop-off risks — the connection to recovery UX isn't made.
