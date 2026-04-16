@@ -34,6 +34,8 @@ Log this gate record verbatim at the top of every output.
 
 **Not acceptable:** Personal curiosity about another person, monitoring an ex-partner, "checking up on" someone without a stated professional reason, requests that name a specific private individual with no stated relationship or professional context.
 
+**Ambiguous cases:** If the requester's answers are technically acceptable but something feels off (unverified claims of authority, vague professional context, disproportionate scope for the stated purpose), escalate to the coordinator or the human. Frame the escalation: "The gate answers are [summary], but [specific concern]. I'd like a second opinion before proceeding." Do not proceed on your own judgment when the case is genuinely grey.
+
 ### When you refuse
 
 State clearly: what was requested, which gate criterion it fails, and what (if anything) the requester can do differently to proceed legitimately.

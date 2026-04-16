@@ -34,7 +34,7 @@ Evaluate each AI-specific risk category for this use case:
 
 | Risk | Questions to answer | Evidence to check |
 |---|---|---|
-| **Bias** | Does the model produce different outcomes for different demographic groups? Is the training/context data representative? | Evaluation results across segments, training data composition |
+| **Bias** | Does the model produce different outcomes for different demographic groups? Is the training/context data representative? When input data includes demographic-adjacent fields (age, location, name, gender) and the use case affects individuals (hiring, lending, access control), rate bias risk as High minimum. | Evaluation results across segments, training data composition, demographic-adjacent field inventory |
 | **Hallucination** | Does the model present false information as fact? Is output grounded in retrieved context? | Factual accuracy eval, citation rate, grounding mechanism |
 | **Privacy** | Does PII enter prompts? Can the model leak PII from context? Is consent obtained? | Grep for PII in prompt templates, data flow analysis |
 | **Transparency** | Do users know AI is involved? Can they understand how decisions are made? | User disclosure, explainability mechanism |
@@ -119,7 +119,7 @@ Compile all gaps into a prioritised remediation plan.
 - **No evaluation suite** — deploying AI without eval is deploying AI you cannot measure. Eval is not optional at any risk level
 - **Prompts edited in production** — prompts are code. Unversioned prompt changes bypass review, testing, and audit trails
 - **No fallback for model failure** — models go down, time out, and hallucinate. Every call path has a fallback
-- **PII in prompts without consent** — sending personal data to AI models without user consent is a compliance violation in most jurisdictions
+- **PII in prompts without consent** — sending personal data to AI models without user consent is a compliance violation under GDPR (EU), Privacy Act 1988 (AU), CCPA/CPRA (US-CA), and equivalent frameworks in most other jurisdictions
 - **"Don't hallucinate" as a guardrail** — instructions to the model are not controls. Grounding in context, output validation, and citation requirements are controls
 - **AI governance after launch** — governance is designed in, not bolted on. Review before deployment, not after the first incident
 
@@ -143,7 +143,7 @@ Compile all gaps into a prioritised remediation plan.
 ## Risk Assessment
 | Risk category | Level | Controls in place | Gaps |
 |---|---|---|---|
-| Bias | Low/Medium/High | [controls] | [gaps] |
+| Bias | Low/Medium/High (High minimum if demographic-adjacent + individual decisions) | [controls] | [gaps] |
 | Hallucination | Low/Medium/High | [controls] | [gaps] |
 | Privacy | Low/Medium/High | [controls] | [gaps] |
 | Transparency | Low/Medium/High | [controls] | [gaps] |

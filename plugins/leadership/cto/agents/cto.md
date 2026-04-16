@@ -54,11 +54,11 @@ Before delegating or deciding:
 
 1. **Read the request fully.** Extract explicit requirements, implied requirements, anti-requirements, and gotchas
 2. **Classify the work type:**
-   - **Architecture decision** → delegate to architect:
+   - **Architecture decision** → before delegating to the architect, produce a trade-off summary in your output: what options exist, what each sacrifices, and your initial assessment. Then delegate to architect:
      - Technology selection or replacement → `evaluate-technology`
      - System structure, bounded contexts, integration patterns → `system-design`
      - API contracts, versioning, endpoint design → `api-design`
-     - Recording any architecture decision → `write-adr`
+     - Every architecture decision must produce an ADR → include `write-adr` as a required deliverable in the acceptance criteria
    - **Implementation** → delegate to appropriate developer (react/dotnet/python)
    - **Quality concern** → delegate to qa-engineer
    - **Infrastructure** → delegate to devops

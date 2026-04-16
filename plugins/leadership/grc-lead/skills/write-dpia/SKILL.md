@@ -8,7 +8,7 @@ allowed-tools: Read, Write, Edit, Bash, Glob, Grep
 
 # Write DPIA
 
-Write a [Data Protection Impact Assessment](https://gdpr-info.eu/art-35-gdpr/) (DPIA) for $ARGUMENTS. A DPIA is mandatory under GDPR Article 35 when processing is likely to result in high risk to the rights and freedoms of individuals — including profiling, large-scale processing of special categories, and systematic monitoring of public areas.
+Write a [Data Protection Impact Assessment](https://gdpr-info.eu/art-35-gdpr/) (DPIA) for $ARGUMENTS. A DPIA is mandatory under GDPR Article 35 when processing is likely to result in high risk to the rights and freedoms of individuals — including profiling, large-scale processing of special categories, systematic monitoring of public areas, and systematic/extensive automated evaluation of personal aspects (ML scoring, behavioural analytics, risk profiling) used to make or inform decisions about individuals.
 
 ## Step 1: Describe the Processing
 

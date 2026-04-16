@@ -42,9 +42,9 @@ Run test cases against their plugin definitions. Works at three levels:
 
    ## Results
 
-   | Test | Type | Verdict | Score |
-   |---|---|---|---|
-   | research/analyst/skills/company-lookup | skill | PASS | 7/7 (100%) |
+   | Test | Type | Description | Verdict | Score |
+   |---|---|---|---|---|
+   | research/analyst/skills/company-lookup | skill | Research a company's structure, financials, and market position | PASS | 7/7 (100%) |
    ```
 
 4. Print the summary table and flag any failures for follow-up. For single-file runs, skip the report file and just print the result inline.
