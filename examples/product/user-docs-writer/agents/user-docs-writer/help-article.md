@@ -90,26 +90,24 @@ Lost your phone:
 ## Evaluation
 
 **Verdict:** PARTIAL
-**Score:** 6.0/8 criteria met (75%)
+**Score:** 5.5/8 criteria met (69%)
 **Evaluated:** 2026-04-16
 
 ## Results
 
-- [x] PASS: Product language only — the agent explicitly requires "Product language, not system language" as non-negotiable, and "No acronyms without definition." "TOTP" doesn't appear; "authenticator app" is used with plain explanation. The agent's definition enforces this.
-- [x] PASS: Expected result after every step — "Every step has an expected result" is listed in the agent's Non-negotiable section and Principles. The KB article structure in the agent definition requires "Expected result after each step."
-- [~] PARTIAL: Both methods as separate labelled paths — the agent's KB article structure says "One article answers one question — don't combine 'How to create X' and 'How to delete X' in one article." It does not explicitly require multiple setup paths to be presented as separate labelled sections. A well-formed response would likely cover both (the prompt specifies two methods), but the agent definition provides no template or requirement for multi-path structure. Partially met by implication.
-- [~] PARTIAL: Recovery paths documented — the agent's KB structure requires a Troubleshooting section covering "common issues when following this answer." Backup codes and support contact are recovery paths, not troubleshooting items. The agent doesn't explicitly require documenting account recovery or loss-of-access paths. Partially met: troubleshooting is required, but specific recovery path documentation isn't mandated.
-- [x] PASS: Task-oriented title — the agent's KB article structure says "Title — the user's question in their words (search-optimised)" and "Title is the question the user would type into search — 'How do I reset my password?' not 'Password Reset Functionality'."
-- [~] PARTIAL: Mobile user path — the agent's definition contains no mobile-specific guidance for help articles. "Some are on mobile" context in the prompt isn't addressed by any agent rule or template. The criterion is PARTIAL-ceilinged (max 0.5) — and the definition doesn't even reach partial coverage explicitly.
-- [~] PARTIAL: Explains why 2FA matters — the agent says to answer the question completely and use a short answer first, but doesn't explicitly require explaining the benefit of a feature. A one-sentence benefit statement isn't mandated by the definition.
-- [x] PASS: Troubleshooting section — the KB article structure explicitly lists Troubleshooting as a mandatory section. The agent definition requires it.
+- [x] PASS: Product language only — the agent explicitly requires "Product language, not system language" as non-negotiable, and "No acronyms without definition." "TOTP" would not appear; "authenticator app" is the required vocabulary. The agent enforces this.
+- [x] PASS: Expected result after every step — "Every step has an expected result" is listed in the agent's Non-negotiable section: "Every step has an expected result. 'Click Save' is incomplete." The KB article structure requires "Expected result after each step." This is an explicit enforcement mechanism.
+- [~] PARTIAL: Both methods as separate labelled paths — the agent's KB article structure says "One article answers one question — don't combine 'How to create X' and 'How to delete X' in one article." There is no explicit template or requirement for multi-path articles (Option A / Option B structure). The definition provides no format guidance for branching setup flows. The prompt specifies two methods, and a competent writer would cover both, but the agent definition has no explicit rule requiring separate labelled paths for alternative setup methods. Score: 0.5.
+- [~] PARTIAL: Recovery paths documented — the agent's KB article structure requires a Troubleshooting section covering "common issues when following this answer." Backup codes and support contact are loss-of-access recovery paths, not troubleshooting items for the setup steps. The agent's structure has no explicit "account recovery" or "loss of access" section. Partially met: troubleshooting is required, but specific loss-of-access documentation is not mandated. Score: 0.5.
+- [x] PASS: Task-oriented title — the agent's KB article structure says "Title is the question the user would type into search — 'How do I reset my password?' not 'Password Reset Functionality'." This is an explicit requirement.
+- [~] PARTIAL: Mobile user path — the agent's definition contains no mobile-specific guidance for help articles. The criterion is PARTIAL-ceilinged (max 0.5) and the definition has no explicit mobile coverage. Score: 0 out of 0.5 ceiling.
+- [~] PARTIAL: Explains why 2FA matters — the agent's KB article structure requires a "Short answer" (1-2 sentences for scanners) but does not explicitly mandate explaining the benefit of a feature before the steps. The definition pushes toward answering the question completely but does not require a benefit statement. Score: 0.5 — a one-sentence benefit would likely appear from the "short answer" requirement, but the definition does not enforce it.
+- [x] PASS: Troubleshooting section — the KB article structure explicitly lists Troubleshooting as a mandatory section. This is directly traceable in the definition.
 
-## Notes
+### Notes
 
-The agent definition is a strong general-purpose documentation writer but it's written at a high level of abstraction. The KB article structure gives good scaffolding (title, short answer, steps, troubleshooting, related articles) but leaves several things to judgement rather than explicit requirement.
+Score calculation: 4 PASS (1.0 each) + criteria 3, 4, 7 as PARTIAL (0.5 each) + criterion 6 mobile as 0 = 4 + 1.5 = 5.5/8 = 68.75% → PARTIAL verdict.
 
-Criterion 3 (separate labelled paths) is a meaningful gap: the definition has a "one question per article" rule but no template for multi-path articles. Real help content frequently needs to cover "do this OR do that" branching, and the definition doesn't address it.
+The agent definition is strong on the mechanics of article writing (title format, expected results, troubleshooting structure) but leaves several content decisions to judgment rather than explicit requirement. The KB article structure gives good scaffolding but doesn't address: multi-path articles, loss-of-access recovery as a distinct section, or mobile-specific considerations.
 
-Criterion 4 (recovery paths) is similarly a gap — account recovery isn't really "troubleshooting" (it's a separate user journey), and the agent's structure doesn't accommodate it explicitly.
-
-The pre-run evaluation scored this 7.5/8. The actual score against the definition is 6.0/8. Several criteria that were given PASS were based on the quality of the simulated output rather than what the definition actually requires.
+Criterion 3 (separate labelled paths) is the most significant gap. The "one question per article" rule is about article scope, not internal structure. A definition that wants multi-path support should explicitly require an "Option A / Option B" template for features with alternative setup methods.

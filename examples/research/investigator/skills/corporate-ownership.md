@@ -25,7 +25,7 @@ Scenario: A due diligence analyst wants to map the ownership chain behind a comp
 
 ## Corporate ownership: Meridian Capital Partners Pty Ltd
 
-**Date:** 2026-04-15
+**Date:** 2026-04-16
 **Primary jurisdiction:** Australia
 **Registration number:** ACN 621 847 203 (confirmed via ASIC Connect)
 
@@ -40,9 +40,9 @@ Scenario: A due diligence analyst wants to map the ownership chain behind a comp
 | Registered office | Level 18, 1 Market Street, Sydney NSW 2000 |
 | Date registered | 14 March 2018 |
 
-Source: ASIC Connect company extract, accessed 2026-04-15.
+Source: [ASIC Connect company extract](https://connect.asic.gov.au), accessed 2026-04-16.
 
-ABN Lookup cross-reference: ABN 47 621 847 203 — GST registered, entity type: Other Incorporated Entity (consistent with proprietary limited company). One registered business name: "Meridian Capital" (registered 2018).
+ABN Lookup cross-reference: ABN 47 621 847 203 — GST registered, entity type: Other Incorporated Entity (consistent with proprietary limited company). One registered business name: "Meridian Capital" (registered 2018). Source: [ABN Lookup](https://abn.business.gov.au), accessed 2026-04-16.
 
 ### Directors (current)
 
@@ -52,92 +52,101 @@ ABN Lookup cross-reference: ABN 47 621 847 203 — GST registered, entity type: 
 | Sarah M. Chen | Director | 2019-07-01 | See director network below |
 | David A. Okafor | Director | 2021-02-28 | See director network below |
 
-Source: ASIC Connect company extract, Apr 2026.
+Source: ASIC Connect company extract, accessed 2026-04-16.
 
 ### Directors (historical)
 
-- Marcus P. Treloar — Director 2018-03-14 to 2020-11-30. Resignation, no stated reason in ASIC records. Note: departure without announced succession is a notable event for a 2-year founding director.
+- Marcus P. Treloar — Director 2018-03-14 to 2020-11-30. Resignation recorded. Founding director departure after two years is a notable event; no stated reason in ASIC records.
 
 ### Ownership structure
 
-ASIC Connect (for proprietary companies): shareholder data is available for Pty Ltd companies in the ASIC extract. Meridian Capital Partners Pty Ltd shareholder disclosed: Meridian Capital Holdings Ltd (100% shareholder).
+ASIC Connect shareholder data (proprietary company extract): Meridian Capital Partners Pty Ltd is wholly owned by Meridian Capital Holdings Ltd.
 
 Meridian Capital Holdings Ltd: registered in British Virgin Islands (BVI). No ASIC or ABN registration found for this entity. BVI companies have no public shareholder or beneficial ownership register.
 
-**This is a significant finding.** The Australian operating entity is wholly owned by a BVI holding company. BVI provides some of the lowest beneficial ownership disclosure requirements of any offshore jurisdiction. The identity of the ultimate beneficial owner of Meridian Capital Holdings Ltd cannot be determined from publicly available sources.
+**This is a significant finding.** The Australian operating entity is 100% owned by a BVI holding company. BVI provides no public beneficial ownership disclosure. The identity of the ultimate beneficial owner cannot be determined from publicly available sources.
 
-*Registered vs beneficial ownership:* The registered owner of Meridian Capital Partners Pty Ltd is Meridian Capital Holdings Ltd (BVI). The beneficial owner — the natural person(s) who ultimately control or benefit from the entity — is unknown from public sources.
+Registered vs beneficial ownership: the registered owner of Meridian Capital Partners Pty Ltd is Meridian Capital Holdings Ltd (BVI). The beneficial owner — the natural person(s) who ultimately control or benefit — is unknown from public sources. These are not the same thing, and the distinction matters for due diligence.
 
 ABN Lookup: no parent entity relationship disclosed for the AU entity.
 
 ### Subsidiaries
 
-ASIC Connect subsidiary search: no Australian subsidiaries found registered under Meridian Capital Partners Pty Ltd as parent.
+ASIC Connect corporate group search: no Australian subsidiaries found registered under Meridian Capital Partners Pty Ltd as parent.
 
-LinkedIn (company page check): lists "Meridian Capital Partners" with no subsidiary brands or related entities mentioned.
-
-*Note: ASIC requires disclosure of Australian subsidiaries; offshore subsidiaries have no equivalent AU disclosure requirement.*
+Note: ASIC requires disclosure of Australian subsidiaries. Offshore subsidiaries have no equivalent AU disclosure requirement.
 
 ### Related entities
 
-Shared registered address (Level 18, 1 Market Street, Sydney): search reveals 14 other companies at this address. This is a commercial serviced office address — shared address is not a meaningful related-entity signal at this location.
+Shared registered address (Level 18, 1 Market Street, Sydney): 14+ other companies share this address. This is a commercial serviced office address — not a meaningful related-entity signal.
 
-Shared registered agent: Meridian Capital Partners uses Corcept Legal Pty Ltd as its registered agent. ASIC search for other companies using Corcept Legal as registered agent: 47 results. No unusual patterns identified — Corcept Legal is a mid-sized corporate services firm with a broad client base.
+Shared registered agent: Corcept Legal Pty Ltd (47 registered ASIC clients). Corcept Legal is a mid-sized corporate services firm; no unusual clustering identified.
 
-**Director cross-appointments:** See Director network below.
+Director cross-appointments: see director network map below.
 
 ### Offshore/complex structure notes
 
-The BVI holding structure is the primary concern. BVI does not require public disclosure of company directors, shareholders, or beneficial owners. This is a **significant finding** for due diligence:
+The BVI parent structure is the primary finding. BVI does not require public disclosure of directors, shareholders, or beneficial owners. For due diligence purposes:
 
-- It is not possible to determine from public sources who ultimately controls Meridian Capital Partners Pty Ltd.
-- The BVI parent structure is a deliberate choice — BVI is consistently used for its opacity, not for any operational reason.
-- This does not indicate wrongdoing, but it is a material gap that should be addressed directly with the company in any partnership discussion.
+- Who ultimately controls Meridian Capital Partners Pty Ltd cannot be determined from public sources
+- BVI is consistently used for its opacity, not for operational efficiency
+- This does not indicate wrongdoing, but it is a material gap that should be addressed directly with the company before any partnership is formalised
 
-ICIJ Offshore Leaks Database search: no results for "Meridian Capital Holdings" or director names in the ICIJ database. *Note: the ICIJ database covers specific leaked datasets (Panama Papers, Pandora Papers, etc.) — it is not a comprehensive offshore company registry. Absence from ICIJ does not mean no offshore structure; it means this entity was not in any of the leaked datasets.*
+ICIJ Offshore Leaks Database: searched for "Meridian Capital Holdings" and each director name. No results found. *Note: the ICIJ database covers specific leaked datasets (Panama Papers, Pandora Papers, etc.) — it is not a comprehensive offshore company registry. Absence from ICIJ does not mean no offshore structure; it means this entity did not appear in those specific leaked datasets.*
+
+Source: [ICIJ Offshore Leaks Database](https://offshoreleaks.icij.org), accessed 2026-04-16.
 
 ### Director network map
 
 **Jonathan W. Hartley (Director since 2018):**
-ASIC director search: current appointments at 3 entities — Meridian Capital Partners Pty Ltd; Hartley Advisory Services Pty Ltd (family advisory vehicle, registered 2015); Banksia Superannuation Pty Ltd (SMSF trustee). No concerning cross-appointments identified.
+ASIC Connect director search: 3 current appointments — Meridian Capital Partners Pty Ltd; Hartley Advisory Services Pty Ltd (registered 2015, family advisory); Banksia Superannuation Pty Ltd (SMSF trustee). No concerning cross-appointments.
 
 **Sarah M. Chen (Director since 2019):**
-ASIC director search: 2 current appointments — Meridian Capital Partners Pty Ltd; Chen Capital Consulting Pty Ltd (single-director entity, registered 2012, active). No concerning cross-appointments.
+ASIC Connect: 2 current appointments — Meridian Capital Partners Pty Ltd; Chen Capital Consulting Pty Ltd (single-director entity, registered 2012). No concerning cross-appointments.
 
 **David A. Okafor (Director since 2021):**
-ASIC director search: 3 current appointments — Meridian Capital Partners Pty Ltd; Okafor Partners Pty Ltd (consulting, registered 2019); Savanna Growth Fund Pty Ltd (financial services, registered 2021, same year as Meridian appointment).
+ASIC Connect: 3 current appointments — Meridian Capital Partners Pty Ltd; Okafor Partners Pty Ltd (consulting, registered 2019); Savanna Growth Fund Pty Ltd (financial services, registered 2021).
 
-*Savanna Growth Fund Pty Ltd warrants noting: registered in the same year as Okafor's appointment to Meridian, in the same industry (financial services). ASIC extract for Savanna Growth Fund: directors are Okafor and one other (not a Meridian director). No immediate red flag but worth confirming with the company whether Savanna and Meridian are related entities.*
+Note on Savanna Growth Fund: registered in the same year as Okafor's Meridian appointment, same industry (financial services). Not an immediate red flag, but worth confirming with the company whether Savanna and Meridian are related entities before proceeding.
 
 ### Sources
 
-1. [ASIC Connect](https://connect.asic.gov.au) — company extract, director history, shareholder data for AU entity
-2. [ABN Lookup](https://abn.business.gov.au) — ABN/ACN cross-reference, business name
-3. [OpenCorporates](https://opencorporates.com) — cross-jurisdiction search for BVI entity (no results — BVI not in OpenCorporates registry)
-4. [ICIJ Offshore Leaks Database](https://offshoreleaks.icij.org) — searched; no results; caveat noted
-5. [LinkedIn: Meridian Capital Partners](https://linkedin.com) — subsidiary/brand check; director profile cross-reference
-6. [ViewDNS.info](https://viewdns.info) — shared address and registered agent cross-check
+1. [ASIC Connect](https://connect.asic.gov.au) — company extract, director history, shareholder data, accessed 2026-04-16
+2. [ABN Lookup](https://abn.business.gov.au) — ABN/ACN cross-reference, business name, accessed 2026-04-16
+3. [OpenCorporates](https://opencorporates.com) — cross-jurisdiction search for BVI entity (no results — BVI not in OpenCorporates registry), accessed 2026-04-16
+4. [ICIJ Offshore Leaks Database](https://offshoreleaks.icij.org) — director names and company name searched; no results found, accessed 2026-04-16
+5. [ViewDNS.info](https://viewdns.info) — shared address and registered agent cross-check, accessed 2026-04-16
 
 ## Evaluation
 
 **Verdict:** PASS
 **Score:** 8.5/9 (94%)
-**Evaluated:** 2026-04-15
+**Evaluated:** 2026-04-16
 
-- [x] PASS: Skill checks ASIC Connect as the primary AU registry source — Step 1 (Primary registration) lists ASIC Connect as the first source for Australian entities: "company extract includes current and historical directors, shareholders for proprietary companies, registered office, date of registration, and current status." The skill also specifies ABN Lookup as a cross-reference. Simulated output uses both ASIC Connect and ABN Lookup with specific data from each.
-- [x] PASS: Beneficial ownership section distinguishes registered from beneficial ownership — Step 2 (Beneficial ownership) instructs: "Identify who ultimately controls or owns the company beyond the registered directors." The Rules block states: "Distinguish between registered ownership (what the registry shows) and beneficial ownership (who actually controls the entity). These often differ." Simulated output explicitly labels the BVI holding structure as registered ownership and states the beneficial owner is unknown.
-- [x] PASS: Director network step is executed — Step 3 (Director networks) instructs: "For each director, search their other company appointments" and names ASIC Connect director search as the tool. The output template includes a `### Director network map` section. Simulated output searches all three current directors and one notable historical departure, finding cross-appointments for each.
-- [x] PASS: Subsidiary mapping is attempted — Step 4 (Subsidiary mapping) lists sources: "ASIC Connect — corporate group searches." The simulated output searches ASIC and notes no AU subsidiaries found, with the caveat that offshore subsidiaries have no AU disclosure requirement.
-- [x] PASS: Related entities step checks shared addresses, directors, and registered agents — Step 5 (Related entities) specifically lists "same registered address / same directors / same registered agent / similar naming patterns." Simulated output checks all three (shared address: serviced office — not significant; registered agent: broad client base — not significant; director cross-appointments: covered in director network).
-- [x] PASS: Offshore jurisdiction termination flagged as significant finding — the Rules block states: "Note when an ownership chain terminates in a jurisdiction with limited disclosure requirements (offshore structures, certain US states) — this is a significant finding, not a gap." Simulated output explicitly flags the BVI parent as a "significant finding" with explanation of BVI's disclosure limitations, and explicitly distinguishes it from a routine data gap.
-- [x] PASS: Jurisdiction documented for every entity in the chain — the Rules block states: "Document the jurisdiction for every entity in the ownership chain." Simulated output documents: Meridian Capital Partners Pty Ltd — Australia (NSW); Meridian Capital Holdings Ltd — British Virgin Islands. All director-affiliated entities include their Australian ACN/jurisdiction.
-- [~] PARTIAL: ICIJ Offshore Leaks Database checked with absence caveat — Step 2 (Beneficial ownership) lists the ICIJ Offshore Leaks Database as a source with the note: "ICIJ data covers specific leaked datasets — it's a signal, not a comprehensive offshore registry. Absence from ICIJ doesn't mean no offshore structure." The Rules block adds the same caveat. The partial stands because: the ICIJ check is listed as a source to use (not a mandatory step with a specific rule requiring it), and the absence caveat is present in the definition but appears as explanatory text rather than a hard rule. In the simulated output, ICIJ is checked and the caveat is applied correctly. The partial reflects that the criterion asks for the caveat to be applied — which it is — but the definition doesn't make ICIJ checking mandatory in all cases.
-- [x] PASS: Output uses the structured format — the output template specifies: primary registration table, Directors (current) table, Directors (historical), Ownership structure, Subsidiaries, Related entities, Offshore/complex structure notes, Director network map, and Sources. All sections are present in the simulated output.
+### Results
+
+- [x] PASS: Skill checks ASIC Connect as the primary AU registry source — met. Step 1 explicitly lists ASIC Connect as the first source for Australian entities: "company extract includes current and historical directors, shareholders for proprietary companies, registered office, date of registration, and current status." ABN Lookup is listed as the cross-reference. Both are explicit, named sources in the definition.
+
+- [x] PASS: Beneficial ownership section distinguishes registered from beneficial ownership — met. Step 2 (Beneficial ownership) instructs identifying who ultimately controls the company. The Rules block states: "Distinguish between registered ownership (what the registry shows) and beneficial ownership (who actually controls the entity). These often differ." Both the step and the rule are explicit. Output applies the distinction correctly to the BVI structure.
+
+- [x] PASS: Director network step is executed — met. Step 3 (Director networks) instructs: "For each director, search their other company appointments" and names ASIC Connect director search as the tool. The output format template requires a `### Director network map` section. All three current directors are searched; historical director noted.
+
+- [x] PASS: Subsidiary mapping is attempted — met. Step 4 (Subsidiary mapping) lists "ASIC Connect — corporate group searches" as a source. Output searches ASIC and notes no AU subsidiaries found, with a caveat that offshore subsidiaries have no AU disclosure requirement.
+
+- [x] PASS: Related entities step checks shared addresses, directors, and registered agents — met. Step 5 (Related entities) specifically lists "the same registered address / the same directors / the same registered agent / similar naming patterns." Output checks all three (shared address: serviced office — not significant; registered agent: broad client base — not significant; director cross-appointments: covered in director network).
+
+- [x] PASS: Offshore jurisdiction termination flagged as significant finding — met. The Rules block states: "Note when an ownership chain terminates in a jurisdiction with limited disclosure requirements (offshore structures, certain US states) — this is a significant finding, not a gap." Output explicitly labels the BVI parent structure as a "significant finding" with explanation of disclosure limitations. The distinction from a routine data gap is explicit.
+
+- [x] PASS: Jurisdiction documented for every entity in the chain — met. The Rules block states: "Document the jurisdiction for every entity in the ownership chain." Output documents: Meridian Capital Partners Pty Ltd — Australia (NSW); Meridian Capital Holdings Ltd — British Virgin Islands. All director-affiliated entities include jurisdiction via their ACN.
+
+- [~] PARTIAL: ICIJ Offshore Leaks Database checked with absence caveat — partially met (ceiling 0.5). Step 2 lists ICIJ as a source with the explanatory note: "ICIJ data covers specific leaked datasets — it's a signal, not a comprehensive offshore registry. Absence from ICIJ doesn't mean no offshore structure." The Rules block repeats the same caveat. The check is listed as a source to use but not as a mandatory step in its own rules block. The caveat is present. Ceiling is PARTIAL per criterion prefix.
+
+- [x] PASS: Output uses the structured format — met. The output format template specifies: primary registration table, Directors (current) table, Directors (historical), Ownership structure, Subsidiaries, Related entities, Offshore/complex structure notes, Director network map, and Sources. All sections are present and follow the template structure.
 
 ### Notes
 
-The BVI structure is the defining finding in this scenario and the skill handles it correctly. The Rules block's language — "This is a significant finding, not a gap" — is exactly the right framing. Many due diligence frameworks would simply note "beneficial owner not found" without flagging the systemic reason. The skill's explicit treatment of offshore jurisdiction terminations as a finding rather than a data gap is a meaningful design choice.
+The BVI structure scenario tests the most important element of this skill — the distinction between "gap" and "significant finding." The Rules block handles this well: "this is a significant finding, not a gap" is explicit language that changes how a reviewer interprets the result. Many due diligence frameworks would record "beneficial owner not identified" without explaining why the opacity is structural.
 
-The director network map is the most labour-intensive step and the definition provides the right tool (ASIC Connect director search) but no guidance on what level of cross-appointment warrants escalation. The simulated output flags the Savanna Growth Fund co-registration as worth noting but not a red flag. The definition could benefit from explicit criteria: "Flag if a director's cross-appointments include entities in the same financial sector that are not disclosed as related."
+The director network map is the most labour-intensive step. The definition gives the right tool (ASIC Connect director search) but no threshold for what level of cross-appointment warrants escalation. The Savanna Growth Fund finding in the output is flagged as worth noting but not a red flag. The definition could benefit from explicit criteria, such as: "Flag if a director's cross-appointments include entities in the same sector as the target that are not disclosed as related."
 
-One strength: the historical director section and the unexplained resignation of the founding director (Marcus Treloar) are captured as a notable event. The skill's Step 3 includes "historical directors" in the template, which is correct — founding director departures can signal significant changes in control or direction that the current structure doesn't reflect.
+Source citation quality: deep links used where supported. Access dates on all sources.

@@ -23,52 +23,64 @@ We need to ship a new "Team Workspaces" feature for Flowbase before the end of t
 
 ## Output
 
-**Pre-flight:**
-Reading CLAUDE.md and .claude/CLAUDE.md... Reading .claude-plugin/marketplace.json. Available leads: CPO, CTO, GRC Lead. Installed specialists: CTO team includes architect, react-developer, dotnet-developer, qa-lead, qa-engineer, devops, security-engineer. CPO team includes product-owner, ui-designer, gtm, user-docs-writer, support. No active incidents or in-progress workstreams flagged.
+**Pre-flight check**
+
+Reading CLAUDE.md and .claude/CLAUDE.md for project conventions and installed rules. Reading `.claude-plugin/marketplace.json` to identify available agents. Checking for in-progress workstreams or active incidents.
+
+Available leads confirmed: CPO, CTO, GRC Lead. CTO team includes: architect, react-developer, dotnet-developer, qa-lead, qa-engineer, devops, release-manager, security-engineer. CPO team includes: product-owner, ui-designer, user-docs-writer, gtm, support.
+
+No active incidents. No conflicting workstreams flagged.
 
 ---
 
 **Team Workspaces — Dispatch Plan**
 
-This is a full-stack cross-team initiative. I will not implement anything directly. Below is the structured dispatch plan for the main conversation to execute.
+This is a cross-team initiative spanning both CPO and CTO domains. I will not implement anything. The following is a structured dispatch plan for the main conversation to execute.
 
-**Dependency map:**
+**Workstream dependency map**
 
 | Workstream | Depends on | Blocks |
 |---|---|---|
-| Product (PRD + user stories) | — | Design, Architecture, QA Lead |
-| Architecture (system design, ADRs) | Product requirements | Development, DevOps |
-| QA Lead (acceptance criteria, test strategy) | Product requirements | QA Engineer, Development |
+| Product requirements (PRD, user stories) | — | Design, Architecture, QA Lead |
+| Architecture (system design, ADRs) | Product requirements | Backend development, DevOps |
+| QA Lead (acceptance criteria, test strategy) | Product requirements | QA Engineer, all development |
 | Design (UX flows, component specs) | Product requirements | Frontend development |
-| Security (threat model — roles/access control) | Architecture | Development, QA |
-| Development (backend + frontend) | Design, Architecture, QA acceptance tests | QA execution |
-| QA Engineer (acceptance tests, e2e) | Architecture, QA Lead criteria | Development gate |
-| DevOps (infra, deploy plan) | Architecture | Launch |
-| Content + GTM + Support | Working feature | Launch |
+| Security (threat model — roles, access control, invitations) | Architecture | Development, QA |
+| QA Engineer (acceptance tests) | QA Lead criteria, Architecture | Development (TDD gate) |
+| Backend development | Architecture, QA acceptance tests | QA execution |
+| Frontend development | Design, QA acceptance tests | QA execution |
+| QA execution (integration, e2e) | Development complete | Release |
+| DevOps (infra, deploy) | Architecture | Launch |
+| GTM, user-docs-writer, support | Working feature | Launch |
 
-**Execution sequence:**
+**Execution sequence**
 
-| Phase | Agents (parallel where possible) | Gate |
+| Phase | Agents | Gate before advancing |
 |---|---|---|
-| 1 — Define | CPO → product-owner (PRD, user stories, success metrics) | PRD approved by CPO |
-| 2 — Specify | CTO → architect (system design, API contracts, ADRs); CPO → ui-designer (UX flows); CTO → qa-lead (3 amigos — acceptance criteria + test strategy); CTO → security-engineer (threat model) | Architecture ADR reviewed; design specs complete; acceptance criteria signed off; threat model complete |
-| 3 — Build | CTO → qa-engineer (write acceptance tests first); CTO → dotnet-developer (backend); CTO → react-developer (frontend) | Feature complete, all tests passing |
-| 4 — Validate | CTO → qa-engineer (integration + e2e); CTO → devops (deployment prep, staging) | Tests passing in staging, no regressions |
-| 5 — Prepare | CPO → user-docs-writer; CPO → gtm (launch plan); CPO → support (FAQ, training) | Docs written, launch plan approved |
-| 6 — Launch | CTO → release-manager (go/no-go) | All gates passed |
+| 1 — Define | CPO → product-owner: PRD, user stories, success metrics for Team Workspaces | PRD reviewed and approved by CPO |
+| 2 — Specify (parallel tracks) | CTO → architect: system design, permissions model, API contracts, ADRs; CPO → ui-designer: UX flows and component specs; CTO → qa-lead: acceptance criteria and test strategy (3 amigos with product-owner and architect); CTO → security-engineer: threat model covering roles, member invitation, workspace isolation | All four workstreams complete; ADR reviewed; acceptance criteria signed off by all three amigos |
+| 3 — Build | CTO → qa-engineer: write acceptance tests first (TDD); CTO → dotnet-developer: backend; CTO → react-developer: frontend — development does not start until acceptance tests exist | Feature complete; all acceptance tests pass |
+| 4 — Validate | CTO → qa-engineer: integration and e2e tests; CTO → devops: staging deployment and deployment prep | Tests passing in staging; no regressions |
+| 5 — Prepare | CPO → user-docs-writer: help content; CPO → gtm: launch plan; CPO → support: FAQ, known issues, training | Docs complete; launch plan approved |
+| 6 — Launch | CTO → release-manager: go/no-go decision | All DoD criteria met; all gates passed |
 
-**Definition of Ready check — required before Phase 3 starts:**
-- [ ] Problem validated — evidence of collaboration pain points
-- [ ] User stories written with acceptance criteria (3 amigos sign-off)
-- [ ] Edge cases documented (role inheritance, concurrent edits, member removal, orphaned workspace)
-- [ ] Design complete — UX flows and component specs
-- [ ] Architecture agreed — ADR written for workspace data model and permissions model
-- [ ] Dependencies identified — any auth infrastructure changes
-- [ ] Scope bounded — what's in v1 vs deferred
+**Definition of Ready — required before Phase 3**
 
-**What I am not deciding:** I have not chosen between invite-by-email vs invite-by-link, the permissions storage model, or whether workspace roles map to existing auth primitives. Those are product and architecture decisions for the CPO and CTO respectively.
+- [ ] Problem validated — evidence of collaboration pain (not assumption)
+- [ ] User stories written with acceptance criteria (3 amigos sign-off: product-owner, architect, qa-lead)
+- [ ] Edge cases documented: empty workspace, member removal, role inheritance, concurrent edits, orphaned workspace
+- [ ] Design complete — UX flows and component specs for invite, roles, and workspace switching
+- [ ] Architecture agreed — ADR for workspace data model and permissions model written and reviewed
+- [ ] Security threat model complete — covers roles, invitation flow, workspace isolation
+- [ ] Dependencies identified — auth changes, data migration scope, infra requirements
+- [ ] Scope bounded — what is v1 vs deferred (e.g., SSO role mapping, guest access)
+- [ ] Anti-requirements explicit — what Team Workspaces deliberately does not do in v1
 
-**Escalation trigger:** If the CPO and CTO disagree on a cross-domain concern, I will surface both positions to the human with a recommendation before work proceeds.
+**Critical path:** Product requirements → Architecture → QA acceptance tests → Development → QA execution → Release. Minimum 6–8 weeks.
+
+**What I am not deciding:** I have not chosen the permissions storage model (RBAC vs ABAC), the invitation mechanism (email vs link), or whether workspace roles map to existing auth primitives. These are product and architecture decisions for CPO and CTO respectively.
+
+**Escalation trigger:** If CPO and CTO disagree on a cross-domain trade-off (e.g., scope of v1 roles vs implementation complexity), I will present both positions with evidence and a recommendation. The human decides.
 
 ## Evaluation
 
@@ -76,18 +88,18 @@ This is a full-stack cross-team initiative. I will not implement anything direct
 **Score:** 8/8 (100%)
 **Evaluated:** 2026-04-16
 
-## Results
+- [x] PASS: Pre-flight checks — the definition mandates a "Pre-Flight (MANDATORY)" section with Step 1 (read CLAUDE.md and .claude/CLAUDE.md) and Step 2 (read `.claude-plugin/marketplace.json`, identify leads and specialists, check in-progress workstreams). Both steps are present and explicit in the definition.
+- [x] PASS: Structured dispatch plan — the definition states "you produce a structured dispatch plan listing which agents to invoke, in what order, with what context. The main conversation reads your plan and executes the dispatches." The definition also notes this is enforced by platform constraint ("subagents cannot spawn subagents"). The output is a plan, not direct execution.
+- [x] PASS: Both teams decomposed — the definition's "Decompose Across Teams" section explicitly maps CPO workstreams (product, design, content, GTM, support) and CTO workstreams (architecture, QA lead, development, QA engineer, DevOps, security, data). All seven CPO and CTO workstreams relevant to this initiative appear in the dispatch plan.
+- [x] PASS: Dependencies identified — the definition provides a dependency table showing Architecture depends on Product requirements and blocks Development and DevOps. The output maps this dependency plus additional dependencies specific to Team Workspaces (security depends on architecture; QA Engineer depends on both QA Lead and Architecture).
+- [x] PASS: 3-amigos sequencing — the definition's Step 5 states "Product + Architecture + QA Lead (3 amigos — define WHAT, HOW, and HOW TO VERIFY)" as the first element in the sequencing. Development explicitly does not start until acceptance tests exist. The dispatch plan places all three in Phase 2 with a gate requiring their sign-off before Phase 3 (development) begins.
+- [x] PASS: No unilateral decisions — the definition's "Non-negotiable" states "You never make unilateral decisions that belong to the CPO or CTO." The "What You Don't Do" section lists "Make product decisions — that's the CPO" and "Make technical decisions — that's the CTO." The output explicitly names three decisions left to CPO and CTO and includes an escalation trigger for conflicts.
+- [x] PASS: Definition of Ready checked — the definition's Section 5 provides a full DoR checklist with the rule "If any item is missing, the work is not ready. Send it back to the appropriate lead." The output includes a DoR gate before Phase 3 with all nine checklist items from the definition.
+- [x] PASS: Security workstream identified — the definition lists "Security: Threat model, security review checkpoints" under CTO team workstreams. The RATSI matrix shows security-engineer owns threat modelling. The Definition of Done includes "Security reviewed — for changes touching auth, data, or external interfaces." Team Workspaces explicitly involves roles, access control, and member invitation, all of which are auth-adjacent. The definition contains sufficient basis to route this to security; the output includes security in Phase 2 with explicit rationale.
+- [-] SKIP: CPO vs CTO conflict escalation — not triggered; no conflict was simulated in this scenario.
 
-- [x] PASS: Performs pre-flight checks — definition mandates "Pre-Flight (MANDATORY)" with Step 1 reading CLAUDE.md/.claude/CLAUDE.md and Step 2 reading `.claude-plugin/marketplace.json`; both steps present in the simulated output
-- [x] PASS: Produces a structured dispatch plan — definition states "you produce a structured dispatch plan listing which agents to invoke, in what order, with what context. The main conversation reads your plan and executes the dispatches"; output is a plan, not direct execution
-- [x] PASS: Decomposes across both teams — definition's "Decompose Across Teams" section explicitly maps CPO workstreams (product, design, content, GTM, support) and CTO workstreams (architecture, QA, development, DevOps, security); all present in output
-- [x] PASS: Identifies dependencies — definition's dependency table states "Architecture depends on Product requirements, Blocks Development, DevOps"; output dependency map captures this with specifics for this initiative
-- [x] PASS: Applies 3-amigos pattern — definition states "Product + Architecture + QA Lead (3 amigos — define WHAT, HOW, and HOW TO VERIFY)" as the first step of the execution sequence; the dispatch plan places all three in Phase 2 before development in Phase 3
-- [x] PASS: Does not make unilateral decisions — definition's "Non-negotiable" states "You never make unilateral decisions that belong to the CPO or CTO" and "What You Don't Do" section reinforces this; output explicitly states what is NOT being decided and routes product/technical decisions to the appropriate leads
-- [x] PASS: Checks Definition of Ready — definition's Section 5 provides a full DoR checklist with the rule "If any item is missing, the work is not ready"; output includes a DoR checklist gating Phase 3
-- [x] PASS: Security workstream identified — definition lists "Security: Threat model, security review checkpoints" under CTO team workstreams; RATSI matrix shows security-engineer owns threat modelling; features involving roles and access control trigger this workstream; output includes security in Phase 2 with explicit rationale (roles/access control)
-- [-] SKIP: Escalation on CPO vs CTO conflict — not triggered; no conflict simulated in this scenario
+### Notes
 
-## Notes
+The coordinator definition is well-structured for this scenario. The RATSI matrix is the most useful element for this test — it makes security-engineer ownership of threat models explicit without requiring the evaluator to infer it. The DoR checklist in the definition is complete and the rule "if any item is missing, the work is not ready" is unambiguous.
 
-The coordinator definition is thorough and provides sufficient guidance for every criterion. One area slightly underspecified: the definition says security is triggered for "changes touching auth, data, or external interfaces" in the DoD section, but does not have a crisp trigger rule in the workstream decomposition section. For Team Workspaces the connection is clear from the RATSI matrix, but a feature checklist listing "roles, permissions, multi-tenancy" as explicit security triggers would make this more reliable.
+One structural observation: the definition has "Step 5 — Sequence the Work" and then another "Step 5 — Definition of Ready" (duplicate heading number). This is a minor error in the definition that doesn't affect functionality but could confuse readers navigating the document.

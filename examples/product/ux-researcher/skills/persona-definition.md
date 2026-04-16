@@ -46,7 +46,7 @@ Proposed: 4 segments. Each tested:
 | Team Member | Yes — executes tasks, does not evaluate or buy | Yes | Keep |
 | IT Admin | Yes — different access and security concerns | Yes | Keep |
 
-Final count: 3 personas (within 3-5 maximum). Merged Power User into Ops Director — same product decisions, overlapping feature usage.
+Final count: 3 personas (within 3–5 maximum). Merged Power User into Ops Director — same product decisions, overlapping feature usage.
 
 **Persona 1: The Ops Director**
 
@@ -56,7 +56,7 @@ Final count: 3 personas (within 3-5 maximum). Merged Power User into Ops Directo
 
 | Attribute | Value | Evidence |
 |---|---|---|
-| **Role** | Manages 3-6 teams, accountable for delivery across departments | Sales calls |
+| **Role** | Manages 3–6 teams, accountable for delivery across departments | Sales calls |
 | **Technical sophistication** | Intermediate | Support tickets |
 | **Decision authority** | Economic buyer for software in their function | Sales calls |
 | **Time pressure** | Evaluating with delivery deadline | Sales calls |
@@ -82,7 +82,7 @@ Final count: 3 personas (within 3-5 maximum). Merged Power User into Ops Directo
 
 **Anti-persona signals:** Uses a dedicated BI tool for all reporting; org has a dedicated PMO function that owns reporting.
 
-**Personas 2 and 3 follow same structure.**
+*Personas 2 and 3 follow same structure.*
 
 **Validation checklist (Step 4):**
 
@@ -104,15 +104,15 @@ Persona 3 flagged as low confidence — label as hypothesis, gather more evidenc
 
 ## Results
 
-- [x] PASS: Evidence inventory step required first — Step 1 is explicitly mandatory ("Before defining any attributes, identify the data sources"). The rules reinforce: "No evidence = no persona. Do not invent attributes to fill gaps." This is a hard gate, not a recommendation.
-- [x] PASS: Demographic stereotypes explicitly prohibited — the Rules section states: "Behaviours over demographics. Age, gender, and job title do not predict product decisions. Goals, frustrations, and behaviour patterns do. Never use a human name for a persona." The Step 2 segment validation rules also specify: "Segments are defined by behaviour and goals, not demographics."
-- [x] PASS: Segment validation required — Step 2 is mandatory and requires both the Assignment test ("Could two team members independently assign the same real customer?") and Decision test ("Would this persona make a DIFFERENT product decision?") before writing a persona. Failing either test means the segment must be merged or clarified.
-- [x] PASS: Goals, pain points, and behaviours required — the Step 3 persona template includes mandatory sections for Goals, Frustrations, Behaviour Patterns, and Success Criteria. A demographic-only profile cannot satisfy the template.
-- [x] PASS: Validation checklist — Step 4 is a mandatory validation step with a five-item checklist covering assignment test, decision test, evidence threshold, no stereotypes, and actionability. The instruction states "If any check fails, revise the persona before finalising."
-- [~] PARTIAL: Solution-agnostic goals — Step 3 requires goals to be stated "in THEIR words" with an evidence source, which pushes toward user-framing. However the definition does not include an explicit rule prohibiting solution references in goal statements. A compliant persona could still frame goals in terms of the product. Criterion prefix is PARTIAL — awarded at ceiling (0.5).
-- [x] PASS: Maximum persona count with merge guidance — the Rules section states "3–5 personas maximum" and provides an explicit merge rule: "If two personas would make the same product decisions, merge them." Step 2 also enforces: "If two personas would make the same product decisions, merge them."
-- [x] PASS: Valid YAML frontmatter — name, description, and argument-hint are all present in the skill's YAML header.
+- [x] PASS: Evidence inventory step required — Step 1 is explicitly mandatory ("Before defining any attributes, identify the data sources"). The rules reinforce: "No evidence = no persona. Do not invent attributes to fill gaps." The evidence inventory table is a required deliverable before any persona can be written.
+- [x] PASS: Demographic stereotypes explicitly prohibited — the Rules section states: "Behaviours over demographics. Age, gender, and job title do not predict product decisions. Goals, frustrations, and behaviour patterns do. Never use a human name for a persona." Step 2 also specifies: "Segments are defined by behaviour and goals, not demographics."
+- [x] PASS: Segment validation required — Step 2 is mandatory and requires both the Assignment test ("Could two team members independently assign the same real customer?") and Decision test ("Would this persona make a DIFFERENT product decision?") before writing a persona. Failing either means the segment must be merged or clarified.
+- [x] PASS: Goals, pain points, and behaviours required — the Step 3 persona template has mandatory sections for Goals, Frustrations, Behaviour Patterns, and Success Criteria. A demographic-only profile cannot satisfy this template.
+- [x] PASS: Validation checklist — Step 4 is a mandatory step with a five-item checklist covering assignment test, decision test, evidence threshold, no stereotypes, and actionability. The instruction states "If any check fails, revise the persona before finalising."
+- [~] PARTIAL: Solution-agnostic goals — Step 3 requires goals to be stated "in THEIR words" with an evidence source. This pushes toward user framing, but the definition has no explicit rule prohibiting solution references in goal statements. A compliant persona could still frame goals in product terms. Criterion ceiling is PARTIAL — 0.5.
+- [x] PASS: Maximum persona count with merge guidance — the Rules section states "3–5 personas maximum" and the merge rule is explicit: "If two personas would make the same product decisions, merge them." Step 2 enforces the same merge rule during segment validation.
+- [x] PASS: Valid YAML frontmatter — name, description, and argument-hint are all present in the skill's YAML header. `user-invocable: true` and `argument-hint: "[user segment or product area to define persona for]"` are explicit.
 
-## Notes
+### Notes
 
-The anti-persona signals requirement is one of the stronger elements — it appears in both the persona format template and the rules as mandatory. This is rare in persona frameworks and practically valuable for preventing over-broad targeting. The confidence level (High/Medium/Low/Hypothesis) in the persona format is another good design choice, distinguishing validated personas from working hypotheses without discarding the hypothesis altogether.
+Anti-persona signals are a required section in the persona template (Step 3), not optional. This is one of the more distinctive elements of the definition — it actively prevents over-broad targeting. The confidence level (High/Medium/Low/Hypothesis) in the persona format is a good design choice: it lets teams track which personas are research-backed vs working hypotheses without discarding the hypothesis altogether. The goal-wording instruction ("in THEIR words") is doing partial work on the JTBD/solution-agnostic criterion but without an explicit "no solution references" rule the ceiling genuinely remains PARTIAL.

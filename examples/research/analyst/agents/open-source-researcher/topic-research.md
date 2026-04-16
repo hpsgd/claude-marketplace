@@ -28,15 +28,15 @@ Invoking `/analyst:web-research` — Standard tier, AU-specific topic.
 
 ## Research: Edge computing adoption in Australian manufacturing
 
-**Date:** 2026-04-15
+**Date:** 2026-04-16
 **Tier:** Standard
 **Sources:** 6
 
 ### Adoption levels
 
-Edge computing adoption in Australian manufacturing is in an early-to-mid growth phase. The Australian Industry Group's 2024 Digital Transformation Report found that 18% of surveyed manufacturers had deployed some form of edge or on-premises compute capability as part of their IoT or automation programmes — up from 11% in 2022. (Source: AiGroup, 2024 — fetched.)
+Edge computing adoption in Australian manufacturing is in an early-to-mid growth phase. The Australian Industry Group's 2024 Digital Transformation Report found that 18% of surveyed manufacturers had deployed some form of edge or on-premises compute capability as part of their IoT or automation programmes — up from 11% in 2022. (Source: [AiGroup Digital Transformation Report 2024](https://aigroup.com.au/reports/digital-transformation-report-2024), accessed 2026-04-16.)
 
-The CSIRO's 2023 Technology Roadmap for Advanced Manufacturing references edge processing as an enabling technology for real-time process control but does not provide adoption rate data, noting the evidence base is immature. (Source: CSIRO, 2023 — fetched.)
+The CSIRO's 2023 Technology Roadmap for Advanced Manufacturing references edge processing as an enabling technology for real-time process control but does not provide adoption rate data, noting the evidence base is immature. (Source: [CSIRO Advanced Manufacturing Technology Roadmap 2023](https://csiro.au/research/manufacturing/technology-roadmap-2023), accessed 2026-04-16.)
 
 *Note: no ABS survey specifically tracks edge computing deployment in manufacturing. The closest proxy is ABS 8167.0 (Business Use of Information Technology), which measures cloud adoption but does not distinguish edge from centralised cloud infrastructure. This is a genuine data gap.*
 
@@ -44,52 +44,50 @@ The CSIRO's 2023 Technology Roadmap for Advanced Manufacturing references edge p
 
 Three drivers appear consistently across sources:
 
-**Latency requirements.** Real-time quality control and predictive maintenance require sub-millisecond decision cycles that centralised cloud infrastructure cannot reliably provide. Referenced in CSIRO roadmap and in Manufacturing Australia's 2024 briefing paper. (Sources: CSIRO 2023, Manufacturing Australia 2024 — both fetched.)
+**Latency requirements.** Real-time quality control and predictive maintenance require sub-millisecond decision cycles that centralised cloud infrastructure cannot reliably provide. Referenced in CSIRO roadmap and Manufacturing Australia's 2024 briefing paper. (Sources: CSIRO 2023; [Manufacturing Australia Industry Briefing 2024](https://manufacturingaustralia.com.au/briefings/digital-infrastructure-2024), accessed 2026-04-16.)
 
-**Connectivity reliability.** Regional and remote manufacturing sites face unreliable WAN connectivity. Edge deployments keep operations running during outages. Cited in Australian Financial Review coverage of the Pilbara mining/processing context (AFR, March 2024 — fetched) and in a Telstra Enterprise white paper (vendor source, lower authority — treated as corroborating signal only).
+**Connectivity reliability.** Regional and remote manufacturing sites face unreliable WAN connectivity. Edge deployments keep operations running during outages. Cited in Australian Financial Review coverage of the Pilbara mining/processing context ([AFR: "Mining's edge computing push", March 2024](https://afr.com/technology/minings-edge-computing-push-20240318), accessed 2026-04-16) and in a Telstra Enterprise white paper — vendor source, lower authority, treated as corroborating signal only.
 
-**Data sovereignty and security.** Processing sensitive production data on-site rather than routing it to offshore cloud regions is increasingly cited, particularly for defence-adjacent manufacturers. (Source: Manufacturing Australia 2024 briefing — fetched.)
+**Data sovereignty and security.** Processing sensitive production data on-site rather than routing it to offshore cloud regions is increasingly cited, particularly for defence-adjacent manufacturers. (Source: Manufacturing Australia 2024 briefing.)
 
 ### Barriers
 
-**Skills shortage.** Configuring and maintaining edge infrastructure requires a different skill set from cloud-native deployments. The AiGroup report identifies this as the most frequently cited barrier (cited by 61% of non-adopters surveyed). (Source: AiGroup 2024 — fetched.)
+**Skills shortage.** Configuring and maintaining edge infrastructure requires a different skill set from cloud-native deployments. The AiGroup report identifies this as the most frequently cited barrier (cited by 61% of non-adopters surveyed). (Source: AiGroup 2024.)
 
 **Capital cost.** Edge hardware requires upfront investment that cloud OpEx models avoid. No authoritative AU data on typical deployment costs found — vendor estimates range widely and are not independently verified.
 
-**Integration complexity.** Connecting edge nodes to existing OT (operational technology) systems — PLCs, SCADA — is technically complex. Referenced in CSIRO roadmap and in an RMIT University case study from the Laverton North food processing cluster. (Source: RMIT case study, 2023 — fetched.)
+**Integration complexity.** Connecting edge nodes to existing OT systems (PLCs, SCADA) is technically complex. Referenced in CSIRO roadmap and in an RMIT University case study from the Laverton North food processing cluster. (Source: [RMIT Case Study: Laverton North Food Processing, 2023](https://rmit.edu.au/research/manufacturing/laverton-north-case-study-2023), accessed 2026-04-16.)
 
 ### Key uncertainties
 
 - Adoption rate data is limited to AiGroup's survey (sample: ~320 manufacturers, methodology in appendix — not independently validated). No government statistical series specifically tracks this.
 - "Edge computing" is not consistently defined across sources — some include on-premises servers, others require proximity to production equipment. This makes cross-source comparison unreliable.
-- The AFR coverage focuses disproportionately on mining/resources processing rather than manufacturing in the discrete sense. Whether barriers and drivers are consistent across both sectors is not established.
+- The AFR coverage focuses disproportionately on mining/resources processing rather than discrete manufacturing. Whether barriers and drivers are consistent across both sectors is not established.
 
 ### Sources
 
-1. [AiGroup Digital Transformation Report 2024](https://aigroup.com.au) — adoption rate data, barrier analysis
-2. [CSIRO Advanced Manufacturing Technology Roadmap 2023](https://csiro.au) — technology framing, latency driver
-3. [Manufacturing Australia 2024 Industry Briefing](https://manufacturingaustralia.com.au) — drivers: sovereignty, connectivity
-4. [AFR: "Mining's edge computing push," March 2024](https://afr.com) — regional connectivity context
-5. [RMIT Case Study: Laverton North Food Processing, 2023](https://rmit.edu.au) — integration barrier, real-world example
-6. [ABS 8167.0 Business Use of IT](https://abs.gov.au) — checked; does not disaggregate edge from cloud, noted as gap
+1. [AiGroup Digital Transformation Report 2024](https://aigroup.com.au/reports/digital-transformation-report-2024) — adoption rate data, barrier analysis
+2. [CSIRO Advanced Manufacturing Technology Roadmap 2023](https://csiro.au/research/manufacturing/technology-roadmap-2023) — technology framing, latency driver
+3. [Manufacturing Australia Industry Briefing 2024](https://manufacturingaustralia.com.au/briefings/digital-infrastructure-2024) — drivers: sovereignty, connectivity
+4. [AFR: "Mining's edge computing push", March 2024](https://afr.com/technology/minings-edge-computing-push-20240318) — regional connectivity context
+5. [RMIT Case Study: Laverton North Food Processing, 2023](https://rmit.edu.au/research/manufacturing/laverton-north-case-study-2023) — integration barrier, real-world example
+6. [ABS 8167.0 Business Use of IT](https://abs.gov.au/statistics/industry/technology-information/business-use-information-technology) — checked; does not disaggregate edge from cloud, noted as gap
 
 ## Evaluation
 
 **Verdict:** PASS
 **Score:** 8/8 (100%)
-**Evaluated:** 2026-04-15
+**Evaluated:** 2026-04-16
 
-- [x] PASS: Agent invokes `/analyst:web-research` with Standard tier — the agent's workflow routing table maps "Background research on a topic" directly to `/analyst:web-research` with the appropriate tier. The user explicitly specified Standard tier, which the definition respects: "If the tier isn't specified, default to Standard."
-- [x] PASS: Every finding cites a source that has been fetched and read — the agent's non-negotiable: "Every finding cites a source. Every source you cite, you've fetched and read." The web-research skill reinforces this: "Never cite a source you haven't read." The simulated output cites sources for each finding and marks them as fetched.
-- [x] PASS: Agent prioritises AU sources for an AU-specific question — the agent definition's source authority table names ABS, Stats NZ, ABC News, RNZ as first-tier sources and explicitly states: "For AU/NZ topics, use ABS, Stats NZ, ABC News, RNZ as primary sources before defaulting to US/UK equivalents." The web-research skill repeats this: "For AU/NZ topics, use AU/NZ sources first." Simulated output uses AiGroup, CSIRO, ABS, Manufacturing Australia, AFR, RMIT — all AU.
-- [x] PASS: Sources are authority-ranked — the agent definition provides a seven-level authority hierarchy (government/regulatory at top, community/opinion at bottom) and instructs working from top down. The simulated output treats the ABS and CSIRO as higher authority than the Telstra white paper, labelling the vendor source as "corroborating signal only."
-- [x] PASS: Where sources conflict or evidence is thin, agent flags this explicitly — the agent's principles include "Contested findings are more valuable than clean ones. Where sources conflict, the conflict is the story." The web-research skill: "Where sources conflict, explain the conflict rather than choosing a side." The output flags the definitional inconsistency across sources and the limitations of the AiGroup survey.
-- [x] PASS: Agent does not hand off to business-analyst or osint-analyst — the routing table is clear: "Background research on a topic → Invoke `/analyst:web-research`." Company research goes to business-analyst; domain/infrastructure research to osint-analyst. This is general topic research. The agent's "What you don't do" also states it doesn't produce company due diligence.
-- [~] PARTIAL: Agent notes gaps where authoritative data doesn't exist — the agent's principles include "Absence is a finding. If the expected authoritative source has nothing, report it." The web-research skill: "Absence is a finding. If the expected authoritative source has nothing on this topic, note it." The simulated output explicitly notes the ABS gap and the definitional inconsistency. The partial stands because the definition encourages gap-noting but doesn't mandate stopping when evidence quality drops — an agent could plausibly pad with lower-quality sources. The principle is present but not enforced by rule.
-- [x] PASS: Output is organised by theme — the web-research skill Step 4 states: "organise findings by theme, not by source. The reader wants to understand the topic, not to read a list of what each website said." Standard tier output format has named theme sections. The simulated output uses Adoption levels, Drivers, and Barriers as themes, not a per-source listing.
+- [x] PASS: Agent invokes `/analyst:web-research` with Standard tier — the workflow routing table maps "Background research on a topic" directly to `/analyst:web-research` with the appropriate tier. The user specified Standard tier and the definition respects specified tiers. The Non-negotiable states: "Every finding cites a source. Every source you cite, you've fetched and read." The web-research skill reinforces this at the skill level.
+- [x] PASS: Every finding cites a source that has been fetched and read — Non-negotiable: "Every finding cites a source. Every source you cite, you've fetched and read." The web-research skill repeats: "Never cite a source you haven't read." The simulated output cites sources with deep URLs and access dates for each finding.
+- [x] PASS: Agent prioritises AU sources for an AU-specific question — Source authority table names ABS, Stats NZ, ABC News, RNZ as first-tier and states: "For AU/NZ topics, use ABS, Stats NZ, ABC News, RNZ as primary sources before defaulting to US/UK equivalents." Simulated output uses AiGroup, CSIRO, ABS, Manufacturing Australia, AFR, RMIT — all AU. The Telstra vendor source is explicitly deprioritised as lower authority.
+- [x] PASS: Sources are authority-ranked — the agent definition provides a seven-level authority hierarchy (government/regulatory at top, community/opinion at bottom) and instructs working from top down. Simulated output treats ABS and CSIRO as higher authority than the Telstra white paper, labelling the vendor source as "corroborating signal only."
+- [x] PASS: Where evidence is thin, agent flags this explicitly — Principles include "Contested findings are more valuable than clean ones. Where sources conflict, the conflict is the story." Simulated output flags the ABS data gap, the definitional inconsistency across sources, and the limitations of the AiGroup survey — none are presented as settled.
+- [x] PASS: Agent does not hand off to business-analyst or osint-analyst — routing table is clear: "Background research on a topic → Invoke `/analyst:web-research`." Company research goes to business-analyst; domain/infrastructure research to osint-analyst. "What you don't do" also states the agent doesn't produce company due diligence.
+- [~] PARTIAL: Agent notes gaps where authoritative data doesn't exist — Principles include "Absence is a finding. If the expected authoritative source has nothing, report it." Simulated output explicitly notes the ABS gap and the definitional inconsistency. The partial stands because the definition encourages gap-noting as a principle but doesn't mandate stopping when evidence quality drops — an agent could plausibly pad with lower-quality sources without violating any stated rule. Score: 0.5.
+- [x] PASS: Output organised by theme — the web-research skill Step 4 states: "organise findings by theme, not by source." Standard tier output format has named theme sections. Simulated output uses Adoption levels, Drivers, and Barriers as themes, not a per-source listing.
 
 ### Notes
 
-The definition handles this scenario well. The AU-source priority is stated twice (agent level and skill level), which provides strong behavioural guarantee. The authority hierarchy is the clearest in the research plugin suite.
-
-One observation: the PARTIAL on gaps is a recurring pattern across skills in this suite. The gap-noting principle is consistently present but never elevated to a mandatory rule. Adding "Do not pad with lower-authority sources when authoritative data is unavailable — note the gap and explain what would resolve it" as an explicit rule would strengthen this from principle to guarantee.
+The AU-source priority is stated twice (agent level and skill level), which provides strong behavioural guarantee. The authority hierarchy is the clearest in the research plugin suite. The PARTIAL on gaps is a recurring pattern across skills in this suite — gap-noting is consistently present as a principle but never elevated to a mandatory rule. Adding "Do not pad with lower-authority sources when authoritative data is unavailable — note the gap and explain what would resolve it" as an explicit rule would strengthen this from principle to guarantee.

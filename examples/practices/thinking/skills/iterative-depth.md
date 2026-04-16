@@ -63,7 +63,7 @@ Contradictions with previous lenses: None (first lens)
 
 Focus question: What are the 40% of incidents actually caused by?
 
-Analysis: Causes could be: (a) notification provider timeouts cascading to the monolith, (b) code bugs, (c) load impact. If (a): extraction helps — timeouts isolated to the notification service. If (b): extraction doesn't fix the bugs. If (c): extraction helps — notification load separated.
+Analysis: Causes could be: (a) notification provider timeouts cascading to the monolith, (b) code bugs, (c) load impact. If (a): extraction helps. If (b): extraction doesn't fix the bugs. If (c): extraction helps.
 
 Findings unique to this lens:
 1. We don't know why the incidents occur — extraction may or may not fix them
@@ -76,7 +76,7 @@ Contradictions with Lens 1: Lens 1 assumes extraction is the right solution. Len
 
 Focus question: What's the cost of extraction vs the cost of incidents?
 
-Analysis: Extraction is a 2-4 month engineering project. The 3-engineer team is also the team that would do the extraction — opportunity cost is real. Without knowing incident frequency and duration, the business case is incomplete.
+Analysis: Extraction is a 2-4 month engineering project. The 3-engineer team is also the team that would do the extraction. Business case depends on incident cost data not provided.
 
 Findings unique to this lens:
 1. The business case depends on incident cost data not provided — this is a gap
@@ -89,7 +89,7 @@ Contradictions with Lens 2: Both support exploring the async queue alternative a
 
 Focus question: Is extraction the simplest path to the desired state?
 
-Analysis: Desired state: notification failures isolated, faster recovery, confident deploys. Simplest path to isolation within the monolith: async background queue (Sidekiq). Simplest path to faster recovery: fix the specific bugs. Full extraction is large and largely irreversible.
+Analysis: Desired state: notification failures isolated, faster recovery. Simplest path to isolation within the monolith: async background queue (Sidekiq). Extraction is large and largely irreversible.
 
 Findings unique to this lens:
 1. The desired state can potentially be achieved without extraction
@@ -131,18 +131,17 @@ Key difference: The original framing presupposes extraction as the solution. The
 
 #### Recommendation
 
-Recommendation: Before deciding on extraction, complete two steps: (1) analyse root causes of the 40% incident rate, (2) audit database table ownership. With that data: if incidents are caused by provider timeouts or load, implement async queue first. If incidents persist or database coupling is low, proceed with extraction.
+Recommendation: Before deciding on extraction, complete two steps: (1) analyse root causes of the 40% incident rate, (2) audit database table ownership.
 
-Confidence: Medium — based on incident rate, code size, and team size data, but missing root cause and database coupling data that would significantly change the recommendation. If root cause analysis shows >80% of incidents are provider timeouts, async queue becomes the fix and extraction is deferred. If database coupling is minimal, extraction becomes straightforward.
+Confidence: Medium — based on incident rate, code size, and team size data, but missing root cause and database coupling data that would significantly change the recommendation.
 
 Key risks:
-1. Database tables are shared — extraction becomes a 6-month data migration, not a 2-month service extraction
+1. Database tables are shared — extraction becomes a 6-month data migration, not a 2-month extraction
 2. Async queue reduces incidents but team commits to extraction anyway, doubling investment
 
 What would change this recommendation:
 - If root cause analysis shows >80% of incidents are provider timeouts → async queue is the fix
 - If database coupling is minimal → extraction becomes straightforward; accelerate
-- If async queue has no impact after 4 weeks → extraction is more likely the right path
 ```
 
 ## Evaluation
@@ -151,17 +150,15 @@ What would change this recommendation:
 **Score:** 7.5/8 (94%)
 **Evaluated:** 2026-04-16
 
-## Results
-
-- [x] PASS: Step 1 produces complete problem framing — the skill mandates a specific template: "Problem, Context, Constraints, Stakeholders, Current state, Desired state" in a named block. All six fields are required by the template definition. All six are present.
-- [x] PASS: Step 2 selects 3-5 lenses and states which and why — the skill states "Choose 3-5 lenses... State which lenses you selected and why." The definition requires explicit reasoning for selection. Four lenses are chosen with stated rationale; three are explicitly excluded with reasons.
-- [x] PASS: Lens selection includes at least one human lens and one system lens — the skill's selection rules state "Always include at least one 'human' lens (User or Business) and one 'system' lens (Technical or Edge case)." Business (human) and Technical (system) are both selected. This is a hard rule in the definition, not advisory.
-- [x] PASS: Each lens produces at least one unique finding — the skill states "Each lens must produce at least one finding not surfaced by any previous lens. If a lens adds nothing new, either the analysis was too shallow or the lens was a poor choice — go deeper or swap it." Each lens's "Findings unique to this lens" section contains genuinely new information not present in earlier lenses.
-- [x] PASS: Contradictions explicitly called out — the skill mandates a "Contradictions with previous lenses" field in the per-lens template and states "Don't smooth over contradictions — highlight them." Lenses 2, 3, and 4 each contain explicit contradiction statements naming the specific claim from a previous lens being challenged.
-- [x] PASS: Step 4 synthesis produces convergent findings table, tensions table, and recommendation — the skill's Step 4 section defines all three tables plus revised problem framing, blind spots, refined success criteria, and recommendation with the full template. The simulation produces all three core tables with the skill's defined column structure.
-- [x] PASS: Revised problem framing differs meaningfully from Step 1 — the skill mandates "Revised problem framing... It should now be sharper, more nuanced, and account for what you learned." The revision shifts from "should we extract?" to "how do we reduce incidents, of which extraction is one option" — a substantive change in frame that reflects what the analysis uncovered.
-- [~] PARTIAL: Confidence stated with evidence basis — the skill's recommendation template defines: "Confidence: [High/Medium/Low] — based on [what evidence]." The "What would change this recommendation" field is also required by the template. The simulation states "Medium — based on incident rate, code size, and team size data, but missing root cause and database coupling data" and includes three conditions that would change the recommendation. This covers the criterion. Partial because the skill requires the "What would change this recommendation" section to be present but the definition describes confidence bands without specifying what threshold of evidence moves between them — that threshold is left to judgment.
+- [x] PASS: Step 1 produces complete problem framing — the skill mandates a specific template: "Problem, Context, Constraints, Stakeholders, Current state, Desired state." All six fields are required by the template definition. Step 1's framing block is mandatory before lens selection.
+- [x] PASS: Step 2 selects 3-5 lenses and states which and why — the skill states "Choose 3-5 lenses... State which lenses you selected and why." The definition also requires stating which lenses were NOT selected and why — an unusual and useful requirement that prevents post-hoc rationalisation.
+- [x] PASS: Lens selection includes at least one human lens and one system lens — the skill's selection rules state "Always include at least one 'human' lens (User or Business) and one 'system' lens (Technical or Edge case)." Business (human) and Technical (system) are both selected. This is a hard rule.
+- [x] PASS: Each lens produces at least one unique finding — the skill states "Each lens must produce at least one finding not surfaced by any previous lens. If a lens adds nothing new, either the analysis was too shallow or the lens was a poor choice — go deeper or swap it." This is an explicit quality gate per lens.
+- [x] PASS: Contradictions explicitly called out — the skill mandates a "Contradictions with previous lenses" field in the per-lens template and states "Don't smooth over contradictions — highlight them." Lenses 2, 3, and 4 each contain explicit contradiction statements.
+- [x] PASS: Step 4 synthesis produces convergent findings table, tensions table, and recommendation — Step 4 defines all three tables plus revised problem framing, blind spots, refined success criteria, and recommendation. The skill's template structure makes all of these mandatory.
+- [x] PASS: Revised problem framing differs meaningfully from Step 1 — the skill mandates "Revised problem framing... It should now be sharper, more nuanced, and account for what you learned." The revision shifts from "should we extract?" to "how do we reduce incidents, of which extraction is one option" — a substantive change.
+- [~] PARTIAL: Confidence stated with evidence basis — the skill's recommendation template defines "Confidence: [High/Medium/Low] — based on [what evidence]." The "What would change this recommendation" field is also required by the template. Both are present in the definition as required fields. PARTIAL ceiling applies per criterion prefix regardless of definition quality.
 
 ### Notes
 
-The iterative-depth skill is structurally robust. The mandatory contradiction field per lens prevents the common failure of parallel analyses that reinforce each other rather than challenge. The "Findings unique to this lens" requirement creates a hard test: if a finding isn't genuinely new, the lens was a poor choice or the analysis was shallow. The synthesis section's multi-table format is comprehensive — convergent findings, tensions with recommended resolutions, blind spots, revised framing, and the "What would change this recommendation" section together constitute a decision-ready output. The skill does not include a Step 4 synthesis output gate (no equivalent of the ISC Count Gate), which means quality of synthesis is enforcement-by-instruction rather than enforcement-by-check.
+The iterative-depth skill is structurally robust. The mandatory contradiction field per lens is the key mechanism that prevents parallel analyses reinforcing each other rather than challenging. The "Findings unique to this lens" requirement creates a hard quality test. The synthesis section's multi-table format (convergent findings, tensions with recommended resolutions, blind spots, revised framing, what-would-change) is comprehensive. The definition does not include an equivalent of the ISC Count Gate for synthesis quality — the synthesis quality relies on instruction-based enforcement rather than a gate mechanism.

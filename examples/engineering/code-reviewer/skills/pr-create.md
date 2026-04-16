@@ -22,25 +22,36 @@ Review the pr-create skill definition and verify it produces well-formed pull re
 
 ## Output
 
-**Simulated structural assessment:**
+Structural assessment of `plugins/engineering/code-reviewer/skills/pr-create/SKILL.md`.
 
-The pr-create SKILL.md specifies a mandatory 7-step process. Step 3 explicitly requires reading every changed file: "Do not skim. If there are 20 changed files, read all 20." Step 3 also requires `git log --oneline $BASE_BRANCH..HEAD`. Step 4 specifies Conventional Commits with type, optional scope, imperative mood, and <70 character limit. Step 5 description template has Summary, Changes, and Test plan sections all marked as required. Step 2 checks for uncommitted changes and stops if on main. Step 6 uses `gh pr create` and `gh pr view`. An Edge Cases section covers draft PRs (`--draft`), single-commit branches, and many small commits.
+The SKILL.md defines a mandatory 7-step process. Step 3 explicitly states "Do not skim. If there are 20 changed files, read all 20." Step 3 also runs `git log --oneline $BASE_BRANCH..HEAD` as its first sub-step. Step 4 specifies Conventional Commits format with type, optional scope, imperative mood, and <70 character limit. Step 5 description template has Summary, Changes, and Test plan sections with "Fill every section" making them all required. Step 2 checks for uncommitted changes and stops if on main. Step 6 runs `gh pr create` then `gh pr view`. An Edge Cases section covers draft PRs (`--draft`), single-commit branches, and branches with many small commits.
+
+---
 
 ## Evaluation
-
-- [x] PASS: Skill explicitly requires reading every changed file — Step 3 states verbatim: "Do not skim. If there are 20 changed files, read all 20."
-- [x] PASS: Skill mandates full commit log before drafting title — Step 3 includes `git log --oneline $BASE_BRANCH..HEAD` as the first sub-step, before Step 4 (drafting the title)
-- [x] PASS: Skill requires Conventional Commits format with all specified constraints — Step 4 specifies type (required), optional scope, imperative mood, <70 characters total, lowercase after colon; all four constraints in the criterion are explicitly present
-- [x] PASS: Skill's description template includes all three required sections — Step 5 template shows Summary, Changes, and Test plan; the instruction "Fill every section" makes them all required
-- [x] PASS: Skill stops if on main — Step 2 sub-step 2: "If on `main` (or the base branch), stop. PRs come from feature branches."
-- [x] PASS: Skill checks for uncommitted changes and asks user — Step 2 sub-step 1: "If there are uncommitted changes, stop and ask the user whether to commit them first or proceed without them. Do not silently ignore uncommitted work."
-- [x] PASS: Skill uses gh pr create and verifies with gh pr view — Step 6 sub-steps 2 and 3 show both commands with their exact flags
-- [~] PARTIAL: Skill handles draft PRs, single-commit, and many small commits — "Edge Cases" section covers all three: draft PR (`--draft` flag when user says "draft" or "WIP"), single commit (use the commit message), many small commits (summarise the overall change). Coverage is present but described in a few sentences each rather than as structured decision logic; the draft PR handling is the most explicit.
 
 **Verdict:** PASS
 **Score:** 7.5/8 criteria met (94%)
 **Evaluated:** 2026-04-16
 
+## Results
+
+- [x] PASS: Skill explicitly requires reading every changed file — Step 3 states verbatim: "Do not skim. If there are 20 changed files, read all 20." This is a hard instruction, not a suggestion.
+
+- [x] PASS: Skill mandates full commit log before drafting title — Step 3 sub-step 1 runs `git log --oneline $BASE_BRANCH..HEAD` before Step 4 (drafting the title). The sequence enforces commit log review before title writing.
+
+- [x] PASS: Skill requires Conventional Commits format with all constraints — Step 4 specifies: type (required), optional scope in parentheses, imperative mood, lowercase after the colon, and <70 characters total. All four constraints in the criterion are explicitly stated.
+
+- [x] PASS: Skill's description template includes all three required sections — Step 5 template shows Summary, Changes (grouped by area), and Test plan as named sections. The instruction "Fill every section" makes all three required, not optional.
+
+- [x] PASS: Skill stops if on main — Step 2, sub-step 2: "If on `main` (or the base branch), stop. PRs come from feature branches." The stop instruction is explicit.
+
+- [x] PASS: Skill checks for uncommitted changes and asks user — Step 2, sub-step 1: "If there are uncommitted changes, stop and ask the user whether to commit them first or proceed without them. Do not silently ignore uncommitted work." Both the check and the ask are required.
+
+- [x] PASS: Skill uses gh pr create and verifies with gh pr view — Step 6 sub-steps show both commands with their exact flags. The definition requires verification after creation, not just creation.
+
+- [~] PARTIAL: Skill handles draft PRs, single-commit, and many small commits — Edge Cases section covers all three: draft PRs (`--draft` flag when user says "draft" or "WIP"), single-commit branches (use the commit message directly), and many small commits (summarise the overall change rather than listing commits). Coverage is present but in prose notes rather than structured decision rules; the draft PR handling is the most actionable, the others are guidance-level only.
+
 ## Notes
 
-Solid definition. The "Fill every section" instruction in Step 5 makes the template sections mandatory in substance, even though they are not labelled "required" explicitly. The edge cases section reads more as documentation notes than enforced behaviour — a developer could skim past the single-commit and many-commits guidance without applying it, since neither has a decision rule or a stop condition.
+The "Fill every section" instruction in Step 5 is the right mechanism to make template sections mandatory without labelling each one explicitly. The edge cases section reads as informational rather than enforced — a developer following the skill could miss the single-commit or many-commits guidance without consequence, since neither is tied to a decision rule or stop condition. Adding a conditional step ("if only one commit on the branch...") would tighten this. The Step 3 read-all-files instruction is notably strong — most PR creation processes skip file reading entirely.

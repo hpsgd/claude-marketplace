@@ -25,7 +25,7 @@ Scenario: A security analyst wants to investigate a domain that appeared in a th
 
 ## Domain intelligence: trackupdate-cdn77.com
 
-**Date:** 2026-04-15
+**Date:** 2026-04-16
 **Purpose logged:** Security research — domain flagged in threat intelligence report as potential C2 host
 **Methods:** Passive open-source only
 
@@ -39,9 +39,9 @@ Scenario: A security analyst wants to investigate a domain that appeared in a th
 | Nameservers | ns1.privatedns.pro / ns2.privatedns.pro |
 | Privacy protection | Yes — REDACTED FOR PRIVACY |
 
-Source: who.is WHOIS lookup (.com generic TLD registry).
+Source: [who.is WHOIS](https://who.is/whois/trackupdate-cdn77.com) (.com generic TLD registry), accessed 2026-04-16.
 
-**Finding:** Domain registered November 2025 — approximately 5 months old. Privacy protection in place. Nameservers on privatedns.pro — a DNS hosting provider with no commercial content association, commonly used for operational security. Registrar (PublicDomainRegistry/PDR) is a low-cost registrar frequently used for throwaway domains. Early registration characteristics are consistent with a purpose-built attack or C2 domain. Privacy protection logged as a finding; investigation continues.
+**Finding:** Domain registered November 2025 — approximately 5 months old. Privacy protection in place. Nameservers on privatedns.pro — commonly used for operational security. Registrar (PDR/PublicDomainRegistry) is a low-cost registrar frequently used for throwaway domains. Privacy protection logged as a finding; investigation continues.
 
 ### DNS records
 
@@ -53,20 +53,20 @@ Source: who.is WHOIS lookup (.com generic TLD registry).
 | TXT | None | No SPF, DKIM, Google/Microsoft verification codes |
 | NS | ns1/ns2.privatedns.pro | Privacy-focused DNS hosting |
 
-**Notable:** No MX record (no email intent), no TXT records (no third-party service integrations). A domain configured only for HTTP/S resolution with no email or service verification records is consistent with a command-and-control host — C2 infrastructure rarely needs email capability.
+Source: [MXToolbox DNS lookup](https://mxtoolbox.com/SuperTool.aspx?action=dns%3atrackupdate-cdn77.com), accessed 2026-04-16.
 
-The A record (94.102.49.87) resolves directly — no CDN proxy. This IP is attributable and worth investigating.
+**Notable:** No MX record (no email intent), no TXT records (no third-party service integrations). A domain configured only for HTTP/S resolution with no email or service verification records is consistent with a command-and-control host. The A record (94.102.49.87) resolves directly — no CDN proxy. This IP is attributable and warrants investigation.
 
 ### Certificate transparency findings
 
-crt.sh search for trackupdate-cdn77.com:
+[crt.sh search for trackupdate-cdn77.com](https://crt.sh/?q=trackupdate-cdn77.com), accessed 2026-04-16:
 
 - Certificate 1: issued 2025-11-05 (two days after registration), Let's Encrypt, single domain
-- Certificate 2: issued 2026-01-12, Let's Encrypt — SAN entries include: `trackupdate-cdn77.com`, `api.trackupdate-cdn77.com`, `update.trackupdate-cdn77.com`, `dl.trackupdate-cdn77.com`
+- Certificate 2: issued 2026-01-12, Let's Encrypt — SAN entries include `api.trackupdate-cdn77.com`, `update.trackupdate-cdn77.com`, `dl.trackupdate-cdn77.com`
 
-**Finding:** Three subdomains discovered from cert transparency — `api.`, `update.`, and `dl.`. Naming conventions (`api`, `update`, `dl`) are consistent with C2 beacon communication, software update spoofing, and file download hosting respectively. The subdomain pattern supports the C2 hypothesis from the threat report.
+**Finding:** Three subdomains — `api.`, `update.`, `dl.`. Naming conventions are consistent with C2 beacon communication, software update spoofing, and file download hosting. The subdomain pattern supports the C2 hypothesis from the threat report.
 
-Related naming pattern search on crt.sh: searching for "cdn77" naming in recent certificates surfaces no additional domains sharing the pattern that are obviously related (cdn77.com itself is a legitimate CDN service — the domain name appears designed to blend in with legitimate CDN traffic).
+Related naming pattern search on crt.sh: "cdn77" in recent certificates returns cdn77.com (legitimate CDN service) and no obviously related attack infrastructure under this naming pattern. Domain appears designed to blend with legitimate CDN traffic.
 
 ### Hosting
 
@@ -77,69 +77,78 @@ Related naming pattern search on crt.sh: searching for "cdn77" naming in recent 
 | IP range | 94.102.49.0/24 |
 | Email hosting | None |
 
-Source: ipinfo.io lookup for 94.102.49.87.
+Source: [ipinfo.io/94.102.49.87](https://ipinfo.io/94.102.49.87), accessed 2026-04-16.
 
-**Notable:** Frantech Solutions/BuyVM is a "bulletproof hosting" provider — a hosting service known for accepting payments anonymously, ignoring abuse reports, and hosting content that mainstream providers would take down. AS53667 appears frequently in threat intelligence reports. This is a significant finding.
+**Notable:** Frantech Solutions/BuyVM is a hosting provider known for accepting anonymous payments and ignoring abuse reports. AS53667 appears frequently in threat intelligence references. This is a significant finding.
 
 ### Related domains
 
-ViewDNS.info reverse WHOIS on privacy-protected registrant: no results.
+[ViewDNS.info reverse WHOIS](https://viewdns.info/reversewhois/) on privacy-protected registrant: no results, accessed 2026-04-16.
 
-crt.sh search for other certificates issued to the same IP (94.102.49.87): found 4 other domains with certificates pointing to this IP — `softwareupdate-dist.net`, `cdn-asset-repo.com`, `patchdeploy-secure.net`, `svchost-telemetry.com`. All registered within a 3-month window (Nov 2025 – Jan 2026).
+crt.sh certificate search for other certificates pointing to 94.102.49.87: found 4 other domains — `softwareupdate-dist.net`, `cdn-asset-repo.com`, `patchdeploy-secure.net`, `svchost-telemetry.com`. All registered November 2025 – January 2026.
 
-**Finding:** The IP hosts a cluster of domains with similar naming conventions (mimicking legitimate software distribution and telemetry terminology). This is a strong indicator of a coordinated infrastructure, not a single-use domain.
+**Finding:** IP hosts a cluster of domains with similar mimicry naming conventions (legitimate software distribution and telemetry terminology). Strong indicator of coordinated infrastructure.
 
 ### Historical findings
 
-Wayback Machine: no archive history for trackupdate-cdn77.com. Domain is 5 months old with no web content indexed by Wayback crawlers. Absence of Wayback history for an active-looking domain is consistent with a purpose-built attack domain that doesn't need to present a convincing web presence.
+[Wayback Machine](https://web.archive.org/web/*/trackupdate-cdn77.com), accessed 2026-04-16: no archive history. Domain is 5 months old with no web content indexed by Wayback crawlers. Absence of Wayback history for an active-looking domain is consistent with a purpose-built attack domain.
 
 ### Notable observations
 
-- Domain name designed to blend with legitimate CDN traffic ("cdn77" is a real CDN service brand).
-- Subdomains (`api`, `update`, `dl`) are functional C2 architecture naming, not marketing-oriented names.
-- Hosted on bulletproof hosting (AS53667/BuyVM) — supports operational security and takedown resistance.
-- Related domains on the same IP share mimicry naming conventions.
-- The combination — bulletproof host, mimicry naming, functional subdomain structure, no email/service verification, no web content — is consistent with active C2 infrastructure.
+- Domain name designed to blend with legitimate CDN traffic ("cdn77" is a real CDN service brand)
+- Subdomains (`api`, `update`, `dl`) are functional C2 architecture naming
+- Hosted on bulletproof hosting (AS53667/BuyVM) — supports takedown resistance
+- Related domains on same IP share mimicry naming conventions
+- Combination of factors: bulletproof host + mimicry naming + functional subdomain structure + no email/service records + no web content = consistent with active C2 infrastructure
 
 ### Gaps
 
 | Gap | Reason | Access route |
 |---|---|---|
-| Registrant identity | Privacy protection | Requires registrar cooperation or law enforcement |
-| Origin of C2 traffic | Passive methods only | Network traffic analysis (requires endpoint logs) |
-| Whether domains are currently active C2 | Passive methods cannot confirm active sessions | VirusTotal/Shodan historical may show recent activity — see ip-intel |
+| Registrant identity | Privacy protection | Registrar cooperation or law enforcement |
+| Whether domains are currently active C2 | Passive methods cannot confirm live sessions | VirusTotal/Shodan historical may show recent activity — see ip-intel |
 
 ### Sources
 
-1. [who.is WHOIS](https://who.is) — registration details; generic .com TLD registry
-2. [MXToolbox DNS](https://mxtoolbox.com) — A, MX, TXT, NS records
-3. [crt.sh certificate transparency](https://crt.sh) — certificate history, subdomain discovery, related domain search
-4. [ipinfo.io](https://ipinfo.io) — ASN, hosting provider identification
-5. [ViewDNS.info reverse WHOIS](https://viewdns.info) — registrant cross-reference (no results)
-6. [Wayback Machine](https://web.archive.org) — historical content (no history found)
+1. [who.is WHOIS](https://who.is/whois/trackupdate-cdn77.com) — registration details, generic .com TLD, accessed 2026-04-16
+2. [MXToolbox DNS](https://mxtoolbox.com/SuperTool.aspx?action=dns%3atrackupdate-cdn77.com) — A, MX, TXT, NS records, accessed 2026-04-16
+3. [crt.sh certificate transparency](https://crt.sh/?q=trackupdate-cdn77.com) — certificate history, subdomain discovery, related domain search, accessed 2026-04-16
+4. [ipinfo.io](https://ipinfo.io/94.102.49.87) — ASN, hosting provider, accessed 2026-04-16
+5. [ViewDNS.info reverse WHOIS](https://viewdns.info/reversewhois/) — registrant cross-reference (no results), accessed 2026-04-16
+6. [Wayback Machine](https://web.archive.org/web/*/trackupdate-cdn77.com) — historical content (no history found), accessed 2026-04-16
 
-**Follow-on recommended:** `/investigator:ip-intel` for 94.102.49.87 — the IP resolves directly (not CDN proxy) and AS53667/BuyVM has a reputation history worth investigating in detail via VirusTotal, AbuseIPDB, and Shodan. The four related domains on the same IP should each be assessed with additional domain-intel runs.
+**Follow-on recommended:** `/investigator:ip-intel` for 94.102.49.87 — the IP resolves directly (not a CDN proxy) and AS53667/BuyVM warrants full reputation investigation via VirusTotal, AbuseIPDB, and Shodan. The four related domains should each receive additional domain-intel runs.
 
 ## Evaluation
 
 **Verdict:** PASS
 **Score:** 8.5/9 (94%)
-**Evaluated:** 2026-04-15
+**Evaluated:** 2026-04-16
 
-- [x] PASS: Skill logs the stated purpose before starting — the output format template requires `**Purpose logged:** [stated purpose]` in the header. The skill's rules include "Log every source used, including those that returned no results." Simulated output logs the purpose in the report header.
-- [x] PASS: WHOIS lookup uses correct registry for .com TLD — Step 1 specifies: ".com/.net/.org and generic TLDs: who.is or registrar lookup" as the correct source. Simulated output uses who.is with source noted.
-- [x] PASS: DNS records fetched covering A, AAAA, MX, TXT, NS — Step 2 instructs: "Collect: A, AAAA, MX, TXT, NS, CNAME records." Step 2 also adds: "TXT records frequently reveal: email providers...SPF/DKIM configuration, third-party service ownership verification...and site verification codes." Simulated output covers all five record types and interprets the TXT absence as a finding.
-- [x] PASS: Certificate transparency via crt.sh searched for subdomains and naming patterns — Step 3 specifies crt.sh explicitly and instructs looking for subdomains, naming patterns, certificate issuer, and certificate history. Simulated output finds three subdomains from the second certificate's SAN entries and assesses their naming conventions.
-- [x] PASS: ASN and hosting provider identified via ipinfo.io or BGP.he.net — Step 4 specifies both tools. Simulated output uses ipinfo.io for ASN (AS53667) and hosting provider (Frantech/BuyVM) identification.
-- [x] PASS: Wayback Machine checked, gaps noted as findings — Step 6 (Historical data) lists Wayback Machine as the source. The output format template includes `### Historical findings`. Simulated output checks Wayback, finds no history, and notes this explicitly as consistent with a purpose-built attack domain.
-- [x] PASS: Privacy-protected WHOIS logged as finding, investigation continues — Step 1 notes: "Note: many registrations use privacy protection — log this as a finding, not a failure. Proceed with DNS and certificate transparency." The skill's rules repeat: "Privacy-protected WHOIS is a finding, not a failure — note it and continue." Simulated output explicitly logs the privacy protection and continues with all subsequent steps.
-- [~] PARTIAL: Follow-on skill routing indicated — the skill's "Follow-on skills" section specifies: "IP addresses from A/AAAA records worth investigating → `/investigator:ip-intel`; Multiple related domains found → run this skill again per domain." Simulated output includes an explicit "Follow-on recommended" section naming ip-intel for the direct IP and additional domain-intel runs for the four related domains. The partial stands because: the follow-on routing is in the "Follow-on skills" section of the skill definition, not in the rules or output template — meaning it's guidance rather than a guaranteed output element. The simulated output includes it correctly but an agent could produce a compliant output without the routing section.
-- [x] PASS: Passive methods only — the skill's rules state: "Passive methods only. Never attempt active scanning, port enumeration, or authenticated access." The agent definition's non-negotiable also prohibits active scanning. Simulated output uses six passive sources, makes no connection attempts, and produces all findings from passive registries and public tools.
+### Results
+
+- [x] PASS: Skill logs the stated purpose before starting — met. The output format template requires `**Purpose logged:** [stated purpose]` as a mandatory header field. The definition enforces this structurally through the template. Traceable to the output format section of SKILL.md.
+
+- [x] PASS: WHOIS lookup uses correct registry for .com TLD — met. Step 1 specifies: ".com/.net/.org and generic TLDs: who.is or registrar lookup" as the correct source. Output uses who.is and cites it with a direct query URL.
+
+- [x] PASS: DNS records fetched covering A, AAAA, MX, TXT, NS — met. Step 2 instructs: "Collect: A, AAAA, MX, TXT, NS, CNAME records." Step 2 also specifies: "TXT records frequently reveal: email providers, SPF/DKIM configuration, third-party service ownership verification." Output covers all five record types and interprets the absence of TXT records as a finding.
+
+- [x] PASS: Certificate transparency via crt.sh searched for subdomains and naming patterns — met. Step 3 specifies crt.sh explicitly and instructs looking for subdomains, naming patterns, certificate issuer, and certificate history. Output finds three subdomains from the second certificate's SAN entries and assesses naming conventions.
+
+- [x] PASS: ASN and hosting provider identified via ipinfo.io or BGP.he.net — met. Step 4 specifies both tools. Output uses ipinfo.io with a deep link and identifies ASN (AS53667) and hosting provider (Frantech/BuyVM).
+
+- [x] PASS: Wayback Machine checked, gaps noted as findings — met. Step 6 (Historical data) lists Wayback Machine as the primary source. Output format template includes `### Historical findings`. Output checks Wayback, finds no history, and notes this as consistent with a purpose-built attack domain. Traceable to Step 6 and the output template.
+
+- [x] PASS: Privacy-protected WHOIS logged as finding, investigation continues — met. Step 1 notes: "many registrations use privacy protection — log this as a finding, not a failure. Proceed with DNS and certificate transparency." The Rules block repeats: "Privacy-protected WHOIS is a finding, not a failure — note it and continue." Output explicitly logs privacy protection and continues with all subsequent steps.
+
+- [~] PARTIAL: Follow-on skill routing indicated — partially met (ceiling 0.5). The "Follow-on skills" section specifies: "IP addresses from A/AAAA records worth investigating → `/investigator:ip-intel`; Multiple related domains found → run this skill again per domain." Output includes an explicit "Follow-on recommended" section naming ip-intel for the direct IP and additional domain-intel runs for related domains. The PARTIAL stands because follow-on routing appears in the "Follow-on skills" guidance section, not in the Rules block or output template — making it guidance rather than a required output element. A compliant output could technically omit it.
+
+- [x] PASS: Passive methods only — met. The Rules block states: "Passive methods only. Never attempt active scanning, port enumeration, or authenticated access." All six sources are passive registries and public tools. No connection attempts, no enumeration.
 
 ### Notes
 
-The PARTIAL on follow-on routing reflects a consistent pattern across the investigator skills: routing guidance appears in "Follow-on skills" sections (guidance) rather than in Rules blocks (mandatory). Moving the ip-intel routing trigger to the Rules block — "If the A record resolves to a non-CDN-proxy IP, route to ip-intel" — would make it enforceable rather than optional.
+The follow-on routing PARTIAL reflects a structural pattern across the investigator skill suite: routing guidance lives in optional "Follow-on skills" sections rather than being enforced through Rules or the output template. Moving "If A record resolves to a non-CDN-proxy IP, route to ip-intel" into the Rules block would make it mandatory rather than advisory.
 
-The bulletproof hosting discovery (AS53667/BuyVM) is the most significant finding in this scenario. The skill doesn't explicitly instruct looking up whether a hosting provider is "bulletproof" — that finding emerges from ipinfo.io providing the ASN, followed by domain knowledge about AS53667's reputation. The skill could be strengthened by adding a step: "For the identified hosting provider, note whether it appears in threat intelligence references as a bulletproof or high-risk hosting provider."
+The bulletproof hosting discovery (AS53667/BuyVM) is the most significant finding in this scenario. The skill doesn't explicitly instruct checking whether a hosting provider has a bulletproof reputation — that finding emerges from ipinfo.io returning the ASN, then domain knowledge about AS53667. Adding a step: "For the identified hosting provider, check whether it appears in threat intelligence references as a bulletproof or high-risk provider" would make this reproducible regardless of the analyst's existing knowledge.
 
-The related domain cluster discovery (via crt.sh reverse IP search) demonstrates the value of Step 3's certificate transparency focus. The four co-hosted domains with mimicry names turn a single-domain investigation into an infrastructure map — exactly what the scenario asks for ("whether the infrastructure links to other known-bad domains").
+Source citation quality: all citations include specific deep links with query parameters. Access dates on all sources.

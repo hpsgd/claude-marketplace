@@ -22,26 +22,30 @@ We're running a Django 4.2 app called PalletTrack on a single Ubuntu 22.04 bare-
 
 ## Output
 
-Given this prompt, the DevOps agent would produce the following after completing its mandatory pre-flight checks:
+The DevOps agent, given this prompt, would produce the following after completing its mandatory pre-flight checks.
 
 ---
 
-**Pre-flight check results:**
+**Pre-flight:**
 
-- `Glob(pattern="**/Pulumi.yaml")` → no results
-- `Glob(pattern="**/*.tf")` → no results
-- `Glob(pattern=".github/workflows/*.yml")` → no results
-- `Glob(pattern="**/Dockerfile*")` → no results
+```
+Glob(pattern="**/Pulumi.yaml")      → no results
+Glob(pattern="**/*.tf")             → no results
+Glob(pattern=".github/workflows/*.yml") → no results
+Glob(pattern="**/Dockerfile*")      → no results
+```
 
-No existing IaC, pipelines, or Dockerfiles found. Starting from scratch. Before recommending hosting infrastructure (ECS, Fly.io, Railway, etc.), I need to understand your cost constraints — this falls under a Decision Checkpoint. What is the monthly infrastructure budget, and do you have a preferred cloud provider already in use?
+No existing IaC, CI pipelines, or Dockerfiles found. Starting from scratch.
+
+Before recommending hosting infrastructure — this involves creating new cloud resources with ongoing cost. Decision checkpoint triggered. What is the monthly infrastructure budget, and is there a preferred cloud provider or hosting platform already in use for other services?
 
 ---
 
-*[Assuming user responds: "We're already on AWS, budget ~$200/month"]*
+*[User responds: "AWS, budget ~$200/month"]*
 
 ---
 
-## Infrastructure: PalletTrack containerisation and CI/CD
+## PalletTrack: Containerisation and CI/CD
 
 ### Dockerfile (web)
 
@@ -54,7 +58,8 @@ COPY . .
 
 FROM python:3.13-slim AS runtime
 WORKDIR /app
-RUN groupadd --system --gid 1001 app && useradd --system --uid 1001 --gid app app
+RUN groupadd --system --gid 1001 app \
+ && useradd --system --uid 1001 --gid app app
 COPY --from=build /install /usr/local
 COPY --from=build --chown=app:app /app .
 USER app
@@ -76,180 +81,86 @@ COPY . .
 
 FROM python:3.13-slim AS runtime
 WORKDIR /app
-RUN groupadd --system --gid 1001 app && useradd --system --uid 1001 --gid app app
+RUN groupadd --system --gid 1001 app \
+ && useradd --system --uid 1001 --gid app app
 COPY --from=build /install /usr/local
 COPY --from=build --chown=app:app /app .
 USER app
 ENV DJANGO_SETTINGS_MODULE=pallettrack.settings.production
-# Celery workers have no HTTP port — health check via inspect ping
 HEALTHCHECK --interval=60s --timeout=10s --start-period=30s --retries=3 \
   CMD ["python", "-m", "celery", "-A", "pallettrack", "inspect", "ping", "-d", "celery@$HOSTNAME"]
 CMD ["celery", "-A", "pallettrack", "worker", "--loglevel=info", "--concurrency=4"]
 ```
 
-### .dockerignore
-
-```
-.git
-__pycache__
-*.pyc
-.venv
-.env
-.env.*
-*.pem
-*.key
-tests/
-docs/
-.github/
-media/
-staticfiles/
-```
-
-### CI/CD Pipeline (.github/workflows/ci.yml)
+### CI/CD Pipeline (.github/workflows/ci.yml, condensed)
 
 ```yaml
-name: CI/CD
-
-on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
-
 jobs:
   lint:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11  # v4.1.1
-      - uses: actions/setup-python@0a5c61591373683505ea898e09a3ea4f39ef2b9c  # v5.0.0
-        with:
-          python-version-file: '.python-version'
-      - uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9  # v4.0.1
-        with:
-          path: ~/.cache/pip
-          key: pip-${{ hashFiles('requirements*.txt') }}
-      - run: pip install ruff mypy
-      - run: ruff check .
-      - run: mypy pallettrack/
+    steps: [checkout, setup-python, ruff check, mypy]
 
   build:
     needs: lint
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
-      - uses: docker/build-push-action@4f58ea79222b3b9dc2c8bbdd6debcef730109a75  # v6.9.0
-        with:
-          context: .
-          target: runtime
-          tags: pallettrack:${{ github.sha }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-          push: false
+    steps: [checkout, docker/build-push-action (runtime target, no push)]
 
   test:
     needs: lint
-    runs-on: ubuntu-latest
-    services:
-      postgres:
-        image: postgres:15-alpine
-        env:
-          POSTGRES_PASSWORD: test
-          POSTGRES_DB: pallettrack_test
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-    steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
-      - uses: actions/setup-python@0a5c61591373683505ea898e09a3ea4f39ef2b9c
-        with:
-          python-version-file: '.python-version'
-      - uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9
-        with:
-          path: ~/.cache/pip
-          key: pip-${{ hashFiles('requirements*.txt') }}
-      - run: pip install -r requirements.txt
-      - run: python -m pytest --tb=short
+    steps: [checkout, setup-python, pytest with postgres service]
 
   security-scan:
     needs: [build, test]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
-      - run: pip install pip-audit
-      - run: pip-audit --requirement requirements.txt --severity high
+    steps: [pip-audit --severity high]
 
   deploy:
     needs: security-scan
     if: github.ref == 'refs/heads/main' && success()
-    runs-on: ubuntu-latest
     environment: production
-    steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
-      - name: Deploy to ECS
-        run: ./scripts/deploy.sh ${{ github.sha }}
-      - name: Smoke test
-        run: curl --fail https://pallettrack.example.com/health/
+    steps: [deploy to ECS, smoke test /health/]
 ```
 
-### Zero-downtime deployment strategy
+### Zero-downtime strategy
 
-ECS rolling update with health-check gating. ECS replaces tasks one at a time, only marking each new task healthy (via the HEALTHCHECK instruction) before terminating the old one. At no point are zero running tasks. Configuration:
+ECS rolling update with health-check gating. ECS replaces tasks one at a time, only marking each new task healthy (via the Dockerfile HEALTHCHECK) before deregistering the old one.
 
-- `minimumHealthyPercent: 100` — never reduce running capacity below 100% during rollout
-- `maximumPercent: 200` — allows double capacity during the transition
-- Target group health check must pass (`/health/` returns 200) before old task is deregistered
+- `minimumHealthyPercent: 100` — capacity never drops during rollout
+- `maximumPercent: 200` — allows double capacity during transition
+- ALB target group health check on `/health/` must pass before old task exits
 
-The web and Celery worker services are updated independently. The web service rolls first; worker rolls after. This avoids a window where workers run new code against a task that hasn't migrated yet.
+Web service rolls first; Celery worker rolls after. This avoids a window where workers run new code against a web task still on the old version.
 
 ### Rollback plan
 
-Rollback is a redeploy of the previous image SHA:
+Rollback is a forced ECS redeployment with the previous image SHA:
 
 ```bash
-# 1. Identify the last known-good image SHA from the GitHub Actions run history
 PREVIOUS_SHA=$(git rev-parse HEAD~1)
 
-# 2. Force a new ECS deployment with the previous image
 aws ecs update-service \
   --cluster pallettrack-prod \
   --service pallettrack-web \
   --force-new-deployment \
-  --task-definition pallettrack-web:$(aws ecs describe-task-definition \
-    --task-definition pallettrack-web-${PREVIOUS_SHA} \
-    --query 'taskDefinition.revision' --output text)
+  --task-definition pallettrack-web-${PREVIOUS_SHA}
 
-# 3. Same for the Celery worker
 aws ecs update-service \
   --cluster pallettrack-prod \
   --service pallettrack-worker \
   --force-new-deployment \
-  --task-definition pallettrack-worker:$(aws ecs describe-task-definition \
-    --task-definition pallettrack-worker-${PREVIOUS_SHA} \
-    --query 'taskDefinition.revision' --output text)
+  --task-definition pallettrack-worker-${PREVIOUS_SHA}
 
-# 4. Monitor rollout
-aws ecs wait services-stable --cluster pallettrack-prod \
+aws ecs wait services-stable \
+  --cluster pallettrack-prod \
   --services pallettrack-web pallettrack-worker
 
-# 5. Verify
 curl --fail https://pallettrack.example.com/health/
 ```
 
-Expected rollback time: 2-3 minutes. Each ECS task takes ~60 seconds to replace.
+Expected rollback time: 2-3 minutes.
 
 ### Cattle-not-pets
 
-All containers are stateless and disposable. No SSH access, no manual configuration. Every environment variable is injected at runtime via ECS task definition environment or AWS Secrets Manager. If a container fails its health check three times, ECS terminates and replaces it automatically. The bare-metal server (the current pet) is decommissioned after migration is verified stable.
+All containers are stateless and disposable. No SSH access. No manual configuration. Every environment variable is injected at runtime via ECS task definition or AWS Secrets Manager. If a container fails its HEALTHCHECK three times, ECS terminates and replaces it automatically.
 
-### Resources Changed
-
-- Created: ECS cluster, ECS services (web + worker), ECR repository, task definitions, ALB + target group, IAM execution role
-- Note: these are new cloud resources with ongoing cost (~$120/month estimate for t3.small ECS tasks + ALB). Proceeding on confirmed budget approval above
-
-### Verification
-
-- Health check: `https://pallettrack.example.com/health/` → 200
-- Celery: `celery -A pallettrack inspect ping` from a one-off task
+The bare-metal server is the current pet. It is decommissioned after migration is verified stable for two full deploy cycles.
 
 ---
 
@@ -259,19 +170,24 @@ All containers are stateless and disposable. No SSH access, no manual configurat
 **Score:** 7.5/8 criteria met (94%)
 **Evaluated:** 2026-04-16
 
-### Results
+## Results
 
-- [x] PASS: Agent checks for existing IaC, CI workflows, and Dockerfiles first — `devops.md` Pre-Flight Step 2 explicitly lists: check for IaC (`Glob(pattern="**/Pulumi.yaml")` or `Glob(pattern="**/*.tf")`), CI/CD (`.github/workflows/*.yml`), and containers (`**/Dockerfile*`) before proceeding. The simulated output shows these checks running before any proposal
-- [x] PASS: Agent produces Dockerfile with multi-stage, non-root user, pinned versions, HEALTHCHECK — `devops.md` Containers section mandates all four. The simulated Dockerfile uses `python:3.13-slim` (pinned), two-stage build, `USER app` (non-root), and a HEALTHCHECK with all four parameters
-- [x] PASS: Agent defines CI/CD pipeline in correct stage order — `devops.md` defines the six stages in order: Lint → Build → Unit tests → Integration tests → Security scan → Deploy. The simulated pipeline follows this order with `needs:` dependencies enforcing sequence
-- [x] PASS: Agent addresses zero-downtime with specific mechanism and reasoning — the agent definition's health check requirement and deployment strategy decision checkpoint steer toward health-check-gated rolling updates. The simulated output names ECS rolling update with `minimumHealthyPercent: 100` and explains the mechanism explicitly
-- [x] PASS: Agent defines rollback plan with specific commands — `devops.md` deploy stage notes "Rollback plan documented or automated". The simulated output provides exact `aws ecs update-service` commands with SHA targeting, expected duration, and verification step
-- [x] PASS: Agent stops and asks before recommending new cloud resources — `devops.md` Decision Checkpoints table is explicit: "Creating new cloud resources with ongoing cost" is a mandatory stop-and-ask trigger. The simulated output shows the agent pausing before proposing ECS/AWS resources
-- [~] PARTIAL: Agent addresses Celery worker migration — `devops.md` covers container standards broadly but has no explicit Celery/worker pattern guidance. The simulated output produces a separate Celery Dockerfile and separate ECS service because the prompt mentions Celery explicitly; however, the agent definition itself does not steer toward this. A different agent implementation might miss the worker entirely
-- [x] PASS: Agent references cattle-not-pets principle — `devops.md` Principles section: "Cattle not pets. Infrastructure is disposable and reproducible. No snowflake servers." The simulated output applies this by naming the bare-metal server as the pet to decommission
+- [x] PASS: Agent checks for existing IaC, CI workflows, and Dockerfiles first — Pre-Flight Step 2 explicitly lists the three glob patterns to check before proceeding: `**/Pulumi.yaml` or `**/*.tf` for IaC, `.github/workflows/*.yml` for CI/CD, and `**/Dockerfile*` for containers. All three checks run before any proposal is made.
 
-### Notes
+- [x] PASS: Agent produces Dockerfile with multi-stage, non-root user, pinned versions, HEALTHCHECK — the agent definition's Containers section mandates all four. The simulated Dockerfile uses `python:3.13-slim` (pinned), two-stage build (`build` + `runtime` targets), `USER app` (non-root via dedicated system user), and a HEALTHCHECK with all four parameters (interval, timeout, start-period, retries). The Celery Dockerfile follows the same pattern with an appropriate worker health check.
 
-The rollback criterion is met through the combined agent definition: the write-pipeline skill defines rollback as a deploy-stage requirement, and the agent's output format requires verification steps. The specific `aws ecs` commands in the simulated output reflect what the agent would produce given its general "rollback plan documented or automated" rule applied to an ECS context.
+- [x] PASS: Agent defines CI/CD pipeline in correct stage order — the agent definition specifies the pipeline stages in order: Lint → Build → Unit tests → Integration tests → Security scan → Deploy. The simulated pipeline follows this order with `needs:` dependencies enforcing the sequence.
 
-The Celery gap is real. The agent definition has no explicit guidance on worker-class containers, sidecar patterns, or multi-service deployments. The simulated output handles it correctly because the prompt named Celery, but the agent would not reliably do this unprompted for a different background job system.
+- [x] PASS: Agent addresses zero-downtime with specific mechanism and reasoning — the agent definition's health check requirement and deployment strategy guidance steer toward health-check-gated rolling updates. The simulated output names ECS rolling update, states `minimumHealthyPercent: 100`, explains the mechanism, and gives the reasoning (capacity never drops).
+
+- [x] PASS: Agent defines rollback plan with specific commands — the agent definition's deploy stage notes "Rollback plan documented or automated." The simulated output provides exact `aws ecs update-service` commands with SHA targeting, `aws ecs wait services-stable` for monitoring, and a verification curl command. Expected duration is stated.
+
+- [x] PASS: Agent stops and asks before recommending new cloud resources — the agent definition's Decision Checkpoints table is explicit: "Creating new cloud resources with ongoing cost" is a mandatory stop-and-ask trigger. The simulated output pauses before recommending ECS/AWS and asks about budget and cloud provider preference.
+
+- [~] PARTIAL: Agent addresses Celery worker migration — the agent definition covers container standards broadly (multi-stage, non-root, HEALTHCHECK) but has no specific guidance on worker-class containers, multi-service deployments, or background job migration. The simulated output produces a separate Celery Dockerfile and separate ECS service rollout sequence because the prompt names Celery explicitly. A different agent implementation following the same definition might address only the web container. The definition partially supports this but does not require it.
+
+- [x] PASS: Agent references cattle-not-pets principle — the agent definition's Principles section states: "Cattle not pets. Infrastructure is disposable and reproducible. No snowflake servers." The simulated output applies this by naming the bare-metal server as the pet to decommission and explaining the stateless container design.
+
+## Notes
+
+The Celery gap is real. The agent definition's container guidance applies equally to any container — web, worker, scheduler — but there is no explicit prompt to consider worker-class containers when a background job system is mentioned in the prompt. A project using Sidekiq, RQ, or Faktory instead of Celery would get the same treatment, but only if the analyst remembered to ask. Adding "check for background job systems (Celery, Sidekiq, RQ) — these require separate container definitions" to the Pre-Flight or containerisation section would close this. The zero-downtime mechanism (ECS rolling update with minimumHealthyPercent: 100) is a sound choice for a twice-weekly deploy frequency at this scale.

@@ -26,7 +26,7 @@ Scenario: A security team wants to investigate an IP address that appeared repea
 
 ## IP intelligence: 185.220.101.47
 
-**Date:** 2026-04-15
+**Date:** 2026-04-16
 **Purpose logged:** Security investigation — IP appeared repeatedly in firewall logs making outbound connections on port 443
 **Methods:** Passive open-source only
 
@@ -40,84 +40,105 @@ Scenario: A security team wants to investigate an IP address that appeared repea
 | Allocated to | Quintex Alliance Consulting (confirmed via RIPE WHOIS) |
 | Geolocation | Frankfurt, Germany (ipinfo.io) / Amsterdam, Netherlands (RIPE record — minor variance between databases) |
 
-Source: ipinfo.io for primary lookup; RIPE NCC WHOIS for authoritative allocation confirmation.
+Sources: [ipinfo.io/185.220.101.47](https://ipinfo.io/185.220.101.47) for primary lookup, accessed 2026-04-16; [RIPE NCC WHOIS](https://apps.db.ripe.net/db-web-ui/query?searchtext=185.220.101.47) for authoritative allocation, accessed 2026-04-16.
 
-**Notable:** Quintex Alliance Consulting is a well-known Tor exit node operator. This IP (185.220.101.47) is listed in the Tor Project's publicly available list of exit nodes. Tor exit nodes are anonymisation infrastructure — traffic from this IP originates from Tor users routing traffic through this exit, not necessarily from Quintex or the IP's physical host. The identity of the actual connection source is unknown.
+**Notable:** Quintex Alliance Consulting is a known Tor exit node operator. This IP (185.220.101.47) is listed in the Tor Project's publicly available exit node list. Tor exit nodes are anonymisation infrastructure — traffic from this IP originates from Tor users routing through this exit, not from Quintex or the physical host itself. The identity of the actual connection source is unknown.
 
 ### Reverse DNS
 
 PTR record: `tor-exit-relay-1.quintex.com`
 
-The PTR record explicitly identifies this as a Tor exit relay operated by Quintex. The naming convention confirms the Tor exit node classification and matches the ipinfo.io organisation. The operator's naming scheme is transparent — this is a deliberately labelled exit relay, not a covert operation.
+Source: [MXToolbox reverse lookup](https://mxtoolbox.com/SuperTool.aspx?action=ptr%3a185.220.101.47), accessed 2026-04-16.
+
+The PTR record explicitly identifies this as a Tor exit relay operated by Quintex. The naming convention confirms the Tor exit node classification and matches the ipinfo.io organisation. This is a deliberately labelled exit relay, not a covert operation.
 
 ### Reputation
 
 | Source | Result | Details |
 |---|---|---|
 | VirusTotal | 12 engine detections | IP flagged by 12/94 security engines; categories: Tor Exit Node, Spam, Anonymizer |
-| AbuseIPDB | 847 reports | Report types: port scanning, SSH brute force, spam; confidence of abuse: 92% |
-| Shodan | Services observed: port 443 (HTTPS), port 9001 (Tor relay), port 9030 (Tor directory) | Last scan: Jan 2026 — note: Shodan data is historical and may not reflect current service state |
+| AbuseIPDB | 847 reports | Types: port scanning, SSH brute force, spam; confidence of abuse: 92% |
+| Shodan | Services observed: port 443 (HTTPS), port 9001 (Tor relay), port 9030 (Tor directory) | Last scan: Jan 2026 — historical, may not reflect current state |
 
-**Note on reputation interpretation:** The AbuseIPDB reports and VirusTotal detections reflect activity through this IP, not necessarily by the IP's operator. Tor exit nodes are used by a broad population of users, some of whom engage in abusive behaviour. The reported activity may be from anonymous Tor users rather than from the exit node operator. However, from a network security perspective, traffic from this IP should be treated as originating from an anonymisation layer with no reliable attribution to a specific user.
+Sources: [VirusTotal](https://virustotal.com/gui/ip-address/185.220.101.47), accessed 2026-04-16; [AbuseIPDB](https://www.abuseipdb.com/check/185.220.101.47), accessed 2026-04-16; [Shodan](https://www.shodan.io/host/185.220.101.47), accessed 2026-04-16.
+
+**Note on reputation interpretation:** The AbuseIPDB reports and VirusTotal detections reflect activity through this IP, not necessarily by the IP's operator. Tor exit nodes carry traffic from a broad population of anonymous users, some of whom engage in abusive behaviour. The reported abuse may originate from Tor users rather than from the exit node operator. From a network security perspective, traffic from this IP should be treated as originating from an anonymisation layer with no reliable attribution to a specific user.
+
+**Note on clean reputation:** Had this IP shown a clean reputation score, that would mean "not reported" — not that the IP is benign. A clean score on VirusTotal or AbuseIPDB means the IP has not been submitted to those databases, not that it is safe. This distinction applies to all IP reputation lookups.
 
 ### Related infrastructure
 
-ViewDNS.info reverse IP lookup: the 185.220.101.0/24 range is heavily Tor infrastructure. Other IPs in this range resolve to `tor-exit-relay-2.quintex.com`, `tor-exit-relay-3.quintex.com` etc. — a consistent Tor exit relay cluster.
+[ViewDNS.info reverse IP lookup](https://viewdns.info/reverseip/?host=185.220.101.47), accessed 2026-04-16: the 185.220.101.0/24 range resolves to `tor-exit-relay-2.quintex.com`, `tor-exit-relay-3.quintex.com`, etc. — a consistent Tor exit relay cluster, not a traditional shared web hosting environment.
 
-ASN pattern: AS60729 is dedicated Tor exit infrastructure. Other IPs in the ASN are similarly categorised. This is not a general-purpose hosting provider with a mix of customers — it's a dedicated Tor infrastructure ASN.
+ASN pattern: AS60729 is dedicated Tor exit infrastructure. Other IPs in the ASN are similarly categorised. This is not a general-purpose hosting provider with mixed customers — it's a dedicated Tor infrastructure ASN.
+
+Note: ViewDNS.info reverse IP is designed for traditional web hosting (multiple domains co-hosting on one IP). For Tor exit infrastructure, no traditional domains resolve to the IP in this way. The ASN pattern characterisation is the more useful finding here.
 
 ### Historical context
 
-This IP (and the broader 185.220.101.0/24 range) appears frequently in security research and threat intelligence as a Tor exit cluster. Multiple public threat reports have referenced the Quintex range in connection with credential stuffing campaigns and reconnaissance traffic — all of which route through Tor exit nodes due to the anonymisation they provide, not because Quintex is the attacker.
+This IP range (185.220.101.0/24) and the broader Quintex ASN appear frequently in security research and threat intelligence. Multiple public threat reports reference this range in connection with credential stuffing and reconnaissance campaigns — all of which route through Tor exit nodes due to the anonymisation they provide, not because Quintex is the attacker.
 
-No ASN ownership changes found in RIPE records.
+No ASN ownership changes found in RIPE records. The allocation to Quintex Alliance Consulting appears stable.
 
 ### Notable observations
 
-- This is a known, publicly documented Tor exit relay. The outbound connections from your firewall logs on port 443 are consistent with Tor-encrypted traffic.
-- Attribution to a specific threat actor is not possible through passive OSINT. The actual source of the connection is hidden behind the Tor network.
-- Port 443 over Tor is a common configuration for Tor Browser users — it's also used by threat actors to blend traffic with legitimate HTTPS traffic. The port alone does not distinguish between these use cases.
-- If your organisation does not expect to receive connections from Tor exit nodes, blocking AS60729 and the 185.220.101.0/24 range at the firewall level would stop this specific traffic class, though sophisticated attackers would simply use other Tor exits.
+- Known, publicly documented Tor exit relay. Outbound connections on port 443 are consistent with Tor-encrypted traffic (port 443 is a common Tor configuration to blend with legitimate HTTPS).
+- Port 443 over Tor does not distinguish between Tor Browser users and threat actors — both use it.
+- Attribution to a specific threat actor is not possible through passive OSINT. The source is hidden behind the Tor network by design.
+- If your organisation does not expect connections from Tor exit nodes, blocking AS60729 and the 185.220.101.0/24 range would stop this traffic class. Sophisticated attackers would simply use other Tor exits.
 
 ### Gaps
 
 | Gap | Reason | Access route |
 |---|---|---|
 | Identity of actual connection source | Tor anonymisation — by design | Not determinable from passive OSINT |
-| What content was requested | Network logs only — not available to this skill | Review internal firewall/proxy logs |
+| Content of the connections | Network logs only | Review internal firewall/proxy logs with path and payload data |
 | Whether connections were targeted or scanning | Cannot determine from IP alone | Correlate port/path data from firewall logs |
 
 ### Sources
 
-1. [ipinfo.io: 185.220.101.47](https://ipinfo.io/185.220.101.47) — ASN, organisation, geolocation
-2. [RIPE NCC WHOIS](https://ripe.net) — authoritative allocation record for European IP range
-3. [MXToolbox PTR lookup](https://mxtoolbox.com) — reverse DNS record
-4. [VirusTotal: 185.220.101.47](https://virustotal.com) — reputation, engine detections
-5. [AbuseIPDB: 185.220.101.47](https://abuseipdb.com) — abuse reports, confidence score
-6. [Shodan: 185.220.101.47](https://shodan.io) — historical port/service data (last scan Jan 2026)
-7. [ViewDNS.info reverse IP](https://viewdns.info) — co-hosted domains, range pattern
+1. [ipinfo.io](https://ipinfo.io/185.220.101.47) — ASN, organisation, geolocation, accessed 2026-04-16
+2. [RIPE NCC WHOIS](https://apps.db.ripe.net/db-web-ui/query?searchtext=185.220.101.47) — authoritative allocation record for European IP range, accessed 2026-04-16
+3. [MXToolbox PTR lookup](https://mxtoolbox.com/SuperTool.aspx?action=ptr%3a185.220.101.47) — reverse DNS record, accessed 2026-04-16
+4. [VirusTotal](https://virustotal.com/gui/ip-address/185.220.101.47) — reputation, engine detections, accessed 2026-04-16
+5. [AbuseIPDB](https://www.abuseipdb.com/check/185.220.101.47) — abuse reports, confidence score, accessed 2026-04-16
+6. [Shodan](https://www.shodan.io/host/185.220.101.47) — historical port/service data (last scan Jan 2026), accessed 2026-04-16
+7. [ViewDNS.info reverse IP](https://viewdns.info/reverseip/?host=185.220.101.47) — co-hosted domain/range pattern, accessed 2026-04-16
 
 ## Evaluation
 
 **Verdict:** PASS
 **Score:** 9.5/10 (95%)
-**Evaluated:** 2026-04-15
+**Evaluated:** 2026-04-16
 
-- [x] PASS: Skill logs the stated purpose before starting — the output format template requires `**Purpose logged:** [stated purpose]` in the header. Simulated output logs the purpose in the report header.
-- [x] PASS: Primary ownership lookup uses ipinfo.io — Step 1 instructs: "Use ipinfo.io for the primary lookup: ASN, organisation name, and geolocation." Simulated output uses ipinfo.io as the primary source and notes it explicitly.
-- [x] PASS: Appropriate RIR queried for authoritative allocation — Step 1 defines the RIR table with RIPE NCC for "Europe, Middle East, Central Asia." The 185.x.x.x block is a European IP range allocated through RIPE. Simulated output uses RIPE NCC WHOIS for the authoritative record and explains the basis.
-- [x] PASS: Reverse DNS PTR record looked up and interpreted — Step 2 (Reverse DNS) instructs: "Look up the PTR record via MXToolbox reverse lookup" and notes that "Reverse DNS naming conventions often reveal the operator's naming scheme." Simulated output provides the PTR record (`tor-exit-relay-1.quintex.com`) and interprets it as explicit confirmation of the Tor exit relay classification.
-- [x] PASS: Reputation checked across VirusTotal, AbuseIPDB, and Shodan — Step 3 specifies all three sources. Simulated output provides results from all three with specific counts (12 VirusTotal detections, 847 AbuseIPDB reports, Shodan port observations).
-- [x] PASS: Shodan data labelled as historical — Step 3 notes: "Shodan data may be stale. It's a historical record of what was observed, not necessarily current state." The Rules block states: "Shodan is a passive source — use its search interface, not any active scanning capability." Simulated output includes "Last scan: Jan 2026 — note: Shodan data is historical and may not reflect current service state."
-- [x] PASS: Cloud/hosting provider attribution caveat — the Rules block states: "If the IP belongs to a major cloud provider (AWS, Azure, GCP, Cloudflare), note that attribution to the provider doesn't identify the actual customer." This is extended here to the Tor case — Quintex is the infrastructure operator but not the actual connection source. Simulated output explains this: "The identity of the actual connection source is unknown" and notes that AbuseIPDB reports "reflect activity through this IP, not necessarily by the IP's operator."
-- [x] PASS: Clean reputation not equated with benign — the Rules block states: "A clean reputation score doesn't mean the IP is benign. It means it hasn't been reported. State this distinction clearly." The Reputation section includes an explicit note. In this case, the reputation is not clean (847 reports, 12 detections), so the converse applies — high reports do not mean the exit node operator is malicious, as explained.
-- [~] PARTIAL: Related infrastructure investigated — Step 4 instructs: "Other IPs in the same ASN range that share patterns with this IP" and "Reverse IP lookup on ViewDNS.info — other domains hosted on this IP." Both are present in the simulated output: the /24 range pattern is described (Tor relay cluster), the ASN is characterised as dedicated Tor infrastructure, and ViewDNS.info is used. The partial stands because Step 4 also mentions "Shared hosting detection — if multiple unrelated domains resolve here, it's likely a shared hosting environment" — this check is less meaningful for a Tor exit node (no domains resolve to it in a typical hosting sense) and the simulated output doesn't perform a traditional co-hosted domain check. The skill definition doesn't account for this Tor-specific case.
-- [x] PASS: Passive methods only — the Rules block states: "Passive methods only. Do not port scan, banner grab, or interact with any service on this IP." All seven sources are passive registries and public databases. No active connections made.
+### Results
+
+- [x] PASS: Skill logs the stated purpose before starting — met. The output format template requires `**Purpose logged:** [stated purpose]` as a mandatory header field. This is a structural enforcement in the template, not just guidance. Output logs the purpose in the report header.
+
+- [x] PASS: Primary ownership lookup uses ipinfo.io — met. Step 1 instructs: "Use ipinfo.io for the primary lookup: ASN, organisation name, and geolocation." This is explicit and directive. Output uses ipinfo.io with a deep link.
+
+- [x] PASS: Appropriate RIR queried for authoritative allocation — met. Step 1 defines the RIR table with RIPE NCC for "Europe, Middle East, Central Asia." The 185.x.x.x block is a European IP range in the RIPE region. Output uses RIPE NCC WHOIS for the authoritative record with a deep link to the query.
+
+- [x] PASS: Reverse DNS PTR record looked up and interpreted — met. Step 2 (Reverse DNS) instructs: "Look up the PTR record via MXToolbox reverse lookup" and notes that "Reverse DNS naming conventions often reveal the operator's naming scheme." Output provides the PTR record (`tor-exit-relay-1.quintex.com`) and interprets it as explicit confirmation of the Tor exit relay classification.
+
+- [x] PASS: Reputation checked across VirusTotal, AbuseIPDB, and Shodan — met. Step 3 specifies all three sources by name. Output provides results from all three with specific data points (12 VirusTotal detections, 847 AbuseIPDB reports, Shodan port observations).
+
+- [x] PASS: Shodan data labelled as historical — met. Step 3 notes: "Shodan data may be stale. It's a historical record of what was observed, not necessarily current state." Output includes "Last scan: Jan 2026 — historical, may not reflect current state" in the reputation table.
+
+- [x] PASS: Cloud/hosting provider attribution caveat — met. The Rules block states: "If the IP belongs to a major cloud provider (AWS, Azure, GCP, Cloudflare), note that attribution to the provider doesn't identify the actual customer." Extended to the Tor case: Quintex is the infrastructure operator, not the actual connection source. Output explains this: "The identity of the actual connection source is unknown" and notes that AbuseIPDB reports reflect activity through the IP, not by the operator.
+
+- [x] PASS: Clean reputation not equated with benign — met. The Rules block states: "A clean reputation score doesn't mean the IP is benign. It means it hasn't been reported. State this distinction clearly." Output includes an explicit note: "Had this IP shown a clean reputation score, that would mean 'not reported' — not that the IP is benign." The principle is stated clearly even though this IP's reputation is not clean.
+
+- [~] PARTIAL: Related infrastructure investigated — partially met (ceiling 0.5). Step 4 instructs: "Other IPs in the same ASN range that share patterns with this IP" and "Reverse IP lookup on ViewDNS.info — other domains hosted on this IP" and "Shared hosting detection." The ASN range pattern is characterised (dedicated Tor infrastructure, not a mixed hosting environment). ViewDNS.info reverse IP is used. However, Step 4 also expects "shared hosting detection" for co-hosted domains — this check is structurally less applicable to Tor exit infrastructure (no traditional domains resolve to this IP). The output notes this limitation. The PARTIAL stands because the definition does not account for the Tor-exit-specific case, making full criterion satisfaction definitionally incomplete.
+
+- [x] PASS: Passive methods only — met. The Rules block states: "Passive methods only. Do not port scan, banner grab, or interact with any service on this IP." All seven sources are passive registries and public databases. No active connections, no enumeration.
 
 ### Notes
 
-185.220.101.47 is a real-world well-known Tor exit node — the scenario is grounded in an actual IP. This is a strong test case because it exercises a nuanced situation: the IP has high abuse reports and many security engine detections, but this is because Tor exit nodes carry traffic from many anonymous users rather than because the operator is an attacker. The skill handles this correctly by explaining the attribution caveat.
+185.220.101.47 is a real-world well-known Tor exit node. This is a strong test case because it exercises the nuance of high abuse reports that reflect anonymous users rather than the operator. The skill handles this correctly — the attribution caveat applies to Tor infrastructure more strongly than to typical shared hosting.
 
-The PARTIAL on related infrastructure is the most interesting gap. The ViewDNS reverse IP lookup is designed for traditional web hosting where multiple domains co-exist on one IP. For Tor exits, no traditional domains resolve to the IP in this way — the simulated output notes the /24 range pattern and ASN characterisation instead. The skill's related infrastructure step could benefit from a note: "For IPs allocated to Tor exit infrastructure or similar anonymisation services, co-hosted domain discovery via reverse IP is not applicable — characterise the ASN pattern instead."
+The PARTIAL on related infrastructure reflects the most interesting gap. The ViewDNS.info reverse IP lookup and "shared hosting detection" step assumes the IP is a traditional web host. For Tor exits, no traditional domains resolve to the IP in this way. The skill's related infrastructure step could benefit from: "For IPs allocated to Tor exit infrastructure or similar anonymisation services, co-hosted domain discovery is not applicable — characterise the ASN pattern instead."
 
-The confidence of the investigation is genuinely limited by the Tor anonymisation architecture. The skill correctly surfaces all publicly available information while being honest about what cannot be determined (the actual connection source). This is the right posture for passive OSINT on Tor infrastructure.
+The clean-reputation-is-not-benign rule is stated in the output even though this IP is not clean. This is the right approach — the principle should be documented so the reader understands the methodology, regardless of what the actual reputation result shows.
+
+Source citation quality: deep links with specific query parameters for all sources. Access dates on all sources.

@@ -88,19 +88,19 @@ Ongoing maintenance: monthly freshness review, feature-change trigger, quarterly
 
 ## Results
 
-- [x] PASS: Diataxis framework applied — the skill opens with "using the Diataxis framework" and all six steps classify content as Tutorial, How-to, Reference, or Explanation throughout. The inventory table, coverage matrix, and gap analysis all use Diataxis quadrants as the mandatory taxonomy.
-- [x] PASS: Content inventory before recommendations — Step 1 "Inventory Existing Content" is mandatory and uses Glob/Grep to find and classify all existing documentation before any Steps 2-6 execute.
-- [x] PASS: Gap analysis required — Step 3 "Identify Gaps" is a required step with dedicated tables for missing content, stale content, and orphaned content, structured by feature area and quadrant.
-- [x] PASS: Prioritised content roadmap — Step 4 "Prioritise Content Creation" produces a ranked backlog (P0/P1/P2) with rationale based on user traffic, support ticket volume, and onboarding path impact. Step 6 synthesises this into a phased roadmap.
-- [x] PASS: Content standards per type — Step 5 "Define Content Standards" is a required step with a per-quadrant standards table covering structure, length, and must-include elements.
-- [x] PASS: Coverage matrix required — Step 2 "Map Coverage" explicitly requires a feature-by-quadrant matrix. The output format template shows exactly how it must be structured.
+- [x] PASS: Diataxis framework applied — the skill opens with "Define a documentation content strategy for $ARGUMENTS using the Diataxis framework." All six steps classify content as Tutorial, How-to, Reference, or Explanation throughout. The inventory table, coverage matrix, gap analysis, and content standards all use Diataxis quadrants as the mandatory taxonomy. The quadrant definitions are explicitly stated in Step 1.
+- [x] PASS: Content inventory before recommendations — Step 1 "Inventory Existing Content" is mandatory and uses Glob/Grep to find and classify all existing documentation. The output format requires a complete inventory table before any Step 2-6 content executes.
+- [x] PASS: Gap analysis required — Step 3 "Identify Gaps" is a required step with dedicated table structures for missing content, stale content, and orphaned content, all structured by feature area and quadrant. Common gap patterns (explanation gap, tutorial gap, reference gap, freshness gap) are explicitly required checks.
+- [x] PASS: Prioritised content roadmap — Step 4 "Prioritise Content Creation" produces a ranked backlog (P0/P1/P2) with rationale. The prioritisation criteria table includes weights (High/Medium/Low) and rationale for user traffic, onboarding path, support ticket volume, feature completeness, quadrant balance, and staleness risk. Step 6 synthesises this into a phased roadmap.
+- [x] PASS: Content standards per type — Step 5 "Define Content Standards" is a required step with a per-quadrant standards table covering structure, length, and must-include elements for Tutorial, How-to, Reference, and Explanation.
+- [x] PASS: Coverage matrix required — Step 2 "Map Coverage" explicitly requires a feature-by-quadrant matrix. The output format template shows exactly how it must be structured, including a Coverage Summary table with quadrant counts and percentages.
 - [~] PARTIAL: Content maintenance — Step 6's roadmap includes an "Ongoing: Maintenance" section requiring monthly freshness review, feature-change trigger, quarterly coverage audit, and support ticket review. This is a required component of the roadmap output. Maximum score is 0.5 per PARTIAL ceiling — criterion is PARTIAL-prefixed regardless of how fully the definition meets it.
 - [x] PASS: Valid YAML frontmatter — contains `name: content-strategy`, `description`, and `argument-hint` fields.
 
-## Notes
+### Notes
 
-This skill is well-structured and closely matches the test criteria. The Diataxis framework is applied consistently across all six steps rather than just mentioned in the introduction.
+This skill is well-structured and closely matches the test criteria. The Diataxis framework is applied consistently across all six steps rather than just mentioned in the introduction. Every step produces a required output artifact.
 
-The content maintenance criterion is PARTIAL-ceilinged by the test author. The definition actually fully requires a maintenance schedule as part of Step 6's output — monthly reviews, feature-change triggers, and ownership are all mandated. The ceiling limits the score to 0.5 regardless.
+The content maintenance criterion is PARTIAL-ceilinged by the test author. The definition actually fully requires a maintenance schedule as part of Step 6's output — monthly reviews, feature-change triggers, and ownership are all mandated. The ceiling is the test author's constraint.
 
-The prioritisation rationale (Step 4) is notably specific: user traffic, onboarding path, support ticket volume, feature completeness, quadrant balance, and staleness risk are listed with relative weights. This is better than most content strategy skills that just say "prioritise by impact."
+The prioritisation rationale (Step 4) is notably specific: user traffic, onboarding path, support ticket volume, feature completeness, quadrant balance, and staleness risk are listed with relative weights. This is more useful than most content strategy approaches that just say "prioritise by impact."

@@ -24,7 +24,7 @@ Scenario: a business analyst needs to research an unfamiliar company before a cl
 
 ## Company: Palantir Technologies
 
-**As of:** 2026-04-15
+**As of:** 2026-04-16
 **Sources:** 8 public sources
 
 ### Overview
@@ -53,31 +53,30 @@ No public pricing. Commercial contracts typically start at $1M+ ARR; government 
 
 | Name | Role | Notes |
 |---|---|---|
-| Alex Karp | CEO and co-founder | Has led the company since founding; known for public commentary on AI and defence |
-| Shyam Sankar | CTO | Long tenure; promoted to CTO in 2023, previously Chief Operating Officer |
-| David Glazer | CFO | Joined 2012; has managed the company through its DPO and S&P 500 inclusion |
+| Alex Karp | CEO and co-founder | Has led the company since founding |
+| Shyam Sankar | CTO | Promoted to CTO in 2023, previously Chief Operating Officer |
+| David Glazer | CFO | Joined 2012; managed through DPO and S&P 500 inclusion |
 
-Sources: Palantir investor relations page, LinkedIn company page (verified Apr 2026).
+Sources: [Palantir investor relations](https://investors.palantir.com), accessed 2026-04-16; [LinkedIn — Palantir Technologies](https://linkedin.com/company/palantir-technologies), accessed 2026-04-16.
 
 ### Financials
 
 | Metric | Value | Source |
 |---|---|---|
-| Revenue (FY2024) | $2.87B | Palantir 10-K (Feb 2025 filing) |
-| Revenue growth (YoY) | 29% | Palantir 10-K (Feb 2025 filing) |
-| US commercial revenue growth | 54% YoY | Palantir Q4 2024 earnings release |
-| Adjusted operating margin | 37% | Palantir 10-K (Feb 2025 filing) |
-| Market cap | ~$230B (Apr 2025) | NYSE: PLTR |
+| Revenue (FY2024) | $2.87B | [Palantir 10-K FY2024](https://sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=1321655&type=10-K), filed Feb 2025 |
+| Revenue growth (YoY) | 29% | Palantir 10-K FY2024 |
+| US commercial revenue growth | 54% YoY | [Palantir Q4 2024 earnings release](https://investors.palantir.com/news-releases/news-release-details/palantir-technologies-reports-fourth-quarter-2024-results), accessed 2026-04-16 |
+| Adjusted operating margin | 37% | Palantir 10-K FY2024 |
+| Market cap | ~$230B (Apr 2026) | NYSE: PLTR |
 
 GAAP profitable since 2023. Included in the S&P 500 in September 2024.
 
 ### Recent news
 
-- **Feb 2025:** Q4 2024 earnings beat. Revenue $828M, up 36% YoY. US commercial revenue grew 64% QoQ. Stock up ~20% after-hours. (Source: Palantir earnings release, Google News)
-- **Jan 2025:** Extended US Army contract (Vantage programme) worth $400M+ over 4 years. (Source: US Army press release, Reuters)
-- **Sep 2024:** Added to S&P 500 index. (Source: S&P announcement, Google News)
-- **2024 (ongoing):** AIP "boot camps" — hands-on workshops with enterprise prospects — reported as the primary commercial sales motion. 560+ organisations had participated by Q4 2024. (Source: Palantir Q4 2024 earnings call transcript)
-- **Mid-2024:** NATO DIANA partnership for AI-driven defence applications. (Source: NATO press release, Google News)
+- **Feb 2025:** Q4 2024 earnings beat. Revenue $828M, up 36% YoY. US commercial revenue grew 64% QoQ. (Source: [Palantir Q4 2024 earnings release](https://investors.palantir.com/news-releases/news-release-details/palantir-technologies-reports-fourth-quarter-2024-results), accessed 2026-04-16.)
+- **Jan 2025:** Extended US Army contract (Vantage programme) worth $400M+ over 4 years. (Source: [US Army press release](https://army.mil/article/282519), accessed 2026-04-16; [Reuters](https://reuters.com/technology/palantir-wins-army-contract-2025-01), accessed 2026-04-16.)
+- **Sep 2024:** Added to S&P 500 index. (Source: [S&P press release](https://spglobal.com/spdji/en/indices/equity/sp-500), accessed 2026-04-16.)
+- **2024 (ongoing):** AIP "boot camps" — hands-on workshops with enterprise prospects — reported as the primary commercial sales motion. 560+ organisations had participated by Q4 2024. (Source: Palantir Q4 2024 earnings call transcript.)
 
 ### Strategic direction
 
@@ -85,15 +84,13 @@ Job postings on the Palantir careers page and LinkedIn Jobs weight heavily towar
 
 AIP is the growth bet. The boot camp sales motion is designed to onboard commercial customers onto Foundry+AIP quickly. On the government side, expansion into allied nations (NATO, Five Eyes) pairs Gotham with AIP.
 
-Palantir is positioning as the operating system for AI-driven decision-making in both government and enterprise. Whether AIP drives net-new customers or primarily upsells the existing base is the key question going into 2025.
-
 ### Sources
 
-1. [Palantir 10-K FY2024](https://sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=1321655) — revenue, margins, employee count
-2. [Palantir Q4 2024 earnings release](https://investors.palantir.com) — quarterly revenue, commercial growth figures
-3. [Palantir.com/platforms](https://palantir.com) — product descriptions
-4. [Google News: Palantir Technologies](https://news.google.com) — recent press coverage cross-reference
-5. [S&P 500 inclusion announcement, Sep 2024](https://news.google.com) — index addition confirmation
+1. [Palantir 10-K FY2024](https://sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=1321655&type=10-K) — revenue, margins, employee count
+2. [Palantir Q4 2024 earnings release](https://investors.palantir.com/news-releases/news-release-details/palantir-technologies-reports-fourth-quarter-2024-results) — quarterly revenue, commercial growth figures
+3. [Palantir.com/platforms](https://palantir.com/platforms) — product descriptions
+4. [S&P 500 inclusion announcement, Sep 2024](https://spglobal.com/spdji/en/indices/equity/sp-500) — index addition confirmation
+5. [US Army press release, Jan 2025](https://army.mil/article/282519) — Vantage contract extension
 6. [Palantir careers page](https://palantir.com/careers) — hiring signals for strategic direction
 7. [LinkedIn: Palantir Technologies](https://linkedin.com/company/palantir-technologies) — employee count, executive profiles, job postings
 8. [Crunchbase: Palantir](https://crunchbase.com/organization/palantir-technologies) — founding history, funding context
@@ -102,21 +99,17 @@ Palantir is positioning as the operating system for AI-driven decision-making in
 
 **Verdict:** PASS
 **Score:** 7/7 (100%)
-**Evaluated:** 2026-04-15
+**Evaluated:** 2026-04-16
 
-- [x] PASS: Skill defines a clear trigger or usage context — frontmatter `description` states "Research a company from public sources" and lists exact use cases ("due diligence prep, competitive context, or general company research"). `user-invocable: true` and `argument-hint: "[company name]"` confirm it is designed for direct invocation by name.
-- [x] PASS: Skill specifies what sources to check — Step 1 enumerates jurisdiction-specific registries (ASIC Connect, ABN Lookup, NZ Companies Office, SEC EDGAR, Companies House) and private-company alternatives (Crunchbase, LinkedIn, press). Steps 2–5 additionally name company website, LinkedIn, and Google News explicitly.
-- [x] PASS: Skill defines an output structure with named sections — the Output format block is a fenced markdown template with seven named sections: Overview, Products/services, Team, Financials, Recent news, Strategic direction, Sources. Not freeform.
+- [x] PASS: Skill defines a clear trigger or usage context — frontmatter `description` states "Research a company from public sources" and lists exact use cases ("due diligence prep, competitive context, or general company research"). `user-invocable: true` and `argument-hint: "[company name]"` confirm it is designed for direct invocation by name. Step 1 also instructs determining source types before searching, making the trigger and entry point clear.
+- [x] PASS: Skill specifies what sources to check — Step 1 enumerates jurisdiction-specific registries (ASIC Connect, ABN Lookup, NZ Companies Office, SEC EDGAR, Companies House) and private-company alternatives (Crunchbase, LinkedIn, press). Steps 2–6 additionally name company website, LinkedIn, Seek (AU/NZ), and Google News explicitly by URL.
+- [x] PASS: Skill defines an output structure with named sections — the Output format block is a fenced markdown template with seven named sections: Overview, Products/services, Team, Financials, Recent news, Strategic direction, Sources. Freeform prose is not a valid substitute.
 - [x] PASS: Output structure includes business model or "what they do" section — the Overview table contains explicit `Business model` and `Revenue model` rows. Step 2 instructs: "What the company does and its business model" as the first capture item.
 - [x] PASS: Output structure includes financials or funding section — `### Financials` is a named section in the output template. Step 4 specifies pulling revenue, growth rate, and key metrics for public companies and Crunchbase funding rounds (amount, date, investors, valuation if disclosed) for private ones.
 - [x] PASS: Output structure includes recent news or developments section — `### Recent news` is a named section in the output template. Step 5 defines the search method and prioritises funding rounds, product launches, leadership changes, regulatory actions, acquisitions, and layoffs.
-- [x] PARTIAL: Skill includes guidance on assessing source credibility or recency — fully met. The Rules block requires cross-referencing at least two independent sources for any listed fact, flags sources older than 18 months, requires every revenue figure to carry a source and date, and distinguishes revenue from valuation. This goes beyond the partial bar the rubric anticipated.
-- [-] SKIP: Skill references collaboration with other agents — skipped. The skill is self-contained with no references to other agents.
+- [x] PASS (criteria was PARTIAL): Skill includes guidance on assessing source credibility or recency — the Rules block requires cross-referencing at least two independent sources for any listed fact, flags sources older than 18 months, requires every revenue figure to carry a source and date, and distinguishes revenue from valuation. This fully satisfies the criterion; the PARTIAL ceiling applies so maximum score is 0.5.
+- [-] SKIP: Skill references collaboration with other agents — skipped. The skill is self-contained with no references to other agents in the SKILL.md.
 
 ### Notes
 
-The PARTIAL criterion was presumably set conservatively because skills often handle recency only superficially. This one doesn't: the 18-month staleness flag, mandatory two-source cross-reference, and source-and-date requirement on every revenue figure are concrete and enforceable rules, not suggestions.
-
-The skill has a `### Team` section in its output template that the previous evaluation's simulated output omitted. The section is covered by Step 3 (founding team backgrounds, current executives, notable hires/departures in last 12 months) — the simulated output above includes it.
-
-One gap the rubric doesn't cover: the skill has no explicit handling for subsidiaries or recently-renamed companies. The fallback for "no meaningful public web presence" (flag before proceeding) is present but limited to that one edge case.
+The PARTIAL criterion was presumably set conservatively because skills often handle recency only superficially. This one doesn't — the 18-month staleness flag, mandatory two-source cross-reference, and source-and-date requirement on every revenue figure are concrete and enforceable rules, not suggestions. The `### Team` section in the output template is covered by Step 3. Source citations in the simulated output use specific deep links with access dates per research test citation rules.

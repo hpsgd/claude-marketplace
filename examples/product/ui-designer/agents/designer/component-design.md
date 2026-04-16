@@ -113,6 +113,8 @@ Extend (Card) + Create (WizardProgress)
 - [~] PARTIAL: Loading states for async operations — the States table requires a Loading state entry: "Awaiting data/action | Skeleton or spinner, not interactive." The definition requires the Loading state to be documented but does not require breaking it down per async operation (workspace submit vs integration connect vs template load). Criterion prefix is PARTIAL — maximum 0.5 points.
 - [x] PASS: Structured component spec format — the Output Format section specifies named sections: Purpose, Pattern Decision, Props, States, Responsive, Accessibility, Usage Examples, Design Notes. Prose descriptions without this structure do not satisfy the format requirement.
 
-## Notes
+### Notes
 
-The loading states criterion is scored PARTIAL per its prefix. The agent definition requires a Loading state in the states table, which covers the general case. It does not require per-async-operation loading state breakdown. A multi-step wizard with three distinct async operations (workspace create, integration OAuth, template fetch) could benefit from per-step loading states in the definition, but this is not currently required. The definition's coverage is real but not as specific as the criterion asks for.
+The loading states criterion scores PARTIAL per its prefix. The agent definition requires a Loading state in the states table, which covers the general case. It does not require per-async-operation loading state breakdown. A multi-step wizard with three distinct async operations (workspace create, integration OAuth, template fetch) could benefit from per-step loading states in the definition, but this is not currently required.
+
+The Pre-Flight structure is the agent's strongest feature. Reuse/Extend/Create with mandatory justification for Create prevents unnecessary component proliferation. The Decision Checkpoints add enforcement: "Creating a new component when a similar one exists" is an explicit STOP trigger.

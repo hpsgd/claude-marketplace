@@ -22,25 +22,132 @@ Review the write-adr skill definition and verify it produces complete, honest AD
 
 ## Output
 
-**Simulated structural assessment:**
+The write-adr skill, applied to a representative scenario (documenting the decision to use PostgreSQL BYTEA for binary content storage), would produce the following ADR.
 
-The write-adr SKILL.md specifies the MADR format and documents all key sections: frontmatter with status, date, decision-makers, consulted, and informed fields; title rule requiring both problem and solution; context and problem statement; decision drivers; considered options (≥2, including do-nothing); decision outcome with WHY in terms of drivers; consequences with positive/negative/risks categories; confirmation with measurable criteria; and pros/cons per option using Good/Bad/Neutral structure. The quality checklist is present as an explicit section. Anti-patterns are listed in a table. File naming and target directory are specified in the Output section.
+---
+
+```markdown
+---
+status: "proposed"
+date: 2026-04-16
+decision-makers: [Platform Architect, Backend Lead]
+consulted: [Infrastructure Lead, Security Team]
+informed: [Engineering Team, Product Engineering]
+---
+
+# ADR-0005: Use PostgreSQL BYTEA for binary content storage
+
+## Context and Problem Statement
+
+The platform currently stores uploaded binary content (PDF reports, CSV exports) as
+file paths to an S3-like object store. We need to decide how to store binary content
+produced during processing — specifically intermediate pipeline artefacts that are
+<5MB each, short-lived (24-hour TTL), and accessed exclusively within a single
+transaction context. The question is whether to use PostgreSQL BYTEA (inline storage)
+or continue routing all binary content through the object store.
+
+## Decision Drivers
+
+- Access latency: binary content is read immediately after write in the same request
+- Operational complexity: reducing the number of external service dependencies reduces
+  failure modes
+- Content size: artefacts average 500KB–2MB; all under the BYTEA practical limit
+- Retention: 24-hour TTL makes object store lifecycle rules awkward
+- Consistency: transactional atomicity — if the pipeline fails, orphaned S3 objects
+  are hard to clean up
+
+## Considered Options
+
+1. PostgreSQL BYTEA inline storage
+2. Object store (S3/MinIO) — status quo
+3. Do nothing — keep routing all binary content through the object store
+
+## Decision Outcome
+
+Chosen option: **Option 1 — PostgreSQL BYTEA inline storage**, because the content is
+small, transactionally-scoped, and short-lived. The operational simplicity of keeping
+the data in the same transaction context outweighs the object store benefits, which
+are designed for large, persistent, independently-accessed content.
+
+## Consequences
+
+**Positive:**
+- No orphaned S3 objects after pipeline failures — BYTEA rolls back with the transaction
+- Eliminates a network round-trip for content that is written and read in the same request
+- Simpler local development — no object store emulator needed
+
+**Negative:**
+- PostgreSQL row sizes increase; large TOAST tables can slow vacuum and index scans if
+  content exceeds the 8KB TOAST threshold frequently
+- Migration path is harder if content size requirements grow beyond the practical BYTEA
+  limit (~1GB per row)
+- pg_dump backup sizes increase proportionally with stored binary content
+
+**Risks:**
+- If average artefact size grows to >5MB, query performance will degrade and this
+  decision should be revisited
+
+## Confirmation
+
+- Review date: 2027-01-01 (or if average binary content size exceeds 3MB — monitor
+  via pg_column_size queries on the artefacts table monthly)
+- Metric: `SELECT avg(pg_column_size(content)) FROM pipeline_artefacts` — alert if
+  median exceeds 2MB
+- Automated: pg_stat_user_tables on the artefacts table; vacuum duration alert in
+  monitoring
+
+## Pros and Cons of Options
+
+### Option 1: PostgreSQL BYTEA inline storage
+
+- Good, because transactional atomicity — no orphaned files on rollback
+- Good, because eliminates network dependency for transactionally-scoped content
+- Bad, because TOAST overhead increases as content grows
+- Bad, because makes horizontal PostgreSQL sharding harder in future
+- Neutral, because BYTEA supports up to ~1GB; current envelope is 2MB
+
+### Option 2: Object store (S3/MinIO) — status quo
+
+- Good, because proven pattern for binary storage already in use elsewhere
+- Good, because scales to any content size without schema changes
+- Bad, because orphaned objects accumulate if pipeline fails mid-transaction
+- Bad, because adds a network round-trip within a synchronous request
+- Neutral, because lifecycle rules can handle TTL but require separate configuration
+
+### Option 3: Do nothing
+
+- Good, because no migration work
+- Bad, because consistency problem (S3 artefacts not rolled back with transactions)
+  persists
+- Bad, because adds external dependency for a use case that doesn't need it
+```
+
+---
 
 ## Evaluation
-
-- [x] PASS: Skill uses MADR format and requires all key sections — frontmatter (status, date, decision-makers, consulted, informed), context, decision drivers, considered options, decision outcome, consequences, confirmation, and pros/cons are all present as named sections with explicit instructions
-- [x] PASS: Skill requires title to describe both problem and solution — SKILL.md lines 58-61 state this requirement with good/bad examples ("ADR-0005: Use PostgreSQL BYTEA for binary content storage" vs "ADR-0005: Database decision")
-- [x] PASS: Skill mandates ≥2 options including do-nothing — SKILL.md states "At least 2 options. Always include 'do nothing / status quo' if applicable"
-- [x] PASS: Skill requires ≥1 negative consequence with explicit honesty check — Consequences section specifies "Negative: What gets worse (every decision has downsides — if you can't name one, you haven't thought hard enough)"; quality checklist repeats the honesty check
-- [x] PASS: Skill requires measurable confirmation criteria — Confirmation section lists review date, metric to watch, automated test or CI check, and conditions that would trigger revisiting
-- [x] PASS: Skill provides quality checklist — "Quality Checklist" section is present with 9 items covering all major ADR elements; the heading is a clear pre-delivery gate
-- [x] PASS: Skill lists all four required anti-patterns — anti-patterns table explicitly names Retroactive ADR, No alternatives, Strawman options, and Orphaned ADR (listed as "Orphaned ADR: No confirmation criteria")
-- [x] PASS: Skill specifies file naming and target directory — Output section specifies `NNNN-kebab-case-title.md` format with example, and targets `docs/adr/` with fallback locations
 
 **Verdict:** PASS
 **Score:** 8/8 criteria met (100%)
 **Evaluated:** 2026-04-16
 
+## Results
+
+- [x] PASS: Skill uses MADR format and requires all key sections — the SKILL.md "Step 3: Write the ADR" section lists all sections as "(none optional)": frontmatter (status, date, decision-makers, consulted, informed), Context and Problem Statement, Decision Drivers, Considered Options, Decision Outcome, Consequences (positive/negative/risks), Confirmation, and Pros and Cons of Options. Every section is explicitly required with instructions.
+
+- [x] PASS: Skill requires title to describe both problem and solution — title rule is stated explicitly with good/bad examples: "Good: 'ADR-0005: Use PostgreSQL BYTEA for binary content storage'" vs "Bad: 'ADR-0005: Database decision'" (too vague) and "Bad: 'ADR-0005: We should use PostgreSQL'" (no problem stated).
+
+- [x] PASS: Skill mandates ≥2 options including do-nothing — Considered Options section instruction: "At least 2 options. Always include 'do nothing / status quo' if applicable."
+
+- [x] PASS: Skill requires ≥1 negative consequence with explicit honesty check — Consequences section: "Negative: What gets worse (every decision has downsides — if you can't name one, you haven't thought hard enough)." Quality Checklist repeats this: "Consequences include at least one negative (honesty check)."
+
+- [x] PASS: Skill requires measurable confirmation criteria — Confirmation section lists four specific mechanisms: a review date, a metric to watch, an automated test or CI check, and conditions that would trigger revisiting. The Quality Checklist checks "Confirmation criteria are measurable or observable."
+
+- [x] PASS: Skill provides quality checklist — "Quality Checklist" section is present with 9 items covering title, context, options count, decision drivers specificity, consequences honesty, risks, confirmation measurability, rejected options fairness, and related ADR links. Framed as a pre-delivery gate ("Before declaring the ADR complete").
+
+- [x] PASS: Skill lists all four required anti-patterns — Anti-Patterns table names: "Retroactive ADR," "No alternatives," "Strawman options," and "Orphaned ADR" (described as "No confirmation criteria"). All four present.
+
+- [x] PASS: Skill specifies file naming and target directory — Output section: "File naming: `NNNN-kebab-case-title.md` (e.g., `0005-use-postgresql-bytea-for-content.md`)" and target "the project's ADR directory" with fallback list: `docs/adr/`, `docs/architecture-decisions/`, `docs/decisions/`. Creates `docs/adr/` if none exists.
+
 ## Notes
 
-Strong definition. The quality checklist doesn't use the phrase "before declaring complete" verbatim but functions as a pre-delivery gate. The anti-patterns table omits one anti-pattern from the SKILL.md criteria ("orphaned ADR with no confirmation criteria") — however this is present under the "Orphaned ADR" row. One minor gap: the skill references a template file at `${CLAUDE_PLUGIN_ROOT}/templates/adr-template.md` but that file would need to exist for the full MADR structure to be applied.
+The only notable gap is that the SKILL.md references a template file at `${CLAUDE_PLUGIN_ROOT}/templates/adr-template.md` which would need to exist in the plugin's `templates/` directory. If that file is missing, Step 3 falls back to the inline section instructions, which are complete enough to stand alone. The quality checklist includes "Rejected options have fair representation (not strawmen)" — a nuance beyond the strawman anti-pattern, catching cases where technically-presented options are still unrealistic.

@@ -31,12 +31,12 @@ Scenario: An architect is questioning whether the team's assumption that REST AP
 |---|---|---|
 | HTTP as transport protocol | Hard constraint | Platform requirement — all consumers use HTTP |
 | Request routing must be deterministic | Hard constraint | Distributed system requirement |
-| Breaking changes cannot propagate to consumers simultaneously | Hard constraint | Physical constraint — cannot atomically update all consumers |
+| Breaking changes cannot propagate to all consumers simultaneously | Hard constraint | Physical constraint — cannot atomically update all consumers |
 | External partners require advance notice of breaking changes | Soft constraint | SLA convention, not an HTTP requirement |
 | Version signalled in URL path (/v1/, /v2/) | Assumption | Industry convention adopted without evaluation; HTTP has header-based versioning alternatives |
 | "That's how APIs work" | Assumption | No evidence — convention masquerading as fact |
 | Clients will break on any schema change | Assumption | Believed true but depends on change type; additive changes are safe under most JSON parsers |
-| All consumers need the same version simultaneously | Assumption | Unverified — 3 internal services may be on different release cadences |
+| All consumers need the same version simultaneously | Assumption — unverified | Unverified — 3 internal services may be on different release cadences |
 | We need multiple concurrent versions running | Assumption — unverified | Currently true? How long do we maintain v1 after v2 ships? |
 
 ---
@@ -64,11 +64,9 @@ Scenario: An architect is questioning whether the team's assumption that REST AP
 - Use additive-only API evolution — add fields, never remove or rename without a deprecation window
 - Use deprecation notices in response headers — `Deprecation: true`, `Sunset:` per RFC 8594
 - Eliminate URL versioning entirely — `/api/users/{id}` is the resource; the contract evolves additively
-- If a breaking change truly becomes necessary — create a new endpoint for the new resource shape rather than
-  wholesale versioning the entire API
+- If a breaking change truly becomes necessary — create a new endpoint for the new resource shape rather than wholesale versioning the entire API
 
-**Cross-domain insight:** How does a relational database handle schema evolution? Additive migrations are
-non-breaking. Removal migrations are breaking. The principle is identical.
+**Cross-domain insight:** How does a relational database handle schema evolution? Additive migrations are non-breaking. Removal migrations are breaking. The principle is identical.
 
 ---
 
@@ -93,17 +91,15 @@ non-breaking. Removal migrations are breaking. The principle is identical.
 **Score:** 7.5/8 (94%)
 **Evaluated:** 2026-04-16
 
-## Results
+- [x] PASS: Component inventory classifies all constraints with hard/soft/assumption and evidence — Step 1 defines a table with exactly three classification types (Hard constraint, Soft constraint, Assumption) and an Evidence column. The definition states "For each assumption, state: What evidence would prove this wrong?" and every row must have evidence.
+- [x] PASS: "That's how APIs work" classified as assumption — Step 1's guidance explicitly states "'We've always done it this way' → assumption." This maps directly to the prompt's "that's how APIs work" and "we've always done it this way."
+- [x] PASS: Challenge ledger addresses every soft constraint and assumption — Step 2 states "Take every soft constraint and assumption from Step 1 and pressure-test it." The Rules section states "Assumptions MUST be challenged." The table requires verdict (Keep/Remove/Test) and impact-if-removed for every item.
+- [x] PASS: Step 3 reconstruction starts from verified truths only — Step 3 mandates "Starting from ONLY the verified truths and hard constraints." The Rules section states "Design as if no prior solution existed. Ignore current form — focus on function." Both are explicit and unambiguous.
+- [x] PASS: Step 4 delta analysis with assumption-removal mapping — Step 4 defines a delta table with `Aspect / Current / Reconstructed / Why different` columns where the "Why different" column explicitly links each difference to which assumption removal enabled it.
+- [x] PASS: Output uses defined template with all four sections — the Output Format section defines Component Inventory, Challenge Ledger, Reconstruction, and Delta Analysis (plus Recommendations) as mandatory sections. All four content sections are present.
+- [~] PARTIAL: Migration assessment distinguishes quick wins from authority changes — Step 4's migration assessment template defines exactly three categories: "Quick wins," "Requires validation," "Requires authority." These three are defined in the definition's Step 4 template explicitly. PARTIAL ceiling applies per criterion prefix regardless of definition quality.
+- [x] PASS: Reconstruction does not conclude "change nothing" — Step 3 Rules state "If the reconstruction looks identical to the current approach, you haven't challenged enough assumptions — return to Step 2." This is an explicit enforcement mechanism that prevents a null output.
 
-- [x] PASS: Component inventory classifies all constraints with hard/soft/assumption and evidence — Step 1 defines a table with exactly these three classification types plus an Evidence column; every row must have evidence
-- [x] PASS: "That's how APIs work" classified as assumption — Step 1's guidance explicitly states "'We've always done it this way' → assumption"; this maps directly to the prompt's inherited convention
-- [x] PASS: Challenge ledger addresses every soft constraint and assumption — Step 2 states "Take every soft constraint and assumption from Step 1 and pressure-test it." Rules section states "Assumptions MUST be challenged." The table requires verdict (Keep/Remove/Test) and impact-if-removed
-- [x] PASS: Step 3 reconstruction starts from verified truths only — Step 3 mandates "Starting from ONLY the verified truths and hard constraints"; Rules state "Design as if no prior solution existed. Ignore current form — focus on function"
-- [x] PASS: Step 4 delta analysis with assumption-removal mapping — Step 4 defines a delta table with `Aspect / Current / Reconstructed / Why different` columns; the "Why different" column explicitly links each difference to which assumption removal enabled it
-- [x] PASS: Output uses defined template with all four sections — Output Format section defines Component Inventory, Challenge Ledger, Reconstruction, Delta Analysis, and Recommendations; all four content sections are present in the definition
-- [~] PARTIAL: Migration assessment distinguishes quick wins from authority changes — Step 4's migration assessment template has exactly three categories: "Quick wins", "Requires validation", "Requires authority." This is well-defined. PARTIAL ceiling applies per criterion prefix.
-- [x] PASS: Reconstruction does not conclude "change nothing" — Step 3 Rules state "If the reconstruction looks identical to the current approach, you haven't challenged enough assumptions — return to Step 2." This is an explicit enforcement mechanism
+### Notes
 
-## Notes
-
-The first-principles skill is logically coherent. The chain from Step 1 (classify) → Step 2 (challenge) → Step 3 (rebuild from truths only) → Step 4 (delta) is tight and each step builds on the previous. The cross-domain analogy requirement in Step 3 is noted as optional ("Cross-domain analogies are not mandatory but often unlock breakthroughs") — the criterion doesn't test for it but the suggestion is there. One gap: the skill says "If a well-established framework exists, use it" in Step 3 but doesn't name any first-principles frameworks, leaving selection to agent judgment.
+The first-principles skill has a logically tight chain: Step 1 (classify) → Step 2 (challenge) → Step 3 (rebuild from truths only) → Step 4 (delta). Each step builds directly on the previous. The "return to Step 2" rule if reconstruction looks identical is a self-correcting mechanism. One gap: Step 3 says "Cross-domain analogies are not mandatory but often unlock breakthroughs" — the definition makes the cross-domain analogy optional, so an output without one would not fail the skill. The three migration assessment categories (quick wins, requires validation, requires authority) are clearly defined and match the criterion.

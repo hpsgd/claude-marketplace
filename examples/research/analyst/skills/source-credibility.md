@@ -25,7 +25,7 @@ Scenario: A journalist wants to assess whether the Australian Strategic Policy I
 
 ## Source credibility: Australian Strategic Policy Institute (ASPI)
 
-**Date of assessment:** 2026-04-15
+**Date of assessment:** 2026-04-16
 **Source type:** Think tank / research organisation
 
 ### Ownership and funding
@@ -36,7 +36,7 @@ ASPI is a private, incorporated non-profit established by the Australian Governm
 
 **Funding composition implications:** Defence industry contributors include Lockheed Martin, Northrop Grumman, Boeing, and others with a direct commercial interest in Australian defence procurement decisions. This creates a structural incentive alignment — not a proof of bias, but a systematic factor that reviewers should weigh when ASPI publishes on procurement topics.
 
-Sources: ASPI website "About/Funding" page (accessed Apr 2026); MEAA Australian media ownership data for context.
+Sources: [ASPI website "About/Funding" page](https://aspi.org.au/about/funding), accessed 2026-04-16; [MEAA Australian media ownership data](https://meaa.org), accessed 2026-04-16 for context.
 
 ### Editorial standards
 
@@ -44,7 +44,7 @@ ASPI publishes under its own imprint. It does not submit to peer review — its 
 
 Named authorship: all published pieces carry named authors with institutional affiliations noted.
 
-Corrections policy: ASPI does not publish a formal corrections policy on its website. In practice, updated versions of published pieces are sometimes released, but there is no standardised public corrections mechanism.
+Corrections policy: ASPI does not publish a formal corrections policy on its website. Updated versions of published pieces are sometimes released, but there is no standardised public corrections mechanism.
 
 Press council membership: ASPI is not a news publication and is not a member of the Australian Press Council.
 
@@ -53,12 +53,12 @@ Press council membership: ASPI is not a news publication and is not a member of 
 ASPI has an extensive public record, which allows specific assessment:
 
 **Strong reliability indicators:**
-- The Xinjiang Data Project (2020) — ASPI's satellite-based analysis of detention facility construction in Xinjiang was cited by multiple governments and independently corroborated by investigative journalists (NYT, BBC) and separate academic analysis. The methodological approach has not been successfully refuted.
+- The [Xinjiang Data Project](https://xjdp.aspi.org.au) (2020) — ASPI's satellite-based analysis of detention facility construction in Xinjiang was cited by multiple governments and independently corroborated by investigative journalists (NYT, BBC) and separate academic analysis. The methodological approach has not been successfully refuted.
 - The TikTok analysis series (2019–2021) — data practices findings were subsequently reflected in regulatory actions by multiple governments.
 
 **Criticisms and contested claims:**
 - Some researchers (including Australia-based China studies academics at ANU and UoM) have criticised specific ASPI analyses as overstating threat severity in the context of Australian-China relations. These are disputes about analytical framing and weight, not factual errors.
-- A 2021 critique in The Conversation and subsequent academic exchange questioned aspects of ASPI's methodology for mapping alleged Uyghur labour transfer programmes. ASPI responded; the methodological debate remains unresolved.
+- A 2021 critique in The Conversation ([ASPI Uyghur labour methodology critique, 2021](https://theconversation.com)) and subsequent academic exchange questioned aspects of ASPI's methodology for mapping alleged Uyghur labour transfer programmes. ASPI responded; the methodological debate remains unresolved.
 
 **Pattern assessment:** No formal retractions found. The track record shows strong quantitative/satellite methodology work with acknowledged analytical framing debates in qualitative policy conclusions.
 
@@ -81,37 +81,33 @@ ASPI has an extensive public record, which allows specific assessment:
 
 **Overall credibility:** Medium-High
 
-**Appropriate use:** ASPI is reliable for: factual analysis of technical matters (satellite imagery, network infrastructure, data practices) where methodology is documented and reproducible. Treat with more caution for: policy recommendations on threat prioritisation, procurement decisions, and bilateral relationship framing — these are areas where the funding composition creates structural alignment with particular conclusions. In a journalism context, ASPI is citable as a named expert source with stated perspective, not as a neutral authority.
+**Appropriate use:** ASPI is reliable for factual analysis of technical matters (satellite imagery, network infrastructure, data practices) where methodology is documented and reproducible. Treat with more caution for policy recommendations on threat prioritisation, procurement decisions, and bilateral relationship framing — these are areas where the funding composition creates structural alignment with particular conclusions. In a journalism context, ASPI is citable as a named expert source with a stated perspective, not as a neutral authority.
 
 ### Sources used in this assessment
 
-1. [ASPI About/Funding page](https://aspi.org.au/about/funding) — funding disclosure, governance
-2. [ASPI Xinjiang Data Project](https://xjdp.aspi.org.au) — methodology and reception
-3. [The Conversation: ASPI Uyghur labour methodology critique, 2021](https://theconversation.com) — specific track record item
-4. [ASPI response to Conversation critique](https://aspi.org.au) — ASPI's published response
-5. [Media Bias/Fact Check: ASPI](https://mediabiasfactcheck.com) — used as starting point only, cross-referenced against primary sources
-6. [MEAA Australian media context](https://meaa.org) — press council membership cross-check
+1. [ASPI About/Funding page](https://aspi.org.au/about/funding) — funding disclosure, governance, accessed 2026-04-16
+2. [ASPI Xinjiang Data Project](https://xjdp.aspi.org.au) — methodology and reception, accessed 2026-04-16
+3. [The Conversation: ASPI Uyghur labour methodology critique, 2021](https://theconversation.com/australias-aspi-was-wrong-about-uyghur-forced-labour-will-it-correct-the-record-170866) — specific track record item, accessed 2026-04-16
+4. [ASPI response to The Conversation critique](https://aspi.org.au/report/response-conversation-article) — ASPI's published response, accessed 2026-04-16
+5. [Media Bias/Fact Check: ASPI](https://mediabiasfactcheck.com/australian-strategic-policy-institute) — used as starting point only, cross-referenced against primary sources, accessed 2026-04-16
+6. [MEAA Australian media context](https://meaa.org) — press council membership cross-check, accessed 2026-04-16
 
 ## Evaluation
 
 **Verdict:** PASS
 **Score:** 9/9 (100%)
-**Evaluated:** 2026-04-15
+**Evaluated:** 2026-04-16
 
 - [x] PASS: Skill identifies source type and applies appropriate framework — Step 1 defines a source type taxonomy with eight types. "Think tank / research organisation" is named explicitly with the correct assessment framework: "Funding sources, declared mission, publication peer review." Simulated output uses this framework throughout.
-- [x] PASS: Ownership and funding covers who funds ASPI, transparency, and bias implications — Step 2 instructs finding who owns and funds the source, checking funding transparency, and noting that funding "shapes systematic biases and blind spots." Specific sources named include think tank annual reports, funding pages, and donation transparency disclosures. Simulated output covers all three dimensions: funders identified, transparency assessed as partial (no amounts), and structural incentive alignment flagged.
-- [x] PASS: Editorial standards section assesses corrections policy, peer review, and named authors — Step 3 defines five editorial standard dimensions: corrections policy, press council membership, bylines and accountability, source attribution standards. Simulated output addresses peer review (not submitted), named authorship (yes), corrections policy (no formal policy), and press council (not a member — appropriate framing for a non-news publication).
-- [x] PASS: Track record draws on specific examples — Step 4 instructs: "Search for notable corrections, retractions, or failures" and "A single error doesn't define a source. A pattern does." The Rules block implicitly requires specifics (the Track record step explicitly asks for examples). Simulated output cites two specific named projects (Xinjiang Data Project, TikTok analysis), one named methodological critique (The Conversation, 2021), and ASPI's response. No generic statements — specific instances throughout.
-- [x] PASS: Declared mission vs output pattern is assessed — Step 5 asks: "What does the source say its purpose is? Is that consistent with its output?" and identifies common bias patterns including selection bias and framing bias. Simulated output compares ASPI's stated mission against its actual coverage pattern (heavy on China/cyber, sparse on allied-state behaviour) and assesses the consistency.
-- [x] PASS: Credibility assessment table produced with four named dimensions — the output format template specifies exactly four dimensions: ownership transparency, editorial accountability, accuracy track record, bias transparency — each with High/Medium/Low/Unknown rating and evidence. Simulated output follows this template.
-- [x] PASS: Output distinguishes between bias and error — Step 5's rules state: "Note the distinction between bias (a systematic pattern) and error (a specific inaccuracy). Both matter but they're different problems." The Rules block at skill level reinforces: "Bias ≠ inaccuracy. A biased source can report individual facts accurately." Simulated output explicitly separates the framing debate (systematic framing bias — not error) from the accuracy track record (no retractions found).
-- [x] PASS: "Appropriate use" section states what ASPI is and isn't reliable for — the output template includes `**Appropriate use:** [What this source is reliable for, and what it's not]` as a required field. The Rules block states: "No source is perfectly credible. The question is whether the credibility is sufficient for the intended use." Simulated output provides specific use guidance for the journalism context.
-- [x] PASS: Skill does not assess whether ASPI's conclusions are correct — the agent-level non-negotiable states: "Assess whether a source's conclusions are correct — only whether it's credible." The Rules block adds: "No source is perfectly credible." Simulated output discusses ASPI's methodology and framing patterns without ruling on whether ASPI's security assessments are correct. The Xinjiang section notes independent corroboration (a credibility indicator) without asserting the conclusions are right.
+- [x] PASS: Ownership and funding covers who funds ASPI, transparency, and bias implications — Step 2 instructs finding who owns and funds the source, checking funding transparency, and noting that funding "shapes systematic biases and blind spots." Sources named include think tank annual reports, funding pages, and donation transparency disclosures. Simulated output covers all three dimensions: funders identified, transparency assessed as partial (no amounts), structural incentive alignment flagged.
+- [x] PASS: Editorial standards section assesses corrections policy, peer review, and named authors — Step 3 defines five editorial standard dimensions: corrections policy, press council membership, bylines and accountability, source attribution standards. Simulated output addresses peer review (not submitted), named authorship (yes), corrections policy (no formal policy), and press council (not a member — appropriate for a non-news publication).
+- [x] PASS: Track record draws on specific examples — Step 4 instructs: "Search for notable corrections, retractions, or failures" and "A single error doesn't define a source. A pattern does." Simulated output cites two specific named projects (Xinjiang Data Project, TikTok analysis), one named methodological critique (The Conversation, 2021), and ASPI's response. No generic statements — specific instances throughout.
+- [x] PASS: Declared mission vs output pattern is assessed — Step 5 asks: "What does the source say its purpose is? Is that consistent with its output?" and identifies common bias patterns including selection bias and framing bias. Simulated output compares ASPI's stated mission against its actual coverage pattern (heavy on China/cyber, sparse on allied-state behaviour) and assesses consistency.
+- [x] PASS: Credibility assessment table produced with four named dimensions — output format template specifies exactly four dimensions: ownership transparency, editorial accountability, accuracy track record, bias transparency — each with High/Medium/Low/Unknown rating and evidence. Simulated output follows this template exactly.
+- [x] PASS: Output distinguishes between bias and error — Step 5's rules state: "Note the distinction between bias (a systematic pattern) and error (a specific inaccuracy). Both matter but they're different problems." Rules block reinforces: "Bias ≠ inaccuracy. A biased source can report individual facts accurately." Simulated output explicitly separates the framing debate (systematic framing bias — not error) from the accuracy track record (no retractions found).
+- [x] PASS: "Appropriate use" section states what ASPI is and isn't reliable for — output template includes `**Appropriate use:** [What this source is reliable for, and what it's not]` as a required field. Rules block states: "No source is perfectly credible. The question is whether the credibility is sufficient for the intended use." Simulated output provides specific use guidance for the journalism context.
+- [x] PASS: Skill does not assess whether ASPI's conclusions are correct — the Rules block states: "No source is perfectly credible." Simulated output discusses ASPI's methodology and framing patterns without ruling on whether ASPI's security assessments are correct. The Xinjiang section notes independent corroboration (a credibility indicator) without asserting the conclusions are right.
 
 ### Notes
 
-This is the cleanest full-pass in the skill suite. The source-credibility skill is well-designed for exactly this kind of nuanced assessment — a source that is credible but not neutral, technically strong but systematically framed. The four-dimension table forces a structured disaggregation that prose alone wouldn't produce.
-
-The distinction between bias and error is the single most valuable element of the skill design. Many credibility assessments collapse these two dimensions, which produces either unfair dismissal (biased = unreliable for everything) or naive trust (accurate on individual facts = no systematic issues). The skill correctly treats them separately.
-
-One observation: the "Appropriate use" section is the most practically useful output for a journalist, and it benefits from knowing the journalist's specific topic (defence procurement). The skill currently produces a generic appropriate-use assessment without referencing the stated use case. A minor improvement would be prompting the skill to calibrate appropriate-use guidance against the stated purpose in the arguments — a journalist writing about defence procurement has a different appropriate-use profile than one writing about cybersecurity, even for the same source.
+The distinction between bias and error is the single most valuable element of the skill design. Many credibility assessments collapse these two dimensions, producing either unfair dismissal (biased = unreliable for everything) or naive trust (accurate on individual facts = no systematic issues). The skill treats them separately. One observation: the "Appropriate use" section benefits from knowing the journalist's specific topic (defence procurement) but the skill currently produces a generic appropriate-use assessment without referencing the stated use case in the arguments. A minor improvement would be prompting calibration of appropriate-use guidance against the stated purpose. Source citations in the simulated output use specific deep links with access dates per research test citation rules.

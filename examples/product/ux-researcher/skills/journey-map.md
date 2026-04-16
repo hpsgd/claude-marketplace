@@ -66,10 +66,6 @@ Evidence gaps: Pre-awareness stage has no data — mapped as hypothesis.
 
 **Stage 2: Evaluation (Evidence-based — sales call recordings)**
 
-**User goal:** Confirm Clearpath can replace their current reporting process without a painful migration.
-**Duration:** 1-3 weeks
-**Evidence basis:** Sales call recordings (5)
-
 | Element | Detail |
 |---|---|
 | **Touchpoints** | Demo call, free trial, competitor comparison, internal champion deck |
@@ -80,8 +76,6 @@ Evidence gaps: Pre-awareness stage has no data — mapped as hypothesis.
 | **Opportunities** | Include IT security FAQ in trial welcome; show a "team size like yours" setup case |
 
 **Wait time:** IT security review — avg 2-3 weeks. Often kills trial momentum.
-
-**Drop-off risk:** High — 34% of trials go cold during IT approval period.
 
 **[Stages 3-5 continue with same structure through Onboarding, Core Usage, Daily Use]**
 
@@ -113,20 +107,26 @@ Evidence gaps: Pre-awareness stage has no data — mapped as hypothesis.
 ## Evaluation
 
 **Verdict:** PASS
-**Score:** 8/8 criteria met (100%)
+**Score:** 7.5/8 criteria met (94%)
 **Evaluated:** 2026-04-16
 
 ## Results
 
-- [x] PASS: Scope with concrete start and end — Step 1 is mandatory and requires a scope table with "Start point" and "End point" explicitly defined as "concrete events, not states." The rules reinforce this: "Start and end points must be concrete events."
+- [x] PASS: Scope with concrete start and end — Step 1 is mandatory and requires a scope table with "Start point" and "End point" explicitly defined. The rules state: "Start and end points must be concrete events, not states." The output format requires a completed scope table before any mapping begins.
 - [x] PASS: Evidence sources before mapping — Step 2 is a mandatory evidence-gathering step that must be completed before any stage is mapped. Stages without data are explicitly required to be labelled "hypothesis." The rules state: "If evidence is sparse, the journey map is a hypothesis to be validated, not a fact to be acted on."
-- [x] PASS: All four dimensions per stage — Step 3's mandatory stage template includes Actions, Thinking, Feeling, and Pain points as required table rows for every stage.
-- [x] PASS: Touchpoints and channels per stage — Step 3's stage template requires "Touchpoints" as an explicit field listing "every interaction point: website, app, email, docs, support, social media."
-- [x] PASS: Critical moments identified — Step 4 is a mandatory step dedicated to critical moments, requiring Moment of truth, Biggest drop-off, and Delight opportunity, each with evidence.
+- [x] PASS: All four dimensions per stage — Step 3's mandatory stage template includes Actions, Thinking, Feeling, and Pain points as required table rows for every stage. All four are listed in the template with no optional marking.
+- [x] PASS: Touchpoints and channels per stage — Step 3's stage template requires "Touchpoints" as an explicit field listing "every interaction point: website, app, email, docs, support, social media." This is a required row in the per-stage table.
+- [x] PASS: Critical moments identified — Step 4 is a mandatory step dedicated to critical moments, requiring Moment of truth, Biggest drop-off, and Delight opportunity, each with evidence. The definition requires all three.
 - [x] PASS: Recommendations linked to specific stages — Step 5's recommendations table template includes "Stage affected" as a required column. The rules state: "Opportunities must be specific" — generic UX advice is not permitted.
-- [x] PASS: Wait times as explicit steps — Step 2 (customer actions rules in service-blueprint, and Step 3 in journey-map) explicitly states "Include wait times as explicit steps — 'Customer waits for response (avg 4h)' is a real step." This is a required rule, not a suggestion. The criterion prefix is PARTIAL (ceiling 0.5) — awarded at ceiling.
-- [x] PASS: Valid YAML frontmatter — the SKILL.md file contains name, description, and argument-hint fields in its YAML frontmatter. All three are present.
+- [~] PARTIAL: Wait times as explicit steps — Step 3 explicitly states in its rules: "Include wait times as explicit steps — 'Customer waits for response (avg 4h)' is a real step." This is a required rule, not a suggestion. However, the criterion prefix is PARTIAL (ceiling 0.5) — awarded at ceiling.
+- [x] PASS: Valid YAML frontmatter — the SKILL.md file contains name, description, and argument-hint fields in its YAML frontmatter.
 
-## Notes
+### Notes
 
-Score 7.5/8 (93.75%) after applying the PARTIAL ceiling to criterion 7. The wait-times rule is explicitly stated in the journey-map skill (Step 3 rules: "Include wait times as explicit steps"), which is stronger coverage than the prior evaluation noted. The PARTIAL prefix caps that criterion at 0.5 regardless. The evidence-labelling requirement (hypothesis vs evidence-based per stage) is the skill's strongest design choice — it prevents journey maps from being presented as validated fact when they're built on limited data.
+Score: 7 PASS + 0.5 PARTIAL (wait times criterion, PARTIAL ceiling) = 7.5/8 = 93.75% → PASS verdict.
+
+The wait-times rule is explicitly stated in the SKILL.md Step 3 rules: "Include wait times as explicit steps." This is stronger coverage than a mere mention. The PARTIAL ceiling is the test author's constraint.
+
+The evidence-labelling requirement (hypothesis vs evidence-based per stage) is the skill's strongest design choice. It prevents journey maps from being presented as validated fact when built on limited data.
+
+The "Opportunities must be specific" rule is a meaningful anti-pattern guard. "Improve the onboarding" is not an opportunity; "Add a progress bar showing 3/5 steps completed" is. The definition enforces this distinction.

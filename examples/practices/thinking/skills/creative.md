@@ -38,80 +38,70 @@ Drop at step 3 is diagnostic. The wizard asks for commitment (create a project) 
 ### Step 2 — Reframes
 
 **Reframe 1 — As a user story:**
-"A team lead who needs to try the tool before committing, because they don't know if it fits their workflow, but
-currently they're asked to create a project before they've seen any feature work."
+"A team lead who needs to try the tool before committing, because they don't know if it fits their workflow, but currently they're asked to create a project before they've seen any feature work."
 
 **Reframe 2 — As a constraint:**
-"We can't ask users to create real content before they understand the tool, so what if we removed content creation
-from onboarding entirely?"
+"We can't ask users to create real content before they understand the tool, so what if we removed content creation from onboarding entirely?"
 
 **Reframe 3 — As an analogy:**
 "This is like a cooking class that requires you to buy all the ingredients before you've seen the recipe."
 
-**Selected reframe:** Reframe 2 (constraint removal) — opens the most creative space by challenging the assumption
-that onboarding must involve creating content.
+**Selected reframe:** Reframe 2 (constraint removal) — opens the most creative space by challenging the assumption that onboarding must involve creating content.
 
 ### Step 3 — Options
 
 #### Technique 1 — Inversion
-Remove the wizard entirely. Launch users into a pre-built demo workspace with sample projects and tasks populated.
-When ready, a sticky "Set up your real workspace" starts a 2-step setup.
+Remove the wizard entirely. Launch users into a pre-built demo workspace with sample projects and tasks populated. When ready, a sticky "Set up your real workspace" starts a 2-step setup.
 
 #### Technique 2 — Extreme scale
-Solo mode: for users who sign up without a team, skip invite-team entirely. Create a solo project template.
-Show individual value first, upsell team features once they've seen it.
+Solo mode: for users who sign up without a team, skip invite-team entirely. Create a solo project template. Show individual value first, upsell team features once they've seen it.
 
 #### Technique 3 — Remove constraints
-Templates-first: replace the blank canvas with 12 industry templates. Selection takes 10 seconds.
-User gets to "ah, this is how it works" in 90 seconds instead of 7 minutes.
+Templates-first: replace the blank canvas with 12 industry templates. Selection takes 10 seconds. User gets to "ah, this is how it works" in 90 seconds instead of 7 minutes.
 
 #### Technique 4 — Cross-domain transfer
-Game tutorial model: guided overlay walks user through adding one task, assigning it, moving it to Done.
-No form. No wizard. Just the product teaching itself through use.
+Game tutorial model: guided overlay walks user through adding one task, assigning it, moving it to Done. No form. No wizard. Just the product teaching itself through use.
 
 #### Technique 5 — Worst idea first
-Make onboarding take 20 minutes: 30-question assessment (team size, industry, tools, pain points).
-The kernel: the customisation is the value. Strip to 5 questions and the workspace feels curated, not generic.
+Make onboarding take 20 minutes: 30-question assessment. The kernel: the customisation is the value. Strip to 5 questions and the workspace feels curated, not generic.
 
 ### Step 4 — Evaluation
 
 #### Option A: "Live Demo" — demo workspace on first login
-**What's genuinely good:** Eliminates the creation-commitment problem. Users see value before committing. Zero
-cognitive load at start.
+**What's genuinely good about it:** Eliminates the creation-commitment problem. Users see value before committing.
 **Biggest risk:** Users explore and don't transition to real workspace. Sticky banner may not create urgency.
 **Effort:** High — 4-6 weeks to build and maintain a compelling demo dataset.
 **Reversibility:** Easy — A/B testable alongside existing wizard.
 
 #### Option B: "Solo First" — team-optional onboarding
-**What's genuinely good:** Surgical fix. Removes one blocking step for solo signups. Ships in a sprint.
-**Biggest risk:** Team collaboration is the core value prop. Solo users may not convert to paying customers.
+**What's genuinely good about it:** Surgical fix. Removes one blocking step for solo signups. Ships in a sprint.
+**Biggest risk:** Solo users may not convert to paying customers — team collaboration is the core value prop.
 **Effort:** Low — 1 sprint.
 **Reversibility:** Trivially reversible.
 
 #### Option C: "Template Sprint" — industry templates replace blank canvas
-**What's genuinely good:** Blank canvas paralysis is documented. Templates are a proven solution.
+**What's genuinely good about it:** Blank canvas paralysis is documented. Templates are a proven solution.
 **Biggest risk:** Templates are someone else's project structure. Users may dismiss as "not relevant."
 **Effort:** Medium — 2-3 weeks.
 **Reversibility:** Easy — templates coexist with blank project creation.
 
 #### Option D: "Game Tutorial" — guided task in the real UI
-**What's genuinely good:** Learns by doing. Creates muscle memory before commitment.
+**What's genuinely good about it:** Learns by doing. Creates muscle memory before commitment.
 **Biggest risk:** Tutorial ends and blank canvas problem returns.
 **Effort:** Medium — 3-4 weeks for guided overlay system.
 **Reversibility:** Easy.
 
 #### Option E: "Personalised Workspace" — 5-question setup assessment
-**What's genuinely good:** Customisation creates ownership. User sees themselves in the tool from minute one.
-**Biggest risk:** 5 questions may be enough friction to move the drop-off point earlier.
-**Effort:** High — generating meaningful workspace variations requires significant logic.
+**What's genuinely good about it:** Customisation creates ownership. User sees themselves in the tool from minute one.
+**Biggest risk:** 5 questions may move the drop-off point earlier.
+**Effort:** High.
 **Reversibility:** Moderate.
 
 ### Recommended path
 
 **Recommendation:** Option B (Solo First) + Option C (Template Sprint) in sequence
 
-**What to do first:** This week, add "Skip for now" to the invite-team step and measure drop-off at step 3 in
-the next cohort. If it improves, ship Option B. If not, Template Sprint is the next experiment.
+**What to do first:** This week, add "Skip for now" to the invite-team step and measure drop-off at step 3 in the next cohort. If it improves, ship Option B. If not, Template Sprint is the next experiment.
 
 **What to watch for:** If skip rate on invite-team exceeds 60%, solo-first becomes a permanent design decision.
 
@@ -121,8 +111,7 @@ the next cohort. If it improves, ship Option B. If not, Template Sprint is the n
 
 **Wild card: "Abandon the wizard, let the product teach itself"**
 Why it seems wrong: Users will be confused with no guidance. Support tickets will spike.
-Why it might be right: Wizards optimise for completion of a flow, not understanding. Users who complete the wizard
-and then churn are just as lost as those who abandon it. The wizard covers up a discoverability problem.
+Why it might be right: Wizards optimise for completion of a flow, not understanding. Users who complete the wizard and then churn are just as lost as those who abandon it. The wizard covers up a discoverability problem.
 When to revisit: If churn at day 7 is high despite completed wizards.
 ```
 
@@ -132,17 +121,15 @@ When to revisit: If churn at day 7 is high despite completed wizards.
 **Score:** 7.5/8 (94%)
 **Evaluated:** 2026-04-16
 
-## Results
+- [x] PASS: Step 1 analyses problem before generating ideas — Step 1 is "Understand before ideating" with a defined template (problem as stated, who has it, why it matters, what's been tried, constraints). The definition states "Do not skip this step. The most common failure mode in brainstorming is solving the wrong problem creatively."
+- [x] PASS: Step 2 produces all three reframes with selection and reasoning — Step 2 defines exactly three reframe types: "As a user story," "As a constraint," "As an analogy." The definition states "After all three reframes, pick the framing that opens the most creative space. State which one and why." All three are mandatory and the selection must be stated.
+- [x] PASS: Step 3 applies all five mandatory diversity techniques — Step 3 lists five under "Mandatory diversity techniques": Inversion, Extreme scale, Remove constraints, Cross-domain transfer, Worst idea first. The definition states "Apply each technique to generate at least one option." All five are mandatory.
+- [x] PASS: At least 5 options pass all three quality tests — Step 3 states "at least 5 genuinely different approaches" must pass all three tests: distinct, feasible, and specific. The quality bar is explicitly defined with an example of what fails ("'Use AI' is not an option") and what passes. The definition provides a quality gate: "If you have fewer than 5 options that pass all three tests, go back to the techniques and push harder."
+- [x] PASS: Step 4 evaluates with genuine pros, biggest risk, effort, and reversibility — Step 4 template requires: "What's genuinely good about it," "What's the biggest risk," "Effort to implement," "Reversibility." All four fields are mandatory. The evaluation rules also state what counts as a genuine pro ("Reduces cost by 60%" not "It's innovative").
+- [x] PASS: Wild card included and argued seriously — the Rules section states "The wild card is mandatory." Step 6 output section defines the wild card template with three required fields: "Why it seems wrong," "Why it might be right," "When to revisit." The wild card cannot be omitted.
+- [x] PASS: Recommended path specifies concrete immediate action — Step 6 output template includes "What to do first — Immediate next step — make it concrete." This is a required field in the recommended path section.
+- [~] PARTIAL: Options named with descriptive memorable names — the Rules section states "Name every option. Names should be descriptive and memorable." The rule exists and is specific. However it is in the Rules section rather than a template field requirement — it is enforced by instruction rather than structure. PARTIAL ceiling applies per criterion prefix.
 
-- [x] PASS: Step 1 analyses problem before generating ideas — Step 1 is titled "Understand before ideating" with a defined template (problem as stated, who has it, why it matters, what's been tried, constraints); "Do not skip this step" is explicit
-- [x] PASS: Step 2 produces all three reframes with selection and reasoning — Step 2 defines exactly three reframe types (user story, constraint, analogy) and states "After all three reframes, pick the framing that opens the most creative space. State which one and why"
-- [x] PASS: Step 3 applies all five diversity techniques — Step 3 lists five under "Mandatory diversity techniques" with "Apply each technique to generate at least one option"
-- [x] PASS: At least 5 options pass all three quality tests — Step 3 states "at least 5 genuinely different approaches" must pass all three tests: distinct, feasible, and specific. The quality bar is explicitly defined with examples of what fails ("'Use AI' is not an option")
-- [x] PASS: Step 4 evaluates with genuine pros, biggest risk, effort, reversibility — Step 4 template requires all four fields: "What's genuinely good about it", "What's the biggest risk", "Effort to implement", "Reversibility"
-- [x] PASS: Wild card included and argued seriously — Rules section states "The wild card is mandatory." Step 6 output section defines the wild card template with three required fields: "Why it seems wrong", "Why it might be right", "When to revisit"
-- [x] PASS: Recommended path specifies concrete immediate action — Step 6 output template includes "What to do first — Immediate next step — make it concrete"
-- [~] PARTIAL: Options named with descriptive memorable names — Rules section states "Name every option. Names should be descriptive and memorable." The rule exists and is specific, but enforcement is through a rule statement rather than a structural template requirement. PARTIAL ceiling applies per criterion prefix.
+### Notes
 
-## Notes
-
-The creative skill is strong. The five mandatory diversity techniques ensure the output space is genuinely explored. The "worst idea first" technique is particularly good at breaking fixedness — the instruction to find the kernel of a good idea inside the bad one is sound. One gap: Step 4's evaluation template includes "Combinability" but the criterion doesn't test for it. The skill's Step 5 (Combine and synthesise) is defined but Step 6 (Output) doesn't mandate reporting the synthesis — the combination recommendation in the output template is implicit.
+The creative skill is strong. The five mandatory diversity techniques ensure the solution space is genuinely explored rather than anchored on the first idea. The "worst idea first" technique is the most distinctive — the instruction to find the kernel of a good idea inside the bad one is a well-established creativity technique. Step 5 (Combine and synthesise) is defined in the process but is not in the Output Format as a mandatory section — the combination recommendation appears as part of the recommended path, which is slightly inconsistent. The evaluation rules ("Innovative is not a pro. Reduces cost by 60% is a pro") are precise and prevent hollow evaluations.

@@ -35,10 +35,10 @@ Scenario: Testing whether the usability-review skill requires Nielsen's heuristi
 
 Walkthrough notes:
 1. Settings landing page shows 9 tabs with no grouping or visual hierarchy — user must scan all 9.
-2. "Members" tab (team management) is in alphabetical order; easily found.
+2. "Members" tab (team management) is in alphabetical order; findable with effort.
 3. "Billing" is tab 2; visible.
 4. API keys are under "Developer" tab — non-technical users do not self-identify as developers and don't look there.
-5. No search within settings. No breadcrumbs. No indication of where you are.
+5. No search within settings. No breadcrumbs. No indication of current location.
 
 **Findings:**
 
@@ -110,15 +110,15 @@ Walkthrough notes:
 
 ## Results
 
-- [x] PASS: Nielsen's 10 heuristics — Step 2 is mandatory and evaluates against all 10 Nielsen heuristics by name and number. The full heuristic table is a required step; a generic checklist is not a valid substitute.
-- [x] PASS: Severity ratings per finding — Step 3 is a mandatory severity rating step with explicit criteria for Critical/Major/Minor/Enhancement. The finding template in Step 2 requires "Severity" as a mandatory field. Unrated findings are not permitted.
+- [x] PASS: Nielsen's 10 heuristics — Step 2 is mandatory and evaluates against all 10 Nielsen heuristics by name and number. The full heuristic table is a required output; a generic checklist is not a valid substitute. The skill links directly to the NNGroup definition in the header.
+- [x] PASS: Severity ratings per finding — Step 3 is a mandatory severity rating step with explicit criteria for Critical/Major/Minor/Enhancement. The finding template in Step 2 requires "Severity" as a mandatory field for every finding. Unrated findings are not permitted.
 - [x] PASS: Structured walkthrough before evaluation — Step 1 is mandatory and requires defining scope, target user, entry point, and success state, plus annotated walkthrough notes. Rules state: "Complete the ENTIRE flow, not just the happy path."
-- [x] PASS: Prioritised synthesis — Step 4 is a mandatory synthesis step that produces a findings summary table, severity distribution, heuristic coverage table, and Top 3 Recommendations. The catalogue alone is not the deliverable.
-- [x] PASS: Each finding tied to a specific heuristic — the Step 2 finding template requires "Heuristic: [number and name]" as a mandatory field. The rules state: "Every finding must map to a specific heuristic and explain the impact on task completion."
-- [~] PARTIAL: Blocking vs non-blocking distinction — the severity scale defines Critical as "Users cannot complete the task at all" (task failure) and Major as "Users struggle significantly or abandon frequently" (high friction). Critical and Major are de facto blocking; Minor and Enhancement are non-blocking. The distinction is implicit in the severity definitions, not a separate classification dimension. Criterion prefix is PARTIAL — awarded at ceiling (0.5).
-- [x] PASS: Recommendations per finding — the Step 2 finding template requires "Recommendation: [specific fix]" as a mandatory field. The rules state: "'Improve the error handling' is not a recommendation." Generic recommendations are explicitly rejected.
-- [x] PASS: Valid YAML frontmatter — name, description, and argument-hint are all present in the skill's YAML header.
+- [x] PASS: Prioritised synthesis — Step 4 is a mandatory synthesis step producing a findings summary table, severity distribution, heuristic coverage table, and Top 3 Recommendations. The catalogue alone is not the deliverable.
+- [x] PASS: Each finding tied to a specific heuristic — the Step 2 finding template requires "Heuristic: [number and name]" as a mandatory field. Rules state: "Don't conflate aesthetics with usability. Every finding must map to a specific heuristic and explain the impact on task completion."
+- [~] PARTIAL: Blocking vs non-blocking distinction — the severity scale defines Critical as "Users cannot complete the task at all" (task failure) and Major as "Users struggle significantly or abandon frequently" (high friction). Critical/Major are de facto blocking; Minor/Enhancement are non-blocking. The distinction exists implicitly in the severity definitions but there is no explicit "blocking/non-blocking" classification dimension. Criterion ceiling is PARTIAL — 0.5.
+- [x] PASS: Recommendations per finding — the Step 2 finding template requires "Recommendation: [specific fix]" as a mandatory field. Rules state: "'Improve the error handling' is not a recommendation" — generic recommendations are explicitly rejected.
+- [x] PASS: Valid YAML frontmatter — name, description, and argument-hint are all present in the skill's YAML header. `user-invocable: true` and `argument-hint: "[feature, flow, or area to review]"` are explicit.
 
-## Notes
+### Notes
 
-The "What works well" section is a required element in the output format template, not optional. This is a good design choice — it prevents design teams from feeling under attack and helps preserve what already works. The rules also explicitly state "Zero findings is a valid result" — this guards against manufactured findings, which is a real risk in heuristic reviews when the reviewer feels pressure to justify the time spent.
+The "What works well" section is a required element in the output format template, not optional — this is a deliberate design choice that prevents the review from reading as an attack. The Rules section states "Zero findings is a valid result," which guards against manufactured findings when reviewers feel pressure to justify the exercise. Both are practically valuable and distinguish this from most heuristic review templates. The severity scale does the work of blocking/non-blocking classification implicitly, which is why the criterion ceiling is PARTIAL rather than a hard failure.

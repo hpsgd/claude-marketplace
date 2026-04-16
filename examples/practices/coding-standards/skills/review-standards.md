@@ -60,7 +60,7 @@ Review this PR. `src/auth/session.ts` has a block of 8 lines commented out with 
 
 ---
 
-#### SUGGESTION [Pass 5]: Banned word — "leverages"
+#### SUGGESTION [Pass 5]: Banned word — "leverage"
 
 **File:** `README.md`
 **Evidence:** "our platform leverages cutting-edge synergies"
@@ -78,7 +78,7 @@ Review this PR. `src/auth/session.ts` has a block of 8 lines commented out with 
 
 ---
 
-#### SUGGESTION [Pass 5]: Banned word — "synergies"
+#### SUGGESTION [Pass 5]: Banned word — "synergy"
 
 **File:** `README.md`
 **Evidence:** "cutting-edge synergies to streamline"
@@ -114,7 +114,7 @@ Review this PR. `src/auth/session.ts` has a block of 8 lines commented out with 
 
 ---
 
-#### SUGGESTION [Pass 5]: Banned word — "fosters"
+#### SUGGESTION [Pass 5]: Banned word — "foster"
 
 **File:** `README.md`
 **Evidence:** "documentation fosters a robust ecosystem"
@@ -150,15 +150,15 @@ Review this PR. `src/auth/session.ts` has a block of 8 lines commented out with 
 **Score:** 7.5/7.5 (100%)
 **Evaluated:** 2026-04-16
 
-- [x] PASS: Skill executes all passes for the file types in scope — the definition states "Execute these checks in order. Do not skip steps." The skill has five passes (Pass 1–5); the criterion says "four mandatory passes" which is imprecise but all applicable passes for these file types are covered. Pass 4 and Pass 3 are also run (finding nothing), so all passes execute
-- [x] PASS: Commented-out code flagged as Pass 1 finding — Pass 1 step 1 states "Any `// oldFunction()` or `/* former implementation */` is a violation. Version control preserves history; commented code is noise." The `// old session logic` block matches this rule with file reference required by the Evidence Format
-- [x] PASS: Lint suppression without justification flagged as Pass 2 finding — Pass 2 step 2 states "Each suppression must have an inline comment explaining why. Bare suppressions without explanation are always a finding."
-- [x] PASS: Banned words flagged individually — Pass 5 step 1 lists `leverage`, `cutting-edge`, `synergy`, `streamline`, `robust`, `ecosystem`, `comprehensive`, `foster` all explicitly by name; each is in the definition's banned word list
-- [x] PASS: Banned phrases flagged — Pass 5 step 2 lists "It's important to note" and "In today's world" / "In the modern era" explicitly. The text "In today's rapidly evolving landscape" matches both the banned phrase pattern and the standalone banned word `landscape`
-- [x] PASS: Evidence format followed — the Evidence Format section defines `File/Evidence/Standard/Fix` as mandatory for every finding; the definition's format header is `### [SEVERITY] [Category]: [Short description]`
-- [x] PASS: Output uses the defined summary template — the Output Template section defines exactly the severity-count summary (X critical, Y important, Z suggestions) with suppressions and dead code counts
-- [~] PARTIAL: Zero-finding gate applied — the Zero-Finding Gate section states "Do not manufacture findings to appear thorough" and the Anti-Patterns section lists four acceptable patterns not to flag. The mechanism is present. The PARTIAL ceiling on this criterion reflects that the anti-patterns list is brief (4 items) and the gate relies on agent judgment rather than an exhaustive exclusion list
+- [x] PASS: Skill executes all passes for the file types in scope — the definition states "Execute these checks in order. Do not skip steps." The skill has five passes (Pass 1–5). The criterion says "four mandatory passes" which under-counts, but all passes applicable to the in-scope files are executed. Pass 5 is conditional ("Only run this pass if the diff includes documentation...") and the README update triggers it. No pass is skipped.
+- [x] PASS: Commented-out code flagged as Pass 1 finding — Pass 1 step 1 states "Any `// oldFunction()` or `/* former implementation */` is a violation. Version control preserves history; commented code is noise." The `// old session logic` block matches this rule. The Evidence Format section mandates file reference and exact evidence.
+- [x] PASS: Lint suppression without justification flagged as Pass 2 finding — Pass 2 step 2 states "Each suppression must have an inline comment explaining why. Bare suppressions without explanation are always a finding." The definition is unambiguous.
+- [x] PASS: Banned words flagged individually in Pass 5 — the definition's Pass 5 step 1 list includes `leverage`, `cutting-edge`, `synergy`, `streamline`, `robust`, `ecosystem`, `comprehensive`, and `foster` — all root forms of the words in the prompt. The criterion lists inflected forms (`synergies`, `fosters`, `leverages`) but these are caught by flagging the root forms, which the definition explicitly names.
+- [x] PASS: Banned phrases flagged in Pass 5 — step 2 explicitly lists "It's important to note" and "In today's world" / "In the modern era" as banned phrases. The prompt's "In today's rapidly evolving landscape" matches the "In today's world" pattern. Both phrases in the prompt are caught by named entries in the definition.
+- [x] PASS: Evidence format followed — the Evidence Format section defines `### [SEVERITY] [Category]: [Short description]` with `File/Evidence/Standard/Fix` as mandatory fields for every finding. The definition makes this structure explicit and required.
+- [x] PASS: Output uses the defined summary template — the Output Template section defines the exact summary format: `Files reviewed: N`, `Findings: X critical, Y important, Z suggestions`, `Suppressions: N found, M unjustified`, `Dead code: N instances`. The simulated output matches this template.
+- [~] PARTIAL: Zero-finding gate applied correctly — the Zero-Finding Gate section states "Do not manufacture findings to appear thorough." The Anti-Patterns section lists four acceptable patterns (including "Suppressions with a linked issue number and explanation") as not-to-flag items. Both mechanisms are present in the definition. The PARTIAL ceiling is set by the test author regardless of outcome.
 
 ### Notes
 
-The banned word and phrase lists in Pass 5 are specific enough that every word in the scenario maps directly to an entry in the definition. One note: the criterion says "four mandatory passes" but the skill has five (Pass 1–5). The test criterion is imprecise — the skill covers all relevant passes. The Anti-Patterns section lists "Suppressions with a linked issue number and explanation" as acceptable; the suppression in the scenario has neither, so it correctly remains a finding.
+The review-standards skill is well-specified for this scenario. All eight banned words in the prompt appear by their root forms in Pass 5 step 1. The two banned phrases are explicitly listed in Pass 5 step 2. The Anti-Patterns section provides a concrete list of what NOT to flag (short utility functions, justified suppressions, template-comment code in tests, factory patterns with many parameters) — this is the anti-padding mechanism the criterion tests. One minor note: the criterion mentions "best practices pattern" but no best-practices text appears in the prompt, so this goes untested. The definition does address it in Pass 5 step 2: `"Best practices" (say what the practice actually is)`.

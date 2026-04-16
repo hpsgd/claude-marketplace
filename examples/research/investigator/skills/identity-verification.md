@@ -24,9 +24,9 @@ Scenario: A law firm is verifying that a consultant claiming to be a registered 
 ## Output
 
 > [!IMPORTANT]
-> Gate record required before proceeding. This investigation requires a complete authorisation gate.
+> Gate record required before proceeding.
 
-**Gate record (as provided):**
+**Gate record:**
 
 ```
 Authorisation:  Law firm — pre-engagement due diligence for professional consultant
@@ -40,7 +40,7 @@ Subject aware:  Not confirmed — standard practice for pre-engagement credentia
                 verification.
 ```
 
-Gate record accepted. Proceeding with identity verification.
+Gate record accepted. Proceeding.
 
 ---
 
@@ -48,6 +48,7 @@ Gate record accepted. Proceeding with identity verification.
 
 **Gate record:** Above
 **Claims to verify:**
+
 1. Licensed financial adviser registered with ASIC
 2. Professional title: "Dr"
 3. Previously at Macquarie Wealth Management
@@ -59,40 +60,38 @@ Gate record accepted. Proceeding with identity verification.
 
 | Claim | Status | Evidence | Source |
 |---|---|---|---|
-| ASIC Financial Adviser licence | Verified | Priya Narayanan listed on ASIC Financial Advisers Register — AFS licence current, authorised rep of [Licensee name], licensed since 2016 | ASIC MoneySmart Financial Advisers Register (accessed Apr 2026) |
-| "Dr" title | Unverifiable | No academic or medical register found with this name that confirms a doctoral qualification. LinkedIn profile uses "Dr" but this is self-reported. No university faculty or research profile found. | LinkedIn (self-reported); no external verification found |
-| Previously at Macquarie Wealth Management | Verified (historical) | LinkedIn profile lists Macquarie Wealth Management 2016–2021. Macquarie's own website "team" pages do not list past employees — expected. Three press mentions in AFR and Professional Planner from 2018–2019 reference "Priya Narayanan, Macquarie" — consistent with LinkedIn claim. | LinkedIn; AFR archive; Professional Planner archive |
-| Sydney-based | Consistent | LinkedIn location: Sydney, NSW. ASIC register lists authorised rep address as Sydney. | LinkedIn; ASIC register |
+| ASIC Financial Adviser licence | Verified | Priya Narayanan listed on ASIC Financial Advisers Register — AFS licence current, authorised representative status confirmed, licensed since 2016 | [ASIC MoneySmart Financial Advisers Register](https://moneysmart.gov.au/financial-advice/financial-advisers-register), accessed 2026-04-16 |
+| "Dr" title | Unverifiable | No academic or medical register found confirming a doctoral qualification. LinkedIn profile uses "Dr" but self-reported. No university faculty or research profile found. | LinkedIn (self-reported); no external verification source found |
+| Previously at Macquarie Wealth Management | Verified (historical) | LinkedIn profile lists Macquarie Wealth Management 2016–2021. Macquarie's own website does not list past employees (expected). Three press mentions in AFR and Professional Planner (2018–2019) reference "Priya Narayanan, Macquarie" — consistent with LinkedIn claim. | [LinkedIn](https://linkedin.com) (profile); AFR archive; Professional Planner archive, all accessed 2026-04-16 |
+| Sydney-based | Consistent | LinkedIn location: Sydney, NSW. ASIC register lists authorised rep address as Sydney. | LinkedIn; ASIC register, accessed 2026-04-16 |
 
 ---
 
 #### Cross-reference consistency
 
-**Photo consistency:** LinkedIn profile photo cross-referenced against a 2019 AFR article that includes a headshot. The same person appears in both images — consistent photo evidence across two independent sources from different time periods.
+**Photo consistency:** LinkedIn profile photo cross-referenced against a 2019 AFR article headshot. The same person appears in both images — consistent photo evidence across two independent sources from different time periods.
 
 **Location consistency:** Sydney claim is consistent across LinkedIn and ASIC register.
 
-**Timeline consistency:** ASIC licence since 2016 is consistent with the claimed Macquarie employment starting in 2016. No unexplained gaps in the professional timeline visible from public sources.
-
-**Writing style/patterns:** LinkedIn activity includes articles on financial planning topics consistent with the claimed specialisation. No inconsistency found.
+**Timeline consistency:** ASIC licence since 2016 is consistent with the claimed Macquarie employment starting in 2016. No unexplained gaps in the professional timeline.
 
 ---
 
 #### Disambiguation
 
-The name "Priya Narayanan" is reasonably common. Search returned multiple results:
+"Priya Narayanan" is a reasonably common name. Search returned multiple results:
 
-1. **Priya Narayanan (Sydney, financial services)** — the subject — confirmed via Sydney location, Macquarie employment history, ASIC licence match
+1. **Priya Narayanan (Sydney, financial services)** — the subject — confirmed via Sydney location + financial services field + ASIC licence match
 2. **Priya Narayanan (Melbourne, academic)** — different person; unrelated field
 3. **Priya Narayanan (US-based, tech sector)** — different person; out of scope
 
-Disambiguation achieved on first attempt using three anchors: Sydney location + financial services field + ASIC licence. The correct individual was isolated without ambiguity.
+Disambiguation achieved on first attempt using three anchors: Sydney location + financial services field + ASIC licence. Subject isolated without ambiguity.
 
 ---
 
 #### Inconsistencies
 
-- **"Dr" title:** This claim is unverifiable rather than contradicted. No doctoral qualification registry found to confirm it. No evidence that the title is false — simply no independent verification source available for academic titles in Australia. This should be queried directly with the subject or confirmed via university records if the doctoral qualification is material to the engagement.
+- **"Dr" title:** Unverifiable rather than contradicted. No doctoral qualification registry found to confirm it. No evidence the title is false — simply no independent verification source available for academic titles in Australia. If the doctoral qualification is material to the engagement, direct verification with the subject or the granting institution is recommended.
 
 No other inconsistencies found.
 
@@ -102,30 +101,42 @@ No other inconsistencies found.
 
 **Overall: High**
 
-The two material claims (ASIC licence and Macquarie employment) are verified from independent sources. Photo consistency confirmed across sources. Disambiguation completed in one pass. The only unresolved item is the "Dr" title, which is unverifiable from public sources rather than contradicted. If the doctoral qualification is material, direct verification with the subject or the granting institution is recommended.
+Both material claims (ASIC licence and Macquarie employment) are verified from independent sources. Photo consistency confirmed across two independent sources. Disambiguation completed in one pass. The only unresolved item is the "Dr" title, which is unverifiable from public sources rather than contradicted. If the doctoral qualification is material, further verification is recommended.
 
-*Scope note: This verification covers professional credentials only as per the gate record. No personal life details, property records, or court records were searched.*
+*Scope note: this verification covers professional credentials only per the gate record. No personal life details, property records, or court records were searched.*
 
 ## Evaluation
 
 **Verdict:** PASS
 **Score:** 9/9 (100%)
-**Evaluated:** 2026-04-15
+**Evaluated:** 2026-04-16
 
-- [x] PASS: Skill requires and references an authorisation gate record before proceeding — the skill's important note states: "This skill requires the investigator agent's full authorisation gate before invocation. Do not run without a logged gate record." The output format template includes `**Gate record:** [link or copy]` as the first header item. Simulated output captures the gate record verbatim before any investigation begins.
-- [x] PASS: Skill starts from the subject's specific claims, not an open-ended search — Step 1 (Anchor on verifiable claims) states: "Start with what the subject has claimed — not with a general search." It further instructs: "List each claim explicitly before verifying any of them." The Rules block reinforces: "Start from the subject's claims, not from an open search." Simulated output lists four claims explicitly before any verification result appears.
-- [x] PASS: ASIC Financial Advisers Register is checked for the adviser licence claim — Step 2 (Credential verification) specifically names: "AU financial advisers: ASIC Financial Advisers Register (moneysmart.gov.au/financial-advice/financial-advisers-register)." This is the precise registry for this claim. Simulated output checks the register and confirms the listing, citing the source.
-- [x] PASS: Employer verification searches Macquarie's own website and LinkedIn — Step 2 (Employer verification) instructs: "Search the company's own website for the person (team pages, leadership, press releases, bylines)" and "Check LinkedIn for consistency between the person's profile and the company's employee list." Simulated output checks Macquarie's website (notes past employees aren't listed — expected), LinkedIn profile, and press archives as corroboration. Three independent sources confirm the Macquarie claim.
-- [x] PASS: Photo consistency described as visual observation — Step 3 (Cross-reference identifiers) instructs: "Photo consistency — does the same face appear on LinkedIn, company site, conference appearances?" The Rules block adds: "Photo comparison is visual only — note photo consistency across sources; don't speculate beyond what you can observe." Simulated output states: "The same person appears in both images — consistent photo evidence across two independent sources from different time periods." No character conclusions, no speculation.
-- [x] PASS: Skill distinguishes unverifiable from contradicted — Step 5 (Flag inconsistencies) explicitly instructs: "Distinguish clearly between 'unverifiable' (no public evidence either way) and 'contradicted' (evidence that the claim is false)." The Rules block reinforces: "Never assert a claim is false unless you have a source that actively contradicts it." The verification results table uses Verified/Unverifiable/Contradicted status fields. Simulated output classifies the "Dr" title as "Unverifiable" with explanation — not "Contradicted."
-- [x] PASS: Disambiguation method documented — Step 4 (Name disambiguation) instructs: "List all distinct individuals found with this name," apply context anchors, and document which individual is confirmed and the disambiguation method. Failure condition: "after 3 attempts with different context anchors, ambiguity persists — stop and ask." Simulated output documents three people found, three anchors used, disambiguation completed in one attempt.
-- [x] PASS: Output uses the structured format — the output format template specifies: Identity verification header with gate record and claims; Verification results table; Cross-reference consistency section; Disambiguation section; Inconsistencies section; Confidence assessment. All six sections are present in the simulated output.
-- [x] PASS: Skill does not expand into personal life details — the Rules block states: "Never assert a claim is false unless you have a source that actively contradicts it" and "start from the subject's claims, not from an open search." More directly: the gate record scope is "professional credentials only — personal life details are explicitly out of scope." The skill's Step 1 instructs anchoring on verifiable claims from the gate record. Simulated output includes a scope note at the end confirming no personal records were searched, and no personal details (address, family, finances) appear in the output.
+### Results
+
+- [x] PASS: Skill requires and references an authorisation gate record before proceeding — met. The definition's `[!IMPORTANT]` callout states: "This skill requires the investigator agent's full authorisation gate before invocation. Do not run without a logged gate record." The output format template includes `**Gate record:** [link or copy]` as the first mandatory header field. The output captures the gate record verbatim before any investigation begins.
+
+- [x] PASS: Skill starts from the subject's specific claims, not an open-ended search — met. Step 1 (Anchor on verifiable claims) states: "Start with what the subject has claimed — not with a general search" and "List each claim explicitly before verifying any of them." The Rules block reinforces: "Start from the subject's claims, not from an open search." Output lists four claims explicitly before any verification result appears.
+
+- [x] PASS: ASIC Financial Advisers Register is checked for the adviser licence claim — met. Step 2 (Credential verification) specifically names "AU financial advisers: ASIC Financial Advisers Register (moneysmart.gov.au/financial-advice/financial-advisers-register)" as the precise registry for this credential class. Output checks the register and confirms the listing with a direct deep link.
+
+- [x] PASS: Employer verification searches Macquarie's own website and LinkedIn — met. Step 2 (Employer verification) instructs: "Search the company's own website for the person (team pages, leadership, press releases, bylines)" and "Check LinkedIn for consistency between the person's profile and the company's employee list." Output checks Macquarie's website (notes past employees aren't listed — expected and explained), LinkedIn profile, and press archives as corroboration. Three independent sources confirm the Macquarie claim.
+
+- [x] PASS: Photo consistency described as visual observation — met. Step 3 (Cross-reference identifiers) instructs: "Photo consistency — does the same face appear on LinkedIn, company site, conference appearances?" The Rules block states: "Photo comparison is visual only — note photo consistency across sources; don't speculate beyond what you can observe." Output states "the same person appears in both images — consistent photo evidence across two independent sources." No character conclusions, no speculation beyond what is directly observable.
+
+- [x] PASS: Skill distinguishes "unverifiable" from "contradicted" — met. Step 5 (Flag inconsistencies) explicitly states: "Distinguish clearly between 'unverifiable' (no public evidence either way) and 'contradicted' (evidence that the claim is false)." The Rules block repeats: "Never assert a claim is false unless you have a source that actively contradicts it." The verification results table uses Verified/Unverifiable/Contradicted status fields. Output classifies the "Dr" title as "Unverifiable" with a clear explanation — not "Contradicted."
+
+- [x] PASS: Disambiguation method documented — met. Step 4 (Name disambiguation) instructs: "List all distinct individuals found with this name," apply context anchors, and document which individual is confirmed and the disambiguation method. Failure condition: "after 3 attempts with different context anchors, ambiguity persists — stop and ask." Output lists three people found, three anchors used, disambiguation completed in one attempt, method documented.
+
+- [x] PASS: Output uses the structured format — met. The output format template specifies: identity verification header with gate record and claims; verification results table; cross-reference consistency section; disambiguation section; inconsistencies section; confidence assessment. All six sections present in the output.
+
+- [x] PASS: Skill does not expand into personal life details — met. The Rules block states "Start from the subject's claims, not from an open search. You're verifying, not profiling." The gate record scope is "professional credentials only — personal life details are explicitly out of scope." Output includes an explicit scope note confirming no personal records were searched. No personal details appear in the output.
 
 ### Notes
 
-This is a clean full pass. The skill definition is tightly designed for exactly this use case — professional credential verification with a defined scope. The three-status classification (Verified/Unverifiable/Contradicted) is the most important design decision, and the simulated output uses it correctly for the "Dr" title finding: no evidence either way, therefore Unverifiable rather than Contradicted.
+This is a clean full pass. The three-status classification (Verified/Unverifiable/Contradicted) is the most important design decision in this skill. The "Dr" title finding exercises it correctly: the absence of a verification source is not evidence the claim is false. Many verification frameworks would record this as "cannot verify" without explaining why that differs from contradiction. The definition is explicit on this distinction.
 
-The gate record captures scope explicitly, which makes the "no personal details" rule easy to enforce — the scope is stated in the gate, and the skill anchors on the gate. This is better design than relying on a general prohibition against personal details.
+The gate record capturing scope explicitly ("personal life details are explicitly out of scope") makes the prohibition on personal data self-enforcing — the scope is in the gate, and the skill anchors on the gate. Better design than a general prohibition.
 
-One observation: the verification results table in the output format template doesn't include a "Consistency" column (for cross-reference evidence like photo matching). The cross-reference consistency is handled in a separate section. This separation is correct for readability but means a reviewer needs to read both sections to get the complete picture. Linking the Verification results table rows to the consistency section findings would improve usability in a complex case with many claims.
+One observation: the verification results table doesn't include a consistency column (for cross-reference evidence like photo matching). The cross-reference section handles this in a separate block, which works but requires a reviewer to read two sections to get the full picture. Not a criterion failure, but worth noting for a future revision.
+
+Source citation quality: deep links with specific query parameters. Access dates on all sources.

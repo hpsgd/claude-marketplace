@@ -22,26 +22,26 @@ Review the evaluate-technology skill definition and verify it produces a structu
 
 ## Output
 
-The evaluate-technology skill, applied to a representative scenario (evaluating Redis vs. RabbitMQ as a message broker for the FreightFlow notification system), would produce the following output.
+The evaluate-technology skill, applied to a representative scenario (evaluating Redis Pub/Sub vs. RabbitMQ as a message broker for the FreightFlow notification system), would produce the following output.
 
 ---
 
-# Technology Evaluation: Redis Pub/Sub vs. RabbitMQ for FreightFlow Notification Message Broker
+# Technology Evaluation: Redis Pub/Sub vs. RabbitMQ
 
 ## Evaluation Criteria
 
 Weights defined before research begins, to prevent post-hoc rationalisation.
 
-| Criterion | Weight (1-5) | Why it matters for this decision |
+| Criterion | Weight (1-5) | Why it matters |
 |---|---|---|
 | Maturity / stability | 4 | Production messaging infrastructure — must be battle-tested |
 | Community / ecosystem | 3 | Long-term support, Django libraries available |
-| Team familiarity | 5 | Highest weight — unfamiliar tooling adds meaningful delivery risk |
-| Performance | 3 | At 700 events/minute peak, both candidates will handle the load; not the differentiator |
+| Team familiarity | 5 | Highest weight — unfamiliar tooling adds delivery risk |
+| Performance | 3 | At 700 events/minute peak, both candidates handle the load |
 | Maintenance burden | 4 | Operational overhead on a small team matters |
-| Lock-in risk | 3 | If we migrate later, how hard is it? |
-| Cost | 2 | Both are open source; hosting cost difference is marginal at this scale |
-| Integration | 4 | Must integrate cleanly with Django and the existing PostgreSQL-backed system |
+| Lock-in risk | 3 | Migration cost if we change later |
+| Cost | 2 | Both are open source; hosting cost difference is marginal |
+| Integration | 4 | Must integrate cleanly with Django Channels |
 
 ---
 
@@ -49,69 +49,54 @@ Weights defined before research begins, to prevent post-hoc rationalisation.
 
 ### Redis Pub/Sub
 
-**What:** In-memory data structure store with a pub/sub messaging layer. Frequently used as a lightweight message broker for low-latency fan-out.
-**Version:** 7.2.4 (stable), released February 2024
-**License:** BSD 3-Clause (open source)
+**What:** In-memory data store with pub/sub messaging. Used for low-latency fan-out.
+**Version:** 7.2.4 (stable), February 2024
+**License:** BSD 3-Clause
 **Notable adopters:** GitHub, Twitter, Stack Overflow, Shopify, Airbnb
 
-#### Maturity signals
-
+**Maturity signals:**
 - First stable release: 2009
-- Release cadence: Minor releases every 3-4 months, patch releases as needed
+- Release cadence: Minor releases every 3–4 months
 - Breaking changes in last 2 major versions: 1 (RESP3 protocol in v6, mostly transparent)
-- Open issues / PRs: ~3,500 open issues — stable trend
 
-#### Community signals
+**Community signals:**
+- GitHub stars: 63,000
+- Stack Overflow: 90,000+ questions, ~85% answer rate
+- Active maintainers: Redis Ltd. core team (~15 engineers)
 
-- GitHub stars: 63,000 | no npm/PyPI package (server-side)
-- Stack Overflow questions: 90,000+, answer rate ~85%
-- Active maintainers: Redis Ltd. core team (~15 engineers) + community
-- Discord/forum activity: Active
-
-#### Known limitations
-
-- Pub/sub is fire-and-forget — no message persistence, no delivery guarantees. If a subscriber is offline, the message is lost.
-- No message acknowledgement or retry built in
-- Not designed for durable queue semantics — if persistence is needed, requires Redis Streams (different API)
+**Known limitations:**
+- Fire-and-forget — no message persistence, no delivery guarantees. Offline subscribers miss messages.
+- No acknowledgement or retry built in
 - Fan-out at very high subscriber counts requires careful connection pooling
-
----
 
 ### RabbitMQ
 
-**What:** Open source message broker implementing AMQP. Designed for reliable, durable messaging with acknowledgements, routing, and dead-letter queues.
-**Version:** 3.13.0 (stable), released March 2024
-**License:** Mozilla Public License 2.0 (open source)
+**What:** Open source message broker implementing AMQP. Designed for reliable, durable messaging with ACKs, routing, and dead-letter queues.
+**Version:** 3.13.0 (stable), March 2024
+**License:** Mozilla Public License 2.0
 **Notable adopters:** VMware, Reddit, Mozilla, NASA, Instagram
 
-#### Maturity signals
-
+**Maturity signals:**
 - First stable release: 2007
-- Release cadence: Minor releases every 4-6 months
-- Breaking changes in last 2 major versions: 2 (management API changes in v3.11, Erlang version requirements in v3.12)
-- Open issues / PRs: ~800 open issues — stable trend
+- Release cadence: Minor releases every 4–6 months
+- Breaking changes in last 2 major versions: 2 (management API changes in v3.11, Erlang requirements in v3.12)
 
-#### Community signals
+**Community signals:**
+- GitHub stars: 12,000
+- Stack Overflow: 40,000+, ~80% answer rate
+- Active maintainers: VMware/Broadcom-backed team (~10 engineers)
 
-- GitHub stars: 12,000 | PyPI: `pika` client ~500k downloads/month
-- Stack Overflow questions: 40,000+, answer rate ~80%
-- Active maintainers: VMware/Broadcom-backed core team (~10 engineers)
-- Discord/forum activity: Moderate (primary support through GitHub issues)
-
-#### Known limitations
-
+**Known limitations:**
 - Higher operational complexity — Erlang runtime, management UI, cluster configuration
-- AMQP protocol has a learning curve compared to Redis's simple pub/sub API
-- Erlang dependency creates a deployment footprint that Redis does not
-- Broadcom acquisition of VMware (2023) has introduced uncertainty about long-term stewardship
+- AMQP protocol has a learning curve
+- Broadcom acquisition (2023) creates uncertainty about long-term stewardship
 
 ---
 
 ## Scoring Matrix
 
-| Criterion | Weight | Redis Pub/Sub | | RabbitMQ | |
+| Criterion | Weight | Redis Raw | Redis Weighted | RabbitMQ Raw | RabbitMQ Weighted |
 |---|---|---|---|---|---|
-| | | Raw (1-5) | Weighted | Raw (1-5) | Weighted |
 | Maturity / stability | 4 | 5 | 20 | 5 | 20 |
 | Community / ecosystem | 3 | 5 | 15 | 4 | 12 |
 | Team familiarity | 5 | 4 | 20 | 2 | 10 |
@@ -125,20 +110,20 @@ Weights defined before research begins, to prevent post-hoc rationalisation.
 **Score justifications (one sentence each):**
 
 - Redis maturity (5): 15+ years in production at global scale; no credible stability concerns.
-- Redis community (5): Largest in-memory store community; Django integration via `channels-redis` is the documented and officially supported channel layer for Django Channels.
-- Redis team familiarity (4): Team has used Redis for caching — pub/sub API is a minor extension of known tooling. Scored 4 not 5 because pub/sub message guarantees differ from caching semantics.
-- Redis performance (5): Sub-millisecond fan-out for hundreds of events/minute is well within documented performance envelope.
-- Redis maintenance burden (4): Single-process, no runtime dependencies beyond Redis itself; already a common dependency. Scored 4 not 5 because `channels-redis` requires keeping the Channels version compatible.
-- Redis lock-in risk (4): Pub/sub is a commodity pattern; migrating to Redis Streams or another broker is straightforward. Not a 5 because switching channel layers in Django Channels is a code change.
-- Redis cost (4): Redis Cloud free tier is sufficient; self-hosted adds only server cost. Marginal.
-- Redis integration (5): `channels-redis` is the official Django Channels channel layer — zero custom integration work.
+- Redis community (5): Largest in-memory store community; `channels-redis` is the officially supported Django Channels layer.
+- Redis team familiarity (4): Team has used Redis for caching — pub/sub is a minor extension of known tooling. Scored 4 not 5 because pub/sub guarantees differ from caching semantics.
+- Redis performance (5): Sub-millisecond fan-out for hundreds of events/minute is well within documented envelope.
+- Redis maintenance burden (4): Single-process, no runtime dependencies beyond Redis itself. Scored 4 not 5 because `channels-redis` requires version compatibility maintenance.
+- Redis lock-in (4): Pub/sub is a commodity pattern; migrating to Redis Streams is straightforward.
+- Redis cost (4): Redis Cloud free tier sufficient; self-hosted adds only server cost.
+- Redis integration (5): `channels-redis` is the official Django Channels layer — zero custom integration work.
 - RabbitMQ maturity (5): 17+ years production use; AMQP is a well-understood standard.
 - RabbitMQ community (4): Smaller but active community; Python `pika` client is well-maintained.
 - RabbitMQ team familiarity (2): No team experience with RabbitMQ or Erlang; AMQP protocol is a significant learning curve.
-- RabbitMQ performance (4): More than sufficient at this scale; slight overhead vs. Redis due to AMQP protocol.
-- RabbitMQ maintenance burden (2): Erlang runtime, cluster configuration, management UI, Broadcom stewardship uncertainty — meaningfully higher operational overhead.
-- RabbitMQ lock-in risk (4): AMQP is a standard; could migrate to another AMQP broker. Similar reversibility to Redis.
-- RabbitMQ cost (3): Hosting cost slightly higher due to Erlang runtime resource usage.
+- RabbitMQ performance (4): Sufficient at this scale; slight overhead vs. Redis due to AMQP protocol.
+- RabbitMQ maintenance burden (2): Erlang runtime, cluster ops, management UI, Broadcom uncertainty — meaningfully higher overhead.
+- RabbitMQ lock-in (4): AMQP is a standard; similar reversibility to Redis.
+- RabbitMQ cost (3): Hosting cost slightly higher due to Erlang resource usage.
 - RabbitMQ integration (3): No official Django Channels integration; requires building a custom channel layer.
 
 ---
@@ -147,10 +132,10 @@ Weights defined before research begins, to prevent post-hoc rationalisation.
 
 | Choosing Redis Pub/Sub means... | Choosing RabbitMQ means... |
 |---|---|
-| Fire-and-forget delivery — no message persistence or acknowledgement | Durable messaging with ACKs, dead-letter queues, and retry |
+| Fire-and-forget — no persistence or ACKs | Durable messaging with ACKs, dead-letter queues, retry |
 | Zero custom integration work (channels-redis is official) | Custom Django Channels layer must be built and maintained |
-| Lowest operational overhead — team already understands Redis | Erlang runtime dependency, cluster ops, management UI |
-| If delivery guarantees are needed later, must migrate to Redis Streams | Built-in support for complex routing, priority queues, and durable consumption |
+| Lowest operational overhead — team already knows Redis | Erlang runtime, cluster ops, management UI |
+| If delivery guarantees needed later, migrate to Redis Streams | Built-in complex routing, priority queues, durable consumption |
 
 ---
 
@@ -159,9 +144,9 @@ Weights defined before research begins, to prevent post-hoc rationalisation.
 | Risk | Trigger signal | Mitigation |
 |---|---|---|
 | Status update lost when subscriber offline | Users report missing notifications; monitoring shows pub/sub drops | Migrate channel layer to Redis Streams for at-least-once delivery |
-| Redis becomes unavailable (single point of failure) | Notification feature down during Redis outage | Redis Sentinel or Cluster for HA; cache reconnection with exponential backoff |
-| Broadcom deprecates RabbitMQ (RabbitMQ only) | Official end-of-life announcement or fork | N/A — not choosing RabbitMQ, but noted as eliminated risk |
-| Message volume spikes beyond capacity | p95 latency exceeds 3s; Redis connection pool exhausted | Horizontal Redis Cluster; reduce channel layer connection pool size |
+| Redis single point of failure | Notification feature down during Redis outage | Redis Sentinel or Cluster for HA |
+| Broadcom deprecates RabbitMQ | Official end-of-life announcement or fork | N/A — not choosing RabbitMQ |
+| Volume spike exceeds capacity | p95 latency > 3s; connection pool exhausted | Redis Cluster; reduce connection pool size |
 
 ---
 
@@ -169,14 +154,12 @@ Weights defined before research begins, to prevent post-hoc rationalisation.
 
 **Choose: Redis Pub/Sub (via `channels-redis`)**
 
-**Primary reason:** Team already knows Redis, and `channels-redis` is the official, zero-integration-work channel layer for Django Channels. At 700 events/minute peak, delivery guarantees are not required — a dropped notification means a slightly delayed UI update, not data loss.
+**Primary reason:** Team already knows Redis, and `channels-redis` is the official zero-integration-work channel layer for Django Channels. At 700 events/minute peak, delivery guarantees are not required.
 
-**Secondary reasons:** Lower maintenance burden, no new runtime dependencies, and better community support for the specific Django Channels use case.
-
-**What we sacrifice:** Fire-and-forget semantics. If a client reconnects after a disconnect, they may miss status updates that occurred while disconnected. This is acceptable for a real-time dashboard (a page refresh will show current state) but would not be acceptable for an audit trail or financial notification system.
+**What we sacrifice:** Fire-and-forget semantics. If a client disconnects, they may miss status updates. Acceptable for a real-time dashboard (a page refresh shows current state) but not for an audit trail.
 
 **Reconsideration triggers:**
-- Delivery guarantee requirements emerge (e.g., "drivers must never miss a status change even if offline") — switch to Redis Streams or RabbitMQ
+- Delivery guarantee requirements emerge (drivers must never miss a change even when offline)
 - Redis stability incidents occur more than once per quarter in production
 - Team scales to a point where dedicated message broker expertise exists
 
@@ -190,12 +173,6 @@ Weights defined before research begins, to prevent post-hoc rationalisation.
 
 ---
 
-## Output
-
-The simulated output above is what the evaluate-technology skill would produce for a representative technology comparison.
-
----
-
 ## Evaluation
 
 **Verdict:** PASS
@@ -204,15 +181,22 @@ The simulated output above is what the evaluate-technology skill would produce f
 
 ## Results
 
-- [x] PASS: Skill requires criteria and weights defined before research — Step 1 opens: "Before researching, establish what matters." Rules: "Assign weights BEFORE research to prevent post-hoc rationalisation." The exact phrase "to prevent post-hoc rationalisation" is in the skill definition. The simulated output's Evaluation Criteria section is the first section and explicitly notes weights are defined before research begins.
-- [x] PASS: Skill provides default criteria set including all seven specified criteria — Step 1 table lists: Maturity/stability, Community/ecosystem, Team familiarity, Performance, Maintenance burden, Lock-in risk, Cost, Integration. All seven required criteria are present (the skill adds Performance as an eighth).
-- [x] PASS: Skill mandates research brief per option with all specified fields — Step 2 template includes: Version (current stable), License, Notable adopters (3-5), Maturity signals (first stable release, release cadence, breaking changes, open issues), Community signals (GitHub stars, Stack Overflow, active maintainers), and Known limitations. All required fields are present and both research briefs in the simulated output follow the template.
-- [x] PASS: Skill requires weighted scoring matrix with per-score justification — Step 3: matrix shows raw score (1-5) and weighted score columns per option. Rules: "Every score must have a one-sentence justification — no bare numbers." The simulated output's scoring matrix includes 16 one-sentence justifications — one per score per option.
-- [x] PASS: Skill requires trade-off table and risk register with trigger signals — Step 4: trade-off table comparing advantages and costs of each option. Risk register table has "Trigger signal" and "Mitigation" columns explicitly. Both are present in the simulated output.
-- [x] PASS: Skill's recommendation states what is sacrificed and reconsideration triggers — Step 5 recommendation template includes "What we sacrifice: [Explicit trade-off acknowledgement]" and "Reconsideration triggers: [Conditions that would change this recommendation]." Both are present in the simulated output's Recommendation section.
-- [x] PASS: Skill lists anti-patterns including the three specified — Anti-Patterns section lists: "Conclusion-first evaluation — deciding the winner before scoring, then fitting criteria to match", "Popularity as proxy — GitHub stars and npm downloads measure awareness, not quality", "Binary scoring — scoring everything 1 or 5 defeats the purpose." All three specified anti-patterns are present verbatim in the skill definition.
-- [~] PARTIAL: Skill handles tie case with time-boxed spike — Step 5: "If neither option is clearly better, say so — recommend a time-boxed spike or prototype instead of a forced choice." This instruction is present and explicit in Step 5 of the main process. PARTIAL ceiling applies per test author.
+- [x] PASS: Skill requires criteria and weights defined before research — Step 1 opens: "Before researching, establish what matters." Rules explicitly state: "Assign weights BEFORE research to prevent post-hoc rationalisation." The phrase "post-hoc rationalisation" is verbatim in the skill definition. The output's criteria table is the first section and explicitly notes weights are pre-research.
+
+- [x] PASS: Skill provides default criteria set including all seven specified criteria — Step 1 table lists: Maturity/stability, Community/ecosystem, Team familiarity, Performance, Maintenance burden, Lock-in risk, Cost, Integration. All seven required criteria present (with Performance as an additional eighth).
+
+- [x] PASS: Skill mandates research brief per option with all specified fields — Step 2 template includes: Version (current stable), License, Notable adopters (3–5), Maturity signals (first stable release, release cadence, breaking changes, open issues), Community signals (GitHub stars, Stack Overflow, active maintainers), and Known limitations. All required fields present in the template.
+
+- [x] PASS: Skill requires weighted scoring matrix with per-score justification — Step 3: matrix shows raw score (1–5) and weighted score per option. Rule: "Every score must have a one-sentence justification — no bare numbers." The output provides 16 one-sentence justifications across both options.
+
+- [x] PASS: Skill requires trade-off table and risk register with trigger signals — Step 4 specifies a trade-off comparison table and a risk register with "Trigger signal" and "Mitigation" columns. Both are present in the output with relevant content.
+
+- [x] PASS: Skill's recommendation states what is sacrificed and reconsideration triggers — Step 5 recommendation template includes "What we sacrifice: [Explicit trade-off acknowledgement]" and "Reconsideration triggers: [Conditions that would change this recommendation]." Both are present in the output.
+
+- [x] PASS: Skill lists anti-patterns including all three specified — Anti-Patterns section lists: "Conclusion-first evaluation — deciding the winner before scoring, then fitting criteria to match," "Popularity as proxy — GitHub stars and npm downloads measure awareness, not quality," and "Binary scoring — scoring everything 1 or 5 defeats the purpose." All three present verbatim.
+
+- [~] PARTIAL: Skill handles tie case with time-boxed spike — Step 5: "If neither option is clearly better, say so — recommend a time-boxed spike or prototype instead of a forced choice." This is present as an explicit instruction in Step 5. PARTIAL ceiling per test author.
 
 ### Notes
 
-The tie-case handling instruction appears in Step 5 of the main process — "recommend a time-boxed spike or prototype" — making it a named process step rather than merely an anti-pattern footnote. The PARTIAL ceiling is a test-author constraint. The Broadcom/VMware acquisition of RabbitMQ is called out in the Known Limitations section as a real-world uncertainty signal — this is the kind of domain-specific detail the skill's "search for known limitations" instruction produces. The per-score justification requirement is the most valuable bias-prevention mechanism in the skill; the simulated output's 16 one-sentence justifications demonstrate it working as intended.
+The tie-case handling is an explicit instruction in Step 5, not merely an anti-pattern footnote. The PARTIAL ceiling is test-author-imposed. The per-score justification requirement is the most valuable bias-prevention mechanism in the skill — 16 one-sentence justifications make the scoring transparent and auditable. The Broadcom/VMware acquisition risk appearing in Known Limitations is a good example of the "search for known limitations" instruction producing domain-relevant output.

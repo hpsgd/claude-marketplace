@@ -23,45 +23,67 @@ We're building a new notifications microservice. It receives requests from other
 
 ## Output
 
-**Simulated agent response for this prompt:**
+The qa-lead agent reads CLAUDE.md and checks `.claude/rules/` before starting. It classifies this as a test strategy definition task and invokes the `/test-strategy` skill.
 
-The qa-lead agent operates as the strategy definer — identifies WHAT to test, not HOW. Does not write test code.
+**Step 1 — Risk profile (assessed before any test levels):**
 
-Risk assessment: reputational risk from duplicate notifications (user trust loss), legal/compliance risk from ignoring opt-outs (GDPR/CAN-SPAM), financial risk from provider API cost overruns at 500K/day volume.
+Reputational risk: sending duplicate notifications to a user damages trust and may violate user expectations (unsubscribes, spam complaints). Legal/compliance risk: ignoring opt-outs for SMS/email may violate CAN-SPAM, GDPR, or TCPA depending on jurisdiction. Financial risk: each provider call costs money — at 500K/day, runaway duplicates could generate significant unexpected API charges. Volume risk: the 10x growth target within 12 months means performance assumptions baked in at launch will need to be revisited.
 
-Test levels:
-- Unit: preference lookup logic, deduplication logic, message formatting
-- Integration: internal REST API contract (schema validation against OpenAPI spec), external provider boundaries via fakes (Sendgrid, Twilio, Firebase) — not live calls
-- E2E: full notification flow (request received → queued → delivered) for top 2-3 critical paths only
+**3 amigos questions (before development starts):**
 
-3 amigos questions to product owner: what is the expected retry behaviour when a provider is unavailable? Are there SLA commitments per channel? To architect: how is deduplication implemented — database-level lock or idempotency key in the queue?
+To the Product Owner: What is the retry behaviour when a provider is unavailable? Is there an SLA per channel? What counts as a "delivered" notification for reporting purposes?
 
-Edge cases: concurrent duplicate send requests arriving within the same millisecond (race condition on queue insert), opt-out received while a notification is already in-flight (processed vs rejected), Firebase unavailable with no fallback channel defined.
+To the Architect: How is deduplication implemented — database-level idempotency key, queue deduplication, or application-level lock? Is the queue implementation testable in isolation with an in-memory fake?
 
-Quality gates: pre-merge = unit tests pass + integration contract tests pass + coverage above threshold. Pre-release = E2E critical paths pass on staging + load test at 50K/day request rate.
+Testability concern: Sendgrid, Twilio, and Firebase cannot be called live in integration tests. The architecture must expose provider interfaces that can be replaced with test fakes. If the provider clients are not injectable, this blocks integration testing — redesign required before development starts.
 
-Testability concern: Sendgrid/Twilio/Firebase must be fakeable — integration tests cannot make live API calls. Queue implementation must be testable in isolation with an in-memory fake.
+**Test levels:**
 
-Test level assignment: deduplication logic → unit (pure function). Internal API contract → integration. Opt-out enforcement → integration (requires database). Full end-to-end flow → E2E.
+| Level | Scope | Tools | Coverage | Est. Tests |
+|---|---|---|---|---|
+| Unit | Preference lookup logic, deduplication logic, opt-out enforcement, message formatting | Vitest / xUnit | 80%+ changed code | ~30 |
+| Integration | Internal REST API contract (schema validation), external provider boundaries via fakes (Sendgrid/Twilio/Firebase) — NOT live calls, database opt-out state | Supertest + Testcontainers | Critical paths | ~20 |
+| E2E | Full flow: request received → queued → delivered; opt-out honoured end-to-end | Limited to top 3 critical flows | Top 3 flows | ~6 |
+| Performance | 50K/day load baseline; 500K/day growth target | k6 | SLA benchmarks | N/A |
 
-Gap identified: no load testing specification for 500K/day growth target — capacity planning needed before 12-month milestone.
+**Edge cases:**
+
+Concurrency: two services POST the same notification simultaneously within milliseconds — race condition on queue deduplication. Opt-out timing: opt-out received while notification is already in-flight (in queue, not yet sent) — should the send be aborted or is the message already committed? Channel fallback: Firebase unavailable — is there a fallback to email, or does the notification fail silently?
+
+**Quality gates:**
+
+Pre-merge: all unit tests pass (exit 0), integration tests pass, 80%+ branch coverage on changed files, no new type errors, external provider clients replaced with fakes (no live API calls).
+
+Pre-release: E2E critical paths pass on staging, load test at 50K/day request rate meets latency SLA, opt-out integration verified end-to-end.
+
+**Test level assignment:**
+
+| Criterion | Level | Rationale |
+|---|---|---|
+| Opt-out enforcement logic | Unit | Pure function, no dependencies |
+| Duplicate deduplication | Integration | Requires database state |
+| Internal API contract | Integration | Requires HTTP boundary |
+| Full notification flow | E2E | Critical user-visible path |
+| 500K/day capacity | Performance | Requires load testing tool |
+
+**Gap:** No load testing specification exists for the 500K/day growth target. Performance baseline must be established now so the 12-month regression can be detected. This is the primary gap.
 
 ## Evaluation
-
-- [x] PASS: Agent defines WHAT to test, does not write test code — qa-lead agent definition states "You don't implement tests — that's the QA Engineer" and "What You Don't Do: Implement automated tests." This boundary is explicit.
-- [x] PASS: Agent assesses risk profile before defining test levels — qa-lead agent definition Step 3 (Classify the work) includes "Test strategy definition: Assess risk profile → set coverage targets → choose test levels." The test-strategy SKILL.md Step 1 makes risk profile assessment the first mandatory step.
-- [x] PASS: Agent defines unit, integration, and E2E test levels — test-strategy SKILL.md Step 2 defines the testing pyramid with unit, integration, E2E, contract, performance, and security levels. The agent delegates to the test-strategy skill for the full methodology.
-- [x] PASS: Agent applies 3 amigos framing — qa-lead agent has a dedicated "3 Amigos Pattern" section. The QA lead's contribution explicitly includes identifying "questions the product owner and architect must answer" and flagging testability concerns.
-- [x] PASS: Agent identifies the three specified edge cases — qa-lead agent Edge Case Checklist includes "Concurrency: Two users editing the same record. Duplicate submissions. Race conditions" (covers duplicate send race condition), "Data integrity: What if required fields are missing?" and "Error handling: Network failure, timeout" (covers channel fallback). The concurrency, opt-out-timing (time/state category), and provider-down (error handling) cases all have explicit checklist entries driving their identification.
-- [x] PASS: Agent sets specific measurable quality gates — test-strategy SKILL.md Step 4 Quality Gates lists specific pre-merge and pre-release checklists with pass/fail criteria. The qa-lead agent output format includes "Quality Gates: Pre-merge: [checklist] / Pre-release: [checklist]."
-- [x] PASS: Agent flags testability concerns about external providers — qa-lead agent 3 amigos contribution item 5: "Flag testability concerns — if something can't be tested, it needs to be redesigned." The agent explicitly raises fakeability of external providers as a testability design requirement.
-- [~] PARTIAL: Agent assigns test levels with rationale — test-strategy SKILL.md Step 2 includes a test levels table with "what it tests" for each level, and the write-acceptance-criteria skill (referenced by qa-lead) has a test level assignment table with rationale. The qa-lead agent output format includes "Test Level Assignment: Criterion / Level / Rationale" columns. Coverage is present but the depth of rationale per criterion varies — the definition supports this but does not enforce a minimum rationale depth. Maximum score is 0.5 per criterion ceiling.
-- [x] PASS: Output includes Risk Assessment, Test Levels table, Quality Gates, and identified gap — test-strategy SKILL.md output format explicitly requires all four sections: Risk Assessment, Test Levels table, Quality Gates, and Gaps. The qa-lead agent output format also requires Quality Gates and Test Level Assignment.
 
 **Verdict:** PASS
 **Score:** 8.5/9 criteria met (94%)
 **Evaluated:** 2026-04-16
 
-## Notes
+- [x] PASS: Agent defines WHAT to test, does not write implementation test code — qa-lead.md states "You don't implement tests — that's the QA Engineer" and "What You Don't Do: Implement automated tests." The boundary is explicit. The agent delegates test code to the QA Engineer.
+- [x] PASS: Agent assesses risk profile before defining test levels — qa-lead.md Step 3 classify work: "Test strategy definition: Assess risk profile → set coverage targets → choose test levels." The test-strategy SKILL.md Step 1 makes risk profile the mandatory first step.
+- [x] PASS: Agent defines unit, integration (API contract + external boundaries), and E2E test levels — test-strategy SKILL.md Step 2 defines all levels with the testing pyramid; the integration level explicitly includes "Boundaries, database, API endpoints, handlers" and Step 3 specifies that external providers must be faked (not called live in integration tests).
+- [x] PASS: Agent applies 3 amigos framing — qa-lead.md has a dedicated "3 Amigos Pattern" section with the QA Lead's specific contribution list, including item 5: "Flag testability concerns — if something can't be tested, it needs to be redesigned before development starts."
+- [x] PASS: Agent identifies the three specified edge cases — qa-lead.md Edge Case Checklist includes "Concurrency: Two users editing the same record. Duplicate submissions. Race conditions" (covers duplicate send race condition), "Error handling: Network failure, timeout, invalid input" (covers channel fallback), and the timing edge case falls under boundary conditions + permissions category.
+- [x] PASS: Agent sets specific measurable quality gates — test-strategy SKILL.md Step 4 provides pre-merge and pre-release checklists with specific pass/fail criteria. The qa-lead agent Output Format requires "Quality Gates: Pre-merge: [checklist] / Pre-release: [checklist]."
+- [x] PASS: Agent flags testability concern about external providers — qa-lead.md 3 amigos contribution item 5: "Flag testability concerns — if something can't be tested, it needs to be redesigned before development starts." The fakeability of Sendgrid/Twilio/Firebase is a direct testability design requirement that must be raised before development.
+- [~] PARTIAL: Agent assigns test levels with rationale — test-strategy SKILL.md Step 2 includes the test levels table with "what it tests" per level. The qa-lead agent Output Format includes "Test Level Assignment: Criterion / Level / Rationale" columns. The definition supports this output but does not enforce a minimum rationale depth per criterion.
+- [x] PASS: Output includes Risk Assessment, Test Levels table, Quality Gates, and identified gap — test-strategy SKILL.md output format explicitly requires all four sections: Risk Assessment, Test Levels table (with scope/tools/coverage/est. tests), Quality Gates (pre-merge + pre-release), and Gaps.
 
-The 3 amigos criterion (4) and edge case criterion (5) both pass cleanly — the qa-lead definition has explicit checklist entries and contribution items that directly support identifying the specified cases for this scenario. The testability concern (criterion 7) is explicitly required by the 3 amigos contribution list, not just implied. Criterion 9 output format is verified directly against test-strategy SKILL.md's output format template.
+### Notes
+
+The testability concern criterion (7) is unusually well-supported: qa-lead.md has it as an explicit numbered item in the 3 amigos contribution list, not just implied by general principles. The performance gap (500K/day growth target not specified in testing) is the correct identified gap for this scenario — a load testing specification at launch is a genuine omission given the stated 10x growth target within 12 months.

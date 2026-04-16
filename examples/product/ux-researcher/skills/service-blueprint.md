@@ -67,9 +67,9 @@ Everything above: the customer sees it. Everything below: the customer does NOT 
 | Customer action | What customer sees | What customer does NOT see |
 |---|---|---|
 | Wait for SSO | "Your IT team is setting up access" | IT ticket backlog, Okta configuration |
-| Receive training | Solutions engineer facilitates session | SE prep time (3-4h per session) |
+| Receive training | Solutions engineer facilitates session | SE prep time (3–4h per session) |
 
-SSO delay becomes visible — customer knows they're waiting but not for how long. Not intentional. Fix: proactive ETA communication when SSO ticket is created.
+SSO delay becomes visible to the customer (they know they're waiting) but not how long. Not intentional. Fix: proactive ETA communication when SSO ticket is created.
 
 **Backstage employee actions:**
 
@@ -77,8 +77,8 @@ SSO delay becomes visible — customer knows they're waiting but not for how lon
 |---|---|---|---|---|---|
 | A | Contract signed | Create account in CRM, assign CSM | Revenue ops | Salesforce | 30 min |
 | B | Kickoff meeting | Submit SSO provisioning request | CSM | IT ticketing | 10 min |
-| C | SSO request | Configure SSO in identity provider | IT | Okta | 2-5 days |
-| D | SSO live | Provision all licensed users | IT | Admin panel | 1-3 days |
+| C | SSO request | Configure SSO in identity provider | IT | Okta | 2–5 days |
+| D | SSO live | Provision all licensed users | IT | Admin panel | 1–3 days |
 | E | Training complete | Send adoption tracking report | CSM | Analytics | 1 hour |
 
 **Support processes (bottom lane):**
@@ -114,16 +114,16 @@ SSO delay becomes visible — customer knows they're waiting but not for how lon
 
 ## Results
 
-- [x] PASS: Scope with concrete start and end — Step 1 is mandatory and requires a scope table; rules state "Start and end must be concrete events with a clear trigger and outcome."
-- [x] PASS: All four lanes — Steps 2, 3, 5, and 6 are all mandatory and map customer actions, frontstage employee actions, backstage employee actions, and support processes respectively.
-- [x] PASS: Line of visibility explicitly drawn — Step 4 is a mandatory dedicated step. The line of visibility appears as a required structural separator in the output format template. It is not optional.
-- [x] PASS: Visibility audit — Step 4 requires a visibility audit table ("What customer sees" vs "What customer does NOT see") and rules state: "Anything that crosses the line is a moment of truth — handle with care." The intentionality question is explicitly included.
-- [x] PASS: Failure point analysis with all required fields — Step 7 requires a failure points table with: location, failure mode, impact on customer, frequency, root cause, and current mitigation. All fields are mandatory.
-- [x] PASS: Backstage trigger required — Step 5 rules state: "Every backstage action must be triggered by something — a customer action, a frontstage action, or another backstage action. No orphaned steps." The "Triggered by" column is mandatory in the template.
-- [~] PARTIAL: Duration estimates — Step 5's backstage action template includes "Duration" as a required column ("how long"). The rules reinforce: "Duration matters — a 'quick review' that takes 3 days is a bottleneck, not a quick review." The definition fully meets this criterion, but the criterion prefix is PARTIAL — maximum score is 0.5.
-- [x] PASS: Prioritised recommendations linked to failure points — Step 8 requires a recommendations table with "Failure point" as a mandatory column. The rules state: recommendations without failure point references are not permitted.
-- [x] PASS: Valid YAML frontmatter — name, description, and argument-hint are all present in the skill's YAML header.
+- [x] PASS: Scope with concrete start and end — Step 1 is mandatory and requires a scope table. The Rules section states "Start and end must be concrete events with a clear trigger and outcome." The output template has `**Start point:**` and `**End point:**` as required fields.
+- [x] PASS: All four lanes — Steps 2 (customer actions), 3 (frontstage employee actions), 5 (backstage employee actions), and 6 (support processes) are all mandatory, each with a required output table and explicit rules. The output format template shows all four lanes in sequence.
+- [x] PASS: Line of visibility explicitly drawn — Step 4 is a mandatory dedicated step. The output format template shows the line as a visual separator (`───────────────────── LINE OF VISIBILITY ─────────────────────`) between frontstage and backstage. It is a required structural element, not a suggestion.
+- [x] PASS: Visibility audit — Step 4 requires a visibility audit table ("What customer sees" vs "What customer does NOT see") and Rules state: "Anything that crosses the line is a moment of truth — handle with care." The intentionality question is explicitly included ("decide if it's intentional or accidental").
+- [x] PASS: Failure point analysis with all required fields — Step 7 requires a table with location, failure mode, impact on customer, frequency, root cause, and current mitigation. All fields are mandatory in the template.
+- [x] PASS: Backstage trigger required — Step 5 rules state: "Every backstage action must be triggered by something — a customer action, a frontstage action, or another backstage action. No orphaned steps." The `Triggered by` column is mandatory in the template.
+- [~] PARTIAL: Duration estimates — Step 5's backstage action template includes `Duration` as a required column ("how long"). The Rules reinforce: "Duration matters — a 'quick review' that takes 3 days is a bottleneck, not a quick review." The definition fully satisfies this criterion, but the criterion prefix is PARTIAL — maximum score is 0.5 regardless.
+- [x] PASS: Prioritised recommendations linked to failure points — Step 8 requires a recommendations table with `Failure point` as a mandatory column. The rules state: recommendations must be linked to failure points. The output template enforces this structure.
+- [x] PASS: Valid YAML frontmatter — name, description, and argument-hint are all present in the skill's YAML header. `user-invocable: true` and `argument-hint: "[service or customer journey to blueprint]"` are explicit.
 
-## Notes
+### Notes
 
-The duration criterion is fully met by the definition — it's a required column in the backstage template, not just mentioned as important. The PARTIAL ceiling (0.5) applies regardless because the criterion prefix was set to PARTIAL by the test author. The line of visibility is treated as the conceptual core of the skill, which is architecturally correct: Step 4 is given its own mandatory step and appears as a visual separator in the output format template, not just described in prose.
+The line of visibility is treated as the conceptual core of the skill — Step 4 gets its own mandatory step and appears as a visual separator in the output format template, not just described in prose. This is architecturally correct for a service blueprint. The duration column in Step 5 is a required column, not just mentioned as important — the definition fully meets the duration criterion. The PARTIAL ceiling reflects the test author's deliberate conservative set, not a gap in the definition.

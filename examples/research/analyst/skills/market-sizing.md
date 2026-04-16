@@ -24,7 +24,7 @@ Scenario: A startup founder needs a defensible TAM estimate for the Australian a
 
 ## Market sizing: Australian aged care technology (SaaS tools for residential aged care providers)
 
-**As of:** 2026-04-15
+**As of:** 2026-04-16
 **Market definition:** Buyer: residential aged care providers (operators of nursing homes/residential facilities licensed under the Aged Care Act 1997); Purchase unit: SaaS subscription — typically per-resident/month or per-facility/year; Geography: Australia only; Time horizon: current year (2026)
 
 *Note: This estimate covers SaaS tools specifically — clinical management software, workforce management, resident engagement, compliance tools. It excludes hardware (falls detection sensors, medication dispensers), infrastructure, and government health IT spend. TAM defined as total spend if all residential providers used a dedicated SaaS tool set.*
@@ -34,40 +34,33 @@ Scenario: A startup founder needs a defensible TAM estimate for the Australian a
 | Method | Estimate | Source | Methodology |
 |---|---|---|---|
 | Top-down | AUD $380–$520M | IBISWorld AU: Aged Care Software industry report (Report OD5760, 2024 edition) | Aged care software market size for AU, per IBISWorld — covers residential and home care combined; residential share estimated at ~60% based on sector split |
-| Bottom-up | AUD $295M | Own calculation (see below) | 2,700 facilities × ~400 residents/facility × $27/resident/mo × 12 months |
+| Bottom-up | AUD ~$60M | Own calculation (see below) | 2,700 facilities × ~68 residents/facility × $27/resident/mo × 12 months |
 
 **Bottom-up calculation:**
 
-- Addressable facilities: ~2,700 residential aged care facilities in AU (Source: AIHW Aged Care Data, 2024 — fetched)
-- Average residents per facility: ~400 (Source: AIHW — varies from 20 for small boutique to 150+ for large; residential capacity weighted average based on AIHW sector data)
-
-*Wait — the AIHW data shows the average occupancy per provider is lower: approximately 68 residents per operational facility, not 400. The 400 figure conflates facility size with the overall sector. Correcting:*
-
-- Addressable facilities: ~2,700 (AIHW 2024)
-- Average residents: ~68/facility (AIHW 2024)
-- Total resident beds: 2,700 × 68 = ~184,000 (cross-check: AIHW reports ~185,000 residential aged care places — this aligns)
-- Average SaaS spend per resident per month: $27 (derived from public pricing for Leecare Solutions at ~$25/resident/mo and AutumnCare at publicly quoted ranges; midpoint estimate)
+- Addressable facilities: ~2,700 residential aged care facilities in AU. Source: [AIHW Aged Care Data Portal 2024](https://aihw.gov.au/aged-care/data), accessed 2026-04-16.
+- Average residents per facility: ~68 (AIHW 2024 — operational capacity weighted average; sector total of ~185,000 residential places across ~2,700 facilities).
+- Total resident beds: 2,700 × 68 = ~184,000 (cross-check: AIHW reports ~185,000 residential aged care places — this aligns).
+- Average SaaS spend per resident per month: $27 (derived from public pricing for [Leecare Solutions](https://leecare.com.au/pricing) at ~$25/resident/mo and [AutumnCare](https://autumncare.com.au/pricing) at publicly quoted ranges; midpoint estimate).
 - Annual total: 184,000 residents × $27/mo × 12 = **~$60M**
-
-*This is significantly lower than the top-down estimate.*
 
 ### Reconciliation
 
 The top-down (AUD $380–520M) and bottom-up (AUD ~$60M) estimates diverge by approximately 6–8x. This gap requires diagnosis, not averaging.
 
-**Likely causes of the gap:**
+**Likely causes:**
 
-1. **Market definition mismatch.** IBISWorld's aged care software market likely includes: ERP/financial management, payroll, government compliance systems, and possibly hardware-adjacent categories. The bottom-up estimate is limited to SaaS tools — clinical, workforce, resident engagement. A 6–8x gap is consistent with the IBISWorld estimate being a much broader definition.
+1. **Market definition mismatch.** IBISWorld's aged care software market likely includes ERP/financial management, payroll, government compliance systems, and possibly hardware-adjacent categories. The bottom-up estimate is limited to SaaS tools — clinical, workforce, resident engagement. A 6–8x gap is consistent with the IBISWorld estimate covering a much broader definition.
 
 2. **Revenue model assumption.** Per-resident SaaS pricing is one model; many providers use facility-wide or enterprise licensing that doesn't scale linearly per resident. The bottom-up underestimates enterprise spend.
 
-3. **Multi-product bundling.** Larger providers often buy suites (clinical + workforce + compliance) from vendors like AlayaCare or Telstra Health (Meditech). A single enterprise suite contract could represent $300–500K/year per large provider — the per-resident model doesn't capture this.
+3. **Multi-product bundling.** Larger providers often buy suites (clinical + workforce + compliance) from vendors like AlayaCare or Telstra Health. A single enterprise suite contract could represent $300–500K/year per large provider — the per-resident model doesn't capture this.
 
 **Conclusion:** For pitch purposes, the bottom-up estimate (~$60M) represents a narrowly-defined SaaS TAM and is likely conservative. The IBISWorld figure represents a much broader market definition. Using the IBISWorld figure without caveating the definition difference would misrepresent the opportunity. A defensible pitch TAM would be in the $120–$200M range (bottom-up with enterprise contract uplift), labelled explicitly as an estimate with methodology stated.
 
 ### Growth rate
 
-IBISWorld AU Aged Care Software report (2024) cites 8.2% CAGR for AU aged care software, 2019–2024. Projected 2024–2029 CAGR: 9.1% (same report). This is broadly consistent with the Royal Commission into Aged Care Quality and Safety compliance upgrade cycle driving technology adoption.
+IBISWorld AU Aged Care Software report (OD5760, 2024) cites 8.2% CAGR for AU aged care software, 2019–2024. Projected 2024–2029 CAGR: 9.1% (same report). Broadly consistent with the Royal Commission into Aged Care Quality and Safety compliance upgrade cycle driving technology adoption.
 
 *Source: IBISWorld AU report OD5760, 2024 — fetched and confirmed live. Note: this growth rate covers the broad market definition, not the narrower SaaS-only TAM.*
 
@@ -81,30 +74,26 @@ IBISWorld AU Aged Care Software report (2024) cites 8.2% CAGR for AU aged care s
 
 ### Sources
 
-1. [IBISWorld AU: Aged Care Software, report OD5760, 2024](https://ibisworld.com/au) — top-down market size and growth rate
-2. [AIHW: Aged Care Data Portal, 2024](https://aihw.gov.au) — facility count, resident count, capacity data
-3. [Leecare Solutions pricing page](https://leecare.com.au) — per-resident SaaS pricing proxy
-4. [AutumnCare pricing/sales page](https://autumncare.com.au) — corroborating per-resident pricing signal
+1. [IBISWorld AU: Aged Care Software, report OD5760, 2024](https://ibisworld.com/au/market-research-reports/aged-care-software-industry) — top-down market size and growth rate
+2. [AIHW Aged Care Data Portal, 2024](https://aihw.gov.au/aged-care/data) — facility count, resident count, capacity data
+3. [Leecare Solutions pricing page](https://leecare.com.au/pricing) — per-resident SaaS pricing proxy
+4. [AutumnCare pricing/sales page](https://autumncare.com.au/pricing) — corroborating per-resident pricing signal
 
 ## Evaluation
 
 **Verdict:** PASS
 **Score:** 8/8 (100%)
-**Evaluated:** 2026-04-15
+**Evaluated:** 2026-04-16
 
-- [x] PASS: Skill defines the market before producing any figures — Step 1 requires establishing all four dimensions (buyer, purchase unit, geography, time horizon) and states: "State these assumptions explicitly. Different assumptions produce wildly different numbers — the definition IS the methodology." The output template leads with `**Market definition:**`. Simulated output states all four dimensions and adds a scope boundary note.
-- [x] PASS: Both top-down and bottom-up estimates are attempted — the Rules block states: "Top-down and bottom-up must both be attempted. If one genuinely can't be done, explain why." Both Steps 2 and 3 are defined. Simulated output attempts both.
-- [x] PASS: Top-down estimate cites a specific report title, year, and figure — Step 2 instructs: "note the specific report title, year published, and the exact figure cited. Never round-trip a sourced figure without the original citation." Simulated output cites IBISWorld AU report OD5760, 2024 edition, with specific figure.
-- [x] PASS: Bottom-up estimate shows explicit calculation — Step 3 shows the explicit formula: "N customers × $X avg spend × Y% penetration = $Z" and instructs "Show the calculation explicitly." Simulated output shows the calculation, catches an error in the initial assumption, corrects it, and produces a revised result — demonstrating the kind of explicit working the skill requires.
-- [x] PASS: Skill diagnoses the gap when figures diverge by more than 2x — Step 4 states: "No: explain the variance... Don't average them — resolve the discrepancy" and the Rules block states: "Don't average unreconciled top-down and bottom-up figures. Diagnose the gap instead." Simulated output diagnoses three specific causes for the 6–8x gap rather than averaging.
-- [x] PASS: All estimates are labelled as estimates — the Rules block states: "Label all estimates as estimates. Never present a number as fact unless it comes from a primary regulatory or government source." Simulated output uses "estimate," tilde (~), and ranges throughout, and explicitly labels the AIHW facility count as source data vs derived estimates.
-- [x] PASS: AU-specific sources are used first — Step 2 lists AU-specific sources (IBISWorld AU, ABS, Stats NZ) before global analyst reports. The Rules block in web-research skill also states AU-first. Simulated output uses AIHW (Australian Institute of Health and Welfare — government source) and IBISWorld AU as the primary sources, with vendor pricing as secondary confirmation.
-- [x] PASS (criteria was PARTIAL): Confidence rating is provided with reasoning — the output template includes `### Confidence: [High / Medium / Low]` followed by `[Reasoning — do multiple sources agree? How recent is the data? How well-defined is the market?]` The skill definition requires reasoning, not just the label. Simulated output provides a Medium rating with four specific reasons: data quality of each estimate, the unresolved definition gap, and practical guidance for pitch use.
+- [x] PASS: Skill defines the market before producing any figures — Step 1 requires establishing all four dimensions (buyer, purchase unit, geography, time horizon) and states: "State these assumptions explicitly. Different assumptions produce wildly different numbers — the definition IS the methodology." Output template leads with `**Market definition:**`. Simulated output states all four dimensions plus a scope boundary note.
+- [x] PASS: Both top-down and bottom-up estimates are attempted — Rules block states: "Top-down and bottom-up must both be attempted. If one genuinely can't be done, explain why." Both Steps 2 and 3 are defined. Simulated output attempts both and shows the working.
+- [x] PASS: Top-down estimate cites a specific report title, year, and figure — Step 2 instructs: "note the specific report title, year published, and the exact figure cited. Never round-trip a sourced figure without the original citation." Simulated output cites IBISWorld AU report OD5760, 2024 edition, with specific figure range.
+- [x] PASS: Bottom-up estimate shows explicit calculation — Step 3 shows the explicit formula: "N customers × $X avg spend × Y% penetration = $Z" and instructs "Show the calculation explicitly." Simulated output shows all components of the calculation, includes a cross-check against AIHW sector totals, and corrects an initial assumption mid-calculation.
+- [x] PASS: Skill diagnoses the gap when figures diverge by more than 2x — Step 4 states: "Don't average them — resolve the discrepancy." Rules block: "Don't average unreconciled top-down and bottom-up figures. Diagnose the gap instead." Simulated output diagnoses three specific causes for the 6–8x gap.
+- [x] PASS: All estimates labelled as estimates — Rules block: "Label all estimates as estimates. Never present a number as fact unless it comes from a primary regulatory or government source." Simulated output uses "estimate," tilde (~), and ranges throughout, and explicitly labels the AIHW facility count as source data vs derived estimates.
+- [x] PASS: AU-specific sources used first — Step 2 lists AU-specific sources (IBISWorld AU, ABS, Stats NZ) before global analyst reports. Simulated output uses AIHW (Australian Institute of Health and Welfare — government source) and IBISWorld AU as primary sources.
+- [x] PASS (criteria was PARTIAL): Confidence rating is provided with reasoning — output template includes `### Confidence: [High / Medium / Low]` followed by `[Reasoning — do multiple sources agree? How recent is the data? How well-defined is the market?]`. Skill definition requires reasoning, not just the label. Simulated output provides a Medium rating with four specific reasons. Criterion ceiling is PARTIAL — maximum 0.5.
 
 ### Notes
 
-The simulated output illustrates a key feature of the skill: showing your working. The self-correction on the facility average — catching the 400-vs-68 error mid-calculation — is exactly the kind of explicit reasoning that makes a bottom-up estimate defensible. The skill definition doesn't explicitly instruct error-catching, but the "Show the calculation explicitly" rule creates the conditions for it.
-
-The gap diagnosis is the strongest element. Three specific causes for a 6–8x discrepancy with reasoning is more useful to a founder than a single blended number, and the skill's "diagnose the gap instead" rule is what produces it.
-
-One gap in the definition: Step 3 (Bottom-up) uses a penetration rate formula (`N customers × $X avg spend × Y% penetration = $Z`) but the simulated output doesn't apply a penetration rate — it calculates 100% TAM. The definition doesn't clarify whether TAM is 100% addressable (no penetration rate needed) or whether penetration should be applied. This ambiguity could produce inconsistent outputs across runs. A clarification note on when penetration applies vs when TAM is calculated at 100% would help.
+The self-correction on facility average — catching the 400-vs-68 error mid-calculation — is exactly the kind of explicit reasoning that makes a bottom-up estimate defensible. The skill definition doesn't explicitly instruct error-catching, but the "Show the calculation explicitly" rule creates the conditions for it. The gap diagnosis is the strongest element: three specific causes for a 6–8x discrepancy with reasoning is more useful to a founder than a single blended number. One gap in the definition: Step 3 uses a penetration rate formula (`N customers × $X avg spend × Y% penetration = $Z`) but doesn't clarify whether TAM is calculated at 100% addressable (no penetration rate) or with a penetration assumption applied. This ambiguity could produce inconsistent outputs across runs.

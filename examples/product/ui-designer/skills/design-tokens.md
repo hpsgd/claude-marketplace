@@ -56,29 +56,33 @@ type.base: 16px / 24px line-height
 
 **Naming convention:** `[category].[property].[variant].[state]` — e.g. `color.text.primary`, `color.interactive.hover`
 
-**Documentation:** Step 5 compiles a spec with Token Architecture section, Naming Convention, Primitives, Semantic Tokens, Validation Results, and Migration Guide.
+**Design Tool Export:**
+- Figma: Token JSON compatible with the Figma Tokens plugin (or Figma Variables for native support)
+- Style Dictionary: Configuration for generating CSS custom properties, SCSS variables, and platform-specific formats
+
+**Documentation:** Step 5 compiles a spec with Token Architecture section, Naming Convention, Primitives, Semantic Tokens, Validation Results, Migration Guide, and Design Tool Export sections.
 
 ## Evaluation
 
 **Verdict:** PASS
-**Score:** 6.5/8 criteria met (81%)
+**Score:** 7.5/8 criteria met (94%)
 **Evaluated:** 2026-04-16
 
 ## Results
 
 - [x] PASS: Primitive vs semantic layers — Step 2 "Define primitive tokens" and Step 3 "Define semantic tokens" are explicitly separate required steps. Step 3 opens with "Semantic tokens map primitives to purposes. Components consume semantic tokens, never primitives." The two-layer architecture is enforced by rule.
-- [x] PASS: Inventory step first — Step 1 "Inventory existing tokens" is the first step and explicitly precedes any new definitions. The output table catalogues existing values grouped by category with inconsistency flags.
-- [x] PASS: Contrast validation against WCAG AA — Step 4 "Validate coverage" contains a contrast validation table requiring 4.5:1 for normal text and 3:1 for large text/UI elements, covering both light and dark mode.
-- [x] PASS: Token documentation with use case — the semantic token tables in Step 3 include a "Usage" column, and Step 5's documentation format requires a `description` field per token. Value-only documentation is not the required format.
+- [x] PASS: Inventory step first — Step 1 "Inventory existing tokens" is the first step and explicitly precedes any new definitions. It scans CSS custom properties, Tailwind config, hardcoded values, and theme files, producing a table of discovered values with usage counts and inconsistency flags.
+- [x] PASS: Contrast validation against WCAG AA — Step 4 "Validate coverage" contains a contrast validation table requiring 4.5:1 for normal text and 3:1 for large text/UI elements, covering both light and dark mode. The Rules state: "Contrast ratios are mandatory, not aspirational."
+- [x] PASS: Token documentation with use case — the semantic token tables in Step 3 include a "Usage" column. Step 5's documentation format requires a description per token. Value-only documentation is not the required format.
 - [x] PASS: Colour, typography, spacing minimum — Step 2 defines colour palette (full hue scales), spacing scale (mathematical progression), and typography scale (size + line height + weight). All three required categories plus border radius, shadow, and motion.
-- [~] PARTIAL: Naming convention — Step 5 specifies `[category].[property].[variant].[state]` and the Rules section states "Naming conventions are non-negotiable. Follow the `[category].[property].[variant].[state]` pattern consistently." This criterion is PARTIAL-ceilinged (max 0.5) regardless — the convention is explicitly required, not just mentioned.
-- [ ] FAIL: Usable by both designers and developers — the skill explicitly covers developers (Step 1 scans CSS custom properties and Tailwind config; Step 5 output is a markdown spec). Designer tooling (Figma Variables, Figma Tokens plugin, or Style Dictionary → Figma) is not mentioned anywhere in the definition. The output format produces a markdown document, not a dual-audience artifact. Only one audience is served by the definition.
+- [~] PARTIAL: Naming convention — Step 5 specifies `[category].[property].[variant].[state]` and the Rules section states "Naming conventions are non-negotiable. Follow the pattern consistently." This criterion is PARTIAL-ceilinged (max 0.5) — the convention is explicitly required, not merely mentioned.
+- [x] PASS: Usable by both designers and developers — Step 5's documentation template includes a "Design Tool Export" section naming "Figma Variables or Figma Tokens plugin JSON" for designers and "CSS custom properties via Style Dictionary" for developers. The closing instruction states: "Do not produce a developer-only specification." Both audiences are explicitly served.
 - [x] PASS: Valid YAML frontmatter — contains `name: design-tokens`, `description`, and `argument-hint` fields.
 
-## Notes
+### Notes
 
-The previous evaluation incorrectly passed criterion 7. The definition is developer-focused throughout — it scans CSS, references Tailwind, and produces a markdown specification. There is no mention of Figma Variables, Figma Tokens plugin, or any designer-facing output format. A designer could consume the markdown document manually, but the skill doesn't require or produce a format that integrates with design tools.
+The Design Tool Export section in Step 5 is what makes criterion 7 a PASS. It explicitly names Figma Variables (native) and the Figma Tokens plugin as designer-facing formats, alongside Style Dictionary for developer-facing CSS. The closing enforcement rule ("Do not produce a developer-only specification") gives this requirement meaningful weight.
 
-The naming convention (criterion 6) is PARTIAL-ceilinged by the test author. Given it's actually a fully required specific convention in the definition, the ceiling feels conservative — but the rules are clear that PARTIAL-prefixed criteria cannot be upgraded.
+The naming convention (criterion 6) is PARTIAL-ceilinged by the test author. The definition fully requires a specific convention — the ceiling is the test author's constraint, not a definition gap.
 
-The two-layer primitive/semantic architecture is the strongest element of this skill. The rule "Components must never reference primitive tokens directly" enforced in the Rules section is a meaningful constraint, not just guidance.
+The two-layer primitive/semantic architecture is the skill's strongest design choice. The rule "Components must never reference primitive tokens directly" prevents the common drift where components eventually reach through to raw values rather than consuming semantic aliases.

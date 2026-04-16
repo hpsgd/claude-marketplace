@@ -29,12 +29,12 @@ Scenario: Testing whether the write-onboarding skill defines a value path before
 **Time to complete:** 5 minutes
 **What you'll accomplish:** Complete your first project milestone with your team.
 
-**Step 1 — Value path (before writing):**
+**Value path (Step 1 — before writing):**
 
 | Element | Definition |
 |---|---|
 | Target user | New account holder, likely a project manager, no Clearpath experience |
-| Aha moment | User sees their first completed task inside a project with at least one teammate — collaboration value becomes real |
+| Aha moment | User sees their first completed task inside a project with at least one teammate |
 | Minimum steps | 5: create workspace → invite teammate → create project → assign task → mark complete |
 | Time target | 5 minutes |
 | Primary drop-off risk | Step 3 — too many project options presented at once |
@@ -58,8 +58,6 @@ Working alone is fine, but Clearpath shows its value when your team can see each
 2. Enter a colleague's email address, e.g. `colleague@example.com`.
 3. Click **Send invite**.
    Your teammate receives an email. They appear in your workspace as "Pending" until they accept.
-
-If something's not right: If the button is greyed out, check that you've verified your email address first.
 
 **Step 3: Complete your first task**
 
@@ -86,7 +84,7 @@ You've completed your first project milestone in Clearpath. Here's what you just
 
 ## Evaluation
 
-**Verdict:** PASS
+**Verdict:** PARTIAL
 **Score:** 6.5/8 criteria met (81%)
 **Evaluated:** 2026-04-16
 
@@ -96,15 +94,15 @@ You've completed your first project milestone in Clearpath. Here's what you just
 - [x] PASS: Aha moment confirmation step required — Step 4 "Write the aha moment confirmation" is a required step with a specific template. The rules state "Name what they accomplished, not what features they used." The completion screen must be specific to what was built/created, not a generic "setup complete."
 - [x] PASS: Welcome contextualises outcome — Step 2 "Write the welcome" explicitly requires "Lead with the user's goal, not the product's features" and mandates "In the next [N] minutes, you'll [specific outcome]." Greeting-only welcome is rejected by the definition.
 - [x] PASS: Benefit per step required — the step template in Step 3 requires "[One sentence: why this step matters to THEM.]" as a mandatory field before the "What to do" list. Instruction-only steps are not the required format.
-- [ ] FAIL: Progress indicators not required — the skill's step format is `## Step N: [Action]` which numbers steps, but there is no requirement for a progress bar, step counter, or "Step N of M" indicator anywhere in the definition. The output format template also doesn't include progress indicator markup. Numbering exists, but a visual progress indicator as a UI requirement is absent from the definition.
-- [~] PARTIAL: Skip/abandon handling — Step 1 requires identifying "drop-off risks" (mentioned but not a full design section). Step 3 requires an "escape hatch" per step ("If something's not right") and Step 5 quality checks include "Escape hatches." Abandonment recovery (what the product shows on re-entry) is not addressed. PARTIAL ceiling applies regardless.
+- [ ] FAIL: Progress indicators not required — the skill's step format is `## Step N: [Action]` which numbers steps, but there is no requirement for a "Step N of M" progress indicator, a progress bar, or any UI element showing total step count. The welcome section lists steps as a numbered preview, but this is context-setting content, not an in-flow progress indicator. The definition does not explicitly require progress indicators.
+- [~] PARTIAL: Skip/abandon handling — Step 1 requires identifying "drop-off risks." Step 3 requires an "If something's not right" escape hatch per step. Step 5 quality checks include "Escape hatches." However, abandonment recovery (what the product shows on re-entry after abandonment) is not addressed. PARTIAL ceiling applies per criterion prefix.
 - [x] PASS: Plain language only — the Rules section says "No jargon. If the product has specific terminology, introduce it in context later." Step 5 quality check explicitly requires "No jargon: Would a first-time user understand every term without a glossary?"
 - [x] PASS: Valid YAML frontmatter — contains `name: write-onboarding`, `description`, and `argument-hint` fields.
 
-## Notes
+### Notes
 
-The progress indicator failure (criterion 5) is the most significant finding. The pre-run evaluation claimed this passed, but the definition has no explicit requirement for visual progress indicators. Step numbering (`## Step 1`, `## Step 2`) is implicit in the format, but a "Step 2 of 5" indicator or progress bar is a distinct UI requirement that the definition simply doesn't address.
+The progress indicator failure (criterion 5) is the most significant finding. The definition has numbered step headers and a welcome section with a numbered preview list — but it does not explicitly require an in-flow "Step N of M" counter or progress bar as a design requirement. Step numbering is implied by the format but a visual progress indicator is absent from the definition.
 
-The aha moment (criterion 2) and benefit-per-step (criterion 4) requirements are the strongest elements of this skill — they force the author to think about user motivation rather than just task completion.
+The aha moment (criterion 2) and benefit-per-step (criterion 4) requirements are the strongest elements of this skill. They force the author to think about user motivation rather than just task completion.
 
-The value path table (Step 1) is particularly useful: it requires a "Time target" field, which forces the author to verify the flow can be completed in the stated time before publishing it.
+The value path table (Step 1) is genuinely useful: it requires a "Time target" field and a "Primary drop-off risk" field, forcing the author to think about where users abandon before writing a single word of content.

@@ -106,7 +106,7 @@ sequenceDiagram
 ## Evaluation
 
 **Verdict:** PASS
-**Score:** 9/9 (100%)
+**Score:** 8.5/9 (94.4%)
 **Evaluated:** 2026-04-16
 
 ## Results
@@ -123,4 +123,6 @@ sequenceDiagram
 
 ## Notes
 
-The Known limitations criterion is PARTIAL-prefixed, capping at 0.5. The section IS in the mandatory output format (Step 6 and the Output Format template both include it), so this would be a PASS by evidence — but the ceiling rule prevents upgrading a PARTIAL-prefixed criterion. Score is 8.5/9 (94.4%). The skill is well-structured: sequence diagrams are explicitly required as a distinct type (not just architecture diagrams), and the "decisions without ADRs" handling (flag as "undocumented — write one") is a practical quality gate.
+The Known limitations criterion is PARTIAL-prefixed, capping at 0.5. The section IS in the mandatory output format (Step 6 and the Output Format template both include it), so this would be a PASS by evidence — but the ceiling rule prevents upgrading a PARTIAL-prefixed criterion. Score is 8.5/9 (94.4%). The previous evaluation header incorrectly stated 9/9 (100%) — corrected here.
+
+The skill is well-structured: sequence diagrams are explicitly required as a distinct type (not just architecture diagrams), and the "decisions without ADRs" handling (flag as "undocumented — write one") is a practical quality gate.

@@ -73,15 +73,17 @@ Recommended action: Investigate token generation service; check for deploy at ~2
 
 ## Results
 
-- [x] PASS: Multi-dimension classification — Step 2 requires classifying every ticket across Category (8 options listed), Severity (4 levels with definitions), and Routing (6 destinations). All three dimensions are mandatory, applied to every ticket.
+- [x] PASS: Multi-dimension classification — Step 2 requires classifying every ticket across Category (8 options listed), Severity (4 levels with definitions), and Routing (6 destinations). All three dimensions are mandatory and applied to every ticket.
 - [x] PASS: Pattern detection at 3+ tickets — Step 3 defines "Escalation trigger: 3+ tickets on the same issue → flag for immediate escalation to product/engineering." The threshold is explicit and the escalation template is provided.
 - [x] PASS: Bug report / incident escalation generated — Step 4 requires a structured bug report for every ticket routed to engineering, with 8 mandatory fields. A pattern escalation does not replace this — individual engineering tickets also get bug reports.
 - [x] PASS: Structured triage table — Step 5 Output specifies "Present ALL tickets in a single table, sorted by severity (Critical first), then by category" with 7 required columns. Prose summaries are not accepted.
 - [x] PASS: Ingest before classifying — Step 1 is titled "Ingest and normalise" and states "Read every ticket" before any classification step. This ordering is structural, not optional.
-- [~] PARTIAL: Response SLA per ticket — the Severity table (Step 2) includes explicit response targets: Critical = "Acknowledge within 1 hour, update every 2 hours," High = "Acknowledge within 4 hours," Medium = "Acknowledge within 1 business day," Low = "Acknowledge within 2 business days." SLA targets are defined but attached to severity levels rather than assigned to individual tickets in the triage table. Criterion prefix is PARTIAL — maximum 0.5 points.
+- [~] PARTIAL: Response SLA per ticket — the Severity table (Step 2) includes explicit response targets: Critical = "Acknowledge within 1 hour, update every 2 hours," High = "Acknowledge within 4 hours," Medium = "Acknowledge within 1 business day," Low = "Acknowledge within 2 business days." SLA targets are defined but attached to severity levels rather than assigned to individual tickets as a column in the triage table. Criterion prefix is PARTIAL — maximum 0.5 points.
 - [x] PASS: Routing to specific teams — Step 2 Routing table provides 6 named destinations (Engineering bugs, Engineering infrastructure, Product, Documentation, Support, Security). The triage table output requires a "Route to" column. Unrouted tickets are not permitted.
 - [x] PASS: Valid YAML frontmatter — the skill has `name: triage-tickets`, `description`, and `argument-hint` fields.
 
-## Notes
+### Notes
 
-The SLA criterion is scored PARTIAL per its prefix. The definition does contain explicit SLA targets (e.g. "Acknowledge within 1 hour" for Critical) in the severity table — these are more than implicit. However, the SLA is attached to the severity level rather than surfaced as a per-ticket field in the triage table output format, which is the gap the criterion identifies. Adding a "Response by" column to the triage table output would make this a clean PASS under a PASS-prefixed criterion.
+The SLA criterion scores PARTIAL per its prefix. The definition does contain explicit SLA targets (e.g., "Acknowledge within 1 hour" for Critical) in the severity table — these are substantive, not vague. However, the SLA is attached to the severity level rather than surfaced as a per-ticket column in the triage table output format. Adding a "Response by" column to the output table would make this a clean PASS under a PASS-prefixed criterion.
+
+The Rules section adds meaningful constraints beyond the step structure: "Never downplay a user's reported severity without evidence," "Always preserve the user's original language," and "Every Critical and High ticket MUST have a recommended next action." These are enforcement mechanisms not captured in the criteria.

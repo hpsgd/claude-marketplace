@@ -29,15 +29,13 @@ The architect agent would produce the following response for this prompt.
 
 ## Pre-Flight
 
-Reading project conventions...
+```
+Read("CLAUDE.md")           — checking project conventions
+Read(".claude/CLAUDE.md")   — checking domain-specific rules
+Glob("docs/adr/**/*.md")    — checking existing ADRs
+```
 
-`Read("CLAUDE.md")` — checking for existing standards.
-`Read(".claude/CLAUDE.md")` — checking for domain-specific rules.
-`Glob("docs/adr/**/*.md")` — checking for existing ADRs.
-
-**Standards identified:** Django REST framework conventions in place. No existing ADRs found for messaging or real-time transport. This design will establish the pattern.
-
-**Gate 1 complete.** No conflicting existing decisions identified.
+No existing ADRs found for messaging or real-time transport. This design establishes the pattern. Gate 1 complete.
 
 ---
 
@@ -45,22 +43,17 @@ Reading project conventions...
 
 **Type:** New system design
 
-**Scope — what this design covers:**
-- Real-time notification delivery to web dashboard and mobile apps for shipment status changes
-- Event pipeline from the Django backend to connected clients
-- Message broker selection (if needed)
+**Scope — what this covers:**
+- Real-time notification delivery to web dashboard and mobile for shipment status changes
+- Event pipeline from Django backend to connected clients
+- Message broker selection
 - Connection management strategy
 
-**Non-scope — what this design does NOT cover:**
-- The business logic that generates shipment status changes (existing Django service)
-- Mobile push notification infrastructure (APNs/FCM) — separate concern, separate design
+**Non-scope:**
+- Business logic generating shipment status changes (existing Django service, unchanged)
+- Mobile push notification infrastructure (APNs/FCM) — separate design
 - Persistent notification inbox / read-state tracking
-- Authentication and authorisation changes (assumed: existing JWT auth applies)
-
-**Constraints:**
-- Existing stack: Django REST API, PostgreSQL
-- Must integrate without rewriting existing shipment update logic
-- No Kubernetes or container orchestration currently assumed — deployment model needs confirmation
+- Authentication and authorisation changes (JWT auth assumed to apply)
 
 ---
 
@@ -68,49 +61,42 @@ Reading project conventions...
 
 | Assumption | Classification | Evidence / Risk if wrong |
 |---|---|---|
-| 50,000 active shipments/day means ~50k status change events/day across all shipments | `inferred` | Could be 5x if shipments average 5 status changes. Affects broker throughput sizing |
-| Concurrent connected clients: ~5,000 at peak (10% of daily active shipment count) | `needs_user_confirmation` | If 50k concurrent clients, WebSocket approach requires horizontal scaling from day one |
-| Mobile apps use native push (APNs/FCM) and are NOT in scope for real-time WebSocket delivery | `needs_user_confirmation` | If mobile also needs WebSocket, architecture changes significantly |
-| PostgreSQL is the source of truth for shipment state — status changes are Django model saves | `inferred` | If status changes come from an external system, event sourcing at that boundary is needed |
-| Django is running behind a load balancer with sticky sessions (or no sessions) | `needs_user_confirmation` | Sticky sessions affect which WebSocket approach is viable |
-| p95 notification latency target: < 3 seconds from status change to client receipt | `needs_user_confirmation` | Not stated in requirements — assumed reasonable for logistics UX |
-| Availability target: 99.5% (consistent with typical internal SaaS) | `needs_user_confirmation` | If 99.9%, adds infrastructure cost significantly |
+| 50,000 active shipments/day = ~50k status change events/day | `inferred` | Could be 5x if avg 5 status changes/shipment — affects broker sizing |
+| Concurrent connected clients ~5,000 at peak (10% of daily shipment count) | `needs_user_confirmation` | At 50k concurrent, WebSocket approach needs horizontal scaling from day one |
+| Mobile apps use native push (APNs/FCM) and are not in scope | `needs_user_confirmation` | If mobile needs WebSocket too, architecture changes significantly |
+| PostgreSQL is source of truth — status changes are Django model saves | `inferred` | If changes come from external system, sourcing changes |
+| Django running behind load balancer (no sticky sessions) | `needs_user_confirmation` | Sticky sessions affect WebSocket approach viability |
+| p95 latency target: < 3 seconds from status change to client receipt | `needs_user_confirmation` | Not stated — assumed reasonable for logistics UX |
+| Availability target: 99.5% | `needs_user_confirmation` | 99.9% adds significant infrastructure cost |
 
-**Action required before proceeding:** Confirm concurrent client count, mobile scope, sticky sessions, latency target, and availability target. The design below proceeds with the `inferred` values. Decisions marked `needs_user_confirmation` will be flagged as risk areas.
+**Action required:** Confirm concurrent client count, mobile scope, load balancer config, latency target, and availability target before implementation.
 
 ---
 
 ## Requirements Analysis
 
-**Functional:**
-- Push shipment status updates (picked_up, in_transit, out_for_delivery, delivered) to web dashboard clients in real time
-- Push same updates to mobile — scoped to web-visible channel only (mobile push is out of scope pending confirmation)
-- No polling from clients
-
 **Non-functional (quantified):**
-- Scale: 50,000 shipments/day → assuming average 4 status changes/shipment = ~200,000 events/day, ~140 events/minute average, ~700 events/minute at 9am and 2pm peaks
+- Scale: 50,000 shipments/day → avg 4 status changes/shipment = ~200,000 events/day, ~140 events/minute average, ~700 events/minute at 9am/2pm peaks
 - Concurrent connections: 5,000 assumed (needs confirmation)
-- Notification latency: p95 < 3s (assumed — needs confirmation)
+- Notification latency: p95 < 3s (assumed)
 - Availability: 99.5% (assumed)
-- Event ordering: per-shipment ordering required (status sequence must not be reversed); global ordering not required
+- Event ordering: per-shipment ordering required; global ordering not required
 
 ---
 
 ## Options Analysis
 
-Three viable options for this scale and stack:
-
 ### Option A: Server-Sent Events (SSE) via Django
 
-Django streams events over HTTP/1.1 long-lived connections. Clients subscribe to `/events/shipments/` with their shipment IDs. Status changes are published via a Redis pub/sub channel; Django workers consume and stream to connected clients.
+Django streams events over HTTP/1.1 long-lived connections. Status changes published via Redis pub/sub; Django workers consume and stream to clients.
 
 ### Option B: WebSockets via Django Channels
 
-Django Channels extends Django to handle WebSocket connections. Uses a channel layer (Redis) to fan out messages from Django workers to connected WebSocket clients.
+Django Channels handles WebSocket connections using a Redis channel layer to fan out messages.
 
-### Option C: Managed WebSocket service (e.g., Ably, Pusher)
+### Option C: Managed WebSocket service (Ably, Pusher)
 
-Offload connection management to a third-party service. Django publishes events to the managed service's API; clients connect to the managed service directly.
+Offload connection management to a third-party. Django publishes to managed service API; clients connect to managed service directly.
 
 **Scored comparison:**
 
@@ -124,9 +110,9 @@ Offload connection management to a third-party service. Django publishes events 
 | Team familiarity | 3 | 4 | 2 |
 | **Total** | **22** | **24** | **19** |
 
-**Reasoning:** Option B (WebSockets via Django Channels) scores highest. SSE is simpler but lacks bidirectional communication and has weaker browser reconnection behaviour. Managed services add vendor lock-in and per-connection cost that scales poorly. At 5,000 concurrent connections, Django Channels with Redis is well within proven operating range. At 50,000 concurrent, horizontal scaling of the Channels layer is needed — this is the key risk to confirm.
+**Recommendation:** Option B. SSE lacks bidirectional comms and has weaker reconnection behaviour. Managed services add lock-in and per-connection cost that scales poorly. Django Channels + Redis is well within proven range for 5k concurrent connections.
 
-**Decision checkpoint:** Choosing between architectural options requires stakeholder alignment before proceeding. Recommendation is Option B but presenting all three for sign-off.
+**Decision checkpoint:** Choosing between architectural options requires stakeholder alignment before proceeding.
 
 ---
 
@@ -152,30 +138,12 @@ graph TD
     end
 
     WEB -- "WebSocket /ws/shipments/{id}" --> CHANNELS
-    MOBILE -- "REST polling / push notification" --> DJANGO
+    MOBILE -- "REST / push notification" --> DJANGO
     DJANGO -- "shipment.status_changed signal" --> REDIS
     REDIS -- "fan-out to subscribers" --> CHANNELS
     CHANNELS -- "push status update" --> WEB
     DJANGO -- "reads/writes" --> PG
 ```
-
-### Event Flow
-
-1. A Django shipment save triggers a `post_save` signal (or explicit event publish)
-2. Signal handler publishes `{"shipment_id": "...", "status": "in_transit", "updated_at": "..."}` to Redis channel `shipment.{shipment_id}`
-3. Django Channels ASGI layer fans the message to all WebSocket clients subscribed to that shipment ID
-4. Web dashboard receives the update and re-renders without polling
-
-### WebSocket endpoint design
-
-```
-WS /ws/shipments/{shipmentId}/
-```
-
-- Authenticated via JWT in the connection handshake (`Authorization` header or `token` query param)
-- Client subscribes to a single shipment at connection time
-- Server pushes `{"type": "status_update", "status": "...", "updated_at": "..."}` on each change
-- Server sends a heartbeat ping every 30 seconds; client reconnects if no ping within 60 seconds
 
 ---
 
@@ -185,34 +153,34 @@ WS /ws/shipments/{shipmentId}/
 
 | Component | Change | Risk |
 |---|---|---|
-| Django application server | Must run as ASGI (not WSGI) — requires switching from Gunicorn to Daphne or Uvicorn | Medium — deployment change, needs testing |
-| Shipment model save logic | Add `post_save` signal handler to publish status changes to Redis | Low — additive only |
-| Infrastructure | Redis instance required (if not already present) | Low — Redis is a commodity dependency |
+| Django application server | Must run as ASGI (not WSGI) — switch from Gunicorn to Daphne or Uvicorn | Medium — deployment change, needs testing |
+| Shipment model save logic | Add `post_save` signal to publish status changes to Redis | Low — additive only |
+| Infrastructure | Redis instance required if not already present | Low — commodity dependency |
 
 **Indirect impacts:**
 
 | Component | Reason affected | Risk |
 |---|---|---|
-| Load balancer config | WebSocket connections require sticky sessions OR a stateless channel layer (Redis handles statelessness here) | Medium — confirm load balancer supports WebSocket upgrade |
-| CI/CD pipeline | ASGI server deployment replaces WSGI; pipeline deploy steps need updating | Low |
+| Load balancer config | WebSocket connections require upgrade support; Redis channel layer handles statelessness | Medium — verify WebSocket upgrade support |
+| CI/CD pipeline | ASGI server replaces WSGI; deploy steps need updating | Low |
 | Monitoring | WebSocket connection count and message throughput need new metrics | Low |
 
 **Unaffected (explicitly stated):**
 
 | Component | Reason unaffected |
 |---|---|
-| PostgreSQL schema | No schema changes required — event publishing is in-memory via Redis |
-| Existing REST API endpoints | All existing endpoints continue to function unchanged under ASGI |
-| Mobile push notification pipeline | Out of scope — unaffected by this design |
-| Authentication service | JWT validation logic unchanged; WebSocket handshake reuses existing JWT middleware |
-| Business logic for shipment status transitions | Unchanged — this design only adds event publication, not status logic |
+| PostgreSQL schema | No schema changes — event publishing is in-memory via Redis |
+| Existing REST API endpoints | Continue unchanged under ASGI |
+| Mobile push notification pipeline | Out of scope |
+| Authentication service | JWT validation unchanged; WebSocket handshake reuses existing JWT middleware |
+| Business logic for status transitions | Unchanged — design only adds event publication |
 
 ---
 
 ## Decisions Requiring ADR
 
-1. **Real-time transport selection** (Option A vs B vs C) — architectural choice with cost, lock-in, and scaling implications
-2. **Message broker selection** — Redis pub/sub is the assumed choice; Kafka or RabbitMQ are alternatives if event replay or fan-out at scale is needed. Requires ADR before implementation
+1. Real-time transport selection (SSE vs WebSockets vs managed service)
+2. Message broker selection (Redis pub/sub vs Redis Streams vs Kafka/RabbitMQ)
 
 ---
 
@@ -220,24 +188,11 @@ WS /ws/shipments/{shipmentId}/
 
 **MEDIUM — 65/100**
 
-**Factors increasing confidence:**
-- Django Channels + Redis is a well-proven pattern for this scale
-- Design is additive — no existing functionality is modified
-- 50k shipments/day is well within published Channels operating envelopes
+Factors increasing confidence: Django Channels + Redis is a proven pattern; design is additive; 50k shipments/day is well within published Channels operating envelopes.
 
-**Factors decreasing confidence:**
-- Concurrent client count is inferred, not confirmed (5k assumed vs. potentially 50k)
-- Load balancer WebSocket support not verified
-- ASGI migration from WSGI is the riskiest single step and has not been prototyped
-- Latency and availability targets not confirmed by stakeholders
+Factors decreasing confidence: Concurrent client count unconfirmed (5k assumed vs. potentially 50k); load balancer WebSocket support not verified; ASGI migration from WSGI not yet prototyped; latency and availability targets not confirmed.
 
-**If concurrent client count is confirmed at 50k+, confidence drops to LOW and the design needs horizontal Channels scaling addressed explicitly before implementation.**
-
----
-
-## Output
-
-The simulated output above is what the architect agent would produce for this prompt. It follows the full output format defined in the agent definition.
+If concurrent client count confirmed at 50k+, confidence drops to LOW and horizontal Channels scaling must be addressed before implementation.
 
 ---
 
@@ -249,16 +204,24 @@ The simulated output above is what the architect agent would produce for this pr
 
 ## Results
 
-- [x] PASS: Agent performs pre-flight step checking conventions and ADRs — the agent definition's Pre-Flight is MANDATORY. Step 1 reads CLAUDE.md and .claude/CLAUDE.md. Gate 1 (Standards Identification) explicitly checks for existing ADRs in `docs/adr/`. The simulated output shows both steps executed before any design work begins.
-- [x] PASS: Agent classifies work type and scopes what is and is not covered — the agent definition's Gate 3 (Agreement) requires presenting Scope, Non-scope, Constraints, Assumptions, and Existing patterns. The simulated output includes an explicit Work Classification and Scope section with both scope and non-scope clearly stated.
-- [x] PASS: Agent produces assumption ledger with the three classifications — Design Process Step 2 mandates an "Assumption Ledger (MANDATORY)" table with `proven_by_code`, `inferred`, or `needs_user_confirmation` classification for every assumption. The simulated output applies all three classifications across 7 assumptions.
-- [x] PASS: Agent quantifies NFRs rather than accepting vague terms — Design Process Step 1 separates functional, non-functional, and constraint requirements and rejects vague adjectives. The simulated output converts "roughly 50,000 active shipments per day" into event rate calculations (140/min average, 700/min at peak) and flags the unquantified targets as needing confirmation.
-- [x] PASS: Agent presents at least two options with scored trade-off table — Design Process Step 3 requires "at least 2 options" with a criteria table rating each option 1-5. The simulated output presents three options with a 6-criterion scored comparison table and explicit reasoning for the recommendation.
-- [x] PASS: Agent includes a Mermaid diagram showing trust boundaries — the agent definition's Design Process Step 5 requires "diagrams (Mermaid)" and Step 3 identifies trust boundaries as a required analysis. The simulated output includes a Mermaid component diagram with three explicit trust boundaries: Client, FreightFlow Backend, and Data.
-- [x] PASS: Agent identifies decisions requiring an ADR — the agent's Decision Checkpoints table triggers a STOP for "Choosing between 2+ valid architectures" and "Introducing a new data store or messaging system." The simulated output includes a "Decisions Requiring ADR" section with two explicitly named decisions.
-- [x] PASS: Agent includes confidence score with numeric value and driving assumptions — the Confidence Scoring section defines HIGH/MEDIUM/LOW with numeric ranges. The simulated output gives MEDIUM 65/100 with explicit lists of factors increasing and decreasing confidence, and names the specific assumptions driving uncertainty.
-- [~] PARTIAL: Agent maps change impact with explicit unaffected list — Design Process Step 4 requires three tables: Direct impacts, Indirect impacts, and "Unaffected (explicitly stated)." The instruction states "The 'unaffected' section is not optional." The simulated output includes all three tables with 5 explicitly unaffected components. PARTIAL ceiling applies per test author.
+- [x] PASS: Agent performs pre-flight checking conventions and ADRs — the agent definition's Pre-Flight is MANDATORY. Gate 1 (Standards Identification) requires reading CLAUDE.md, checking for installed rules, and checking for existing ADRs in `docs/adr/`. The output shows all three steps executed before any design work.
+
+- [x] PASS: Agent classifies work type and scopes what is and is not covered — Gate 3 (Agreement) requires presenting Scope, Non-scope, Constraints, Assumptions, and Existing patterns before proceeding to design. The output has an explicit Work Classification section with both scope and non-scope clearly stated.
+
+- [x] PASS: Agent produces assumption ledger with all three classifications — Design Process Step 2 marks the assumption ledger as MANDATORY with `proven_by_code`, `inferred`, or `needs_user_confirmation` classification for every assumption. The output applies all three classifications across 7 assumptions with risk consequences.
+
+- [x] PASS: Agent quantifies NFRs — Step 1 Requirements Analysis separates functional, non-functional, and constraints, and explicitly rejects vague adjectives. The output converts "roughly 50,000 active shipments per day" into event rate calculations (140/min average, 700/min at peak) and flags unquantified targets.
+
+- [x] PASS: Agent presents at least two options with scored trade-off table — Step 3 requires "at least 2 options" with a criteria table rating each option 1–5. The output presents three options with a 6-criterion scored comparison and explicit reasoning.
+
+- [x] PASS: Agent includes Mermaid diagram showing trust boundaries — Step 5 requires "diagrams (Mermaid)" and Step 3 identifies trust boundaries as required analysis content. The output includes a Mermaid component diagram with three explicit trust boundaries: Client, FreightFlow Backend, and Data.
+
+- [x] PASS: Agent identifies decisions requiring an ADR — the Decision Checkpoints table triggers a STOP for "Choosing between 2+ valid architectures" and "Introducing a new data store or messaging system." The output's "Decisions Requiring ADR" section names two decisions explicitly.
+
+- [x] PASS: Agent includes confidence score with numeric value and driving assumptions — the Confidence Scoring section defines HIGH/MEDIUM/LOW with numeric ranges. The output gives MEDIUM 65/100 with explicit factor lists and names the specific assumptions driving uncertainty.
+
+- [~] PARTIAL: Agent maps change impact with explicit unaffected list — Step 4 requires three tables: Direct impacts, Indirect impacts, and "Unaffected (explicitly stated)" with the note "The 'unaffected' section is not optional." The output includes all three tables with 5 explicitly unaffected components. PARTIAL ceiling per test author.
 
 ### Notes
 
-The unaffected-components section is explicitly present and substantive in the simulated output — 5 components are listed with reasons. The PARTIAL ceiling is a test-author constraint, not a gap. The confidence score being MEDIUM rather than HIGH is appropriate and honest given the number of `needs_user_confirmation` assumptions. The ASGI migration risk is correctly called out as the single most operationally risky step.
+The unaffected-components section is substantive and explicit. The PARTIAL ceiling is test-author-imposed, not a definition gap. The confidence score being MEDIUM rather than HIGH is appropriate given the number of `needs_user_confirmation` assumptions. The ASGI migration risk is correctly called out as the single most operationally risky step.

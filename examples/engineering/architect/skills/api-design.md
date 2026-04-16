@@ -32,33 +32,28 @@ The api-design skill, applied to a representative scenario (designing a REST API
 ## Resource Hierarchy
 
 ```
-/customers                          → customer collection
-/customers/{customerId}             → single customer
-/customers/{customerId}/shipments   → shipments belonging to a customer
-/customers/{customerId}/shipments/{shipmentId}        → single shipment
-/customers/{customerId}/shipments/{shipmentId}/events → status events for a shipment
-/drivers                            → driver collection
-/drivers/{driverId}                 → single driver
-/drivers/{driverId}/assignments     → shipments assigned to a driver
+/customers                                              → customer collection
+/customers/{customerId}                                 → single customer
+/customers/{customerId}/shipments                       → shipments for a customer
+/customers/{customerId}/shipments/{shipmentId}          → single shipment
+/customers/{customerId}/shipments/{shipmentId}/events   → status events for a shipment
+/drivers/{driverId}/assignments                         → shipments assigned to a driver
 ```
 
-**URL hierarchy rule applied:** Every child resource is accessed through its parent chain. `/shipments` does not exist as a flat top-level endpoint — shipments are always accessed under `/customers/{customerId}/shipments`. No verbs in URLs — `POST /shipments/{id}/cancellation` not `POST /shipments/{id}/cancel`.
+URL hierarchy rule applied: every child resource is accessed through its parent chain. `/shipments` does not exist as a flat top-level endpoint. No verbs in URLs.
 
 ---
 
 ## Authentication
 
-- Bearer tokens in the `Authorization` header: `Authorization: Bearer <token>`
-- Access tokens: 15 minutes lifetime
-- Refresh tokens: 7 days lifetime, rotated on use
-- Token refresh: `POST /auth/token/refresh`
-- Resource-level authorisation: customers can only access their own shipments; drivers can only access their own assignments. Role-based access is insufficient — ownership check is mandatory per endpoint.
+- Bearer tokens in `Authorization: Bearer <token>`
+- Access tokens: 15-minute lifetime
+- Refresh tokens: 7 days, rotated on use
+- Resource-level authorisation: customers can only access their own shipments. Role-based access is insufficient — ownership check is mandatory per endpoint.
 
 ---
 
 ## Endpoints
-
-### Shipments
 
 | Method | Path | Description | Auth |
 |---|---|---|---|
@@ -66,21 +61,9 @@ The api-design skill, applied to a representative scenario (designing a REST API
 | POST | /customers/{customerId}/shipments | Create shipment | Bearer + Owner |
 | GET | /customers/{customerId}/shipments/{shipmentId} | Get shipment | Bearer + Owner |
 | PATCH | /customers/{customerId}/shipments/{shipmentId} | Update shipment | Bearer + Owner |
-| DELETE | /customers/{customerId}/shipments/{shipmentId} | Cancel/delete shipment | Bearer + Owner |
+| DELETE | /customers/{customerId}/shipments/{shipmentId} | Cancel shipment | Bearer + Owner |
 
-#### GET /customers/{customerId}/shipments
-
-**Parameters:**
-
-| Name | Location | Type | Required | Description |
-|---|---|---|---|---|
-| customerId | path | string (UUID) | Yes | Customer identifier |
-| page | query | integer | No | 1-indexed page number. Default: 1 |
-| size | query | integer | No | Items per page. Default: 25, max: 100 |
-| sort | query | string | No | Field to sort by. Allowed: `createdAt`, `status`. Default: `createdAt` |
-| dir | query | string | No | Sort direction: `asc` or `desc`. Default: `desc` |
-| status | query | string | No | Filter by status. Repeatable for OR: `?status=in_transit&status=out_for_delivery` |
-| createdAfter | query | string (ISO 8601) | No | Filter shipments created after this date |
+### GET /customers/{customerId}/shipments
 
 **Response 200:**
 
@@ -91,8 +74,6 @@ The api-design skill, applied to a representative scenario (designing a REST API
       "id": "a1b2c3d4-...",
       "customerId": "x9y8z7...",
       "status": "in_transit",
-      "origin": "Sydney, NSW",
-      "destination": "Melbourne, VIC",
       "createdAt": "2026-04-16T08:00:00Z",
       "updatedAt": "2026-04-16T09:30:00Z"
     }
@@ -104,30 +85,11 @@ The api-design skill, applied to a representative scenario (designing a REST API
 }
 ```
 
-**Errors:**
-
-| Status | When | Error type |
-|---|---|---|
-| 401 | Missing or invalid token | `/problems/unauthorized` |
-| 403 | Token valid but not authorised for this customer | `/problems/forbidden` |
-| 404 | Customer not found | `/problems/not-found` |
-
-#### PATCH /customers/{customerId}/shipments/{shipmentId}
+### PATCH /customers/{customerId}/shipments/{shipmentId}
 
 Uses JSON Merge Patch (`Content-Type: application/merge-patch+json`).
 
-**Optimistic concurrency (MANDATORY):** Client must include `lastUpdatedAt` matching the server's current value. Mismatch returns `409 Conflict` with the current server state.
-
-**Request body example:**
-
-```json
-{
-  "status": "out_for_delivery",
-  "lastUpdatedAt": "2026-04-16T09:30:00Z"
-}
-```
-
-**Response 200:** Updated shipment object.
+**Optimistic concurrency (MANDATORY):** Client must include `lastUpdatedAt` matching the server's current value. Mismatch returns `409 Conflict`.
 
 **Response 409:**
 
@@ -147,22 +109,18 @@ Uses JSON Merge Patch (`Content-Type: application/merge-patch+json`).
 
 All errors use RFC 9457 Problem Details format.
 
-| Error type | Status | When it occurs | Example |
-|---|---|---|---|
-| `/problems/bad-request` | 400 | Malformed JSON or wrong field type | Invalid UUID in path parameter |
-| `/problems/unauthorized` | 401 | Missing or expired token | No `Authorization` header |
-| `/problems/forbidden` | 403 | Authenticated but not owner | Customer accessing another customer's shipment |
-| `/problems/not-found` | 404 | Resource does not exist | Shipment ID not found |
-| `/problems/conflict` | 409 | Optimistic concurrency mismatch | `lastUpdatedAt` does not match server value |
-| `/problems/validation-error` | 422 | Valid JSON but fails business rules | Status transition not allowed (e.g., delivered → in_transit) |
-| `/problems/rate-limit-exceeded` | 429 | Too many requests | Burst limit exceeded |
-| `/problems/internal-error` | 500 | Server error | Returns correlation ID only — details logged server-side |
+| Error type | Status | When it occurs |
+|---|---|---|
+| `/problems/bad-request` | 400 | Malformed JSON or wrong field type |
+| `/problems/unauthorized` | 401 | Missing or expired token |
+| `/problems/forbidden` | 403 | Authenticated but not owner |
+| `/problems/not-found` | 404 | Resource does not exist |
+| `/problems/conflict` | 409 | Optimistic concurrency mismatch |
+| `/problems/validation-error` | 422 | Valid JSON but fails business rules |
+| `/problems/rate-limit-exceeded` | 429 | Burst limit exceeded |
+| `/problems/internal-error` | 500 | Server error — correlation ID only |
 
-**Rules applied:**
-- Stack traces, database error messages, and internal paths never appear in error responses
-- 4xx errors include enough detail for the client to fix the request
-- 500 responses return only: `{ "type": "...", "title": "Internal Server Error", "status": 500, "correlationId": "abc123" }`
-- Validation errors list ALL failing fields, not just the first
+Rules applied: stack traces, database error messages, and internal paths never appear in error responses. 500 responses return only a correlation ID.
 
 ---
 
@@ -170,24 +128,11 @@ All errors use RFC 9457 Problem Details format.
 
 **Strategy:** URL prefix (`/v1/`, `/v2/`)
 
-**When a new version is required:**
-- Removing a field from a response
-- Changing a field's type or semantics
-- Removing an endpoint
-- Changing pagination behaviour
+Breaking changes requiring a new version: removing a field, changing field type or semantics, removing an endpoint.
 
-**When a new version is NOT required (additive changes only):**
-- Adding a new optional field to a response
-- Adding a new endpoint
-- Adding a new optional query parameter
+Additive changes NOT requiring a new version: new optional fields, new endpoints, new optional query parameters.
 
-**Deprecation:** Deprecated versions include a `Sunset` header: `Sunset: Sat, 01 Jan 2027 00:00:00 GMT`. Maximum 2 versions supported simultaneously.
-
----
-
-## Output
-
-The simulated output above is what the api-design skill would produce when applied to a REST API design scenario. It demonstrates all the structural elements the skill mandates.
+Deprecated versions include a `Sunset` header. Maximum 2 versions simultaneously.
 
 ---
 
@@ -199,16 +144,24 @@ The simulated output above is what the api-design skill would produce when appli
 
 ## Results
 
-- [x] PASS: Skill defines URL hierarchy rule — Step 2 (URL Hierarchy Design): "URLs MUST mirror entity ownership. Every resource is accessed through its parent chain." Explicit rule: "No flat top-level listings of child resources. `/crawls` does not exist — it is always `/sources/{sourceId}/crawls`." The simulated output applies this — `/shipments` does not exist as a top-level endpoint. Anti-patterns also lists "Flat URL namespace."
-- [x] PASS: Skill specifies HTTP method semantics table — Step 3: a table covering GET, POST, PUT, PATCH, DELETE with "Idempotent" column and "Success code" column. All five methods are present with correct idempotency values and status codes (200, 201, 204). The simulated output's endpoints table applies these semantics.
-- [x] PASS: Skill mandates RFC 7396 merge patch with lastUpdatedAt optimistic concurrency — Step 4 (PATCH Semantics): "All PATCH operations use JSON Merge Patch (Content-Type: application/merge-patch+json)" and "Optimistic concurrency is MANDATORY for all PATCH and PUT operations" using `lastUpdatedAt`, returning 409 Conflict on mismatch. The simulated output shows the 409 response example and the `lastUpdatedAt` requirement.
-- [x] PASS: Skill requires pagination with the defined response shape — Step 5: "Every list endpoint MUST support" pagination. Response format shows `items`, `page`, `size`, `totalItems`, `totalPages` — all five required fields. The simulated output's GET list response matches this shape exactly.
-- [x] PASS: Skill specifies RFC 9457 Problem Details — Step 6: "All errors use the Problem Details format" with a schema example. Rules: "Never expose stack traces, internal paths, or database details in error responses." The simulated output's Error Catalogue uses the Problem Details format throughout.
-- [x] PASS: Skill provides versioning section with 2+ options and rules — Step 7 provides three strategy options (URL prefix, Header, No versioning). Rules define what requires a new version (breaking changes) and what does not (additive changes). Sunset header for deprecated versions. The simulated output shows the URL prefix strategy applied with breaking/non-breaking change rules.
-- [x] PASS: Skill defines authentication requirements — Step 8: "Bearer tokens in the Authorization header", "Tokens are short-lived (15 minutes for access, 7 days for refresh)", and "Resource-level authorisation — check ownership, not just role." The simulated output's Authentication section reproduces all three requirements.
-- [x] PASS: Skill lists the required anti-patterns — Anti-Patterns section explicitly lists: "Flat URL namespace", "Verbs in URLs", "Silent failures — every error returns an appropriate status code and message", and "Leaking internal IDs — use UUIDs or slugs, not auto-increment integers." All four specified anti-patterns are present verbatim.
-- [~] PARTIAL: Skill's output format template includes error catalogue and resource hierarchy visual — Output Format template includes "## Resource Hierarchy [Visual tree showing URL structure]" and "## Error Catalogue [All custom error types with examples]." Both sections are present as named required sections in the output format template, and both are present in the simulated output. PARTIAL ceiling applies per test author.
+- [x] PASS: Skill defines URL hierarchy rule — Step 2 (URL Hierarchy Design): "URLs MUST mirror entity ownership. Every resource is accessed through its parent chain." And explicitly: "No flat top-level listings of child resources. `/crawls` does not exist — it is always `/sources/{sourceId}/crawls`." The Anti-Patterns section also lists "Flat URL namespace." Both are explicit instructions.
+
+- [x] PASS: Skill specifies HTTP method semantics table — Step 3 provides a table covering GET, POST, PUT, PATCH, DELETE with "Idempotent" column and "Success code" column. All five methods present with correct idempotency values (GET/PUT/PATCH/DELETE yes, POST no) and success codes (200, 201, 200, 200, 204).
+
+- [x] PASS: Skill mandates RFC 7396 merge patch with lastUpdatedAt optimistic concurrency — Step 4 (PATCH Semantics): "All PATCH operations use JSON Merge Patch (Content-Type: application/merge-patch+json)" and "Optimistic concurrency is MANDATORY for all PATCH and PUT operations" using `lastUpdatedAt`, returning 409 Conflict on mismatch. Both requirements are explicit.
+
+- [x] PASS: Skill requires pagination with the five-field response shape — Step 5: "Every list endpoint MUST support" pagination. The paginated response format shows `items`, `page`, `size`, `totalItems`, `totalPages` — all five required fields. The word MUST makes this non-optional.
+
+- [x] PASS: Skill specifies RFC 9457 Problem Details — Step 6 title is "Error Format (Problem Details — RFC 9457)." Rules include "Never expose stack traces, internal paths, or database details in error responses" and "5xx errors are generic — log the detail server-side." Both the format and the anti-leakage rules are explicit.
+
+- [x] PASS: Skill provides versioning section with 2+ options and rules — Step 7 provides three strategy options (URL prefix, Header, No versioning). Rules define breaking changes (require new version) vs. additive changes (do not require new version), plus sunset header guidance. More than two options present.
+
+- [x] PASS: Skill defines authentication requirements — Step 8: "Bearer tokens in the Authorization header," "Tokens are short-lived (15 minutes for access, 7 days for refresh)," and "Resource-level authorisation — check ownership, not just role." All three requirements explicit.
+
+- [x] PASS: Skill lists all four required anti-patterns — Anti-Patterns section lists: "Flat URL namespace," "Verbs in URLs" (with example), "Silent failures — every error returns an appropriate status code and message," and "Leaking internal IDs — use UUIDs or slugs, not auto-increment integers." All four specified anti-patterns present verbatim.
+
+- [~] PARTIAL: Skill's output format template includes error catalogue and resource hierarchy visual — Output Format template includes "## Resource Hierarchy [Visual tree showing URL structure]" and "## Error Catalogue [All custom error types with examples]." Both are present as named required sections in the output format template. PARTIAL ceiling per test author.
 
 ### Notes
 
-The error catalogue and resource hierarchy visual are both defined as required sections in the output format template. The criterion is fully met by the skill definition. The PARTIAL ceiling is a test-author choice. The skill is one of the stronger definitions in the set — the RFC citations (RFC 7396 for merge patch, RFC 9457 for Problem Details) and the specific status code table make it unusually precise. The optimistic concurrency requirement being MANDATORY rather than optional is a good example of opinionated guidance that prevents a common API defect.
+The skill definition is precise throughout — RFC citations (RFC 7396 for merge patch, RFC 9457 for Problem Details), explicit MANDATORY markers for optimistic concurrency and pagination, and named anti-patterns. The error catalogue and resource hierarchy are both in the output format template as required sections, so the criterion is met by the definition. The PARTIAL ceiling is test-author-imposed.
