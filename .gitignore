@@ -9,6 +9,7 @@ TODO.md
 .claude/learnings/sessions/
 .claude/learnings/signals/
 .claude/learnings/patterns/
+.claude/learnings/metrics/
 
 __pycache__/
 node_modules/
