@@ -86,3 +86,5 @@ These rules govern how the evaluator assesses criteria against plugin definition
 **Simulated outputs should be realistic, not perfect.** When generating the simulated output, reflect the definition's actual coverage. If the definition has a gap that would affect a criterion, the output should show that gap. Do not generate output that compensates for missing definition guidance.
 
 **Independence between criteria.** Evaluate each criterion independently. Do not let a strong result on one criterion influence your assessment of another.
+
+**Source citation quality in simulated outputs.** For research-related tests (anything under `examples/research/`), simulated output source citations must use specific deep links, not generic homepages. `linkedin.com/company/safetyculture` not `linkedin.com`. `crt.sh/?q=example.com` not `crt.sh`. When a registry doesn't support deep linking, state the exact search path used. Every source gets an access date. If the plugin definition has a `rules/source-citations.md` rule installed, the simulated output must follow it.
