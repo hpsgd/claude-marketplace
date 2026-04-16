@@ -28,6 +28,14 @@ Scenario: Testing whether the component-spec skill definition requires all 8 int
 
 ---
 
+### 0. Design system decision
+
+Searched codebase for existing upload components. Found `FileInput` at `components/forms/FileInput.tsx` — handles single-file selection via click only, no drag-and-drop, no progress indication, no multi-file support.
+
+**Decision: Create** — `FileInput` does not support drag-and-drop or progress indication. A new `FileUpload` component is needed. This spec documents a full new component rather than extending `FileInput`.
+
+---
+
 ### 1. Purpose and Usage Context
 
 **What it does:** Accepts file uploads via drag-and-drop or click-to-browse, with upload progress feedback and validation for invalid file types or sizes.
@@ -76,6 +84,8 @@ When unsure, use `default`. `compact` exists for layout-constrained contexts onl
 | **Loading** | Progress bar at bottom of zone (width animates from 0 to 100%); upload zone non-interactive | Preserves layout dimensions to prevent shift | Default, Error |
 | **Error** | Border → `color.feedback.error`; error text below zone using `color.text.primary` on error bg | Displays `error` prop string; user can retry | Default |
 | **Empty** | Placeholder icon + "Drag files here or click to browse" CTA | Guides user to take action | Default |
+| **Selected** | N/A | N/A | — |
+| **Read-only** | N/A | N/A | — |
 
 Rules: Hover, Focus, Active, and Disabled are mandatory per definition. Focus must be visually distinct beyond colour change. Loading must preserve layout dimensions. Disabled must use `aria-disabled` and block events.
 
@@ -195,21 +205,25 @@ All animations must respect `prefers-reduced-motion: reduce` — provide instant
 
 ## Evaluation
 
-**Verdict:** PARTIAL
-**Score:** 5.5/8 (69%)
+**Verdict:** PASS
+**Score:** 7.5/8 criteria met (94%)
 **Evaluated:** 2026-04-16
 
-- [x] PASS: All 8 interaction states required — Section 4 "States — Complete Coverage Table" lists Default, Hover, Focus, Active, Disabled, Loading, Error, and Empty with the mandate "Document EVERY state the component can be in." The rules state Hover, Focus, Active, and Disabled are mandatory "no exceptions." Selected and Read-only are also in the table (marked N/A if not applicable). The 8 states the criterion requires are all present as required entries.
-- [x] PASS: ARIA roles, labels, keyboard navigation mandatory — Section 6 "Accessibility Requirements" is part of the Mandatory Specification Structure. It requires keyboard navigation table, screen reader section covering role/label/state announcements, colour/contrast requirements, and focus management. None are marked optional. The heading "Every component must meet WCAG 2.1 AA" is a mandatory framing.
-- [ ] FAIL: No Reuse / Extend / Create decision step — the skill's mandatory structure begins at "1. Purpose and Usage Context." There is no step requiring a design system decision (Reuse vs Extend vs Create) before writing the spec. The definition instructs "search the codebase for existing implementations" as a preliminary, but this is a codebase search instruction, not a structured decision gate. No Reuse/Extend/Create framework exists anywhere in the definition.
-- [x] PASS: Responsive behaviour at multiple breakpoints — Section 5 "Responsive Behaviour" is in the Mandatory Specification Structure with a breakpoint table covering Mobile (< 640px), Tablet (640–1024px), and Desktop (> 1024px). Touch target requirements (44×44px) are explicit.
-- [x] PASS: Properties/variants table required — Section 2 "Props / API" requires every prop documented with type, default, required, and description. Section 3 "Variants" requires a variants table with visual treatment, semantic meaning, and when-to-use columns. Both are mandatory sections.
-- [x] PASS: Animation and transition specifications required — Section 8 "Animation and Motion" is a mandatory section. It requires specifying what animates, duration, and easing function. `prefers-reduced-motion` handling is required. Maximum duration rules are enforced (300ms micro-interactions, 500ms page transitions).
-- [~] PARTIAL: Token references for colours, spacing, typography — Section 7 "Dark Mode" requires "all colours use semantic tokens, not hardcoded values." The Rules section states "Semantic over primitive — Components must never reference primitive tokens directly" (this appears in design-tokens SKILL.md, not component-spec). Within component-spec, the dark mode checklist enforces token use but the states table template does not include a token reference column or require tokens to be named per state row. Tokens are required but not required to be named inline. PARTIAL ceiling (0.5) applies per criterion prefix.
+## Results
+
+- [x] PASS: All 8 interaction states required — Section 4 "States — Complete Coverage Table" lists Default, Hover, Focus, Active, Disabled, Loading, Error, and Empty as required entries with "Document EVERY state the component can be in." The table template includes all 8 states plus Selected and Read-only (marked N/A if not applicable). Rules mandate Hover, Focus, Active, and Disabled with no exceptions.
+- [x] PASS: ARIA roles, labels, and keyboard navigation mandatory — Section 6 "Accessibility Requirements" is part of the Mandatory Specification Structure with explicit sub-sections: Keyboard Navigation, Screen Reader (role, label, state announcements), Colour and Contrast, and Focus Management. "Every component must meet WCAG 2.1 AA" makes this non-optional.
+- [x] PASS: Design system decision required before spec — Section 0 "Design system decision (MANDATORY — before writing the spec)" is a new explicit gate. It requires a Reuse / Extend / Create decision with a decision table, justification statement, and the rule "If the decision is Reuse, stop here." This is a structured output gate, not just a search instruction. The decision must be stated with reasoning before Section 1 begins.
+- [x] PASS: Responsive behaviour at multiple breakpoints — Section 5 "Responsive Behaviour" is in the Mandatory Specification Structure with a breakpoint table covering Mobile (< 640px), Tablet (640–1024px), and Desktop (> 1024px). Touch target and no-scroll rules are explicit.
+- [x] PASS: Properties/variants table required — Section 2 "Props / API" requires every prop documented with type, default, required, and description. Section 3 "Variants" requires visual treatment, semantic meaning, and when-to-use columns. Both are mandatory sections.
+- [x] PASS: Animation and transition specifications required — Section 8 "Animation and Motion" is a mandatory section requiring what animates, duration, easing, and `prefers-reduced-motion` handling. Maximum duration constraints (300ms micro-interactions, 500ms page transitions) are enforced.
+- [~] PARTIAL: Token references for colours, spacing, and typography — Section 7 "Dark Mode" requires "all colours use semantic tokens, not hardcoded values." Token use is required. However, the states table template does not include a token-reference column and there is no rule requiring tokens to be named inline per state row. Tokens are required but not required to be cited by name within each section. Score: 0.5.
 - [x] PASS: Valid YAML frontmatter — frontmatter contains `name: component-spec`, `description`, and `argument-hint` fields.
 
 ### Notes
 
-The FAIL on criterion 3 (Reuse/Extend/Create) is a genuine gap in the skill. The definition starts immediately with "Purpose and Usage Context" and never asks whether an existing component should be reused or extended. The codebase search instruction ("search the codebase for existing implementations") is a step in the right direction, but it has no structured output — there is no decision gate requiring the author to choose and justify Reuse/Extend/Create before writing a full spec. In practice, this could lead to new components being written when an existing one could be extended.
+The addition of Section 0 is the key change from the previous evaluation. The Reuse/Extend/Create decision gate is now a mandatory named section with a decision table, example justification text, and a hard stop rule for Reuse decisions. This addresses the previous FAIL directly and cleanly.
 
-The score of 5.5/8 (69%) is a borderline FAIL. One additional PASS criterion met would push this to PARTIAL. The definition is strong on interaction states, accessibility, responsive behaviour, and animation — the missing Reuse/Extend/Create decision is the only outright FAIL, but it matters.
+The PARTIAL on token references (criterion 7) remains. The dark mode checklist requires semantic tokens but does not require the author to name the specific token for each state row. This is a weak requirement — it says "use tokens" but doesn't enforce "name the token you're using." A stronger version would include a token column in the states table or a dedicated token mapping section.
+
+Score: 7 PASS + 0.5 PARTIAL = 7.5/8 = 94% → PASS verdict. The previous score was 5.5/8 (69%, FAIL). The definition update flipped criterion 3 from FAIL to PASS, which moved the verdict from FAIL to PASS.

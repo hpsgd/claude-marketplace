@@ -22,7 +22,7 @@ We compete with Atlassian in the project management space. Can you analyse this 
 
 ## Output
 
-The agent receives a single article URL. The routing table maps "Analyse this article / document / transcript" to `/analyst:content-analysis`, so the agent dispatches there.
+The agent receives a single article URL with a request to analyse framing, claims, and source structure. The routing table maps "Analyse this article / document / transcript" to `/analyst:content-analysis`, so the agent dispatches there.
 
 ---
 
@@ -60,7 +60,7 @@ The agent receives a single article URL. The routing table maps "Analyse this ar
 
 **Sentiment targets:** Remote work (positive — productivity gains foregrounded); team cohesion under remote conditions (concerned); Atlassian products (implicitly positive — positioned as a response to the identified problems).
 
-**Notable language signals:** "New research" in headline — claims authority; "we found" — first-person proprietary framing; focus on individual productivity as a metric; absence of "productivity decline" framing despite that being a common counter-narrative at the time.
+**Notable language signals:** "New research" in headline claims authority; "we found" uses first-person proprietary framing; absence of "productivity decline" framing despite that being a common counter-narrative at the time.
 
 ### Framing
 
@@ -68,7 +68,7 @@ The agent receives a single article URL. The routing table maps "Analyse this ar
 
 **Foregrounded:** Individual productivity gains, focus time, reduced interruptions.
 
-**Backgrounded:** Team cohesion risks, the conditions under which the survey was conducted (involuntary pandemic-driven remote work, not chosen remote work), whether gains were sustained over time.
+**Backgrounded:** Team cohesion risks; the conditions under which the survey was conducted (involuntary pandemic-driven remote work, not chosen remote work); whether gains were sustained over time.
 
 **Omissions:** No comparison group (in-office workers during same period); no discussion of which job types were surveyed; no counter-evidence from productivity decline findings; no methodology disclosure (sample size, recruitment, survey design). Insufficient topic knowledge to fully assess whether specific claims accurately represent the broader remote work literature at this date.
 
@@ -76,7 +76,7 @@ The agent receives a single article URL. The routing table maps "Analyse this ar
 
 ### Narrative
 
-The piece runs a progress/opportunity narrative: a disruption (pandemic remote work) has unexpectedly revealed productivity benefits that organisations can capture, provided they address the collaboration deficit. This activates a problem-solution reader response — the reader ends the piece looking for a tool to bridge the gap. A secondary authority narrative is present: Atlassian as the source of insight, not just a product vendor.
+The piece runs a progress/opportunity narrative: a disruption (pandemic remote work) has unexpectedly revealed productivity benefits that organisations can capture, provided they address the collaboration deficit. A secondary authority narrative is present: Atlassian as the source of insight, not just a product vendor.
 
 ### Source structure
 
@@ -89,10 +89,6 @@ The piece runs a progress/opportunity narrative: a disruption (pandemic remote w
 
 The primary evidence base is Atlassian's proprietary and unpublished survey data. No named external researchers, no peer-reviewed citations, no third-party validation. This is a structural observation about how the article argues, not a verdict on whether the findings are accurate.
 
-### Summary assessment
-
-The piece is an advocacy article using proprietary research framing to position Atlassian as a thoughtful commentator on remote work. The source structure leans entirely on unattributed internal data — unusual even for blog content. The framing foregrounds findings that support a narrative favourable to Atlassian's product positioning. A researcher using this piece should treat it as evidence of Atlassian's internal narrative, not as independent evidence about remote work outcomes.
-
 ---
 
 ## Evaluation
@@ -103,17 +99,17 @@ The piece is an advocacy article using proprietary research framing to position 
 
 ### Results
 
-- [x] PASS: Agent routes to `/analyst:content-analysis` for a single article URL — met. The routing table explicitly maps "Analyse this article / document / transcript" to `/analyst:content-analysis`. A blog post URL with an analyse request maps directly to that row.
-- [~] PARTIAL: Agent distinguishes analysis from summarisation — partially met: 0.5. The Core section prohibits summarisation ("You don't summarise; you analyse") and the Principles section names the analytical categories (framing, sentiment, etc.). However, the agent definition itself does not enforce a structured output template — the template lives in the `/analyst:content-analysis` skill. The agent definition guides but cannot guarantee the full structured output on its own. Score: 0.5.
-- [x] PASS: Framing observations are stated as interpretive judgements — met. The Non-negotiable section states "Don't present framing observations as objective fact — they're analytical judgements." The Principles section reinforces "own it — don't hide interpretive judgements behind passive voice." Explicit in two places.
-- [x] PASS: Sentiment assessed at author's tone level — met. Non-negotiable states "Sentiment analysis applies to the content, not to the subject being written about." Principles restate "Sentiment applies to the author's tone, not the subject's character." Explicit in two places.
-- [ ] FAIL: Source structure section identifies how claims are attributed — not met. The agent routes single-article requests to `/analyst:content-analysis`. The agent's own definition (not the skill's) contains no requirement to produce a source attribution breakdown as part of its response to a content-analysis request. The agent description mentions "source credibility assessment" as a general capability but no instruction in the agent definition enforces source attribution analysis for a content-analysis request. The skill definition handles this — but the criterion is testing the agent definition.
-- [~] PARTIAL: Agent notes omissions, with caveat if topic knowledge insufficient — partially met: 0.5. The Principles section states "Absence matters. What a piece doesn't say is often more revealing than what it does." Omission-noting is covered. The caveat mechanism (qualifying omission observations when topic knowledge is insufficient) has no corresponding instruction in the agent definition. Ceiling is PARTIAL.
-- [x] PASS: Agent does not produce academic-style output — met. "What you don't do" states "Produce academic-style literature reviews — that's research, not content analysis." Explicit.
-- [x] PASS: Agent does not assess whether conclusions are correct — met. "What you don't do" states "Assess whether a source's conclusions are correct — only whether it's credible." Explicit.
+- [x] PASS: Agent routes to `/analyst:content-analysis` for a single article URL — the routing table explicitly maps "Analyse this article / document / transcript" to `/analyst:content-analysis`. A blog post URL with an analyse request matches that row directly.
+- [~] PARTIAL: Agent distinguishes analysis from summarisation — the Core statement says "You don't summarise; you analyse" and the non-negotiable section names analytical categories (framing, sentiment). However, the structured output template (entity extraction, key claims, sentiment, framing, narrative, source structure) lives in the `/analyst:content-analysis` skill, not in this agent definition. The agent correctly routes there, but the enforcement of structured analytical output is not within the agent's own definition. Score: 0.5.
+- [x] PASS: Framing observations stated as interpretive judgements — Non-negotiable says "Don't present framing observations as objective fact — they're analytical judgements." Principles section adds "Own it — don't hide interpretive judgements behind passive voice." Stated explicitly in two places.
+- [x] PASS: Sentiment assessed at author's tone level — Non-negotiable states "Sentiment analysis applies to the content, not to the subject being written about." Principles reinforce "Sentiment applies to the author's tone, not the subject's character." Explicit in two places.
+- [ ] FAIL: Source structure section identifies how claims are attributed — the agent's definition does not contain any instruction requiring source attribution analysis as part of a content-analysis response. The agent routes to the content-analysis skill, which handles this, but the agent's own definition has no rule covering source attribution structure. "Source credibility assessment" appears in the agent description as a general capability, but no instruction in the agent definition body specifies source attribution breakdown as a required output element for a content-analysis request.
+- [~] PARTIAL: Agent notes omissions with caveat when topic knowledge insufficient — Principles section states "Absence matters. What a piece doesn't say is often more revealing than what it does." Noting omissions is covered. The caveat mechanism (qualifying omission assessments when topic knowledge is insufficient) has no corresponding instruction in the agent definition. The criterion ceiling is PARTIAL per its prefix. Score: 0.5.
+- [x] PASS: Agent does not produce academic-style output — "What you don't do" explicitly states "Produce academic-style literature reviews — that's research, not content analysis." Direct exclusion.
+- [x] PASS: Agent does not assess whether conclusions are correct — "What you don't do" states "Assess whether a source's conclusions are correct — only whether it's credible." Direct exclusion.
 
 ### Notes
 
-The FAIL on source attribution structure is a genuine gap in the agent definition. A competitor's blog post is exactly the scenario where claim attribution matters most — is this proprietary data? Named researcher? Disclosed methodology? The agent routes to the content-analysis skill which handles this correctly, but the agent's own definition has no instruction requiring source attribution breakdown as part of a content-analysis request. The content-analysis skill makes up the gap operationally, but the agent's coordination layer doesn't guarantee it.
+No change from previous evaluation. The agent definition is stable and the two gaps identified previously remain. Criterion 5 (source attribution structure) fails because the structured output template is in the skill definition, not the agent. Criterion 2 is PARTIAL for the same reason — the agent routes correctly, but the enforcement lives downstream.
 
-The PARTIAL on analysis vs summarisation reflects that the enforcement mechanism lives in the skill definition, not the agent definition. The agent correctly routes there, but a user receiving a plain summary from the skill would not have a rule in the agent definition to object to.
+The agent's framing, sentiment, and exclusion rules are well-written and directly traceable. The two weaknesses are structural: the agent delegates the output format to skills but doesn't carry enough of that specification in its own definition to pass the structural criteria independently.
