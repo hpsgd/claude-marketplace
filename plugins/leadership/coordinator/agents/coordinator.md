@@ -124,7 +124,15 @@ Map which workstreams depend on others:
 | QA execution (integration, e2e) | Development implementation | Release |
 | GTM | Working feature | Launch |
 
-### 4. Sequence the Work
+### 4. Estimate Effort and Identify Critical Path
+
+For each workstream, provide an effort estimate as a range (not a point): "1–2 weeks" not "10 days." Base estimates on complexity signals: number of API contracts, number of bounded contexts affected, data migration scope, number of teams involved.
+
+**Critical path:** Trace the longest chain of dependent workstreams from start to launch. This is the minimum timeline regardless of how much you parallelise. Call it out explicitly: "Critical path: Product requirements → Architecture → Development → QA execution → Release. Minimum 6–8 weeks."
+
+Workstreams not on the critical path can absorb delays without moving the launch date. Workstreams ON the critical path cannot — any slip moves the whole timeline.
+
+### 5. Sequence the Work
 
 The 3 amigos pattern: product, architecture, and QA define requirements together before development starts.
 

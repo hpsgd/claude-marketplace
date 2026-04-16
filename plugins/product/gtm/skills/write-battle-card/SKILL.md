@@ -56,6 +56,23 @@ For every common objection a prospect raises about choosing us over this competi
 
 Build at least 4 objection-response pairs. Prioritise by frequency — the objections sales hears most go first.
 
+**For enterprise deals with multiple buyer personas:** Segment objections by buyer role. The CFO's objection about TCO is different from the VP Engineering's objection about API coverage. Structure as:
+
+```
+### Objections by buyer persona
+
+#### Economic buyer (e.g., CFO/VP Finance)
+[Objections about cost, TCO, ROI, contract terms]
+
+#### Technical buyer (e.g., VP Engineering/CTO)
+[Objections about integration, migration, API, security]
+
+#### End user (e.g., sales reps, account managers)
+[Objections about UX, speed, mobile, workflow disruption]
+```
+
+**TCO comparison for enterprise deals:** When the competitor is an established platform (Salesforce, HubSpot, etc.), include a TCO breakdown with specific line items: licence cost per seat, implementation/migration cost, training, ongoing admin overhead, and integration maintenance. "We're cheaper" is not a TCO comparison.
+
 **Rules for objection handling:**
 - **Never dismiss the objection.** Acknowledge it, then redirect.
 - **Proof points are mandatory.** A response without evidence is opinion. Prospects can smell it.

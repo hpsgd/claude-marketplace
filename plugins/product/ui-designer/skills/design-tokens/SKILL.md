@@ -184,7 +184,13 @@ Compile the final token specification:
 
 ## Migration Guide
 [For existing codebases: mapping from old values to new tokens]
+
+## Design Tool Export
+- **Figma:** Token JSON compatible with the Figma Tokens plugin (or Figma Variables for native support)
+- **Style Dictionary:** Configuration for generating CSS custom properties, SCSS variables, and platform-specific formats
 ```
+
+The output must be usable by both designers (Figma Variables or Figma Tokens plugin JSON) and developers (CSS custom properties via Style Dictionary). Do not produce a developer-only specification — if the token set can't be imported into the design tool, designers will diverge from it.
 
 ## Rules
 

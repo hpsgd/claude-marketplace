@@ -80,6 +80,13 @@ Document EVERY state the component can be in. Missing states are the #1 source o
 - Loading state MUST preserve the component's layout dimensions to prevent layout shift.
 - Disabled state MUST use `aria-disabled` and prevent interaction — do not just change opacity without blocking events.
 
+**Compound state combinations:** For components with multiple simultaneous interaction modes (e.g., a data table with sorting + selection + inline editing), document each combination explicitly. A row can be selected AND being edited AND in a sorted column — the spec must define what each combination looks like and how transitions work between them.
+
+**Sub-component states:** When a component contains sub-components with their own state (e.g., a toolbar that appears/disappears, an inline edit field), specify:
+- The sub-component's own states (hidden/visible, editing/display, expanded/collapsed)
+- Transitions: what triggers the sub-component to change state
+- For inline editing: entry trigger (click/double-click), save (Enter/blur), cancel (Escape), validation error display, and what happens to the row's other states during edit
+
 ### 5. Responsive Behaviour
 
 Define behaviour at each breakpoint. Use the project's breakpoint system (Tailwind defaults shown):

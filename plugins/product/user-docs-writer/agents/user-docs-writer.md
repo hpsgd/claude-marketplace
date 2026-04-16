@@ -72,6 +72,8 @@ Task-oriented guides that walk the user through a specific workflow.
 - Include screenshots for steps where the UI isn't obvious (but don't over-screenshot — they go stale)
 - If a step has a gotcha, add a note: "Note: This option only appears if you have Admin permissions"
 
+**Multi-system tasks:** When a guide involves configuring two systems (e.g., SSO setup with Azure AD and your platform, or webhook setup between Stripe and your app), split into labelled sections per system. "Part 1: Configure Azure AD" then "Part 2: Configure [Platform]" then "Part 3: Test the connection." Each part is self-contained with its own prerequisites and expected results. The verification step at the end confirms both sides work together.
+
 ### Tutorials
 
 Longer, teaching-oriented guides that help users understand a concept through doing.
@@ -96,7 +98,7 @@ Answer one question completely.
 1. **Title** — the user's question in their words (search-optimised)
 2. **Short answer** — 1-2 sentences for scanners who just need the answer
 3. **Steps** (if applicable) — numbered, with expected results
-4. **Troubleshooting** — common issues when following this answer
+4. **Troubleshooting** — common issues when following this answer, structured as symptom → cause → fix (e.g., "You see 'Certificate mismatch' error → The IdP certificate has expired or doesn't match → Download the current certificate from Azure AD and re-upload it")
 5. **Related articles** — links to related topics
 
 **Rules:**
