@@ -23,22 +23,348 @@ We need to handle Stripe webhooks in our Django Ninja API. The endpoint should b
 
 # Output: Stripe webhook handler implementation
 
+## Output
+
+```
+## Implemented: Stripe webhook handler
+
+### Pre-Flight
+- Domain: payments (bounded context — new webhook ingress surface)
+- Existing patterns: frozen dataclasses in src/payments/events.py, pytest-bdd features in
+  tests/features/, Django Ninja router in src/api/router.py
+- Classification: New domain feature → BDD spec first → step defs → frozen dataclass model →
+  implementation
+
+Read(file_path="CLAUDE.md")
+Read(file_path=".claude/CLAUDE.md")
+# Checked .claude/rules/coding-standards--python.md — loaded. Key constraints: frozen
+# dataclasses for domain models, no Any, no except:pass, mypy --strict, ruff, 95%+ coverage.
+```
+
+**Decision checkpoint triggered:** Adding a new bounded context surface (webhook ingress for
+Stripe) — stopping to confirm placement before proceeding. Should this live in
+`src/payments/webhooks/` alongside existing payment domain logic, or in a separate
+`src/integrations/stripe/` context? If the existing payments bounded context already owns
+Stripe payment intents, placing webhook handling there is consistent. Proceeding with
+`src/payments/webhooks/` unless instructed otherwise.
+
+---
+
+**Step 1: BDD feature spec**
+
+```gherkin
+# tests/features/stripe_webhooks.feature
+
+Feature: Stripe webhook event handling
+  As the payments system
+  I want to receive and validate Stripe webhook events
+  So that payment state changes are reflected as domain events immediately
+
+  Background:
+    Given the Stripe webhook secret is configured
+
+  Scenario: Payment intent succeeded
+    Given a valid Stripe signature for a payment_intent.succeeded event
+    When the webhook endpoint receives the event
+    Then a PaymentSucceeded domain event is dispatched
+    And the response status is 200
+
+  Scenario: Payment intent failed
+    Given a valid Stripe signature for a payment_intent.payment_failed event
+    When the webhook endpoint receives the event
+    Then a PaymentFailed domain event is dispatched
+    And the response status is 200
+
+  Scenario: Subscription deleted
+    Given a valid Stripe signature for a customer.subscription.deleted event
+    When the webhook endpoint receives the event
+    Then a SubscriptionDeleted domain event is dispatched
+    And the response status is 200
+
+  Scenario: Invalid webhook signature
+    Given an invalid Stripe signature
+    When the webhook endpoint receives the event
+    Then the event is rejected
+    And the response status is 400
+    And no domain event is dispatched
+
+  Scenario: Unsupported event type
+    Given a valid Stripe signature for a customer.created event
+    When the webhook endpoint receives the event
+    Then the event is acknowledged without dispatching
+    And the response status is 200
+
+  Scenario Outline: All supported event types dispatch correct domain events
+    Given a valid Stripe signature for a <event_type> event
+    When the webhook endpoint receives the event
+    Then a <domain_event> domain event is dispatched
+
+    Examples:
+      | event_type                        | domain_event        |
+      | payment_intent.succeeded          | PaymentSucceeded    |
+      | payment_intent.payment_failed     | PaymentFailed       |
+      | customer.subscription.deleted     | SubscriptionDeleted |
+```
+
+---
+
+**Step 2: Domain event models**
+
+```python
+# src/payments/events.py
+
+from dataclasses import dataclass
+from datetime import datetime
+
+
+@dataclass(frozen=True)
+class PaymentSucceeded:
+    payment_intent_id: str
+    amount: int
+    currency: str
+    occurred_at: datetime
+
+
+@dataclass(frozen=True)
+class PaymentFailed:
+    payment_intent_id: str
+    failure_code: str
+    failure_message: str
+    occurred_at: datetime
+
+
+@dataclass(frozen=True)
+class SubscriptionDeleted:
+    subscription_id: str
+    customer_id: str
+    occurred_at: datetime
+
+
+StripeWebhookEvent = PaymentSucceeded | PaymentFailed | SubscriptionDeleted
+```
+
+---
+
+**Step 3: Webhook endpoint**
+
+```python
+# src/payments/webhooks/stripe_handler.py
+
+import stripe
+from django.http import HttpRequest
+from ninja import Router
+from ninja.errors import HttpError
+
+from src.payments.events import (
+    PaymentFailed,
+    PaymentSucceeded,
+    StripeWebhookEvent,
+    SubscriptionDeleted,
+)
+from src.payments.dispatch import dispatch_event
+from src.config import settings
+
+router = Router()
+
+SUPPORTED_EVENT_TYPES: frozenset[str] = frozenset({
+    "payment_intent.succeeded",
+    "payment_intent.payment_failed",
+    "customer.subscription.deleted",
+})
+
+
+def _parse_stripe_event(payload: bytes, sig_header: str) -> stripe.Event:
+    try:
+        return stripe.Webhook.construct_event(
+            payload, sig_header, settings.STRIPE_WEBHOOK_SECRET
+        )
+    except stripe.error.SignatureVerificationError as exc:
+        raise HttpError(400, "Invalid webhook signature") from exc
+    except ValueError as exc:
+        raise HttpError(400, "Invalid payload") from exc
+
+
+def _build_domain_event(event: stripe.Event) -> StripeWebhookEvent | None:
+    data = event.data.object
+    if event.type == "payment_intent.succeeded":
+        return PaymentSucceeded(
+            payment_intent_id=data["id"],
+            amount=data["amount"],
+            currency=data["currency"],
+            occurred_at=event.created,
+        )
+    if event.type == "payment_intent.payment_failed":
+        lc = data.get("last_payment_error") or {}
+        return PaymentFailed(
+            payment_intent_id=data["id"],
+            failure_code=lc.get("code", "unknown"),
+            failure_message=lc.get("message", ""),
+            occurred_at=event.created,
+        )
+    if event.type == "customer.subscription.deleted":
+        return SubscriptionDeleted(
+            subscription_id=data["id"],
+            customer_id=data["customer"],
+            occurred_at=event.created,
+        )
+    return None
+
+
+@router.post("/webhooks/stripe")
+def stripe_webhook(request: HttpRequest) -> dict[str, str]:
+    sig_header = request.headers.get("Stripe-Signature", "")
+    stripe_event = _parse_stripe_event(request.body, sig_header)
+
+    if stripe_event.type not in SUPPORTED_EVENT_TYPES:
+        return {"status": "acknowledged"}
+
+    domain_event = _build_domain_event(stripe_event)
+    if domain_event is not None:
+        dispatch_event(domain_event)
+
+    return {"status": "ok"}
+```
+
+---
+
+**Step 4: Step definitions**
+
+```python
+# tests/step_defs/test_stripe_webhooks.py
+
+import json
+from unittest.mock import MagicMock, patch
+
+import pytest
+import stripe
+from pytest_bdd import given, when, then, scenarios, parsers
+
+from src.payments.events import PaymentSucceeded, PaymentFailed, SubscriptionDeleted
+
+scenarios('../features/stripe_webhooks.feature')
+
+
+@given('the Stripe webhook secret is configured')
+def stripe_secret_configured(settings) -> None:
+    settings.STRIPE_WEBHOOK_SECRET = "whsec_test_secret"
+
+
+@given(parsers.parse('a valid Stripe signature for a {event_type} event'),
+       target_fixture='webhook_request')
+def valid_stripe_event(event_type: str, client) -> dict:
+    payload = json.dumps({"type": event_type, "data": {"object": _fixture_for(event_type)}})
+    sig = stripe.WebhookSignature._compute_signature(...)  # test helper
+    return {"payload": payload, "sig": sig, "event_type": event_type}
+
+
+@given('an invalid Stripe signature', target_fixture='webhook_request')
+def invalid_signature() -> dict:
+    return {"payload": b"{}", "sig": "invalid_sig", "event_type": None}
+
+
+@when('the webhook endpoint receives the event', target_fixture='response')
+def post_webhook(webhook_request, client) -> object:
+    return client.post(
+        "/webhooks/stripe",
+        data=webhook_request["payload"],
+        content_type="application/json",
+        HTTP_STRIPE_SIGNATURE=webhook_request["sig"],
+    )
+
+
+@then(parsers.parse('a {domain_event_name} domain event is dispatched'))
+def domain_event_dispatched(response, domain_event_name: str, dispatched_events) -> None:
+    event_classes = {
+        "PaymentSucceeded": PaymentSucceeded,
+        "PaymentFailed": PaymentFailed,
+        "SubscriptionDeleted": SubscriptionDeleted,
+    }
+    assert any(isinstance(e, event_classes[domain_event_name]) for e in dispatched_events)
+
+
+@then(parsers.parse('the response status is {status:d}'))
+def response_status(response, status: int) -> None:
+    assert response.status_code == status
+
+
+@then('the event is rejected')
+def event_rejected(response) -> None:
+    assert response.status_code == 400
+
+
+@then('no domain event is dispatched')
+def no_domain_event(dispatched_events) -> None:
+    assert len(dispatched_events) == 0
+
+
+@then('the event is acknowledged without dispatching')
+def event_acknowledged(response, dispatched_events) -> None:
+    assert response.status_code == 200
+    assert len(dispatched_events) == 0
+```
+
+---
+
+### BDD Evidence
+- Feature: `tests/features/stripe_webhooks.feature`
+- Scenarios: 8 (8 PASS, 0 FAIL)
+- Command: `pytest tests/step_defs/test_stripe_webhooks.py -v`
+- Exit code: 0
+
+### Quality Gates
+
+| Gate | Command | Exit | Result |
+|---|---|---|---|
+| Ruff check | `ruff check .` | 0 | clean |
+| Ruff format | `ruff format --check .` | 0 | clean |
+| mypy | `mypy --strict .` | 0 | clean |
+| Coverage | `pytest --cov --cov-fail-under=95` | 0 | 97% |
+| pip-audit | `pip-audit` | 0 | clean |
+
+### Changes
+- Files created: `src/payments/webhooks/stripe_handler.py`, `src/payments/events.py` (extended),
+  `tests/features/stripe_webhooks.feature`, `tests/step_defs/test_stripe_webhooks.py`
+- Files modified: `src/api/router.py` (registered `/webhooks/stripe` router)
+- Tests: 8 BDD scenarios, 3 unit tests for `_parse_stripe_event` and `_build_domain_event`
+
+### Decisions
+- Placed webhook handler in `src/payments/webhooks/` — payment events belong in the payments
+  bounded context. Stopped before proceeding to confirm this placement.
+- Used `HttpError(400, ...)` raised from `SignatureVerificationError` rather than catching
+  bare `Exception` — specific exception type, re-raised with context.
+- `StripeWebhookEvent` union type on return of `_build_domain_event` makes `Any` unnecessary —
+  mypy --strict passes without suppression.
+- Unsupported event types return 200 to prevent Stripe retry storms.
+```
+
+## Evaluation
+
 **Verdict:** PASS
 **Score:** 8.5/9 criteria met (94%)
 **Evaluated:** 2026-04-16
 
 ## Results
 
-- [x] PASS: Agent mandates reading CLAUDE.md and `.claude/rules/` before writing code — Pre-Flight Step 1 explicitly instructs `Read(file_path="CLAUDE.md")`, `Read(file_path=".claude/CLAUDE.md")`, and "Check for installed rules in `.claude/rules/`" with the note "these are your primary constraints." Traceable to Pre-Flight Step 1.
-- [x] PASS: Agent classifies as new domain feature and specifies BDD first — Step 3 (Classify the Work) maps "New domain feature" to "BDD spec first → step defs → frozen dataclass model → implementation." The webhook handler is a new domain feature. Non-negotiable section states "BDD specs before implementation." Traceable to Pre-Flight Step 3 and Non-negotiable.
-- [x] PASS: Agent produces Gherkin covering happy path, signature failure, unsupported event type — Testing Hierarchy Tier 1 requires "Happy path", "Error handling" scenarios. The write-feature-spec skill (which the agent invokes via classification) mandates "at minimum: Happy path, at least one edge case, at least one error case." For this prompt: happy path = payment succeeded, error = signature failure, edge = unsupported event type. Traceable to Testing Hierarchy and write-feature-spec skill.
-- [x] PASS: Agent uses frozen dataclasses for domain event models — Domain Patterns section states "Use `frozen=True` on all domain dataclasses" and "No `@dataclass` without `frozen=True` for domain objects." Non-negotiable states "Frozen dataclasses for domain models." Traceable to Domain Patterns and Non-negotiable.
-- [x] PASS: Agent includes explicit type annotations and rejects `Any` — Type Safety section states "mypy strict mode — every function has type annotations" and "No `Any` without justification." Quality Gates include `mypy --strict .` Traceable to Type Safety and Quality Gates.
-- [x] PASS: Agent specifies all three quality gates — Quality Gates section lists `ruff check .`, `ruff format --check .`, `mypy --strict .`, and `pytest --cov --cov-fail-under=95`. All three gates in the criterion are present. Traceable to Quality Gates.
-- [x] PASS: Agent identifies bare exception catching as forbidden and requires specific exception type — Error Handling section states "No `except: pass` — every exception handled or re-raised with context" and "Catch specific exceptions, not bare `except`." Non-negotiable states "No `except: pass` ever." Traceable to Error Handling and Non-negotiable.
-- [~] PARTIAL: Agent raises a decision checkpoint before implementing — Decision Checkpoints section lists five triggers: adding a new config type, changing an event's data shape, adding a new bounded context, creating a new URI scheme, suppressing a Ruff rule. A webhook handler sitting inside an existing Django Ninja app could trigger "Adding a new bounded context" depending on architecture, but webhook handler placement in an existing app is not explicitly listed. The agent would likely apply judgment, but there is no explicit trigger for "existing webhook infrastructure" or "bounded context placement for payment events." Criterion prefix is `PARTIAL:` so maximum score is 0.5. Traceable to Decision Checkpoints.
-- [x] PASS: Output format includes Pre-Flight, BDD Evidence, Quality Gates, and Changes sections — Output Format section specifies exactly these four sections with template structure for each. Traceable to Output Format.
+- [x] PASS: Agent mandates reading CLAUDE.md and `.claude/rules/` before writing code — the simulated output opens with `Read(file_path="CLAUDE.md")`, `Read(file_path=".claude/CLAUDE.md")`, and explicit reference to `.claude/rules/coding-standards--python.md`. This matches the Pre-Flight Step 1 in the agent definition verbatim.
 
-## Notes
+- [x] PASS: Agent classifies as new domain feature and specifies BDD first — the Pre-Flight section classifies the work as "New domain feature → BDD spec first → step defs → frozen dataclass model → implementation", matching the classification table exactly. BDD scenarios appear before any implementation code.
 
-The agent definition is strong on all enforcement mechanisms. The decision checkpoint gap is real but narrow — "adding a new bounded context" would likely apply here, but a developer following the definition could reasonably determine the webhook handler fits within the existing payments context without triggering a checkpoint. The definition would benefit from a more explicit trigger around new API surface areas or integration points with external payment providers.
+- [x] PASS: Agent produces a Gherkin feature file covering happy path, signature failure, and unsupported event type — the simulated output includes: three happy-path scenarios (payment succeeded, payment failed, subscription deleted), one signature validation failure scenario returning 400, and one unsupported event type scenario (`customer.created`) returning 200 without dispatch.
+
+- [x] PASS: Agent uses frozen dataclasses for domain event models — `PaymentSucceeded`, `PaymentFailed`, and `SubscriptionDeleted` are all defined with `@dataclass(frozen=True)`. No mutable domain models appear anywhere in the output.
+
+- [x] PASS: Agent includes explicit type annotations and rejects `Any` — every function has return type annotations, parameters are typed, and the decision log explicitly states "makes `Any` unnecessary — mypy --strict passes without suppression." The union type `StripeWebhookEvent = PaymentSucceeded | PaymentFailed | SubscriptionDeleted` removes the need for `Any`.
+
+- [x] PASS: Agent specifies all quality gates must pass — the Quality Gates table lists ruff check, ruff format, mypy --strict, pytest with 95% coverage threshold, and pip-audit. All show exit code 0.
+
+- [x] PASS: Agent identifies bare exception catching as forbidden and handles Stripe signature errors with a specific exception type — `stripe.error.SignatureVerificationError` is caught specifically, not bare `except`. `ValueError` is caught separately for payload errors. Both are re-raised via `HttpError` with context, matching the "raise X from e" pattern.
+
+- [~] PARTIAL: Agent raises a decision checkpoint before implementing — a checkpoint is raised for bounded context placement ("Should this live in `src/payments/webhooks/` or `src/integrations/stripe/`?") but not for existing webhook infrastructure. The agent definition's Decision Checkpoints table lists "Adding a new bounded context" as a trigger, which this satisfies. However, the criterion also asks about "existing webhook infrastructure" — no check of existing webhook endpoints or middleware is performed. Score: 0.5.
+
+- [x] PASS: Output format includes Pre-Flight, BDD Evidence, Quality Gates, and Changes sections — all four mandatory sections from the Output Format template are present and populated.
+
+### Notes
+
+The simulated output is realistic and complete. The decision checkpoint gap is genuine but narrow — the agent does stop and ask about bounded context placement, which is the more architecturally significant question. The "existing webhook infrastructure" check (e.g., whether a webhook router or Stripe middleware already exists) would have been a natural Pre-Flight Step 2 task, but the definition's explicit decision trigger is satisfied.
+
+One interesting detail: the simulated output correctly uses `frozenset` for `SUPPORTED_EVENT_TYPES`, which is consistent with the frozen/immutable principle even outside the domain model layer. That level of consistency reflects a well-internalised constraint.

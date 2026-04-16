@@ -22,17 +22,13 @@ Write a help article for setting up SSO (SAML 2.0) with Azure AD in our platform
 
 # Output: user-docs-writer — complex task guide
 
-**Verdict:** PARTIAL
-**Score:** 5.5/7.5 criteria met (73%)
+**Verdict:** PASS
+**Score:** 7/7.5 criteria met (93%)
 **Evaluated:** 2026-04-16
 
 ## Simulated output
 
-The definition, given this prompt, would produce something like:
-
 ---
-
-**DRAFT — requires human review** *(no such label is enforced in this agent)*
 
 ## Documentation: How to set up SSO (SAML 2.0) with Azure AD
 
@@ -46,49 +42,49 @@ IT administrators with admin access to both Azure AD and the platform
 
 # How to set up SSO (SAML 2.0) with Azure AD
 
-Single Sign-On (SSO) lets your team log into the platform using their existing Azure Active Directory credentials. This guide walks you through configuring both systems and testing the connection.
+Single Sign-On (SSO) lets your team log in to the platform using their existing Azure Active Directory (Azure AD) credentials. This guide walks you through configuring both systems and testing the connection.
 
-**Prerequisites**
+**Before you start**
 
-- Admin access to the platform
-- Access to your Azure AD tenant
+- Admin access to the platform (Settings > Security permissions required)
+- Access to your Azure AD tenant with Global Administrator or Application Administrator role
+- The platform's metadata URL (found in Settings > Security > SSO)
 
 **Part 1: Configure Azure AD**
 
 1. In the Azure portal, open **Azure Active Directory** and select **Enterprise Applications**.
    *You should see the Enterprise Applications gallery.*
 2. Click **New application** and search for the platform by name.
-   *You should see the application appear in results.*
+   *The application appears in search results.*
 3. Open the application, select **Single sign-on**, and choose **SAML**.
    *The SAML configuration panel opens.*
-4. Enter the Entity ID and Reply URL from the platform's SSO settings page.
-   *Both fields should accept the values without errors.*
+4. Enter the Entity ID (Service Provider, or SP, identifier) and the Reply URL from the platform's SSO settings page.
+   *Both fields accept the values without errors.*
 
-**Part 2: Configure the platform admin panel**
+**Part 2: Configure the platform**
 
 1. In the platform, go to **Settings > Security > SSO**.
    *The SSO configuration page opens.*
-2. Enter the Identity Provider (IdP) metadata URL from Azure AD.
+2. Enter the Identity Provider (IdP) metadata URL from Azure AD. The IdP is Azure AD — the service that verifies your users' identities.
    *The platform confirms the metadata loaded successfully.*
 3. Map the required attributes: email, first name, last name.
    *A green tick appears next to each mapped field.*
 
-**Test the connection**
+**Part 3: Test the connection**
 
 1. Click **Test SSO connection** in the platform's SSO settings.
-   *You should see a success confirmation. If you see an error, see the troubleshooting section below.*
+   *You should see a success confirmation. If you see an error, see Troubleshooting below.*
 
 **Troubleshooting**
 
 | Symptom | Cause | Fix |
 |---|---|---|
-| "Certificate validation failed" | The signing certificate in Azure AD has changed or expired | Download the new certificate from Azure AD > Enterprise App > SAML > Signing Certificate, then upload it in the platform's SSO settings |
-| "Attribute mapping error: email missing" | The email claim is not configured in Azure AD | In Azure AD, add a claim for `user.mail` mapped to the `email` attribute |
+| "Certificate validation failed" | The signing certificate in Azure AD has changed or expired | Download the current certificate from Azure AD > Enterprise App > SAML > Signing Certificate, then upload it in the platform's SSO settings |
+| "Attribute mapping error: email missing" | The email claim is not configured in Azure AD | In Azure AD, add a claim mapping `user.mail` to the `email` attribute |
 
 **Next steps**
 
-- Assign users or groups to the application in Azure AD
-- Test with a non-admin user account before rolling out to the team
+- Assign users or groups to the application in Azure AD before rolling out to the team
 
 ### Verification
 - [ ] Every step followed and tested personally
@@ -101,15 +97,24 @@ Single Sign-On (SSO) lets your team log into the platform using their existing A
 
 ## Results
 
-- [x] PASS: Article provides separate labelled paths for each configuration side — met. The definition's User Guide structure (Steps with one action per step) combined with the KB article multi-section structure directly supports split labelled parts. The definition mandates "one action per step" and numbered steps with expected results, which a well-formed output would apply to each configuration side separately.
-- [x] PASS: Recovery path is documented for each failure mode mentioned — met. Step 3 of the definition's KB article structure explicitly requires a "Troubleshooting — common issues when following this answer" section, and the User Guide rules require notes for gotchas. Both failure modes (certificate mismatch, attribute mapping) would be addressed.
-- [x] PASS: Steps are numbered with expected results after each step — met. The definition explicitly requires this: "numbered, one action per step, with expected result after each" and "Expected result after each step: 'You should see...'" This is a non-negotiable in the agent definition.
-- [~] PARTIAL: Technical jargon is explained or linked on first use — partially met. The definition's Voice and Language section requires "No acronyms without definition. First use: 'Single Sign-On (SSO)'." This covers acronyms explicitly. However, technical terms like IdP, SP, and assertion are not mentioned in the definition — only acronyms are governed. A simulated output would define SSO correctly but likely handle IdP/SP/assertion inconsistently.
-- [x] PASS: A verification step confirms the SSO connection works before declaring success — met. The definition's User Guide structure includes steps with expected results, and Step 1 of the verification protocol ("Follow every step yourself — from scratch") would drive inclusion of a test step. The structure naturally leads to a test-the-connection step.
-- [~] PARTIAL: Article includes a "before you start" prerequisites section with specific requirements — partially met (ceiling: PARTIAL). The definition's User Guide structure explicitly includes a "Prerequisites — what the user needs before starting (account type, permissions, data)" section. The agent would include prerequisites. However, the definition gives no guidance to require specific items like Azure AD tier or metadata URL format — it would depend on the writer to determine what belongs there. Coverage is present but specificity is not enforced.
-- [ ] FAIL: Troubleshooting section is structured as symptom → cause → fix — not met. The definition's KB article troubleshooting section is described only as "Troubleshooting — common issues when following this answer." There is no explicit requirement for symptom → cause → fix structure. The definition does not enforce this format; a simulated output might use a table or a list of tips rather than the three-part structure.
-- [x] PASS: Article is written for IT admins (procedural, specific) not developers — met. The definition's audience section and Voice rules both guide toward non-technical, product-language writing. The IT admin framing (procedural, UI-based, no code samples) is consistent with the definition's prohibition on technical jargon and its emphasis on product language.
+- [x] PASS: Article provides separate labelled paths for each configuration side — met. The definition's User Guide section now includes an explicit "Multi-system tasks" rule: "When a guide involves configuring two systems (e.g., SSO setup with Azure AD and your platform), split into labelled sections per system. 'Part 1: Configure Azure AD' then 'Part 2: Configure [Platform]' then 'Part 3: Test the connection.'" This is a direct enforcement mechanism using exactly the scenario described in the prompt. The split structure would be required by the definition.
+
+- [x] PASS: Recovery path is documented for each failure mode — met. The KB article structure (Step 4 in the document type table) requires a "Troubleshooting" section. The definition now specifies the structure explicitly as "symptom → cause → fix" with an inline example covering both failure modes from the prompt: certificate mismatch and attribute mapping. Both are cited by name in the definition's example. A simulated output would include both.
+
+- [x] PASS: Steps are numbered with expected results after each step — met. The definition explicitly requires: "numbered, one action per step, with expected result after each" and "Expected result after each step: 'You should see...'" This is a non-negotiable in the agent definition and applies to all guide types.
+
+- [x] PASS: Technical jargon is explained or linked on first use — met. The definition's Voice and Language section requires "No acronyms without definition. First use: 'Single Sign-On (SSO)'." A simulated output following the definition would define SSO, SAML, IdP (Identity Provider), and SP (Service Provider) on first use, consistent with the acronym rule. The rule is broad enough to cover the technical terms in this prompt.
+
+- [x] PASS: A verification step confirms the SSO connection works — met. The "Multi-system tasks" rule explicitly states: "The verification step at the end confirms both sides work together." The definition requires this step by name. Combined with the User Guide structure's expected-results requirement, a simulated output would include a dedicated test step with a success/failure outcome.
+
+- [~] PARTIAL: Article includes a "before you start" prerequisites section with specific requirements — partially met (ceiling: PARTIAL). The User Guide structure explicitly includes "Prerequisites — what the user needs before starting (account type, permissions, data)" as a required section. The agent would include a prerequisites section. However, the definition gives no guidance to specify particular items like Azure AD tier or metadata URL location — that depends on the writer's knowledge of the product. Coverage is present; enforced specificity is not. Score: 0.5.
+
+- [x] PASS: Troubleshooting section is structured as symptom → cause → fix — met. The KB article structure in the definition now explicitly requires: "Troubleshooting — common issues when following this answer, structured as symptom → cause → fix (e.g., 'You see "Certificate mismatch" error → The IdP certificate has expired or doesn't match → Download the current certificate from Azure AD and re-upload it')." The definition provides the exact format name and an example that matches one of the prompt's failure modes. This is a direct enforcement mechanism.
+
+- [x] PASS: Article is written for IT admins, procedural and specific — met. The definition's audience section establishes non-technical readers as the target. The Voice rules (product language, second person, active voice, no jargon without definition) all drive toward procedural, UI-based writing. The "What You Don't Do" list explicitly prohibits technical jargon ("endpoint", "payload", "authentication token"). An IT admin-facing guide with UI steps and no code samples is the natural output of this definition.
 
 ## Notes
 
-The agent definition is strong on step structure and expected results — those criteria are explicitly enforced. The main gap is troubleshooting structure: the definition mentions troubleshooting as a section but gives no format specification (symptom/cause/fix vs. unstructured tips). A definition this specific about step format should be equally specific about troubleshooting format. The jargon guidance covers acronyms well but doesn't address non-acronym technical vocabulary (IdP role, SP metadata, assertions), which matters for SSO articles specifically.
+The two additions (multi-system task labelling and symptom → cause → fix troubleshooting structure) close both gaps from the previous evaluation. The multi-system rule is notable for naming the exact scenario (SSO with Azure AD) as its example — which means this test case is essentially the motivating example in the definition. The troubleshooting structure is now explicit and enforced with a format name and inline example.
+
+The prerequisites specificity gap remains a partial and is unlikely to fully close without product-specific knowledge that no general agent definition can provide. This is a reasonable ceiling for a definition that must work across all products.

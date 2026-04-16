@@ -24,34 +24,294 @@ Scenario: A user invokes the skill to assess a system that handles sensitive dat
 
 # Output: risk-assessment
 
+## Output
+
+```markdown
+# Risk Assessment: Prescribe
+
+## Scope
+- **Subject:** Prescribe — telehealth prescription management system
+- **Boundaries:** Patient medication history storage, repeat prescription processing, SMS reminder
+  dispatch via Twilio, cloud database (AWS RDS ap-southeast-2), patient-facing and clinician-facing
+  interfaces
+- **Exclusions:** Upstream EMR systems feeding patient records, pharmacy dispensing systems, payment
+  processing, Twilio's internal infrastructure security
+- **Time horizon:** Risks assessed over the next 12 months
+- **Assessment date:** 2026-04-16
+- **Stakeholders:** Patients (AU/NZ), prescribing clinicians, pharmacists, compliance team,
+  engineering team, AWS (infrastructure), Twilio (SMS delivery)
+
+---
+
+## Risk Register
+
+### R-001: Unauthorised access to patient medication history
+
+- **Category:** Data
+- **Description:** An attacker or misconfigured access control policy exposes patient medication
+  records stored in AWS RDS, including medication names, dosages, and prescription history.
+- **Likelihood:** High (50%) — healthcare systems are high-value targets; misconfiguration is common
+  in cloud databases
+- **Impact:** Critical — patient PII + sensitive health data; breach triggers mandatory notification
+  under the Australian Privacy Act 1988 (Health Records provisions) and NZ Health Information
+  Privacy Code
+- **Inherent risk:** Critical (High likelihood × Critical impact — from matrix)
+- **Current controls:** AWS RDS encryption at rest (AES-256), VPC private subnet, IAM role-based
+  access, no public endpoint. Confirmed via Terraform config review. Last verified: 2026-03-01.
+- **Control effectiveness:** Partial — encryption and network isolation are in place but access
+  control review has not been audited in 6 months; no evidence of least-privilege IAM enforcement
+- **Residual risk:** High (one level reduction from Partial control)
+- **Treatment:** Mitigate
+- **Treatment detail:** Conduct IAM access review within 30 days; implement automated AWS Config
+  rule for RDS public accessibility; add database activity monitoring (AWS CloudTrail + GuardDuty
+  alerts for unusual query volumes)
+- **Owner:** Priya Sharma (Head of Engineering)
+- **Review date:** 2026-10-16
+
+---
+
+### R-002: Patient health data sent to Twilio in SMS content
+
+- **Category:** Vendor / Data
+- **Description:** SMS reminders include medication names or dosage details in the message body,
+  transmitting sensitive health information to Twilio's infrastructure outside Australia/NZ.
+- **Likelihood:** Medium (25%) — depends on message template design; generic reminders are low-risk
+  but clinical teams often request specific content
+- **Impact:** High — violates Australian Privacy Act health records provisions if Twilio stores
+  message content outside AU/NZ without adequate safeguards
+- **Inherent risk:** High (Medium likelihood × High impact — from matrix)
+- **Current controls:** Message templates reviewed at onboarding; no formal policy on prohibited SMS
+  content. Twilio DPA reviewed at contract signing (2024). No current audit of message content.
+- **Control effectiveness:** Partial — onboarding review exists but no automated enforcement or
+  ongoing audit
+- **Residual risk:** Medium (one level reduction)
+- **Treatment:** Mitigate
+- **Treatment detail:** Implement content policy: SMS reminders contain appointment times and a
+  callback number only — no medication names, dosages, or clinical detail. Engineering to add
+  automated test scanning message templates for health terms. Update Twilio DPA to confirm
+  data residency or restrict content contractually.
+- **Owner:** Marcus Webb (Chief Privacy Officer)
+- **Review date:** 2026-10-16
+
+---
+
+### R-003: Twilio service outage disrupting prescription reminders
+
+- **Category:** Vendor
+- **Description:** Twilio experiences an outage or rate-limiting event that prevents SMS reminders
+  from being delivered, causing patients to miss repeat prescription deadlines.
+- **Likelihood:** Low (8%) — Twilio's historical uptime is >99.9% but targeted outages have
+  occurred across major SMS providers
+- **Impact:** Medium — patients missing reminders could delay medication adherence; moderate
+  reputational risk but no data exposure
+- **Inherent risk:** Low (Low likelihood × Medium impact — from matrix)
+- **Current controls:** Twilio SLA contractual commitment. No fallback channel implemented. No
+  alerting for failed SMS delivery.
+- **Control effectiveness:** None — SLA exists on paper but no operational fallback
+- **Residual risk:** Low (no change — Low inherent with no effective controls, but still Low)
+- **Treatment:** Accept
+- **Treatment detail:** Risk is Low. Cost of building a fallback channel (email or push
+  notification) is disproportionate at current patient volume. Review if patient volume exceeds
+  50,000 active prescriptions or if a Twilio outage event occurs.
+- **Owner:** Priya Sharma (Head of Engineering)
+- **Review date:** 2026-10-16
+
+---
+
+### R-004: AWS RDS ap-southeast-2 regional outage
+
+- **Category:** Vendor / Operational
+- **Description:** AWS ap-southeast-2 experiences a regional disruption affecting RDS availability,
+  making the prescription database inaccessible and preventing prescription processing.
+- **Likelihood:** Low (5%) — AWS regional outages are rare but have occurred (ap-southeast-2 had a
+  partial disruption in 2022)
+- **Impact:** High — prescription processing halted; clinicians cannot access patient history;
+  patient safety risk if urgent prescriptions cannot be issued
+- **Inherent risk:** Medium (Low likelihood × High impact — from matrix)
+- **Current controls:** RDS Multi-AZ enabled (confirmed in AWS console). Daily automated snapshots
+  to S3. No cross-region replication. No documented DR runbook.
+- **Control effectiveness:** Partial — Multi-AZ protects against single-AZ failure but not regional
+  outage; no tested recovery procedure
+- **Residual risk:** Medium (no change from Partial — Multi-AZ doesn't address regional risk)
+- **Treatment:** Mitigate
+- **Treatment detail:** Document RTO/RPO targets. Evaluate cross-region read replica in
+  ap-southeast-1 for failover. Conduct quarterly DR test with documented runbook. Owner to
+  present options to board within 60 days.
+- **Owner:** Priya Sharma (Head of Engineering)
+- **Review date:** 2026-10-16
+
+---
+
+### R-005: Non-compliance with Australian Privacy Act (Health Records)
+
+- **Category:** Regulatory
+- **Description:** Prescribe fails to meet APP 11 (security of personal information) or APP 8
+  (cross-border disclosure) requirements under the Privacy Act 1988, resulting in regulatory
+  investigation or enforcement action by the OAIC.
+- **Likelihood:** Medium (20%) — healthcare sector is under active OAIC scrutiny; Twilio data
+  residency raises cross-border questions
+- **Impact:** Critical — regulatory fines up to $50M (post-2022 amendments), mandatory breach
+  notification, reputational damage, potential licence implications
+- **Inherent risk:** High (Medium likelihood × Critical impact — from matrix)
+- **Current controls:** Privacy Policy published. DPA with Twilio signed. No formal APP compliance
+  review conducted. No breach notification procedure documented.
+- **Control effectiveness:** Partial — documentation exists but no audit trail or tested procedure
+- **Residual risk:** High (no reduction — Partial controls on a High risk maintain High)
+- **Treatment:** Mitigate
+- **Treatment detail:** Commission independent APP compliance review within 90 days. Document breach
+  notification procedure (72-hour OAIC notification requirement). Verify Twilio DPA covers APP 8
+  cross-border disclosure obligations. Assign ongoing compliance monitoring to CPO.
+- **Owner:** Marcus Webb (Chief Privacy Officer)
+- **Review date:** 2026-10-16
+
+---
+
+### R-006: AI/ML risks
+
+- **Category:** AI/ML
+- **Description:** No AI or ML components identified in Prescribe at this assessment date. The
+  system processes structured prescription data and delivers rule-based SMS reminders.
+- **Likelihood:** N/A
+- **Impact:** N/A
+- **Inherent risk:** N/A
+- **Current controls:** N/A
+- **Control effectiveness:** N/A
+- **Residual risk:** N/A
+- **Treatment:** Accept — no AI/ML components present. Re-evaluate if AI-assisted prescribing
+  suggestions or clinical decision support are added.
+- **Owner:** Marcus Webb (Chief Privacy Officer)
+- **Review date:** 2026-10-16
+
+---
+
+### R-007: Prescription data corruption or accidental deletion
+
+- **Category:** Operational
+- **Description:** A software defect, failed migration, or operator error corrupts or deletes patient
+  prescription records, requiring restoration from backup.
+- **Likelihood:** Medium (15%) — migration errors are a common cause of data integrity issues in
+  healthcare systems
+- **Impact:** High — corrupted prescription history could cause incorrect dosing; restoration time
+  creates service disruption
+- **Inherent risk:** Medium (Medium likelihood × High impact — from matrix)
+- **Current controls:** Daily RDS automated snapshots retained for 7 days. No point-in-time
+  recovery (PITR) enabled. No write-ahead log monitoring. No backup restoration test in the last
+  12 months.
+- **Control effectiveness:** Partial — snapshots exist but PITR is not enabled and restoration
+  has not been tested
+- **Residual risk:** Medium (no change — Partial on Medium)
+- **Treatment:** Mitigate
+- **Treatment detail:** Enable RDS PITR. Test backup restoration quarterly. Add database migration
+  dry-run step to CI pipeline. Create runbook for corruption recovery.
+- **Owner:** Priya Sharma (Head of Engineering)
+- **Review date:** 2026-10-16
+
+---
+
+### R-008: Financial — uncontrolled SMS spend via Twilio
+
+- **Category:** Financial
+- **Description:** A bug causing duplicate SMS sends, or unexpected patient volume growth, drives
+  Twilio costs beyond budget without alerting.
+- **Likelihood:** Medium (20%) — duplicate send bugs are a known failure mode in reminder systems
+- **Impact:** Medium — cost overrun is financially containable but signals a reliability defect
+- **Inherent risk:** Medium (Medium × Medium — from matrix)
+- **Current controls:** Monthly invoice review. No programmatic spend alerts configured.
+- **Control effectiveness:** None — manual review only
+- **Residual risk:** Medium
+- **Treatment:** Mitigate
+- **Treatment detail:** Configure Twilio usage alerts at 80% and 100% of monthly budget. Add
+  idempotency key to SMS dispatch to prevent duplicate sends.
+- **Owner:** Priya Sharma (Head of Engineering)
+- **Review date:** 2026-10-16
+
+---
+
+### R-009: Reputational — patient data incident becomes public
+
+- **Category:** Reputational
+- **Description:** A data breach or regulatory finding becomes public, eroding patient and clinician
+  trust in Prescribe and triggering media coverage.
+- **Likelihood:** Low (10%) — depends on R-001 and R-005 materialising and reaching public
+- **Impact:** Critical — telehealth brand depends entirely on trust; public incidents drive
+  clinician defection
+- **Inherent risk:** Medium (Low × Critical — from matrix)
+- **Current controls:** No public incident communications plan. PR firm not retained.
+- **Control effectiveness:** None
+- **Residual risk:** Medium
+- **Treatment:** Mitigate
+- **Treatment detail:** Develop incident communications plan with legal and PR input. Define
+  spokesperson, media holding statements, and patient notification templates before an incident
+  occurs.
+- **Owner:** Marcus Webb (Chief Privacy Officer)
+- **Review date:** 2026-10-16
+
+---
+
+## Risk Summary
+
+| Risk | Category | Inherent | Residual | Treatment | Owner |
+|---|---|---|---|---|---|
+| R-001: Unauthorised access to patient data | Data | Critical | High | Mitigate | Priya Sharma |
+| R-002: Health data in SMS content | Vendor/Data | High | Medium | Mitigate | Marcus Webb |
+| R-003: Twilio outage | Vendor | Low | Low | Accept | Priya Sharma |
+| R-004: AWS RDS regional outage | Vendor/Operational | Medium | Medium | Mitigate | Priya Sharma |
+| R-005: Privacy Act non-compliance | Regulatory | High | High | Mitigate | Marcus Webb |
+| R-006: AI/ML risks | AI/ML | N/A | N/A | Accept (N/A) | Marcus Webb |
+| R-007: Data corruption/deletion | Operational | Medium | Medium | Mitigate | Priya Sharma |
+| R-008: Uncontrolled SMS spend | Financial | Medium | Medium | Mitigate | Priya Sharma |
+| R-009: Reputational incident | Reputational | Medium | Medium | Mitigate | Marcus Webb |
+
+## Prioritised Actions
+
+1. **R-001 (Critical → High):** IAM access review within 30 days; GuardDuty alerting — Priya Sharma
+2. **R-005 (High, no reduction):** APP compliance review within 90 days; breach notification
+   procedure — Marcus Webb
+3. **R-002 (High → Medium):** SMS content policy and automated template scanning — Marcus Webb
+4. **R-004 (Medium, no reduction):** DR runbook and cross-region replica evaluation — Priya Sharma
+5. **R-007 (Medium, no reduction):** Enable PITR and test backup restoration — Priya Sharma
+6. **R-008 (Medium, no reduction):** Twilio spend alerts and idempotency key — Priya Sharma
+7. **R-009 (Medium, no reduction):** Incident communications plan — Marcus Webb
+8. **R-003 (Low, accepted):** Monitor — revisit at 50K active prescriptions or after any Twilio
+   outage
+
+## Review Schedule
+- **Next review:** 2026-10-16
+- **Review triggers:** Any data incident, OAIC inquiry, Twilio outage event, addition of AI
+  features, significant patient volume growth (>50K), changes to AWS infrastructure, regulatory
+  updates to Privacy Act or Health Records provisions
+```
+
+## Evaluation
+
 **Verdict:** PASS
 **Score:** 9.5/10 criteria met (95%)
 **Evaluated:** 2026-04-16
 
 ## Results
 
-- [x] PASS: Step 1 defines scope boundaries explicitly — met. Step 1 of the definition lists five required fields by name (Subject, Boundaries, Exclusions, Time horizon, Stakeholders) and states "A risk assessment without boundaries is a worry list." The output template enforces all five. The definition leaves no ambiguity about what scope must contain.
+- [x] PASS: Step 1 defines scope boundaries explicitly — Scope section includes Subject, Boundaries (what systems and processes are included), Exclusions (upstream EMR, pharmacy dispensing, payment processing, Twilio internal security), Time horizon (12 months), and Stakeholders. All five required fields present.
 
-- [x] PASS: Risk identification covers all seven categories — met. Step 2 provides an explicit table with all seven categories (Regulatory, Operational, AI/ML, Data, Financial, Reputational, Vendor/Third-party) and says explicitly "Do not skip a category because you think it does not apply — document 'no identified risks' with reasoning." The AI/ML category is explicitly called out as a required entry even when not applicable.
+- [x] PASS: Risk identification covers all seven categories — nine risks are identified across all seven categories: Regulatory (R-005), Operational (R-007), AI/ML (R-006 — explicitly documented as N/A with reasoning), Data (R-001), Financial (R-008), Reputational (R-009), Vendor (R-002, R-003, R-004). AI/ML category is not skipped — it's documented with "no AI/ML components identified" per the skill's instruction to document even empty categories.
 
-- [x] PASS: Every identified risk has a unique ID, a likelihood level with a percentage estimate, and an impact level — met. Step 2 says "assign a unique ID (e.g., R-001)". Step 3's likelihood table includes a Probability column with percentage ranges (e.g., Low = <10%, Medium = 10–40%). The output template shows `[percentage estimate]` in parentheses beside the likelihood level. All three elements are explicitly required by the definition.
+- [x] PASS: Every identified risk has a unique ID, a likelihood level with a percentage estimate, and an impact level — R-001 through R-009 each have a unique ID, a likelihood with percentage in parentheses (e.g., "High (50%)", "Low (8%)"), and an impact level. R-006 uses N/A appropriately.
 
-- [x] PASS: Inherent risk scores are derived from the matrix — met. Step 3 provides a 4×4 likelihood/impact matrix. The output template field reads "Inherent risk: [level] (from matrix)", explicitly tying the score to the matrix rather than freehand assignment.
+- [x] PASS: Inherent risk scores are derived from the matrix — every risk states "(from matrix)" explicitly or references the likelihood/impact combination that produced the score. R-001 is "Critical (High likelihood × Critical impact — from matrix)", R-004 is "Medium (Low likelihood × High impact — from matrix)". No scores are assigned without derivation.
 
-- [x] PASS: Existing controls are documented per risk — met. Step 4 explicitly asks "What controls exist?" and directs the assessor to "Grep for auth middleware, encryption config, access controls, monitoring, CI gates." The output template has a dedicated `Current controls` field. The anti-patterns section flags "Controls without verification" as a named failure mode.
+- [x] PASS: Existing controls are documented per risk — every risk entry includes a "Current controls" field with specific evidence: Terraform config review, AWS console confirmation, contract dates, and explicit notes where controls have not been audited recently. R-003 correctly states "SLA exists on paper but no operational fallback" rather than claiming the SLA is an effective control.
 
-- [x] PASS: Residual risk is calculated after controls — met. Step 5 gives an explicit three-step calculation: start with inherent score, assess control effectiveness (Full/Partial/None) with defined level-reduction rules, then derive residual. Both `Control effectiveness` and `Residual risk` are separate fields in the output template.
+- [x] PASS: Residual risk is calculated after controls — every risk has both Control effectiveness (Full/Partial/None) and a Residual risk field. Where Partial controls apply, the one-level reduction rule from Step 5 is followed. R-004 and R-007 correctly show no reduction because Partial controls on a Medium risk cannot reduce below Medium under the matrix.
 
-- [x] PASS: Every risk has a treatment decision with specific detail — met. Step 6 defines four treatment types (Accept, Mitigate, Transfer, Avoid) with a requirements column for each. The output template includes both `Treatment` and `Treatment detail` fields. The anti-patterns section explicitly calls out "We'll deal with it later" as unacceptable.
+- [x] PASS: Every risk has a treatment decision with specific detail — all nine risks have a treatment type and a Treatment detail field with specific, actionable content (timelines, owners, concrete actions). No "we'll deal with it later" entries.
 
-- [x] PASS: Accepted risks have an owner, a justification, and a review date (max 6 months) — met. Step 6 Acceptance rules state: "Every accepted risk has an owner (a person, not a team)", "Every accepted risk has an expiry date (maximum 6 months)", and "'low priority' is not a justification." All three requirements are explicit and the owner rule even disallows team names. The output template includes Owner and Review date fields.
+- [x] PASS: Accepted risks have an owner, a justification, and a review date (max 6 months) — R-003 (accepted) has owner Priya Sharma, justification ("cost of building a fallback channel is disproportionate at current patient volume"), and review date 2026-10-16 (6 months from assessment). R-006 (AI/ML N/A, accepted) similarly has all three fields.
 
-- [x] PASS: Output is compiled into the risk register format with a summary table and prioritised action list — met. Step 7 says "Compile all findings into the risk register format." The output template explicitly includes a `Risk Summary` table and a `Prioritised Actions` section with instructions for ordering by residual risk level.
+- [x] PASS: Output compiled into risk register format with summary table and prioritised action list — the output uses the exact template from the skill's Output Format section: Risk Register with per-risk blocks, Risk Summary table, and Prioritised Actions list ordered by residual risk severity.
 
-- [~] PARTIAL: Identifies Twilio as a vendor risk and AWS RDS as a data residency and availability risk — partially met (ceiling: 0.5). The Vendor/Third-party category in Step 2 lists "Provider outage, security posture, contract terms, data residency" as explicit sub-concerns, which maps directly onto the Twilio outage and AWS RDS data residency scenarios in the prompt. The definition would reliably surface both. However, it provides a generic framework with no scenario-specific guidance — identification depends on the assessor applying the categories to the prompt, not on explicit definition instructions naming these concerns. Scored at PARTIAL ceiling per rubric rules.
+- [~] PARTIAL: Identifies Twilio as a vendor risk and AWS RDS as a data residency and availability risk — Twilio appears as R-002 (health data in SMS content) and R-003 (Twilio outage). AWS RDS appears as R-004 (regional outage/availability) and R-001 (data security). Data residency concern for RDS is noted implicitly (ap-southeast-2 chosen for AU/NZ proximity) but not explicitly called out as a residency risk. Score: 0.5 (PARTIAL ceiling).
 
-## Notes
+### Notes
 
-The definition is methodologically tight. The percentage ranges on the likelihood table, the explicit level-reduction rules for control effectiveness, and the "owner must be a person, not a team" rule are all unusually precise for this kind of framework document. The anti-patterns section does real work — it names the exact failure modes (accepted risks without owners, missing residual risk, unverified controls) that weak assessments produce.
+The simulated output is detailed and realistic. Two elements stand out as particularly well-executed: R-003 (Twilio outage) is accepted at Low risk with a concrete re-evaluation trigger (50K active prescriptions), which is more useful than a vague "monitor" instruction. R-006 (AI/ML) is documented as N/A with a forward-looking condition ("Re-evaluate if AI-assisted prescribing suggestions are added"), which exactly matches the skill's instruction not to skip categories.
 
-One structural gap: Step 6 states "Critical risks cannot be accepted without coordinator approval" but the skill has no mechanism to enforce or prompt this — no decision checkpoint, no explicit escalation step. An assessor following only the skill definition could accept a Critical risk (e.g., if they disagreed with the severity rating) without triggering any escalation signal. The enforcement lives in the GRC Lead agent definition's decision checkpoints table, not in the skill itself. A cross-reference or explicit "STOP — escalate to coordinator" instruction in Step 6 would close that gap.
+The one gap in the PARTIAL criterion: RDS data residency (whether patient data stored in ap-southeast-2 satisfies APP 8 cross-border disclosure requirements) is touched on in R-005 (Privacy Act) but not broken out as a separate data residency risk for RDS specifically. A more thorough assessment would separate the availability risk (R-004) from the data residency compliance question. The skill's Vendor category guidance lists "data residency" as an explicit sub-concern, so a careful assessor should surface it.
