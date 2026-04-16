@@ -14,7 +14,7 @@ Scenario: A contributor asks the create-agent skill to create a new `data-engine
 - [ ] PASS: Agent definition follows all mandatory sections: Core statement, Non-negotiable, Pre-Flight, Domain methodology, Output format, Failure caps, Decision checkpoints, Collaboration, Principles, What You Don't Do
 - [ ] PASS: Agent uses `sonnet` model — data-engineer is a specialist, not leadership
 - [ ] PASS: marketplace.json is updated with the new plugin entry including source path, description, version, category, and tags
-- [ ] PASS: All 10 registry updates are completed — marketplace.json, README (3 places), coordinator RATSI, and CTO team listing
+- [ ] PASS: All registry updates are completed — marketplace.json, README (3 places), coordinator RATSI, and relevant lead team listing
 - [ ] PARTIAL: Verification step confirms JSON is valid, plugin count matches registry count, and no private references exist in the new files
 
 ---

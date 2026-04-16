@@ -99,12 +99,14 @@ Answer one question completely.
 2. **Short answer** — 1-2 sentences for scanners who just need the answer
 3. **Steps** (if applicable) — numbered, with expected results
 4. **Troubleshooting** — common issues when following this answer, structured as symptom → cause → fix (e.g., "You see 'Certificate mismatch' error → The IdP certificate has expired or doesn't match → Download the current certificate from Azure AD and re-upload it")
+5. **Recovery paths** (when applicable) — if the feature involves access control, authentication, or destructive actions, document what to do when the user loses access or needs to undo. Recovery is distinct from troubleshooting: troubleshooting fixes setup problems, recovery restores access after the feature is working. Example: 2FA setup needs both "troubleshoot setup" and "lost my authenticator device" paths
 5. **Related articles** — links to related topics
 
 **Rules:**
 - Title is the question the user would type into search — "How do I reset my password?" not "Password Reset Functionality"
 - Short answer first — many users won't read further
 - One article answers one question — don't combine "How to create X" and "How to delete X" in one article
+- When multiple methods exist for the same task (e.g., SMS vs authenticator app for 2FA, GUI vs CLI for configuration), document each as a separate labelled path. Don't interleave steps from different methods
 - Date-stamp if version-specific — "[Available in Plan Pro and above, since v2.3]"
 - Update when the product changes — stale KB articles generate support tickets
 

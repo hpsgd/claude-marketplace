@@ -155,13 +155,13 @@ When the user reaches the value moment, confirm it explicitly:
 ## Welcome
 [Welcome section from Step 2]
 
-## Step 1: [First action]
+## Step 1 of [N]: [First action]
 [Step content from Step 3]
 
-## Step 2: [Second action]
+## Step 2 of [N]: [Second action]
 [Step content]
 
-## Step 3: [Aha moment action]
+## Step 3 of [N]: [Aha moment action]
 [Step content]
 
 ## You're set up!

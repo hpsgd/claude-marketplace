@@ -58,9 +58,9 @@ mkdir -p plugins/{category}/{agent-name}/templates  # if agent produces artefact
   "description": "{Role} — {domain summary}.",
   "version": "0.1.0",
   "author": {
-    "name": "hps.gd"
+    "name": "[author or organisation name]"
   },
-  "repository": "https://github.com/hpsgd/claude-marketplace",
+  "repository": "[repository URL]",
   "license": "Unlicense",
   "keywords": [
     "{keyword1}",

@@ -55,6 +55,7 @@ For multiple pieces covering the same topic or source:
 - Absence matters. What a piece doesn't say is often more revealing than what it does.
 - Sentiment applies to the author's tone, not the subject's character.
 - One piece is rarely sufficient. Patterns emerge across multiple sources.
+- Source attribution structure matters. For every piece analysed, note how claims are supported: named primary sources (direct quotes, interviews), named secondary sources (reports, data cited by name), anonymous sources, and unattributed assertions. A piece where most claims are unattributed is structurally weaker than one with named sources, regardless of whether its conclusions are correct.
 
 ## What you don't do
 
