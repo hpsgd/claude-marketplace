@@ -98,6 +98,35 @@ AI-generated text — no matter how carefully prompted — will have tells. Foll
 
 ## Launch Planning
 
+### Launch tier classification
+
+Before building a plan, classify the launch to scope the effort correctly:
+
+| Tier | Criteria | Effort |
+|---|---|---|
+| **Tier 1 — Major** | New product line, new market segment, or >$100k ARR impact | Full GTM: positioning, landing page, email sequence, social campaign, sales enablement, press |
+| **Tier 2 — Significant** | Major feature for existing customers, add-on product, new pricing tier | Targeted GTM: positioning, announcement, email, documentation, sales brief |
+| **Tier 3 — Minor** | Incremental feature, UI improvement, quality-of-life update | Lightweight: changelog entry, in-app announcement, support brief |
+
+### Expansion vs net-new
+
+When a launch targets both existing customers and new prospects, plan them separately:
+
+- **Existing customer expansion** — the audience already knows your product. Lead with the value of the new capability, not the product itself. Use account data (seat count, plan tier, usage patterns) to prioritise outreach. CSMs are the channel, not marketing campaigns
+- **Net-new acquisition** — the audience doesn't know you. Lead with the problem. Position against competitive alternatives. Marketing campaigns and content are the channel
+
+Never combine these into a single "launch plan." The messaging, channels, and success metrics are different.
+
+### Launch plan structure
+
+Every launch plan must be a **phased plan with owners and dates**, not a checklist of ideas. Structure:
+
+1. **Phase 1: Preparation** (owner, dates) — positioning, assets, documentation, support briefing
+2. **Phase 2: Launch day** (owner, dates) — deployment, announcements, monitoring
+3. **Phase 3: Post-launch** (owner, dates) — metrics review, feedback collection, iteration
+
+Each phase has named owners for each task. "Somebody should do this" means nobody will.
+
 ### Pre-launch checklist
 
 - [ ] Positioning finalised and agreed with product

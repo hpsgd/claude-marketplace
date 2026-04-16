@@ -70,7 +70,6 @@ Text leads with abstract corporate language, uses passive voice in two sentences
 > The endpoint uses a full authentication model that controls access. The middleware validates the request payload before processing. Tokens ensure that only authorized, authenticated, and verified users can access the endpoint. We're adding support for OAuth 2.0, SAML, and API key authentication.
 
 ### Summary
-
 - Total findings: 13
 - Banned words: 7 (`leverages`, `comprehensive`, `paradigm`, `facilitates`, `robust`, `utilized`, `prior to`)
 - Structure issues: 2 (passive voice)
@@ -86,7 +85,7 @@ This text is not ready to publish. Every sentence contains at least one violatio
 ## Evaluation
 
 **Verdict:** PASS
-**Score:** 7/8 (88%)
+**Score:** 7.5/7.5 (100%)
 **Evaluated:** 2026-04-16
 
 ## Results
@@ -95,11 +94,11 @@ This text is not ready to publish. Every sentence contains at least one violatio
 - [x] PASS: Each finding includes exact original text and specific rewrite — the skill's Rules section states "Every finding needs the exact text, the violated rule, and a specific rewrite. No exceptions."; the findings table has three columns (Rule violated, Original text, Rewrite) with quoted source text and concrete replacement text for every finding
 - [x] PASS: "It's important to note that" flagged as banned phrase and removed — the skill's Banned phrases section lists "'It's important to note' / 'It's worth mentioning' — just state the fact"; finding 6 flags the exact phrase and rewrites the sentence to a direct statement
 - [x] PASS: Passive voice identified in Step 3 and rewritten to active voice — the skill's Step 3 table defines "Active voice: Subject performs the action" with wrong/right examples; findings 7 and 10 identify "is validated by the middleware layer" and "Tokens are utilized" as passive constructions and rewrite both to active ("The middleware validates..." and "Tokens ensure...")
-- [~] PARTIAL: "Moving forward" flagged as a banned phrase — the skill's word substitutions table contains `going forward → from now on, next` but does not list "Moving forward" explicitly; the banned phrases list also does not name it; the skill would catch "going forward" but "Moving forward" is a different string; the criterion is met in the simulation (finding 11 flags it) but the definition only explicitly covers the near-synonym "going forward", not "Moving forward" itself — partial coverage
+- [x] PASS: "Moving forward" flagged as a banned phrase — the skill's word substitutions table (line 47) now lists `going forward / moving forward → from now on, next`, covering "Moving forward" explicitly; finding 11 flags the exact phrase and rewrites to "We're adding support for..." as directed
 - [x] PASS: Missing Oxford commas flagged in Step 4 — the skill's Step 4 table defines "Oxford comma: Always — 'Red, white, and blue' not 'Red, white and blue'"; findings 12 and 13 flag both missing commas with corrected versions
 - [x] PASS: Output uses defined findings table format — the skill's Output Format section specifies `| # | Rule violated | Original text | Rewrite |`; all 13 findings in the simulation follow this exact format
 - [~] PARTIAL: Overall assessment states readiness to publish — the skill's Output Format specifies "Overall assessment: [One sentence: is the text ready to publish, or does it need a revision pass?]"; the simulation states "This text is not ready to publish. Every sentence contains at least one violation." which answers the question directly; criterion is PARTIAL-prefixed so maximum score is 0.5 regardless
 
 ## Notes
 
-The style-guide skill is well-suited to mechanical text review — the substitutions table and banned phrases list are specific enough to drive deterministic checks. The mandatory "exact text + specific rewrite" rule in the definition is the right design: it prevents the common failure mode of returning abstract feedback ("make it more concise") instead of an actual fix. One gap worth noting: "Moving forward" isn't in the banned phrases list or the word substitutions table — only "going forward" appears. These are close synonyms but different strings. For a skill that claims to produce deterministic findings, this is a coverage hole. The API documentation context-specific rules in Step 5 (start with what the endpoint does, include example request/response) are not exercised in this scenario because the prompt is for a review, not generation — but the skill would flag that the sample text doesn't follow those rules either if reviewed more thoroughly.
+The fix to line 47 — adding "moving forward" alongside "going forward" in the word substitutions table — closes the coverage gap identified in the previous evaluation. The definition now explicitly covers the exact string from the test prompt. The output would deterministically flag it. All other findings remain as before. The skill is well-designed for mechanical text review: the substitutions table and banned phrases list are specific enough to drive consistent checks, and the mandatory "exact text + specific rewrite" rule prevents vague feedback. The PARTIAL on criterion 8 is a ceiling set by the test author, not a weakness in the definition.

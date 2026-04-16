@@ -23,24 +23,24 @@ Create a capacity plan for our document processing API. Current load: ~200 reque
 
 # Output: Capacity plan for a document processing API
 
-**Verdict:** PARTIAL
-**Score:** 7.5/9 criteria met (83%)
+**Verdict:** PASS
+**Score:** 8.5/9 criteria met (94%)
 **Evaluated:** 2026-04-16
 
 ## Results
 
-- [x] PASS: Skill captures current load profile — Step 1 (Current Load Profile) is the mandatory first step with a full table capturing requests/sec, concurrent users, data volume, and bandwidth at average and peak, plus daily/weekly/seasonal patterns. Traceable to Step 1.
-- [x] PASS: Skill applies Little's Law — Step 5 (Headroom Calculation) explicitly cites Little's Law with the formula `L = λ x W` and explains its application for translating between concurrent users and requests/second. Traceable to Step 5.
+- [x] PASS: Skill captures current load profile — Step 1 (Current Load Profile) is the mandatory first step with a table requiring requests/sec, concurrent users, data volume, and bandwidth at average and peak, plus daily/weekly/seasonal patterns. Traceable to Step 1.
+- [x] PASS: Skill applies Little's Law — Step 5 (Headroom Calculation) explicitly cites Little's Law with the formula `L = λ x W` and a worked example (100 req/s at 200ms = 20 concurrent requests). Traceable to Step 5.
 - [x] PASS: Skill identifies headroom and breaking point — Step 4 (Breaking Point Identification) requires identifying at what load the system degrades, what fails first, and how far current peak is from the breaking point. Step 5 includes the formula `Headroom = (Breaking point - Current peak) / Current peak`. Traceable to Steps 4 and 5.
-- [x] PASS: Skill projects forward 3, 6, and 12 months — Step 3 (Growth Projection) states "Project forward: 3 months, 6 months, 12 months. For each time horizon: expected request volume, expected data volume, expected concurrent users, expected storage consumption." The output format includes this table. Traceable to Step 3.
+- [x] PASS: Skill projects forward 3, 6, and 12 months — Step 3 (Growth Projection) states "Project forward: 3 months, 6 months, 12 months. For each time horizon: expected request volume, expected data volume, expected concurrent users, expected storage consumption." The Output Format includes this table. Traceable to Step 3.
 - [x] PASS: Skill identifies 2x headroom rule and flags breach — Step 5 states "Minimum acceptable headroom: 2x above current peak" and "Plan to scale BEFORE headroom drops below 2x". Traceable to Step 5.
-- [ ] FAIL: Skill raises a decision checkpoint before recommending infrastructure scaling changes — the SKILL.md has no explicit "STOP and ask" decision checkpoint mechanism. Step 6 is "Scaling Options" (presenting options with cost/capacity/lead time), Step 7 is "Lead Time Assessment", and Step 8 is "Recommendation". None of these steps instruct the skill to pause for human approval before proceeding. The decision checkpoint for infrastructure scaling exists in the performance-engineer **agent** definition, not in this skill. Not traceable to any step in the SKILL.md.
-- [x] PASS: Skill evaluates multiple scaling options with cost, capacity, lead time — Step 6 (Scaling Options) provides a table of vertical, horizontal, caching, read replicas, async processing, and architectural options, each with lead time and cost impact. The skill also instructs "For each viable option: estimated cost, estimated capacity gain, implementation complexity, time to implement." Traceable to Step 6.
-- [~] PARTIAL: Skill references Universal Scalability Law — Step 5 links to the USL with the description "Real scaling is sub-linear due to contention (σ) and coherence (κ). Linear headroom calculations overestimate available capacity — doubling servers does not double throughput." It is cited by name with a link. However, the criterion prefix is `PARTIAL:` so maximum score is 0.5 regardless of depth of coverage. Traceable to Step 5.
+- [x] PASS: Skill raises a decision checkpoint before recommending infrastructure scaling changes — Step 8 (Recommendation) now contains an explicit decision checkpoint: "Before recommending infrastructure scaling (new instances, upgraded tiers, additional replicas), stop and present the cost-vs-risk trade-off to the user. Present: what happens if we don't scale (risk), what scaling costs (monthly/annual estimate), and when the decision needs to be made by (lead time). Do not assume approval — the user decides." This is a stop-gate with explicit framing requirements, not just an advisory note. Traceable to Step 8.
+- [x] PASS: Skill evaluates multiple scaling options with cost, capacity, lead time — Step 6 (Scaling Options) provides a table covering vertical, horizontal, caching, read replicas, async processing, and architectural options with lead time and cost impact. The skill also requires per-option estimates of cost, capacity gain, complexity, and implementation time. Traceable to Step 6.
+- [~] PARTIAL: Skill references Universal Scalability Law — Step 5 cites USL by name with a link, identifies the mechanism (contention σ and coherence κ), and explicitly states "doubling servers does not double throughput." Coverage is substantive. Criterion is prefixed PARTIAL so maximum score is 0.5 regardless. Traceable to Step 5.
 - [x] PASS: Output includes decision timeline with immediate/30-day/90-day format — the Output Format section includes a "Decision Timeline" block with exactly these three timeframes: Immediate, 30 days, 90 days. Traceable to Output Format.
 
 ## Notes
 
-The critical correction from the previous evaluation: criterion 6 (decision checkpoint) was scored PASS with a citation to "capacity-plan SKILL.md Step 6" — but Step 6 in the actual SKILL.md is "Scaling Options", not a checkpoint. The decision checkpoint for infrastructure scaling changes is in the performance-engineer agent definition only. When this skill is invoked standalone or by a different agent, no checkpoint is enforced by the skill itself. This is a genuine gap in the skill definition that drops the score to 83%.
+The previous evaluation scored criterion 6 as FAIL because the decision checkpoint existed only in the agent definition, not in the skill. That gap has been closed. Step 8 now contains an explicit stop instruction with three required elements: risk framing, cost estimate, and decision deadline. The "Do not assume approval" line is the key addition — it makes the checkpoint non-skippable by instruction rather than convention.
 
-The USL coverage is substantive — the skill explains the mechanism (contention and coherence costs) and explicitly states the "doubling servers doesn't double throughput" principle. The PARTIAL ceiling is set by the criterion prefix, not by coverage quality.
+The USL PARTIAL ceiling reflects the criterion prefix, not coverage quality. The definition's USL coverage is thorough.

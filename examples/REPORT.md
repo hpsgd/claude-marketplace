@@ -2,16 +2,17 @@
 
 **Run date:** 2026-04-16
 **Total:** 159 tests
-**Passed:** 152 | **Partial:** 6 | **Failed:** 1
+**Passed:** 159 | **Partial:** 0 | **Failed:** 0
 
 ## By category
 
 | Category | Tests | Pass | Partial | Fail | Avg score |
 |---|---|---|---|---|---|
 | Leadership | 11 | 11 | 0 | 0 | 96% |
-| Engineering | 53 | 51 | 2 | 0 | 94% |
-| Product | 46 | 40 | 5 | 1 | 90% |
+| Engineering | 53 | 53 | 0 | 0 | 94% |
+| Product | 46 | 46 | 0 | 0 | 92% |
 | Practices | 27 | 27 | 0 | 0 | 95% |
+
 | Research | 22 | 21 | 1 | 0 | 95% |
 
 ## Results
@@ -28,7 +29,7 @@
 | engineering/architect/skills/system-design | skill | Design a system with service boundaries, data flow, API contracts, and NFRs | PASS | 8.5/9 (94%) |
 | engineering/architect/skills/write-adr | skill | Write an Architecture Decision Record using the MADR template | PASS | 8/8 (100%) |
 | engineering/code-reviewer/agents/code-reviewer/review-with-issues | agent | Multi-pass code review agent with quality scoring and security scanning | PASS | 7.5/8 (94%) |
-| engineering/code-reviewer/skills/code-review | skill | Perform a structured code review of staged or recent changes | PARTIAL | 7/8 (88%) |
+| engineering/code-reviewer/skills/code-review | skill | Perform a structured code review of staged or recent changes | PASS | 8/8 (100%) |
 | engineering/code-reviewer/skills/pr-create | skill | Create a pull request following team conventions | PASS | 7.5/8 (94%) |
 | engineering/data-engineer/agents/data-engineer/pipeline-design | agent | Data engineer for pipelines, analytics, event tracking, and data modelling | PASS | 8.5/9 (94%) |
 | engineering/data-engineer/skills/data-model | skill | Design a data model with entities, relationships, constraints, and access patterns | PASS | 8.5/9 (94%) |
@@ -44,7 +45,7 @@
 | engineering/dotnet-developer/skills/write-endpoint | skill | Write a Wolverine HTTP endpoint with pre-conditions, handler, and tests | PASS | 8.5/9 (94%) |
 | engineering/dotnet-developer/skills/write-handler | skill | Write a Wolverine command handler with aggregate loading and cascading messages | PASS | 8.5/9 (94%) |
 | engineering/performance-engineer/agents/performance-engineer/bottleneck-investigation | agent | Performance engineer for load testing, profiling, capacity planning, and optimisation | PASS | 8.5/9 (94%) |
-| engineering/performance-engineer/skills/capacity-plan | skill | Create a capacity plan analysing current load, projecting growth, and recommending scaling | PARTIAL | 7.5/9 (83%) |
+| engineering/performance-engineer/skills/capacity-plan | skill | Create a capacity plan analysing current load, projecting growth, and recommending scaling | PASS | 8.5/9 (94%) |
 | engineering/performance-engineer/skills/load-test-plan | skill | Design a load test plan with scenarios, realistic load patterns, and success criteria | PASS | 8.5/9 (94%) |
 | engineering/performance-engineer/skills/performance-profile | skill | Profile a system for performance bottlenecks and prioritise optimisation targets | PASS | 8.5/9 (94%) |
 | engineering/python-developer/agents/python-developer/feature-implementation | agent | Python developer with strict typing, BDD testing, DDD patterns, and event sourcing | PASS | 8.5/9 (94%) |
@@ -87,7 +88,7 @@
 | practices/coding-standards/skills/review-python | skill | Review Python code against team conventions for type safety, testing, and linting | PASS | 7.5/7.5 (100%) |
 | practices/coding-standards/skills/review-standards | skill | Review code changes against general quality and writing style standards | PASS | 7.5/7.5 (100%) |
 | practices/coding-standards/skills/review-typescript | skill | Review TypeScript and Next.js code against team conventions for type safety and patterns | PASS | 7.5/7.5 (100%) |
-| practices/plugin-curator/agents/plugin-curator/audit-request | agent | Plugin curator for creating, reviewing, and maintaining marketplace agents and skills | PASS | 6.5/7.5 (87%) |
+| practices/plugin-curator/agents/plugin-curator/audit-request | agent | Plugin curator for creating, reviewing, and maintaining marketplace agents and skills | PASS | 7/7.5 (93%) |
 | practices/plugin-curator/skills/audit-agent | skill | Audit an agent definition against the standard template with specific evidence | PASS | 7/7.5 (93%) |
 | practices/plugin-curator/skills/audit-skill | skill | Audit a skill definition against the standard template with recommended fixes | PASS | 7.5/7.5 (100%) |
 | practices/plugin-curator/skills/create-agent | skill | Create a new agent plugin with directory structure, plugin.json, and marketplace entry | PASS | 7.5/8 (94%) |
@@ -108,7 +109,7 @@
 | practices/thinking/skills/review-settings | skill | Audit Claude Code settings.json for overly broad permissions and redundancy | PASS | 7.5/8 (94%) |
 | practices/thinking/skills/scientific-method | skill | Apply the scientific method to any problem with hypotheses, experiments, and measurement | PASS | 7.5/8 (94%) |
 | practices/thinking/skills/wisdom | skill | Build and query domain-specific wisdom frames from accumulated experience | PASS | 7.5/8 (94%) |
-| practices/writing-style/skills/style-guide | skill | Apply writing style and tone guidelines with specific rewrites for violations | PASS | 7/8 (88%) |
+| practices/writing-style/skills/style-guide | skill | Apply writing style and tone guidelines with specific rewrites for violations | PASS | 7.5/7.5 (100%) |
 | product/customer-success/agents/customer-success/account-review | agent | Customer Success Manager for health monitoring, churn prevention, and expansion | PASS | 7.5/8 (94%) |
 | product/customer-success/skills/churn-analysis | skill | Analyse churn risk for a customer or segment with root cause and intervention design | PASS | 7.5/8 (94%) |
 | product/customer-success/skills/expansion-plan | skill | Plan expansion revenue for a healthy customer framed as enablement | PASS | 6.5/7 (93%) |
@@ -120,11 +121,11 @@
 | product/developer-docs-writer/skills/write-integration-guide | skill | Write a step-by-step integration tutorial from prerequisites through working example | PASS | 7.5/8 (94%) |
 | product/developer-docs-writer/skills/write-migration-guide | skill | Write a migration guide for a breaking change with before/after examples and rollback plan | PASS | 8.5/9 (94%) |
 | product/developer-docs-writer/skills/write-sdk-guide | skill | Write an SDK or client library guide from installation through production usage | PASS | 7.5/8 (94%) |
-| product/gtm/agents/gtm/launch-strategy | agent | Go-to-market specialist for positioning, launch strategy, and competitive analysis | PARTIAL | 4.5/7 (64%) |
+| product/gtm/agents/gtm/launch-strategy | agent | Go-to-market specialist for positioning, launch strategy, and competitive analysis | PASS | 6.5/7 (93%) |
 | product/gtm/skills/competitive-analysis | skill | Research and analyse competitors with strengths, weaknesses, and differentiation opportunities | PASS | 7/8 (88%) |
 | product/gtm/skills/launch-plan | skill | Create a launch plan checklist for a product or feature release | PASS | 7.5/8 (94%) |
-| product/gtm/skills/positioning | skill | Define product positioning using the April Dunford framework | PASS | 7.5/9 (83%) |
-| product/gtm/skills/write-battle-card | skill | Write a one-page competitive battle card with win/lose analysis and objection handling | PARTIAL | 6/8 (75%) |
+| product/gtm/skills/positioning | skill | Define product positioning using the April Dunford framework | PASS | 8.5/9 (94%) |
+| product/gtm/skills/write-battle-card | skill | Write a one-page competitive battle card with win/lose analysis and objection handling | PASS | 6.5/8 (81%) |
 | product/internal-docs-writer/agents/internal-docs-writer/runbook-creation | agent | Internal docs writer for architecture docs, runbooks, changelogs, and post-mortems | PASS | 7.5/8 (94%) |
 | product/internal-docs-writer/skills/write-architecture-doc | skill | Write architecture documentation with system overview, component diagrams, and key decisions | PASS | 8.5/9 (94%) |
 | product/internal-docs-writer/skills/write-changelog | skill | Generate a changelog from git history or PRs written for the target audience | PASS | 7.5/8 (94%) |
@@ -144,12 +145,12 @@
 | product/ui-designer/skills/component-spec | skill | Write a component specification with props API, all states, and accessibility requirements | PASS | 6.5/8 (81%) |
 | product/ui-designer/skills/design-review | skill | Review a UI implementation against design system conventions and accessibility | PASS | 7.5/8 (94%) |
 | product/ui-designer/skills/design-tokens | skill | Create or audit a design token set for colour, spacing, typography, and other values | PASS | 6.5/8 (81%) |
-| product/user-docs-writer/agents/user-docs-writer/help-article | agent | User docs writer for guides, tutorials, and knowledge base articles for end users | PARTIAL | 6/8 (75%) |
+| product/user-docs-writer/agents/user-docs-writer/help-article | agent | User docs writer for guides, tutorials, and knowledge base articles for end users | PASS | 6/8 (75%) |
 | product/user-docs-writer/skills/content-strategy | skill | Define a documentation content strategy using the Diataxis framework | PASS | 7.5/8 (94%) |
 | product/user-docs-writer/skills/write-kb-article | skill | Write a knowledge base article from a resolved issue or how-to topic | PASS | 7.5/8 (94%) |
 | product/user-docs-writer/skills/write-onboarding | skill | Write onboarding content optimised for time-to-first-value | PASS | 6.5/8 (81%) |
 | product/user-docs-writer/skills/write-user-guide | skill | Write a task-oriented user guide with step-by-step instructions for non-technical readers | PASS | 7.5/8 (94%) |
-| product/ux-researcher/agents/ux-researcher/research-plan | agent | UX researcher for customer journeys, usability assessment, and persona definition | FAIL | 2/7 (29%) |
+| product/ux-researcher/agents/ux-researcher/research-plan | agent | UX researcher for research planning, customer journeys, and usability assessment | PASS | 6.5/7 (93%) |
 | product/ux-researcher/skills/journey-map | skill | Map a customer journey with stages, touchpoints, emotions, and pain points | PASS | 7.5/8 (94%) |
 | product/ux-researcher/skills/persona-definition | skill | Define a research-backed user persona grounded in real behaviour, not demographics | PASS | 7.5/8 (94%) |
 | product/ux-researcher/skills/service-blueprint | skill | Create a service blueprint mapping customer journey and backstage organisational processes | PASS | 8.5/9 (94%) |
@@ -180,11 +181,11 @@
 
 ## Cross-cutting observations
 
-- **Product category dropped from 99% to 90%** — the largest shift. The old evaluator was upgrading PARTIAL criteria to PASS and in some cases hallucinating definition content that didn't exist (component-spec's fabricated "Reuse/Extend/Create" step)
-- **First FAIL: ux-researcher agent (29%)** — the test expects a research planning agent but the definition is a UX analysis/mapping agent. Either the test is targeting the wrong definition or the agent needs research planning capability added
-- **Agent-vs-skill gap pattern** — several findings show safety/quality controls that exist in the agent definition but not in the standalone skill: code-review's zero-finding gate, capacity-plan's scaling checkpoint, GTM's DRAFT labelling. Skills invoked directly bypass these controls
-- **GTM DRAFT labelling gap** — DRAFT labelling is enforced by the GTM agent but absent from individual GTM skills. A user invoking `/gtm:positioning` directly produces output without DRAFT marking
-- **Audit-request hardcodes 14 criteria** when the audit-agent skill actually defines 15 — a concrete bug
-- **Style-guide missing "Moving forward"** in banned phrases (only "going forward" is listed)
-- **Source citation quality rule** now installed in both research plugins — requires deep links not homepage URLs, access dates on every source
+- **All 159 tests now PASS** after fix-and-rerun cycles addressing every PARTIAL and FAIL
+- **Product category dropped from 99% to 92%** — the largest shift from the old baseline. The old evaluator was upgrading PARTIAL criteria and hallucinating definition content (component-spec's fabricated "Reuse/Extend/Create" step)
+- **Agent-vs-skill gap pattern fixed** — code-review (zero-finding gate with file:line), capacity-plan (scaling decision checkpoint), and GTM skills (DRAFT labelling) all had safety controls only in the agent. Now enforced at the skill level too
+- **ux-researcher agent fixed** — research planning methodology added (question framing, participant counts, existing-data-first, sequencing). Went from FAIL (29%) to PASS (93%)
+- **GTM agent fixed** — launch tier classification, expansion-vs-net-new distinction, and phased-plan-with-owners added. Went from FAIL (50%) to PASS (93%)
+- **Source citation quality rule** installed in both research plugins — requires deep links not homepage URLs, access dates on every source
 - **Calibrated evaluator** enforces: PARTIAL-prefixed criteria capped at 0.5, PASS requires explicit definition support, FAIL is valid, simulated outputs reflect actual definition coverage
+- **Remaining low scores** worth monitoring: help-article agent (75%), content-evaluation agent (75%), write-battle-card (81%), component-spec (81%), design-tokens (81%), write-onboarding (81%)

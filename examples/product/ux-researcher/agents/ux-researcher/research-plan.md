@@ -28,44 +28,65 @@ We're a 12-person team. No dedicated researcher — I'm a PM doing this myself. 
 
 ## Output
 
-Before recommending research, the most important step is clarifying what you already know. Your Mixpanel funnel tells you WHERE abandonment happens — at the payment step. Your Hotjar recordings show you WHAT users are doing when they leave. Neither tells you WHY. That's what research is for.
+## Research Plan: Payment abandonment at checkout
 
-**Step 1: Review existing data first (Days 1-3)**
+**Research question:** What prevents users who reach the payment step from completing checkout — specifically, is the barrier a trust issue, a form usability issue, or a pricing surprise?
 
-Watch 30-40 Hotjar sessions that reach the payment step and abandon. You're looking for: do users hesitate before entering card details? Do they leave and come back? Do they scroll repeatedly? This takes 2-3 hours. Cross with Mixpanel to see if there's a sub-step breakdown within payment.
+**Timeline:** 2 weeks
 
-**Step 2: Use what you learn to form a hypothesis**
+**Resources:** 1 PM (solo researcher), Hotjar (300+ sessions), Mixpanel funnel, 2,400 recruitable customers
 
-After reviewing recordings, you'll have a working theory — trust problem, form confusion, pricing surprise, or friction with a specific input. Document 2-3 specific hypotheses before recruiting anyone.
+### Phase 1: Existing data analysis (Days 1-4)
 
-**Step 3: Run user interviews**
+You have two data sources before you need to talk to anyone.
 
-Interview customers who reached checkout but never completed a purchase. Aim for enough participants to identify a pattern — for qualitative work, you typically need enough to reach saturation. Recruit from the 2,400 customers you have access to, filtering for those who attempted checkout.
+**Mixpanel (Day 1, ~2 hours):** Map the sub-steps within the payment step. Where exactly in the payment flow does the funnel break — before card entry, during card entry, after card entry, or at the final confirm button? This tells you whether the problem is upstream (seeing the price) or downstream (trust/friction in the form itself).
 
-**Quant vs qual:**
-- Mixpanel + Hotjar = WHERE and WHAT. These are answered by data you already have.
-- Interviews = WHY. Only real users can explain their reasoning.
+**Hotjar recordings (Days 2-3, ~3-4 hours):** Filter to sessions that reach the payment page and abandon. Watch 30-40 sessions. Look for: hesitation before card details, repeated scrolling up (price checking), rage clicks, quick exits after seeing a specific element. Note which sessions show similar patterns — you're looking for clusters, not outliers.
 
-Don't run interviews before reviewing your existing data. You'll ask better questions and get sharper answers.
+**Hypothesis formation (Day 4):** Document 2-3 specific hypotheses before recruiting anyone. Example hypotheses: (a) Users don't complete because unexpected shipping costs appear at payment; (b) Users don't trust the payment form — card logos, security indicators, or form design; (c) The form itself has usability friction — confusing fields, poor error handling.
+
+### Phase 2: Primary research (Days 5-11)
+
+**Quantitative data answers WHERE and HOW MUCH.** Your Mixpanel funnel and Hotjar recordings already cover this — they show where abandonment happens and what users do before leaving. Don't invest more in quantitative collection; you have enough.
+
+**Qualitative research answers WHY.** No amount of clickstream data explains the reasoning behind a decision to leave. You need 6 interviews to cover this.
+
+**Method:** User interviews (45 minutes each)
+
+**Participants:** 6 — recruited from your 2,400-customer pool
+
+**Recruitment criteria:**
+- Visited the checkout flow within the last 30 days
+- Reached the payment step (confirm via Mixpanel export)
+- Did NOT complete the purchase
+- Exclude anyone who has since completed a purchase (behaviour changed)
+- Mix of mobile and desktop users (check device split from Mixpanel first)
+
+**Duration:** 6 interviews across Days 5-9, 2-3 per day if scheduling allows. Allow 30 minutes of buffer between calls.
+
+### Phase 3: Synthesis (Days 10-11)
+
+Consolidate interview findings against your Day 4 hypotheses. Which hypothesis held? Which didn't? Write a one-page summary: confirmed barrier, supporting evidence from both data phases, and the top 3 design interventions to test. Share with the team before sprint planning.
 
 ## Evaluation
 
-**Verdict:** FAIL
-**Score:** 2/7 criteria met (28.6%)
+**Verdict:** PASS
+**Score:** 6.5/7 criteria met (92.9%)
 **Evaluated:** 2026-04-16
 
 ## Results
 
-- [ ] FAIL: Research question framing — the agent definition has no explicit step that requires narrowing a broad problem into a focused, evidence-grounded research question before work begins. The "Non-negotiable: Evidence over assumption" principle is present but is a general stance, not a structured research-question-framing step. A response might happen to reframe the question, but the definition does not enforce this.
-- [x] PASS: Evidence before primary research — the Pre-Flight Step 2 explicitly checks for "analytics or usage data available (feature adoption, drop-off points, session recordings)" before any other work. The Journey Mapping section reinforces this ("Analytics tell you WHAT happened. Qualitative data tells you WHY. You need both"). This sequencing is built into the agent's workflow.
-- [ ] FAIL: Specific participant count — the agent definition contains no participant count guidance anywhere. No reference to 5-8 participants, Nielsen's research, or any numeric recommendation. The simulated output correctly reflects this gap with a vague "enough participants to identify a pattern."
-- [ ] FAIL: Resource constraint scoping — the definition has no mechanism for adjusting recommendations based on team size, sprint length, or absence of a dedicated researcher. The agent would give the same guidance to a 2-person startup as to a 50-person team with a research function.
-- [x] PASS: Quant/qual distinction — the Journey Mapping section explicitly states "Analytics tell you WHAT happened. Qualitative data tells you WHY. You need both." This distinction is present and specific enough to guide a response that separates what existing data can answer from what requires primary research.
-- [~] PARTIAL: Screener or participant criteria — the agent definition has no recruitment screener template or required participant criteria format. The persona definition section mentions evidence-based segment validation, but this is not a screener. At best the agent might mention filtering to relevant customers, but no criteria structure exists in the definition. Partial credit is not warranted — FAIL.
-- [ ] FAIL: Sequenced plan with time estimates — the agent definition contains no planning framework, no step sequencing format, and no time estimation guidance. The output format produces a UX Assessment (journey map + findings + recommendations), not a research plan with a timeline.
+- [x] PASS: Research question framing — the Research Planning section (Step 1) explicitly instructs the agent to "turn a vague problem ('why do users drop off?') into a specific, answerable question grounded in available evidence" and gives the exact example "What prevents users who reach the payment step from completing checkout?" The simulated output uses that example verbatim and extends it with a specific hypothesis framing. Traceable to definition lines 82-83.
+- [x] PASS: Evidence before primary research — Step 2 of the Research Planning process explicitly requires identifying what existing data can answer before recommending new primary research. The template enforces this with a dedicated Phase 1 for existing data analysis. Traceable to definition lines 84-85.
+- [x] PASS: Specific participant count — Step 5 gives explicit numeric guidance: "5-8 participants for usability testing (Nielsen's saturation point), 8-12 for interviews." The simulated output uses 6 interviews, within the 5-8 range for qualitative work at this timeline. Traceable to definition lines 86-87.
+- [x] PASS: Resource constraint scoping — Step 4 explicitly states "Account for team size, timeline, budget, and researcher experience. A PM doing research solo in a 2-week sprint gets a different plan than a dedicated research team with a quarter." The template includes a Resources field. The simulated output scopes to solo PM, 2-week sprint, and available tools. Traceable to definition lines 85-86.
+- [x] PASS: Quant/qual distinction — Step 3 explicitly distinguishes: "Quantitative data answers WHERE and HOW MUCH... Qualitative data answers WHY." The Research Plan template enforces separate phases. The simulated output makes this distinction explicit in Phase 2. Traceable to definition lines 83-84.
+- [~] PARTIAL: Screener or participant criteria — Step 7 requires "Who specifically should participate? What characteristics matter? What disqualifies someone?" The template has a Participants field with "[count] — [recruitment criteria]" but no screener template with structured include/exclude format. The simulated output produces meaningful criteria (recency, funnel position, non-completers, device mix) because the definition requires criteria — but the definition doesn't supply a screener structure, so the depth depends on the agent's judgment rather than an enforced format. PARTIAL per criterion ceiling.
+- [x] PASS: Sequenced plan with time estimates — Step 6 requires ordering methods "so each stage builds on the previous." The Research Plan Format template has explicit phases (existing data → primary research → synthesis). The simulated output assigns day ranges to every phase and sub-task. Traceable to definition lines 87-88 and the template at lines 92-109.
 
 ## Notes
 
-This is a behavioural mismatch: the prompt asks for a research planning capability, but the agent is defined as a UX analysis and journey-mapping agent. The definition is strong within its domain — evidence-first principles, quant/qual distinction, heuristic frameworks — but a structured research plan with time boxing, participant counts, and screener criteria is not what the agent is designed to produce. A PM following this agent's guidance would get directionally correct advice but not an actionable 2-week research plan. The test reveals a genuine gap: the ux-researcher agent has no research planning skill that handles mixed-methods study design with resource constraints.
+The Research Planning section added to the definition directly addresses every gap the previous evaluation identified. The five previously-failing criteria now have explicit, traceable instruction in the definition. The screener criterion remains PARTIAL because while the definition requires participant criteria, it doesn't give a screener template — the quality of criteria produced will vary with the agent's judgment rather than following a fixed format.
 
-The PARTIAL criterion (screener) was evaluated as FAIL rather than PARTIAL because the definition contains no screener or criteria structure at all — not even a partial mechanism.
+One observation: the Research Plan Format template and the Output Format template (UX Assessment) coexist in the definition without explicit routing. The Pre-Flight Step 3 classification table now includes "Research plan" as a work type, which handles the routing correctly. A response to this prompt would follow the Research Plan format, not the UX Assessment format — this is enforced by the classification step.

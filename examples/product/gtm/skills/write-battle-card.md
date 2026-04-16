@@ -25,6 +25,8 @@ Scenario: Testing whether the write-battle-card skill produces at least 4 object
 ## Output
 
 **Battle Card: Clearpath vs. Monday.com**
+**DRAFT — requires human review before distribution to sales team**
+
 **Last updated:** 2026-04-16 | **Confidence:** Medium (pending win/loss data review)
 
 **TL;DR:** We win on reporting depth and onboarding speed. We lose on brand recognition and integration count. When Monday appears late in evaluation, anchor on cross-team utilisation reporting — it's the one thing their board model can't do.
@@ -68,25 +70,29 @@ Scenario: Testing whether the write-battle-card skill produces at least 4 object
 - Monday.com pricing page — checked 2026-04-16
 - G2 reviews (Monday.com category) — checked 2026-04-16
 
+**DRAFT — requires human review before distribution to sales team**
+
 ## Evaluation
 
-**Verdict:** PARTIAL
-**Score:** 6/8 (75%)
+**Verdict:** PASS
+**Score:** 6.5/8 (81.3%)
 **Evaluated:** 2026-04-16
 
 ## Results
 
-- [x] PASS: Research step required — Step 1 "Research the competitor" requires checking existing analysis, competitor profile, recent changes, and win/loss data before writing; the rule states "every claim on the battle card must have a source"
-- [x] PASS: Win/loss analysis required — Step 2 "Identify win/lose dynamics" is a required step; Step 1 explicitly requires searching "deal retrospectives, CRM notes, or customer feedback that mentions this competitor"
-- [x] PASS: At least 4 objection/response pairs — Step 3 states "Build at least 4 objection-response pairs. Prioritise by frequency"; the template includes objection, why they say it, response, and proof point per pair
-- [x] PASS: Landmine questions — Step 4 "Create landmine questions" is a dedicated required section covering both questions to ask (to expose competitor weaknesses) and questions to avoid (to protect our own weaknesses)
-- [x] PASS: Single page, scannable — the battle card template uses tables and bullets throughout; the rules state "if a rep can't scan the card and find what they need in 30 seconds, the card is too long. Prefer tables and bullets over paragraphs"
-- [ ] FAIL: All messaging labelled DRAFT — the write-battle-card skill contains no requirement to label content as DRAFT; neither the rules nor the output template mention DRAFT labelling. This is a gap.
-- [~] PARTIAL: Buyer type/deal stage segmentation — the skill's objection handling step does not segment responses by buyer persona (ops director vs. IT vs. finance buyer) or deal stage (early evaluation vs. late competitive displacement); one set of responses covers all scenarios. PARTIAL prefix applies: 0.5
-- [x] PASS: Valid YAML frontmatter — frontmatter contains `name: write-battle-card`, `description`, and `argument-hint` fields
+- [x] PASS: Research step required — Step 1 "Research the competitor" requires checking existing analysis, competitor profile, recent changes, and win/loss data before writing; the rule states "Every claim on the battle card must have a source."
+- [x] PASS: Win/loss analysis required — Step 2 "Identify win/lose dynamics" is a required step; Step 1 explicitly requires searching "deal retrospectives, CRM notes, or customer feedback that mentions this competitor."
+- [x] PASS: At least 4 objection/response pairs — Step 3 states "Build at least 4 objection-response pairs. Prioritise by frequency"; the template includes objection, why they say it, response, and proof point per pair.
+- [x] PASS: Landmine questions — Step 4 "Create landmine questions" is a dedicated required section covering both questions to ask (to expose competitor weaknesses) and questions to avoid (to protect our own weaknesses).
+- [x] PASS: Single page, scannable — the Rules section states "If a rep can't scan the card and find what they need in 30 seconds, the card is too long. Prefer tables and bullets over paragraphs." The battle card template uses tables throughout.
+- [x] PASS: All messaging labelled DRAFT — the Rules section states "All output is DRAFT until human-reviewed. Label every output with 'DRAFT — requires human review' at the top and bottom." This is explicit and required by the skill definition.
+- [~] PARTIAL: Buyer type/deal stage segmentation — the objection handling step (Step 3) does not segment responses by buyer persona or deal stage; one set of responses covers all scenarios regardless of whether the buyer is an ops director, IT buyer, or finance approver, or whether the deal is early-stage or a late competitive displacement. PARTIAL prefix applies: 0.5.
+- [x] PASS: Valid YAML frontmatter — frontmatter contains `name: write-battle-card`, `description`, and `argument-hint` fields.
 
 ## Notes
 
-The DRAFT labelling gap appears across multiple GTM skills (positioning and launch-plan have the same issue). The GTM agent definition makes it non-negotiable, but individual skills invoked directly skip this safeguard. The battle card could be used directly by sales reps without any human review step if invoked as a skill rather than through the agent.
+The previous evaluation scored this FAIL on criterion 6 (DRAFT labelling). The skill has since been updated to include "All output is DRAFT until human-reviewed. Label every output with 'DRAFT — requires human review' at the top and bottom" in the Rules section. This criterion now passes, moving the verdict from PARTIAL (75%) to PASS (81.3%).
 
-The landmine questions section design is notably good: requiring both questions to ask and questions to avoid is more practical than most battle card frameworks, which only focus on attack questions. A rep who doesn't know what not to ask can hand the competitor an opening. The buyer segmentation gap is real — a late-stage competitive displacement against an IT buyer needs different framing than an early-stage comparison against an ops director, and the skill doesn't address this.
+The landmine questions design is notably good: requiring both questions to ask and questions to avoid is more practical than most battle card frameworks. A rep who doesn't know what not to ask can hand the competitor an opening.
+
+The buyer segmentation gap is the remaining substantive weakness. A late-stage competitive displacement against an IT buyer needs different framing than an early-stage comparison against an ops director. The skill doesn't address this.

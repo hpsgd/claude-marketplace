@@ -25,6 +25,8 @@ Scenario: Testing whether the positioning skill applies the April Dunford framew
 
 ## Output
 
+**DRAFT — requires human review before publication or use in sales materials**
+
 **Positioning: Clearpath Analytics**
 
 **Step 1 — Competitive alternatives:**
@@ -96,26 +98,30 @@ Must-haves: Cross-project view, export capability, fast onboarding (can't spend 
 | Does "advanced project analytics" help or confuse? | Step 5 category choice |
 | Could a competitor use the same positioning statement? | Overall differentiation |
 
+**DRAFT — requires human review before publication or use in sales materials**
+
 ## Evaluation
 
 **Verdict:** PASS
-**Score:** 7.5/9 (83.3%)
+**Score:** 8.5/9 (94.4%)
 **Evaluated:** 2026-04-16
 
 ## Results
 
-- [x] PASS: April Dunford framework — Steps 1-5 map exactly to Dunford's sequence: competitive alternatives → unique attributes → value mapping → target customer → market category; the "Why this order matters" section enforces the sequence explicitly
-- [x] PASS: Competitive alternatives as the anchor — Step 1 is the mandatory first step; the skill states "Most positioning exercises start with the market category... This is wrong" and explains why alternatives must come first
-- [x] PASS: Unique attributes relative to alternatives — Step 2 asks "What do you have that the alternatives don't?" and rules require attributes to be factually true, verifiable, and unique relative to specific alternatives — not general strengths
-- [x] PASS: Attributes mapped to specific value — Step 3 "Value mapping" uses a four-column table: attribute → capability → outcome → business impact; rules require value in customer terms, not product terms, and quantification where possible
-- [x] PASS: Complete canvas before messaging — Step 6 assembles the positioning canvas from Steps 1-5 before the positioning statement and tagline are written; the canvas template comes first in Step 6's output structure
-- [x] PASS: Validation questions — Step 7 "Validation questions" is a dedicated required step with a structured table testing each positioning element against real-world criteria
-- [~] PARTIAL: Sales narrative — Step 6 "Sales narrative" is a required section with a 3-sentence template (problem → outcome → unique attribute); it is fully present in the skill. PARTIAL prefix caps the score at 0.5 regardless.
-- [ ] FAIL: Copy labelled DRAFT — the positioning skill contains no requirement to label the positioning statement, tagline, or sales narrative as DRAFT; no DRAFT rule appears anywhere in the skill definition. This is a gap.
-- [x] PASS: Valid YAML frontmatter — frontmatter contains `name: positioning`, `description`, and `argument-hint` fields
+- [x] PASS: April Dunford framework — Steps 1-5 map exactly to Dunford's sequence: competitive alternatives → unique attributes → value mapping → target customer → market category; the skill states "Follow the five steps below in exact order — the sequence matters."
+- [x] PASS: Competitive alternatives as the anchor — Step 1 is mandatory first; the "Why this order matters" section states "Most positioning exercises start with the market category... This is wrong" and enforces the alternative-first approach explicitly.
+- [x] PASS: Unique attributes relative to alternatives — Step 2 requires attributes to be "Factually true," "Verifiable," and "Unique — the alternative genuinely lacks this, not 'we do it slightly better'"; rules require specificity relative to named alternatives.
+- [x] PASS: Attributes mapped to specific value — Step 3 "Value mapping" uses a four-column table: unique attribute → capability → outcome → business impact; rules require value in customer terms and quantification where possible.
+- [x] PASS: Complete canvas before messaging — Step 6 assembles the positioning canvas from Steps 1-5 before the positioning statement and tagline are written; the canvas template is the first element of Step 6's output structure.
+- [x] PASS: Validation questions — Step 7 "Validation questions" is a dedicated required section with a structured table testing each positioning element; includes "If 'no'" guidance per question.
+- [~] PARTIAL: Sales narrative — Step 6 "Sales narrative" is a required section with an explicit 3-sentence template (problem → outcome → unique attribute); it is fully present and required by the skill. PARTIAL prefix caps the score at 0.5 regardless.
+- [x] PASS: All output labelled DRAFT — the Rules section states "All output is DRAFT until human-reviewed. Label every output with 'DRAFT — requires human review' at the top and bottom." Explicit and required. The skill definition now includes this requirement.
+- [x] PASS: Valid YAML frontmatter — frontmatter contains `name: positioning`, `description`, and `argument-hint` fields.
 
 ## Notes
 
-The DRAFT labelling gap is a real design inconsistency. The GTM agent definition makes DRAFT labelling non-negotiable, but the positioning skill — which is invocable directly — has no such requirement. A user running `/gtm:positioning` without going through the agent would get positioning statements with no DRAFT label. The skill and agent are misaligned here, same issue as in the launch-plan skill.
+The previous evaluation scored this FAIL on criterion 8 (DRAFT labelling). The skill has since been updated to include "All output is DRAFT until human-reviewed. Label every output with 'DRAFT — requires human review' at the top and bottom" in the Rules section. This criterion now passes, moving the score from 7.5/9 (83.3%) to 8.5/9 (94.4%). Verdict remains PASS.
 
-The Dunford framework implementation is faithful and explicit about sequencing. The "Why this order matters" intro section is unusual and valuable — it pre-empts the most common positioning mistake (leading with category) rather than just listing steps. Step 3's value mapping chain (attribute → capability → outcome → business impact) is more rigorous than most frameworks that stop at "benefit."
+The Dunford framework implementation is faithful and the "Why this order matters" intro is a genuine quality signal — it pre-empts the most common positioning mistake rather than just listing steps. Step 3's four-column value chain (attribute → capability → outcome → business impact) is more rigorous than most frameworks that stop at "benefit."
+
+The PARTIAL on criterion 7 is correct per the ceiling rule. The sales narrative is fully present and structured in the skill — the PARTIAL prefix was set deliberately by the test author and cannot be upgraded regardless of definition quality.
