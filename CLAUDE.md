@@ -6,10 +6,11 @@ This repo is a Claude Code marketplace. Plugins are organised by function:
 
 ```
 plugins/
-├── leadership/          # Coordinator, CPO, CTO
-├── product/             # Product owner, UI designer, UX researcher, technical writer, GTM, support
+├── leadership/          # Coordinator, CPO, CTO, GRC Lead
+├── product/             # Product owner, UI designer, UX researcher, technical writer, GTM, support, customer success
 ├── engineering/          # Architect, developers, QA, DevOps, security, data engineering, workflow tools
-└── practices/           # Coding standards, writing style, security compliance, thinking, technology stack
+├── practices/           # Coding standards, writing style, security compliance, thinking, technology stack
+└── research/            # Business analyst, content analyst, open-source researcher, investigator, OSINT analyst
 ```
 
 Each plugin follows this layout:
@@ -39,6 +40,7 @@ plugins/<category>/<name>/
 - Use `product/` for customer-facing and product-related agents
 - Use `engineering/` for technical implementation agents
 - Use `practices/` for standards, conventions, and methodologies
+- Use `research/` for research, analysis, and investigation agents
 - Use the `scripts/install-rules.sh` helper for rule installation hooks
 
 ## Adding a new plugin

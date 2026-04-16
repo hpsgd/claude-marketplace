@@ -24,6 +24,7 @@ Invoke with `/thinking:skill-name` or let Claude auto-invoke when the context ma
 | `/thinking:creative` | Divergent ideation with wild card options | Need novel solutions or multiple distinct approaches |
 | `/thinking:iterative-depth` | Multi-lens analysis from different perspectives | Requirements analysis, architecture decisions |
 | `/thinking:scientific-method` | Goal → hypothesise → experiment → measure → iterate | Debugging, validating assumptions |
+| `/thinking:reconcile-rules` | Review learned rules against marketplace rules for overlap | Reducing context bloat from duplicate rules |
 
 ### Learning system
 
@@ -370,6 +371,22 @@ Learnings flow through two paths:
 
 The regex classifier is self-evolving — each retrospective that classifies an ambiguous message extracts a new regex pattern and writes it to `.claude/learnings/signals/patterns.json`, which the classifier loads on every subsequent message.
 
+## Evaluation framework
+
+Every plugin definition is tested against a calibrated evaluator. Tests live in `examples/` mirroring the plugin structure, and each contains a realistic prompt, criteria, a simulated output showing what the skill would produce, and a per-criterion evaluation.
+
+Run evaluations with the `/evaluate` skill:
+
+```
+/evaluate                                          # all 173 tests
+/evaluate examples/research                        # one category
+/evaluate examples/research/analyst/skills/company-lookup.md  # single test
+```
+
+Current results: **173 tests, 173 PASS.** Scores range from 81% to 100% across all categories. Research tests are grounded in real data (real companies, public figures, real articles) and enforce source citation quality (deep links, access dates).
+
+Full results in `examples/REPORT.md`.
+
 ## Troubleshooting
 
 ### marketplace.json source paths
@@ -396,6 +413,7 @@ Plugin skills are invoked by Claude automatically (when the description matches 
    plugins/product/my-product-agent/   # Customer-facing, product, design, content
    plugins/engineering/my-eng-agent/   # Technical implementation agents
    plugins/practices/my-practice/      # Standards, methodology, cross-cutting rules
+   plugins/research/my-research/       # Research, analysis, investigation agents
    ```
 
    Plugin structure:
