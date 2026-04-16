@@ -55,9 +55,17 @@ For every function or method in the changed files:
 4. **Error messages**: Do error messages include enough context to diagnose the problem? "Failed" is useless. "Failed to fetch user {id}: connection timeout after 5s" is actionable.
 5. **Error propagation**: Are errors from dependencies wrapped with context, or do raw database/HTTP errors leak to callers?
 
-### Pass 5: Writing Style (Docs, Comments, Copy)
+### Pass 5: Naming Consistency Across Contexts
 
-Only run this pass if the diff includes documentation, comments, README content, UI copy, or commit messages.
+When the diff touches multiple modules or bounded contexts, check that the same semantic operation uses the same method name everywhere.
+
+1. **Cross-context scan** — if the diff spans 2+ directories that represent different domains/modules, identify operations that exist in both
+2. **Name comparison** — the same operation must use the same verb and structure. `fail()` in one context and `record_failed()` in another for the same semantic action is a finding
+3. **Scope** — this applies to public/exported methods, command/event names, and API endpoints. Internal helpers are less critical but still worth flagging if the inconsistency is confusing
+
+### Pass 6: Writing Style (Docs, Comments, Copy)
+
+Only run this pass if the diff includes documentation, comments, README content, UI copy, or commit messages. (Skip if no text content in the diff.)
 
 1. **Banned words** — flag any occurrence:
    `delve`, `tapestry`, `landscape`, `nuanced`, `robust`, `crucial`, `vital`, `realm`,

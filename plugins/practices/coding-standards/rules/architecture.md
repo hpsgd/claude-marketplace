@@ -9,6 +9,10 @@ description: General architecture principles — applies across all languages an
 - Group related files by feature or domain, not by type
 - Keep the dependency graph shallow — avoid deep import chains
 
+## Naming consistency across contexts
+
+When the same semantic operation exists in multiple modules or bounded contexts, use the same method name everywhere. Don't mix `fail()` in one context with `record_failed()` in another for the same operation. Pick one and apply it consistently.
+
 ## Documentation
 - Each workspace or service should have its own CLAUDE.md with project-specific guidance
 - Services in separate languages/runtimes get their own CLAUDE.md (not just the monorepo root)

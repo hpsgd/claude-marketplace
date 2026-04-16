@@ -4,7 +4,7 @@ Scenario: A developer submits a PR containing a .NET message handler with a fore
 
 ## Prompt
 
-Review this PR. The main change is in `OrderProcessor.cs` — we added a `HandleBatchOrdersCommand` handler that loops over a list of order IDs and calls `_repository.SaveAsync(order)` inside the loop for each one. There's also a new `OrderSummaryController.cs` with a `/api/orders` endpoint that fetches all orders then filters in memory with `.Where()`. Both files are in the diff.
+Review this PR. The main change is in `OrderProcessor.cs` — we added a `HandleBatchOrdersCommand` handler that loops over a list of order IDs and calls `_repository.SaveAsync(order)` inside the loop for each one. There's also a new `OrderSummaryController.cs` with a `/api/orders` endpoint that fetches all orders then filters in memory with `.Where()`. Finally, `CreateChildWorkItemHandler.cs` creates a new `WorkItem` aggregate from a `WorkItemTriggered` event but doesn't check whether the aggregate already exists — if the event replays, it'll try to create a duplicate.
 
 ## Criteria
 
@@ -15,4 +15,5 @@ Review this PR. The main change is in `OrderProcessor.cs` — we added a `Handle
 - [ ] PASS: Output uses the defined output template with summary counts per pass category
 - [ ] PASS: Zero-finding gate is respected — skill does not fabricate additional findings where none exist
 - [ ] PARTIAL: Pass 6 (analyser compliance) and Pass 7 (testing) are run even when no new test files are in the diff — at minimum the skill confirms the passes were executed
+- [ ] PASS: Missing idempotency guard on creation handler is flagged — `CreateChildWorkItemHandler` creates an aggregate without checking if it already exists, risking duplicate-version conflicts on event replay
 - [ ] PASS: Related skills are referenced at the end of the output (review-standards and review-git)

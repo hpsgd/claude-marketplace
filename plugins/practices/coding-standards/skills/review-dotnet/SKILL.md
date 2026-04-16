@@ -45,7 +45,11 @@ The foundational rule: every message handler performs exactly one unit of work. 
 
 2. **Return types** — aggregate handlers return domain events as their result. The framework publishes them. Verify handlers return the event, not `void` or `Task`.
 
-3. **Event immutability** — domain events must be immutable records or classes with `init`-only properties. Grep for `set;` in event classes:
+3. **Idempotency guards on creation handlers** — handlers that create aggregates from coordination events (e.g., `WorkItemTriggered` → create `WorkItem`) must check whether the aggregate already exists before calling create. Event replay after a partial write will re-run the handler, and a second create for the same ID produces a duplicate-version conflict in the event store:
+   - **Wrong**: `var item = new WorkItem(command.Id); await repository.Save(item);`
+   - **Right**: Try to load the aggregate first. If it exists, return early. If `AggregateNotFound`, proceed with creation.
+
+4. **Event immutability** — domain events must be immutable records or classes with `init`-only properties. Grep for `set;` in event classes:
    ```bash
    grep -rn 'set;' --include='*.cs' [event file paths]
    ```

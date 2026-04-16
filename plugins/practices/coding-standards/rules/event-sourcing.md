@@ -32,6 +32,22 @@ ProcessStarted → Checkpoint, Checkpoint, ... → ProcessCompleted
 ## One message, one unit of work
 Orchestration handlers MUST NOT loop through items doing heavy work inline. Instead, publish one independent message per item and let the message bus handle each in its own transaction. A failure in one item must not affect others.
 
+## Idempotency guards on creation handlers
+
+Handlers that create aggregates must check whether the aggregate already exists before creating it. Event replay after a partial write will re-run the handler, and a second `create()` call for the same ID produces a duplicate-version conflict in the event store.
+
+The guard pattern:
+
+```
+try:
+    repository.get(aggregate_id)
+    return  # already exists, skip
+except AggregateNotFound:
+    pass  # proceed with creation
+```
+
+This applies to any handler triggered by a coordination event (e.g., "WorkItemTriggered") that creates a child aggregate. The coordination event may replay, but the child aggregate from the first run is already persisted.
+
 ## Cascading handler chains
 Each handler does one thing (one API call, one persistence operation) and returns the next command. This creates event-driven pipelines that are:
 - Individually retriable
