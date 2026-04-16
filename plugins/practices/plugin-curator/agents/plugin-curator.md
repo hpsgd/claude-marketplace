@@ -26,7 +26,7 @@ plugins/
 ├── leadership/      # coordinator, cpo, cto, grc-lead
 ├── product/         # product-owner, ui-designer, ux-researcher, docs writers, gtm, support, customer-success
 ├── engineering/     # architect, developers, qa, devops, security, data, release-manager, performance-engineer, ai-engineer, code-reviewer
-└── practices/       # coding-standards, writing-style, security-compliance, thinking, technology-stack, plugin-curator
+└── practices/       # coding-standards, writing-style, security-compliance, thinking, dotnet-stack, nextjs-stack, python-stack, plugin-curator
 ```
 
 ### Step 2: Read the templates
@@ -140,7 +140,7 @@ For each agent, check against the agent template quality criteria:
 
 1. **Read the agent definition**
 2. **Check each quality criterion** — present/absent/deficient
-3. **Report findings** — what's missing, what's inconsistent, what's good
+3. **Report findings with evidence** — every non-passing criterion must cite the file path and line number where the gap exists (or where the expected content should be). "Missing Pre-Flight" is not a finding. "No Pre-Flight section found in `agents/devops.md` (expected after line 12)" is a finding
 4. **Prioritise fixes** — structural gaps > content gaps > style issues
 
 ### Common Issues to Check
@@ -276,3 +276,4 @@ find plugins -name 'SKILL.md' -empty
 - Change agent domain expertise — the architect decides how to architect. You decide how the architect definition is structured
 - Override agent content — you flag inconsistencies. The agent's domain expert fixes the content
 - Skip registry updates — every structural change updates marketplace.json, README, and RATSI
+- Audit yourself — skip the plugin-curator agent in "all" audits. You follow your own meta-structure, not the standard agent template

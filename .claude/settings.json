@@ -1,18 +1,14 @@
 {
   "extraKnownMarketplaces": {
-    "turtlestack": {
+    "hpsgd": {
       "source": {
-        "source": "git",
-        "url": "https://github.com/hpsgd/turtlestack.git"
+        "source": "github",
+        "repo": "hpsgd/turtlestack"
       }
     }
   },
   "enabledPlugins": {
-    "coding-standards@turtlestack": true,
-    "writing-style@turtlestack": true,
-    "thinking@turtlestack": true,
-    "tooling@turtlestack": true,
-    "plugin-curator@turtlestack": true,
-    "ai-engineer@turtlestack": true
+    "thinking@hpsgd": true,
+    "plugin-curator@hpsgd": true
   }
 }

@@ -1,0 +1,116 @@
+# Service blueprint
+
+Testing whether the service-blueprint skill requires both frontstage and backstage lanes, a line of visibility, failure point analysis, and improvement recommendations.
+
+## Prompt
+
+> /ux-researcher:service-blueprint for our enterprise customer onboarding process — from contract signed to customer achieving first value, including everything our CS, solutions engineering, and support teams do behind the scenes.
+
+## Output
+
+**Service Blueprint: Enterprise Customer Onboarding**
+
+**Scope:**
+
+| Element | Detail |
+|---|---|
+| **Service** | Enterprise customer onboarding |
+| **Journey** | Contract signed → customer achieves first value |
+| **Start point** | Contract countersigned |
+| **End point** | Customer confirms first value milestone achieved |
+| **Customer type** | Enterprise (200+ seats, dedicated IT, $100k+ ACV) |
+| **Success metric** | Days to first value (target: ≤45 days) |
+
+**Customer actions (top lane):**
+
+| Step | Customer action | Touchpoint | Channel |
+|---|---|---|---|
+| 1 | Receive onboarding welcome email | Email | Email |
+| 2 | Attend kickoff meeting | Calendar invite | Video call |
+| 3 | Complete IT setup tasks | IT checklist doc | Email/Shared doc |
+| 4 | Wait for SSO provisioning (avg 5 days) | — | — |
+| 5 | Complete team training | Training sessions | Video call |
+| 6 | Use product for first 2 weeks | In-product | Web app |
+| 7 | Confirm first value milestone | CSM check-in | Video call |
+
+**Frontstage employee actions:**
+
+| Step | Corresponding customer action | Employee action | Role | Touchpoint |
+|---|---|---|---|---|
+| 1 | Step 1 | Send personalised welcome email | CSM | Email |
+| 2 | Step 2 | Run kickoff meeting, capture goals | CSM + Solutions Engineer | Video |
+| 3 | Step 5 | Deliver training sessions | Solutions Engineer | Video |
+| 4 | Step 7 | Facilitate value confirmation meeting | CSM | Video |
+
+───────────────────── LINE OF VISIBILITY ─────────────────────
+Everything above: the customer sees it. Everything below: the customer does NOT see it.
+
+**Visibility audit:**
+
+| Customer action | What customer sees | What customer does NOT see |
+|---|---|---|
+| Wait for SSO | "Your IT team is setting up access" | IT ticket backlog, Okta configuration |
+| Receive training | Solutions engineer facilitates session | SE prep time (3–4h per session) |
+
+SSO delay becomes visible to the customer (they know they're waiting) but not how long. Not intentional. Fix: proactive ETA communication when SSO ticket is created.
+
+**Backstage employee actions:**
+
+| Step | Triggered by | Employee action | Role | System/tool used | Duration |
+|---|---|---|---|---|---|
+| A | Contract signed | Create account in CRM, assign CSM | Revenue ops | Salesforce | 30 min |
+| B | Kickoff meeting | Submit SSO provisioning request | CSM | IT ticketing | 10 min |
+| C | SSO request | Configure SSO in identity provider | IT | Okta | 2–5 days |
+| D | SSO live | Provision all licensed users | IT | Admin panel | 1–3 days |
+| E | Training complete | Send adoption tracking report | CSM | Analytics | 1 hour |
+
+**Support processes (bottom lane):**
+
+| Backstage action | Support system | Type | Owner | SLA/availability |
+|---|---|---|---|---|
+| A | Salesforce | CRM | Revenue ops | Business hours |
+| B | IT ticketing system | Queue | IT | No onboarding SLA |
+| C | Okta | Identity provider | IT | Business hours |
+| D | Admin panel | Internal tool | IT | Business hours |
+
+**Failure points:**
+
+| # | Location | Failure mode | Impact on customer | Frequency | Root cause | Current mitigation |
+|---|---|---|---|---|---|---|
+| F1 | Backstage B→C handoff | SSO request lost or delayed in IT queue | Customer cannot log in, onboarding stalls | Weekly | No SLA on IT provisioning tickets for onboarding | None |
+| F2 | Customer step 4 | SSO delay exceeds 5 days | Customer loses momentum; early churn risk | Monthly | IT backlog; onboarding tickets not prioritised | None |
+| F3 | Step 7 | CSM cannot evidence value — customer champion has left | Renewal risk with no documented value | Quarterly | Champion tracking not systematic | Partial — CSM note in CRM |
+
+**Recommendations (prioritised by customer impact):**
+
+| Priority | Failure point | Recommendation | Impact | Effort | Owner |
+|---|---|---|---|---|---|
+| 1 | F1, F2 | Establish IT SLA: onboarding provisioning tickets resolved within 2 business days | Reduce average SSO delay from 5 to 2 days | M | IT + CS leadership |
+| 2 | F1 | Send automated ETA email to customer when SSO ticket is created | Reduce "where's my access?" support volume | S | Engineering |
+| 3 | F3 | Add champion tracking to kickoff template — document who knows the value and why | Reduce renewal risk from champion turnover | S | CS |
+
+## Evaluation
+
+
+| Field | Value |
+|---|---|
+| Verdict | PASS |
+| Score | 8.5/9 criteria met (94.4%) |
+| Evaluated | 2026-04-16 |
+
+
+## Results
+
+- [x] PASS: Scope with concrete start and end — Step 1 is mandatory and requires a scope table. The Rules section states "Start and end must be concrete events with a clear trigger and outcome." The output template has `**Start point:**` and `**End point:**` as required fields.
+- [x] PASS: All four lanes — Steps 2 (customer actions), 3 (frontstage employee actions), 5 (backstage employee actions), and 6 (support processes) are all mandatory, each with a required output table and explicit rules. The output format template shows all four lanes in sequence.
+- [x] PASS: Line of visibility explicitly drawn — Step 4 is a mandatory dedicated step. The output format template shows the line as a visual separator (`───────────────────── LINE OF VISIBILITY ─────────────────────`) between frontstage and backstage. It is a required structural element, not a suggestion.
+- [x] PASS: Visibility audit — Step 4 requires a visibility audit table ("What customer sees" vs "What customer does NOT see") and Rules state: "Anything that crosses the line is a moment of truth — handle with care." The intentionality question is explicitly included ("decide if it's intentional or accidental").
+- [x] PASS: Failure point analysis with all required fields — Step 7 requires a table with location, failure mode, impact on customer, frequency, root cause, and current mitigation. All fields are mandatory in the template.
+- [x] PASS: Backstage trigger required — Step 5 rules state: "Every backstage action must be triggered by something — a customer action, a frontstage action, or another backstage action. No orphaned steps." The `Triggered by` column is mandatory in the template.
+- [~] PARTIAL: Duration estimates — Step 5's backstage action template includes `Duration` as a required column ("how long"). The Rules reinforce: "Duration matters — a 'quick review' that takes 3 days is a bottleneck, not a quick review." The definition fully satisfies this criterion, but the criterion prefix is PARTIAL — maximum score is 0.5 regardless.
+- [x] PASS: Prioritised recommendations linked to failure points — Step 8 requires a recommendations table with `Failure point` as a mandatory column. The rules state: recommendations must be linked to failure points. The output template enforces this structure.
+- [x] PASS: Valid YAML frontmatter — name, description, and argument-hint are all present in the skill's YAML header. `user-invocable: true` and `argument-hint: "[service or customer journey to blueprint]"` are explicit.
+
+### Notes
+
+The line of visibility is treated as the conceptual core of the skill — Step 4 gets its own mandatory step and appears as a visual separator in the output format template, not just described in prose. This is architecturally correct for a service blueprint. The duration column in Step 5 is a required column, not just mentioned as important — the definition fully meets the duration criterion. The PARTIAL ceiling reflects the test author's deliberate conservative set, not a gap in the definition.

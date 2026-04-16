@@ -1,0 +1,18 @@
+# Test: design-tokens — audit of inconsistent token system
+
+Scenario: Testing the design-tokens skill with an audit request where the existing token system has orphaned tokens, mixed units, and dark mode tokens that bypass the primitive-semantic hierarchy.
+
+## Prompt
+
+/ui-designer:design-tokens audit our existing token system — we have 47 colour tokens but only 12 are actually used in components, the rest are orphaned. We also have spacing values defined in both rem and px across different files, and our dark mode tokens reference hardcoded hex values instead of primitive tokens.
+
+## Criteria
+
+- [ ] PASS: Inventory step catalogues all 47 existing colour tokens and identifies which 12 are in active use
+- [ ] PASS: Orphaned tokens (the 35 unused) are listed with a recommendation to remove or archive
+- [ ] PASS: Spacing inconsistency (rem vs px) is flagged with a recommended single unit system
+- [ ] PASS: Dark mode tokens are flagged for referencing hardcoded values instead of primitive token aliases
+- [ ] PASS: Output is usable by both designers (Figma-compatible format) and developers (CSS custom properties or equivalent)
+- [ ] PASS: A migration plan is produced for fixing the inconsistencies, not just a list of problems
+- [ ] PARTIAL: Contrast validation is performed on the 12 active colour tokens against WCAG AA thresholds
+- [ ] PASS: The distinction between primitive tokens and semantic tokens is maintained in the recommended structure

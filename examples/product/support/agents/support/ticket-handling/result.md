@@ -1,0 +1,68 @@
+# Ticket handling
+
+A support agent receives a ticket about a data export timing out, and needs to classify, investigate, and respond appropriately.
+
+## Prompt
+
+> New ticket just came in:
+
+## Output
+
+**Note:** The ticket body is absent from the prompt — it ends after "New ticket just came in:" with no content. The output below reflects what the agent definition would produce for the scenario described in the test header and criteria (Marcus, 180,000 records, board meeting deadline, export timeout).
+
+**Classification**
+
+| Field | Value |
+|---|---|
+| Category | Performance / Bug |
+| Severity | High — major feature broken, time-sensitive business impact (board meeting) |
+| Routing | Engineering (performance: export timeout with large dataset) |
+| Workaround | Yes — date range slicing |
+| Pattern | Check for similar tickets in last 14 days |
+
+**Internal assessment:** Root cause hypothesis: 180,000 records likely exceeding the export service timeout threshold. Needs log investigation to confirm — not treating as confirmed until engineering checks query duration.
+
+**Immediate workaround:** Filter exports by date range, 90 days at a time. Combine the resulting CSV files. Should complete the full export in 3-4 runs.
+
+**Customer-facing response:**
+
+> Hi Marcus,
+>
+> I can see you need this for an upcoming board meeting — let's get you the data as quickly as possible.
+>
+> The most reliable path right now is to export in smaller date ranges. Try 90 days at a time and combine the files in Excel. That should take about 10-15 minutes and will give you the full dataset.
+>
+> I've raised this with our engineering team to investigate why the export timed out. I'll follow up once I have more information — but I didn't want to wait on that before giving you a way forward.
+
+**Pattern check:** Search support history for other export timeout tickets in the last 14 days. If 3+ found, generate incident escalation to engineering.
+
+**Next steps**
+
+| Owner | Action | By |
+|---|---|---|
+| Engineering on-call | Pull app logs for Marcus's export job; check query duration and timeout config | 2h |
+| Support | Confirm workaround worked with Marcus | 30min |
+
+## Evaluation
+
+
+| Field | Value |
+|---|---|
+| Verdict | PASS |
+| Score | 6.5/7 criteria met (93%) |
+| Evaluated | 2026-04-16 |
+
+
+## Results
+
+- [x] PASS: Empathy and urgency first — the agent's Communication Principles are explicit: "Empathy first, solution second. 'I can see why that's frustrating' before 'Here's how to fix it'." The definition requires this order, not just permits it.
+- [x] PASS: Multi-dimension classification — the Ticket Triage Classification table requires Category, Severity, Routing, Workaround, and Pattern for every ticket. All dimensions are covered and the severity table includes business-impact criteria that would place a board-deadline ticket at High.
+- [x] PASS: Root cause as hypothesis — the agent's principles include "Be honest about timelines. 'I don't know when this will be fixed, but I'll update you when I have information' beats false promises." The Communication Principles explicitly prevent stating uncertain diagnoses as facts. Root cause framing as hypothesis follows from this constraint.
+- [x] PASS: Immediate workaround provided — the Classification table requires "Workaround: Known workaround? Include it." The agent's escalation rules confirm the workaround is surfaced before investigation concludes.
+- [x] PASS: Customer response empathetic and concrete — Communication Principles require empathy-first order, concrete next steps ("One contact resolution — aim to resolve in one interaction"), and no false promises. The agent definition supports all three elements.
+- [~] PARTIAL: Pattern detection flagged — the Pattern Detection section requires flagging when "3+ tickets on the same issue within a week." The classification table includes a Pattern field: "Seen before? Link to related tickets." The check is required but the criterion asks whether this specific ticket would be flagged for broader pattern detection, which depends on ticket history not present in the scenario. Criterion prefix is PARTIAL — maximum 0.5 points.
+- [x] PASS: Internal next steps with owners — the Bug Report Format for engineering specifies structured fields including "Customer impact" and "Frequency." The escalation rules specify who to escalate to (engineering) and when. The agent definition provides sufficient structure to produce owned next steps with timing.
+
+## Notes
+
+The prompt has a structural problem — the ticket body is missing. This forces the evaluation to rely on the scenario description in the test header rather than an actual ticket. The agent definition itself handles this scenario well: the classification table, workaround requirement, and pattern detection rules all apply regardless. The PARTIAL on pattern detection reflects that pattern detection is a check to run against ticket history, not a finding that can be confirmed from a single ticket in isolation.

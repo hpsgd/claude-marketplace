@@ -1,0 +1,18 @@
+# Test: Production incident coordination
+
+Scenario: A production outage in the payments service requires the CTO to coordinate incident response across multiple teams. Tests whether the CTO follows incident protocol (mitigate first, investigate second) and delegates correctly rather than trying to debug directly.
+
+## Prompt
+
+Production is down. The payments service is returning 500 errors for all transactions. Grafana shows it started 20 minutes ago. The last deployment was 45 minutes ago by the dotnet team — a handler change for order processing. Customer support is getting flooded. What do we do?
+
+## Criteria
+
+- [ ] PASS: CTO follows incident response protocol — detect/assess before root-causing
+- [ ] PASS: First action is mitigation (rollback the deployment), not investigation
+- [ ] PASS: CTO delegates to devops for the rollback and the relevant developer for diagnosis
+- [ ] PASS: CTO escalates to coordinator for customer communication (support team is under CPO)
+- [ ] PASS: Delegation includes specific evidence requirements — deployment logs, error traces, Grafana dashboard links
+- [ ] PARTIAL: CTO identifies the blast radius (all payment transactions) and estimates customer impact
+- [ ] PASS: Post-incident actions are mentioned — root cause analysis, ADR or post-mortem
+- [ ] PASS: CTO does not attempt to debug the code directly — delegates to the specialist

@@ -1,0 +1,72 @@
+# Write story map
+
+Testing whether the write-story-map skill definition requires a backbone of activities, a walking skeleton slice, release slices, and a validation checklist.
+
+## Prompt
+
+> /product-owner:write-story-map for the guest checkout flow — from cart review through to order confirmation.
+
+## Output
+
+**Story Map: Guest Checkout**
+
+**User and Goal**
+
+| Field | Description |
+|---|---|
+| **User** | Guest shopper completing a first-time purchase |
+| **Goal** | Buy items and receive order confirmation without creating an account |
+| **Journey** | Views cart → Order confirmed |
+| **Scope boundary** | Excludes registered user checkout, saved payment methods, order tracking |
+
+**Story Map**
+
+| | Review cart | Enter shipping | Select delivery | Enter payment | Confirm order |
+|---|---|---|---|---|---|
+| **Walking Skeleton** | View items and total | Enter name/address | Select standard shipping | Enter card details | Show order confirmation |
+| **MVP** | Edit item quantity | Address validation errors | Show delivery estimates | Card validation errors | Confirmation email |
+| | Apply promo code | Save address option | Express delivery upsell | 3D Secure flow | Receipt download |
+| **Enhancement** | Empty cart state | Multiple addresses | Delivery date selection | PayPal / Apple Pay | Retry on failure |
+
+**Release Slices**
+
+**Slice 1: Walking Skeleton** — Proves end-to-end flow works. One story per backbone activity. Not MVP — no polish, no error handling.
+
+**Slice 2: MVP** — Adds error handling and enough depth for a real purchase.
+
+**Slice 3: Enhancement** — Alternative paths and edge cases.
+
+**Validation Checklist**
+
+- [ ] Backbone covers full journey (cart to confirmation)
+- [ ] No orphan stories — every task sits under exactly one activity
+- [ ] Walking skeleton touches every activity
+- [ ] Each task is independently deliverable
+- [ ] Edge cases and error paths are in rows below the happy path
+- [ ] Each release slice is independently shippable
+
+## Evaluation
+
+
+| Field | Value |
+|---|---|
+| Verdict | PASS |
+| Score | 8.5/9 criteria met (94%) |
+| Evaluated | 2026-04-16 |
+
+
+## Results
+
+- [x] PASS: Backbone as verb phrases, 3-7 activities — Step 2 explicitly states "Activities are verb phrases" and "3-7 activities is typical — fewer than 3 means you are too abstract; more than 7 means you are too granular." Both rules are enforced.
+- [x] PASS: Walking skeleton defined and distinguished from MVP — Step 5 defines the walking skeleton as "the thinnest possible end-to-end slice that demonstrates the full flow" and states explicitly "The walking skeleton is NOT an MVP. It is smaller — it proves the flow works, not that it is valuable to users."
+- [x] PASS: Tasks ordered top-to-bottom by priority — Step 4 states "Place these below the happy-path tasks, ordered by priority (most important first). Each row down is less critical than the row above." The Rules section reinforces: "Stories above the line are more important than stories below — vertical position is priority."
+- [x] PASS: No orphan stories — Step 6 Validation Checklist includes "No orphan stories: Does every task sit under an activity? Move orphans or add a missing backbone activity." The Rules section also states: "No story exists without an activity above it — orphan stories indicate a missing backbone activity."
+- [x] PASS: Each release slice touches every backbone activity — Step 5 Slice Rules states: "Every slice must touch every activity — a release that only covers 'Create Posting' is not a slice, it is a component. Users need end-to-end value."
+- [x] PASS: Validation checklist — Step 6 is a dedicated validation checklist covering backbone completeness, orphan detection, walking skeleton coverage, story independence, hidden activities, and edge case coverage.
+- [~] PARTIAL: Each task must be independently deliverable — the skill includes independence in the Step 6 validation checklist ("Can each task be built and delivered independently?") and in the output format checklist. It is framed as a check rather than a construction rule, and Step 3 does not enforce independent deliverability at the point of writing tasks. Criterion prefix is PARTIAL — maximum 0.5 points.
+- [x] PASS: 2D grid output — the Output Format section specifies a markdown table with activities as columns and priority-ordered rows. The Rules section states: "A story map is not a backlog — it is a 2D spatial arrangement. If you flatten it into a list, you lose the narrative structure."
+- [x] PASS: Valid YAML frontmatter — the skill has `name: write-story-map`, `description`, and `argument-hint` fields.
+
+## Notes
+
+The criterion on independent deliverability is genuinely PARTIAL. The skill validates it in the checklist but does not enforce it as a construction rule when tasks are first written in Step 3. A stronger version would add an independence check at the task-writing step, not just during validation. The walking skeleton vs MVP distinction is the most precise conceptual element — the definition is explicit rather than relying on convention.

@@ -1,0 +1,18 @@
+# Test: content-analyst — multi-source comparison
+
+Scenario: A user provides three articles on the same topic from different source types (financial press, progressive press, industry body) and asks the content analyst to compare framing and source quality before citing them in a policy brief.
+
+## Prompt
+
+I have three articles about Australia's critical minerals strategy — one from the AFR, one from The Guardian, and one from the Minerals Council of Australia's website. Can you analyse how each one frames the issue differently? I want to understand the framing and source quality before I cite any of them in a policy brief.
+
+## Criteria
+
+- [ ] PASS: Agent routes each article to content-analysis skill separately, then produces a comparative view
+- [ ] PASS: Framing differences between the three sources are stated as interpretive observations, not facts
+- [ ] PASS: Source credibility differences are noted (industry body vs independent press)
+- [ ] PASS: Each article's source structure is assessed independently (named/anonymous/unattributed sources)
+- [ ] PASS: The comparison identifies where the three articles agree and where they diverge on key claims
+- [ ] PARTIAL: Agent recommends which source(s) are most appropriate for the policy brief context, with reasoning
+- [ ] PASS: Agent does not produce a merged summary — each article is analysed independently before comparison
+- [ ] PASS: Agent flags any claims that appear in only one source as requiring independent verification

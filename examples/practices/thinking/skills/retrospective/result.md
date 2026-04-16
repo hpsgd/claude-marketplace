@@ -1,0 +1,243 @@
+# Retrospective session analysis with corrections
+
+At the start of a new session, the retrospective skill analyses the previous session's transcript where the assistant made two approach reversals and received one explicit correction about file location assumptions.
+
+## Prompt
+
+> /retrospective latest
+>
+> (Session transcript contains: assistant declared a migration complete before running the verification step; user corrected "you haven't actually checked if the migration ran, please verify"; assistant then wrote a local rule file to the wrong path assuming project-level when user clarified it should be global; session ends with user saying "good work on the API refactor though, that was clean".)
+
+```markdown
+
+## Output
+
+### Retrospective: latest session
+
+**Step 1: Locate transcript**
+
+Computing directory hash for current working directory:
+
+```bash
+path_to_hash() { echo "$1" | sed 's|^/||; s|[^a-zA-Z0-9]|-|g'; }
+PROJECTS_DIR="$HOME/.claude/projects"
+MAIN_HASH_DIR="$PROJECTS_DIR/-$(path_to_hash "$PWD")"
+```
+
+Working directory: `/Users/martin/Projects/my-project`
+Hash: `-Users-martin-Projects-my-project`
+Transcript directory: `~/.claude/projects/-Users-martin-Projects-my-project/`
+
+Checking active worktrees:
+```bash
+for wt in $(git worktree list --porcelain 2>/dev/null | sed -n 's/^worktree //p'); do
+  wt_dir="$PROJECTS_DIR/-$(path_to_hash "$wt")"
+  [ "$wt_dir" != "$MAIN_HASH_DIR" ] && echo "Worktree: $wt_dir"
+done
+```
+
+No additional active worktrees found. Checking removed worktree breadcrumbs... none found.
+
+Finding most recent transcript:
+```bash
+ls -t ~/.claude/projects/-Users-martin-Projects-my-project/*.jsonl | head -1
+```
+
+Found: `~/.claude/projects/-Users-martin-Projects-my-project/a4f2c91e.jsonl`
+
+---
+
+**Step 2: Run analysis**
+
+```bash
+python3 ${CLAUDE_PLUGIN_ROOT}/scripts/analyse-session.py \
+    ~/.claude/projects/-Users-martin-Projects-my-project/a4f2c91e.jsonl \
+    --project-dir .claude/learnings \
+    --global-dir ~/.claude/learnings \
+    --json
+```
+
+#### Metrics
+
+| Metric | Value |
+|---|---|
+| Duration | 38 minutes |
+| Turns | 16 user / 16 assistant |
+| Corrections | 2 immediate, 0 approach changes, 0 reversals |
+| Successes | 1 |
+| Correction rate | 13% |
+
+Events extracted:
+1. **Correction** (turn 8): Assistant declared "Migration complete" → User: "you haven't actually checked if the migration ran, please verify"
+2. **Correction** (turn 13): Assistant wrote rule to `.claude/rules/learned--check-scope.md` → User clarified rule should be at `~/.claude/rules/` (global scope)
+3. **Success** (turn 15): User said "good work on the API refactor though, that was clean"
+
+---
+
+**Step 3: Classify queued signals**
+
+```bash
+cat .claude/learnings/signals/pending.jsonl
+```
+
+Found 3 pending signals:
+
+1. "you haven't actually checked if the migration ran, please verify"
+   - Classified: **correction** (rating: 2)
+   - Regex missed this — no existing pattern for "haven't actually checked"
+   - New pattern: `"\\bhaven't actually (checked|verified|run|tested)\\b"` → correction
+
+2. "that should be in global rules not project rules"
+   - Classified: **correction** (rating: 3)
+   - Regex missed this — no existing scope correction pattern
+   - New pattern: `"\\bshould be (global|in global|project-local|project-level)\\b"` → correction
+
+3. "good work on the API refactor though, that was clean"
+   - Classified: **praise** (rating: 9)
+   - Regex caught this (existing praise pattern matched "good work")
+
+Testing pattern 1: "you haven't actually checked the deploy" → matches. "it hasn't actually been long" → no match (word boundary on "haven't" prevents false positive). Safe.
+Testing pattern 2: "it should be global" → matches. "we should be global" → no match. Safe.
+
+2 new patterns added to `patterns.json`.
+
+---
+
+**Step 4: Interpret, write learnings, and apply local rules**
+
+#### Learning 1: Verify before declaring complete
+
+
+| Field | Value |
+|---|---|
+| Type | immediate_correction |
+| What happened | Assistant declared "Migration complete" without running the verification step. Success was inferred, not confirmed. |
+| What was wrong | Assertions about completion require evidence. The verification step was not run. |
+| Rule | Never declare a task complete without running the appropriate verification command and reporting its output. |
+| Scope | Universal — applies to all projects |
+
+
+#### Learning 2: Check scope before writing rule files
+
+
+| Field | Value |
+|---|---|
+| Type | immediate_correction |
+| What happened | Assistant wrote a universal rule about assistant behaviour to `.claude/rules/` (project-local). |
+| What was wrong | A universal rule written project-locally only applies to one project. Universal behavioural rules belong in `~/.claude/rules/`. |
+| Rule | Before writing a learned rule, classify its scope. Universal behaviour → `~/.claude/rules/`. Project-specific convention → `.claude/rules/`. |
+| Scope | Universal |
+
+
+#### Learning 3: API refactor bundled as a single PR
+
+
+| Field | Value |
+|---|---|
+| Type | success (non-obvious positive) |
+| What happened | The API refactor touched multiple related files and was delivered as a single PR rather than split. |
+| What went right | User confirmed this was the right call ("that was clean"). The alternative — splitting across multiple PRs — was also a valid option. |
+| Rule | When a refactor touches multiple related files as a single logical change, bundle into one PR. |
+| Scope | Universal |
+
+
+#### Path 1: Write local learned rules
+
+```bash
+ls ~/.claude/rules/learned--*.md 2>/dev/null
+```
+
+No existing rules on these topics.
+
+Writing `~/.claude/rules/learned--verify-before-declaring-complete.md`:
+
+```markdown
+---
+description: "Never declare a task complete without verifiable evidence"
+alwaysApply: true
+---
+
+# Learned: Verify before declaring complete
+
+Never say "done", "complete", or "migration complete" without running the appropriate verification command and reporting its actual output.
+
+**Why:** In session a4f2c91e, the assistant declared a migration complete without running verification. The migration had not run.
+
+**Evidence:** Session a4f2c91e, 2026-04-16. User correction: "you haven't actually checked if the migration ran, please verify"
+```
+
+Writing `~/.claude/rules/learned--check-rule-scope-before-writing.md`:
+
+```markdown
+---
+description: "Classify rule scope (global vs project-local) before writing learned rule files"
+alwaysApply: true
+---
+
+# Learned: Check scope before writing rule files
+
+Before writing a learned rule, determine its scope:
+- Universal assistant behaviour → `~/.claude/rules/learned--{topic}.md`
+- Project-specific conventions → `.claude/rules/learned--{topic}.md`
+
+**Why:** In session a4f2c91e, a universal rule about assistant behaviour was written to project-local scope. It would only apply to one project.
+
+**Evidence:** Session a4f2c91e, 2026-04-16. User correction: "that should be in global rules not project rules"
+```
+
+---
+
+### Retrospective: a4f2c91e
+
+#### Metrics
+
+| Metric | Value |
+|---|---|
+| Duration | 38 minutes |
+| Turns | 16 user / 16 assistant |
+| Corrections | 2 immediate, 0 approach changes, 0 reversals |
+| Successes | 1 |
+| Correction rate | 13% |
+
+#### Learnings
+
+| # | Type | Severity | Rule | Scope |
+|---|---|---|---|---|
+| 1 | immediate_correction | High | Never declare complete without verification | Universal |
+| 2 | immediate_correction | High | Check rule scope before writing (global vs project) | Universal |
+| 3 | success | Positive | Bundle related refactors into a single PR | Universal |
+
+#### Rules written
+
+- `~/.claude/rules/learned--verify-before-declaring-complete.md` (global)
+- `~/.claude/rules/learned--check-rule-scope-before-writing.md` (global)
+
+#### Patterns added
+
+- 2 new regex patterns added to `.claude/learnings/signals/patterns.json`
+```
+
+## Evaluation
+
+
+| Field | Value |
+|---|---|
+| Verdict | PASS |
+| Score | 7.5/8 (94%) |
+| Evaluated | 2026-04-16 |
+
+
+## Results
+
+- [x] PASS: Step 1 locates transcript by computing directory hash — the skill defines the exact bash function `path_to_hash()` using `sed` to strip the leading slash and replace non-alphanumeric characters with hyphens, then constructs `$HOME/.claude/projects/-$(path_to_hash "$PWD")`. It also explicitly checks active worktrees via `git worktree list --porcelain` and removed worktrees via breadcrumb scan. The output uses the computed hash path and steps through both checks before finding the transcript, not a hardcoded location.
+- [x] PASS: Step 2 runs analysis script and presents metrics — the skill defines running `analyse-session.py` with `--project-dir`, `--global-dir`, and `--json` flags and specifies the exact metrics table format covering Duration, Turns, Corrections (broken into immediate/approach changes/reversals), Successes, and Correction rate. Step 2 is labelled "(mandatory for session analysis)." All fields appear in the simulation's metrics table.
+- [x] PASS: Premature completion declaration extracted as high-severity correction — the skill's Step 4 classifies corrections as "HIGH severity" and requires an imperative rule statement ("Always X" or "Never Y"). The simulation extracts turn 8 as a correction event, classifies it as immediate_correction at High severity, and derives the rule "Never declare a task complete without running the appropriate verification command and reporting its output."
+- [x] PASS: Wrong-path assumption extracted as correction with scope classification — the skill's Step 4 Rules section states "Universal vs project-specific: classify correctly" with the example "Don't declare completion without running the audit is universal." The simulation extracts turn 13 as a second correction event, classifies the scope as Universal, and writes the rule to `~/.claude/rules/` with explicit reasoning about why universal rules must not be written project-locally.
+- [x] PASS: API refactor success captured as non-obvious positive — the skill's Step 4 states "Only record successes that are non-obvious — approaches that worked but might not be the default choice." The bundled PR approach is genuinely non-obvious (splitting was also valid) and the user's explicit "that was clean" confirms it. Captured with type "success" and a specific reinforcement rule.
+- [x] PASS: Path 1 local learned rule written for every high-severity correction — the skill's Step 4 states "For every HIGH severity correction and every recurring pattern, write a learned rule" and "Path 1 is immediate, Path 2 is shared. Always write a local learned rule first." Both high-severity corrections produce rule files written immediately to `~/.claude/rules/` with `alwaysApply: true` frontmatter and the required evidence field (session ID plus what happened).
+- [x] PASS: Learned rule files use correct naming convention and correct scope — the skill defines file naming as `learned--{kebab-case-topic}.md` and scope rules: "Universal → `~/.claude/rules/learned--{topic}.md`." Both rule files use the `learned--` prefix, kebab-case names, and global scope matching the explicit definition.
+- [~] PARTIAL: Step 3 classifies pending signals and adds patterns — the skill's Step 3 defines reading `pending.jsonl`, classifying each unclassified signal, extracting patterns, and testing each against "the original message AND imagine 3 other messages." The simulation classifies 3 signals, adds 2 patterns with word boundaries, and tests each against two examples. Partial because the definition requires mentally testing against 3 other messages before adding — the simulation tests against one or two examples per pattern, not three. PARTIAL ceiling applies regardless.
+
+### Notes
+
+The retrospective skill is the most operationally complex in this set. The worktree-aware transcript location logic is well-specified in the definition — the bash code is fully present. The two-path design (local rule immediately, upstream PR at threshold) is clearly articulated and the simulation correctly implements Path 1 without jumping to Path 2. The scope classification criteria (universal vs project-specific) have concrete examples in the definition, making them reliably testable. One note: the skill requires Step 3 (signal classification) as "mandatory" for the `latest` mode, but Step 3 and Step 4 are somewhat interleaved in the definition — patterns should be added in Step 3, but the full learning write-up happens in Step 4. The simulation handles this correctly by separating the two steps.

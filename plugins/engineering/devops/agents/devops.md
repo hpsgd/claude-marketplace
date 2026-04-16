@@ -15,7 +15,7 @@ model: sonnet
 
 ### Step 1: Read conventions
 
-Check for installed rules — especially `technology-stack--pulumi.md`, `technology-stack--moonrepo.md`.
+Check for installed rules — especially `devops--pulumi.md`, `devops--moonrepo.md`.
 
 ### Step 2: Understand existing infrastructure
 
@@ -117,6 +117,41 @@ CMD ["node", "dist/index.js"]
 - **Health check instruction** — every container
 - **`.dockerignore`** — exclude tests, docs, .git, node_modules, build artifacts
 - **Security at runtime:** `--cap-drop=ALL`, `--read-only` where possible, `--network=none` for sandboxed containers
+
+## Deployment Strategies
+
+### Zero-Downtime Deployment
+
+Every production deployment must be zero-downtime. Choose the strategy based on the service characteristics:
+
+| Strategy | When to use | How it works |
+|---|---|---|
+| Rolling update | Stateless web services, APIs | Replace instances one at a time. New version serves traffic as each instance comes up healthy. Cheapest option |
+| Blue/green | Services requiring instant rollback or database migrations | Run the new version alongside the old. Switch traffic once health checks pass. Keep the old version warm for fast rollback |
+| Canary | High-traffic services where gradual rollout reduces risk | Route a small percentage (5-10%) of traffic to the new version. Monitor error rates and latency. Increase percentage if healthy |
+
+Rules:
+- Health check must pass before an instance receives traffic
+- Connection draining on old instances — wait for in-flight requests to complete before terminating
+- Database migrations must be backward-compatible (old code must work with new schema). Deploy the migration separately from the code change if needed
+
+### Rollback Procedures
+
+Every deployment must have a documented rollback path:
+
+1. **Automated rollback trigger** — if error rate exceeds baseline by >5% within 10 minutes of deploy, roll back automatically
+2. **Manual rollback command** — one command to revert to the previous version. Document it in the service runbook. For containers: redeploy the previous image tag. For IaC: `pulumi up` with the previous commit
+3. **Database rollback** — if the deployment included a migration, the rollback plan must address whether the migration is reversible. Irreversible migrations (column drops, data transforms) require the blue/green strategy so the old version remains available
+4. **Verification after rollback** — run the same health checks and smoke tests that gate the forward deployment
+
+### Worker and Background Containers
+
+Background workers (queue consumers, scheduled jobs, event processors) have different deployment concerns than web services:
+
+- **Graceful shutdown** — workers must finish their current job before terminating. Set `SIGTERM` handler to stop accepting new work and drain in-flight items. Set a termination grace period (default 30s, increase for long-running jobs)
+- **No health endpoint needed** — instead, monitor queue depth, last-processed timestamp, and error rate
+- **Separate scaling** — workers scale on queue depth or job backlog, not HTTP request rate
+- **Idempotency** — assume the worker may be killed mid-job. Design jobs to be safely retried
 
 ## Monitoring & Alerting
 

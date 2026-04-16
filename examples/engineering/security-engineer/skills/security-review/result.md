@@ -1,0 +1,56 @@
+# Security review skill structure
+
+Checking that the security-review skill enforces all six mandatory scans in sequence, requires grep evidence for each scan, suppresses low-confidence findings, and produces CVSS-scored output.
+
+## Prompt
+
+> Review the security-review skill definition and verify it produces systematic security assessments with evidence rather than intuition-based findings.
+
+## Output
+
+**6-Scan Protocol header:** "sequential — every scan is MANDATORY. Do not skip a scan because you think it doesn't apply. Evidence of execution is required for each scan."
+
+**Scans in order:**
+
+Scan 1: Input Validation — Grep patterns per language (TypeScript: `req\.body\|req\.params\|req\.query`, C#: `FromBody\|FromQuery\|FromRoute\|FromForm\|BindProperty`, Python: `request\.json\|request\.form\|request\.args\|request\.data`). Checklist: all inputs validated, allowlists over denylists, file uploads validated, output encoding. Finding if missing: MEDIUM: "Unvalidated input at `file:line`" through CRITICAL.
+
+Scan 2: Injection — Grep patterns for SQL injection (raw queries), command injection (`exec\|spawn\|system\|popen\|subprocess\.call\|Process\.Start`), XSS (`dangerouslySetInnerHTML\|innerHTML\|document\.write`), path traversal. Checklist with severities: SQL not parameterised = CRITICAL, command injection = CRITICAL, XSS = HIGH.
+
+Scan 3: Authentication and Authorisation — Grep patterns for auth middleware coverage and route definitions. Checklist: auth on every endpoint (CRITICAL if missing), no IDOR (CRITICAL), password hashing (CRITICAL for weak hashing), session management (HIGH), rate limiting (MEDIUM), CSRF (HIGH).
+
+Scan 4: Secrets and Data Exposure — Grep patterns for hardcoded secrets, `.env` files, logging of sensitive data. Checklist: no hardcoded secrets (CRITICAL), `.env` in `.gitignore` (CRITICAL), no PII in logs (HIGH).
+
+Scan 5: Dependencies — `npm audit`, `pip-audit`, `dotnet list package --vulnerable`. Triage categories: fix now, fix soon, monitor.
+
+Scan 6: OWASP Top 10 — Full table A01-A10 with Status (PASS/FAIL) and Evidence columns. "For each FAIL: reference the specific finding from Scans 1-5."
+
+**Confidence calibration:** LOW (below 60): "NO — suppress. Do not report speculative findings." MODERATE (60-79): include with caveat. HIGH (80+): include in findings.
+
+**Zero-finding rubber stamp prohibition:** Anti-Patterns: "if you find nothing, verify you actually read the code. Name one specific positive assertion with `file:line` to prove review depth."
+
+**Configuration security:** Anti-Patterns: "Ignoring configuration — CORS, CSP, HSTS, cookie flags are security controls. Review them."
+
+**Output format:** Executive Summary (overall risk, finding counts, Recommendation: ship/fix first/block), Findings table (Severity, Confidence, STRIDE, Finding, Location, Recommendation), OWASP Top 10 Coverage table, Dependency Audit table, Scan Evidence table.
+
+## Evaluation
+
+
+| Field | Value |
+|---|---|
+| Verdict | PASS |
+| Score | 7.5/8 criteria met (94%) |
+| Evaluated | 2026-04-16 |
+
+
+- [x] PASS: Skill defines six mandatory scans in order, all mandatory — security-review SKILL.md "6-Scan Protocol (sequential — every scan is MANDATORY)" header. Six scans listed in order: Input Validation, Injection, Auth/Authz, Secrets/Data Exposure, Dependencies, OWASP Top 10. "Do not skip a scan because you think it doesn't apply."
+- [x] PASS: Skill provides grep patterns per scan for TypeScript, Python, C# — security-review SKILL.md Scans 1-4 each have grep pattern bash blocks with `--include="*.ts"`, `--include="*.cs"`, `--include="*.py"` flags for language targeting.
+- [x] PASS: Skill includes checklist per scan with pass criteria and finding severity — security-review SKILL.md Scans 1-4 each have a Checklist table with columns: Check, Pass criteria, Finding if missing. Severities (CRITICAL, HIGH, MEDIUM, LOW) with `file:line` placeholders.
+- [x] PASS: Confidence calibration suppresses below 60% — security-review SKILL.md Confidence Calibration section: "LOW (below 60): NO — suppress. Do not report speculative findings."
+- [x] PASS: OWASP Top 10 sweep as final scan with PASS/FAIL per category and evidence — security-review SKILL.md Scan 6 is a full OWASP Top 10 (2021) table (A01-A10) with Status and Evidence columns. "For each FAIL: reference the specific finding from Scans 1-5."
+- [x] PASS: Zero-finding rubber stamp prohibited — security-review SKILL.md Anti-Patterns: "Zero-finding rubber stamp — if you find nothing, verify you actually read the code. Name one specific positive assertion with `file:line` to prove review depth."
+- [x] PASS: Output format includes Executive Summary with ship/fix/block, findings table, and scan evidence table — security-review SKILL.md Output Format defines all three: Executive Summary (overall risk, finding counts, "Recommendation: ship / fix first / block"), Findings table, Scan Evidence table.
+- [~] PARTIAL: Skill addresses configuration security including CORS, CSP, HSTS, cookie flags — security-review SKILL.md Anti-Patterns: "Ignoring configuration — CORS, CSP, HSTS, cookie flags are security controls. Review them." Present as a prohibition in Anti-Patterns but not as a structured scan step with grep patterns and a checklist table. Configuration review is required but unstructured.
+
+### Notes
+
+The Scan 5 (Dependencies) section is slightly asymmetric with Scans 1-4 — it relies on audit tool commands and prose triage categories rather than a formal checklist table with severities. This is a valid design choice given how dependency audits work, but it means the checklist criterion (3) only fully applies to Scans 1-4. The CVSS reference in the test title is not actually required by any of the eight criteria; the Findings table uses a STRIDE column rather than an explicit CVSS score field, which is a design choice worth noting.

@@ -122,7 +122,11 @@ The `description` field must include: (1) the role, (2) what it does, (3) when t
 
 For the links criterion specifically: list EACH unlinked tool mention with its line number.
 
-### Step 5: Produce the report
+### Step 5: Prioritise findings
+
+Order recommended actions by impact: structural gaps first (missing sections, wrong template structure), then content gaps (vague rules, weak principles), then style issues (formatting, link text). This ordering applies to both the recommended actions list and how you present detail for non-passing agents.
+
+### Step 6: Produce the report
 
 **Single agent audit** — full 15-criterion detail.
 

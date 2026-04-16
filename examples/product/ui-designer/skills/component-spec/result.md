@@ -1,0 +1,217 @@
+# Component spec
+
+Testing whether the component-spec skill definition requires all 8 interaction states, accessibility requirements, and responsive behaviour as mandatory sections.
+
+## Prompt
+
+> /ui-designer:component-spec for a file upload component that supports drag-and-drop and click-to-browse, with progress indicator and error handling for invalid file types.
+
+## Output
+
+**Component Spec: FileUpload**
+
+---
+
+#### 0. Design system decision
+
+Searched codebase for existing upload components. Found `FileInput` at `components/forms/FileInput.tsx` — handles single-file selection via click only, no drag-and-drop, no progress indication, no multi-file support.
+
+**Decision: Create** — `FileInput` does not support drag-and-drop or progress indication. A new `FileUpload` component is needed. This spec documents a full new component rather than extending `FileInput`.
+
+---
+
+#### 1. Purpose and Usage Context
+
+**What it does:** Accepts file uploads via drag-and-drop or click-to-browse, with upload progress feedback and validation for invalid file types or sizes.
+
+**When to use:** For any file input that requires drag-and-drop support, progress feedback, or multi-file selection. Do NOT use for simple single-file inputs without progress — use `Input type="file"` directly. Do NOT use for image-cropping flows — use `ImageUpload` instead.
+
+---
+
+#### 2. Props / API
+
+| Prop | Type | Default | Required | Description |
+|---|---|---|---|---|
+| `accept` | `string` | `"*"` | No | MIME types accepted. e.g. `"image/*,.pdf"` |
+| `multiple` | `boolean` | `false` | No | Allow multiple file selection |
+| `maxSizeMB` | `number` | `50` | No | Max file size in MB per file |
+| `onUpload` | `(files: File[]) => void` | — | Yes | Callback invoked with selected file(s) |
+| `disabled` | `boolean` | `false` | No | Disable all interaction |
+| `loading` | `boolean` | `false` | No | Show progress state externally |
+| `progress` | `number` | `undefined` | No | Upload progress 0–100 (shows progress bar when set) |
+| `error` | `string` | `undefined` | No | Error message to display in error state |
+
+Rules for prop design: `disabled` defaults to `false` per rule 2; `onUpload` callback follows `on` prefix convention per rule 3. No string enum booleans per rule 4.
+
+---
+
+#### 3. Variants
+
+| Variant | Visual treatment | Semantic meaning | When to use |
+|---|---|---|---|
+| `default` | Dashed border, muted background | Standard upload zone | Most contexts |
+| `compact` | Smaller drop zone, icon + text only | Same | Tight layouts, inline forms |
+
+When unsure, use `default`. `compact` exists for layout-constrained contexts only.
+
+---
+
+#### 4. States — Complete Coverage Table
+
+| State | Visual treatment | Behaviour | Transitions to |
+|---|---|---|---|
+| **Default** | Dashed border (`color.border.default`), muted background (`color.bg.surface-raised`) | Accept drag or click | Hover, Focus |
+| **Hover** | Border colour → `color.interactive.default`, background tint | Cursor: pointer | Default, Active |
+| **Focus** | Focus ring using `color.border.focus`, 2px solid | Keyboard accessible; ring must be visible in both light and dark mode | Default, Active |
+| **Active** | Accent border (`color.interactive.active`), stronger tint — drag-over highlight | During drag-over: shows "Drop to upload" label | Default |
+| **Disabled** | Muted border and text, cursor: not-allowed | No interaction; no hover effects; `aria-disabled="true"` must block events | — |
+| **Loading** | Progress bar at bottom of zone (width animates from 0 to 100%); upload zone non-interactive | Preserves layout dimensions to prevent shift | Default, Error |
+| **Error** | Border → `color.feedback.error`; error text below zone using `color.text.primary` on error bg | Displays `error` prop string; user can retry | Default |
+| **Empty** | Placeholder icon + "Drag files here or click to browse" CTA | Guides user to take action | Default |
+| **Selected** | N/A | N/A | — |
+| **Read-only** | N/A | N/A | — |
+
+Rules: Hover, Focus, Active, and Disabled are mandatory per definition. Focus must be visually distinct beyond colour change. Loading must preserve layout dimensions. Disabled must use `aria-disabled` and block events.
+
+---
+
+#### 5. Responsive Behaviour
+
+| Breakpoint | Width | Layout changes | Content changes |
+|---|---|---|---|
+| **Mobile** | < 640px | Full-width; drop zone height 120px | Touch targets ≥ 44px; no drag (touch only) — click-to-browse only on mobile |
+| **Tablet** | 640–1024px | Full-width or contained in form grid | Drag-and-drop enabled; "Drag or tap to browse" label |
+| **Desktop** | > 1024px | Standard layout; width constrained to form width | Full label: "Drag files here or click to browse" |
+
+Rules: Touch targets must be ≥ 44×44px (WCAG 2.5.5). No horizontal scrolling at any breakpoint.
+
+---
+
+#### Performance Considerations
+
+N/A — FileUpload does not render large datasets. Upload progress is driven by the `progress` prop externally; the component does not manage file transfer state.
+
+---
+
+#### 6. Accessibility Requirements
+
+**Keyboard navigation**
+
+| Key | Action |
+|---|---|
+| `Tab` | Focus the drop zone |
+| `Shift+Tab` | Return focus to previous element |
+| `Enter` / `Space` | Open native file picker |
+| `Escape` | Cancel active drag operation |
+
+**Screen reader**
+
+- **Role:** `role="region"` on the drop zone container
+- **Label:** `aria-label="File upload area"` (or `aria-labelledby` if visible label present)
+- **State announcements:** `aria-live="polite"` for progress updates ("Uploading: 60%"); `aria-live="assertive"` for errors ("Upload failed: file type not accepted")
+- **Disabled state:** `aria-disabled="true"` on the root; confirm events are blocked at the JS level, not just CSS
+
+**Colour and contrast**
+
+- Text contrast: minimum 4.5:1 for error messages and labels
+- Non-text elements (drag zone border, progress bar): minimum 3:1 against adjacent colours
+- Information not conveyed by colour alone — error state uses icon + text + border change, not red border alone
+
+**Focus management**
+
+- Focus stays on the drop zone during upload
+- After upload completes, focus remains on the zone unless the component unmounts
+- No focus trap (this is not a modal)
+- Focus ring visible in both light and dark modes
+
+---
+
+#### 7. Dark Mode
+
+- [ ] All colours use semantic tokens (e.g., `color.border.default`, `color.interactive.default`) — no hardcoded hex values
+- [ ] Contrast ratios re-validated in dark mode (do not assume light-mode values carry over)
+- [ ] Progress bar visible against dark surface backgrounds
+- [ ] Error state distinguishable in dark mode — error red must meet 3:1 against dark background
+- [ ] Shadows on progress bar adjusted for dark backgrounds (lighter, not darker)
+- [ ] Borders remain visible against dark backgrounds
+
+---
+
+#### 8. Animation and Motion
+
+| Element | Animation | Duration | Easing |
+|---|---|---|---|
+| Drag-over highlight (border + background) | Colour transition | 150ms | ease |
+| Progress bar width | Width increase | 100ms per update | linear |
+| Error state appearance | Fade in + border colour | 150ms | ease |
+| File accepted confirmation | Scale + opacity | 200ms | ease-out |
+
+All animations must respect `prefers-reduced-motion: reduce` — provide instant transitions as fallback. Maximum 300ms for micro-interactions per definition rule.
+
+---
+
+#### 9. Usage Examples
+
+```tsx
+// Basic upload
+<FileUpload
+  accept="image/*,.pdf"
+  onUpload={(files) => handleFiles(files)}
+/>
+
+// With progress feedback
+<FileUpload
+  accept="*"
+  multiple
+  progress={uploadProgress}
+  loading={isUploading}
+  onUpload={(files) => startUpload(files)}
+/>
+
+// Error state
+<FileUpload
+  accept=".pdf"
+  error="Only PDF files are accepted. The file you selected is a .docx file."
+  onUpload={(files) => handleFiles(files)}
+/>
+```
+
+---
+
+#### 10. Do / Don't
+
+| Do | Don't |
+|---|---|
+| Use the `error` prop to show validation messages from the server | Use browser-native `alert()` for upload errors |
+| Preserve the drop zone layout during loading | Show a spinner that shifts the surrounding layout |
+| Use `accept` to guide users before they select | Only reject files after upload attempt |
+| Provide a "Remove file" action after selection | Leave users unable to clear their selection |
+
+## Evaluation
+
+
+| Field | Value |
+|---|---|
+| Verdict | PASS |
+| Score | 7.5/8 criteria met (94%) |
+| Evaluated | 2026-04-16 |
+
+
+## Results
+
+- [x] PASS: All 8 interaction states required — Section 4 "States — Complete Coverage Table" lists Default, Hover, Focus, Active, Disabled, Loading, Error, and Empty as required entries with "Document EVERY state the component can be in." The table template includes all 8 states plus Selected and Read-only (marked N/A if not applicable). Rules mandate Hover, Focus, Active, and Disabled with no exceptions.
+- [x] PASS: ARIA roles, labels, and keyboard navigation mandatory — Section 6 "Accessibility Requirements" is part of the Mandatory Specification Structure with explicit sub-sections: Keyboard Navigation, Screen Reader (role, label, state announcements), Colour and Contrast, and Focus Management. "Every component must meet WCAG 2.1 AA" makes this non-optional.
+- [x] PASS: Design system decision required before spec — Section 0 "Design system decision (MANDATORY — before writing the spec)" is a new explicit gate. It requires a Reuse / Extend / Create decision with a decision table, justification statement, and the rule "If the decision is Reuse, stop here." This is a structured output gate, not just a search instruction. The decision must be stated with reasoning before Section 1 begins.
+- [x] PASS: Responsive behaviour at multiple breakpoints — Section 5 "Responsive Behaviour" is in the Mandatory Specification Structure with a breakpoint table covering Mobile (< 640px), Tablet (640–1024px), and Desktop (> 1024px). Touch target and no-scroll rules are explicit.
+- [x] PASS: Properties/variants table required — Section 2 "Props / API" requires every prop documented with type, default, required, and description. Section 3 "Variants" requires visual treatment, semantic meaning, and when-to-use columns. Both are mandatory sections.
+- [x] PASS: Animation and transition specifications required — Section 8 "Animation and Motion" is a mandatory section requiring what animates, duration, easing, and `prefers-reduced-motion` handling. Maximum duration constraints (300ms micro-interactions, 500ms page transitions) are enforced.
+- [~] PARTIAL: Token references for colours, spacing, and typography — Section 7 "Dark Mode" requires "all colours use semantic tokens, not hardcoded values." Token use is required. However, the states table template does not include a token-reference column and there is no rule requiring tokens to be named inline per state row. Tokens are required but not required to be cited by name within each section. Score: 0.5.
+- [x] PASS: Valid YAML frontmatter — frontmatter contains `name: component-spec`, `description`, and `argument-hint` fields.
+
+### Notes
+
+The addition of Section 0 is the key change from the previous evaluation. The Reuse/Extend/Create decision gate is now a mandatory named section with a decision table, example justification text, and a hard stop rule for Reuse decisions. This addresses the previous FAIL directly and cleanly.
+
+The PARTIAL on token references (criterion 7) remains. The dark mode checklist requires semantic tokens but does not require the author to name the specific token for each state row. This is a weak requirement — it says "use tokens" but doesn't enforce "name the token you're using." A stronger version would include a token column in the states table or a dedicated token mapping section.
+
+Score: 7 PASS + 0.5 PARTIAL = 7.5/8 = 94% → PASS verdict. The previous score was 5.5/8 (69%, FAIL). The definition update flipped criterion 3 from FAIL to PASS, which moved the verdict from FAIL to PASS.

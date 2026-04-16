@@ -1,0 +1,95 @@
+# Health assessment
+
+Testing whether the health-assessment skill scores all 5 dimensions with correct weights, produces a composite health score, and recommends specific interventions rather than generic advice.
+
+## Prompt
+
+> /customer-success:health-assessment for our top 15 enterprise accounts ahead of our quarterly CS team review — we need to know which accounts need immediate attention.
+
+```markdown
+
+## Output
+
+# Customer Health Assessment: Enterprise Portfolio Q2
+
+### Summary
+- **Overall portfolio health:** Mixed — 4 accounts require immediate attention
+- **Assessment date:** 2026-04-16
+- **Data confidence:** Medium — product analytics and CRM available; NPS data partial
+
+### Data Sources (Step 1)
+
+| Signal type | Source |
+|---|---|
+| Product usage | Product analytics (event tracking, DAU/MAU, feature adoption) |
+| Engagement | CRM (login frequency trends, meeting attendance, outreach logs) |
+| Relationship | NPS/CSAT scores (partial — 9/15 accounts have recent scores), exec sponsor status |
+| Value realisation | Customer-stated goals from onboarding, success plans, QBR notes |
+| Commercial | Billing system (payment status, contract terms, renewal dates) |
+
+---
+
+### Per-Account Assessment (example — Fenwick Capital)
+
+| Dimension | Weight | Score (0–100) | Weighted |
+|---|---|---|---|
+| Product adoption | 30% | 28 | 8.4 |
+| Engagement | 25% | 45 | 11.25 |
+| Relationship | 20% | 60 | 12.0 |
+| Value realisation | 15% | 40 | 6.0 |
+| Commercial | 10% | 80 | 8.0 |
+| **Composite** | — | — | **45.65** |
+
+**Composite formula:** (28 × 0.30) + (45 × 0.25) + (60 × 0.20) + (40 × 0.15) + (80 × 0.10) = 45.65
+
+**Classification:** At Risk (40–59) — Intervene within 1 week.
+
+**Active risk signals:** Adoption critically low (12/45 seats = 27%). No QBR in 6 months. Value realisation unclear — no documented success metric. No champion identified.
+
+**Intervention:** Assign senior CSM. Book executive discovery call within 5 business days. Run targeted seat activation campaign for 3 dormant teams. Milestone: 25 active users within 30 days. Escalate to Critical if no improvement.
+
+[14 additional accounts assessed using the same process. Representative outputs below.]
+
+---
+
+### Portfolio Summary (15 accounts)
+
+| Status | Score range | Count | Accounts |
+|---|---|---|---|
+| Healthy (80–100) | — | 6 | Meridian Legal, Ashworth Group, Calloway Partners, Tenbury Inc., Orion Capital, Westfield Co. |
+| Neutral (60–79) | — | 5 | (5 accounts — monitor quarterly) |
+| At Risk (40–59) | — | 3 | Fenwick Capital, Bradwick & Sons, Harlow Group |
+| Critical (0–39) | — | 1 | Meridian Inc. |
+
+**Immediate attention required:**
+- Meridian Inc. (Critical) — escalate within 48 hours
+- Fenwick Capital, Bradwick & Sons, Harlow Group (At Risk) — intervene within 1 week
+
+**Healthy accounts with expansion potential:**
+- Meridian Legal (score 85, 92% seat utilisation, asking about API tier) — run `/expansion-plan`
+```
+
+## Evaluation
+
+
+| Field | Value |
+|---|---|
+| Verdict | PASS |
+| Score | 7.5/8 (94%) |
+| Evaluated | 2026-04-16 |
+
+
+## Results
+
+- [x] PASS: Scores all 5 dimensions with correct weights — Step 2 specifies all five dimensions with their weights: Adoption 30%, Engagement 25%, Relationship 20%, Value Realisation 15%, Commercial 10%. Scoring criteria for each dimension (0–100 scale) are defined. The skill states "Do not skip a dimension because data is sparse — estimate with documented reasoning."
+- [x] PASS: Composite score uses weighted formula — Step 3 states the exact formula: `(Adoption × 0.30) + (Engagement × 0.25) + (Relationship × 0.20) + (Value × 0.15) + (Commercial × 0.10)`. This is a weighted sum, not an unweighted average. The output shows the formula applied with numbers.
+- [x] PASS: Health categories with defined thresholds — Step 4 defines four categories with numeric thresholds: Healthy (80–100), Neutral (60–79), At Risk (40–59), Critical (0–39). Each category has a defined response cadence.
+- [x] PASS: Data sources identified before scoring — Step 1 "Identify Data Sources" is explicitly the first step and requires establishing where health signals come from per dimension before any scoring begins. "If data sources are unavailable, note the gap." The simulation lists five data sources before producing any scores.
+- [x] PASS: Specific risk signals per account — Step 5 requires checking churn risk indicators regardless of composite score and states "a single critical signal can override the composite." The Fenwick Capital example identifies four specific signals (adoption rate, QBR absence, value gap, champion absence) driving the score.
+- [x] PASS: Specific interventions for at-risk accounts — Step 6 requires tailored intervention plans for At Risk and Critical accounts with Owner, Timeline, Success criteria, and Escalation. The Anti-patterns section prohibits "Intervention without root cause" and "schedule a call" as an intervention plan. The simulation produces a four-part intervention with a 30-day milestone for Fenwick Capital.
+- [~] PARTIAL: Portfolio summary view — Step 7 "Portfolio Summary (if assessing multiple accounts)" is present and applicable to this 15-account prompt. The definition requires aggregating across accounts. The simulation produces the required portfolio table. PARTIAL ceiling applies — the test author set this ceiling deliberately and the calibration rules prohibit upgrading it.
+- [x] PASS: Valid YAML frontmatter — the skill has `name: health-assessment`, `description`, and `argument-hint` fields in valid YAML frontmatter.
+
+### Notes
+
+The weighted formula in Step 3 and the five-dimension structure in Step 2 make health assessment reproducible across CSMs — the same account assessed by two different people should produce comparable scores. The "single critical signal overrides the composite" rule in Step 5 prevents a strong adoption score from masking a high-severity relationship risk (e.g., a healthy-scoring account whose champion just left). The portfolio summary in Step 7 is well-designed for the multi-account use case: it identifies accounts needing immediate action and — notably — also flags healthy accounts with expansion potential, closing the loop between health assessment and expansion planning.

@@ -1,0 +1,17 @@
+{
+  "name": "dotnet-stack",
+  "description": "Framework-specific conventions for JasperFx (Wolverine/Marten) on .NET",
+  "version": "1.3.0",
+  "author": {
+    "name": "hps.gd"
+  },
+  "repository": "https://github.com/hpsgd/turtlestack",
+  "license": "Unlicense",
+  "keywords": [
+    "dotnet",
+    "wolverine",
+    "marten",
+    "jasperfx",
+    "csharp"
+  ]
+}

@@ -186,16 +186,26 @@ For monorepo projects:
 
 1. **Change detection** — determine which projects changed using path filters or `git diff`
 2. **Selective execution** — only build/test projects that changed or depend on changed code
-3. **Dependency graph** — if project A depends on project B and B changed, test A too
+3. **Dependency graph** — if project A depends on project B and B changed, test A too. Use [Moon](https://moonrepo.dev) (`moon ci`) or similar task runners that resolve the dependency graph automatically
 4. **Shared workflows** — extract common steps into reusable workflows/templates
 
+If using Moon:
+
 ```yaml
-# GitHub Actions path filter
+# Moon handles change detection + dependency graph resolution
+- name: Run affected checks
+  run: moon ci  # builds/tests all projects affected by changes, in dependency order
+```
+
+Without a task runner, use path filters as a fallback:
+
+```yaml
+# GitHub Actions path filter (manual, no dependency graph awareness)
 on:
   push:
     paths:
       - 'services/api/**'
-      - 'packages/shared/**'  # shared dependency
+      - 'packages/shared/**'  # shared dependency — must be listed manually
 ```
 
 ## Secrets Management

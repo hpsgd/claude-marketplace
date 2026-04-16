@@ -1,0 +1,102 @@
+# Write runbook
+
+Testing whether the write-runbook skill requires copy-pasteable commands, rollback steps for every destructive action, and an escalation table with specific contacts.
+
+## Prompt
+
+> /internal-docs-writer:write-runbook for our database failover procedure — promoting the read replica to primary when the primary instance becomes unavailable.
+
+## Output
+
+**Runbook: Database Failover — Promote Read Replica to Primary**
+
+| Field | Value |
+|---|---|
+| **What this covers** | Promoting read replica to primary when primary is unavailable |
+| **When to use** | Primary RDS instance in failed/unavailable state |
+| **Risk level** | Critical |
+| **Estimated duration** | 15–25 minutes |
+| **Last tested** | [UNTESTED — verify before use] |
+| **Owner** | DevOps |
+
+**Prerequisites:**
+- [ ] AWS console access with RDS permissions in production account
+- [ ] AWS CLI installed (`aws --version` → 2.x+), configured for production: `aws configure`
+- [ ] Slack: post to #incidents immediately on starting procedure
+
+**Step 1: Confirm primary is unavailable**
+
+```bash
+aws rds describe-db-instances \
+  --db-instance-identifier prod-primary \
+  --query 'DBInstances[0].DBInstanceStatus'
+```
+
+Expected output: `"failed"` or `"incompatible-network"`. If output is `"available"`, STOP — do not proceed with failover.
+
+If this fails: check AWS console directly. If you cannot access the console, escalate to on-call DBA before proceeding.
+
+**Step 2: Promote read replica** ⚠ WARNING: This step is irreversible. Once promoted, the replica becomes primary and the original primary cannot be automatically restored. Double-check instance identifier before running.
+
+```bash
+aws rds promote-read-replica \
+  --db-instance-identifier prod-replica-1
+```
+
+Expected output: JSON with `"DBInstanceStatus": "modifying"`. This takes 5–10 minutes. Do not proceed until status is `"available"`.
+
+**Rollback for Step 2:** Promotion cannot be automatically reversed. If this step causes issues, escalate to DBA immediately. Recovery requires restoring original primary from latest RDS snapshot.
+
+**Step 3: Update connection string in SSM**
+
+```bash
+aws ssm put-parameter \
+  --name "/prod/db/primary-host" \
+  --value "prod-replica-1.xxxx.us-east-1.rds.amazonaws.com" \
+  --overwrite
+```
+
+Expected output: `{"Version": N, "Tier": "Standard"}` where N is greater than the previous version number.
+
+**Verification:**
+
+- [ ] `curl -s https://api.yourapp.com/health/db | jq .status` → `"healthy"`
+- [ ] `curl -s https://api.yourapp.com/health/db | jq .write` → `true`
+- [ ] Check CloudWatch: write IOPS on new primary should be non-zero within 2 minutes
+- [ ] Application logs: no database connection errors in last 2 minutes
+
+**Rollback (procedure-level):** If application still fails after Step 3, check SSM parameter was applied. Restart application workers if connection string was cached.
+
+**Escalation:**
+
+| Condition | Escalate to | Contact | Response time |
+|---|---|---|---|
+| Promotion taking >15 min | On-call DBA | PagerDuty: dba-oncall | Immediate |
+| App failing after connection update | On-call backend | PagerDuty: backend-oncall | Immediate |
+| Data loss suspected | DBA + Engineering Manager | PagerDuty: dba-oncall, mobile | Immediate |
+| Customer-visible outage >20 min | VP Engineering | Mobile: listed in PagerDuty profile | Within 5 min |
+
+## Evaluation
+
+
+| Field | Value |
+|---|---|
+| Verdict | PASS |
+| Score | 7.5/8 (93.75%) |
+| Evaluated | 2026-04-16 |
+
+
+## Results
+
+- [x] PASS: Written for a first-timer at 2am — the skill's core principle states "This runbook will be used by someone who has never done this procedure before, at 2am, while stressed. Every decision must serve that reader. No assumed knowledge. No missing steps. No ambiguity." This is the first sentence of the skill's purpose.
+- [x] PASS: Expected output per command — Step 2 procedure rules state "Every step needs expected output. The operator must be able to confirm what they see matches what they should see." The step template includes a mandatory `**Expected output:**` field.
+- [x] PASS: Rollback for every destructive action — Step 2 rules state "Dangerous steps get warnings. Prefix with: `⚠ WARNING: This step [modifies production data / causes downtime / is irreversible]`." The Rollback section is a mandatory section of the runbook structure and Step 2 rules require rollback per destructive step.
+- [x] PASS: Escalation table with named roles and contact methods — the mandatory Escalation section template requires columns for Condition, Escalate to, Contact, and Expected response time. The rules specify "Include both primary and backup contacts."
+- [x] PASS: Verification step at the end — the Verification section is a mandatory section with its own checklist template requiring "exact command to run and the expected result" for every check.
+- [x] PASS: Research step before writing — Step 1 requires searching the codebase for scripts, deployment configs, and infrastructure definitions, identifying services and dependencies, and finding existing monitoring before writing begins.
+- [~] PARTIAL: Severity classification at the top — the mandatory Overview table includes a "Risk level" field (Low/Medium/High/Critical) but does not include a "Business impact" field with dollar or user-count context. Risk level is present; business impact as a header field is not explicitly required. This criterion has a PARTIAL ceiling — maximum score is 0.5.
+- [x] PASS: Valid YAML frontmatter — frontmatter is present with `name: write-runbook`, `description`, and `argument-hint: "[service, procedure, or incident type]"` fields.
+
+## Notes
+
+The severity criterion scores PARTIAL because the Overview table has "Risk level" (categorical) but not "Business impact" (quantitative context). The $3,400/minute style context is not a required field in the skill's template — a well-formed runbook from this skill would state the risk level but might not surface the revenue impact numerically. The skill's quality checklist (Step 3) is thorough: copy-paste test, failure coverage, rollback exists, escalation contacts, timing estimates, warnings present, verification complete.

@@ -1,0 +1,171 @@
+# Data model for a subscription billing domain
+
+Developer invokes the data-model skill to design the schema for a subscription billing domain. Key entities are customers, subscriptions, plans, invoices, and payment methods.
+
+## Prompt
+
+> Design a data model for subscription billing. Entities: customers (name, email, created date), plans (name, price, billing interval monthly/annual, feature limits), subscriptions (customer to plan, status: trial/active/past_due/cancelled, start date, trial end date), invoices (subscription, amount, due date, paid date, status), and payment methods (customer, type: card/bank, last 4 digits, expiry). A customer can have multiple subscriptions and payment methods. Subscriptions must have a payment method.
+
+The data-model skill, applied to subscription billing, would produce the following.
+
+---
+
+## Output
+
+**Step 1 — Domain Discovery:**
+
+Entities: Customer, Plan, Subscription, Invoice, PaymentMethod.
+
+Events: SubscriptionCreated, SubscriptionStatusChanged, InvoiceIssued, PaymentProcessed, PaymentFailed, SubscriptionCancelled.
+
+Actors: Customer (creates account, adds payment methods), Billing system (creates invoices, processes payments), Payment processor (external — responds to charge attempts).
+
+Invariants:
+- Subscription must reference a valid payment method (NOT NULL FK)
+- Invoice amount must be > 0 (CHECK constraint)
+- trial_end_date must be after start_date (CHECK constraint)
+- plan.price must be >= 0
+
+Cardinality: 1 Customer → many Subscriptions, 1 Customer → many PaymentMethods, 1 Plan → many Subscriptions, 1 Subscription → many Invoices.
+
+**Step 2 — Relationship Mapping:**
+
+Customer → Subscription: one-to-many, FK on Subscription.customer_id, ON DELETE RESTRICT (cannot delete a customer with active subscriptions)
+Customer → PaymentMethod: one-to-many, ON DELETE RESTRICT
+Subscription → Plan: many-to-one, ON DELETE RESTRICT (cannot delete a plan with active subscriptions)
+Subscription → PaymentMethod: mandatory FK, ON DELETE RESTRICT
+
+**Step 3 — Entity Design (excerpts):**
+
+```sql
+CREATE TABLE customers (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name TEXT NOT NULL,
+    email TEXT NOT NULL UNIQUE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE TABLE plans (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name TEXT NOT NULL,
+    price_cents INTEGER NOT NULL CHECK (price_cents >= 0),
+    billing_interval TEXT NOT NULL CHECK (billing_interval IN ('monthly', 'annual')),
+    feature_limits JSONB NOT NULL DEFAULT '{}',
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE TABLE subscriptions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    customer_id UUID NOT NULL,
+    plan_id UUID NOT NULL,
+    payment_method_id UUID NOT NULL,
+    status TEXT NOT NULL CHECK (status IN ('trial', 'active', 'past_due', 'cancelled')),
+    start_date TIMESTAMPTZ NOT NULL,
+    trial_end_date TIMESTAMPTZ,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    CONSTRAINT fk_subscriptions_customer
+        FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE RESTRICT,
+    CONSTRAINT fk_subscriptions_plan
+        FOREIGN KEY (plan_id) REFERENCES plans(id) ON DELETE RESTRICT,
+    CONSTRAINT fk_subscriptions_payment_method
+        FOREIGN KEY (payment_method_id) REFERENCES payment_methods(id) ON DELETE RESTRICT,
+    CONSTRAINT chk_trial_end_after_start
+        CHECK (trial_end_date IS NULL OR trial_end_date > start_date)
+);
+```
+
+**Step 4 — Access Patterns (MANDATORY):**
+
+| Query | Frequency | Latency SLA |
+|---|---|---|
+| Subscriptions for a customer (dashboard) | High | < 10ms |
+| Active subscriptions with renewal due tomorrow (billing job) | Daily batch | < 5s total |
+| Invoices for a subscription | Medium | < 20ms |
+| Customer by email (login lookup) | High | < 5ms |
+| Past-due subscriptions (collections job) | Daily | < 10s total |
+
+Indexes derived: `idx_subscriptions_customer_id`, `idx_subscriptions_status`, `idx_customers_email` (UNIQUE), `idx_invoices_subscription_id`.
+
+**Step 5 — Data Integrity:**
+
+All FKs use named constraints with `ON DELETE RESTRICT` for customer and plan (deletion blocked until subscriptions are cancelled). Payment method ON DELETE RESTRICT (subscription must be updated before payment method is removed).
+
+**Step 8 — Privacy by Design:**
+
+PII columns:
+
+| Column | Classification | Retention | Erasure strategy |
+|---|---|---|---|
+| customers.email | PII — contact info | Until account deletion + 30 days | Replace with `DELETED-{uuid}@deleted.invalid` |
+| customers.name | PII — personal name | Until account deletion + 30 days | Replace with `[Deleted User]` |
+| payment_methods.last4 | PII — financial partial | Until payment method removed + 90 days | Set to `NULL` |
+| payment_methods.expiry | PII — financial | Until payment method removed + 90 days | Set to `NULL` |
+
+**Open Questions:**
+
+1. Can a cancelled subscription be reactivated, or must a new one be created? (affects status field design and audit trail)
+2. Is the trial period configurable per plan or global? (affects trial_end_date storage)
+3. What happens to outstanding unpaid invoices when a subscription is cancelled?
+4. Can a customer have multiple active subscriptions simultaneously, or one at a time?
+5. Is payment method type (card/bank) enforced at DB level or application level?
+
+**Mermaid ER diagram:**
+
+```mermaid
+erDiagram
+    customers ||--o{ subscriptions : "has"
+    customers ||--o{ payment_methods : "has"
+    plans ||--o{ subscriptions : "used by"
+    subscriptions ||--o{ invoices : "generates"
+    payment_methods ||--o{ subscriptions : "used by"
+
+    customers {
+        uuid id PK
+        text name
+        text email
+        timestamptz created_at
+    }
+    subscriptions {
+        uuid id PK
+        uuid customer_id FK
+        uuid plan_id FK
+        uuid payment_method_id FK
+        text status
+        timestamptz start_date
+        timestamptz trial_end_date
+    }
+```
+
+## Evaluation
+
+
+| Field | Value |
+|---|---|
+| Verdict | PASS |
+| Score | 8.5/9 criteria met (94%) |
+| Evaluated | 2026-04-16 |
+
+
+## Results
+
+- [x] PASS: Skill performs domain discovery before tables — Step 1 "Domain Discovery" is the first step in the sequential process. It requires identifying entities, events, actors, invariants, and per-entity cardinality. The process instruction says "Before creating any tables or schemas, understand the domain." All five discovery elements are present in the simulated output.
+
+- [x] PASS: All PKs use UUIDs via gen_random_uuid() — Schema design rules explicitly state "UUIDs for primary keys — `UUID PRIMARY KEY DEFAULT gen_random_uuid()` — no sequential integers (enumeration risk, merge conflicts)." The anti-patterns list also names "Sequential integer primary keys." Both positive requirement and anti-pattern are explicit.
+
+- [x] PASS: All timestamps use TIMESTAMPTZ — Schema design rules: "Timestamps with timezone — TIMESTAMPTZ not TIMESTAMP — always store UTC." Anti-patterns list: "TIMESTAMP without timezone — always TIMESTAMPTZ." Both the positive requirement and the anti-pattern are named.
+
+- [x] PASS: Status fields use CHECK constraints — Schema design rules: "CHECK constraints for enums — Database-level validation, not just application-level." Example DDL in the skill shows `CHECK (status IN ('active', 'paused', 'archived'))`. The rule is explicit.
+
+- [x] PASS: Skill documents access patterns before indexes — Step 4 is "Access Pattern Analysis (MANDATORY)" and precedes index definition. The required table includes query shape, frequency, and latency SLA. The MANDATORY label enforces this step.
+
+- [x] PASS: Foreign keys have named constraints and appropriate ON DELETE strategies — Step 5 Data Integrity provides an ON DELETE strategy table with rationale for each relationship type. Example DDL throughout shows `CONSTRAINT fk_<name>` naming pattern. Default for user-type relationships is RESTRICT. Both naming and strategy are required.
+
+- [x] PASS: Privacy section identifies PII with retention and erasure strategy — Step 8 "Privacy by Design" requires PII identification, retention policy, and erasure strategy. Output format includes a Privacy table with Column, Classification, Retention, and Erasure strategy columns. All three required elements are present as explicit requirements.
+
+- [~] PARTIAL: Skill produces Mermaid ER diagram — output format template includes "## Entity-Relationship Diagram [Mermaid ER diagram]" as a named required section. However there is no process step that explicitly produces the diagram — it appears only in the output template. PARTIAL ceiling is appropriate: the requirement is in the output format but not enforced by a process step.
+
+- [x] PASS: Skill identifies open questions for product/business input — output format template includes "## Open Questions [Decisions that need product/business input before finalising]" as an explicit required section. The simulated output produces 5 domain-relevant questions.
+
+## Notes
+
+The Step 4 access pattern analysis being labelled MANDATORY with a required table format (query shape, frequency, latency SLA) is the right mechanism to prevent premature index design. The privacy step is notably thorough — the `COMMENT ON COLUMN` SQL pattern mentioned in the full SKILL.md for tagging PII is a useful enforcement mechanism at the schema level. The Mermaid ER diagram appearing only in the output template rather than as a process step is the single soft spot: without a process instruction like "draw the entity-relationship diagram for the entities identified in Step 1," the diagram depends on the model remembering to produce it.

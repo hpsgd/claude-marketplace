@@ -37,6 +37,7 @@ All markdown output must render correctly on GitHub (GitHub Flavoured Markdown).
 
 ## Tables
 
+- **Use tables for key-value and tabular data.** When you have two or more `**Label:** value` items that form a set (metadata, properties, summaries), put them in a table. Consecutive bold-label lines without blank lines between them render as a single paragraph in GitHub. Tables avoid this and are easier to scan.
 - **Always include the header separator row** (`|---|---|`).
 - **Align pipes** for readability in source, but this is a preference not a requirement.
 - **No empty cells.** Use `—` or `N/A` explicitly.

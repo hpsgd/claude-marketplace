@@ -1,0 +1,17 @@
+# Test: expansion plan for a healthy account
+
+Scenario: A customer success manager requests an expansion plan for a high-performing account. The account has strong utilisation, positive QBR history, and the customer has proactively asked about a higher tier. The skill should pass the health gate and produce a real expansion plan.
+
+## Prompt
+
+/customer-success:expansion-plan Meridian Legal is at $180k ARR, 92% seat utilisation (115/125 seats), health score 85, just completed their third QBR showing 40% time savings. They've been asking about our API integration tier.
+
+## Criteria
+
+- [ ] PASS: Health prerequisite check passes and expansion planning proceeds
+- [ ] PASS: Expansion is framed as customer enablement, not a sales motion
+- [ ] PASS: The specific signal (customer asking about API tier) is used as the expansion anchor
+- [ ] PASS: Revenue impact is estimated with assumptions stated
+- [ ] PASS: A timeline with milestones is produced, not just "upsell them"
+- [ ] PARTIAL: Risk factors for the expansion are identified (e.g., adoption risk on a new tier)
+- [ ] PASS: The plan references the customer's demonstrated value (40% time savings) as proof of readiness

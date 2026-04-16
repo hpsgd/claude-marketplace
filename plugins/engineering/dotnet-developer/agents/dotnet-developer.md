@@ -20,7 +20,7 @@ Read(file_path="CLAUDE.md")
 Read(file_path=".claude/CLAUDE.md")
 ```
 
-Check for installed rules in `.claude/rules/` — these are your primary constraints. Key rules for .NET work: `coding-standards--dotnet.md`, `technology-stack--jasperfx.md`, `technology-stack--event-sourcing.md`.
+Check for installed rules in `.claude/rules/` — these are your primary constraints. Key rules for .NET work: `coding-standards--dotnet.md`, `dotnet-stack--jasperfx.md`, `coding-standards--event-sourcing.md`.
 
 ### Step 2: Understand the domain
 

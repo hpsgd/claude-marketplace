@@ -65,18 +65,44 @@
       ]
     },
     {
-      "name": "technology-stack",
-      "source": "./plugins/practices/technology-stack",
-      "description": "Framework-specific conventions for JasperFx, Pulumi, Moon, Next.js, SonarCloud, and event sourcing",
+      "name": "dotnet-stack",
+      "source": "./plugins/practices/dotnet-stack",
+      "description": "Framework-specific conventions for JasperFx (Wolverine/Marten) on .NET",
       "version": "1.3.0",
       "category": "practices",
       "tags": [
+        "dotnet",
         "wolverine",
         "marten",
+        "jasperfx",
+        "csharp"
+      ]
+    },
+    {
+      "name": "nextjs-stack",
+      "source": "./plugins/practices/nextjs-stack",
+      "description": "Framework-specific conventions for Next.js, React, and Vercel",
+      "version": "1.3.0",
+      "category": "practices",
+      "tags": [
         "nextjs",
-        "pulumi",
-        "moonrepo",
-        "event-sourcing"
+        "react",
+        "vercel",
+        "typescript",
+        "tailwind"
+      ]
+    },
+    {
+      "name": "python-stack",
+      "source": "./plugins/practices/python-stack",
+      "description": "Framework-specific conventions for Python projects — Django, python-eventsourcing, and related tooling",
+      "version": "1.3.0",
+      "category": "practices",
+      "tags": [
+        "python",
+        "django",
+        "eventsourcing",
+        "pydantic"
       ]
     },
     {

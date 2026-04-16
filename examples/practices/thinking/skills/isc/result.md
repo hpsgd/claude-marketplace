@@ -1,0 +1,68 @@
+# Isc request decomposition with negatives
+
+A developer asks for help with a task that has multiple components, explicit exclusions, and implied requirements. The ISC skill must catch all parts including the anti-criteria.
+
+## Prompt
+
+> /isc Update the user profile page to show the new avatar upload feature. The upload should accept JPEG and PNG only, max 5MB, and resize to 200x200 on save. Don't touch the password change section — we're in the middle of a security audit. Also make sure the existing profile tests still pass, and don't add any new npm dependencies.
+
+```markdown
+
+## Output
+
+### ISC Decomposition: User profile page avatar upload
+
+**Effort:** Standard (<2min, 8-16 ISC)
+
+**Step 1 — Reverse engineering:**
+
+- **Explicit wants:** avatar upload UI on profile page, JPEG accepted, PNG accepted, max 5MB limit, resize to 200x200 on save
+- **Implied wants:** existing profile page layout preserved, upload state shown to user (loading, success, error), avatar displayed after upload
+- **Explicit not-wanted:** do not touch password change section, do not add new npm dependencies
+- **Implied not-wanted:** don't change existing profile tests, don't break other profile page features, don't change the profile API contract
+- **Gotchas:** file type validation must happen both client-side AND server-side; resize-on-save implies a backend step not just frontend display; "existing tests still pass" means we can't refactor test setup
+
+**ISC Count Gate:** 14 criteria — above floor of 8 for Standard tier ✓
+
+---
+
+##### Ideal State Criteria
+
+- [ ] ISC-1: Avatar upload section appears on the profile page (visible in rendered DOM)
+- [ ] ISC-2: JPEG files are accepted — upload succeeds with a `.jpg` / `.jpeg` file
+- [ ] ISC-3: PNG files are accepted — upload succeeds with a `.png` file
+- [ ] ISC-4: Files other than JPEG and PNG are rejected — upload attempt with `.gif` returns an error
+- [ ] ISC-5: Files over 5MB are rejected — upload attempt with a 5.1MB file returns an error
+- [ ] ISC-6: Files at exactly 5MB are accepted (boundary condition)
+- [ ] ISC-7: Uploaded image is resized to 200x200 pixels on the server before storage
+- [ ] ISC-8: Resized avatar displayed on profile page after upload
+- [ ] ISC-9: Upload shows a loading state during processing
+- [ ] ISC-10: Password change section is unchanged — `grep -r "PasswordChange" src/` shows no diff in password section files
+- [ ] ISC-11: No new entries in `package.json` — `git diff package.json` shows no new dependencies
+- [ ] ISC-12: All existing profile page tests pass — `npm test -- profile` exits 0
+- [ ] ISC-13: Upload fails gracefully on network error — error message shown, no thrown exception
+- [ ] ISC-14: File type validation occurs server-side — server returns 400 for wrong MIME type
+```
+
+## Evaluation
+
+
+| Field | Value |
+|---|---|
+| Verdict | PASS |
+| Score | 7.5/8 (94%) |
+| Evaluated | 2026-04-16 |
+
+
+- [x] PASS: Step 1 extracts all five categories — the skill's Step 1 defines exactly five categories: "Explicit wants, Implied wants, Explicit not-wanted, Implied not-wanted, Gotchas." The definition states "Read everything. Extract five categories." No escape clause exists; all five are mandatory.
+- [x] PASS: Explicit not-wanted items appear as separate ISC criteria — Step 1 "Explicit not-wanted" captures "don't touch password section" and "no new npm dependencies." The Splitting Test (Step 3) then requires each to become a separately verifiable item. The definition traces directly: extraction → splitting → criterion. ISC-10 and ISC-11 are distinct verifiable items with specific verification commands.
+- [x] PASS: Splitting Test applied to compound criteria — Step 3 defines the Splitting Test with four named triggers. Trigger 1 ("'And'/'With' test: Does it join two verifiable things?") applies directly to "accept JPEG and PNG." JPEG and PNG become ISC-2 and ISC-3 as separately verifiable items. The definition requires applying the test to "EVERY criterion."
+- [x] PASS: Each criterion stated as verifiable — Step 3 defines verifiability as "Can you prove it's done? What tool would you use? What would you see?" and Step 6 states "No criterion should be marked complete without evidence from a tool." ISC-11 includes `git diff package.json`; ISC-12 includes `npm test -- profile exits 0`. The definition explicitly requires tool-based verification.
+- [x] PASS: Effort level assigned and ISC count meets floor — Step 2 defines Standard = 8-16 ISC with a floor of 8. Step 4 (ISC Count Gate) mandates counting and enforcing the floor. The definition states "Default to Standard unless the request clearly warrants more." 14 criteria exceeds the Standard floor of 8.
+- [x] PASS: ISC count gate enforced — Step 4 states "Count your criteria. If below the effort tier floor, you haven't decomposed enough — go back and re-split. Below floor = re-decompose." This is an explicit enforcement mechanism with a defined action (re-decompose, not proceed).
+- [x] PASS: Criteria presented as numbered checklist with checkboxes — Step 5 defines the exact format: `- [ ] ISC-1: [atomic criterion]` as a numbered checklist. Step 5 also states to "Mark each criterion complete immediately as it passes during execution — don't batch at the end."
+- [~] PARTIAL: Domain-specific decomposition applied — Step 3's "Domain-Specific Decomposition" table defines guidance: "UI/Visual: One criterion per element, per state, per breakpoint" and "Data/API: One per field, per validation rule, per error case." These are guidance bullets rather than a mandatory gate. The skill presents them as how to "split differently depending on what you're working on" — advisory rather than enforced. No dedicated gate or required output format exists for domain-specific decomposition.
+
+### Notes
+
+The ISC skill is one of the more mechanically well-specified skills in the set. The five-category extraction, four-trigger Splitting Test, and ISC Count Gate all provide concrete, verifiable process steps. The boundary condition criterion (ISC-6: files at exactly 5MB) and server-side validation (ISC-14) demonstrate the gotchas category working as intended — they would not appear in a naive decomposition. The domain-specific decomposition guidance is useful but advisory; it has no gate or required output format, which explains the PARTIAL on that criterion.

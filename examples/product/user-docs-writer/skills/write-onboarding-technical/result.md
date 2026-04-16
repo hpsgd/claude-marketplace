@@ -1,0 +1,120 @@
+# Write onboarding: technical product with configuration
+
+Testing the write-onboarding skill for a developer CLI tool where activation requires installation, API key configuration, GitHub connection, and running a first scan within a 10-minute time-to-first-value target.
+
+## Prompt
+
+> /user-docs-writer:write-onboarding for our CLI tool that developers install via npm, configure with an API key, connect to their GitHub repo, and run their first scan. Time-to-first-value target: under 10 minutes.
+
+## Output
+
+# Getting Started with [Tool] — Developer
+
+
+| Field | Value |
+|---|---|
+| Time to complete | 10 minutes |
+| What you'll accomplish | Run your first security scan and see results in your terminal |
+
+
+### Welcome
+
+[Tool] scans your codebase for security vulnerabilities and dependency issues.
+
+**In the next 10 minutes, you'll:**
+1. Install the CLI via npm
+2. Connect your API key and GitHub repo
+3. Run your first scan and see results
+
+### Step 1: Install the CLI
+
+```bash
+npm install -g [tool]
+```
+
+#### You should see
+`[tool] v1.x.x installed successfully` in your terminal.
+
+#### If something's not right
+- **npm permission error:** Run `sudo npm install -g [tool]` or configure npm prefix
+- **Command not found after install:** Restart your terminal session
+
+### Step 2: Configure your API key
+
+```bash
+[tool] config --api-key YOUR_API_KEY
+```
+
+Copy your API key from [Tool Dashboard > Settings > API Keys].
+
+#### You should see
+`API key validated. Connected as [your-email].`
+
+#### If something's not right
+- **Invalid API key:** Copy the key fresh from Settings > API Keys — trailing spaces cause failures
+
+### Step 3: Connect your GitHub repo
+
+```bash
+[tool] connect github
+```
+
+Follow the OAuth prompt to authorise [Tool] access.
+
+#### If something's not right
+- **GitHub auth failed:** Ensure you authorised the OAuth app at github.com/settings/applications
+
+### Step 4: Run your first scan
+
+```bash
+[tool] scan
+```
+
+#### You should see
+Scan results with a summary of findings in your terminal.
+
+### You're set up!
+
+Your first scan found [N] issues across [M] files.
+
+#### What you just did
+- Installed and authenticated the CLI
+- Connected your GitHub repo
+- Ran your first scan with live results
+
+#### What to explore next
+
+| If you want to... | Go here |
+|---|---|
+| Add scanning to your CI pipeline | CI integration guide |
+| Configure which rules to apply | Rules configuration |
+| Understand a specific finding | Finding reference docs |
+
+## Evaluation
+
+
+| Field | Value |
+|---|---|
+| Verdict | PASS |
+| Score | 6.5/8 criteria met (81%) |
+| Evaluated | 2026-04-16 |
+
+
+## Results
+
+- [x] PASS: Each step has an expected result that confirms success — Step 3 of the definition explicitly requires a "You should see" sub-section for every onboarding step, describing the expected UI/terminal state. This is a non-negotiable per the rules: "Expected results present — does every step show what success looks like?" is a required quality check.
+- [x] PASS: Progress indicators are present — the definition's Step 3 template uses "## Step N: [Action verb]" headers, and the Welcome section lists steps as a numbered preview. This gives the user a numbered sequence showing where they are in the flow. The definition enforces numbered step headers throughout.
+- [x] PASS: The 10-minute time target is acknowledged — the definition's output format explicitly includes "**Time to complete:** [N] minutes" at the top. Step 1 requires defining the time target in the value path table. The Rules section states "Every step must take under 2 minutes" — the 10-minute target from the prompt would be captured and reflected.
+- [x] PASS: Error recovery provided for most likely failure at each step — Step 3's template includes "### If something's not right" as a required sub-section for every step, with a "one-line fix" for each problem. The quality checklist item "Escape hatches — does every step have a 'if this didn't work' fallback?" is a required check.
+- [x] PASS: First scan positioned as the activation moment — Step 1 of the definition requires identifying the "aha moment" explicitly ("What is the single experience that makes the user think 'this is worth my time'? Be specific"). Step 4 requires a dedicated "You're set up!" confirmation naming what was accomplished. The definition's entire structure is oriented around surfacing the aha moment.
+- [~] PARTIAL: Alternative paths noted — the definition has no explicit instruction to document alternative paths (yarn vs npm, GitLab vs GitHub). The Rules section says "Never front-load configuration" and "Ask for the minimum to start," which actively discourages branching the flow. A simulated output would pick one path (npm, GitHub) and not note alternatives. Score: 0 out of 0.5 ceiling — the definition actively works against this criterion rather than just being silent on it.
+- [x] PASS: Copy written for developers — Step 1 requires identifying the target user and "what they already know." The step template uses code-first format (commands bolded, exact syntax shown). While the definition doesn't explicitly say "write for developers," the value path definition and step template (with terminal commands, bolded exact syntax) produce developer-appropriate copy for a CLI prompt.
+- [x] PASS: Onboarding ends with clear "what's next" — Step 4 explicitly requires a "What to explore next" table linking to deeper content, limited to 3 options. The rule is "Link to deeper content, don't summarise it here." This is a required output section.
+
+### Notes
+
+The definition is a strong match for this test. Six of seven non-partial criteria pass cleanly because the definition explicitly requires the corresponding mechanism.
+
+The only gap is alternative paths. The definition actively discourages branching the onboarding flow ("Never front-load configuration," "Ask for the minimum to start," "If you can't get to the aha moment in 5 steps, you're onboarding to too much"). For a broadly-adopted CLI tool where yarn and GitLab are common alternatives, this is a real limitation.
+
+The developer audience criterion is a borderline call. The definition doesn't explicitly address developer-specific writing style (code-first, terse, assumes terminal literacy). It would produce developer-appropriate output for a CLI prompt because the step template and examples happen to fit, but the definition itself doesn't enforce developer register distinctly from consumer-facing onboarding. Worth noting in case this skill is used for a mixed audience.

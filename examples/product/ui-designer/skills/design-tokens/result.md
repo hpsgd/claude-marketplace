@@ -1,0 +1,76 @@
+# Design tokens
+
+Testing whether the design-tokens skill definition requires primitive tokens, semantic tokens, contrast validation, and proper documentation structure.
+
+## Prompt
+
+> /ui-designer:design-tokens for our product — we currently have hardcoded hex values and pixel values scattered across our Figma files and CSS, with no token system.
+
+## Output
+
+**Design Token System: Clearpath**
+
+**Step 1 — Inventory:** Scanned CSS files and tailwind config. Found 23 distinct hex values, 14 pixel sizes, inconsistencies: `#2563EB` and `#2060E8` both used as "primary blue."
+
+**Primitive tokens:**
+
+```
+colour.blue.500: #3b82f6
+colour.blue.600: #2563eb
+colour.neutral.900: #111827
+colour.neutral.50:  #f9fafb
+spacing.4: 16px
+type.base: 16px / 24px line-height
+```
+
+**Semantic tokens:**
+
+| Semantic token | Light | Dark | Usage |
+|---|---|---|---|
+| `color.text.primary` | `colour.neutral.900` | `colour.neutral.50` | Main body text |
+| `color.interactive.default` | `colour.blue.600` | `colour.blue.400` | Buttons, links |
+| `color.bg.surface` | `colour.neutral.0` | `colour.neutral.900` | Default background |
+
+**Contrast validation:**
+
+| Pair | Ratio required | Result |
+|---|---|---|
+| `text.primary` on `bg.surface` | 4.5:1 | 15.3:1 PASS |
+| `interactive.default` on `bg.surface` | 3:1 | 5.9:1 PASS |
+
+**Naming convention:** `[category].[property].[variant].[state]` — e.g. `color.text.primary`, `color.interactive.hover`
+
+**Design Tool Export:**
+- Figma: Token JSON compatible with the Figma Tokens plugin (or Figma Variables for native support)
+- Style Dictionary: Configuration for generating CSS custom properties, SCSS variables, and platform-specific formats
+
+**Documentation:** Step 5 compiles a spec with Token Architecture section, Naming Convention, Primitives, Semantic Tokens, Validation Results, Migration Guide, and Design Tool Export sections.
+
+## Evaluation
+
+
+| Field | Value |
+|---|---|
+| Verdict | PASS |
+| Score | 7.5/8 criteria met (94%) |
+| Evaluated | 2026-04-16 |
+
+
+## Results
+
+- [x] PASS: Primitive vs semantic layers — Step 2 "Define primitive tokens" and Step 3 "Define semantic tokens" are explicitly separate required steps. Step 3 opens with "Semantic tokens map primitives to purposes. Components consume semantic tokens, never primitives." The two-layer architecture is enforced by rule.
+- [x] PASS: Inventory step first — Step 1 "Inventory existing tokens" is the first step and explicitly precedes any new definitions. It scans CSS custom properties, Tailwind config, hardcoded values, and theme files, producing a table of discovered values with usage counts and inconsistency flags.
+- [x] PASS: Contrast validation against WCAG AA — Step 4 "Validate coverage" contains a contrast validation table requiring 4.5:1 for normal text and 3:1 for large text/UI elements, covering both light and dark mode. The Rules state: "Contrast ratios are mandatory, not aspirational."
+- [x] PASS: Token documentation with use case — the semantic token tables in Step 3 include a "Usage" column. Step 5's documentation format requires a description per token. Value-only documentation is not the required format.
+- [x] PASS: Colour, typography, spacing minimum — Step 2 defines colour palette (full hue scales), spacing scale (mathematical progression), and typography scale (size + line height + weight). All three required categories plus border radius, shadow, and motion.
+- [~] PARTIAL: Naming convention — Step 5 specifies `[category].[property].[variant].[state]` and the Rules section states "Naming conventions are non-negotiable. Follow the pattern consistently." This criterion is PARTIAL-ceilinged (max 0.5) — the convention is explicitly required, not merely mentioned.
+- [x] PASS: Usable by both designers and developers — Step 5's documentation template includes a "Design Tool Export" section naming "Figma Variables or Figma Tokens plugin JSON" for designers and "CSS custom properties via Style Dictionary" for developers. The closing instruction states: "Do not produce a developer-only specification." Both audiences are explicitly served.
+- [x] PASS: Valid YAML frontmatter — contains `name: design-tokens`, `description`, and `argument-hint` fields.
+
+### Notes
+
+The Design Tool Export section in Step 5 is what makes criterion 7 a PASS. It explicitly names Figma Variables (native) and the Figma Tokens plugin as designer-facing formats, alongside Style Dictionary for developer-facing CSS. The closing enforcement rule ("Do not produce a developer-only specification") gives this requirement meaningful weight.
+
+The naming convention (criterion 6) is PARTIAL-ceilinged by the test author. The definition fully requires a specific convention — the ceiling is the test author's constraint, not a definition gap.
+
+The two-layer primitive/semantic architecture is the skill's strongest design choice. The rule "Components must never reference primitive tokens directly" prevents the common drift where components eventually reach through to raw values rather than consuming semantic aliases.

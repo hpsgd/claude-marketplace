@@ -4,33 +4,43 @@ Run test cases against their plugin definitions. Works at three levels:
 
 - `/evaluate` — run all tests in `examples/`
 - `/evaluate examples/research` — run all tests under a directory
-- `/evaluate examples/research/analyst/skills/company-lookup.md` — run a single test
+- `/evaluate examples/research/analyst/skills/company-lookup` — run a single test
 
 ## Steps
 
 1. **Discover test files.** Based on the argument:
-   - No argument: glob for all `.md` files under `examples/` that contain a `## Criteria` section
-   - Directory path: glob within that directory
-   - File path: use that single file
+   - No argument: glob for all `test.md` files under `examples/`
+   - Directory path: glob for `test.md` files within that directory
+   - If the argument points to a specific test directory (contains `test.md`), use that single test
    - Skip `REPORT.md` when globbing
 
-2. **For each test file:**
+2. **For each test directory:**
 
    a. Parse the path to determine test type: `/skills/` → skill test, `/agents/` → agent test
 
-   b. Read the test file. It contains Prompt and Criteria above the `<!-- EVALUATION BELOW -->` marker, and (optionally) previous Output and Evaluation below it.
+   b. Read `test.md` from the test directory. It contains the scenario, prompt, and criteria checklist.
 
    c. Resolve the plugin source path:
-      - Skill: replace `examples/` prefix with `plugins/`, replace the filename with the stem + `/SKILL.md` (e.g. `company-lookup.md` → `company-lookup/SKILL.md`)
-      - Agent: replace `examples/` prefix with `plugins/`, find `agents/<name>.md` by walking up from the test file
-      - Skip any test file with no corresponding plugin source. Report as missing definition.
+      - Skill: replace `examples/` prefix with `plugins/`, walk up to the skill name directory, find `SKILL.md` (e.g. `examples/.../skills/company-lookup/test.md` → `plugins/.../skills/company-lookup/SKILL.md`)
+      - Agent: replace `examples/` prefix with `plugins/`, find `agents/<name>.md` by walking up from the test directory
+      - Skip any test with no corresponding plugin source. Report as missing definition.
 
    d. Dispatch to the evaluator agent with the test case details
 
-   e. The evaluator generates the simulated output and evaluation, then rewrites everything below the `<!-- EVALUATION BELOW -->` marker. Content above the marker is preserved. The structure below the marker MUST be:
+   e. The evaluator generates the simulated output and evaluation, then writes `result.md` in the same directory as `test.md`. The `result.md` is a **standalone showcase document** with this structure:
 
-      ```
+      ```markdown
+      # [Plugin/Agent]: [test name]
+
+      [One-line scenario description]
+
+      ## Prompt
+
+      > [The prompt, blockquoted]
+
       ## Output
+
+      [One-line routing/context note, e.g. "The content analyst routes this to the `/analyst:content-analysis` skill."]
 
       [Full simulated output demonstrating what the skill/agent would
        actually produce for this prompt. This is the most valuable part
@@ -39,9 +49,11 @@ Run test cases against their plugin definitions. Works at three levels:
 
       ## Evaluation
 
-      **Verdict:** PASS/PARTIAL/FAIL
-      **Score:** X/Y (Z%)
-      **Evaluated:** [date]
+      | Field | Value |
+      |---|---|
+      | Verdict | PASS/PARTIAL/FAIL |
+      | Score | X/Y (Z%) |
+      | Evaluated | [date] |
 
       [Per-criterion results with evidence]
 
@@ -49,7 +61,12 @@ Run test cases against their plugin definitions. Works at three levels:
       [Notable findings]
       ```
 
-      The `## Output` section is MANDATORY. An evaluation without a simulated output is incomplete. The output should be long enough to demonstrate the skill's actual deliverable — a PRD should look like a PRD, a threat model should look like a threat model, a code review should look like a code review.
+      **Formatting rules for result.md:**
+      - The `## Output` section is MANDATORY. An evaluation without a simulated output is incomplete.
+      - All key-value metadata (verdict/score/date, content metadata like dates/word counts) must be in **tables**, not consecutive `**Label:** value` lines (which collapse into a single paragraph in GitHub).
+      - Headings in the output section are bumped down one level from the source (### becomes ####) since they're nested under ## Output.
+      - The scenario and prompt are repeated from test.md so result.md reads as a standalone document. Someone landing on result.md from a README link should understand what was asked and what was produced without needing to read test.md.
+      - The routing/context line should be one sentence ("The architect routes this to the `system-design` skill."), not the evaluator's internal narration about how the agent processes the request.
 
    f. Collect the verdict and score
 
@@ -58,9 +75,13 @@ Run test cases against their plugin definitions. Works at three levels:
    ```markdown
    # Evaluation report
 
-   **Run date:** <date>
-   **Total:** N tests
-   **Passed:** N | **Partial:** N | **Failed:** N
+   | Field | Value |
+   |---|---|
+   | Run date | [date] |
+   | Total | N tests |
+   | Passed | N |
+   | Partial | N |
+   | Failed | N |
 
    ## Results
 
@@ -69,7 +90,7 @@ Run test cases against their plugin definitions. Works at three levels:
    | research/analyst/skills/company-lookup | skill | Research a company's structure, financials, and market position | PASS | 7/7 (100%) |
    ```
 
-4. Print the summary table and flag any failures for follow-up. For single-file runs, skip the report file and just print the result inline.
+4. Print the summary table and flag any failures for follow-up. For single-test runs, skip the report file and just print the result inline.
 
 ## What gets reported
 
@@ -78,7 +99,7 @@ After evaluation, report:
 - Verdict (PASS / PARTIAL / FAIL)
 - Score (N/M, X%)
 - Any notable issues from the Notes section
-- Path to the test file
+- Path to the test directory
 
 ## Scoring rules
 

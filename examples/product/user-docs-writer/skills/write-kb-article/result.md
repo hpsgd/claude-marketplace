@@ -1,0 +1,96 @@
+# Write KB article
+
+Testing whether the write-kb-article skill requires a question-format title, short answer first, prerequisites, and a troubleshooting section.
+
+## Prompt
+
+> /user-docs-writer:write-kb-article explaining how to connect a custom domain to a Clearpath workspace — users need to use their company's domain instead of the default clearpath.app subdomain.
+
+## Output
+
+**How do I use my own domain with my Clearpath workspace?**
+
+You can replace your default `company.clearpath.app` address with a custom domain in Settings. The change takes effect after you update your DNS records, which typically takes 1-24 hours.
+
+**Before you start:**
+
+- You need **Admin** access to your Clearpath workspace.
+- You need access to your company's DNS settings (via your domain registrar or IT team).
+- Your domain must not already be connected to another Clearpath workspace.
+
+**Steps:**
+
+1. **Go to Settings > Workspace > Custom Domain.**
+   Expected result: You'll see the Custom Domain panel showing your current workspace address.
+2. **Enter your custom domain** (e.g. `projects.yourcompany.com`) and click **Verify**.
+   Expected result: Clearpath generates a TXT record to add to your DNS.
+3. **Add the TXT record to your DNS settings.** The record looks like `clearpath-verify=abc123xyz`.
+   Expected result: You'll see a "Pending verification" status while Clearpath checks for the record.
+4. **Once verified, click Activate custom domain.**
+   Expected result: Your workspace loads at your custom domain. The old clearpath.app address redirects automatically.
+
+**Troubleshooting:**
+
+
+| Field | Value |
+|---|---|
+| Problem | Verification fails after 24 hours. |
+| Cause | The TXT record may have been entered incorrectly, or DNS propagation is still in progress. |
+| Solution | Check the TXT record exactly as shown — extra spaces or wrong subdomains are common causes. DNS changes can take up to 48 hours in some regions. |
+
+
+
+| Field | Value |
+|---|---|
+| Problem | Custom domain shows a security warning after activation. |
+| Cause | Clearpath provisions an SSL certificate automatically — this takes a few minutes. |
+| Solution | Wait 10 minutes and refresh. |
+
+
+
+| Field | Value |
+|---|---|
+| Problem | Old clearpath.app link not redirecting. |
+| Cause | Redirects activate within 1 hour of domain activation. |
+| Solution | If it's been longer, contact support. |
+
+
+**Related articles:**
+- How to manage workspace settings
+- How to add team members to your workspace
+- How to transfer workspace ownership
+
+---
+Last verified: 2026-04-16
+Product area: Workspace Settings
+Applies to: Pro and Enterprise
+Tags: custom domain, settings, DNS, workspace
+
+## Evaluation
+
+
+| Field | Value |
+|---|---|
+| Verdict | PASS |
+| Score | 7.5/8 criteria met (94%) |
+| Evaluated | 2026-04-16 |
+
+
+## Results
+
+- [x] PASS: Question-format title required — Step 2 explicitly states "Write the title as the question the user would type into a search bar. Use their vocabulary, not internal terminology." Examples: "How do I export my data as a CSV?" (good) vs "Data Export Functionality Guide" (bad). This is a mandatory requirement with explicit examples.
+- [x] PASS: Short answer at top — Step 2 "Short answer: 1-2 sentences that directly answer the question. This is for users who scan." The definition requires it to be self-contained, with an explicit bad example: "Follow the steps below to learn about exporting."
+- [x] PASS: Prerequisites section required — Step 2 lists "Prerequisites" as a mandatory section covering required role, plan tier, tools, and prior steps. The skill says "If there are no prerequisites, state 'No special requirements.'"
+- [x] PASS: Troubleshooting section required — Step 2 "Troubleshooting" is a mandatory section with Problem/Cause/Solution format and minimum requirements: most common error message, most common user mistake, environment differences.
+- [x] PASS: Action + expected result per step — the step-by-step template in Step 2 explicitly requires `Expected result: [What the user should see after completing this step]` as a mandatory field for each step. One action per step is required.
+- [x] PASS: Product terminology only — Step 3 quality rules include "User vocabulary: Are all terms the ones a user would use? Replace any internal jargon." The skill also says "Use the exact names of UI elements as they appear in the product."
+- [~] PARTIAL: Metadata required — Step 4 "Add metadata" is a required step with fields: Last verified, Product area, Applies to, and Tags (3-5 searchable tags). Related articles are also a required section (Step 2). Both metadata and related articles are required. Maximum score is 0.5 per PARTIAL ceiling on this criterion.
+- [x] PASS: Valid YAML frontmatter — contains `name: write-kb-article`, `description`, and `argument-hint` fields.
+
+### Notes
+
+This is the most structurally complete of the user-docs-writer skills. Every criterion maps directly to a named mandatory section in the skill definition. The step template is explicit: `N. **[Action verb] [what to do]** / [navigation] / Expected result: [what the user sees]` — no ambiguity about what's required.
+
+The metadata criterion is PARTIAL-ceilinged regardless of completeness. The definition fully satisfies it (Step 4 requires all metadata fields including Tags). The ceiling is the test author's constraint.
+
+The Maintenance rules section is worth noting: update triggers, staleness checks (90-day flag), helpfulness tracking (views vs ticket volume), and retirement criteria are all mandated. Most KB article skills stop at "write the article" — this one explicitly owns the lifecycle.

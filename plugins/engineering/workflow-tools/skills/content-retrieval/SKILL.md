@@ -1,6 +1,6 @@
 ---
 name: content-retrieval
-description: "Retrieve content from a URL using a four-tier escalation strategy: WebFetch → curl → Playwright (JS rendering) → BrightData (anti-bot bypass). Use when standard WebFetch fails or when the target URL is known to require JS rendering or bot mitigation bypass."
+description: "Retrieve content from a URL using a four-tier escalation strategy: WebFetch → curl → Playwright (JS rendering) → human escalation (anti-bot bypass). Use when standard WebFetch fails or when the target URL is known to require JS rendering or bot mitigation bypass."
 argument-hint: "[URL to retrieve]"
 user-invocable: true
 allowed-tools: WebFetch, Bash
@@ -16,7 +16,7 @@ Before attempting retrieval, classify the target:
 |---|---|
 | Standard website, no login required | Tier 1 (WebFetch) |
 | JavaScript-rendered SPA (React, Vue, Angular) | Tier 3 (Playwright) |
-| Known anti-bot protection (Cloudflare, Datadome, PerimeterX) | Tier 4 (BrightData) |
+| Known anti-bot protection (Cloudflare, Datadome, PerimeterX) | Tier 4 (escalate to human) |
 | Previously failed WebFetch with 403/429 | Start at Tier 2 |
 | News article, blog, documentation | Tier 1 first |
 
@@ -88,29 +88,21 @@ const { chromium } = require('playwright');
 - Site uses advanced fingerprinting that defeats headless browsers
 - Tier 3 is unavailable (Playwright not installed, not appropriate in this environment)
 
-## Tier 4: BrightData
+## Tier 4: Escalate to human
 
-For sites with aggressive anti-bot protection that defeats all standard approaches.
+If Tiers 1-3 all fail, the site has anti-bot protection that defeats standard automated approaches. Don't attempt flaky workarounds — escalate.
 
-BrightData's Scraping Browser routes requests through residential proxies with full browser fingerprinting. This is a paid service — confirm it's available in the environment before attempting.
+**Report to the user:**
 
-```javascript
-const { chromium } = require('playwright-core');
-(async () => {
-  const browser = await chromium.connectOverCDP(
-    'wss://brd-customer-[CUSTOMER_ID]-zone-scraping_browser:PASSWORD@brd.superproxy.io:9222'
-  );
-  const page = await browser.newPage();
-  await page.goto('[URL]', { waitUntil: 'domcontentloaded' });
-  const content = await page.content();
-  console.log(content);
-  await browser.close();
-})();
-```
+1. What was attempted (which tiers, what errors)
+2. Why it failed (bot detection, TLS fingerprinting, CAPTCHA, IP blocking)
+3. Options for the user to resolve it:
+   - **Manual retrieval** — open the URL in a browser, copy the content, paste it back
+   - **Managed scraping service** — services like [ScrapFly](https://scrapfly.io), [BrightData](https://brightdata.com), or [ZenRows](https://zenrows.com) maintain residential proxy pools and browser fingerprints that defeat anti-bot systems. These are paid services with usage-based pricing
+   - **Apify actor** — check the [Apify store](https://apify.com/store) for a pre-built actor for the target domain (see below). Many common sites have dedicated actors that handle anti-bot automatically
+   - **Alternative source** — the same content may be available from a different URL, an API, a cached version, or a different format (PDF, RSS feed)
 
-Credentials are loaded from environment variables (`BRIGHTDATA_CUSTOMER_ID`, `BRIGHTDATA_PASSWORD`). Never hardcode credentials.
-
-**If Tier 4 fails:** the content is not retrievable by automated means. Report the failure with the specific error, note what was attempted, and suggest manual retrieval or an alternative source.
+Do not attempt to solve anti-bot protection with open-source stealth plugins or patched browsers. These are in a constant arms race with commercial anti-bot systems and break regularly. A human needs to decide which paid service (if any) is worth the cost for this specific retrieval.
 
 ## Content extraction
 
@@ -138,7 +130,7 @@ Existing actors for common targets (LinkedIn, Amazon, social platforms) produce 
 - Start at Tier 1 unless you have a strong reason to skip it.
 - Escalate on failure, not preemptively.
 - Never hardcode credentials. Use environment variables.
-- Confirm Playwright and BrightData availability before attempting Tier 3 or 4.
+- Confirm Playwright availability before attempting Tier 3.
 - Respect `robots.txt` for Tier 1 and 2. Tiers 3 and 4 bypass these — use only when there is a legitimate purpose and the requester has confirmed compliance with the target site's terms of service.
 - Log the tier used and any errors encountered in the output.
 

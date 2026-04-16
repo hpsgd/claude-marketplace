@@ -1,0 +1,82 @@
+# Review dotnet handler loop violation
+
+A developer submits a PR containing a .NET message handler with a foreach loop that performs I/O on each iteration — a direct violation of the "one message, one unit of work" rule.
+
+## Prompt
+
+> Review this PR. The main change is in `OrderProcessor.cs` — we added a `HandleBatchOrdersCommand` handler that loops over a list of order IDs and calls `_repository.SaveAsync(order)` inside the loop for each one. There's also a new `OrderSummaryController.cs` with a `/api/orders` endpoint that fetches all orders then filters in memory with `.Where()`. Both files are in the diff.
+
+```markdown
+
+## Output
+
+### .NET Review
+
+#### Summary
+- Files reviewed: 2 (OrderProcessor.cs, OrderSummaryController.cs)
+- Message architecture: 1 finding
+- Aggregate patterns: 0 findings
+- API design: 1 finding
+- Dependencies: 0 findings
+- Sessions: 0 findings
+- Analysers: 0 findings (no .csproj in diff — cannot verify TreatWarningsAsErrors)
+- Testing: 0 findings (no test files in diff)
+
+#### Findings
+
+##### CRITICAL [Pass 1]: Loop with I/O inside message handler
+
+
+| Field | Value |
+|---|---|
+| File | `OrderProcessor.cs` (handler body) |
+| Evidence | `foreach (var orderId in command.OrderIds) { var order = ...; await _repository.SaveAsync(order); }` |
+| Standard | One message, one unit of work. Every message handler performs exactly one unit of work. Loops that perform I/O inside a handler violate this — each save is a separate unit of work. |
+| Fix | Either (a) batch the save — `await _repository.SaveAllAsync(orders)` — or (b) publish an individual `ProcessOrderCommand` for each order ID and let the bus dispatch them separately. |
+
+
+---
+
+##### IMPORTANT [Pass 3]: In-memory filtering on list endpoint
+
+
+| Field | Value |
+|---|---|
+| File | `OrderSummaryController.cs` |
+| Evidence | `var all = await _repository.GetAllAsync(); return all.Where(o => ...).ToList();` |
+| Standard | List endpoints must filter in the database query, not in memory. Loading all records then filtering causes full-table reads. |
+| Fix | Push the filter predicate into the repository query: `await _repository.GetFilteredAsync(filter)` where the filter translates to a WHERE clause. |
+
+
+#### Clean Areas
+
+Pass 2 (AggregateHandler patterns), Pass 4 (dependency injection), and Pass 5 (session management) are clean — no violations found in the changed files. Pass 6 and Pass 7 executed but found no relevant files to assess.
+
+---
+
+*Run `/coding-standards:review-standards` for cross-cutting quality and writing style checks.*
+*Run `/coding-standards:review-git` for commit message and PR conventions.*
+```
+
+## Evaluation
+
+
+| Field | Value |
+|---|---|
+| Verdict | PASS |
+| Score | 7.5/7.5 (100%) |
+| Evaluated | 2026-04-16 |
+
+
+- [x] PASS: Skill executes all seven mandatory passes — the definition states "Execute all seven passes. Every finding requires file, line, and evidence." All seven passes have explicit grep commands; none are conditional or skippable
+- [x] PASS: Loop inside handler flagged as Pass 1 finding — Pass 1 step 2 explicitly gives the wrong example `foreach (var item in items) { await _repository.Save(item); }` and labels any such loop that performs I/O as a finding; the scenario matches directly
+- [x] PASS: In-memory filtering flagged as Pass 3 finding — Pass 3 step 3 states "If a list endpoint loads all records and filters in memory (.ToList() followed by .Where()), that is a critical finding"
+- [x] PASS: Evidence format followed — the skill's Evidence Format section defines `### [SEVERITY] [Pass]: [Short description]` with `File/Evidence/Standard/Fix` as mandatory fields for every finding
+- [x] PASS: Output uses the defined template — the Output Template section defines exactly the summary with per-pass category counts, followed by Findings and Clean Areas
+- [x] PASS: Zero-finding gate present — the Zero-Finding Gate section states "Do not fabricate issues" explicitly; the two-finding output is consistent with the scenario and no padding is present
+- [~] PARTIAL: Pass 6 and Pass 7 run with no matching files — the definition mandates all seven passes but provides no explicit instruction for what to report when no .csproj or test files appear in the diff. The grep commands for both passes are present, implying they should run, but the fallback reporting behaviour must be inferred. Credit for the mandate; partial for the gap in fallback instruction
+- [x] PASS: Related skills referenced — the Related Skills section at the end of the definition explicitly names `/coding-standards:review-standards` and `/coding-standards:review-git`
+
+### Notes
+
+The definition is precise where it matters most. The Pass 1 "one message, one unit of work" rule is backed by a concrete wrong/right code example. Pass 3's list endpoint rule is stated as a critical finding with exact grep patterns. The only structural gap is that the definition does not spell out how to report passes that found no applicable files — the agent would need to infer this, which most would handle correctly but it is not guaranteed.
