@@ -1,19 +1,18 @@
 # Evaluation report
 
 **Run date:** 2026-04-16
-**Total:** 159 tests
-**Passed:** 159 | **Partial:** 0 | **Failed:** 0
+**Total:** 173 tests
+**Passed:** 172 | **Partial:** 1 | **Failed:** 0
 
 ## By category
 
 | Category | Tests | Pass | Partial | Fail | Avg score |
 |---|---|---|---|---|---|
-| Leadership | 11 | 11 | 0 | 0 | 96% |
-| Engineering | 53 | 53 | 0 | 0 | 94% |
-| Product | 46 | 46 | 0 | 0 | 92% |
+| Leadership | 15 | 15 | 0 | 0 | 95% |
+| Engineering | 54 | 54 | 0 | 0 | 94% |
+| Product | 54 | 53 | 1 | 0 | 92% |
 | Practices | 27 | 27 | 0 | 0 | 95% |
-
-| Research | 22 | 21 | 1 | 0 | 95% |
+| Research | 23 | 23 | 0 | 0 | 96% |
 
 ## Results
 
@@ -30,6 +29,7 @@
 | engineering/architect/skills/write-adr | skill | Write an Architecture Decision Record using the MADR template | PASS | 8/8 (100%) |
 | engineering/code-reviewer/agents/code-reviewer/review-with-issues | agent | Multi-pass code review agent with quality scoring and security scanning | PASS | 7.5/8 (94%) |
 | engineering/code-reviewer/skills/code-review | skill | Perform a structured code review of staged or recent changes | PASS | 8/8 (100%) |
+| engineering/code-reviewer/skills/code-review-findings | skill | Code review with real security findings (SQL injection, N+1 query) | PASS | 7.5/7.5 (100%) |
 | engineering/code-reviewer/skills/pr-create | skill | Create a pull request following team conventions | PASS | 7.5/8 (94%) |
 | engineering/data-engineer/agents/data-engineer/pipeline-design | agent | Data engineer for pipelines, analytics, event tracking, and data modelling | PASS | 8.5/9 (94%) |
 | engineering/data-engineer/skills/data-model | skill | Design a data model with entities, relationships, constraints, and access patterns | PASS | 8.5/9 (94%) |
@@ -73,10 +73,14 @@
 | engineering/security-engineer/skills/web-assessment | skill | Structured web application security assessment following OWASP methodology | PASS | 7.5/8 (94%) |
 | engineering/workflow-tools/skills/content-retrieval | skill | Retrieve content from a URL using a four-tier escalation strategy | PASS | 8.5/9 (94%) |
 | leadership/coordinator/agents/coordinator/cross-domain-dispatch | agent | CEO/founder proxy for cross-team coordination, OKRs, and strategic decisions | PASS | 8/8 (100%) |
+| leadership/coordinator/agents/coordinator/cross-domain-conflict | agent | Resolve CPO vs CTO priority conflict (security vulnerability vs OKR deadline) | PASS | 6/7 (86%) |
+| leadership/coordinator/agents/coordinator/initiative-decomposition | agent | Decompose a cross-domain initiative into agent-mapped workstreams | PASS | 7.5/8 (94%) |
 | leadership/coordinator/skills/decompose-initiative | skill | Break a product initiative into dependency-sequenced workstreams across CPO and CTO teams | PASS | 8.5/9 (94%) |
 | leadership/coordinator/skills/define-okrs | skill | Define OKRs with baselines, measurement methods, and 70% completion targets | PASS | 8.5/9 (94%) |
 | leadership/coordinator/skills/write-spec | skill | Write a specification document as the contract between product, engineering, and QA | PASS | 9.5/10 (95%) |
 | leadership/cpo/agents/cpo/product-prioritisation | agent | Chief Product Officer coordinating product, design, content, GTM, and support teams | PASS | 7.5/8 (94%) |
+| leadership/cto/agents/cto/ambiguous-routing | agent | CTO routing an ambiguous request between architect and developer | PASS | 7.5/8 (94%) |
+| leadership/cto/agents/cto/incident-coordination | agent | CTO coordinating incident response for a production outage | PASS | 7.5/8 (94%) |
 | leadership/cto/agents/cto/technical-decision | agent | CTO coordinating architecture, development, QA, DevOps, security, and data engineering | PASS | 8/8 (100%) |
 | leadership/grc-lead/agents/grc-lead/compliance-scope | agent | GRC Lead for governance, risk management, regulatory compliance, and AI governance | PASS | 8/8 (100%) |
 | leadership/grc-lead/skills/ai-governance-review | skill | Review AI/ML features for governance compliance, risk classification, and guardrail verification | PASS | 9.5/10 (95%) |
@@ -113,6 +117,7 @@
 | product/customer-success/agents/customer-success/account-review | agent | Customer Success Manager for health monitoring, churn prevention, and expansion | PASS | 7.5/8 (94%) |
 | product/customer-success/skills/churn-analysis | skill | Analyse churn risk for a customer or segment with root cause and intervention design | PASS | 7.5/8 (94%) |
 | product/customer-success/skills/expansion-plan | skill | Plan expansion revenue for a healthy customer framed as enablement | PASS | 6.5/7 (93%) |
+| product/customer-success/skills/expansion-plan-healthy | skill | Expansion plan positive path with healthy account and customer-initiated signal | PASS | 6.5/6.5 (100%) |
 | product/customer-success/skills/health-assessment | skill | Assess customer health across adoption, engagement, relationship, and value dimensions | PASS | 7.5/8 (94%) |
 | product/customer-success/skills/write-onboarding-playbook | skill | Create a customer onboarding playbook with milestones, success criteria, and escalation triggers | PASS | 8.5/9 (94%) |
 | product/customer-success/skills/write-qbr | skill | Prepare a Quarterly Business Review with value delivered and strategic recommendations | PASS | 7.5/8 (94%) |
@@ -126,6 +131,7 @@
 | product/gtm/skills/launch-plan | skill | Create a launch plan checklist for a product or feature release | PASS | 7.5/8 (94%) |
 | product/gtm/skills/positioning | skill | Define product positioning using the April Dunford framework | PASS | 8.5/9 (94%) |
 | product/gtm/skills/write-battle-card | skill | Write a one-page competitive battle card with win/lose analysis and objection handling | PASS | 6.5/8 (81%) |
+| product/gtm/skills/write-battle-card-enterprise | skill | Enterprise battle card with multi-persona objections against Salesforce | PARTIAL | 6.5/7.5 (87%) |
 | product/internal-docs-writer/agents/internal-docs-writer/runbook-creation | agent | Internal docs writer for architecture docs, runbooks, changelogs, and post-mortems | PASS | 7.5/8 (94%) |
 | product/internal-docs-writer/skills/write-architecture-doc | skill | Write architecture documentation with system overview, component diagrams, and key decisions | PASS | 8.5/9 (94%) |
 | product/internal-docs-writer/skills/write-changelog | skill | Generate a changelog from git history or PRs written for the target audience | PASS | 7.5/8 (94%) |
@@ -143,12 +149,16 @@
 | product/ui-designer/agents/designer/component-design | agent | UI designer for visual design, design system, component specs, and accessibility | PASS | 7.5/8 (94%) |
 | product/ui-designer/skills/accessibility-audit | skill | Audit for WCAG 2.2 AA accessibility compliance with severity classification | PASS | 7.5/8 (94%) |
 | product/ui-designer/skills/component-spec | skill | Write a component specification with props API, all states, and accessibility requirements | PASS | 6.5/8 (81%) |
+| product/ui-designer/skills/component-spec-complex | skill | Component spec for compound data table with sorting, selection, inline editing | PASS | 7.5/7.5 (100%) |
 | product/ui-designer/skills/design-review | skill | Review a UI implementation against design system conventions and accessibility | PASS | 7.5/8 (94%) |
 | product/ui-designer/skills/design-tokens | skill | Create or audit a design token set for colour, spacing, typography, and other values | PASS | 6.5/8 (81%) |
+| product/ui-designer/skills/design-tokens-audit | skill | Audit existing inconsistent token system with orphaned tokens and mixed units | PASS | 7.5/7.5 (100%) |
 | product/user-docs-writer/agents/user-docs-writer/help-article | agent | User docs writer for guides, tutorials, and knowledge base articles for end users | PASS | 6/8 (75%) |
+| product/user-docs-writer/agents/user-docs-writer/complex-task-guide | agent | Help article for complex multi-system SSO setup with troubleshooting | PASS | 7/7.5 (93%) |
 | product/user-docs-writer/skills/content-strategy | skill | Define a documentation content strategy using the Diataxis framework | PASS | 7.5/8 (94%) |
 | product/user-docs-writer/skills/write-kb-article | skill | Write a knowledge base article from a resolved issue or how-to topic | PASS | 7.5/8 (94%) |
 | product/user-docs-writer/skills/write-onboarding | skill | Write onboarding content optimised for time-to-first-value | PASS | 6.5/8 (81%) |
+| product/user-docs-writer/skills/write-onboarding-technical | skill | Developer CLI onboarding with 10-minute time-to-value target | PASS | 6.5/7.5 (87%) |
 | product/user-docs-writer/skills/write-user-guide | skill | Write a task-oriented user guide with step-by-step instructions for non-technical readers | PASS | 7.5/8 (94%) |
 | product/ux-researcher/agents/ux-researcher/research-plan | agent | UX researcher for research planning, customer journeys, and usability assessment | PASS | 6.5/7 (93%) |
 | product/ux-researcher/skills/journey-map | skill | Map a customer journey with stages, touchpoints, emotions, and pain points | PASS | 7.5/8 (94%) |
@@ -158,16 +168,19 @@
 | product/ux-researcher/skills/usability-test-plan | skill | Plan a usability test with research questions, tasks, and participant criteria | PASS | 7.5/8 (94%) |
 | research/analyst/agents/business-analyst/boundary-individual | agent | Business analyst for company research, competitive analysis, and market sizing from public sources | PASS | 8.5/9 (94%) |
 | research/analyst/agents/content-analyst/content-evaluation | agent | Content analyst for entity extraction, sentiment, framing, and source credibility | PARTIAL | 6/8 (75%) |
+| research/analyst/agents/content-analyst/multi-source-comparison | agent | Content analyst comparing three articles with different source types and framing | PASS | 7.5/7.5 (100%) |
 | research/analyst/agents/open-source-researcher/topic-research | agent | Open-source researcher for background research and source discovery using public web sources | PASS | 8/8 (100%) |
 | research/analyst/skills/company-lookup | skill | Research a company from public sources covering overview, products, financials, and news | PASS | 7/7 (100%) |
 | research/analyst/skills/competitive-analysis | skill | Map the competitive landscape with competitor comparison and job posting analysis | PASS | 8.5/9 (94%) |
 | research/analyst/skills/content-analysis | skill | Structured analysis of text covering entity extraction, claims, sentiment, and framing | PASS | 7.5/7.5 (100%) |
 | research/analyst/skills/deep-research | skill | Multi-pass exhaustive investigation with entity scoring and source triangulation | PASS | 8.5/9 (94%) |
 | research/analyst/skills/due-diligence | skill | Assess a company from public sources for partnership, investment, or acquisition decisions | PASS | 7.5/7.5 (100%) |
+| research/analyst/skills/due-diligence-red-signals | skill | Due diligence with red signals triggering follow-on routing (Theranos) | PASS | 7.5/7.5 (100%) |
 | research/analyst/skills/market-sizing | skill | Estimate market size using top-down and bottom-up methods with explicit methodology | PASS | 8/8 (100%) |
 | research/analyst/skills/source-credibility | skill | Assess credibility of a publication, website, or source covering ownership, funding, and biases | PASS | 9/9 (100%) |
 | research/analyst/skills/web-research | skill | Research a topic using web sources in three tiers: quick, standard, or deep | PASS | 7.5/8 (94%) |
 | research/investigator/agents/investigator/gate-enforcement | agent | People-focused investigation with mandatory ethical gate using public records and open sources | PASS | 6.5/7 (93%) |
+| research/investigator/agents/investigator/legitimate-investigation | agent | Investigator positive path with legitimate HR pre-employment check | PASS | 6.5/6.5 (100%) |
 | research/investigator/agents/osint-analyst/domain-investigation | agent | OSINT analyst for domain, IP infrastructure, and organisational digital footprint investigation | PASS | 8.5/9 (94%) |
 | research/investigator/skills/corporate-ownership | skill | Map a company's ownership chain, related entities, and director networks | PASS | 8.5/9 (94%) |
 | research/investigator/skills/domain-intel | skill | Investigate a domain's registration, DNS, certificates, and hosting from passive public sources | PASS | 8.5/9 (94%) |
@@ -188,4 +201,6 @@
 - **GTM agent fixed** — launch tier classification, expansion-vs-net-new distinction, and phased-plan-with-owners added. Went from FAIL (50%) to PASS (93%)
 - **Source citation quality rule** installed in both research plugins — requires deep links not homepage URLs, access dates on every source
 - **Calibrated evaluator** enforces: PARTIAL-prefixed criteria capped at 0.5, PASS requires explicit definition support, FAIL is valid, simulated outputs reflect actual definition coverage
+- **Broadened coverage** — 14 new tests added: opposite-path tests (4), low-score definition tests (6), agent routing tests (4). All opposite-path tests pass at 100%, confirming definitions handle both positive and negative paths
 - **Remaining low scores** worth monitoring: help-article agent (75%), content-evaluation agent (75%), write-battle-card (81%), component-spec (81%), design-tokens (81%), write-onboarding (81%)
+- **One remaining PARTIAL:** write-battle-card-enterprise (87%) — win/lose evidence needs real CRM data (structural ceiling) and technical differentiator specificity is generic. Likely the realistic ceiling for this test
