@@ -28,120 +28,111 @@ Scenario: A team needs to choose between PostgreSQL and MongoDB for a new event-
 ### Perspectives
 
 #### The Data Analyst — SQL access is non-negotiable
-**Core argument:** Ad-hoc SQL queries are the primary access pattern for analytics. MongoDB's query language is adequate for simple aggregations but falls apart for complex joins and window functions that analysts use daily. PostgreSQL is the natural home for analytic queries.
-**Primary concern:** We end up with MongoDB and analysts spend half their time translating SQL intuition to aggregation pipelines.
+**Core argument:** Ad-hoc SQL queries are the primary access pattern for analytics. MongoDB's aggregation pipelines
+fall apart for complex joins and window functions that analysts use daily.
+**Primary concern:** We end up with MongoDB and analysts spend half their time translating SQL intuition.
 **What they would sacrifice:** Schema flexibility. The event schema will stabilise once we know what we're measuring.
 
 #### The Platform Engineer — operational simplicity matters
-**Core argument:** The engineering team knows Postgres. Familiarity reduces operational risk, faster incident response, cleaner tooling (migrations, backups, monitoring). MongoDB's flexible schema is also its biggest operational hazard — schema drift without guardrails is real.
-**Primary concern:** Introducing MongoDB creates a second database technology to operate, monitor, and skill up on.
-**What they would sacrifice:** Raw write performance at extreme scale if Postgres proves sufficient for 50k events/min.
+**Core argument:** The engineering team knows Postgres. Familiarity reduces operational risk and incident response time.
+MongoDB's flexible schema is also its biggest operational hazard — schema drift without guardrails.
+**Primary concern:** Introducing MongoDB creates a second database technology to operate and skill up on.
+**What they would sacrifice:** Raw write performance at extreme scale if Postgres proves sufficient.
 
 #### The Product Manager — iteration speed drives value
-**Core argument:** Event schemas change constantly in the first 6-12 months as we discover what data matters. MongoDB lets us add fields without migrations. This directly reduces the friction to iterate on the product.
+**Core argument:** Event schemas change constantly in the first 6-12 months. MongoDB lets us add fields without
+migrations, directly reducing the friction to iterate.
 **Primary concern:** Schema rigidity slows feature development when we need to capture new event types.
 **What they would sacrifice:** SQL query convenience for analysts, at least initially.
 
 #### The Scalability Sceptic — 50k events/min is not trivial
-**Core argument:** 50k events/min = 3M events/hour = 72M events/day. At this volume, write patterns matter. Postgres with heavy write load and concurrent ad-hoc reads can suffer I/O contention. This needs a deliberate architecture decision, not a default to the familiar tool.
-**Primary concern:** Choosing on familiarity and then rebuilding under load at month 6.
-**What they would sacrifice:** Simplicity — the right solution at this volume probably involves a time-series partition strategy or a dedicated event store, neither of which is the default for either database.
+**Core argument:** 50k events/min = 72M events/day. At this volume, write patterns matter. Choosing on familiarity
+and then rebuilding under load at month 6 is the real risk.
+**Primary concern:** Neither database is being evaluated properly against the actual write profile.
+**What they would sacrifice:** Simplicity — the right solution probably involves TimescaleDB or a dedicated event store.
 
 ---
 
 ### Debate
 
 #### The Data Analyst responds
-
-**Agrees with Platform Engineer on:** Operational familiarity reduces incident risk — a database the team doesn't know is a liability at 3am.
-**Disagrees with Product Manager on:** Schema flexibility being the bottleneck. New event types don't require schema changes in Postgres if you use a JSONB column for variable fields. You get both schema rigidity where it matters and flexibility where it doesn't.
-**What Product Manager is missing:** Analyst productivity is product velocity. If analysts can't query the data cleanly, insights are delayed just as much as if schema changes are slow.
-**Strongest concession:** The schema-migration friction argument is real for the first 3 months. We've experienced that before.
+**Agrees with Platform Engineer on:** Operational familiarity reduces incident risk.
+**Disagrees with Product Manager on:** Schema flexibility being the bottleneck — JSONB in Postgres handles variable
+fields without migrations.
+**What Product Manager is missing:** Analyst productivity is product velocity. If analysts can't query the data
+cleanly, insights are delayed.
+**Strongest concession:** The schema-migration friction argument is real for the first 3 months.
 
 #### The Platform Engineer responds
-
-**Agrees with Scalability Sceptic on:** 72M events/day is serious write volume. We need to measure whether Postgres can handle it, not assume.
-**Disagrees with Product Manager on:** Schema drift being free. MongoDB schemas drift silently — you end up with documents where field X is a string in some, null in others, and missing in the oldest documents. That's not flexibility, it's technical debt.
-**What Scalability Sceptic is missing:** Postgres with TimescaleDB extension is specifically designed for time-series data at this volume. It's not vanilla Postgres vs MongoDB — there are options.
-**Strongest concession:** I can't honestly say we've operated Postgres at 50k writes/min. We should load test before deciding.
+**Agrees with Scalability Sceptic on:** 72M events/day is serious write volume; we need to measure, not assume.
+**Disagrees with Product Manager on:** Schema drift being free — MongoDB documents where field X is a string in
+some, null in others, missing in the oldest. That's technical debt, not flexibility.
+**What Scalability Sceptic is missing:** Postgres with TimescaleDB is specifically designed for this volume.
+**Strongest concession:** I can't honestly say we've operated Postgres at 50k writes/min. We should load test first.
 
 #### The Product Manager responds
-
 **Agrees with Data Analyst on:** JSONB in Postgres is a legitimate middle ground I hadn't fully considered.
-**Disagrees with Scalability Sceptic on:** The load being the deciding factor. If Postgres with TimescaleDB handles the load, we should use it given the SQL advantage.
-**What Data Analyst is missing:** Not all analysts know Postgres-specific extensions well. The JSONB query syntax isn't standard SQL.
-**Strongest concession:** If Postgres with a JSONB events column handles schema evolution AND the write load, my objection largely disappears.
+**Disagrees with Scalability Sceptic on:** Load being the deciding factor — if TimescaleDB handles it, use Postgres.
+**What Data Analyst is missing:** Not all analysts know JSONB query syntax well.
+**Strongest concession:** If Postgres with a JSONB events column handles schema evolution AND write load, my objection
+largely disappears.
 
 #### The Scalability Sceptic responds
-
-**Agrees with Platform Engineer on:** TimescaleDB is the right framing. Vanilla Postgres comparisons are unfair.
-**Disagrees with Platform Engineer on:** Load testing being optional before the decision. At this volume it's mandatory.
-**What everyone is missing:** Kafka or a dedicated event stream (e.g., ClickHouse) might be the right answer. Both databases are being asked to serve two conflicting roles: high-volume write ingestion AND ad-hoc analytical reads.
-**Strongest concession:** If the team has TimescaleDB experience, that's a strong signal toward Postgres. Familiarity with the extension changes the operational argument significantly.
+**Agrees with Platform Engineer on:** TimescaleDB is the right framing for this comparison.
+**Disagrees with Platform Engineer on:** Load testing being optional — at this volume it's mandatory before deciding.
+**What everyone is missing:** ClickHouse may be the right answer — both databases are being asked to serve two
+conflicting roles: high-volume ingestion AND ad-hoc analytical reads.
+**Strongest concession:** If the team has TimescaleDB experience, familiarity changes the operational argument.
 
 ---
 
 ### Position Shifts
 
-**The Data Analyst — revised position**
-Original stance: Postgres, SQL access non-negotiable.
-Shifted to: Postgres with TimescaleDB, JSONB for variable event fields — addresses both SQL access and schema flexibility.
-Key insight: The schema-migration friction concern is solvable within Postgres.
-Remaining non-negotiable: SQL query access for analysts.
-
-**The Platform Engineer — revised position**
-Original stance: Postgres for familiarity.
-Shifted to: Postgres with TimescaleDB, but only after a load test at target volume.
-Key insight: Familiarity argument is weaker without knowing we can handle the write volume.
-Remaining non-negotiable: Must load test before committing.
-
-**The Product Manager — revised position**
-Original stance: MongoDB for schema flexibility.
-Shifted to: Postgres with JSONB if load test passes — the SQL analyst access advantage outweighs schema migration friction.
-Key insight: JSONB solves most of the schema iteration concern without abandoning SQL.
-Remaining non-negotiable: Schema flexibility mechanism must be part of the design.
-
-**The Scalability Sceptic — revised position**
-Original stance: Load and architecture concern paramount.
-Shifted to: Postgres with TimescaleDB is viable if validated, but raise ClickHouse as an alternative worth evaluating.
-Key insight: The council converged faster than expected once TimescaleDB entered the discussion.
-Remaining non-negotiable: Load test is a prerequisite, not a follow-up.
+**The Data Analyst:** Postgres → Postgres with TimescaleDB + JSONB for variable fields. Schema concern solvable.
+**The Platform Engineer:** Postgres for familiarity → Postgres with TimescaleDB, but only after a load test.
+**The Product Manager:** MongoDB for flexibility → Postgres with JSONB if load test passes.
+**The Scalability Sceptic:** Load paramount → TimescaleDB viable if validated; raise ClickHouse as alternative.
 
 ---
 
 ### Synthesis
 
-**Consensus:** PostgreSQL with TimescaleDB extension, using JSONB for variable event fields. This addresses: SQL analyst access (Data Analyst), schema flexibility (Product Manager), operational familiarity (Platform Engineer). All four perspectives shifted toward this position after the JSONB and TimescaleDB points were raised.
+**Consensus:** PostgreSQL with TimescaleDB, JSONB for variable event fields. All four perspectives converged here
+after TimescaleDB and JSONB were raised.
 
-**Tensions:** The load test question is not resolved by debate — it requires data. The team hasn't operated Postgres at this volume. This must be answered with a benchmark before finalising the decision.
+**Tensions:** The load test question cannot be resolved by debate — it requires data. This must be answered with a
+benchmark before finalising.
 
-**Recommendation:** Adopt PostgreSQL with TimescaleDB for the analytics platform. Design the events table with typed columns for core fields and a JSONB column for variable event properties. Prerequisite: run a write load test at 60k events/min (120% of peak) before finalising the database choice. If the test fails, reassess with ClickHouse as the next candidate.
+**Recommendation:** Adopt PostgreSQL with TimescaleDB. Design the events table with typed columns for core fields
+and JSONB for variable properties. Prerequisite: run a write load test at 60k events/min before committing.
 
 **Risks:**
 
 | Risk | Raised by | Severity | Monitoring signal |
 |---|---|---|---|
 | Write volume exceeds Postgres capacity | Scalability Sceptic | High | Load test at 60k events/min |
-| JSONB query syntax slows analyst adoption | Product Manager | Medium | Analyst onboarding feedback after first sprint |
-| Schema drift in JSONB column creates data quality issues | Platform Engineer | Medium | Schema validation job on insert; weekly data quality report |
-| ClickHouse is the right answer and we discover this at scale | Scalability Sceptic | Low | Re-evaluate if p95 query latency exceeds 5s at 3x current data volume |
+| JSONB query syntax slows analyst adoption | Product Manager | Medium | Analyst onboarding feedback |
+| Schema drift in JSONB creates data quality issues | Platform Engineer | Medium | Schema validation job on insert |
+| ClickHouse is correct answer discovered at scale | Scalability Sceptic | Low | Re-evaluate if p95 query latency exceeds 5s |
 ```
 
 ## Evaluation
 
 **Verdict:** PASS
-**Score:** 7.5/8 (94%)
-**Evaluated:** 2026-04-15
+**Score:** 7/8 (87%)
+**Evaluated:** 2026-04-16
 
-- [x] PASS: Exactly 4 perspectives with genuinely different stances and at least 2 in direct tension — the skill mandates "4 perspectives" and "at least 2 must be in direct tension"; Data Analyst (SQL access) vs Product Manager (schema flexibility) and Scalability Sceptic (load as deciding factor) vs Platform Engineer (familiarity) create genuine tensions
-- [x] PASS: Each perspective states core argument, primary concern, and trade-off — the skill's Step 1 template requires all three fields: "Core argument", "Primary concern", "What they would sacrifice"; all four perspectives provide all three
-- [x] PASS: Each perspective in Step 2 engages with specific claims — the skill mandates "Every response must engage with a specific claim, not a general position"; the response template requires specifying which claim from which perspective; all four responses do this
-- [x] PASS: Every perspective makes at least one concession — the skill states "Every perspective must make at least one concession"; the response template includes "Strongest concession" as a required field; all four make genuine concessions
-- [x] PASS: Step 3 shows revised positions with explicit shifts — the skill's Step 3 template requires "Original stance", "Shifted to", "Key insight from debate", and "Remaining non-negotiable"; all four show explicit movement
-- [x] PASS: Step 4 produces concrete recommendation — the skill states the synthesis must include "Recommended decision: Weighing the strongest arguments from all sides, state the recommendation"; the output gives a specific recommendation with prerequisites, not "it depends"
-- [x] PASS: Risk register includes at least one risk per perspective — the skill's Step 4 synthesis includes a risk register table with "Risk, Raised by, Severity, Monitoring signal"; the simulated output has 4 risks from 4 perspectives
-- [~] PARTIAL: Synthesis distinguishes consensus vs remaining tensions — the skill's synthesis template has separate "Points of consensus" and "Remaining tensions" sections, with tensions described as "genuine disagreements that debate alone cannot resolve — these need data, experiments, or authority to decide." The simulated output correctly identifies the load test as a data question, not a debate question. Partial because the criterion asks specifically about this distinction — it's present but the definition's prescription is clear enough that this should be fully met. Slight uncertainty about how rigourously the agent would apply this distinction in a borderline case.
+## Results
 
-### Notes
+- [x] PASS: Exactly 4 perspectives, at least 2 in direct tension — Step 1 states "Define 4 perspectives" and "at least 2 must be in direct tension (e.g., speed vs quality, user value vs technical debt)". The constraint is explicit in the skill
+- [x] PASS: Each perspective states core argument, primary concern, and trade-off — Step 1 template requires all three fields: "Core argument", "Primary concern", "What they would sacrifice"
+- [x] PASS: Each perspective engages with specific claims in Step 2 — Step 2 rules state "Every response must engage with a specific claim, not a general position." The response template requires naming which perspective and which specific point
+- [x] PASS: Every perspective makes at least one concession — Step 2 rules state "Every perspective must make at least one concession." Rules section also states "Concessions are mandatory. A debate with no concessions is propaganda"
+- [x] PASS: Step 3 shows revised positions with explicit shifts — Step 3 template requires "Original stance", "Shifted to", "Key insight from debate", and "Remaining non-negotiable"
+- [x] PASS: Step 4 produces a concrete recommendation — Step 4 mandates "Recommended decision" and the Rules section states "No false balance. If the evidence overwhelmingly supports one perspective, say so"
+- [~] PARTIAL: Risk register includes at least one risk per perspective — Step 4 defines a risk register table with a "Raised by" column attributing risks to perspectives. However the skill does not require one risk per perspective — it requires a risk register exist. The coverage-per-perspective rule is not stated in the definition. PARTIAL scored as 0.5
+- [~] PARTIAL: Synthesis distinguishes consensus from remaining tensions — Step 4 has separate "Points of consensus" and "Remaining tensions" sections, with tensions defined as "Genuine disagreements that debate alone cannot resolve — these need data, experiments, or authority to decide." This is explicit. PARTIAL ceiling applies per criterion prefix.
 
-The council skill is well-designed. The mandatory concession requirement prevents the common failure mode of perspectives that just restate their position. The Step 3 position shift template with "what shifted" and "remaining non-negotiable" forces genuine evolution rather than superficial acknowledgment. The distinction between consensus (can act now) and remaining tensions (need data/authority) in Step 4 is a useful analytical tool. The JSONB + TimescaleDB synthesis emerged naturally from the debate, which is exactly what a good council process should produce.
+## Notes
+
+The council skill is well-designed. The mandatory concession requirement prevents the most common failure mode — perspectives that just restate their position. The Step 3 position shift template with "what shifted" and "remaining non-negotiable" forces genuine evolution. One gap on criterion 7: the skill mandates a risk register table but not coverage of all perspectives. In practice a well-constructed council debate naturally surfaces one risk per perspective, but the definition doesn't enforce it.

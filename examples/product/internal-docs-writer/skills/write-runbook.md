@@ -28,68 +28,87 @@ Scenario: Testing whether the write-runbook skill requires copy-pasteable comman
 
 | Field | Value |
 |---|---|
-| Severity | SEV-1 — database unavailable |
-| Business impact | All writes fail; read traffic degrades; SLA breach after 15 min |
-| Last verified | 2026-04-15 |
-| Owner | DevOps |
-| Estimated duration | 15-25 minutes |
+| **What this covers** | Promoting read replica to primary when primary is unavailable |
+| **When to use** | Primary RDS instance in failed/unavailable state |
+| **Risk level** | Critical |
+| **Estimated duration** | 15–25 minutes |
+| **Last tested** | [UNTESTED — verify before use] |
+| **Owner** | DevOps |
 
-**Prerequisites:** AWS console access. RDS permissions in production account. Slack notifications sent to #incidents.
-
-**Procedure:**
+**Prerequisites:**
+- [ ] AWS console access with RDS permissions in production account
+- [ ] AWS CLI installed (`aws --version` → 2.x+), configured for production: `aws configure`
+- [ ] Slack: post to #incidents immediately on starting procedure
 
 **Step 1: Confirm primary is unavailable**
+
 ```bash
 aws rds describe-db-instances \
-  --db-instance-identifier clearpath-prod-primary \
+  --db-instance-identifier prod-primary \
   --query 'DBInstances[0].DBInstanceStatus'
 ```
-Expected output: `"failed"` or `"incompatible-network"`. If output is `"available"`, STOP — do not proceed.
 
-**Step 2: Promote read replica** ⚠ DESTRUCTIVE — read replica becomes primary; original primary cannot be automatically restored
+Expected output: `"failed"` or `"incompatible-network"`. If output is `"available"`, STOP — do not proceed with failover.
+
+If this fails: check AWS console directly. If you cannot access the console, escalate to on-call DBA before proceeding.
+
+**Step 2: Promote read replica** ⚠ WARNING: This step is irreversible. Once promoted, the replica becomes primary and the original primary cannot be automatically restored. Double-check instance identifier before running.
+
 ```bash
 aws rds promote-read-replica \
-  --db-instance-identifier clearpath-prod-replica-1
+  --db-instance-identifier prod-replica-1
 ```
-Expected output: JSON with `"DBInstanceStatus": "modifying"`. This takes 5-10 minutes.
 
-**Rollback for Step 2:** Cannot roll back automatically. If promotion fails or causes issues, escalate to DBA immediately. Original primary must be restored manually from the latest snapshot.
+Expected output: JSON with `"DBInstanceStatus": "modifying"`. This takes 5–10 minutes. Do not proceed until status is `"available"`.
 
-**Step 3: Update connection string**
+**Rollback for Step 2:** Promotion cannot be automatically reversed. If this step causes issues, escalate to DBA immediately. Recovery requires restoring original primary from latest RDS snapshot.
+
+**Step 3: Update connection string in SSM**
+
 ```bash
-# Update SSM parameter
 aws ssm put-parameter \
-  --name "/clearpath/prod/db/primary-host" \
-  --value "clearpath-prod-replica-1.xxxx.rds.amazonaws.com" \
+  --name "/prod/db/primary-host" \
+  --value "prod-replica-1.xxxx.us-east-1.rds.amazonaws.com" \
   --overwrite
 ```
-Expected output: `{"Version": N, "Tier": "Standard"}` where N > previous version.
 
-**Verification:** Run `GET /health/db` on production API. Expected: `{"status":"healthy","write":true}`. Check Cloudwatch — write IOPS should be non-zero within 2 minutes of promotion.
+Expected output: `{"Version": N, "Tier": "Standard"}` where N is greater than the previous version number.
 
-**Escalation table:**
+**Verification:**
 
-| Condition | Who | Contact | SLA |
+- [ ] `curl -s https://api.yourapp.com/health/db | jq .status` → `"healthy"`
+- [ ] `curl -s https://api.yourapp.com/health/db | jq .write` → `true`
+- [ ] Check CloudWatch: write IOPS on new primary should be non-zero within 2 minutes
+- [ ] Application logs: no database connection errors in last 2 minutes
+
+**Rollback (procedure-level):** If application still fails after Step 3, check SSM parameter was applied. Restart application workers if connection string was cached.
+
+**Escalation:**
+
+| Condition | Escalate to | Contact | Response time |
 |---|---|---|---|
-| Promotion taking >15 min | On-call DBA (Jane Smith) | PagerDuty: dba-oncall | Immediate |
-| App still failing after update | On-call backend (rotation) | PagerDuty: backend-oncall | Immediate |
-| Customer-visible outage >20 min | VP Engineering (Alex Park) | Mobile: +61-4xx-xxx-xxx | Within 5 min |
+| Promotion taking >15 min | On-call DBA | PagerDuty: dba-oncall | Immediate |
+| App failing after connection update | On-call backend | PagerDuty: backend-oncall | Immediate |
+| Data loss suspected | DBA + Engineering Manager | PagerDuty: dba-oncall, mobile | Immediate |
+| Customer-visible outage >20 min | VP Engineering | Mobile: listed in PagerDuty profile | Within 5 min |
 
 ## Evaluation
 
 **Verdict:** PASS
-**Score:** 8/8 (100%)
-**Evaluated:** 2026-04-15
+**Score:** 7.5/8 (93.75%)
+**Evaluated:** 2026-04-16
 
-- [x] PASS: Written for a first-timer at 2am — the skill states "assume the reader has never done this before" and "no assumed knowledge"; all commands must be copy-pasteable
-- [x] PASS: Expected output per command — the runbook template requires an "Expected output" field for every command step
-- [x] PASS: Rollback step for every destructive action — the skill requires flagging destructive steps with ⚠ and providing a rollback for each
-- [x] PASS: Escalation table with named roles, contact methods, and when to escalate — Step 2 output format requires an escalation table with named roles, contact methods, and explicit escalation triggers
-- [x] PASS: Verification step at the end — the skill's mandatory sections include a verification checklist as the final section
-- [x] PASS: Research step required — Step 1 requires reading infrastructure configs, existing runbooks, and understanding the system before writing
-- [~] PARTIAL: Severity and impact context at the top — the skill's overview table requires "Severity," "Business impact," and "Time to execute" as mandatory header fields — upgrading to full PASS
-- [x] PASS: Valid YAML frontmatter with name, description, and argument-hint fields confirmed
+## Results
 
-### Notes
+- [x] PASS: Written for a first-timer at 2am — the skill's core principle states "This runbook will be used by someone who has never done this procedure before, at 2am, while stressed. Every decision must serve that reader. No assumed knowledge. No missing steps. No ambiguity." This is the first sentence of the skill's purpose.
+- [x] PASS: Expected output per command — Step 2 procedure rules state "Every step needs expected output. The operator must be able to confirm what they see matches what they should see." The step template includes a mandatory `**Expected output:**` field.
+- [x] PASS: Rollback for every destructive action — Step 2 rules state "Dangerous steps get warnings. Prefix with: `⚠ WARNING: This step [modifies production data / causes downtime / is irreversible]`." The Rollback section is a mandatory section of the runbook structure and Step 2 rules require rollback per destructive step.
+- [x] PASS: Escalation table with named roles and contact methods — the mandatory Escalation section template requires columns for Condition, Escalate to, Contact, and Expected response time. The rules specify "Include both primary and backup contacts."
+- [x] PASS: Verification step at the end — the Verification section is a mandatory section with its own checklist template requiring "exact command to run and the expected result" for every check.
+- [x] PASS: Research step before writing — Step 1 requires searching the codebase for scripts, deployment configs, and infrastructure definitions, identifying services and dependencies, and finding existing monitoring before writing begins.
+- [~] PARTIAL: Severity classification at the top — the mandatory Overview table includes a "Risk level" field (Low/Medium/High/Critical) but does not include a "Business impact" field with dollar or user-count context. Risk level is present; business impact as a header field is not explicitly required. This criterion has a PARTIAL ceiling — maximum score is 0.5.
+- [x] PASS: Valid YAML frontmatter — frontmatter is present with `name: write-runbook`, `description`, and `argument-hint: "[service, procedure, or incident type]"` fields.
 
-Score is 8/8. The severity and impact context is a required field in the runbook overview table (Step 2 mandatory sections), making it a full PASS. The "written for a first-timer at 2am" constraint is the most important design principle in this skill — it forces documentation to assume no prior context, which is exactly the right mental model for incident runbooks. The rollback requirement per destructive step is correctly designed as a per-step requirement rather than a single rollback section at the end.
+## Notes
+
+The severity criterion scores PARTIAL because the Overview table has "Risk level" (categorical) but not "Business impact" (quantitative context). The $3,400/minute style context is not a required field in the skill's template — a well-formed runbook from this skill would state the risk level but might not surface the revenue impact numerically. The skill's quality checklist (Step 3) is thorough: copy-paste test, failure coverage, rollback exists, escalation contacts, timing estimates, warnings present, verification complete.

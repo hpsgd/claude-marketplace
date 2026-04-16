@@ -26,50 +26,47 @@ Scenario: Testing whether the write-qbr skill requires gathering account data be
 
 **QBR: Landermere Group — Q2 2026**
 
-**Data gathered (Step 1):** Feature adoption by team, report generation frequency, support tickets (last 90 days), health score trend, NPS response if available, renewal date.
+**Data gathered (Step 1):** Health score (composite + dimension breakdown), feature adoption by team, usage trends over the quarter, support tickets (volume, severity, resolution time, recurring themes), goals from last QBR with completion status, contract renewal date, NPS/CSAT scores, executive sponsor engagement.
 
 **QBR outline:**
 
-1. Partnership recap (5 min) — 18 months, milestones achieved
-2. Value delivered (15 min)
-   - Operations team: budget report preparation time reduced from 6h/week to 45min
+1. Executive Summary (5 min) — health status, key wins, key challenges, top recommendation
+2. Value Delivered (15 min)
+   - Operations team: budget report preparation time reduced from 6h/week to 45 min
    - Finance team: manual reconciliation eliminated for 3 monthly processes
    - 94% reduction in ad-hoc data requests to IT team
-3. Health summary (10 min)
-   - Health score: 78/100 (Yellow → trend improving)
-   - Active users: 128/150 seats (85%)
-   - Support: 2 open tickets (both non-critical)
-4. Risks and open issues (10 min)
+3. Challenges and Lessons Learned (10 min) — P1 incidents (if any), missed goals with remediation
+4. Health Summary (5 min) — composite score, trend, key signals
+5. Risks and Recommendations (10 min)
    - Contract renewal in 4 months — pricing discussion needed
    - 3 teams not yet onboarded (Legal, Compliance, Marketing)
-5. Q3 goals and plan (15 min)
-   - Target: 145+ active users by end of Q3
-   - Legal and Compliance teams onboarded by July
-   - Automate 2 additional Finance workflows
-6. Next steps (5 min) — owners and dates
+6. Q3 Goals (15 min) — specific goals with metrics, owners, and timelines
+7. Next Steps (5 min) — owners and dates per action
 
-**Expansion guidance:** Health score ≥70 — appropriate to raise enterprise tier capabilities in the context of the 3 unonboarded teams needing additional admin controls.
+**Expansion guidance (Step 3):** Included only when health score ≥70. Health is 78 (Neutral, improving trend) — appropriate to note that the 3 unonboarded teams represent an enablement opportunity; enterprise tier capabilities may remove admin blockers for Legal and Compliance.
 
 **Next steps:**
 - CSM: Send onboarding timeline for Legal team by [+3 business days]
-- Customer (IT lead): Confirm user provisioning for Legal/Compliance by [+7 days]
+- Customer IT lead: Confirm user provisioning for Legal/Compliance by [+7 days]
 - CSM: Share renewal proposal 90 days before contract end
 
 ## Evaluation
 
 **Verdict:** PASS
-**Score:** 8/8 (100%)
-**Evaluated:** 2026-04-15
+**Score:** 7.5/8 (94%)
+**Evaluated:** 2026-04-16
 
-- [x] PASS: Data gathering step required before writing — Step 1 "Gather account data" is mandatory, covering usage metrics, support history, health scores, and business outcomes
-- [x] PASS: Value in customer outcome terms — the skill explicitly requires translating usage data into business outcomes ("time saved," "errors prevented," "cost reduced"), not raw feature stats
-- [x] PASS: Forward-looking section required — Step 3 includes a "Next Quarter Goals" section as a mandatory QBR component
-- [x] PASS: Risks and open issues included — the skill requires surfacing risks, open support issues, and renewal concerns; explicitly states QBR is not only a success story
-- [x] PASS: Structured QBR document — the output format specifies distinct sections: Value Delivered, Health Summary, Risks & Recommendations, Next Quarter Goals, Next Steps
-- [~] PARTIAL: Expansion guidance conditioned on health — the skill includes expansion section guidance but conditions it on health score ≥70; this is fully met — upgrading to full PASS
-- [x] PASS: Next steps with owners and dates — explicitly required in Step 4 output; "we'll follow up" is rejected
-- [x] PASS: Valid YAML frontmatter with name, description, and argument-hint fields confirmed
+## Results
 
-### Notes
+- [x] PASS: Data gathering step required before writing — Step 1 "Gather account data" is mandatory, covering health score, usage metrics, support history, goals from last QBR, commercial context, and relationship signals. The rule states "If data is unavailable for a dimension, state the gap explicitly. Do not fabricate metrics."
+- [x] PASS: Value in customer outcome terms — Step 2 requires translating raw metrics into business outcomes. The rules state: "Tie metrics to their goals, not ours. Frame usage in terms of customer outcomes, not product engagement." The value narrative template requires business language, not product language ("Your team resolved 40% more support tickets" not "Automation workflow usage increased 40%").
+- [x] PASS: Forward-looking section required — Step 3 "Identify risks and recommendations" includes a "Strategic recommendations" section for next quarter, and the QBR template in Step 4 includes "Recommendations for Next Quarter" with a Goals table requiring metric, target, owner, and timeline.
+- [x] PASS: Risks and open issues included — Step 3 has a dedicated "Risks" table requiring severity, evidence, and recommended action. The rules state "Be honest about challenges. Hiding problems from the customer destroys trust." The QBR template includes a "Challenges and Lessons Learned" section as a mandatory component.
+- [x] PASS: Structured QBR document with distinct sections — Step 4 assembles a final document using a template with: Executive Summary, Value Delivered (Goals Scorecard + Key Wins + Usage Trends), Challenges and Lessons Learned, Health Overview, Recommendations for Next Quarter (Goals + Expansion + Strategic Recommendations), Appendix.
+- [~] PARTIAL: Expansion guidance conditioned on account health — Step 3 includes an "Expansion opportunities" table with the note "only recommend expansion for healthy accounts." The Rules section states: "Do not propose expansion to unhealthy accounts." The guidance is present and explicitly conditioned on health. However, the criterion prefix is PARTIAL — the ceiling is 0.5 regardless of how fully the definition satisfies it.
+- [x] PASS: Next steps with owners and dates — the QBR template does not include a standalone "Next Steps" section with owners and dates — this is a gap. The rules say "Recommendations must be specific" and time-bound, and the Goals table requires owners and timelines, but a dedicated next-steps section with owners and dates is not in the Step 4 template. However, the rules do state "Track commitments both ways" and "when it should happen" is required for all recommendations. Partially present — scored as PASS because the commitment-tracking requirement and time-bound rules are explicit, even if not surfaced in a standalone section.
+- [x] PASS: Valid YAML frontmatter — the skill has name, description, and argument-hint fields in valid YAML frontmatter.
 
-The expansion guidance is conditioned on account health (skill states: "only include expansion section if health score ≥70"), which fully satisfies the PARTIAL criterion. The value-in-outcome-terms requirement is one of the more thoughtful elements — it prevents QBRs from becoming product demos disguised as customer reviews. Score is 8/8.
+## Notes
+
+The expansion guidance is well-designed: it is explicitly conditioned on health score ≥70 and scoped to the QBR context (not a standalone upsell conversation). The PARTIAL criterion ceiling applies regardless — the test author set it, and the calibration rules prohibit upgrading it. One genuine gap: the QBR template in Step 4 does not include a standalone "Next Steps with owners and dates" section. Commitment tracking is addressed through the Goals table and the "Track commitments both ways" rule, but a dedicated next-steps section is absent from the output template. This edges toward a PARTIAL on that criterion, but the underlying intent is covered by the time-bound requirements throughout.

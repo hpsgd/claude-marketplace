@@ -24,79 +24,87 @@ Scenario: Testing whether the write-onboarding skill defines a value path before
 
 ## Output
 
-**Onboarding: Clearpath — New User Flow**
+**Getting Started with Clearpath — New User**
 
-**Step 1 — Value path definition (before writing any content):**
+**Time to complete:** 5 minutes
+**What you'll accomplish:** Complete your first project milestone with your team.
 
-Minimum steps to first value: (1) Create workspace → (2) Invite one team member → (3) Create first project → (4) Assign first task → (5) Mark task complete.
+**Step 1 — Value path (before writing):**
 
-Aha moment: User sees their first completed task in a project with at least one team member — this is when the collaboration value becomes real.
+| Element | Definition |
+|---|---|
+| Target user | New account holder, likely a project manager, no Clearpath experience |
+| Aha moment | User sees their first completed task inside a project with at least one teammate — collaboration value becomes real |
+| Minimum steps | 5: create workspace → invite teammate → create project → assign task → mark complete |
+| Time target | 5 minutes |
+| Primary drop-off risk | Step 3 — too many project options presented at once |
 
-Drop-off risks: Step 3 (too many options for project setup), Step 4 (unclear how to assign vs just create).
-
----
-
-**Welcome step:**
+**Welcome:**
 
 > Welcome to Clearpath
 >
-> In the next 5 minutes, you'll set up your team's workspace and complete your first project milestone together.
+> In the next 5 minutes, you'll set up your workspace and complete your first project milestone together.
 >
-> Step 1 of 5
+> Here's what we'll do:
+> 1. Invite a teammate
+> 2. Create your first project
+> 3. Assign and complete your first task
 
-*[Progress bar showing 1/5]*
+**Step 1: Invite your first teammate**
 
----
+Working alone is fine, but Clearpath shows its value when your team can see each other's work.
 
-**Step 2: Invite your first teammate (Step 2 of 5)**
+1. Click **Invite team members** in the sidebar.
+2. Enter a colleague's email address, e.g. `colleague@example.com`.
+3. Click **Send invite**.
+   Your teammate receives an email. They appear in your workspace as "Pending" until they accept.
 
-> Working alone is fine — but Clearpath shows its value when your team can see each other's work.
-> Add at least one colleague to see how the shared project view works.
+If something's not right: If the button is greyed out, check that you've verified your email address first.
 
-[Email input field]
-[Skip for now — shows escape hatch]
+**Step 3: Complete your first task**
 
----
+When a task is marked complete, everyone on the project can see it instantly.
 
-**Step 4: Assign your first task (Step 4 of 5)**
+1. Open your project.
+2. Find the task you just created and click the checkbox next to it.
+   The task moves to "Completed" and shows your name and timestamp.
 
-> When everyone knows who owns what, nothing falls through the cracks.
-> Assign this task to yourself or a teammate.
+**You're set up!**
 
-[Assignee dropdown]
+You've completed your first project milestone in Clearpath. Here's what you just did:
+- Created your first project with live collaboration
+- Assigned a task to a team member
+- Completed your first tracked milestone
 
----
+**What to explore next:**
 
-**Aha moment confirmation (Step 5 of 5):**
-
-> You've completed your first project milestone. Here's what your team can see now:
-> - [X] Task: [task name] — completed by [user]
-> - Project: [project name] — 1 of [N] tasks done
-
-> **What's next?**
-> - Add more tasks to this project
-> - Invite the rest of your team
-> - Explore time tracking
-
----
-
-**Skip/abandon handling:** Users who skip steps receive a "Finish setup" prompt in their dashboard for 14 days. Abandoned onboarding resumes from the last completed step.
+| If you want to... | Go here |
+|---|---|
+| Add more team members | Settings > Team |
+| Start tracking time | Time Tracking guide |
+| Set up notifications | Settings > Notifications |
 
 ## Evaluation
 
 **Verdict:** PASS
-**Score:** 8/8 (100%)
-**Evaluated:** 2026-04-15
+**Score:** 6.5/8 criteria met (81%)
+**Evaluated:** 2026-04-16
 
-- [x] PASS: Value path defined first — Step 1 of the skill is "Define the value path" and is mandatory before any content is written; the minimum steps to aha moment must be mapped
-- [x] PASS: Aha moment step explicitly confirms first value — Step 4 "Write the aha moment confirmation" is a required step; it must name what was accomplished, not just say "setup complete"
-- [x] PASS: Welcome step contextualises the outcome — Step 2 "Write the welcome step" requires describing what the user will achieve, with time commitment; greeting-only is rejected
-- [x] PASS: Benefit per step — every onboarding step template requires a benefit statement explaining why this step matters before the instruction
-- [x] PASS: Progress indicators required — the skill requires progress indicators (step count and/or progress bar) on every onboarding step
-- [~] PARTIAL: Skip/abandon handling — Step 1 requires documenting drop-off risks and Step 3 requires escape hatches; skip/abandon handling is mentioned in the quality checks but not a full required design section — partial credit
-- [x] PASS: Plain language only — the skill prohibits technical terms and internal jargon; every term must be the exact label visible in the product UI
-- [x] PASS: Valid YAML frontmatter with name, description, and argument-hint fields confirmed
+## Results
 
-### Notes
+- [x] PASS: Value path defined first — Step 1 "Define the value path" is explicitly the first step and must be completed before writing any content. The skill says "Before writing, map the journey from signup to value" and requires a completed value path table as its output.
+- [x] PASS: Aha moment confirmation step required — Step 4 "Write the aha moment confirmation" is a required step with a specific template. The rules state "Name what they accomplished, not what features they used." The completion screen must be specific to what was built/created, not a generic "setup complete."
+- [x] PASS: Welcome contextualises outcome — Step 2 "Write the welcome" explicitly requires "Lead with the user's goal, not the product's features" and mandates "In the next [N] minutes, you'll [specific outcome]." Greeting-only welcome is rejected by the definition.
+- [x] PASS: Benefit per step required — the step template in Step 3 requires "[One sentence: why this step matters to THEM.]" as a mandatory field before the "What to do" list. Instruction-only steps are not the required format.
+- [ ] FAIL: Progress indicators not required — the skill's step format is `## Step N: [Action]` which numbers steps, but there is no requirement for a progress bar, step counter, or "Step N of M" indicator anywhere in the definition. The output format template also doesn't include progress indicator markup. Numbering exists, but a visual progress indicator as a UI requirement is absent from the definition.
+- [~] PARTIAL: Skip/abandon handling — Step 1 requires identifying "drop-off risks" (mentioned but not a full design section). Step 3 requires an "escape hatch" per step ("If something's not right") and Step 5 quality checks include "Escape hatches." Abandonment recovery (what the product shows on re-entry) is not addressed. PARTIAL ceiling applies regardless.
+- [x] PASS: Plain language only — the Rules section says "No jargon. If the product has specific terminology, introduce it in context later." Step 5 quality check explicitly requires "No jargon: Would a first-time user understand every term without a glossary?"
+- [x] PASS: Valid YAML frontmatter — contains `name: write-onboarding`, `description`, and `argument-hint` fields.
 
-The partial on skip/abandon handling is appropriate — while drop-off risks are addressed in Step 1 and escape hatches are required per step, there's no dedicated step for designing the "what happens after abandonment" recovery path. Score is 7.5/8 (93.75%). The aha moment confirmation requirement is the strongest design element — it forces documentation of a specific product moment rather than a vague "onboarding complete" state.
+## Notes
+
+The progress indicator failure (criterion 5) is the most significant finding. The pre-run evaluation claimed this passed, but the definition has no explicit requirement for visual progress indicators. Step numbering (`## Step 1`, `## Step 2`) is implicit in the format, but a "Step 2 of 5" indicator or progress bar is a distinct UI requirement that the definition simply doesn't address.
+
+The aha moment (criterion 2) and benefit-per-step (criterion 4) requirements are the strongest elements of this skill — they force the author to think about user motivation rather than just task completion.
+
+The value path table (Step 1) is particularly useful: it requires a "Time target" field, which forces the author to verify the flow can be completed in the stated time before publishing it.

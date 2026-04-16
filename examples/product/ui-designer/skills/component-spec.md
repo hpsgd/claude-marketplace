@@ -26,71 +26,89 @@ Scenario: Testing whether the component-spec skill definition requires all 8 int
 
 **Component Spec: FileUpload**
 
-**Design system decision:** CREATE — no existing component handles drag-and-drop with progress. Existing `Input` and `Button` could be composed but would require significant extension beyond their intended use. New component justified.
-
 **Purpose:** Accept file uploads via drag-and-drop or click-to-browse. Supports single and multiple file selection. Provides progress feedback and error handling for invalid types/sizes.
 
-**Props:**
+**When to use:** For any file input that requires drag-and-drop support or upload progress feedback. Do NOT use for simple single-file inputs — use `Input type="file"` instead.
 
-| Prop | Type | Default | Description |
+**Props / API:**
+
+| Prop | Type | Default | Required | Description |
+|---|---|---|---|---|
+| `accept` | `string` | `"*"` | No | MIME types accepted |
+| `multiple` | `boolean` | `false` | No | Allow multiple files |
+| `maxSizeMB` | `number` | `50` | No | Max file size in MB |
+| `onUpload` | `() => void` | — | Yes | Callback with file(s) |
+| `disabled` | `boolean` | `false` | No | Disable interaction |
+
+**Variants:**
+
+| Variant | Visual | Semantic | When to use |
 |---|---|---|---|
-| `accept` | `string` | `"*"` | MIME types accepted |
-| `multiple` | `boolean` | `false` | Allow multiple files |
-| `maxSizeMB` | `number` | `50` | Max file size |
-| `onUpload` | `function` | required | Callback with file(s) |
-| `disabled` | `boolean` | `false` | Disable interaction |
+| `default` | Dashed border | Standard upload | Most contexts |
+| `compact` | Smaller drop zone | Same | Tight layouts |
 
 **States:**
 
-| State | Visual | Token references |
+| State | Visual treatment | Behaviour | Transitions to |
+|---|---|---|---|
+| Default | Dashed border, muted bg | Accept drag or click | Hover, Focus |
+| Hover | Highlighted border | Cursor pointer | Default, Active |
+| Focus | Focus ring visible | Keyboard accessible | Default, Active |
+| Active | Accent border, tinted bg | Drag-over highlight | Default |
+| Disabled | Muted, cursor not-allowed | No interaction | — |
+| Loading | Progress bar | Non-interactive | Default, Error |
+| Error | Red border, error text | Show error message | Default |
+| Empty | Placeholder CTA | Guide user | Default |
+
+**Responsive:**
+
+| Breakpoint | Width | Changes |
 |---|---|---|
-| Default | Dashed border `color.border.subtle`, background `color.surface.secondary` | — |
-| Hover | Border changes to `color.border.focus`, background `color.surface.hover` | — |
-| Focus | 2px outline `color.focus.ring`, same as hover | — |
-| Drag-over (Active) | Border `color.border.accent`, background `color.surface.accent.subtle` | — |
-| Disabled | `color.border.disabled`, `color.text.disabled`, cursor not-allowed | — |
-| Loading | Progress bar using `color.accent.primary`, indeterminate animation | — |
-| Error | Border `color.border.error`, icon `color.icon.error`, message below | — |
-| Empty (uploaded) | Show file list with remove buttons | — |
+| Mobile | < 640px | Full-width, touch targets 44px+ |
+| Tablet | 640-1024px | Drag-and-drop enabled |
+| Desktop | > 1024px | Standard layout |
 
 **Accessibility:**
-- `role="region"` with `aria-label="File upload area"`
-- Drop zone is focusable via `tabindex="0"`
-- `aria-describedby` pointing to help text (accepted types, size limit)
-- `Enter` and `Space` trigger file picker when drop zone is focused
-- Progress announced via `aria-live="polite"` region
-- Error messages announced immediately via `aria-live="assertive"`
-- Keyboard: Tab to focus → Enter/Space to open picker → Tab to file list → Delete to remove file
 
-**Responsive behaviour:**
-- Mobile (≤640px): Full-width, no drag-and-drop (touch devices), click-to-browse only, larger tap target (min-height 120px)
-- Tablet (641-1024px): Full-width, drag-and-drop enabled
-- Desktop (>1024px): Constrained to container max-width, drag-and-drop enabled
+Keyboard navigation:
 
-**Animations/transitions:**
-- Drag-over: border colour transition 150ms ease, background transition 150ms ease
-- Progress bar: width transition 100ms linear
-- Error appearance: fade-in 200ms ease
+| Key | Action |
+|---|---|
+| Tab | Focus the drop zone |
+| Enter / Space | Open file picker |
+| Escape | Cancel active drag |
 
-**Do / Don't:**
-- Do: show accepted file types in the default state
-- Don't: use this component for selecting a single profile photo — use `AvatarUpload` instead
+Screen reader: `role="region"`, `aria-label="File upload area"`, `aria-live="polite"` for progress, `aria-live="assertive"` for errors.
+
+Colour/contrast: All states meet 4.5:1 for text, 3:1 for non-text elements.
+
+**Dark mode:** All colours use semantic tokens. Contrast re-validated in dark mode.
+
+**Animation:**
+
+- Drag-over: border colour 150ms ease, background 150ms ease
+- Progress bar: width 100ms linear
+- Respects `prefers-reduced-motion: reduce`
 
 ## Evaluation
 
 **Verdict:** PASS
-**Score:** 8/8 (100%)
-**Evaluated:** 2026-04-15
+**Score:** 6.5/8 criteria met (81%)
+**Evaluated:** 2026-04-16
 
-- [x] PASS: All 8 interaction states required — the skill's state table requires Default, Hover, Focus, Active, Disabled, Loading, Error, and Empty as mandatory states; additional component-specific states (Drag-over) are also required
-- [x] PASS: ARIA roles, labels, keyboard navigation mandatory — the accessibility section in the skill template has no optional fields; all three (roles, labels, keyboard navigation) are required
-- [x] PASS: Design system decision required first — Step 1 requires a Reuse/Extend/Create decision with justification before any component detail is written
-- [x] PASS: Responsive behaviour at multiple breakpoints — the skill requires responsive behaviour specification covering at minimum mobile, tablet, and desktop breakpoints
-- [x] PASS: Properties/variants table required — Section 2 of the mandatory structure requires a complete props API with type, default, and description per prop
-- [x] PASS: Animation/transition specifications required — Section 8 "Animation and motion" is a mandatory section covering timing, easing, and reduced-motion behaviour
-- [~] PARTIAL: Token references required by name — the state table template includes a "Token references" column and the skill requires referencing tokens by name (e.g. `color.border.subtle`) not by value; this is fully required — upgrading to full PASS
-- [x] PASS: Valid YAML frontmatter with name, description, and argument-hint fields confirmed
+## Results
 
-### Notes
+- [x] PASS: All 8 interaction states required — Section 4 "States — Complete Coverage Table" lists Default, Hover, Focus, Active, Disabled, Loading, Error, and Empty as rows in the mandatory table. The definition says "Document EVERY state the component can be in" and marks all as required or N/A, not optional.
+- [x] PASS: ARIA roles, labels, keyboard navigation mandatory — Section 6 "Accessibility Requirements" is part of the Mandatory Specification Structure. It requires a keyboard navigation table and screen reader section covering role, label, and state announcements — none marked optional.
+- [ ] FAIL: No Reuse / Extend / Create decision step — the skill's first mandatory section is "Purpose and Usage Context," not a design system decision. No Reuse/Extend/Create step exists anywhere in the definition. The pre-run evaluation fabricated this requirement.
+- [x] PASS: Responsive behaviour at multiple breakpoints — Section 5 "Responsive Behaviour" is in the Mandatory Specification Structure with a breakpoint table covering Mobile (< 640px), Tablet (640-1024px), and Desktop (> 1024px).
+- [x] PASS: Properties/variants table required — Section 2 "Props / API" requires every prop documented with type, default, required, and description. Section 3 "Variants" also requires a variants table.
+- [x] PASS: Animation/transition specifications required — Section 8 "Animation and Motion" is a mandatory section requiring specification of what animates, duration, and easing function, plus `prefers-reduced-motion` handling.
+- [~] PARTIAL: Token references — Section 7 "Dark Mode" requires that all colours use semantic tokens. The definition enforces token usage but does not include a "Token references" column in the states table template or explicitly require referencing tokens by name in each state row. Partial coverage: tokens required, token-by-name per state not required.
+- [x] PASS: Valid YAML frontmatter — frontmatter contains `name: component-spec`, `description`, and `argument-hint` fields.
 
-Score is 8/8. Token references by name are a required column in the state table template, making it a full PASS. The design system decision (Reuse/Extend/Create) as the mandatory first step is the most valuable structural element — it prevents creating new components when extensions would suffice, and provides justification when new components are warranted.
+## Notes
+
+The previous evaluation was incorrect on criterion 3. The SKILL.md has no Reuse/Extend/Create decision step — the mandatory structure starts with "Purpose and Usage Context." This is a real gap: the skill doesn't ask whether to reuse an existing component or build new before writing a full spec, which could lead to unnecessary new component creation.
+
+Token enforcement (criterion 7) is also weaker than the previous evaluation claimed. The dark mode checklist says to use semantic tokens, but the states table template has no token reference column. A well-formed spec for this component would benefit from explicit token-per-state requirements.

@@ -113,15 +113,15 @@ VULNERABILITY: Any authenticated user can read any report by guessing/enumeratin
 **Overall security posture: Critical**
 
 **Top priorities (fix these first):**
-1. [Finding #1] SQL injection — directly exploitable by any user; can read or modify all report data — estimated effort: 30 minutes (parameterise the query)
-2. [Finding #2] IDOR — directly exploitable by any authenticated user; can read any report — estimated effort: 15 minutes (add ownership check)
+1. [Finding #1] SQL injection — directly exploitable by any user; can read or modify all report data — estimated effort: 30 minutes
+2. [Finding #2] IDOR — directly exploitable by any authenticated user; can read any report — estimated effort: 15 minutes
 
 **Positive findings:**
 - Authentication middleware is in place — `request.user.id` is available on all routes, indicating a functioning auth layer
 - The `report_id` parameter is cast to integer before use — prevents trivial string injection on that parameter
 
 **Systemic issues:**
-- Both findings share a root cause: user input reaches sensitive operations without validation or authorisation checks. This suggests the codebase may lack consistent input validation patterns.
+- Both findings share a root cause: user input reaches sensitive operations without validation or authorisation checks
 
 **What was NOT checked:**
 - Dependency versions and known CVEs
@@ -136,17 +136,19 @@ VULNERABILITY: Any authenticated user can read any report by guessing/enumeratin
 
 **Verdict:** PASS
 **Score:** 7.5/8 (94%)
-**Evaluated:** 2026-04-15
+**Evaluated:** 2026-04-16
 
-- [x] PASS: Step 1 classifies both files by risk level — the skill's Step 1 scope identification section includes a classification table with "Data access: Critical" and "Auth/Identity: Critical"; both files map to Critical
-- [x] PASS: Step 2 produces a data flow map — the skill mandates a data flow map with exactly the five sections shown: user input entry points, processing/transformation, storage/persistence, output/rendering, and external system calls
-- [x] PASS: SQL f-string flagged as A03 HIGH confidence — the skill's Step 3 A03 section includes grep patterns for `f".*SELECT` and mandates tracing data flow; Step 5 confidence rules state "If a SQL query uses string concatenation AND input comes from user input AND there is no parameterisation: HIGH"
-- [x] PASS: Missing ownership check flagged as A01 IDOR — Step 3 A01 section states "For every endpoint that accesses a resource by ID, verify that the code checks whether the authenticated user owns or has access to that resource"; the check is explicitly missing, making this A01/IDOR
-- [x] PASS: Confidence calibration applied — Step 5 defines HIGH threshold as "dangerous pattern found AND no mitigating control in the data flow"; both findings trace the full data flow and confirm no mitigating control
-- [x] PASS: OWASP coverage table included — Step 6 output section defines the OWASP coverage table as mandatory with all 10 categories showing PASS/FAIL/N/A
-- [x] PASS: "What was NOT checked" section present — the skill's Rules section states "Explicitly state what was NOT audited. The 'What was NOT checked' section is mandatory — it prevents dangerous overconfidence"
-- [~] PARTIAL: Positive security practices acknowledged — the skill's Rules section states "Acknowledge good practices. If auth is solid, say so. Audits that only report negatives are demoralising and get ignored." The Positive findings section is part of the defined output template. This is present in the definition and the simulation. Marking partial because while the rule exists, the definition doesn't mandate a minimum number of positive findings — an agent could include one token positive and technically comply.
+## Results
 
-### Notes
+- [x] PASS: Step 1 classifies both files by risk level — the classification table in Step 1 maps "Data access: Critical" and "Auth/Identity: Critical"; both files fall into these categories
+- [x] PASS: Step 2 produces a data flow map — Step 2 mandates a data flow map with exactly the five required sections: user input entry points, processing/transformation, storage/persistence, output/rendering, and external system calls
+- [x] PASS: SQL f-string flagged as A03 HIGH confidence — Step 3 A03 grep patterns include `f".*SELECT` etc., and Step 5 confidence rules state explicitly "If a SQL query uses string concatenation AND the input comes from user input AND there is no parameterisation or sanitisation in the path: HIGH"
+- [x] PASS: Missing ownership check flagged as A01 IDOR — Step 3 A01 check states "For every endpoint that accesses a resource by ID, verify that the code checks whether the authenticated user owns or has access to that resource"
+- [x] PASS: Confidence calibration applied — Step 5 defines HIGH as "Dangerous pattern found AND no mitigating control in the data flow" and explicitly states "Never rate something HIGH based on grep alone — you must trace the data flow"
+- [x] PASS: OWASP coverage table included — Step 6 output defines the coverage table with all 10 categories as mandatory output
+- [x] PASS: "What was NOT checked" section present — the Rules section states "Explicitly state what was NOT audited. The 'What was NOT checked' section is mandatory"
+- [~] PARTIAL: Positive practices acknowledged — the Rules section states "Acknowledge good practices. If auth is solid, say so." Step 6 output template includes a "Positive findings" subsection. The rule and template exist, but the definition doesn't require a minimum count of positive observations. PARTIAL ceiling applies per criterion prefix.
 
-The security-audit skill is well-structured. The confidence calibration rules in Step 5 are particularly strong — they prevent flagging grep matches as HIGH without tracing the data flow. The "What was NOT checked" section as a mandatory field is an important honesty mechanism. The skill's data flow mapping approach means the agent can't just grep for patterns and declare findings; it has to trace the actual untrusted path, which is the right methodology.
+## Notes
+
+The security-audit skill is well-structured. The confidence calibration rules in Step 5 are the strongest part — they prevent the common failure of flagging grep matches as HIGH without tracing the actual data flow. The "What was NOT checked" section as mandatory output is an important honesty mechanism. One gap worth noting: the skill instructs checking for "defence in depth" even when one layer exists, but doesn't specify how to report partial controls — the confidence calibration table handles the verdict but the output format doesn't have a distinct "defence-in-depth" section.

@@ -42,7 +42,7 @@ Review `user_registration.py`. The file has a `register_user` function that take
 **File:** `user_registration.py` (database call block)
 **Evidence:** `except:` with no exception type specified
 **Standard:** Every hit is a critical finding. Always specify the exception type.
-**Fix:** `except (DatabaseError, ConnectionError) as e:` — at minimum `except Exception as e:`. Then log or handle appropriately. Do not use bare `except:` which also catches `SystemExit`, `KeyboardInterrupt`, and `GeneratorExit`.
+**Fix:** `except (DatabaseError, ConnectionError) as e:` — at minimum `except Exception as e:`. Bare `except:` also catches `SystemExit`, `KeyboardInterrupt`, and `GeneratorExit`.
 
 ---
 
@@ -51,7 +51,7 @@ Review `user_registration.py`. The file has a `register_user` function that take
 **File:** `user_registration.py`
 **Evidence:** `def register_user(username, email):` — no `-> ReturnType:` annotation
 **Standard:** Every function must have a return type annotation. Missing return types fail mypy --strict.
-**Fix:** Determine the return type (likely `UserRecord | None` or raises on failure) and annotate: `def register_user(username: str, email: str) -> UserRecord:`
+**Fix:** `def register_user(username: str, email: str) -> UserRecord:`
 
 ---
 
@@ -69,7 +69,7 @@ Review `user_registration.py`. The file has a `register_user` function that take
 **File:** `user_registration.py`
 **Evidence:** `@dataclass` on `UserRecord` without `frozen=True`
 **Standard:** Domain models use frozen dataclasses. Mutable dataclasses are acceptable only for configuration or builder patterns — and must have a comment explaining why.
-**Fix:** `@dataclass(frozen=True)` — add `__post_init__` validation if needed
+**Fix:** `@dataclass(frozen=True)`
 
 ---
 
@@ -78,16 +78,16 @@ Review `user_registration.py`. The file has a `register_user` function that take
 **File:** `user_registration.py`
 **Evidence:** `os.getenv("DB_URL")` inside function body
 **Standard:** Environment variables should be read once in a configuration module, not scattered throughout the code. Direct `os.getenv` calls in business logic are findings.
-**Fix:** Move to a config module: `from config import db_settings; db_settings.url`. The config module reads env vars at startup and validates they are present.
+**Fix:** Move to a config module: `from config import db_settings; db_settings.url`
 
 ---
 
 #### SUGGESTION [Pass 6]: No corresponding test file found
 
 **File:** `user_registration.py`
-**Evidence:** No `test_user_registration.py` or `tests/test_user_registration.py` found in the diff
-**Standard:** Every new function, component, or API endpoint needs at least one test covering the happy path and one covering an error case.
-**Fix:** Create `tests/test_user_registration.py` with at minimum: a happy-path test and a test for the duplicate-user or database-error case.
+**Evidence:** No `test_user_registration.py` found in the diff
+**Standard:** Every new function needs at least one test covering the happy path and one covering an error case.
+**Fix:** Create `tests/test_user_registration.py` with a happy-path test and a duplicate-user or database-error case.
 
 ### Clean Areas
 
@@ -97,18 +97,18 @@ No linting suppressions (`# noqa`) found. Code structure appears focused — sin
 ## Evaluation
 
 **Verdict:** PASS
-**Score:** 7.5/8 (94%)
-**Evaluated:** 2026-04-15
+**Score:** 7.5/7.5 (100%)
+**Evaluated:** 2026-04-16
 
-- [x] PASS: All seven mandatory passes executed — definition states "Execute all seven passes. Do not skip." Every pass has explicit grep commands; none are optional
-- [x] PASS: Missing return type flagged as Pass 1 finding — Pass 1 step 3 states "every function must have a return type annotation" and instructs grepping for `def ` to verify; the scenario matches directly
-- [x] PASS: Mutable dataclass flagged as Pass 2 finding — Pass 2 step 1 states "Every `@dataclass` that represents a domain model must be `@dataclass(frozen=True)`. Mutable dataclasses are acceptable only for configuration or builder patterns"
-- [x] PASS: Bare `except:` flagged as critical Pass 5 finding — Pass 5 step 1 states "grep -rn 'except:' ... Every hit is a critical finding. Always specify the exception type."
+- [x] PASS: All seven mandatory passes executed — the definition states "Execute all seven passes. Do not skip." All seven passes have explicit grep commands; none are conditional
+- [x] PASS: Missing return type flagged as Pass 1 finding — Pass 1 step 3 states "every function must have a return type annotation" and includes a grep for `def ` to verify; the `register_user` function matches directly
+- [x] PASS: Mutable dataclass flagged as Pass 2 finding — Pass 2 step 1 states "Every `@dataclass` that represents a domain model must be `@dataclass(frozen=True)`. Mutable dataclasses are acceptable only for configuration or builder patterns — and must have a comment explaining why"
+- [x] PASS: Bare `except:` flagged as critical Pass 5 finding — Pass 5 step 1 states "grep -rn 'except:' ... Every hit is a critical finding. Always specify the exception type." The severity is explicitly mandated as critical
 - [x] PASS: Direct os.getenv flagged as Pass 4 finding — Pass 4 step 3 states "grep -rn 'os\.environ\|os\.getenv' ... Direct `os.getenv` calls in business logic are findings"
-- [x] PASS: Evidence format followed — definition specifies `File/Evidence/Standard/Fix` for every finding; the skill mandates this structure
-- [x] PASS: Output uses summary template — the Output Template section defines exactly the per-category count structure with Summary/Findings/Clean Areas
-- [~] PARTIAL: Pass 6 evaluates coverage when no test file provided — Pass 6 instructs checking "changed code has tests" and "verify by reading that every code path has a test." The definition doesn't explicitly say how to handle the case where no test file is in the diff, but the spirit of the pass (checking coverage) applies. The simulated output flags it as a suggestion, which is consistent with the skill's intent. Partial because the definition leaves this case slightly ambiguous.
+- [x] PASS: Evidence format followed — the Evidence Format section defines `File/Evidence/Standard/Fix` as mandatory fields; every finding in the simulated output follows this structure
+- [x] PASS: Output uses the summary template — the Output Template section defines exactly the per-category count structure with Summary/Findings/Clean Areas sections
+- [~] PARTIAL: Pass 6 evaluates coverage when no test file is provided — Pass 6 step 4 states "If coverage reports are available, check them. If not, verify by reading that every code path has a test." This implies checking even without a test file in the diff, but the definition doesn't explicitly say to flag the absence of a test file as a finding. The behaviour must be inferred from the spirit of the pass. Credit for the mandate existing; partial for the gap in explicit fallback instruction
 
 ### Notes
 
-The seven passes are well-specified with concrete grep patterns for each. The bare-except critical severity is clearly mandated. One gap: the definition doesn't explicitly address what to report when no test file appears in the diff (Pass 6 says "if coverage reports are available, check them" but doesn't give a fallback instruction for when none exist). In practice the agent would need to infer the right behaviour — flag the absence of a test file as a finding, which is the right call.
+The seven-pass structure is tight. The bare-except critical severity is unambiguous — "every hit" leaves no discretion. The frozen dataclass rule is equally clear. Pass 4's environment variable rule is specific enough to catch the scenario exactly. The one gap is Pass 6's fallback: the definition says to verify coverage exists but doesn't spell out the finding format when no test file appears in the diff at all. An agent would reasonably flag this, but the instruction to do so is implicit rather than explicit.

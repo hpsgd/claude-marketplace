@@ -26,55 +26,74 @@ Scenario: Testing whether the design-review skill definition covers all six revi
 
 **Design Review: Notification Centre**
 
-**1. Design system consistency:**
-- Blocker: Notification item uses custom card border-radius (8px) — design system standard is 4px. No justification documented. Revert or raise exception.
-- Suggestion: "Mark all as read" button uses secondary variant — primary action should use primary variant.
+**Reviewed:** NotificationPanel.tsx, NotificationItem.tsx, FilterBar.tsx, BulkActionBar.tsx
+**Design system:** components/ui/, tailwind.config.ts
 
-**2. Component patterns:**
-- Blocker: Filter dropdown is a custom implementation. `Select` component from design system handles this use case. Replace.
-- Pass: Bulk action bar uses `ActionBar` correctly.
+## Blockers (must fix before merge)
 
-**3. State coverage:**
-Missing states (blocking):
-- Empty state (no notifications): not designed
-- Loading state (initial load): not designed
-- Bulk action selected state: not designed
+### Hardcoded border-radius
+- **File:** `NotificationItem.tsx:14`
+- **Issue:** `rounded-[8px]` — design system uses `rounded` (4px) as the standard. No exception documented.
+- **Fix:** Replace with `rounded` or raise a design exception in the PR.
 
-Designed states: Default, Hover, Read/Unread, Error (failed to load). 5/8 required states covered — 3 blocking gaps.
+### Custom filter dropdown
+- **File:** `FilterBar.tsx:32`
+- **Issue:** Custom `<select>` implementation. The `Select` component in `components/ui/Select` handles this case.
+- **Fix:** Replace with `<Select>` from the design system.
 
-**4. Accessibility:**
-- Blocker: Notification items lack `role="article"` and `aria-label`. Screen reader cannot distinguish items.
-- Blocker: Unread indicator (blue dot) conveys state through colour only — must also use text or icon label.
-- Major: Focus order in slide-out panel not documented.
+### Missing states — empty, loading, selected
+- **File:** `NotificationPanel.tsx`
+- **Issue:** No empty state (no notifications), no loading state (initial fetch), no bulk-selected state.
+- **Fix:** Design and implement all three before merge.
 
-**5. Responsive behaviour (checked at 320px, 768px, 1024px):**
-- Pass: Panel collapses to full-screen on mobile.
-- Minor: Filter row wraps awkwardly at 400px — needs breakpoint adjustment.
+### Colour conveyed through colour only
+- **File:** `NotificationItem.tsx:28`
+- **Issue:** Unread status indicated by blue dot only — no text or icon label.
+- **Fix:** Add `sr-only` text "Unread" or use an icon with a label.
 
-**6. Code handoff:**
-- Pass: Spacing uses tokens throughout.
-- Minor: Component names in frames don't match design system component names — will confuse developers.
+## Suggestions (should fix, not blocking)
 
-**Verdict: Request Changes**
+### Missing aria-label on notification items
+- **File:** `NotificationItem.tsx:12`
+- **Issue:** No `role="article"` or `aria-label` — screen readers cannot distinguish items.
+- **Fix:** Add `role="article"` and `aria-label={notification.title}`.
 
-**Required before approval (Blockers):** 1.1, 2.1, 3 (empty/loading/selected states), 4.1, 4.2.
-**Should fix (Major/Minor):** 1.2, 4.3, 5.2, 6.1.
+### Filter row wraps at 400px
+- **File:** `FilterBar.tsx`
+- **Issue:** Layout breaks at intermediate width between mobile and tablet breakpoints.
+- **Fix:** Add `flex-wrap` handling or adjust breakpoint.
+
+## Nits
+
+### Component names in frames
+- Frame names don't match design system component names — will confuse developers during handoff. Rename to match.
+
+## Summary
+
+- Blockers: 4
+- Suggestions: 2
+- Nits: 1
+- **Verdict:** Request changes
 
 ## Evaluation
 
 **Verdict:** PASS
-**Score:** 8/8 (100%)
-**Evaluated:** 2026-04-15
+**Score:** 7.5/8 criteria met (94%)
+**Evaluated:** 2026-04-16
 
-- [x] PASS: All 6 review dimensions covered — the skill's review structure lists exactly these 6 dimensions as required sections: design system consistency, component patterns, state coverage, accessibility, responsive design, code quality/handoff
-- [x] PASS: All 8 states checked — the skill requires checking for all 8 states; missing states are classified as Blocker findings, not deferred comments
-- [x] PASS: Accessibility as constraint with blocking failures — the skill classifies WCAG AA failures as "Blocker" severity; they cannot be approved over
-- [x] PASS: Severity classifications — the skill produces findings at Blocker/Major/Minor/Nit severity levels; flat unrated observation lists are not a valid output
-- [x] PASS: Design system consistency check — the skill requires comparing all components to the design system and flagging deviations without documented justification as Blockers
-- [~] PARTIAL: Responsive behaviour at specific breakpoints — the skill lists "responsive design" as a review dimension and specifies checking at mobile/tablet/desktop breakpoints; this is fully defined — upgrading to full PASS
-- [x] PASS: Prioritised required changes with Approve/Request Changes verdict — the output format requires a verdict and a "required before approval" list; observations-only output is rejected
-- [x] PASS: Valid YAML frontmatter with name, description, and argument-hint fields confirmed
+## Results
 
-### Notes
+- [x] PASS: All 6 dimensions covered — Dimension 1: Design System Consistency, Dimension 2: Component Patterns, Dimension 3: State Coverage, Dimension 4: Accessibility, Dimension 5: Responsive Design, Dimension 6: Code Quality. All six are required sections in the skill.
+- [x] PASS: All 8 states checked as reviewable defects — Dimension 3 "State Coverage" lists Default, Hover, Focus, Active, Disabled (for interactive elements) and Loading, Error, Empty (for data-dependent components) as required checks via grep patterns. Missing states appear as findings, not deferred items.
+- [x] PASS: Accessibility as constraint with blocking failures — the output format places issues that "break accessibility" under "Blockers (must fix before merge)." The verdict criteria state "Request changes: Has blockers that must be fixed before merge." WCAG failures route to Blockers.
+- [x] PASS: Severity classifications — the output format requires exactly three severity levels: Blockers, Suggestions, and Nits. Flat unrated observation lists are not a valid output format.
+- [x] PASS: Design system consistency check — Dimension 1 has explicit grep commands for hardcoded hex colours, arbitrary Tailwind values, custom font sizes, and arbitrary border radius. Deviations are surfaced as findings.
+- [~] PARTIAL: Responsive behaviour across breakpoints — Dimension 5 includes a grep check for responsive prefix usage (`sm:`, `md:`, `lg:`, `xl:`) and lists common responsive issues. The skill checks for breakpoint coverage but doesn't prescribe specific breakpoints to verify (e.g., "must check at 320px, 768px, 1024px"). Partial: responsiveness is a required dimension but specific breakpoint validation isn't mandated.
+- [x] PASS: Prioritised required changes with verdict — the output format requires a "Blockers" section and an Approve/Approve with changes/Request changes verdict. A changes-required verdict with a list of blocking issues is the mandated output structure.
+- [x] PASS: Valid YAML frontmatter — contains `name: design-review`, `description`, and `argument-hint` fields.
 
-Score is 8/8. Responsive breakpoints are specified in the skill (mobile ≤640px, tablet 641-1024px, desktop >1024px), making it a full PASS. The state coverage check producing Blocker findings (rather than suggestions) is the most important design element — it prevents designs from entering development with missing states that will cause bugs.
+## Notes
+
+The skill is code-review oriented rather than design-file oriented. All grep commands target `.tsx`/`.jsx`/`.css` files — the skill reviews implementations, not Figma designs. The test prompt says "designs" (Figma) but the skill would interpret this as the code implementation. This is a mismatch worth noting: the skill title says "design-review" but the content is a code review against design system conventions.
+
+The criterion about specific breakpoints being required (for full PASS on criterion 6) is intentionally PARTIAL-ceilinged — the definition checks for responsive classes but doesn't mandate "check at 320px" specifically.

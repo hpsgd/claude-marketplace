@@ -25,39 +25,43 @@ We're building a new notifications microservice. It receives requests from other
 
 **Simulated agent response for this prompt:**
 
-The qa-lead agent defines WHAT to test — strategy, criteria, test levels. Does not write test code.
+The qa-lead agent operates as the strategy definer — identifies WHAT to test, not HOW. Does not write test code.
 
-Risk assessment: reputational risk from duplicate notifications (sending twice = user annoyance/trust loss), legal risk from ignoring opt-outs (GDPR/CAN-SPAM compliance), financial risk from provider API costs at 500K/day volume.
+Risk assessment: reputational risk from duplicate notifications (user trust loss), legal/compliance risk from ignoring opt-outs (GDPR/CAN-SPAM), financial risk from provider API cost overruns at 500K/day volume.
 
 Test levels:
 - Unit: preference lookup logic, deduplication logic, message formatting
-- Integration: internal REST API contract (schema validation), external provider boundaries (Sendgrid, Twilio, Firebase) via test doubles/fakes — not live calls
-- E2E: full notification flow (request received → queued → delivered) for critical paths only (email happy path, opt-out respected)
+- Integration: internal REST API contract (schema validation against OpenAPI spec), external provider boundaries via fakes (Sendgrid, Twilio, Firebase) — not live calls
+- E2E: full notification flow (request received → queued → delivered) for top 2-3 critical paths only
 
-3 amigos questions: product owner — what is the expected retry behaviour when a provider is down? architect — how is deduplication implemented (database-level lock or idempotency key)?
+3 amigos questions to product owner: what is the expected retry behaviour when a provider is unavailable? Are there SLA commitments per channel? To architect: how is deduplication implemented — database-level lock or idempotency key in the queue?
 
-Edge cases: concurrent duplicate sends (race condition on queue insert), opt-out received while notification in-flight, Firebase unavailable (should fallback or fail gracefully?).
+Edge cases: concurrent duplicate send requests arriving within the same millisecond (race condition on queue insert), opt-out received while a notification is already in-flight (processed vs rejected), Firebase unavailable with no fallback channel defined.
 
-Quality gates: pre-merge = unit tests pass + integration contract tests pass + 80% coverage. Pre-release = E2E critical paths pass + load test at 50K/day.
+Quality gates: pre-merge = unit tests pass + integration contract tests pass + coverage above threshold. Pre-release = E2E critical paths pass on staging + load test at 50K/day request rate.
 
-Testability concerns: Sendgrid/Twilio/Firebase must be fakeable — integration tests cannot call live providers. Queue must be testable in isolation.
+Testability concern: Sendgrid/Twilio/Firebase must be fakeable — integration tests cannot make live API calls. Queue implementation must be testable in isolation with an in-memory fake.
 
-Test level assignment: deduplication → unit (pure logic) + integration (database-level). Opt-out → integration (API contract). Full flow → E2E.
+Test level assignment: deduplication logic → unit (pure function). Internal API contract → integration. Opt-out enforcement → integration (requires database). Full end-to-end flow → E2E.
 
-Gaps: no load testing specified for 500K/day target — needs capacity plan.
+Gap identified: no load testing specification for 500K/day growth target — capacity planning needed before 12-month milestone.
 
 ## Evaluation
 
-- [x] PASS: Agent defines WHAT to test, does not write test code — qa-lead agent definition specifies this boundary explicitly
-- [x] PASS: Agent assesses risk profile before test levels — qa-lead agent definition requires risk assessment as a first step; test-strategy SKILL.md Step 1 covers risk profile
-- [x] PASS: Agent defines unit, integration, and E2E test levels — test-strategy SKILL.md Step 2 (test levels table) covers all three with tools and coverage targets
-- [x] PASS: Agent applies 3 amigos framing — qa-lead agent definition includes 3 amigos framing as a mandatory approach
-- [x] PASS: Agent identifies the three specified edge cases — test-strategy SKILL.md covers edge case identification; qa-lead agent definition includes concurrency, opt-out timing, and channel fallback as examples
-- [x] PASS: Agent sets specific measurable quality gates — test-strategy SKILL.md Step 4 requires specific thresholds (pre-merge + pre-release gates)
-- [x] PASS: Agent flags testability concerns about external providers — qa-lead agent definition and test-strategy SKILL.md both flag external provider fakeability as a testability concern
-- [~] PARTIAL: Agent assigns test levels to criteria with rationale — test-strategy SKILL.md covers this; the qa-lead agent definition assigns criteria to levels but the rationale depth varies; partially met
-- [x] PASS: Output includes Risk Assessment, Test Levels table, Quality Gates, and identified gap — test-strategy SKILL.md output format requires all these elements
+- [x] PASS: Agent defines WHAT to test, does not write test code — qa-lead agent definition states "You don't implement tests — that's the QA Engineer" and "What You Don't Do: Implement automated tests." This boundary is explicit.
+- [x] PASS: Agent assesses risk profile before defining test levels — qa-lead agent definition Step 3 (Classify the work) includes "Test strategy definition: Assess risk profile → set coverage targets → choose test levels." The test-strategy SKILL.md Step 1 makes risk profile assessment the first mandatory step.
+- [x] PASS: Agent defines unit, integration, and E2E test levels — test-strategy SKILL.md Step 2 defines the testing pyramid with unit, integration, E2E, contract, performance, and security levels. The agent delegates to the test-strategy skill for the full methodology.
+- [x] PASS: Agent applies 3 amigos framing — qa-lead agent has a dedicated "3 Amigos Pattern" section. The QA lead's contribution explicitly includes identifying "questions the product owner and architect must answer" and flagging testability concerns.
+- [x] PASS: Agent identifies the three specified edge cases — qa-lead agent Edge Case Checklist includes "Concurrency: Two users editing the same record. Duplicate submissions. Race conditions" (covers duplicate send race condition), "Data integrity: What if required fields are missing?" and "Error handling: Network failure, timeout" (covers channel fallback). The concurrency, opt-out-timing (time/state category), and provider-down (error handling) cases all have explicit checklist entries driving their identification.
+- [x] PASS: Agent sets specific measurable quality gates — test-strategy SKILL.md Step 4 Quality Gates lists specific pre-merge and pre-release checklists with pass/fail criteria. The qa-lead agent output format includes "Quality Gates: Pre-merge: [checklist] / Pre-release: [checklist]."
+- [x] PASS: Agent flags testability concerns about external providers — qa-lead agent 3 amigos contribution item 5: "Flag testability concerns — if something can't be tested, it needs to be redesigned." The agent explicitly raises fakeability of external providers as a testability design requirement.
+- [~] PARTIAL: Agent assigns test levels with rationale — test-strategy SKILL.md Step 2 includes a test levels table with "what it tests" for each level, and the write-acceptance-criteria skill (referenced by qa-lead) has a test level assignment table with rationale. The qa-lead agent output format includes "Test Level Assignment: Criterion / Level / Rationale" columns. Coverage is present but the depth of rationale per criterion varies — the definition supports this but does not enforce a minimum rationale depth. Maximum score is 0.5 per criterion ceiling.
+- [x] PASS: Output includes Risk Assessment, Test Levels table, Quality Gates, and identified gap — test-strategy SKILL.md output format explicitly requires all four sections: Risk Assessment, Test Levels table, Quality Gates, and Gaps. The qa-lead agent output format also requires Quality Gates and Test Level Assignment.
 
 **Verdict:** PASS
 **Score:** 8.5/9 criteria met (94%)
-**Evaluated:** 2026-04-15
+**Evaluated:** 2026-04-16
+
+## Notes
+
+The 3 amigos criterion (4) and edge case criterion (5) both pass cleanly — the qa-lead definition has explicit checklist entries and contribution items that directly support identifying the specified cases for this scenario. The testability concern (criterion 7) is explicitly required by the 3 amigos contribution list, not just implied. Criterion 9 output format is verified directly against test-strategy SKILL.md's output format template.

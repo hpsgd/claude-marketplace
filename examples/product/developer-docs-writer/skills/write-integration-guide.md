@@ -24,51 +24,90 @@ Scenario: Testing whether the write-integration-guide skill requires numbered st
 
 ## Output
 
-**Clearpath-Salesforce Integration Guide**
+**Integrating Clearpath with Salesforce**
 
-**Prerequisites:** Clearpath account with API access (Pro tier+). Salesforce Developer or Admin access. Node.js 18+ installed. Clearpath API key from Settings → API.
+By the end of this guide, you'll have Salesforce opportunity status changes automatically syncing to the corresponding Clearpath project status.
 
-**Steps:**
+**Prerequisites:**
+- [ ] Clearpath account with API access (Pro tier or higher) — Settings → API
+- [ ] Salesforce Developer or Admin access
+- [ ] Node.js 18+ installed: `node --version`
+- [ ] Clearpath API key — from Settings → Integrations → API Keys
 
-1. Install the Clearpath SDK.
-   ```bash
-   npm install @clearpath/sdk
-   ```
-   Expected: `added 1 package` confirmation. `node -e "require('@clearpath/sdk')"` exits without error.
+**Step 1: Research the integration**
 
-2. Configure Salesforce connected app. Navigate to Setup → App Manager → New Connected App. Enable OAuth, set callback URL to `https://your-server.com/oauth/callback`.
-   Expected: Connected App is created with a Consumer Key visible.
+Grepping codebase for existing Salesforce references... [identifies auth method: OAuth 2.0, webhook events, field mapping required]
 
-3. [Steps 3-7 follow same pattern: action + expected result]
+**Step 2: Install the Salesforce SDK**
 
-**Complete end-to-end example:**
-```javascript
-const Clearpath = require('@clearpath/sdk');
-const client = new Clearpath({ apiKey: process.env.CLEARPATH_API_KEY });
-// Full working example syncing Salesforce opportunity status to Clearpath project
-// [complete, runnable code]
+```bash
+npm install @salesforce/core jsforce
 ```
 
+**Expected result:** `added 2 packages` in terminal output. Verify with `node -e "require('jsforce')"` — no error.
+
+**Step 3: Configure Salesforce connected app**
+
+Navigate to Setup → App Manager → New Connected App. Enable OAuth, set callback URL to `https://your-server.com/oauth/callback`, enable `api` and `refresh_token` scopes.
+
+**Expected result:** Connected App created with Consumer Key and Consumer Secret visible under Manage Connected Apps.
+
+**Steps 4-6:** [Configure Clearpath webhook receiver, map Opportunity Stage to Project Status, deploy and test — each with code + expected result]
+
+**Complete example:**
+
+```javascript
+const jsforce = require('jsforce');
+const { createHmac } = require('crypto');
+
+const conn = new jsforce.Connection({
+  oauth2: {
+    clientId: process.env.SF_CLIENT_ID,     // From Connected App
+    clientSecret: process.env.SF_CLIENT_SECRET,
+    redirectUri: 'https://your-server.com/oauth/callback'
+  }
+});
+
+// Webhook handler: Salesforce → Clearpath
+app.post('/webhook/salesforce', (req, res) => {
+  const event = req.body;
+  updateClearpathProject(event.opportunityId, event.stageName);
+  res.sendStatus(200);
+});
+```
+
+**Run it:**
+```bash
+node index.js
+```
+
+**Expected result:** `Listening on port 3000. Salesforce webhook active.`
+
 **Troubleshooting:**
-- `401 Unauthorized` on Clearpath API calls — check API key is set in environment, not hardcoded
-- Salesforce OAuth token expiry — implement refresh token flow; see example in Step 5
-- Webhook signature validation failing — verify `SALESFORCE_WEBHOOK_SECRET` matches connected app secret
+
+| Symptom | Cause | Fix |
+|---|---|---|
+| `401 Unauthorized` on Clearpath API | API key not set or expired | Check `CLEARPATH_API_KEY` env var; regenerate key from Settings → API |
+| Salesforce OAuth token expiry after 2h | Default access token TTL | Implement refresh token flow — see Step 4 for the refresh handler |
+| Webhook signature validation fails | `SF_WEBHOOK_SECRET` mismatch | Regenerate webhook secret in Salesforce Setup, update env var |
 
 ## Evaluation
 
 **Verdict:** PASS
-**Score:** 8/8 (100%)
-**Evaluated:** 2026-04-15
+**Score:** 7.5/8 (93.75%)
+**Evaluated:** 2026-04-16
 
-- [x] PASS: Numbered steps required — Step 3 explicitly requires numbered steps; the skill states "use numbered steps, not bullet points"
-- [x] PASS: Expected output per step — Step 3 template requires "Expected output" as a mandatory field for every step
-- [x] PASS: Complete runnable end-to-end example — Step 4 is dedicated to "Complete example" and explicitly states it must be runnable and exercise the full integration
-- [x] PASS: Troubleshooting section — Step 5 requires a troubleshooting section with common failure modes and specific fixes; generic "check the docs" is explicitly rejected
-- [x] PASS: Prerequisites section — Step 2 "Guide header" requires a prerequisites section before steps begin, covering required accounts, tools, and access levels
-- [x] PASS: Research step — Step 1 requires researching both systems being integrated before writing begins
-- [~] PARTIAL: Verification — the quality checklist (Step 6) includes "verification steps are present" and the end-to-end example is expected to include a verification step; verification is embedded rather than a dedicated section — partial credit
-- [x] PASS: Valid YAML frontmatter with name, description, and argument-hint fields confirmed
+## Results
 
-### Notes
+- [x] PASS: Numbered steps required — Step 3 of the skill explicitly requires "Numbered steps. Each step MUST follow this format" with `## Step N:` heading structure; bullet points are not permitted
+- [x] PASS: Expected result per step — Step 3 template includes `**Expected result:**` as a mandatory field; the rules state "Every step needs expected output"
+- [x] PASS: Complete runnable end-to-end example — Step 4 is dedicated to a single complete example and states explicitly "This is mandatory — fragments scattered across steps are not enough"
+- [x] PASS: Troubleshooting section — Step 5 requires a troubleshooting section with at least the most common auth error, the most common config mistake, and what happens if the external service is unavailable
+- [x] PASS: Prerequisites section — Step 2 "Write the guide header" includes a mandatory prerequisites checklist template requiring accounts, credentials with dashboard locations, tools with install commands, and versions
+- [x] PASS: Research step — Step 1 "Research the integration" is a mandatory step before writing; it requires searching the codebase and identifying auth method, dependencies, and scope
+- [~] PARTIAL: Verification — the quality checklist (Step 6) includes "Every step has expected output" and Step 3 requires expected results per step; verification is embedded rather than a dedicated section. PARTIAL prefix applies: 0.5
+- [x] PASS: Valid YAML frontmatter — frontmatter contains `name: write-integration-guide`, `description`, and `argument-hint` fields
 
-The skill is well-designed for integration documentation specifically — the research-first approach (Step 1) prevents writing guides for integrations you don't understand. The "complete runnable example" requirement in Step 4 is a hard gate that prevents the common failure of integration guides that show snippets but not how the pieces fit together. Verification is present but embedded, hence the partial on that criterion.
+## Notes
+
+The skill is well-structured for integration-specific documentation. The research-first approach in Step 1 (Grep/Glob codebase before writing) is a meaningful constraint — it prevents docs that don't match the actual code. The "mandatory" complete example in Step 4 is explicitly non-negotiable per the rules section. Verification is woven into each step's expected result rather than isolated as a dedicated section, which is why the partial stands.

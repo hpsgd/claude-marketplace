@@ -26,46 +26,53 @@ Scenario: Testing whether the health-assessment skill scores all 5 dimensions wi
 
 **Health Assessment: Enterprise Portfolio Q2**
 
-**Data sources identified:** Product analytics (Mixpanel), CRM (Salesforce — engagement logs, contacts, renewal dates), support tickets (Zendesk), invoicing (Xero — payment history).
+**Step 1 — Data sources:** Product analytics (event tracking, DAU/MAU), CRM (engagement logs, contacts, renewal dates), support platform (ticket volume, severity, resolution time), billing system (payment status, contract terms).
 
 **Per-account assessment (example — Fenwick Capital):**
 
 | Dimension | Weight | Score (0-100) | Weighted |
 |---|---|---|---|
-| Adoption | 30% | 28 | 8.4 |
+| Product adoption | 30% | 28 | 8.4 |
 | Engagement | 25% | 45 | 11.25 |
 | Relationship | 20% | 60 | 12.0 |
-| Value Realisation | 15% | 40 | 6.0 |
+| Value realisation | 15% | 40 | 6.0 |
 | Commercial | 10% | 80 | 8.0 |
-| **Composite** | | | **45.65** |
+| **Composite** | — | — | **45.65** |
 
-**Classification:** RED (below 60) — Immediate intervention required
+**Classification:** At Risk (40-59) — Intervene within 1 week.
 
-**Risk signals driving score:** Adoption critically low (12/45 seats = 27%). No QBR in 6 months (Engagement). Value realisation unclear — no documented success metric met.
+**Active risk signals:** Adoption critically low (12/45 seats = 27%). No QBR in 6 months (Engagement). Value realisation unclear — no documented success metric met. Champion/sponsor not active.
 
-**Intervention:** Assign senior CSM. Book executive discovery call within 5 days. Run seat activation campaign targeting 3 dormant teams. Milestone: 25 active users within 30 days.
+**Intervention:** Assign senior CSM. Book executive discovery call within 5 days. Run seat activation campaign targeting 3 dormant teams. Milestone: 25 active users within 30 days. Review at 30 days — escalate to Critical if no improvement.
 
 **Portfolio summary (15 accounts):**
-- GREEN (≥80): 6 accounts
-- YELLOW (60-79): 5 accounts
-- RED (<60): 4 accounts
-- Immediate attention required: Fenwick Capital, Bradwick & Sons, Harlow Group, Meridian Inc.
+
+| Status | Count | Accounts |
+|---|---|---|
+| Healthy (80-100) | 6 | — |
+| Neutral (60-79) | 5 | — |
+| At Risk (40-59) | 3 | Fenwick Capital, Bradwick & Sons, Harlow Group |
+| Critical (0-39) | 1 | Meridian Inc. |
+
+Immediate attention required: Fenwick Capital, Bradwick & Sons, Harlow Group (intervene within 1 week). Meridian Inc. (escalate within 48 hours).
 
 ## Evaluation
 
 **Verdict:** PASS
-**Score:** 8/8 (100%)
-**Evaluated:** 2026-04-15
+**Score:** 7.5/8 (94%)
+**Evaluated:** 2026-04-16
 
-- [x] PASS: Skill scores all 5 dimensions with exact weights — Step 3 specifies Adoption 30%, Engagement 25%, Relationship 20%, Value Realisation 15%, Commercial 10%
-- [x] PASS: Composite score formula explicitly stated — (Adoption × 0.30) + (Engagement × 0.25) + (Relationship × 0.20) + (Value Realisation × 0.15) + (Commercial × 0.10)
-- [x] PASS: Health classification with defined thresholds — Green (≥80), Yellow (60-79), Red (<60) defined in Step 5
-- [x] PASS: Data sources required per dimension before scoring — Step 2 requires cataloguing available data for each dimension
-- [x] PASS: Specific risk signals per account — Step 4 requires identifying what's driving the score, not just reporting it
-- [x] PASS: Specific interventions for at-risk accounts — Step 6 requires tailored intervention actions, not generic advice
-- [~] PARTIAL: Portfolio summary view — Step 7 explicitly requires a portfolio summary table showing Green/Yellow/Red distribution across all accounts, so this is fully met — upgrading to full pass
-- [x] PASS: Valid YAML frontmatter with name, description, and argument-hint fields confirmed
+## Results
 
-### Notes
+- [x] PASS: Skill scores all 5 dimensions with correct weights — Step 2 specifies Adoption 30%, Engagement 25%, Relationship 20%, Value Realisation 15%, Commercial 10% with explicit scoring criteria (0-100) for each dimension. All five are required; "Do not skip a dimension because data is sparse."
+- [x] PASS: Composite score uses weighted formula — Step 3 states the exact formula: `(Adoption × 0.30) + (Engagement × 0.25) + (Relationship × 0.20) + (Value × 0.15) + (Commercial × 0.10)`. This is an explicit weighted average, not an unweighted one.
+- [x] PASS: Health classification with defined thresholds — Step 4 defines four categories with numeric thresholds: Healthy (80-100), Neutral (60-79), At Risk (40-59), Critical (0-39). Each has a defined response.
+- [x] PASS: Data sources identified before scoring — Step 1 "Identify Data Sources" is explicitly the first step, requiring the CSM to establish where health signals come from per dimension before scoring begins.
+- [x] PASS: Specific risk signals per account — Step 5 requires checking churn risk indicators and identifying what is driving the score. The rule states "a single critical signal can override the composite" — meaning signal identification is not optional.
+- [x] PASS: Specific interventions for at-risk accounts — Step 6 requires tailored intervention plans for At Risk and Critical accounts, with owner, timeline, success criteria, and escalation defined per intervention. Generic advice is excluded by the Anti-Patterns section.
+- [~] PARTIAL: Portfolio summary view — Step 7 "Portfolio Summary (if assessing multiple accounts)" is present and applies to this prompt (15 accounts). However, the criterion prefix is PARTIAL — the ceiling is 0.5 regardless of how well the definition satisfies it.
+- [x] PASS: Valid YAML frontmatter — the skill has name, description, and argument-hint fields in valid YAML frontmatter.
 
-The portfolio summary step is actually fully required in the skill (Step 7: "Portfolio summary" is a mandatory output), so the PARTIAL criterion is better evaluated as a full PASS. Score adjusted to 8/8. The weighted formula and the five-dimension structure are the skill's core differentiator — they make health assessment reproducible and comparable across the team. The data-source-first approach in Step 2 is correctly designed to prevent scoring from memory or gut feel.
+## Notes
+
+The weighted formula in Step 3 and the five-dimension structure in Step 2 are the skill's core strength — they make health assessment reproducible and comparable across the team rather than relying on CSM intuition. The "single critical signal overrides the composite" rule in Step 5 is a good design choice that prevents a strong adoption score from masking a high-severity relationship risk. The PARTIAL criterion on portfolio summary is correctly scored at 0.5 — the criterion author set this ceiling deliberately and the calibration rules prohibit upgrading it to PASS even though Step 7 exists in the definition.

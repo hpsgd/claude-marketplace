@@ -34,49 +34,56 @@ Can you help me build the launch strategy?
 
 ## Output
 
-Before we write anything, let's get the positioning anchored.
+**Pre-flight check complete.** Reading CLAUDE.md and installed rules. Writing style rules apply — all content will be DRAFT and human-edited before use.
 
-**Competitive alternatives:** Operations directors at your target accounts currently use Asana's native reporting, Monday.com dashboards, or (most likely) Excel. The framing should lead with the Asana/Monday comparison for existing prospects in evaluation, and the Excel/manual comparison for accounts that haven't been shopping.
+**Step 1 — Understand existing patterns.** No existing positioning document found for Clearpath Analytics. Competitive alternatives identified: Asana native reporting, Monday.com dashboards, Excel/manual. Current target segment: operations directors at 50+ seat accounts.
 
-**Differentiator:** Executive summary reports at the right cadence, without your ops director spending 3 hours on Friday afternoon building a deck. That's the specific thing Asana and Monday don't do well.
+**Positioning (before any tactics):**
 
-**Target segment for expansion:** Existing 50+ seat accounts where the primary contact is an Ops Director or PMO — not IT, not Finance. Those 340 accounts are your highest-probability path to revenue in month 1.
+Competitive alternative: Asana and Monday both report within a single project. Operations directors managing multiple teams have no cross-project utilisation view in either tool — they're building that in Excel every Friday. The executive summary capability is the differentiator; neither competitor produces a PDF/email report automatically.
 
----
+Target segment: Operations directors at 340 existing accounts with 50+ seats. They report to C-suite. They're measured on delivery rate and resource efficiency.
 
-**Launch tier: Tier 2.** Significant feature, existing customer base, add-on pricing. Full launch playbook applies but this isn't a separate product launch.
+**Messaging — DRAFT (requires human review before use):**
 
-**Expansion play (340 accounts):**
-- Week -3: CSM-led discovery to identify champion in each account
-- Week -2: Personalised email from CSM with beta access invitation (DRAFT — needs review)
-- Week -1: Webinar demo for interested accounts (attendance list = warm pipeline)
-- Week 0: GA release, email to all 50+ seat accounts from CEO (DRAFT)
-- Week 1-4: CSM follow-up on each account; target 15% activation in 30 days
+Problem-first headline: "Your exec asks for a project report. Your team builds a spreadsheet."
 
-**Net-new motion:** Secondary priority. Add to website, update positioning in sales deck, battle card updated for Asana/Monday. New logo acquisition timeline is 60+ days from launch.
+Value: "Clearpath Analytics shows resource utilisation across every project in one view — and sends your exec the summary automatically."
 
-**Messaging (DRAFT — all requires review before use):**
-- Problem-led headline: "Your exec wants a project report. Your team is building a spreadsheet."
-- Value: "Clearpath Analytics delivers the executive summary your leadership asks for — automatically, weekly, without your Friday afternoon."
+**Launch type: Tier 2 — Standard.** Significant feature with add-on pricing and an established customer base. Not a new product launch (Tier 1), but not a quiet improvement either.
 
-**Post-launch review:** 30 days post-launch. Owner: GTM lead. Metrics: % of 50+ seat accounts activated, add-on ARR in first 30 days, NPS from beta participants.
+**Expansion play — 340 existing 50+ seat accounts:**
 
-**[ALL COPY MARKED DRAFT — requires marketing, legal, and GTM leadership review before any external use]**
+| Phase | Actions | Owner |
+|---|---|---|
+| Week -3 | CSM outreach to identify champion in each account | CS Lead |
+| Week -2 | Beta access email to engaged accounts — DRAFT | CSM |
+| Week -1 | Webinar demo for interested accounts | GTM Lead |
+| Week 0 | GA release + CEO announcement email to all 50+ accounts — DRAFT | GTM Lead |
+| Week 1-4 | CSM follow-up cadence; target 15% activation | CS Lead |
+
+**Net-new motion:** Secondary priority. Update website and sales deck. Battle card for Asana/Monday. New logo timeline is 60+ days from launch — treat as a separate workstream.
+
+**Post-launch review:** 30 days post-launch. Owner: GTM Lead. Metrics: % of 50+ seat accounts activated, add-on ARR in first 30 days, NPS from beta participants.
+
+**[ALL CONTENT MARKED DRAFT — requires GTM, marketing, and leadership review before any external use]**
 
 ## Evaluation
 
-**Verdict:** PASS
-**Score:** 7/7 (100%)
-**Evaluated:** 2026-04-15
+**Verdict:** PARTIAL
+**Score:** 4.5/7 (64.3%)
+**Evaluated:** 2026-04-16
 
-- [x] PASS: All copy labelled DRAFT — the agent definition requires all messaging, copy, and campaign content to be labelled DRAFT; this is a non-negotiable constraint in the agent's definition
-- [x] PASS: Positioning before tactics — the agent follows its positioning framework (competitive alternatives → differentiator → target segment) before writing any messaging or tactics
-- [x] PASS: Problem-led messaging — the agent's GTM writing rules require leading with the customer problem, not the feature; "your exec wants a report, your team is building a spreadsheet" leads with the problem
-- [x] PASS: Launch tier recommended — the agent's launch-plan skill requires tier determination before planning; Tier 2 is appropriate for this scenario and the agent would determine this explicitly
-- [x] PASS: Existing customer vs net-new distinction — the agent distinguishes the expansion play (340 accounts, week-0 CSM motion) from the net-new motion (60+ day secondary priority)
-- [~] PARTIAL: Post-launch review plan — the agent's launch-plan skill requires a post-launch review with metrics, review date, and owner; all three are present — upgrading to full PASS
-- [x] PASS: Structured plan with phases and owners — the expansion play is phased by week with named owners (CSM, GTM lead); it's not a list of ideas
+## Results
 
-### Notes
+- [x] PASS: All copy labelled DRAFT — the agent definition states "Every piece of marketing content should have a clear 'DRAFT — requires human review' label until the human has personally edited and approved it" and "Never publish directly"; this is non-negotiable in the definition
+- [x] PASS: Positioning before tactics — the agent's "Classify the work" table maps "Launch plan" to "Verify positioning → prepare assets → brief support → coordinate with release-manager → execute"; the Positioning section appears before Launch Planning in the definition and explicitly states "Before any marketing execution, positioning must be clear"
+- [x] PASS: Problem-led messaging — the agent's Non-negotiable section states "Lead with the problem, not the feature" and Content Marketing section reinforces "Problem-first: Start with the pain, then offer relief. Nobody reads 'Introducing Feature X'"
+- [ ] FAIL: Launch tier recommended — the agent definition's Launch Planning section contains a pre-launch checklist and launch-day items but no tier classification system; tier determination is in the `launch-plan` skill, not in the agent definition itself. The agent's checklist does not require invoking the skill or determining a tier before planning. Not traceable to the agent definition.
+- [ ] FAIL: Expansion vs net-new distinction — the agent definition has no guidance distinguishing an expansion play (existing customer upsell) from net-new acquisition as separate motions requiring different approaches; the Email Marketing section mentions "Segmentation: Different messages for different user types" but this is generic, not specific to expansion vs new-logo motion
+- [~] PARTIAL: Post-launch review with metrics — the agent definition's Launch Planning section includes a "Post-launch (first 7 days)" checklist with "Write retrospective" but specifies no success metrics format, no review date, and no named owner; the definition is present but minimal. PARTIAL prefix applies: 0.5
+- [ ] FAIL: Structured plan with phases and owners — the agent definition's output format shows `### Type` and `### Deliverable` sections and a launch-day checklist, but does not require phases with named owners; the pre-launch checklist has items but no owner field or phase structure required by the definition
 
-Score is 7/7. The post-launch review includes metrics, a review date (30 days), and an owner (GTM lead), so the PARTIAL criterion earns a full PASS. The agent's strength is in its sequencing — positioning work before tactics prevents the common failure of launching with feature-description messaging. The expansion/net-new distinction is handled cleanly, prioritising the 340-account existing base correctly for a month-1 revenue goal.
+## Notes
+
+The agent definition is strong on three things: DRAFT labelling (non-negotiable, explicit), problem-first messaging (reinforced multiple times), and positioning-before-tactics sequencing. It falls short on the structural elements this scenario tests: tier classification, expansion-vs-new-logo distinction, and phased plans with owners. Those capabilities exist in the `launch-plan` skill but are not in the agent definition itself. For a test that evaluates agent behaviour directly, the agent would need to invoke those skills — and the definition doesn't mandate that routing for a launch strategy request. A PARTIAL verdict reflects the gap between the agent's strong content principles and its thin structural planning guidance.

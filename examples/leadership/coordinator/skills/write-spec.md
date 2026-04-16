@@ -30,17 +30,17 @@ Scenario: A user invokes the skill to write a spec for a non-trivial backend fea
 
 # Specification: CSV Import for Planora
 
-**Version:** 1.0 | **Date:** 2026-04-15 | **Status:** Draft
+**Version:** 1.0 | **Date:** 2026-04-16 | **Status:** Draft
 
 ## 1. Problem Definition
 
 | Question | Answer |
 |---|---|
-| **What problem are we solving?** | Project managers must manually create tasks one at a time — there is no bulk creation path. Teams migrating from other tools or setting up large projects waste significant time on repetitive data entry |
-| **Who has this problem?** | Project managers who onboard new projects, migrate tasks from external tools (Jira, Excel, Monday.com), or need to create 20+ tasks at once |
-| **How do we know it's a problem?** | 47 support tickets in the last quarter requesting bulk import; 3 churned enterprise prospects cited missing bulk import as a reason; average session time for users creating 10+ tasks is 23 minutes (Mixpanel, Q2) |
-| **What does success look like?** | Average time to create 20 tasks drops from 23 minutes to under 3 minutes; bulk-import-related support tickets drop by 80% |
-| **What happens if we don't solve it?** | Continued churn risk on mid-size and enterprise accounts where bulk task creation is a workflow requirement; support load remains high |
+| **What problem are we solving?** | Project managers must create tasks one at a time — no bulk creation path exists. Teams migrating from other tools or setting up large projects waste significant time on repetitive data entry |
+| **Who has this problem?** | Project managers onboarding new projects, migrating from Jira/Excel/Monday, or creating 20+ tasks at once |
+| **How do we know it's a problem?** | 47 support tickets in the last quarter requesting bulk import; 3 churned enterprise prospects cited missing bulk import; average session time for users creating 10+ tasks is 23 minutes (Mixpanel, Q2) |
+| **What does success look like?** | Average time to create 20 tasks drops from 23 minutes to under 3 minutes; bulk-import support tickets drop by 80% |
+| **What happens if we don't solve it?** | Continued churn risk on mid-size and enterprise accounts; support load stays high |
 
 ## 2. User Stories
 
@@ -62,11 +62,11 @@ Scenario: A user invokes the skill to write a spec for a non-trivial backend fea
 #### Error cases
 - **Given** a user uploads a file with the wrong MIME type (e.g. `.xlsx`)
 - **When** the file is submitted
-- **Then** the upload is rejected with error: "Only CSV files are supported. Download the template to format your data."
+- **Then** the upload is rejected with: "Only CSV files are supported. Download the template to format your data."
 
 - **Given** a user uploads a CSV where 3 of 20 rows have an unknown assignee email
 - **When** the file is validated
-- **Then** the valid 17 rows are not auto-imported; a validation report lists all 3 failing rows with column and reason; the user must fix and re-upload (no silent skipping)
+- **Then** the valid 17 rows are not auto-imported; a validation report lists all 3 failing rows with column and reason; user must fix and re-upload
 
 #### Edge cases
 - **Given** a CSV with 1001 rows (above the 1000-row limit)
@@ -75,31 +75,31 @@ Scenario: A user invokes the skill to write a spec for a non-trivial backend fea
 
 - **Given** a CSV where a due date field contains "next Friday" (non-ISO format)
 - **When** validated
-- **Then** row is flagged with: "Due date must be in YYYY-MM-DD format. Found: 'next Friday' in row 7."
+- **Then** row flagged with: "Due date must be in YYYY-MM-DD format. Found: 'next Friday' in row 7."
 
 ### US-2: Pre-import validation report
 
 #### Happy path
 - **Given** a CSV with 20 rows, 2 of which have invalid priority values
 - **When** the user uploads and clicks "Validate"
-- **Then** a report is shown listing rows 1-20 with status (valid/invalid), and for invalid rows the column name and error description; valid rows show a preview of the task that will be created
+- **Then** a report shows rows 1-20 with status (valid/invalid); invalid rows show column name and error description; valid rows show a task preview
 
 #### Error cases
 - **Given** the CSV has a header row only (no data rows)
 - **When** validated
-- **Then** "No data rows found in file" error; no import permitted
+- **Then** "No data rows found in file"; no import permitted
 
-- **Given** the CSV is missing the required "name" column entirely
+- **Given** the CSV is missing the required "name" column
 - **When** validated
 - **Then** "Required column 'name' not found. Available columns: [list]. Download the template."
 
 #### Edge cases
-- **Given** a row where the task name field is 256 characters (over the 255-char limit)
+- **Given** a row where the task name is 256 characters (over the 255-char limit)
 - **When** validated
 - **Then** row flagged: "Task name exceeds 255 characters in row 4."
 
-- **Given** a duplicate task name exists in the same project (exact match)
-- **When** the row is validated
+- **Given** a duplicate task name exists in the same project
+- **When** validated
 - **Then** row flagged with warning (not error): "A task named '[name]' already exists in this project. Import will create a duplicate." User can proceed.
 
 ### US-3: CSV template download
@@ -117,13 +117,13 @@ Scenario: A user invokes the skill to write a spec for a non-trivial backend fea
 #### Edge cases
 - **Given** the user's browser locale uses comma as decimal separator (EU locale)
 - **When** they open the downloaded template in Excel
-- **Then** columns should still display correctly (template uses comma separator, not semicolon)
+- **Then** columns display correctly (template uses comma separator, not semicolon)
 
 ## 4. API Contract
 
 ### POST /api/v1/projects/{project_id}/imports/validate
 
-**Purpose:** Validate a CSV file and return a row-by-row validation report without creating tasks.
+**Purpose:** Validate a CSV file and return a row-by-row report without creating tasks.
 
 **Request:**
 | Field | Type | Required | Validation | Description |
@@ -137,16 +137,8 @@ Scenario: A user invokes the skill to write a spec for a non-trivial backend fea
   "valid_rows": 18,
   "invalid_rows": 2,
   "rows": [
-    {
-      "row_number": 1,
-      "status": "valid",
-      "preview": { "name": "Design homepage", "assignee_email": "jane@co.com", "due_date": "2026-05-01", "priority": "high" }
-    },
-    {
-      "row_number": 7,
-      "status": "invalid",
-      "errors": [{ "column": "due_date", "message": "Must be YYYY-MM-DD format. Found: 'next Friday'" }]
-    }
+    { "row_number": 1, "status": "valid", "preview": { "name": "Design homepage", "assignee_email": "jane@co.com", "due_date": "2026-05-01", "priority": "high" } },
+    { "row_number": 7, "status": "invalid", "errors": [{ "column": "due_date", "message": "Must be YYYY-MM-DD format. Found: 'next Friday'" }] }
   ]
 }
 ```
@@ -162,17 +154,11 @@ Scenario: A user invokes the skill to write a spec for a non-trivial backend fea
 
 ### POST /api/v1/projects/{project_id}/imports/commit
 
-**Purpose:** Commit a previously validated import. Only valid rows are created.
+**Purpose:** Commit a previously validated import.
 
-**Request:**
-```json
-{ "import_session_id": "uuid" }
-```
+**Request:** `{ "import_session_id": "uuid" }`
 
-**Response (201):**
-```json
-{ "tasks_created": 18, "skipped_rows": 2, "import_id": "uuid" }
-```
+**Response (201):** `{ "tasks_created": 18, "skipped_rows": 2, "import_id": "uuid" }`
 
 **Error responses:**
 | Status | Code | When |
@@ -181,8 +167,6 @@ Scenario: A user invokes the skill to write a spec for a non-trivial backend fea
 | 409 | IMPORT_ALREADY_COMMITTED | Session already used |
 
 ### GET /api/v1/imports/template
-
-**Purpose:** Download the CSV template.
 
 **Response (200):** `Content-Type: text/csv`, file download.
 
@@ -212,7 +196,7 @@ Scenario: A user invokes the skill to write a spec for a non-trivial backend fea
 
 #### Migration notes
 - New table, no backfill required
-- Add background job to expire sessions older than 30 minutes (set status = 'expired')
+- Add background job to expire sessions older than 30 minutes
 - task table requires no changes — import commit creates standard task rows
 
 ## 6. Non-Functional Requirements
@@ -220,29 +204,28 @@ Scenario: A user invokes the skill to write a spec for a non-trivial backend fea
 | Category | Requirement | Measurement | Target |
 |---|---|---|---|
 | **Performance** | Validation response time for 1000-row CSV | p95 latency | < 3 seconds |
-| **Performance** | Commit (task creation) for 1000 rows | Wall clock | < 5 seconds |
+| **Performance** | Commit for 1000 rows | Wall clock | < 5 seconds |
 | **Scalability** | Concurrent imports per project | Load test | 5 concurrent without degradation |
 | **Security** | File scanning | Malware/script injection | All uploads scanned before parsing |
-| **Accessibility** | Validation report UI | WCAG 2.1 AA | Errors navigable by keyboard and screen reader; row numbers announced |
+| **Accessibility** | Validation report UI | WCAG 2.1 AA | Errors navigable by keyboard and screen reader |
 | **Reliability** | Import atomicity | On partial commit failure | All-or-nothing per commit (rollback on error) |
-| **Observability** | Audit trail | Logging | import_initiated, import_validated, import_committed events logged with user ID, project ID, row count |
 
 ## 7. Edge Cases
 
 | # | Category | Scenario | Expected Behaviour |
 |---|---|---|---|
-| E1 | Empty state | CSV has header row only, no data rows | Rejected with EMPTY_FILE — "No data rows found" |
-| E2 | Malformed CSV | File has unbalanced quotes in a field | Parse error flagged on that row: "Malformed CSV at row 12" |
+| E1 | Empty state | CSV has header row only, no data rows | Rejected: EMPTY_FILE — "No data rows found" |
+| E2 | Malformed CSV | File has unbalanced quotes in a field | Parse error on that row: "Malformed CSV at row 12" |
 | E3 | Malformed CSV | File has inconsistent column count per row | Each short/long row flagged: "Row 5 has 3 columns, expected 4" |
-| E4 | Duplicate rows | Same task name + assignee + due date appears twice in the file | Both rows valid — warning shown; user can proceed. Duplicates permitted. |
+| E4 | Duplicate rows | Same task name + assignee + due date appears twice | Both rows valid — warning shown; user can proceed |
 | E5 | Unknown assignee | Email not found in project members | Row invalid: "User jane@co.com is not a member of this project" |
 | E6 | Max file size | 5.1MB file uploaded | Rejected before parsing: FILE_TOO_LARGE |
-| E7 | Max row count | 1001 data rows | Rejected: TOO_MANY_ROWS — "Split into multiple files" |
-| E8 | Concurrent imports | Two users submit imports to the same project simultaneously | Both proceed independently; tasks are created from both (no lock needed) |
-| E9 | Session expiry | User validates, waits 31 minutes, then commits | SESSION_NOT_FOUND (or SESSION_EXPIRED) returned; must re-upload |
+| E7 | Max row count | 1001 data rows | Rejected: TOO_MANY_ROWS |
+| E8 | Concurrent imports | Two users submit imports to the same project simultaneously | Both proceed independently; no lock needed |
+| E9 | Session expiry | User validates, waits 31 minutes, then commits | SESSION_NOT_FOUND returned; must re-upload |
 | E10 | Priority casing | "HIGH" vs "high" in priority column | Case-insensitive normalisation — "HIGH", "High", "high" all accepted |
 | E11 | Empty name field | Row with blank task name | Row invalid: "Task name is required" |
-| E12 | BOM character | CSV exported from Excel with UTF-8 BOM | BOM stripped before parsing — not treated as column name prefix |
+| E12 | BOM character | CSV exported from Excel with UTF-8 BOM | BOM stripped before parsing |
 
 ## 8. Open Questions & Out of Scope
 
@@ -250,18 +233,17 @@ Scenario: A user invokes the skill to write a spec for a non-trivial backend fea
 
 | # | Question | Owner | Deadline | Impact if unresolved |
 |---|---|---|---|---|
-| Q1 | Should assignee matching be email-only, or also support display name matching? | Product Owner | 2026-04-22 | Affects validation logic and error messages |
-| Q2 | Is the 1000-row limit a hard limit (reject) or a soft limit (warn and truncate)? | Product Owner + CTO | 2026-04-22 | Affects API contract and UX for edge case |
-| Q3 | Should the import session (validation result) be stored permanently for audit, or cleaned up after commit? | CTO + GRC Lead | 2026-04-25 | Affects data model retention policy and storage cost |
+| Q1 | Should assignee matching be email-only, or also support display name matching? | Product Owner | 2026-04-23 | Affects validation logic and error messages |
+| Q2 | Is the 1000-row limit a hard limit (reject) or a soft limit (warn and truncate)? | Product Owner + CTO | 2026-04-23 | Affects API contract and UX |
+| Q3 | Should the import session be stored permanently for audit, or cleaned up after commit? | CTO + GRC Lead | 2026-04-26 | Affects data model retention policy |
 
 ### Out of Scope
 
 | Item | Reason | Future consideration? |
 |---|---|---|
-| Excel (.xlsx) file support | Requires additional parsing library; separate effort | Yes — v2 |
-| Field mapping UI (map CSV columns to task fields) | Significant UX complexity; requires design work | Yes — v2 |
-| Import history / audit log UI | Admin feature; out of scope for v1 | Yes — v2 |
-| Recurring task import | Not supported in task model today | No — separate feature |
+| Excel (.xlsx) file support | Requires additional parsing library | Yes — v2 |
+| Field mapping UI | Significant UX complexity | Yes — v2 |
+| Import history / audit log UI | Admin feature | Yes — v2 |
 
 ## 9. Review Status
 
@@ -280,19 +262,21 @@ Scenario: A user invokes the skill to write a spec for a non-trivial backend fea
 
 **Verdict:** PASS
 **Score:** 9.5/10 (95%)
-**Evaluated:** 2026-04-15
+**Evaluated:** 2026-04-16
+
+## Results
 
 - [x] PASS: Problem definition table — skill's Step 1 template requires "what problem, who, evidence, success criteria, cost of inaction"; all five fields present with specific evidence (47 support tickets, 23-minute session time, churned prospects)
-- [x] PASS: User stories with RICE scores — skill's Step 2 requires "As a [user type], I want [capability] so that [benefit]" format with RICE components; all three stories follow the format and include R, I, C, E scores
-- [x] PASS: Acceptance criteria in Given/When/Then covering happy path, 2+ error cases, 2+ edge cases — skill's Step 3 requires minimum 1 happy path, 2 error cases, 2 edge cases per story; all three stories meet this threshold
-- [x] PASS: API contract covers upload endpoint with file type/size limits, success response, and error responses with status codes — skill's Step 4 template requires request schema, 200 response, and error responses; all present including MIME validation and size constraints
-- [x] PASS: Data model covers task import entity with constraints, indexes, and migration notes — skill's Step 5 template requires entities, relationships, constraints, indexes, and migration notes; task_imports table includes all, plus notes on rollback and no task table changes needed
-- [x] PASS: NFR table includes performance and accessibility — skill's Step 6 template lists performance and accessibility as examples; both present with measurable targets (p95 <3s, WCAG 2.1 AA)
-- [x] PASS: Edge case table has 12 entries covering empty file (E1), malformed CSV (E2, E3), duplicate rows (E4), unknown assignee (E5), max file size (E6), max row count (E7), concurrent imports (E8) — skill requires "minimum 10 entries for any non-trivial feature" and lists specific scenarios to cover; all listed scenarios present
-- [x] PASS: Open questions with owners and deadlines — skill's Step 8 template requires "Question / Owner / Deadline / Impact if unresolved"; all three open questions include these fields
-- [~] PARTIAL: Three amigos review section present — skill's Step 9 template requires sign-off tracker with Role, Reviewer, Status, Comments; section is present but all statuses are Pending since this is a draft spec. Definition says to "Request sign-off" — the structure is correct, the sign-offs are not yet obtained (expected at draft stage). Treating as a structural pass.
-- [x] PASS: Spec written to a file — skill's Output Format section states "Write the output to a file"; the simulated output explicitly shows file write to `docs/spec-csv-import-planora.md`
+- [x] PASS: User stories with RICE scores — skill's Step 2 requires "As a [user type], I want [capability] so that [benefit]" format with RICE components (R, I, C, E); all three stories comply; INVEST compliance is implied by skill's explicit "Stories must be independent, negotiable, valuable, estimable, small, and testable" rule
+- [x] PASS: Acceptance criteria per story in Given/When/Then covering happy path + 2 error cases + 2 edge cases — skill's Step 3 states "Every story must have at least: 1 happy path, 2 error cases, and 2 edge cases"; all three stories have all required combinations
+- [x] PASS: API contract covers upload endpoint with file type/size limits, success response, error responses with status codes — skill's Step 4 template shows request schema with validation column and error response table with status codes; POST /validate includes MIME check, size limit, row limit, and five error response codes
+- [x] PASS: Data model with constraints, indexes, and migration notes — skill's Step 5 template requires entities, constraints, indexes, and migration notes; task_imports table includes all, with NOT NULL constraints, enum CHECK, two indexes, and migration notes
+- [x] PASS: NFR table with measurable performance and accessibility targets — skill's Step 6 template explicitly lists Performance and Accessibility as categories; both present with measurable targets (p95 <3s, WCAG 2.1 AA)
+- [x] PASS: Edge case table with 12 entries covering all listed scenarios — skill's Step 7 requires "minimum 10 entries for any non-trivial feature"; 12 entries present, covering empty file (E1), malformed CSV (E2, E3), duplicates (E4), unknown assignee (E5), max file size (E6), max row count (E7), concurrent imports (E8)
+- [x] PASS: Open questions with owners and deadlines — skill's Step 8 template requires "Question / Owner / Deadline / Impact if unresolved"; all three open questions include all four fields
+- [~] PARTIAL: Three amigos review section present with sign-off tracker — skill's Step 9 template requires "Role / Reviewer / Status / Comments" table plus Review date and Spec status; structure is present; all statuses are Pending (expected for a draft). PARTIAL ceiling applies. Score 0.5.
+- [x] PASS: Spec written to a file — skill's Output Format section states spec is written as a file; the simulated output explicitly shows a file write to `docs/spec-csv-import-planora.md`
 
-### Notes
+## Notes
 
-The skill definition covers all nine steps thoroughly. The three amigos criterion is a PARTIAL in the rubric — in practice, a draft spec would always have pending sign-offs, so the structure check is what matters here and it passes. One gap in the definition: it does not specify a file naming convention for specs (unlike define-okrs which specifies `docs/okrs-[name]-[period].md`). A naming convention like `docs/spec-[feature].md` would make the convention explicit.
+The write-spec definition covers all nine steps clearly. One gap worth noting: unlike define-okrs which specifies a file naming convention (`docs/okrs-[name]-[period].md`), write-spec does not specify a naming convention for the output file. The simulated output uses `docs/spec-[feature].md` which is reasonable, but the definition should make this explicit. The PARTIAL on three amigos is the rubric ceiling — the structural check passes and the sign-off status being Pending is expected behaviour for a draft spec.

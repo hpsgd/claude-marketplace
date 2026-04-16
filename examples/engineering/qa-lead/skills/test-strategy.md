@@ -25,37 +25,40 @@ Define a test strategy for our new document signing feature. Users can: upload a
 
 **Simulated skill output for this prompt:**
 
-Step 1 feature understanding: document signing flow (upload → field placement → send → sign → download). Critical flows: full signing, tamper detection, audit trail accuracy. External dependencies: PDF rendering, email delivery. Failure modes: corrupted signature, wrong audit timestamp, unauthorised access to document.
+Step 1 feature understanding: document signing flow (upload → field placement → add signatories → send → sign → download). Critical flows: full signing end-to-end, tamper-evident hash verification, audit trail accuracy. External dependencies: PDF storage/rendering, email delivery for signing invites. Failure modes: corrupted signature, incorrect audit timestamp, unauthorised signatory access, tampered document accepted as valid.
 
-Risk profile: HIGH for legal/data integrity. Tamper-evident requirement is a legal obligation. Audit trail inaccuracy could void a signed document's legal standing.
+Risk profile: HIGH for legal/data integrity. The tamper-evident requirement is a legal obligation. Audit trail inaccuracy could void the document's legal standing.
 
-Test levels:
-- Unit (Vitest): PDF processing logic, field coordinate calculation, audit event generation. Target: 85% coverage, ~40 tests
-- Integration: signature placement persistence, audit trail write, email delivery. Target: ~20 tests
-- E2E (Playwright): full signing flow, tamper detection verification, audit trail download. Limited to top 3 flows. ~8 tests
+Test levels (TypeScript/Vitest + Playwright):
+- Unit (Vitest): PDF processing, field coordinate calculation, audit event generation, hash computation. Coverage target: 85% changed code. Estimated: ~40 tests
+- Integration: signature placement persistence, audit trail write, email invite delivery, auth/authz boundary. Coverage: critical paths. Estimated: ~20 tests
+- E2E (Playwright): full signing flow, tamper detection (modify signed PDF → verify rejection), audit trail download matches expected events. Limited to top 3 flows. Estimated: ~8 tests
+- Security: authz checks (only invited signatory can sign), signed document integrity (hash verification), audit trail timestamps sourced from server not client
 
-E2E limited: only critical flows (full signing, tamper detection, audit trail). Not every UI interaction.
+E2E limited: only the 3 critical flows above. Not every UI interaction or edge case.
 
-Gaps: no load test for concurrent signing sessions. No accessibility testing for signature field placement (keyboard + screen reader).
+Gaps: no load test for concurrent signing sessions (multiple signatories signing simultaneously). No accessibility testing for signature field drag-and-drop on keyboard or screen reader.
 
-Quality gates: pre-merge = unit + integration pass, 85% branch coverage. Pre-release = E2E pass on staging with real PDF, audit trail verified against expected output.
+Quality gates: pre-merge = unit + integration pass, 85% branch coverage on changed files, no new type errors. Pre-release = E2E pass on staging environment with a real PDF, audit trail output verified against expected event sequence.
 
-Security testing: authz checks (only invited signatory can sign), document integrity (tamper-evident hash verification), audit trail accuracy (timestamps from trusted source, not client clock).
-
-Testing pyramid: this risk profile warrants 60/30/10 (unit/integration/E2E) — higher integration ratio than default 70/20/10 due to legal requirements. Explicitly stated.
+Testing pyramid: this risk profile warrants a higher integration ratio than the default 70/20/10. Suggested allocation: 60% unit / 30% integration / 10% E2E, reflecting the legal requirement for data integrity verification at the boundary level.
 
 ## Evaluation
 
-- [x] PASS: Skill starts with feature understanding — test-strategy SKILL.md Step 1 is feature understanding covering flows, failure modes, dependencies, risk profile
-- [x] PASS: Risk profile identifies legal/data integrity as high risk — test-strategy SKILL.md Step 1 requires risk profile with explicit risk level identification
-- [x] PASS: Skill defines test levels with tools, coverage targets, and estimated counts — test-strategy SKILL.md Step 2 (test levels table) requires all three for each level
-- [x] PASS: E2E tests limited to top critical flows — test-strategy SKILL.md specifies limiting E2E to critical flows; full coverage E2E is listed as an anti-pattern
-- [x] PASS: Skill identifies specific gaps — test-strategy SKILL.md Step 5 (gap identification) is a mandatory step
-- [x] PASS: Quality gates are specific and measurable — test-strategy SKILL.md Step 4 requires specific thresholds
-- [x] PASS: Security testing called out separately — test-strategy SKILL.md Step 3 (stack-specific patterns) and the risk profile step both cover security testing separately
-- [~] PARTIAL: Skill addresses testing pyramid allocation — test-strategy SKILL.md references the 70/20/10 default and allows for variation based on risk profile; the explicit reallocation for high-risk features is mentioned but not as a structured mandatory calculation
-- [x] PASS: Output follows the required format — test-strategy SKILL.md output format specifies all required sections
+- [x] PASS: Skill starts with feature understanding — test-strategy SKILL.md Step 1 is "Understand What's Being Tested" and requires: description of what it does, critical user flows, failure modes, external dependencies, and risk profile. All five elements are mandated before writing the strategy.
+- [x] PASS: Risk profile identifies legal/data integrity as high risk — test-strategy SKILL.md Step 1 item 5 requires "What's the risk profile? Financial, safety, data integrity, reputation, convenience." The output format Risk Assessment section requires this explicitly. The definition supports identifying data integrity as high risk.
+- [x] PASS: Skill defines test levels with tools, coverage targets, and estimated test counts — test-strategy SKILL.md Step 2 test levels table has columns: Level / What it tests / Tools / Coverage target. The output format Test Levels table includes Level / Scope / Tools / Coverage / Est. Tests. All three required elements (tools, coverage targets, counts) are in the specified format.
+- [x] PASS: E2E tests limited to top critical flows — test-strategy SKILL.md Step 2 states "E2E: Complete user flows through UI / Playwright/Cypress / Top 5-10 flows." The anti-patterns table does not explicitly list "E2E for everything" but the "top 5-10 flows" constraint is explicit in the level definition.
+- [x] PASS: Skill identifies specific gaps — test-strategy SKILL.md Step 5 (Identify Gaps) is a mandatory step listing: untested paths, missing edge cases, over-tested code, flaky tests, and missing levels. The output format includes a Gaps section.
+- [x] PASS: Quality gates are specific and measurable — test-strategy SKILL.md Step 4 (Quality Gates) provides pre-merge and pre-release checklists with specific pass/fail criteria (e.g., "Coverage above threshold on changed files," "E2E tests pass on staging"). Not generic.
+- [x] PASS: Security testing called out separately — test-strategy SKILL.md Step 2 test levels table includes Security as a separate row: "OWASP, auth/authz, input validation / SAST / security-review skill / Public-facing code." This is a distinct level, not folded into integration.
+- [~] PARTIAL: Skill addresses testing pyramid allocation for this risk profile — test-strategy SKILL.md Step 2 states "Default allocation: 70% unit, 20% integration, 10% E2E. Adjust based on risk." The instruction to adjust based on risk is explicit, but the definition does not provide a formula or guidance for what the adjusted allocation should be for high-risk scenarios. The definition supports the concept of reallocation but does not enforce a specific alternative. Maximum score is 0.5 per criterion ceiling.
+- [x] PASS: Output follows the required format — test-strategy SKILL.md output format template explicitly requires: Risk Assessment, Test Levels table (with scope/tools/coverage/est. tests columns), Quality Gates (pre-merge + pre-release), Gaps, and Recommendations sections.
 
 **Verdict:** PASS
 **Score:** 8.5/9 criteria met (94%)
-**Evaluated:** 2026-04-15
+**Evaluated:** 2026-04-16
+
+## Notes
+
+The security testing criterion (7) passes cleanly — test-strategy SKILL.md has Security as an explicit separate row in the test levels table with its own tools and scope. The pyramid reallocation criterion (8) has a PARTIAL ceiling by design; the definition mentions adjusting for risk but gives no quantitative guidance on the adjusted split. The output format criterion (9) is fully traceable to the output format template in the skill.

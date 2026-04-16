@@ -44,7 +44,7 @@ Locating qa agent: plugins/engineering/qa/agents/qa.md... ✓
 | 1 | Line count (150–300) | ✅ | 187 lines |
 | 2 | Core statement | ✅ | "You own the quality gate..." — second person, clear ownership |
 | 3 | Non-negotiable rules | ⚠️ | Rules present but two are vague: "Maintain quality standards" doesn't specify what standards |
-| 4 | Pre-Flight | ✅ | Reads CLAUDE.md at line 18, reads .claude/CLAUDE.md at line 22 |
+| 4 | Pre-Flight | ✅ | Reads CLAUDE.md at line 18 and .claude/CLAUDE.md at line 22 |
 | 5 | Mandatory methodology | ✅ | Steps framed as mandatory with "must" throughout |
 | 6 | Output format | ✅ | Structured report template at line 89 |
 | 7 | Failure caps | ❌ | No failure caps section found — no 3-strike escalation rule |
@@ -58,27 +58,27 @@ Locating qa agent: plugins/engineering/qa/agents/qa.md... ✓
 | 15 | Description precision | ✅ | "QA lead — test strategy, quality gates, regression prevention. Use when reviewing test coverage or validating a release" |
 
 ### Recommended Actions
-1. **Add failure caps section** (structural gap — criterion 7) — add standard: "3 consecutive test failures without root cause → escalate to architect"
-2. **Fix tool links** (criterion 13) — add `[Playwright](https://playwright.dev)` and `[k6](https://k6.io)` on first mention at lines 74 and 81
-3. **Sharpen non-negotiable rules** (criterion 3) — replace "Maintain quality standards" with a specific falsifiable rule such as "Never approve a PR with failing tests regardless of deadline pressure"
+1. **Add failure caps section** (structural gap — criterion 7) — add: "3 consecutive test failures without root cause → escalate to architect"
+2. **Fix tool links** (criterion 13) — add `[Playwright](https://playwright.dev)` and `[k6](https://k6.io)` at lines 74 and 81
+3. **Sharpen non-negotiable rules** (criterion 3) — replace "Maintain quality standards" with a specific falsifiable rule
 4. **Complete decision checkpoints** (criterion 8) — expand the single checkpoint into a full table with trigger, what to ask, and who to ask
 ```
 
 ## Evaluation
 
 **Verdict:** PASS
-**Score:** 7.5/8 (94%)
-**Evaluated:** 2026-04-15
+**Score:** 6.5/7.5 (87%)
+**Evaluated:** 2026-04-16
 
-- [x] PASS: Agent reads CLAUDE.md and marketplace.json in pre-flight — the agent definition's Pre-Flight (MANDATORY) section step 1 explicitly reads both `CLAUDE.md` and `.claude-plugin/marketplace.json`
-- [x] PASS: Agent reads agent template before evaluating — the Pre-Flight step 2 reads `${CLAUDE_PLUGIN_ROOT}/templates/agent-template.md`; the audit-agent skill (which this agent would delegate to) also mandates reading the template as Step 1
-- [x] PASS: Output includes all 15 criteria — the audit-agent skill Step 3 defines all 15 criteria with explicit scoring instructions; the agent's "Auditing Existing Agents" section also lists the same criteria set and references the audit-agent skill
-- [x] PASS: Each criterion scored as met/partially met/missing — the Audit Output Format defines ✅/⚠️/❌ for every row; the skill mandates "Score as ✅ (met), ⚠️ (partially met — with reason), or ❌ (missing)"
-- [x] PASS: Non-passing criteria include specific evidence — the audit-agent skill Step 4 mandates "Every non-passing criterion MUST include: what was looked for, what was found or not found, where (file location, line number)"; the Anti-Patterns section calls out "Vague findings" as never acceptable
-- [x] PASS: Quality score X/15 and line count included — the Single agent Output Format template shows `Lines: {count} (target: 150–300)` and `Quality score: {X}/15 criteria met`
-- [x] PASS: Recommended actions prioritised by impact — the Audit Output Format ends with Recommended Actions; the audit-agent definition states "Prioritise fixes — structural gaps listed before content gaps before style issues"
-- [~] PARTIAL: Boundary check on self-audit — the audit-agent skill Anti-Patterns section states "Auditing the plugin-curator — skip the plugin-curator agent in 'all' audits." This request is for the `qa` agent, not the curator itself, so this boundary isn't directly tested. The criterion asks whether the agent respects the self-audit exclusion; since this scenario doesn't trigger it, it's not directly observable. Partial credit — the rule exists in the definition but can't be confirmed active from this scenario.
+- [x] PASS: Agent reads CLAUDE.md and marketplace.json in pre-flight — the Pre-Flight (MANDATORY) Step 1 in the agent definition explicitly reads both `CLAUDE.md` and `.claude-plugin/marketplace.json` before any other action
+- [x] PASS: Agent reads agent template before evaluating — Pre-Flight Step 2 reads `${CLAUDE_PLUGIN_ROOT}/templates/agent-template.md`; the audit-agent skill (which the agent delegates to for auditing) has its own Step 1 reading the same template
+- [~] PARTIAL: Audit output covers all 15 quality criteria — the audit-agent skill defines 15 criteria and the agent reads this skill. However the agent's own Audit Output Format in the definition shows a hardcoded criteria table with 14 rows (ending with "Line count"), and its quality score field reads "Quality score: {X}/{14}". The 15th criterion (Frontmatter description precision) appears only in the audit-agent skill, not in the agent's own output template. Depending on whether the agent defers fully to the skill or uses its own template, the output may show 14 or 15 criteria — the definition is inconsistent on this point. Partial credit
+- [x] PASS: Each criterion scored as met/partially met/missing — the audit-agent skill mandates "Score as ✅ (met), ⚠️ (partially met — with reason), or ❌ (missing)" for every criterion; the agent's own criteria table uses the same scoring symbols
+- [x] PASS: Non-passing criteria include specific evidence — the audit-agent skill Step 4 mandates "Every non-passing criterion MUST include: (1) what was looked for, (2) what was found or not found, (3) where"; the Anti-Patterns section calls "Vague findings" never acceptable
+- [~] PARTIAL: Quality score format — the audit-agent skill output format shows "Quality score: {X}/15 criteria met ({Y} N/A)" with line count. The agent's own output template shows "Quality score: {X}/{14} criteria met." These two templates conflict. Through the skill the output would show X/15; through the agent's own template it would show X/14. The definition is inconsistent, making this a partial rather than a full pass
+- [x] PASS: Recommended actions prioritised by impact — the agent's own Audit Process states "Prioritise fixes — structural gaps > content gaps > style issues"; this ordering rule is explicit in the agent definition regardless of the skill
+- [~] PARTIAL: Boundary check — the audit-agent skill Anti-Patterns section states "Auditing the plugin-curator — skip the plugin-curator agent in 'all' audits." The boundary rule exists in the definition. This scenario audits the `qa` agent, not the plugin-curator, so the boundary is not triggered here. The criterion is observable in principle but not exercised by this scenario. PARTIAL ceiling applies regardless
 
 ### Notes
 
-The agent delegates audit work to the audit-agent skill, which is the right pattern. The 15-criterion list is well-defined. The agent's own audit criteria table in the agent body (lines ~145–193) slightly differs from the audit-agent skill (14 criteria vs 15), which is a minor inconsistency — the skill is the canonical version. The pre-flight is robust: both CLAUDE.md and marketplace.json, plus both templates. Overall a strong definition for this test scenario.
+The key structural finding is the 14 vs 15 criteria discrepancy between the agent's own Audit Output Format (14 rows, "X/{14}" score) and the audit-agent skill (15 criteria, "X/15" score). The 15th criterion is Frontmatter description precision — it exists only in the skill, not in the agent's hardcoded template. An agent following its own definition would produce a 14-criterion report; one that properly defers to the skill would produce 15. This is a real defect in the agent definition that the test surfaces. The pre-flight and evidence requirements are otherwise solid.

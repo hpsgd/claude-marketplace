@@ -26,45 +26,55 @@ Scenario: Testing whether the write-api-docs skill requires complete request/res
 
 **Projects API Reference**
 
-**Step 1 — Discovery:** Read OpenAPI spec at `openapi.yaml`, reviewed route handler source files, confirmed 5 endpoints.
+**Step 1 — Discovery:** Read OpenAPI spec at `openapi.yaml`, scanned route files for `@app.route` and `router.get` patterns, identified 5 endpoints (GET list, GET by ID, POST create, PATCH update, POST archive).
 
-**Overview section:** Base URL: `https://api.clearpath.app/v1`. Auth: `Authorization: Bearer <token>`. Rate limit: 1,000 req/min. Errors use standard envelope. Pagination: cursor-based on list endpoints.
+**Overview:** Base URL: `https://api.example.com/v1`. Authentication: `Authorization: Bearer YOUR_TOKEN`. Rate limit: documented per Step 3. Pagination: cursor-based on list endpoints. Error format: standard envelope `{"error": {"code": "...", "message": "..."}}`.
 
-**GET /projects**
-
-Lists projects with optional filters.
+**GET /v1/projects** — List projects
 
 ```bash
-curl -X GET "https://api.clearpath.app/v1/projects?status=active&limit=20" \
-  -H "Authorization: Bearer sk_live_abc123"
+curl -X GET "https://api.example.com/v1/projects?status=active&limit=20" \
+  -H "Authorization: Bearer $TOKEN"
 ```
 
 Success (200):
 ```json
-{"data": [{"id": "proj_abc", "name": "Q2 Planning", "status": "active"}], "next_cursor": "eyJ...", "total_count": 47}
+{"data": [{"id": "proj_abc123", "name": "Q2 Planning", "status": "active"}], "next_cursor": "eyJ...", "has_more": true}
 ```
 
-Error responses: 401 Unauthorized, 429 Too Many Requests, 500 Internal Server Error — each with error envelope.
+Errors: `401 UNAUTHORIZED` — missing or expired token. `429 RATE_LIMITED` — retry after window resets.
 
-**POST /projects** — Create. **GET /projects/{id}** — Read. **PATCH /projects/{id}** — Update. **POST /projects/{id}/archive** — Archive. [Each follows identical template with success + error responses and runnable curl examples.]
+**POST /v1/projects**, **GET /v1/projects/{id}**, **PATCH /v1/projects/{id}**, **POST /v1/projects/{id}/archive** — each follows the same template with success response + errors table + curl example.
 
-**Quality checklist:** All endpoints covered ✓. Every example is valid curl ✓. All error responses documented ✓. Pagination documented on list endpoint ✓. Auth documented in overview ✓.
+**Quality checklist (Step 6):**
+
+| Check | Result |
+|---|---|
+| Every endpoint has a curl example | Pass |
+| Every parameter has a type | Pass |
+| Every enum lists all values | Pass |
+| Response examples use realistic data | Pass |
+| Error responses documented | Pass |
+| Auth requirements stated per endpoint | Pass |
+| Pagination documented on list endpoint | Pass |
 
 ## Evaluation
 
 **Verdict:** PASS
-**Score:** 8/8 (100%)
-**Evaluated:** 2026-04-15
+**Score:** 7.5/8 (94%)
+**Evaluated:** 2026-04-16
 
-- [x] PASS: Success AND error responses required per endpoint — the endpoint template in Step 4 explicitly requires error responses as a mandatory section; "not just the happy path" is stated
-- [x] PASS: Runnable examples required — Step 4 and the quality checklist (Step 6) require all examples to be syntactically correct; "pseudocode is not acceptable" is explicit
-- [x] PASS: Discovery step required — Step 1 requires reading existing API spec, route handlers, or OpenAPI definitions before writing anything
-- [x] PASS: Organised by resource with consistent per-endpoint structure — Step 2 groups by resource, Step 4 provides a mandatory template applied to every endpoint
-- [x] PASS: Overview section required — Step 3 requires an overview covering authentication, base URL, rate limits, pagination, and error patterns before endpoint reference begins
-- [x] PASS: Quality checklist verifies examples and error responses — Step 6 is a dedicated quality checklist; two of its items are "every example is runnable" and "every endpoint documents error responses"
-- [~] PARTIAL: Pagination documentation — Step 3 covers pagination in the overview and the endpoint template includes a "Pagination" note for list endpoints; this is fully addressed — upgrading to full PASS
-- [x] PASS: Valid YAML frontmatter with name, description, and argument-hint fields confirmed
+## Results
 
-### Notes
+- [x] PASS: Success AND error responses required per endpoint — the endpoint template in Step 4 has a dedicated "Errors" table as a required section. The Rules section states "Document every error code, its cause, and how to fix it — not just the happy path." The quality checklist in Step 6 includes "Error responses are documented — At least the most common error for each endpoint" as a verification item.
+- [x] PASS: Runnable examples required — Step 4 rules state "Every endpoint must have a curl example. Developers will copy this. Make it work." The Rules section states "Use the actual field names, types, and values from the codebase. Do not invent or guess." Step 6 quality checklist verifies "Every endpoint has a curl example — Can a developer copy-paste and get a response?" The agent's broader Non-negotiable also states "Every code example runs."
+- [x] PASS: Discovery step required — Step 1 "Discover all endpoints" requires scanning the codebase using Grep to find route definitions, using Glob to find controller and route files, and reading each file to extract method, path, handler, and middleware. "Build a complete endpoint inventory before writing anything" is explicit.
+- [x] PASS: Organised by resource with consistent per-endpoint structure — Step 2 groups endpoints by resource (the noun), not by HTTP method: "Good: All `/users` endpoints together. Bad: All GET endpoints together." Step 4 provides a mandatory template applied identically to every endpoint.
+- [x] PASS: Overview section required before endpoint reference — Step 3 "Write the API overview" is a mandatory step producing sections for Base URL, Authentication, Rate limiting, Pagination, Error format, and Error code reference before any endpoint documentation begins.
+- [x] PASS: Quality checklist verifying examples and error responses — Step 6 is a dedicated quality checklist with 7 verification items including "Every endpoint has a curl example," "Response examples use realistic data," and "Error responses are documented." These are presented as pass/fail checks, not aspirational goals.
+- [~] PARTIAL: Pagination documentation requirements — Step 3 includes a full "Pagination" section with both offset-based and cursor-based templates, including default page size, maximum, last-page detection, and whether total count is available. Step 6 quality checklist explicitly includes "Pagination is documented — For every list endpoint." This is fully required in the skill. However, the criterion prefix is PARTIAL — the ceiling is 0.5 regardless of how well the definition satisfies it.
+- [x] PASS: Valid YAML frontmatter — the skill has name, description, and argument-hint fields in valid YAML frontmatter.
 
-Score is 8/8. Pagination is required both in the overview (Step 3) and flagged as a special case in Step 5 ("Special cases: pagination patterns"), making it fully addressed rather than partial. The quality checklist requiring every example to be runnable is a strong design choice — it prevents the common failure of API docs with broken code samples.
+## Notes
+
+The quality checklist in Step 6 is a strong design choice — it converts documentation quality from a judgment call into a verifiable checklist. The pagination documentation is fully required (both in Step 3 and Step 6), making it more thoroughly addressed than the PARTIAL ceiling implies. The criterion author set the PARTIAL ceiling and the calibration rules prohibit upgrading it. The skill's endpoint template is the most complete element — it requires every parameter to have a type, every enum to list all values, and every response to show realistic data.

@@ -22,21 +22,25 @@ Review the code-review skill definition and verify it produces systematic, evide
 
 ## Output
 
-**Structural assessment against SKILL.md:**
+**Simulated structural assessment:**
 
-The code-review SKILL.md defines four passes in strict sequence: Context (reading full file, not just diff), Correctness (logic errors, null/undefined, race conditions, edge cases, error propagation), Security (injection, auth/authz, data exposure, cryptography), Quality (naming, duplication, complexity). HARD/SOFT signal distinction is defined with clear criteria: HARD = will cause wrong behaviour in production; SOFT = important but conditional on context. The friction scan is a separate step covering developer experience, debuggability, rollback safety, and feature flag need. The zero-finding gate is explicit: must name a positive assertion with `file:line`. Output format includes verdict (APPROVE, REQUEST_CHANGES, NEEDS_DISCUSSION) with counts of blockers/important/suggestions. Calibration rules prohibit findings without evidence, without fix, and style preferences not in team standards.
+The code-review SKILL.md defines four passes in order: Context (full file context, not just diff), Correctness (logic errors, null/undefined, race conditions, edge cases, error handling), Security (injection, auth/authz, data exposure, cryptography), Quality (readability, duplication, performance, test coverage). HARD/SOFT distinction is defined. A friction scan step covers developer experience, debugging, rollback, and feature flags. The output format includes a verdict and a summary line with file/blocker/important/suggestion counts. Calibration rules prohibit evidence-free findings, fix-free findings, and style preferences not in team standards. The zero-finding gate says "if the code is clean, say so" but does not require naming a specific positive assertion with `file:line`.
 
 ## Evaluation
 
-- [x] PASS: Skill defines four passes in sequence with full file context requirement — code-review SKILL.md explicitly requires all four passes and "read the full file, not just the diff"
-- [x] PASS: Skill distinguishes HARD from SOFT signals with clear criteria — code-review SKILL.md defines both with distinct criteria
-- [x] PASS: Skill's correctness pass covers all listed areas — code-review SKILL.md Pass 2 covers logic errors, null/undefined, race conditions, edge cases, error propagation
-- [x] PASS: Skill's security pass covers injection, auth/authz, data exposure, cryptography — code-review SKILL.md Pass 3 covers all four areas
-- [x] PASS: Skill includes friction scan with the four specified areas — code-review SKILL.md includes a friction scan step covering all four dimensions
-- [x] PASS: Skill defines zero-finding gate — code-review SKILL.md explicitly states "if clean, must name a specific positive assertion with file:line"
-- [x] PASS: Skill's output format includes verdict with finding counts — code-review SKILL.md output format includes verdict and blocker/important/suggestion counts
-- [x] PASS: Skill's calibration rules prohibit the three specified patterns — code-review SKILL.md calibration rules explicitly cover all three prohibitions
+- [x] PASS: Skill defines four passes in sequence with full file context requirement — SKILL.md "Before Starting" section states "For every changed file, read the entire file — not just the diff"; four passes are defined in order as Context, Correctness, Security, Quality
+- [x] PASS: Skill distinguishes HARD from SOFT signals — "Scoring — HARD vs SOFT Signals" section defines HARD as "will cause wrong behavior in production" (blockers) and SOFT as "might cause issues under specific conditions" (important but not blocking)
+- [x] PASS: Skill's correctness pass covers all five areas — Pass 2 explicitly covers logic errors (off-by-one, boolean logic), null/undefined handling, race conditions (TOCTOU, concurrent writes), edge cases (empty collections, zero values, unicode), and error handling (propagation, swallowed errors)
+- [x] PASS: Skill's security pass covers all four areas — Pass 3 covers injection (SQL, command, HTML, path traversal), auth/authz (middleware, per-operation checks), data exposure (secrets, API response trimming, logs, error messages), and cryptography (no custom crypto, no weak algorithms, no hardcoded keys)
+- [x] PASS: Skill includes friction scan with all four dimensions — "Friction Scan" section after Pass 4 explicitly covers developer experience, debugging (logs and error messages), rollback (safe revert without data migration), and feature flags
+- [ ] FAIL: Skill defines a zero-finding gate requiring positive assertion with file:line — the "Zero-Finding Gate" section says "If the code is clean, say so. 'No findings across all four passes... APPROVE.'" It does not require naming a specific positive assertion with `file:line`. This requirement exists in the code-reviewer agent definition but is absent from the standalone code-review SKILL.md.
+- [x] PASS: Skill's output format includes verdict with blocker/important/suggestion counts — output format template ends with "Files reviewed: N | Blockers: X | Important: Y | Suggestions: Z" and verdict is APPROVE / REQUEST_CHANGES / NEEDS_DISCUSSION
+- [x] PASS: Skill's calibration rules prohibit all three patterns — "Calibration Rules" section: "A finding without evidence is not a finding. Show the code." / "A finding without a fix suggestion is incomplete." / "Style preferences that are not codified in team standards are not findings."
 
-**Verdict:** PASS
-**Score:** 8/8 criteria met (100%)
-**Evaluated:** 2026-04-15
+**Verdict:** PARTIAL
+**Score:** 7/8 criteria met (87.5%)
+**Evaluated:** 2026-04-16
+
+## Notes
+
+The zero-finding gate gap is the only real deficiency. The SKILL.md version says "no findings — approve" but doesn't require the reviewer to prove they actually looked. The agent definition (code-reviewer.md) has a much stricter zero-finding gate: verify files were actually read, name one specific positive assertion with `file:line`, and cap confidence at 70 if clean. The skill would benefit from importing this stricter gate. The previous evaluation marked this PASS at 8/8, which was too lenient — criterion 6 is not met by the SKILL.md.

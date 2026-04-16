@@ -24,35 +24,33 @@ Audit `src/app/reports/` for performance issues. The reports dashboard has been 
 
 **Simulated skill output for this prompt:**
 
-Step 1 bundle analysis: runs `ls -la .next/static/chunks/ | sort -k5 -rn | head -20` and `grep -rn "from '" src/app/reports/ --include="*.tsx"` to identify large client-side dependencies.
+Step 1 bundle analysis: runs `ls -la .next/static/chunks/ | sort -k5 -rn | head -20` and grep for imports across `src/app/reports/` to identify large client-side dependencies. Flags any `chart.js`, `d3`, `moment`, or `lodash` (full) in `'use client'` components as HIGH — bundle cost exceeds value.
 
-Step 2 server vs client analysis: `grep -rn "'use client'" src/app/reports/ --include="*.tsx"` to find all client boundaries. Checks if entire page is `'use client'` (anti-pattern).
+Step 2 server vs client analysis: `grep -rn "'use client'" src/app/reports/ --include="*.tsx"`. Checks whether the top-level page component is marked `'use client'` (anti-pattern — ships all page code to client). Identifies any data-fetching components also marked `'use client'`. Applies the rule: `'use client'` boundary should be pushed as far DOWN the component tree as possible.
 
-Step 3 re-render analysis: `grep -rn "useMemo\|useCallback\|React.memo" src/app/reports/`. No prophylactic recommendations — only flags specific measured re-render issues.
+Step 3 re-render analysis: `grep -rn "useMemo\|useCallback\|React.memo\|useContext" src/app/reports/`. Identifies existing memoisation. Does NOT recommend adding `useMemo`/`useCallback` prophylactically — only flags specific patterns where measured re-renders cause visible jank (e.g., inline object/array references in props on every render, context updates that re-render all tab consumers).
 
-Step 4 data fetching: checks for `useEffect.*fetch` patterns in App Router page. If found → HIGH finding (should be server component fetch).
+Step 4 data fetching: `grep -rn "useEffect.*fetch\|useQuery\|useSWR" src/app/reports/`. Any `useEffect` + `fetch` for data known at request time → HIGH finding ("should be server component fetch with `async/await`"). Sequential fetches in `useEffect` also flagged.
 
-Step 5 image optimisation: `grep -rn "<img\|<Image" src/app/reports/`. Checks for `priority` prop on LCP image (4.2s LCP suggests this is missing).
+Step 5 image optimisation: `grep -rn "<img\|<Image\|background-image" src/app/reports/`. Checks each `<Image>` for `priority` prop. Given LCP = 4.2s, the above-the-fold image is the likely culprit. Missing `priority` on the LCP image is a HIGH finding.
 
-Step 6 code splitting: `grep -rn "dynamic(\|lazy(" src/app/reports/`. Charts/visualisation libraries should be dynamically imported.
+Step 6 code splitting: `grep -rn "dynamic(\|lazy(\|import(" src/app/reports/`. Visualisation libraries (chart.js, recharts, d3) not dynamically imported → HIGH/MEDIUM finding. Recommends `dynamic(() => import('./chart'), { ssr: false, loading: () => <Skeleton /> })`.
 
-Step 7 Tailwind: `grep -rn "\[.*px\]" src/app/reports/` for arbitrary values.
+Step 7 Tailwind: `grep -rn "\[.*px\]\|\[.*rem\]" src/app/reports/`. Arbitrary Tailwind values flagged as LOW — design system inconsistency. Inline styles flagged.
 
-Findings ranked HIGH/MEDIUM/LOW with rationale. `'use client'` boundary analysis checks depth in component tree.
-
-Output: findings table (impact, category, location, recommendation), Quick Wins list ordered by impact/effort.
+Findings table: each finding has Impact (HIGH/MEDIUM/LOW), Category, Finding, Location (`file:line`), and Recommendation. Quick Wins list ordered by impact-to-effort ratio.
 
 ## Evaluation
 
-- [x] PASS: Skill performs all seven audit steps in order — performance-audit SKILL.md defines all seven steps as MANDATORY in order
-- [x] PASS: Skill uses actual investigation commands — performance-audit SKILL.md provides specific grep and bash commands for each step, explicitly not guessing
-- [x] PASS: Skill identifies LCP image and checks priority prop — performance-audit SKILL.md Step 5 (image optimisation) specifically checks for priority prop on LCP image
-- [x] PASS: Skill flags useEffect data fetching as HIGH finding — performance-audit SKILL.md Step 4 (data fetching patterns) marks client-side fetch in App Router as HIGH
-- [x] PASS: Every finding ranked HIGH/MEDIUM/LOW — performance-audit SKILL.md Impact Scoring section defines the three levels with criteria
-- [x] PASS: Skill does not recommend useMemo/useCallback prophylactically — performance-audit SKILL.md Step 3 explicitly states "Do NOT add useMemo/useCallback everywhere prophylactically. Only where measured re-renders cause visible jank"
-- [~] PARTIAL: Skill identifies 'use client' boundaries pushed as far down as possible — performance-audit SKILL.md Step 2 covers this analysis including the rule to push boundaries as far down as possible; the investigation commands check this but the depth analysis requires judgment
-- [x] PASS: Output includes findings table and Quick Wins list — performance-audit SKILL.md output format requires both elements
+- [x] PASS: Skill performs all seven audit steps in order — SKILL.md defines Steps 1-7 with "sequential — every check is MANDATORY" in the heading
+- [x] PASS: Skill uses actual investigation commands — SKILL.md provides specific bash commands in every step (ls, grep with flags and include patterns); explicitly requires investigation before findings
+- [x] PASS: Skill identifies LCP image and checks priority prop — SKILL.md Step 5 checklist row: "Priority for LCP image | `priority` prop on the largest above-the-fold image | LCP image lazy-loaded"; rule: "The LCP (Largest Contentful Paint) image gets `priority` — never lazy-loaded"
+- [x] PASS: Skill flags useEffect data fetching as HIGH — SKILL.md Step 4 rules: "Never fetch in `useEffect` for data that's known at request time"; Impact Scoring classifies waterfall data fetching and client-side fetch that could be server-side as HIGH
+- [x] PASS: Every finding ranked HIGH/MEDIUM/LOW — SKILL.md Impact Scoring section defines all three levels with criteria and examples
+- [x] PASS: Skill does not recommend useMemo/useCallback prophylactically — SKILL.md Step 3 rules: "Do NOT add `useMemo`/`useCallback`/`React.memo` everywhere prophylactically. Only where measured re-renders cause visible jank"
+- [~] PARTIAL: Skill identifies 'use client' boundaries pushed as far down as possible — SKILL.md Step 2 rules explicitly state "The `'use client'` boundary should be pushed as far DOWN the component tree as possible" and the decision matrix covers the analysis; maximum score is 0.5 per PARTIAL-prefixed criterion ceiling
+- [x] PASS: Output includes findings table and Quick Wins list — SKILL.md Output Format defines findings table with columns (Impact, Category, Finding, Location, Recommendation) and a separate Quick Wins section
 
 **Verdict:** PASS
 **Score:** 7.5/8 criteria met (94%)
-**Evaluated:** 2026-04-15
+**Evaluated:** 2026-04-16

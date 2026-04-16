@@ -57,27 +57,27 @@ find plugins -path '*/agents/devops.md' → plugins/engineering/devops/agents/de
 | 15 | Description precision | ⚠️ | Description: "DevOps engineer — CI/CD, deployment, infrastructure" — missing trigger conditions. Format requires: "{Role} — {domain}. Use when {triggers}." |
 
 ### Recommended Actions
-1. **Add failure caps section** (structural gap — criterion 7) — required section missing entirely. Add: "3 consecutive pipeline failures without root cause identified → stop and escalate to architect"
+1. **Add failure caps section** (structural gap — criterion 7) — required section missing entirely. Add: "3 consecutive pipeline failures without root cause → stop and escalate to architect"
 2. **Fix tool links** (criterion 13) — add hyperlinks for Terraform, k6, and Datadog on first mention at lines 56, 67, 72
-3. **Add trigger conditions to description** (criterion 15) — append "Use when deploying services, configuring CI pipelines, or managing infrastructure changes" to frontmatter description
+3. **Add trigger conditions to description** (criterion 15) — append "Use when deploying services, configuring CI pipelines, or managing infrastructure changes"
 4. **Expand decision checkpoint table** (criterion 8) — add triggers for: blast-radius changes, auth/secret rotation, database migrations
 ```
 
 ## Evaluation
 
 **Verdict:** PASS
-**Score:** 8/8 (100%)
-**Evaluated:** 2026-04-15
+**Score:** 7/7.5 (93%)
+**Evaluated:** 2026-04-16
 
-- [x] PASS: Step 1 reads agent template before evaluating — the skill's first step is `Read(file_path="${CLAUDE_PLUGIN_ROOT}/templates/agent-template.md")` and explicitly states "The template defines the MANDATORY structure. The quality criteria at the bottom of the template are the audit checklist"
-- [x] PASS: All 15 criteria evaluated and scored — Step 3 defines all 15 criteria with explicit ✅/⚠️/❌ scoring; none are skipped; the output format template shows all 15 rows
-- [x] PASS: Non-passing criteria include specific evidence — Step 4 mandates "Every non-passing criterion MUST include: (1) what was looked for, (2) what was found or not found, (3) where"; Anti-Patterns section states "'links need work' is not a finding. 'Line 91: k6 mentioned without hyperlink' is a finding"
-- [x] PASS: Output includes X/15 score and line count with target — the Single agent Output Format template explicitly defines `Lines: {count} (target: 150–300)` and `Quality score: {X}/15 criteria met`
-- [x] PASS: Model correctness checked for devops as specialist — Criterion 14 defines the model table: "Specialists (all others): sonnet" and explicitly requires checking and reporting the actual model vs expected
-- [x] PASS: Tool links criterion checks for hyperlinks on first mention — Criterion 13 states "Tool names mentioned in prose should have markdown hyperlinks on first mention" and the Anti-Patterns section emphasises "cite the SPECIFIC unlinked tool mention with its line number"
-- [x] PASS: Recommended actions prioritised — the output format's Recommended Actions section; the skill's Auditing section in the parent agent states "Prioritise fixes — structural gaps > content gaps > style issues"; the simulated output follows this ordering (missing section first, then tool links, then description tweak)
-- [~] PARTIAL: Description precision criterion checks for role/domain/trigger format — Criterion 15 states "The `description` field must include: (1) the role, (2) what it does, (3) when to use it. Format: '{Role} — {what it owns}. Use when {triggers}.'" The criterion is defined and would be checked, but the test asks specifically about whether this check is reliably applied. The definition mandates it clearly but doesn't provide a scoring rubric for partial vs full compliance on this criterion specifically. Marking partial because the criterion is well-defined but the partial-credit threshold isn't spelled out.
+- [x] PASS: Step 1 reads agent template before evaluating — the skill's first step is `Read(file_path="${CLAUDE_PLUGIN_ROOT}/templates/agent-template.md")` and states "The template defines the MANDATORY structure. The quality criteria at the bottom of the template are the audit checklist." This is the first instruction in the Process section, before any agent is located
+- [x] PASS: All 15 criteria evaluated and scored — Step 3 defines all 15 criteria by number with explicit ✅/⚠️/❌ scoring instructions; Step 5 states "Single agent audit — full 15-criterion detail." None are optional
+- [x] PASS: Non-passing criteria include specific evidence — Step 4 mandates "(1) what was looked for, (2) what was found or not found, (3) where it was found or expected." The Anti-Patterns section reinforces: "'links need work' is not a finding. 'Line 91: k6 mentioned without hyperlink' is a finding"
+- [x] PASS: Output includes X/15 score and line count with target — the Single agent Output Format template shows `Lines: {count} (target: 150–300)` and `Quality score: {X}/15 criteria met ({Y} N/A)` as required fields
+- [x] PASS: Model correctness checked — Criterion 14 defines the model table explicitly: specialists use sonnet, leadership uses opus. The output format row includes `{model} — expected {expected}` to confirm the check ran
+- [x] PASS: Tool links criterion checks for hyperlinks on first mention — Criterion 13 states "Tool names mentioned in prose should have markdown hyperlinks on first mention." Anti-Patterns reinforces: "cite the SPECIFIC unlinked tool mention with its line number"
+- [~] PARTIAL: Recommended actions prioritised — the Output Format shows `{highest priority fix}` as the first action, implying ordering. However the skill itself does not define what makes something "highest priority" or state the "structural gaps > content gaps > style issues" ordering rule. That rule exists only in the parent agent (plugin-curator.md). The skill's own instructions for recommended actions stop at `{highest priority fix with specific guidance}` without defining the ordering criteria. Partial credit for the ordering being implied but not explicitly defined in the skill
+- [~] PARTIAL: Description precision criterion applied — Criterion 15 is explicitly defined: "The `description` field must include: (1) the role, (2) what it does, (3) when to use it. Format: '{Role} — {what it owns}. Use when {triggers}.'" This is well-specified in the definition. The criterion is PARTIAL-prefixed regardless of how well it's defined; full credit within the partial ceiling
 
 ### Notes
 
-The audit-agent skill is one of the more tightly specified skills in the repo. The mandatory evidence requirement for non-passing criteria, the specific tool-link anti-pattern with line number citation, and the 15-criterion checklist are all well-defined. The skill correctly excludes itself from "all" audits. One structural gap: the skill's output format shows 14 rows in the table (the template HTML shows 14 criteria), but Step 3 defines 15. This inconsistency is minor but could cause confusion on the 15th criterion (Frontmatter description precision).
+The skill is tightly specified. The mandatory evidence requirement (Step 4) backed by the anti-pattern example is a strong enforcement mechanism. Criterion 13's "cite the specific tool with line number" instruction is precise and leaves no ambiguity. The one genuine gap is that the recommended action prioritisation rule ("structural gaps > content gaps > style issues") lives in the parent agent definition rather than in the skill itself — a reader using only this skill wouldn't know the ordering principle. The skill would benefit from a brief prioritisation note in the Recommended Actions section of the output format.

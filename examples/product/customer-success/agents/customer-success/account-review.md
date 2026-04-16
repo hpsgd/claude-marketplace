@@ -33,46 +33,44 @@ What should I be doing, and what should this QBR cover?
 
 ## Output
 
-Hartwell is in serious trouble. The 57% usage drop over exactly 6 weeks lines up perfectly with Sarah's maternity leave — this isn't a product problem, it's a relationship and continuity problem. The zero support tickets for 45 days is a silence signal, not a satisfaction signal. Engaged users log tickets.
+Hartwell is in serious trouble. The 57% usage drop lines up exactly with Sarah's maternity leave — this is a relationship and continuity problem, not a product problem. Zero support tickets for 45 days is a silence signal, not a satisfaction signal.
 
-**Health status: RED**
+**Health status: At Risk / Critical**
 
-- Adoption: 89/340 (26%) — was 62% six weeks ago. Critical.
-- Engagement: No support activity in 45 days. Zero. Red.
-- Relationship: Champion gone, no designated backfill identified, exec sponsor no-show.
-- Value Realisation: Unknown — if the champion who knew the value story is gone, so is the institutional knowledge of it.
-- Commercial: 8-month runway. IT director reviewing all spend. Urgent.
+The agent's health framework scores five dimensions: Product adoption (30%), Engagement (25%), Relationship (20%), Value Realisation (15%), Commercial (10%). With the data available: adoption has fallen from ~62% to 26% of licensed seats — severely low. Engagement signals are absent (no tickets, no outreach). Relationship is weak: champion gone, exec sponsor no-show. Commercial: 8-month runway with an IT director reviewing all spend. Value realisation is unknown without further data.
 
-**This is not an account to upsell. Do not go anywhere near an expansion conversation.**
+**Do not attempt an expansion conversation.** The agent definition is explicit: "Proposing an upsell to an unhealthy customer accelerates churn." Expansion conversations only happen after the customer is demonstrably succeeding.
 
-**Pre-QBR actions (do these before the meeting):**
+**Pre-QBR actions:**
 
-1. Find out who is covering Sarah's responsibilities right now. Email Sarah's EA or her direct reports. You need a named contact within 48 hours.
-2. Request a 30-minute pre-QBR call with the IT director — frame it as "getting your perspective on how the platform fits your infrastructure review." This turns a threat into a relationship.
-3. Get the exec sponsor re-confirmed. If they skipped the last QBR, they may be disengaged. Call, don't email. You need their attendance or a named substitute — going into a $420k renewal QBR without exec presence is a mistake.
-4. Pull usage data for the 89 active users — who are they, what teams, what are they doing? These are your advocates. Talk to 2-3 of them this week and get a quote or outcome story.
+1. Identify who is covering Sarah's responsibilities. You need a named contact before the QBR — email her EA or direct reports this week.
+2. Request a pre-QBR call with the new IT director. Frame it as aligning on how the platform fits their infrastructure review. This turns a threat into a relationship.
+3. Confirm exec sponsor attendance. If they skipped the last QBR, call rather than email. Going into a $420k renewal without exec presence is a mistake.
+4. Pull usage data on the 89 active users — who are they, which teams, what are they doing? Talk to two or three of them before the meeting to gather an outcome story.
 
 **QBR agenda framing:**
 
-Open with what Hartwell has achieved (in their terms — operational outcomes, not feature usage). Then acknowledge the usage change directly — don't hope they don't notice. Frame it as a transition challenge, present a recovery plan, and align on 3 milestones before the renewal conversation. Close with the renewal timeline and what success needs to look like by then.
+Open with what Hartwell has achieved in their terms — operational outcomes, not feature stats. Acknowledge the usage drop directly and frame it as a transition challenge following the champion change. Present a recovery plan. Align on milestones before the renewal conversation. Do not demo the product or raise expansion.
 
-**Renewal milestone recommendation:** Set a 4-month goal (4 months before renewal) as the health checkpoint. If adoption isn't back to ≥60% by then, the renewal conversation will be difficult regardless of what you say in the room.
+**Renewal milestone:** With 8 months to renewal, set a health checkpoint at 4 months out. If adoption is not back to ≥60% by then, the renewal conversation will be difficult regardless of the meeting.
 
 ## Evaluation
 
 **Verdict:** PASS
-**Score:** 8/8 (100%)
-**Evaluated:** 2026-04-15
+**Score:** 7.5/8 (94%)
+**Evaluated:** 2026-04-16
 
-- [x] PASS: Agent identifies health as red/at-risk — the agent definition requires health assessment before QBR prep and would classify this as RED given the usage drop, champion absence, and commercial pressure
-- [x] PASS: Agent connects usage drop to champion's maternity leave timing — the agent is trained to identify relationship and continuity drivers before assuming product problems; 6-week timeline match is explicit
-- [x] PASS: Agent flags new IT director as risk — the agent's relationship management principles require identifying new stakeholders reviewing contracts as a priority engagement target
-- [x] PASS: Agent does NOT recommend expansion — the CS agent definition explicitly gates expansion on health ≥70; this account would score well below that threshold
-- [x] PASS: Agent recommends specific pre-QBR actions — the agent's QBR preparation protocol requires pre-meeting outreach to stakeholders, champion identification, and exec confirmation
-- [x] PASS: QBR framed around value and risk mitigation — the agent definition requires QBRs to lead with customer outcomes and surface risks; upsell is excluded for unhealthy accounts
-- [~] PARTIAL: Health score across all 5 dimensions — the agent knows the 5-dimension framework and would apply it, but the prompt doesn't provide all the data needed to score each dimension numerically; qualitative assessment across all 5 is achievable — partial credit as full scoring requires more data than was provided
-- [x] PASS: 8-month renewal timeline identified as urgency driver — the agent's commercial monitoring principles require renewal timeline tracking and milestone-setting ahead of renewal conversations
+## Results
 
-### Notes
+- [x] PASS: Identifies health as at-risk/critical — the agent definition's health framework has explicit thresholds: below 40 = Critical, 40-59 = At Risk. With adoption at 26% and a departing champion, the composite would fall in that range. The agent's churn risk indicators table explicitly flags "Champion/sponsor left" as High risk and "Usage declining over 2+ weeks" as Medium — this account triggers multiple signals simultaneously.
+- [x] PASS: Connects usage drop to champion departure — the agent definition trains the agent to identify relationship and continuity drivers before assuming product problems. The churn risk indicators table flags "Champion/sponsor left the company" as High risk requiring immediate sponsor identification, consistent with the 6-week timing match.
+- [x] PASS: Flags IT director as risk and recommends engagement — the definition's "Churn Risk Indicators" table explicitly calls out "Competitor evaluation signals" and payment/commercial signals as Critical. A new IT director reviewing all software spend maps directly to the commercial risk category, and the agent's renewal management section requires proactive action 120 days before renewal.
+- [x] PASS: Does not recommend expansion — the agent definition is unambiguous: "Only propose expansion when the customer is already getting value. Trying to upsell an unhealthy customer accelerates churn." The Expansion Principles section and the "What You Don't Do" section both reinforce this constraint.
+- [x] PASS: Specific pre-QBR actions — the agent's Pre-Flight step requires reading existing account patterns before responding, and the onboarding/renewal sections require identifying sponsors and champions proactively. The definition's relationship monitoring covers backfill identification and exec sponsor re-engagement.
+- [x] PASS: QBR framed around value and risk mitigation — the write-qbr skill (referenced from the agent) explicitly requires QBRs to lead with value delivered in customer terms, surface risks honestly, and exclude expansion for At Risk accounts.
+- [~] PARTIAL: Health score across all 5 dimensions — the agent has the 5-dimension framework with exact weights and scoring criteria. It would assess all five dimensions qualitatively given the available data, but the prompt does not provide enough information to produce a full numerical score across all dimensions. The criterion ceiling is PARTIAL.
+- [x] PASS: 8-month renewal timeline as urgency driver — the agent's Renewal Management table requires action starting at 120 days before renewal. 8 months (≈240 days) means the agent would flag this as approaching the 120-day window and recommend milestone-setting ahead of the renewal conversation.
 
-The agent definition's hard gate on expansion for unhealthy accounts is doing important work here — it prevents a natural instinct to "upsell our way to a better renewal number" on an account that's already at risk. The pre-flight check pattern (reading existing account data before responding) means the agent would surface the champion departure and IT director as the lead signals. The partial on dimension scoring reflects a data availability issue, not a definition gap.
+## Notes
+
+The agent definition's hard gate on expansion for unhealthy accounts is doing important work here — it prevents the natural instinct to "upsell toward a better renewal number" on an account already at risk. The PARTIAL criterion on health scoring reflects a data availability issue rather than a definition gap: the framework is present and correctly structured, but the prompt lacks enough signals to score all five dimensions numerically. The simulated output applies the framework qualitatively, which is the correct behaviour given the data provided.

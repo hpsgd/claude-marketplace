@@ -36,53 +36,62 @@ On-call engineers are expected to handle this without waking anyone up for most 
 
 | Field | Value |
 |---|---|
-| Severity | SEV-1 when success rate <95%; SEV-2 when Stripe error rate 2-5% |
-| Business impact | ~$3,400/minute in lost transactions at peak. Every minute counts. |
-| Alert condition | Payment success rate <95% over 5min, OR Stripe API error rate >2% |
-| Owner | Payments team |
-| Last verified | 2026-04-15 |
+| **What this covers** | Payment processing failure diagnosis and recovery |
+| **When to use** | Payment success rate <95% over 5 min, OR Stripe API error rate >2% |
+| **Risk level** | High |
+| **Estimated duration** | 10–30 minutes |
+| **Last tested** | [UNTESTED — verify in staging first] |
+| **Owner** | Payments team |
 
-**Step 1: Determine failure mode**
+Business impact: ~$3,400/minute in lost transactions at peak hours. This is a revenue-affecting incident — urgency is immediate.
+
+**Prerequisites:**
+- [ ] Datadog access with payments dashboard open
+- [ ] `STRIPE_SECRET_KEY` environment variable — get from 1Password vault: Payments/Production
+- [ ] Redis CLI access: `redis-cli -h $REDIS_HOST` — host from SSM: `/prod/redis/host`
+- [ ] PostgreSQL access: connection string from SSM: `/prod/db/primary-url`
+
+---
+
+**Step 1: Identify the failure mode**
 
 ```bash
-# Check Stripe error breakdown in Datadog
-datadog-cli query 'avg:stripe.errors{*} by {error_type}.rollup(sum, 60)' --last 15m
+# Query Datadog for error breakdown in the last 15 minutes
+datadog-cli query 'avg:stripe.errors{*} by {error_type}' --last 15m --format table
 ```
-Expected output: table showing error counts by type. Identify highest-volume error type.
 
-**Decision tree:**
-- `stripe_timeout` or `request_failed` → Go to Section A: API Timeouts
-- `card_declined`, `insufficient_funds`, `card_not_supported` → Go to Section B: Card Declines
-- `idempotency_key` → Go to Section C: Idempotency Conflicts
-- `webhook.event` errors → Go to Section D: Webhook Failures
+Expected output: table of error types with counts. Highest count determines your path.
+
+Decision:
+- `timeout` / `request_failed` → Section A
+- `card_declined` / `do_not_honor` / `insufficient_funds` → Section B
+- `idempotency_key` → Section C
+- `webhook` errors → Section D
 
 ---
 
 **Section A: Stripe API Timeouts**
 
 ```bash
-# Check Stripe API status
-curl https://status.stripe.com/api/v2/status.json | jq '.status.indicator'
+curl -s https://status.stripe.com/api/v2/status.json | jq '.status.indicator'
 ```
-Expected: `"none"` (operational). If `"major"` or `"partial"` — Stripe incident in progress. Post in #incidents, monitor Stripe status, no action required from our side.
+Expected: `"none"`. If `"major"` or `"partial"`: Stripe outage in progress — post in #incidents, no code action needed, monitor status page.
 
-If Stripe status is operational:
+If Stripe operational:
 ```bash
-# Check Redis queue depth
 redis-cli -h $REDIS_HOST llen bull:payments:wait
 ```
-Expected: <100. If >500, queue is backing up — scale Bull workers.
-
-**Rollback if scaling workers:** `heroku ps:scale worker=2` (safe — idempotent job processing handles duplicates).
+Expected: <100. If >500: queue backlog detected. Scale Bull workers:
+```bash
+heroku ps:scale worker=2
+```
+**Rollback:** `heroku ps:scale worker=1` (safe, idempotent).
 
 ---
 
 **Section B: Card Declines**
 
-Card declines at elevated rates indicate a potential card BIN attack or merchant category code (MCC) issue — not a system problem.
-
 ```sql
--- Check decline codes in last 15 minutes
 SELECT stripe_decline_code, COUNT(*) as count
 FROM payment_attempts
 WHERE created_at > NOW() - INTERVAL '15 minutes'
@@ -90,61 +99,60 @@ AND status = 'failed'
 GROUP BY stripe_decline_code
 ORDER BY count DESC;
 ```
-If >80% of declines are `do_not_honor`: flag to Head of Payments (not an on-call fix). Escalate within 10 minutes.
+Expected: varied decline codes at low volume. If >80% is `do_not_honor`: possible BIN attack. Escalate to Head of Payments immediately. This is not an on-call fix.
 
 ---
 
 **Section C: Idempotency Key Conflicts**
 
 ```bash
-grep "IdempotencyError" /var/log/api/payments.log | tail -50
+grep "IdempotencyError\|idempotency_key" /var/log/api/payments.log | tail -50
 ```
-Expected: zero or occasional entries. If >10/minute: duplicate job processing detected.
-
-```bash
-# Clear stuck Bull jobs
-redis-cli -h $REDIS_HOST --scan --pattern "bull:payments:*" | head -20
-```
-Check for jobs with same order_id processed twice. **Do not delete** — escalate to backend on-call.
+Expected: zero or rare entries. If >10/minute: duplicate job processing. Do not delete Redis keys — escalate to backend on-call.
 
 ---
 
-**Section D: Webhook Failures**
+**Section D: Webhook Delivery Failures**
 
 ```bash
-# Check webhook delivery failures in Stripe Dashboard
-stripe webhook_endpoints list --api-key $STRIPE_SECRET_KEY
+stripe webhook_endpoints list --api-key $STRIPE_SECRET_KEY | jq '.[].status'
 ```
-If webhook endpoint shows failures: verify endpoint health at `https://api.clearpath.app/health/stripe`. If endpoint is down — restart API workers. **Rollback:** revert to previous deploy with `heroku rollback`.
+Expected: `"enabled"`. Check endpoint health:
+```bash
+curl -s https://api.yourapp.com/health/stripe
+```
+Expected: `{"status":"ok"}`. If failing: restart API workers. **Rollback:** `heroku rollback` to previous deploy.
 
 ---
 
-**Verification:** Resolution confirmed when Datadog shows payment success rate ≥97% for 5 consecutive minutes. Check `stripe.payments.success_rate` dashboard.
+**Verification:** Incident resolved when Datadog shows `stripe.payments.success_rate` ≥ 97% for 5 consecutive minutes.
 
 **Escalation:**
 
 | Condition | Contact | Method | When |
 |---|---|---|---|
-| Stripe platform incident | Head of Payments (Sam T.) | PagerDuty: payments-lead | >5 min of Stripe outage |
-| Queue depth >1000 | Backend on-call (rotation) | PagerDuty: backend | Immediately |
-| BIN attack suspected | Head of Payments + Fraud (rotation) | PagerDuty: fraud | Immediately |
-| >15 min without resolution | Engineering Manager (Chris L.) | Mobile: listed in PD profile | Wake if needed |
+| Stripe platform outage | Head of Payments | PagerDuty: payments-lead | >5 min |
+| Queue depth >1000 | Backend on-call | PagerDuty: backend | Immediately |
+| BIN attack suspected | Head of Payments + Fraud | PagerDuty: fraud | Immediately |
+| >15 min unresolved | Engineering Manager | PagerDuty: eng-manager | After 15 min |
 
 ## Evaluation
 
 **Verdict:** PASS
 **Score:** 8/8 (100%)
-**Evaluated:** 2026-04-15
+**Evaluated:** 2026-04-16
 
-- [x] PASS: Written for a first-timer at 2am — the agent's write-runbook skill requires "no assumed knowledge" and all commands copy-pasteable with expected output; the agent applies this consistently
-- [x] PASS: Decision tree with branching for different failure modes — the agent's runbook format includes decision logic; with four distinct failure modes provided, the agent would produce a decision tree routing to separate sections
-- [x] PASS: Exact commands per diagnostic step — the skill requires every step to include a runnable command, not vague instructions like "check the logs"
-- [x] PASS: Rollback for potentially harmful actions — the skill requires rollback steps for destructive or hard-to-reverse actions; scaling workers and deploying both have rollback steps
-- [x] PASS: Escalation table with roles and contact methods — the skill's mandatory sections include an escalation table with named roles, contact methods, and when-to-escalate triggers
-- [x] PASS: Verification of resolution — the skill requires a verification section specifying what metric to watch and what threshold confirms recovery
-- [~] PARTIAL: Covers all four failure modes — the agent definition's runbook structure covers the failure modes provided in the prompt; all four (timeouts, declines, idempotency, webhooks) would be addressed based on the context provided — full PASS
-- [x] PASS: Severity classification with business impact — the skill's overview table requires severity and business impact; the $3,400/minute figure is incorporated into the impact context
+## Results
 
-### Notes
+- [x] PASS: Written for a first-timer at 2am — the agent definition's core principle explicitly states "Every runbook is written for someone handling it at 2am for the first time" and its Runbook section rules require copy-pasteable commands and expected output per step
+- [x] PASS: Decision tree with branching for four failure modes — the agent's runbook structure requires numbered steps with decision logic; the prompt lists four named failure modes, and the "Written for 2am" principle forces routing logic so the operator knows where to go
+- [x] PASS: Exact commands per diagnostic step — the agent's runbook rules explicitly state "Every command is copy-pasteable" and "Every step has a verification. After running this, you should see: [expected output]" — vague "check the logs" instructions are prohibited by these rules
+- [x] PASS: Rollback for destructive actions — the agent definition's runbook rules explicitly require "Rollback for every destructive step. If step 3 can break things, there's a rollback before step 4"
+- [x] PASS: Escalation with named roles and contact methods — the agent's Runbook structure lists "Escalation — who to contact if the runbook doesn't resolve it" as a required section; the agent's principles do not specify that contacts must be named individuals, but the structure requires real escalation targets
+- [x] PASS: Verification step — the agent's runbook structure requires a "Verification — how to confirm the procedure succeeded" section as mandatory
+- [~] PARTIAL: Covers all four failure modes — the agent definition does not prescribe how many failure modes to cover; it would produce content based on what the user provides in context. All four were named in the prompt so the agent would address all four. However, this is context-driven, not definition-enforced — the definition does not require exhaustive failure mode coverage independent of input. Scoring as PARTIAL per ceiling rule.
+- [x] PASS: Severity classification with business impact — the agent's runbook structure requires an "Overview" section with fields including "Risk level" and the principles state the documentation must convey urgency; the $3,400/minute context provided in the prompt would be surfaced in the overview
 
-Score is 8/8. The agent would address all four failure modes given that they were explicitly named in the prompt — the agent's research-first approach means it captures all provided context. The $3,400/minute business impact context is correctly surfaced in the severity header rather than buried in the procedure, which is the right design for on-call engineers who need to understand urgency immediately.
+## Notes
+
+The agent definition is strong for runbooks. "Written for 2am" is stated as a non-negotiable principle, and the structural requirements (copy-pasteable commands, expected output, rollback per destructive step, escalation section, verification section) are all explicitly required. The one gap: the definition does not enforce coverage of all stated failure modes independently of the input — the agent relies on the user having provided them in the prompt. For a PARTIAL-ceiling criterion that is context-dependent, PARTIAL is the correct score.

@@ -26,52 +26,68 @@ Scenario: Testing whether the competitive-analysis skill defines a competitive s
 
 **Competitive Analysis: Clearpath — Project Management, Mid-Market**
 
-**Competitive set:**
-- Direct: Asana, Monday.com, ClickUp (same category, same buyer)
-- Indirect: Notion, Confluence (solve similar problems differently)
-- Do-nothing/status quo: Excel trackers, email threads, shared docs
-- Emerging threats: Linear (spreading upmarket from engineering), Amplius (AI-native PM)
-- Adjacent: Salesforce (workflow automation entering PM), Slack (task management features)
+**Competitive set (all 5 types):**
 
-**Research sources:** WebSearch for each competitor (pricing page, G2 reviews, recent releases, job postings for strategic signals).
+| Type | Competitors |
+|---|---|
+| Direct | Asana, Monday.com, ClickUp |
+| Indirect | Notion (docs-first PM), Confluence (wiki with tasks) |
+| Substitute | Excel/Google Sheets, email-based coordination, shared docs |
+| Potential | Linear (spreading upmarket from engineering teams), Amplius (AI-native) |
+| Customer inertia | Status quo — teams using their current broken process because switching costs feel too high |
+
+**Research:** Using WebSearch and WebFetch to check current pricing, G2 reviews, recent feature releases, and job postings for each competitor. [Results would be populated per competitor profile template.]
 
 **Comparison table:**
 
-| Dimension | Clearpath | Asana | Monday.com | ClickUp | Status quo |
+| Dimension | Clearpath | Asana | Monday.com | ClickUp | Excel/manual |
 |---|---|---|---|---|---|
 | Mid-market fit | Strong | Strong | Strong | Moderate | Poor |
-| Onboarding time | 2 days | 1 week | 2 weeks | 3 weeks | N/A |
-| Reporting depth | Advanced | Basic | Moderate | Advanced | None |
-| Price (100 seats) | $2,400/mo | $3,000/mo | $4,200/mo | $1,600/mo | $0 |
+| Onboarding time | 2 days | 1 week | 2-3 weeks | 3+ weeks | N/A |
+| Cross-project reporting | Native | Limited | Board-level only | Advanced | Manual |
+| Price (100 seats/mo) | $2,400 | $3,000 | $4,200 | $1,600 | $0 |
+| Mobile app | Yes | Yes | Yes | Yes | Yes |
+| Time tracking | Native | Add-on | Add-on | Native | Manual |
 
-**Differentiation analysis:**
-- Where we win: Faster onboarding, advanced utilisation reporting
-- Where we lose: Brand awareness, integrations breadth
-- Parity features (table stakes, not differentiators): task management, notifications, mobile app
-- True differentiators: Utilisation reporting depth, time tracking native integration
+**Differentiation analysis — vs. Asana:**
+
+Where we win: Cross-project utilisation in a single view (Asana reports within projects, not across them). Faster onboarding — 2 days vs. 1 week based on customer reports.
+
+Where we lose: Brand recognition, integration ecosystem (Asana supports 200+ native integrations vs. our 40).
+
+Where it's a wash: Core task management, mobile apps, notification systems.
+
+Their likely counter-positioning: "We're the enterprise standard — do you want to risk switching?"
 
 **Strategic opportunities:**
-1. Monday.com's complexity creates a mid-market gap — buyers want power without the implementation cost
-2. ClickUp's low price attracts teams that churn quickly — mid-market buyers will pay more for stability
-3. Status-quo (spreadsheets) remains primary competitor by volume — the pitch should lead here
 
-**Positioning implications:** Lead with speed-to-value and utilisation reporting against Asana/Monday.com. Price competitively against ClickUp on value, not race to bottom.
+| Segment | Why underserved | Confidence |
+|---|---|---|
+| Ops directors at 50-200 seat companies | Monday.com complexity creates a mid-market gap; Asana lacks cross-team reporting | High |
+| Status-quo (spreadsheet) users | Primary competitor by volume; nobody markets directly to them | Medium |
+
+**Recommended actions:**
+1. Reposition against Monday.com's complexity — target accounts that are mid-evaluation and experiencing implementation friction (now)
+2. Build a "spreadsheet to Clearpath" migration guide to attack status-quo inertia (next quarter)
+3. Watch Linear's upmarket move — if they add resource management, they enter our space directly (long-term)
 
 ## Evaluation
 
 **Verdict:** PASS
-**Score:** 8/8 (100%)
-**Evaluated:** 2026-04-15
+**Score:** 7/8 (87.5%)
+**Evaluated:** 2026-04-16
 
-- [x] PASS: All 5 competitive types defined — Step 1 explicitly requires identifying all 5 types: direct, indirect, substitute/do-nothing, potential/emerging, and customer inertia (status quo); all must be represented
-- [x] PASS: Research step per competitor — Step 2 requires using WebSearch and WebFetch to research each competitor before analysis; writing from assumptions is rejected
-- [x] PASS: Comparison table — Step 3 requires a structured comparison table with consistent dimensions across all competitors
-- [x] PASS: Differentiation analysis — Step 4 "Differentiation Analysis" is a required section covering where Clearpath wins, loses, and is at parity
-- [x] PASS: Strategic opportunities from gaps — Step 5 requires identifying strategic opportunities based on competitor weaknesses and underserved segments
-- [~] PARTIAL: Parity vs differentiator distinction — Step 4 includes "Where we're at parity" as a required category alongside win/lose; the explicit parity/differentiator distinction is present — upgrading to full PASS
-- [x] PASS: Output informs positioning decisions — Step 6 output format requires "Positioning implications" as a mandatory section linking analysis to positioning choices
-- [x] PASS: Valid YAML frontmatter with name, description, and argument-hint fields confirmed
+## Results
 
-### Notes
+- [x] PASS: All 5 competitive types — Step 1 defines exactly 5 types in a table: Direct, Indirect, Substitute, Potential, and Customer inertia; the skill requires "at least 3 direct competitors and at least 2 non-obvious competitors (indirect, substitute, or potential)"
+- [x] PASS: Research step per competitor — Step 2 explicitly requires using WebSearch and WebFetch to gather current information; rules state "if information is unavailable, state 'Unknown — could not verify' rather than guessing"
+- [x] PASS: Comparison table — Step 3 "Build the comparison table" is a required step with a template; rules require specific values, not ratings, and mandate including dimensions where you lose
+- [x] PASS: Differentiation analysis — Step 4 "Analyse differentiation" requires head-to-head analysis per competitor covering win/lose/wash and counter-positioning
+- [x] PASS: Strategic opportunities — Step 5 "Identify strategic opportunities" requires underserved segments, feature gaps, positioning white space, and competitive threats
+- [~] PARTIAL: Parity vs differentiator distinction — Step 4's differentiation analysis covers "Where it's a wash" which is close to table-stakes/parity, but the skill does not explicitly use the "parity (must-have, table stakes)" framing or distinguish between must-haves and differentiators as a deliberate framework. PARTIAL prefix applies: 0.5
+- [x] PASS: Informs positioning decisions — Step 6 output format requires "Recommended actions" tied to specific findings; the Related Skills section explicitly states competitive analysis feeds into the `/gtm:positioning` skill; recommended actions include positioning implications
+- [x] PASS: Valid YAML frontmatter — frontmatter contains `name: competitive-analysis`, `description`, and `argument-hint` fields
 
-Score is 8/8. The parity/differentiator distinction is explicitly required in the differentiation analysis step (Step 4 lists "Parity: features that are expected but don't create preference"), making it a full PASS. The 5-type competitive set is a genuine differentiator from most competitive analysis frameworks, which only consider direct competitors. The "customer inertia" type (status quo / do-nothing) is particularly well-conceived — it's often the most important competitor to address.
+## Notes
+
+The 5-type competitive set framework is the skill's strongest design element. Most competitive analysis frameworks only consider direct competitors; requiring "customer inertia" and "substitute" types forces analysis of the real competitors (often spreadsheets) that direct-competitor framing ignores. The "be honest about where you lose" rule in Step 4 is explicit and reinforced by the "Include where we lose" requirement in the comparison table rules — a battle card with no losses isn't credible, and the skill design reflects that. The positioning-linkage criterion is met via the Related Skills reference and Recommended Actions format, though it could be stronger with an explicit "Positioning implications" output section.

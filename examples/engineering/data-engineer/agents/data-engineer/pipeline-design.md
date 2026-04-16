@@ -23,39 +23,59 @@ We're building out our analytics capability and need a pipeline for user activit
 
 ## Output
 
-**Simulated agent response for this prompt:**
+**Simulated agent response:**
 
-Pre-flight: agent checks for existing metric definitions, analytics infrastructure, and event tracking plan before designing anything. Reviews Marten event store schema to confirm available events.
+Pre-flight Step 1: checks for existing analytics infrastructure (data warehouse, pipelines, dashboards), identifies Marten PostgreSQL as data source, looks for existing metric definitions for retention and conversion, reviews what events are already tracked.
 
-Metric definitions before pipeline design:
-- Retention (Day-7): user who had any event on day 7±1 after their `user_created` event. Granularity: daily cohort. Filter: exclude test accounts. Caveat: correlation only — cannot determine causation.
-- Feature adoption: distinct event types per user in their first 30 days. Granularity: per-user. Time window: days 0-30 from signup.
-- Trial-to-paid conversion: subscription with plan_type='paid' created within 14 days of trial subscription. Granularity: cohort by signup week.
+Metric definitions (before pipeline design):
 
-Event sourcing principles applied: pipeline reads from Marten as append-only source. No UPDATE or DELETE on ingested events. Deduplicate by `event_id` at ingestion boundary.
+**Day-7 Retention**
+- Definition: User who performed any qualifying event on day 7 (+/- 1 day) after their first `user_created` event
+- Calculation: `COUNT(DISTINCT user_id WHERE EXISTS event in days 6-8) / COUNT(DISTINCT user_id in cohort)`
+- Granularity: Daily signup cohort
+- Filters: Exclude test accounts (is_test_account = true), exclude internal domains
+- Time window: Day 6-8 after signup date
+- Caveats: Correlation only — cannot determine causation without A/B test. Day ±1 window accounts for timezone ambiguity.
 
-Data quality: null checks on required fields at boundary, deduplication before loading, freshness monitoring (alert if no events for >1 hour during business hours).
+**Feature Adoption (First 30 Days)**
+- Definition: Distinct event types per user in their first 30 days from signup
+- Calculation: `COUNT(DISTINCT event_type) per user WHERE event_timestamp <= signup_date + 30 days`
+- Granularity: Per user
+- Time window: Days 0-30 from signup
 
-Data lineage documented: Marten PostgreSQL → CDC / polling extract → staging table → analytics dimensional model.
+**Trial-to-Paid Conversion**
+- Definition: User with subscription_upgraded event within 14 days of first trial subscription
+- Calculation: `COUNT(users with subscription_upgraded within 14 days) / COUNT(trial starts)`
+- Granularity: Weekly signup cohort
 
-Decision checkpoint: agent stops before recommending storage technology (ClickHouse vs BigQuery vs Postgres analytical schema vs Redshift) — this is an architecture commitment requiring human input.
+Pipeline: Marten PostgreSQL → CDC/polling → staging → deduplication by event_id → analytics schema. No UPDATE or DELETE on ingested events. Append-only. Null checks on required fields at ingestion boundary. Freshness alert if no events for >1 hour during business hours.
 
-Privacy: `user_id` only (no PII in event properties by standard). Flag any events that inadvertently include email or name fields for erasure policy.
+Lineage documented: Marten event store → CDC extract → staging (raw) → cleaned/deduped → dimensional analytics model.
 
-Correlation/causation caveat explicitly noted when discussing retention: Day-7 retention metric shows correlation with actions; cannot establish causation from observational data alone.
+Decision checkpoint: stops before recommending storage technology (ClickHouse, BigQuery, analytical Postgres, Redshift) — this is an architecture commitment requiring human input.
+
+Privacy: `user_id` UUID only in events (no PII by default). Flag any events with email or name fields for erasure policy. Output validation checklist includes privacy assessment.
+
+Validation checklist: lineage documented, privacy assessed, property types and constraints specified, sanity checks defined.
+
+Correlation/causation caveat noted explicitly when presenting Day-7 retention: "This is correlation. Causation requires a controlled experiment."
 
 ## Evaluation
 
-- [x] PASS: Agent identifies data sources, existing metrics, and tracked events before designing — data-engineer agent definition mandates pre-flight checks for existing infrastructure and metric definitions
-- [x] PASS: Agent produces precise metric definitions before pipeline design — data-engineer agent definition requires metric definitions with calculation, granularity, filters, time window, caveats
-- [x] PASS: Agent applies immutable event sourcing principles — data-engineer agent definition explicitly prohibits UPDATE/DELETE patterns; append-only ingestion is a core principle
-- [x] PASS: Agent addresses data quality at every pipeline boundary — data-engineer agent definition covers quality checks including null checks, deduplication, freshness
-- [x] PASS: Agent documents data lineage from source to destination — data-engineer agent definition requires lineage documentation
-- [x] PASS: Agent raises decision checkpoint before storage technology — data-engineer agent definition includes decision checkpoints for architecture commitments
-- [~] PARTIAL: Agent includes privacy considerations — data-engineer agent definition covers privacy by design in the data-model skill; the agent definition mentions privacy considerations but doesn't mandate a structured PII audit and retention policy for every pipeline design; partially covered
-- [x] PASS: Agent produces validation checklist — data-engineer agent definition includes a validation checklist covering lineage, privacy, property types, sanity checks
-- [x] PASS: Agent distinguishes correlation from causation — data-engineer agent definition explicitly calls out correlation vs causation as a required caveat for retention metrics
+- [x] PASS: Agent starts by identifying data sources, existing metrics, and tracked events — Pre-Flight Step 1 mandates checking existing data infrastructure, identifying data sources, checking for existing metric definitions, and reviewing event tracking; this is listed as MANDATORY
+- [x] PASS: Agent produces precise metric definitions before pipeline design — Metric Definitions section (MANDATORY before implementation) requires Definition, Calculation, Data source, Granularity, Filters, Time window, Known caveats, Owner; all fields mapped to the three requested metrics
+- [x] PASS: Agent applies immutable event sourcing principles — Data Modelling Principles: "Immutable events. Once written, event data doesn't change. Corrections are new events, not edits to old ones." This is a core stated principle, not a conditional guideline.
+- [x] PASS: Agent addresses data quality at every pipeline boundary — Data Quality section specifies null check, type check, uniqueness check, freshness check at every boundary; rule: "Validate at ingestion. Bad data that enters the system is 10x harder to fix downstream."
+- [x] PASS: Agent documents data lineage from source to destination — Data Lineage section provides a structured documentation template from source system through ingestion, transformations, and destination; every metric requires documented lineage.
+- [x] PASS: Agent raises decision checkpoint before storage technology — Decision Checkpoints table includes "Choosing a new data storage technology — Infrastructure commitment — architecture decision" as a mandatory STOP.
+- [~] PARTIAL: Agent includes privacy considerations — Data Modelling Principles includes "Privacy by design. Don't collect what you don't need. Document retention policies. Anonymise what you can." Validation checklist requires "Privacy implications assessed (PII, retention, consent)." However the definition doesn't mandate a structured PII audit per pipeline (identifying which specific event properties contain PII and specifying erasure keys) — privacy is a checklist item, not a required structured deliverable for pipeline design.
+- [x] PASS: Agent produces validation checklist — Output Format validation section lists exactly: "Lineage documented (source → transform → destination), Privacy implications assessed (PII, retention, consent), Property types and constraints specified, Sanity checks defined (totals, ranges, expected patterns)" — all four areas from the criterion.
+- [x] PASS: Agent distinguishes correlation from causation — "Event Correlation and Causation" section with explicit rule: "Default assumption: correlation, not causation. Claiming causation requires experimental evidence (A/B test, before/after with controlled conditions)." Retention metrics must carry this caveat.
 
 **Verdict:** PASS
 **Score:** 8.5/9 criteria met (94%)
-**Evaluated:** 2026-04-15
+**Evaluated:** 2026-04-16
+
+## Notes
+
+The privacy gap is real but narrow. The definition mentions privacy as a principle and checklist item, but the structured PII audit (which specific columns, what erasure key, what retention period) only appears explicitly in the data-model skill, not the agent's pipeline design guidance. A pipeline that ingests event data could easily miss a PII field without a mandated structured audit. Adding a required PII audit step to the pipeline workflow would close this.

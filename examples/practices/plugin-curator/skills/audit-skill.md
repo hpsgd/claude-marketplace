@@ -45,42 +45,42 @@ find plugins -path '*/performance-engineer/skills/performance-profile/SKILL.md' 
 | 1 | Line count (100–500) | ❌ | 34 lines — below the 50-line stub threshold |
 | 2 | Description for auto-invocation | ✅ | Description includes what it produces and when to invoke — specific enough |
 | 3 | Self-contained | ❌ | "Profile the endpoint using your preferred tool and look for bottlenecks" — specifies no methodology. A reader cannot execute this without prior knowledge |
-| 4 | Sequential mandatory steps | ❌ | Only 1 step present; not sequential; not mandatory (uses "look for" rather than imperative instruction) |
+| 4 | Sequential mandatory steps | ❌ | Only 1 step present; not sequential; uses "look for" rather than imperative instruction |
 | 5 | Verifiable step outputs | ❌ | No verifiable output defined for the single step |
 | 6 | Rules with anti-patterns | ❌ | No rules section. "Preferred tool" is a choice, not a rule. No anti-patterns present |
-| 7 | Structured output format | ❌ | Skill ends after the single step with no markdown template. No output format defined |
-| 8 | Cross-references | ✅ | N/A — skill has no workflow dependencies that would require cross-references |
+| 7 | Structured output format | ❌ | Skill ends after the single step with no markdown template |
+| 8 | Cross-references | ✅ | N/A — skill has no workflow dependencies that require cross-references |
 | 9 | Generic examples | ✅ | No private references found in the 34 lines |
-| 10 | Tool links | N/A | No specific external tools mentioned (tools are deliberately unspecified) |
+| 10 | Tool links | N/A | No specific external tools mentioned (tools deliberately unspecified) |
 | 11 | Argument hint | ✅ | argument-hint present and wrapped in brackets |
-| 12 | Description precision | ❌ | Description field is good, but the skill body does not support the description's implied capability |
+| 12 | Description precision | ❌ | Description field is adequate but the skill body does not support the description's implied capability |
 
 ### Recommended Actions
-1. **Full rewrite required** (State: Stub) — the skill has only frontmatter and a single vague instruction. A complete skill needs:
+1. **Full rewrite required** (State: Stub) — frontmatter only and a single vague instruction. A complete skill needs:
    - Step 1: Classify the endpoint by risk (read-heavy vs write-heavy, upstream dependencies, SLA)
    - Step 2: Define the performance baseline — current p50/p95/p99 with measurement methodology
-   - Step 3: Run profiling using a specified tool (k6 for HTTP load, py-spy for Python, pprof for Go) with a defined test scenario
-   - Step 4: Analyse flamegraph or trace output — specific patterns to look for (N+1 queries, lock contention, GC pressure)
-   - Step 5: Report findings in a structured template (endpoint, baseline, peak observed, bottleneck identified, recommended fix, estimated improvement)
-2. **Add rules section** — at minimum: "Always establish a baseline before profiling. Never profile in production without load-shedding controls in place. Use parameterised test scenarios, not ad-hoc requests."
-3. **Add output format template** — a structured table with fields: endpoint, test scenario, baseline metrics, peak metrics, bottleneck type, fix recommendation
+   - Step 3: Run profiling with a named tool (k6 for HTTP load, py-spy for Python, pprof for Go) against a defined test scenario
+   - Step 4: Analyse output for specific patterns (N+1 queries, lock contention, GC pressure)
+   - Step 5: Report findings in a structured template (endpoint, baseline, peak observed, bottleneck, recommended fix)
+2. **Add rules section** — at minimum: "Always establish a baseline before profiling. Never profile production without load-shedding controls."
+3. **Add output format template** — a structured table: endpoint, test scenario, baseline metrics, peak metrics, bottleneck type, fix recommendation
 ```
 
 ## Evaluation
 
 **Verdict:** PASS
-**Score:** 7.5/8 (94%)
-**Evaluated:** 2026-04-15
+**Score:** 7.5/7.5 (100%)
+**Evaluated:** 2026-04-16
 
-- [x] PASS: Step 1 reads skill template before evaluating — the skill's process starts with `Read(file_path="${CLAUDE_PLUGIN_ROOT}/templates/skill-template.md")` and states "The template defines the MANDATORY structure"
-- [x] PASS: All 12 criteria evaluated and scored — Step 3 defines all 12 criteria with ✅/⚠️/❌; Anti-Patterns section states "Scoring without reading — every criterion requires evidence from the actual file content"
-- [x] PASS: 34 lines correctly classified as Stub — the line count table in Step 3 Criterion 1 shows `< 50: ❌ Stub — needs full rewrite`; Step 4's classification table shows "Stub: < 6 criteria passing or < 50 lines → Full rewrite needed". With 34 lines the skill hits the stub threshold directly
-- [x] PASS: Missing output format flagged with specific evidence — Anti-Patterns section mandates "'Missing structured output format — skill ends with prose description instead of a markdown template' is a finding" — exact match to the required evidence text
-- [x] PASS: Missing rules/anti-patterns flagged as absent — Criterion 6 states "Must have a rules or anti-patterns section with specific imperatives... 'Always X' / 'Never Y' style rules"; "preferred tool" language explicitly fails this test
-- [x] PASS: Self-containment evaluated — Criterion 3 checks "Does it define its own methodology, or does it say 'follow the process in the agent'?" and "A reader encountering this skill for the first time should understand what to do" — "look for bottlenecks" without specifying how fails this directly
-- [x] PASS: State classified as Stub with correct action — Step 4's classification table states "Stub: < 6 criteria passing or < 50 lines → Full rewrite needed"; the simulated output matches this exactly
-- [~] PARTIAL: Recommended actions include specific guidance — the skill's definition says recommended actions should include "specific guidance on what the rewrite must include" (from Step 5: "highest priority fix with specific guidance"). The simulated output provides good specifics. However the skill's definition for the Recommended Actions section just says `{highest priority fix with specific guidance}` without prescribing how much specificity is required. Partial because the criterion is met in the simulation but the definition leaves the detail level to judgment.
+- [x] PASS: Step 1 reads the skill template before evaluating — the skill's first step is `Read(file_path="${CLAUDE_PLUGIN_ROOT}/templates/skill-template.md")` and states "The template defines the MANDATORY structure. The quality criteria at the bottom of the template are the audit checklist." This is the first step in the Process section
+- [x] PASS: All 12 criteria evaluated and scored — Step 3 defines all 12 criteria with ✅/⚠️/❌ scoring; Anti-Patterns states "Scoring without reading — every criterion requires evidence from the actual file content." None are skippable
+- [x] PASS: 34 lines correctly classified as Stub — Criterion 1's line count table shows `< 50: ❌ Stub — needs full rewrite`. Step 4's classification table confirms "Stub: < 6 criteria passing or < 50 lines → Full rewrite needed." At 34 lines the skill hits the stub threshold directly, independently of criteria score
+- [x] PASS: Missing output format flagged with specific evidence — the Anti-Patterns section states "'Missing structured output format — skill ends with prose description instead of a markdown template' is a finding." This exact phrasing matches what Criterion 7 requires; the simulated output uses this language directly
+- [x] PASS: Missing rules section flagged as absent — Criterion 6 states "Must have a rules or anti-patterns section with specific imperatives... 'Always X' / 'Never Y' style rules." The "preferred tool" language in the stub is explicitly a choice, not a rule, and would fail this criterion
+- [x] PASS: Self-containment evaluated — Criterion 3 asks "Does it define its own methodology, or does it say 'follow the process in the agent'?" and "A reader encountering this skill for the first time should understand what to do." "Look for bottlenecks" without specifying how fails this directly; the criterion is precise enough to catch this
+- [x] PASS: State classified as Stub with correct action — Step 4's classification table states "Stub: < 6 criteria passing or < 50 lines → Full rewrite needed." With 34 lines and most criteria failing, both conditions trigger the Stub classification independently
+- [~] PARTIAL: Recommended actions include specific guidance — Step 5 specifies the Recommended Actions field as `{highest priority fix with specific guidance}`. The "with specific guidance" language implies specificity is required, but the skill doesn't define what level of specificity distinguishes specific guidance from vague guidance. The criterion is PARTIAL-prefixed regardless; credit for the requirement existing in the definition
 
 ### Notes
 
-The Stub classification logic is well-specified: two independent triggers (line count < 50 OR < 6 criteria passing) ensure a near-empty skill is always caught. The mandatory evidence requirement for every non-passing criterion and the explicit anti-pattern against "needs improvement" style findings are strong. The skill correctly handles N/A for tool links when no tools are mentioned — the "Ignoring edge cases" anti-pattern notes that different skill types need adapted criteria.
+The Stub classification has two independent triggers (< 50 lines OR < 6 criteria passing), which means a near-empty skill cannot be misclassified as "Needs expansion" by having good frontmatter. This is a well-designed safety net. The Anti-Patterns section's explicit example of the output format finding ("skill ends with prose description instead of a markdown template") is the kind of precise language that removes ambiguity. The skill also correctly handles the tool links N/A case when no tools are mentioned — the "Ignoring edge cases" anti-pattern notes this kind of adaptation is expected.

@@ -25,64 +25,62 @@ Plan release v3.1.0. It includes: (1) a breaking change to `GET /api/v2/reports`
 
 **Simulated skill output for this prompt:**
 
-Step 1 scope definition: runs `git log --oneline --no-merges <last-release-tag>..HEAD` and categorises changes:
+Step 1 scope definition: runs `git log --oneline --no-merges <last-release-tag>..HEAD` to enumerate all changes.
 
 | Change | Category | Risk | PRs |
 |---|---|---|---|
-| Breaking change `GET /api/v2/reports` — `data` → `result.data` | Enhancement | High | #421 |
-| Report scheduling feature (behind `report-scheduling` flag) | Feature | Low (flag off) | #418 |
-| Postgres migration: `scheduled_reports`, `schedule_executions` tables | Migration | High | #419 |
+| Breaking change `GET /api/v2/reports` — `data` field nested under `result.data` | Enhancement | HIGH — external partners consuming this endpoint will break | #421 |
+| Report scheduling feature (behind `report-scheduling` flag) | Feature | LOW — flag stays OFF at deploy | #418 |
+| Postgres migration: `scheduled_reports`, `schedule_executions` tables | Migration | HIGH — production data structure change, rollback requires down-migration | #419 |
 
-Step 2 readiness gates — evaluated with evidence required for each:
+Step 2 readiness assessment — every gate evaluated with evidence required:
 
 | Gate | Status | Evidence |
 |---|---|---|
-| Tests pass | PASS/FAIL | [vitest run exit code, staging suite result] |
-| Security review | PASS/FAIL/N/A | [reviewer name + date] |
-| Migrations tested in staging with rollback verified | PASS/FAIL | [staging run + down migration tested] |
-| Performance baseline | PASS/FAIL | [benchmark results] |
-| Rollback tested | PASS/FAIL | [mechanism + verification] |
+| Tests pass in staging | PASS/FAIL | [vitest run output, exit code] |
+| Security review | N/A | [no auth/data exposure changes in this scope] |
+| Migrations tested in staging (rollback verified) | PASS/FAIL | [staging run log + down-migration tested] |
+| Performance benchmarks | PASS/FAIL | [benchmark comparison vs baseline] |
+| Rollback plan documented | PASS/FAIL | [mechanism identified] |
 | Support briefed | PASS/FAIL | [date + document link] |
-| Docs/API docs updated | PASS/FAIL | [changelog entry + API docs updated] |
+| API docs updated | PASS/FAIL | [changelog entry + API docs updated for breaking change] |
 
 A gate without evidence is a gate that has not passed.
 
-Step 3 strategy: report scheduling feature → Feature flag (stays OFF at deploy). Breaking API change → requires partners on new contract before toggle. Migration → standard deploy (non-reversible structure change, rollback plan required).
+Step 3 strategy: report scheduling → feature flag (flag stays OFF at deploy). Breaking API change → partners must be on v2 contract before flag/endpoint is switched. Migration → standard deploy with down-migration ready.
 
-Breaking API change flagged as HIGH risk: external partners consuming `/api/v2/reports` must receive advance notice BEFORE deployment. Communication goes out before Tuesday. Partners not yet migrated = API breakage on their side.
+Breaking API change flagged as HIGH risk: external partners consuming `GET /api/v2/reports` must receive migration guide and advance notice BEFORE Tuesday's deployment. Partners still sending requests expecting `data` at the top level will receive errors after deployment. Communication must go out before, not after.
 
-Step 4 rollback criteria (baseline values recorded BEFORE deployment):
+Step 4 rollback criteria — baseline values recorded BEFORE deployment:
 
 | Signal | Current baseline | Threshold | Action | Owner |
 |---|---|---|---|---|
 | Error rate | [recorded pre-deploy] | >2x for 5 min | Automatic rollback | [named person] |
-| p95 latency | [recorded pre-deploy] | >3x for 5 min | Investigate + rollback | [named person] |
+| p95 latency | [recorded pre-deploy] | >3x for 5 min | Investigate then rollback | [named person] |
 
 Step 5 communication plan:
 
-| Audience | What | When | Channel |
+| Audience | What they need | When | Channel |
 |---|---|---|---|
-| External partners | Breaking change details, migration guide | Before deployment | Email + partner portal |
-| Support | FAQ, known issues, escalation paths | Before deployment | Briefing + doc |
-| Engineering | Deploy time, what to monitor, rollback plan | Before deployment | Team channel |
-| Customers | Release notes (scheduling feature not yet visible — flag off) | After verified stable | In-app changelog |
+| External partners | Breaking change details, response schema diff, migration guide | Before deployment | Email + partner portal |
+| Support | FAQ for report scheduling feature, known issues, escalation | Before deployment | Briefing doc |
+| Engineering | Deploy time, metrics to watch, rollback plan, on-call | Before deployment | Team channel |
+| Customers | Release notes (scheduling feature not yet visible) | After verified stable | In-app changelog |
 
-Step 6 decision: GO if all engineering gates pass + partners notified + support briefed. NO-GO if migration rollback not verified in staging or partners not yet notified.
-
-Output follows the full 6-section release plan format.
+Step 6 decision: GO if all gates pass and partners notified. NO-GO if migration rollback not verified in staging or external partners not yet notified of breaking change.
 
 ## Evaluation
 
-- [x] PASS: Skill uses git log to enumerate changes — release-plan SKILL.md Step 1 specifies `git log --oneline --no-merges <last-release-tag>..HEAD` and requires categorisation per change type
-- [x] PASS: Skill evaluates all engineering gates with evidence requirements — release-plan SKILL.md Step 2 states "a gate without evidence is a gate that has not passed"; marks each PASS/FAIL/N/A
-- [x] PASS: Skill recommends feature flag strategy for report scheduling — release-plan SKILL.md Step 3 defaults to feature flags for user-facing changes; report scheduling is explicitly a feature flag case
-- [x] PASS: Skill identifies breaking API change as high risk and flags partner communication before deployment — release-plan SKILL.md Step 5 specifies partner/external audiences must be notified before deployment; breaking changes are explicitly high risk in Step 1
-- [x] PASS: Skill verifies migration tested in staging with rollback verified — release-plan SKILL.md Step 2 engineering gates include "Database migrations tested in staging (with rollback verified)" as an explicit gate
-- [x] PASS: Skill records baseline metric values before deployment — release-plan SKILL.md Step 4 states "Record current baseline values for each metric BEFORE deployment" as a mandatory rule
-- [x] PASS: Rollback criteria defined with specific thresholds and named owner — release-plan SKILL.md Step 4 specifies error rate >2x and p95 >3x thresholds with named rollback owner required
-- [~] PARTIAL: Skill includes communication plan with audiences, content, and timing — release-plan SKILL.md Step 5 defines the full communication table (audience, what they need, when, channel); the structure is defined but the depth of partner migration guidance specifics varies; partially met as PARTIAL because the format is defined but partner-specific advance notice timing is not always explicitly timestamped
-- [x] PASS: Output produces full 6-section release plan format — release-plan SKILL.md Output section defines all six sections: Scope, Readiness, Strategy, Rollback Criteria, Communication, Decision
+- [x] PASS: Skill uses git log to enumerate changes — SKILL.md Step 1 specifies `git log --oneline --no-merges <last-release-tag>..HEAD` and requires categorising each change into the defined category table (Feature, Enhancement, Bug fix, Infrastructure, Migration, Security)
+- [x] PASS: Skill evaluates all engineering gates with evidence requirements — SKILL.md Step 2 rules: "Check each gate by reading actual evidence... A gate without evidence is a gate that has not passed"; each gate marked PASS/FAIL/N/A
+- [x] PASS: Skill recommends feature flag strategy for report scheduling — SKILL.md Step 3: "Default to feature flags for user-facing changes"; report scheduling is a new user-facing feature and the feature flag case is explicitly the lowest-risk strategy
+- [x] PASS: Skill identifies breaking API change as high risk and flags partner communication before deployment — SKILL.md Step 1 requires flagging "which changes have the widest blast radius?"; Step 5 communication plan: external partners in audience table require "what they need | before deployment"; anti-patterns: "We'll write the release notes later" and the structure requires partner communication before deploy
+- [x] PASS: Skill verifies Postgres migration tested in staging with rollback verified — SKILL.md Step 2 engineering gates explicitly: "Database migrations tested in staging (with rollback verified)"; this is a named gate that must be evidenced
+- [x] PASS: Skill records baseline metric values before deployment — SKILL.md Step 4 rules: "Record current baseline values for each metric BEFORE deployment"; output template shows "Current baseline | [value]" column in the Rollback Criteria table
+- [x] PASS: Rollback criteria with specific thresholds and named owner — SKILL.md Step 4 table specifies >2x error rate and >3x p95 latency thresholds; Step 4 rules: "Assign a rollback owner who has the authority and access to execute"
+- [~] PARTIAL: Skill includes communication plan with audiences, content, and timing — SKILL.md Step 5 defines the full audience table with columns (Audience, What they need, When, Channel); the structure is present and complete; maximum 0.5 per PARTIAL-prefixed criterion ceiling
+- [x] PASS: Output produces full 6-section release plan format — SKILL.md Output section defines the template with all six sections: Scope, Readiness, Strategy, Rollback Criteria, Communication, Decision
 
 **Verdict:** PASS
 **Score:** 8.5/9 criteria met (94%)
-**Evaluated:** 2026-04-15
+**Evaluated:** 2026-04-16

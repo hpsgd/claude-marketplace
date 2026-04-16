@@ -91,17 +91,19 @@ grep -r "hps\.gd\|interstitium" --include="*.md" plugins/engineering/data-engine
 
 **Verdict:** PASS
 **Score:** 7.5/8 (94%)
-**Evaluated:** 2026-04-15
+**Evaluated:** 2026-04-16
 
-- [x] PASS: Step 1 reads agent template, CLAUDE.md, and marketplace.json — the skill's Step 1 reads all three: `agent-template.md`, `CLAUDE.md`, and `.claude-plugin/marketplace.json` as the first three operations
-- [x] PASS: Step 2 performs domain research — the skill's Step 2 explicitly mandates "Before writing anything, research the established standards and frameworks... The principle: adopt existing standards, don't invent." The Anti-Patterns section states "Creating without researching — agents must be grounded in established domain practices"
-- [x] PASS: Required directory structure created — Step 3 defines `mkdir` commands for `.claude-plugin`, `agents`, `skills`, and `templates` as separate directories; all are shown in the skill's template
-- [x] PASS: Agent definition follows all mandatory sections — Step 5's body sections table lists all 10 required sections: Core statement, Non-negotiable, Pre-Flight, Domain methodology, Output format, Failure caps, Decision checkpoints, Collaboration, Principles, What You Don't Do
-- [x] PASS: Agent uses sonnet model — Step 5 frontmatter states "model: {sonnet for specialists, opus for leadership}" and data-engineer is a specialist; the Anti-Patterns section calls out "Forgetting model assignment"
-- [x] PASS: marketplace.json updated with required fields — Step 6 defines the entry format with `name`, `source`, `description`, `version`, `category`, and `tags` fields
-- [x] PASS: All 10 registry updates completed — Steps 6–9 cover marketplace.json, coordinator RATSI, lead agent team listing, and README (3 places: category install, everything install, agent table)
-- [~] PARTIAL: Verification step confirms JSON validity, count match, and no private refs — Step 10 includes exactly these three checks with specific bash commands. The definition mandates running them. However the verification step runs "mentally" according to the skill's Quality Gate section ("Run the agent audit criteria mentally"), and the bash commands are present but their execution is not enforced by the structure of the skill. Partial because the verification is defined but partly delegated to judgment rather than mandated tool calls.
+## Results
 
-### Notes
+- [x] PASS: Step 1 reads agent template, CLAUDE.md, and marketplace.json — Step 1 provides literal `Read()` calls for all three in sequence, before any write operations occur
+- [x] PASS: Step 2 performs domain research before writing — Step 2 is titled "Research best practices" and explicitly states "Before writing anything, research the established standards and frameworks." The Anti-Patterns section names "Creating without researching" as a failure mode
+- [x] PASS: All required directory structure created — Step 3 includes `mkdir -p` commands for `.claude-plugin`, `agents`, `skills`, and `templates` directories
+- [x] PASS: Agent definition follows all mandatory sections — Step 5 body sections table lists all 10 sections as mandatory: Core statement, Non-negotiable, Pre-Flight, Domain methodology, Output format, Failure caps, Decision checkpoints, Collaboration, Principles, What You Don't Do
+- [x] PASS: Agent uses `sonnet` model — Step 5 frontmatter states "model: {sonnet for specialists, opus for leadership}"; Anti-Patterns calls out "Forgetting model assignment"
+- [x] PASS: marketplace.json updated with required fields — Step 6 defines the entry format with name, source, description, version, category, and tags fields explicitly
+- [x] PASS: All registry update targets covered — Steps 6–9 cover marketplace.json (Step 6), coordinator RATSI (Step 7), lead agent team listing (Step 8), and README in 3 places (Step 9)
+- [~] PARTIAL: Verification confirms JSON validity, count match, and no private refs — Step 10 provides bash commands for all three checks. However the skill also says "Run the agent audit criteria mentally", indicating part of the verification pass is not tool-enforced. The private refs grep is a real command but the count/JSON checks could be read as procedural guidance rather than mandatory tool calls. PARTIAL ceiling applies per criterion prefix.
 
-This is a thorough skill with a clear 10-step sequence. The domain research step is a genuine differentiator — the Anti-Patterns section explicitly names "Creating without researching" as a failure mode. The registry update chain (Steps 6–9) is well-specified with four distinct update targets. The skill's plugin.json template contains a private reference (`"hps.gd"` as the author name), which is an ironic gap in a skill that explicitly checks for private references. This would be visible in the generated plugin.json but would then fail the verification step's grep check.
+## Notes
+
+The create-agent skill is well-specified with a clear 10-step sequence. The domain research step (Step 2) is a genuine differentiator — the Anti-Patterns section explicitly names "Creating without researching" as a failure mode, giving it teeth. An ironic gap: the plugin.json template in Step 4 contains `"name": "hps.gd"` as a hardcoded author name — exactly the kind of private reference the verification step checks for. It would appear in the generated plugin.json and then fail the Step 10 grep check, which is a real but self-correcting problem.

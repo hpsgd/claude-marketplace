@@ -24,61 +24,73 @@ Scenario: Testing whether the write-kb-article skill requires a question-format 
 
 ## Output
 
-**How do I use my own domain instead of clearpath.app?**
+**How do I use my own domain with my Clearpath workspace?**
 
-You can replace your default `company.clearpath.app` address with a custom domain (like `projects.yourcompany.com`) in Settings. The change takes effect after you update your DNS records, which typically takes 1-24 hours.
+You can replace your default `company.clearpath.app` address with a custom domain in Settings. The change takes effect after you update your DNS records, which typically takes 1-24 hours.
 
 **Before you start:**
-- You need Admin access to your Clearpath workspace.
-- You need access to your company's DNS settings (usually through your domain registrar or IT team).
-- Your domain must not be in use by another Clearpath workspace.
+
+- You need **Admin** access to your Clearpath workspace.
+- You need access to your company's DNS settings (via your domain registrar or IT team).
+- Your domain must not already be connected to another Clearpath workspace.
 
 **Steps:**
 
-1. Go to Settings → Workspace → Custom Domain.
-   You'll see the Custom Domain panel with your current workspace address.
-2. Enter your custom domain (e.g. `projects.yourcompany.com`) and click Verify.
-   Clearpath generates a TXT record for you to add to your DNS.
-3. Add the TXT record to your DNS settings. The record looks like `clearpath-verify=abc123xyz`.
-   (If you're unsure how to do this, your IT team or domain registrar can help.)
+1. **Go to Settings > Workspace > Custom Domain.**
+   You'll see the Custom Domain panel showing your current workspace address.
+2. **Enter your custom domain** (e.g. `projects.yourcompany.com`) and click **Verify**.
+   Clearpath generates a TXT record to add to your DNS.
+3. **Add the TXT record to your DNS settings.** The record looks like `clearpath-verify=abc123xyz`.
    You'll see a "Pending verification" status while Clearpath checks for the record.
-4. Once verified, click Activate custom domain.
-   Your workspace now loads at your custom domain. The old clearpath.app address redirects automatically.
+4. **Once verified, click Activate custom domain.**
+   Your workspace loads at your custom domain. The old clearpath.app address redirects automatically.
 
 **Troubleshooting:**
 
-Verification failing after 24 hours:
-- Check the TXT record is added exactly as shown — extra spaces or incorrect subdomains are common causes.
-- DNS changes can take up to 48 hours in some cases.
+**Problem:** Verification fails after 24 hours.
+**Cause:** The TXT record may have been entered incorrectly, or DNS propagation is still in progress.
+**Solution:** Check the TXT record exactly as shown — extra spaces or wrong subdomains are common causes. DNS changes can take up to 48 hours in some regions.
 
-Custom domain showing a security warning:
-- Clearpath provisions an SSL certificate automatically. If you see a warning immediately after activation, wait 10 minutes and refresh.
+**Problem:** Custom domain shows a security warning after activation.
+**Cause:** Clearpath provisions an SSL certificate automatically — this takes a few minutes.
+**Solution:** Wait 10 minutes and refresh.
 
-Old clearpath.app link not redirecting:
-- Redirects activate within 1 hour of domain activation. If it's been longer, contact support.
+**Problem:** Old clearpath.app link not redirecting.
+**Cause:** Redirects activate within 1 hour of domain activation.
+**Solution:** If it's been longer, contact support.
 
 **Related articles:**
 - How to manage workspace settings
 - How to add team members to your workspace
 - How to transfer workspace ownership
 
-**Metadata:** Last verified: 2026-04-15 | Product area: Workspace Settings | Applies to: Pro and Enterprise | Tags: custom domain, settings, DNS
+---
+Last verified: 2026-04-16
+Product area: Workspace Settings
+Applies to: Pro and Enterprise
+Tags: custom domain, settings, DNS, workspace
 
 ## Evaluation
 
 **Verdict:** PASS
-**Score:** 8/8 (100%)
-**Evaluated:** 2026-04-15
+**Score:** 7.5/8 criteria met (94%)
+**Evaluated:** 2026-04-16
 
-- [x] PASS: Question-format title — the skill requires the title to be a question the user would search; not a feature description like "Custom Domain Configuration"
-- [x] PASS: Short answer at the top — the skill requires a 1-2 sentence summary before the steps that answers the question without requiring the user to read further
-- [x] PASS: Prerequisites section — the skill requires a prerequisites section before the steps covering required permissions, tools, and access
-- [x] PASS: Troubleshooting section — the skill requires a troubleshooting section covering common problems with specific resolution steps
-- [x] PASS: Action + expected result per step — the skill template requires both the action and "what the user sees/expects" after each step
-- [x] PASS: Product terminology only — the skill requires using exact product labels and defining technical terms in plain English when unavoidable
-- [~] PARTIAL: Metadata — the skill requires related articles and a metadata footer (Last verified, Product area, Applies to, Tags); the Tags field is required — this is fully met — upgrading to full PASS
-- [x] PASS: Valid YAML frontmatter with name, description, and argument-hint fields confirmed
+## Results
 
-### Notes
+- [x] PASS: Question-format title required — Step 2 explicitly states "Write the title as the question the user would type into a search bar. Use their vocabulary, not internal terminology." Examples given: "How do I export my data as a CSV?" Good vs "Data Export Functionality Guide" Bad.
+- [x] PASS: Short answer at top — Step 2 "Short answer: 1-2 sentences that directly answer the question. This is for users who scan." Explicitly required and must be self-contained.
+- [x] PASS: Prerequisites section required — Step 2 lists "Prerequisites" as a mandatory section covering required role, plan tier, tools, and prior steps. The skill says "If there are no prerequisites, state 'No special requirements.'"
+- [x] PASS: Troubleshooting section required — Step 2 "Troubleshooting" is a mandatory section with a specific format (Problem/Cause/Solution) and minimum requirements: most common error message, most common user mistake, environment differences.
+- [x] PASS: Action + expected result per step — the step-by-step template in Step 2 explicitly requires `Expected result: [What the user should see after completing this step]` as a mandatory field for each step.
+- [x] PASS: Product terminology only — Step 3 quality rules include "User vocabulary: Are all terms the ones a user would use? Replace any internal jargon." The skill also says "Use the exact names of UI elements as they appear in the product."
+- [~] PARTIAL: Metadata required — Step 4 "Add metadata" is a required step with fields: Last verified, Product area, Applies to, and Tags (3-5 searchable tags). Related articles are also a required section (Step 2). Both metadata and related articles are required. Maximum score is 0.5 per PARTIAL ceiling on this criterion.
+- [x] PASS: Valid YAML frontmatter — contains `name: write-kb-article`, `description`, and `argument-hint` fields.
 
-Score is 8/8. Metadata including Tags is a required section in the skill's output format (Step 4: metadata with Last verified, Product area, Applies to, Tags), making it a full PASS. The short-answer-first structure is particularly important for this type of task article — users often land on KB articles mid-process and need the answer before they need the instructions.
+## Notes
+
+This is the most structurally complete of the user-docs-writer skills. Every criterion maps directly to a named mandatory section in the skill definition. The step template is particularly explicit: `N. **[Action verb] [what to do]** / [navigation] / Expected result: [what the user sees]` leaves no ambiguity about what's required.
+
+The metadata criterion is PARTIAL-ceilinged regardless of completeness — and the definition fully satisfies it (Step 4 requires all metadata fields including Tags). The ceiling is the test author's constraint, not a definition gap.
+
+One area not tested but worth noting: the skill includes a Maintenance rules section requiring update triggers, staleness checks, helpfulness tracking, and retirement criteria. This is more lifecycle thinking than most KB article skills include.

@@ -27,10 +27,10 @@ Scenario: A backend API endpoint has degraded from 120ms to 850ms p95 over the p
 
 ### Goal
 
-**Goal:** Reduce p95 latency of `/api/reports/summary` to ≤150ms (pre-degradation baseline)
-**Current state:** 850ms p95 (as of 2026-04-15)
-**Target state:** ≤150ms p95 (120ms was the baseline; ≤150ms allows for minor growth)
-**How to measure:** p95 latency on the endpoint over a 10-minute window under equivalent load, sampled from production APM or a load test against staging
+**Goal:** Reduce p95 latency of `/api/reports/summary` to ≤150ms
+**Current state:** 850ms p95 (as of today)
+**Target state:** ≤150ms p95 (120ms was the baseline; allowing small margin)
+**How to measure:** p95 latency over a 10-minute window under equivalent load, sampled from APM or a load test against staging with representative data
 
 ---
 
@@ -42,18 +42,18 @@ Scenario: A backend API endpoint has degraded from 120ms to 850ms p95 over the p
 | 2 | New aggregation query deployed 2026-04-01 | Deploy log | No |
 | 3 | Caching layer added 2026-04-05 | Deploy log | No |
 | 4 | Load (requests/min) has not changed significantly | APM metrics | No |
-| 5 | Degradation onset is unclear — did it spike on 2026-04-01, 2026-04-05, or gradually? | Unknown | Yes — worth investigating |
-| 6 | No previous attempts to investigate or roll back | User report | Yes — we're at 850ms with no mitigations tried |
+| 5 | Degradation onset is unclear — did it spike on 04-01, 04-05, or gradually? | Unknown | Yes |
+| 6 | No mitigation attempts yet | User report | Yes — 850ms with no rollback tried |
 
-**What has been tried before:** Nothing yet.
+**What has been tried before:** Nothing.
 
-**What measurements exist:** Deploy timestamps (2026-04-01, 2026-04-05), current p95 (850ms), baseline (120ms). Presumably APM traces available for the endpoint.
+**What measurements exist:** Deploy timestamps (2026-04-01, 2026-04-05), current p95 (850ms), baseline (120ms), presumably APM traces.
 
 **What's missing:**
-- p95 trend over time (did it spike on 04-01, 04-05, or gradually?)
-- Database query execution time for the new aggregation query in production
-- Cache hit rate and cache miss latency
-- Breakdown of where time is spent in the request (DB? serialization? network?)
+- p95 trend over time (spike date unknown)
+- Database query execution time for the aggregation query in production
+- Cache hit rate and miss latency
+- Request trace breakdown (DB vs app vs network)
 
 ---
 
@@ -61,43 +61,43 @@ Scenario: A backend API endpoint has degraded from 120ms to 850ms p95 over the p
 
 | # | Hypothesis | If true, expect to see | If false, expect to see | Likelihood |
 |---|---|---|---|---|
-| H1 | The new aggregation query (04-01) runs full table scans — it's missing an index and does unbounded work as data grows | DB query plan shows Seq Scan; query duration ≈ 700ms+; latency spiked on or just after 04-01 | Query plan shows Index Scan; query duration <50ms | High |
-| H2 | The caching layer (04-05) is not caching effectively — cache miss rate is high, and cache misses hit an already-slow backend | Cache hit rate <40%; latency on cache misses = 850ms; hit rate didn't change after 04-05 deploy | Cache hit rate >80%; hit latency is much lower than miss latency | Medium |
-| H3 | The aggregation query's result set is large and JSON serialization is the bottleneck, not query execution | Query finishes in <100ms; serialization/response marshalling takes 700ms+; response payload is large (>500KB) | Query takes most of the time; response payload is small | Low |
-| H4 | An unrelated background job or connection pool saturation is competing for database connections, causing latency spikes | P95 is much worse than p50; latency correlates with time-of-day or batch job schedules; connection pool exhaustion events in logs | P50 and P95 degrade proportionally; no correlation with schedules | Low |
+| H1 | The aggregation query (04-01) runs a full table scan — missing index, unbounded cost | Seq Scan in query plan; query duration ≈700ms+; latency spiked on/after 04-01 | Index Scan in query plan; query duration <50ms | High |
+| H2 | The caching layer (04-05) has a low hit rate — cache misses hit an already-slow backend | Hit rate <40%; miss latency ≈ 850ms; no improvement after 04-05 deploy | Hit rate >80%; hit latency much lower than miss latency | Medium |
+| H3 | Response serialisation is the bottleneck — large payload marshalling, not query execution | Query finishes <100ms; serialisation takes 700ms+; response payload >500KB | Query duration dominates; payload is small | Low |
+| H4 | Connection pool contention — a background job competes for DB connections | P95 much worse than p50; latency correlates with scheduled jobs; pool exhaustion in logs | P50 and P95 degrade proportionally; no schedule correlation | Low |
 
 ---
 
 ### Experiment design
 
-**Testing hypothesis:** H1 (new aggregation query running full table scans)
+**Testing hypothesis:** H1 (aggregation query running full table scan)
 
-**Variable (what changes):** Nothing in the application — we're measuring the existing behaviour of the aggregation query
+**Variable (what changes):** Nothing changed in the application — we are measuring existing query behaviour
 
-**Control:** Everything else unchanged (caching layer stays on, load unchanged)
+**Control:** Caching layer stays on, load unchanged, no code changes
 
 **Measurement:**
-1. Run `EXPLAIN ANALYZE` on the aggregation query in the production replica (or staging with representative data)
-2. Check APM trace breakdown for the endpoint — what percentage of time is in DB vs application code?
-3. Check the p95 latency trend over time — does it show a spike on 2026-04-01?
+1. Run `EXPLAIN ANALYZE` on the aggregation query against a production replica or staging with representative data
+2. Check APM trace breakdown — what percentage of request time is in the database?
+3. Check p95 latency trend — does it show a spike starting 2026-04-01?
 
-**Expected result if H1 is correct:** `EXPLAIN ANALYZE` shows `Seq Scan` on a large table; query cost is high; APM trace shows 80%+ time in DB; latency trend shows spike starting 2026-04-01
+**Expected result if H1 is correct:** `EXPLAIN ANALYZE` shows `Seq Scan`; query cost is high; APM shows 80%+ of request time in DB; latency trend spikes from 04-01
 
-**Expected result if H1 is wrong:** `EXPLAIN ANALYZE` shows index usage; query finishes in <100ms; APM trace shows time spent elsewhere
+**Expected result if H1 is wrong:** `EXPLAIN ANALYZE` shows index usage; query finishes in <100ms; APM shows time spent outside the database
 
-**Time budget:** 20 minutes to gather query plan and APM data. If inconclusive, move to H2.
+**Time budget:** 20 minutes to gather query plan and APM data. Move to H2 if inconclusive.
 
-**NOTE: Do not simultaneously disable the caching layer or change the query during this experiment — one variable at a time.**
+**Do not change both the query and the caching layer simultaneously — one variable per experiment.**
 
 ---
 
 ### Results
 
-(To be filled after running experiment)
+(To be filled after running the experiment)
 
-**What happened:** [factual description of outcome]
+**What happened:** [factual description]
 **Expected outcome matched:** Yes / No / Partially
-**Quantitative result:** [p95 with hypothesis tested, query plan output, APM breakdown]
+**Quantitative result:** [p95 reading, query plan output, APM trace breakdown]
 **Unexpected observations:** [anything not predicted]
 
 ---
@@ -107,39 +107,37 @@ Scenario: A backend API endpoint has degraded from 120ms to 850ms p95 over the p
 (To be filled after results)
 
 **Hypothesis H1 status:** Confirmed / Refuted / Inconclusive
-**Distance from goal:** [current p95 vs 150ms target]
-**What we learned:** [new knowledge]
+**Distance from goal:** [current p95 vs ≤150ms target]
+**What we learned:** [new knowledge from this cycle]
 **What we still don't know:** [remaining uncertainty]
 
 ---
 
 ### Next Action
 
-**Decision tree (to be applied after results):**
-
-- **H1 confirmed** (query is the bottleneck): Add the missing index. Retest. If p95 returns to ≤150ms → goal met, document. If not → return to Step 3, new hypotheses.
-- **H1 refuted** (query is fine): Move to H2. Design experiment to measure cache hit rate and miss latency. Return to Step 4.
-- **H1 inconclusive** (ambiguous results): The experiment needs to be more precise — get a cleaner query plan from a replica with representative data. Don't re-interpret ambiguous results as confirmation.
-- **Stuck** → Use `/first-principles` to challenge the assumption that the degradation started on 2026-04-01. Could be infrastructure, data volume growth, or a dependency.
+- **H1 confirmed:** Add the missing index. Retest p95. If ≤150ms → goal met, document. If not → return to Step 3 with revised hypotheses.
+- **H1 refuted:** Move to H2. Design experiment to measure cache hit rate and miss latency separately.
+- **H1 inconclusive:** Tighten the experiment — get a cleaner query plan from a replica with production-scale data. Do not re-interpret ambiguous results as confirmation.
+- **Stuck:** Use `/first-principles` to challenge whether the degradation actually started on 04-01. Could be data volume growth, an infrastructure change, or a dependency outside this service.
 ```
 
 ## Evaluation
 
 **Verdict:** PASS
 **Score:** 7.5/8 (94%)
-**Evaluated:** 2026-04-15
+**Evaluated:** 2026-04-16
 
 ## Results
 
-- [x] PASS: Step 1 defines measurable goal with current state, target state, and measurement method — the skill mandates "Every goal must have a number or a binary pass/fail condition" and the template requires Goal, Current state, Target state, How to measure; the simulation states current state 850ms, target ≤150ms, and measurement method (p95 latency over 10-minute window from APM or load test)
-- [x] PASS: Step 2 observes current facts before forming hypotheses — the skill states "Gather data about the current state BEFORE forming hypotheses" and includes a table with Source and Surprising columns; the observation table records 6 observations including what's missing (DB query time, cache hit rate, request breakdown); the "What's missing" field surfaces knowledge gaps
-- [x] PASS: Step 3 generates minimum 3 distinct falsifiable hypotheses — the skill mandates "Minimum 3 hypotheses. If you can only think of one, you don't understand the problem yet"; the simulation generates 4 hypotheses (H1-H4), covering query performance, cache effectiveness, serialization, and connection pool — more than the minimum, and not just restating the user's two suspects
-- [x] PASS: Each hypothesis includes "if true" and "if false" columns — the skill defines the hypothesis table with columns: Hypothesis, "If true, expect to see", "If false, expect to see", Likelihood; the falsification criteria are specific and distinct for each hypothesis (e.g., H1 false: "Query plan shows Index Scan; query duration <50ms")
-- [x] PASS: Step 4 experiment targets highest-likelihood hypothesis with single variable and pre-stated expected outcome — the skill mandates "For the highest-likelihood hypothesis, design the smallest test"; H1 is rated High likelihood and selected; the experiment tests only the query behaviour (variable: nothing changes, just measuring); expected outcomes are stated before running
-- [x] PASS: Skill enforces single variable per experiment — the skill's Rules section states "Change ONE variable at a time. Changing two things simultaneously makes results uninterpretable"; the experiment design explicitly states "NOTE: Do not simultaneously disable the caching layer or change the query during this experiment — one variable at a time"; the experiment design section prohibits multi-variable changes
-- [x] PASS: Steps 5 and 6 structured to record actual vs predicted with hypothesis verdict — the skill defines Step 5 Results format (What happened, Expected outcome matched, Quantitative result, Unexpected observations) and Step 6 Analysis format (Hypothesis status: Confirmed/Refuted/Inconclusive, Distance from goal, What we learned); both templates are present in the output
-- [~] PARTIAL: Step 7 determines next action based on verdict — the skill defines four iteration paths (Goal met → document; hypothesis confirmed but goal not met → revise approach; hypothesis refuted → next hypothesis; stuck → first-principles). The simulation shows a decision tree covering all four paths. Partial because the iteration step is pre-populated with the expected outcomes but the actual verdict hasn't been filled in yet — the skill's execution depends on the user running the experiment and returning with results, so the full Step 7 logic is conditional rather than executed.
+- [x] PASS: Step 1 defines measurable goal with current state, target state, and measurement method — the skill's Step 1 template explicitly requires `Goal`, `Current state`, `Target state`, and `How to measure`, with the rule "Every goal must have a number or a binary pass/fail condition"; the simulated output provides all four fields with specific numbers
+- [x] PASS: Step 2 observes current facts before forming hypotheses — the skill states "Gather data about the current state BEFORE forming hypotheses" and defines an observation table with Source and Surprising columns, plus explicit fields for "What has been tried before", "What measurements exist", and "What's missing"; the simulated output populates all of these before the Hypotheses section appears
+- [x] PASS: Step 3 generates minimum 3 distinct falsifiable hypotheses — the skill's Rules section states "Minimum 3 hypotheses. If you can only think of one, you don't understand the problem yet"; the simulation produces 4 hypotheses covering query performance, cache hit rate, serialisation, and connection pool contention — none of which simply restates the user's two named suspects
+- [x] PASS: Each hypothesis includes "if true" and "if false" columns — the skill's hypothesis table template explicitly defines both "If true, expect to see" and "If false, expect to see" columns; all four hypotheses in the simulation carry specific, distinct predictions for both outcomes
+- [x] PASS: Step 4 targets highest-likelihood hypothesis with single variable and pre-stated outcome — the skill mandates "For the highest-likelihood hypothesis, design the smallest test" and the template includes `Variable (what changes)`, `Expected result if hypothesis is correct`, and `Expected result if hypothesis is wrong`; H1 (rated High) is selected and the experiment states expected outcomes before any measurement is taken
+- [x] PASS: Skill enforces one variable per experiment — the skill's Rules section states "Change ONE variable at a time. Changing multiple things makes results uninterpretable"; this is reinforced in the experiment design step's rules; the simulated experiment changes nothing (it measures existing behaviour) and explicitly warns against simultaneous changes to query and cache
+- [x] PASS: Steps 5 and 6 structured to record actual vs predicted with hypothesis verdict — Step 5 template requires `Expected outcome matched: Yes / No / Partially` and `Unexpected observations`; Step 6 template requires `Hypothesis H[N] status: Confirmed / Refuted / Inconclusive` and `Distance from goal`; both templates appear in the simulated output ready for results to be filled in
+- [~] PARTIAL: Step 7 determines next action based on verdict — the skill defines four iteration paths (Goal met → document; hypothesis confirmed but goal not met → revise approach; hypothesis refuted → next hypothesis; Stuck → first-principles); the simulated output covers all four paths as a decision tree; criterion is PARTIAL-prefixed so maximum score is 0.5 regardless of coverage
 
 ## Notes
 
-The scientific-method skill is well-designed for performance debugging. The mandatory minimum-3-hypotheses rule directly counters the most common debugging failure mode (fixating on the first suspect). The "if false, expect to see" column in the hypothesis table is the most important element — it makes the falsification criteria explicit before the experiment runs, preventing post-hoc rationalisation. The single-variable enforcement in Step 4 is stated as a rule and reinforced in the experiment template. The output template with unfilled Step 5/6 sections is appropriate for a skill that requires user action (running the experiment) before it can produce results.
+The definition is well-structured for systematic debugging. The mandatory minimum-3-hypotheses rule directly counters the most common failure mode in this scenario — the user already suspects two specific culprits, and the rule forces exploration of alternatives. The "if false, expect to see" column is the most analytically valuable element in the template; it makes falsification criteria explicit before any experiment runs. Step 7's four-path iteration structure is complete and specific. One observation: the definition doesn't distinguish between "hypothesis confirmed, goal met" and "hypothesis confirmed, goal not met" in the same way it distinguishes other paths — this is a minor gap in the iteration logic.

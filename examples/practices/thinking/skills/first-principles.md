@@ -33,9 +33,9 @@ Scenario: An architect is questioning whether the team's assumption that REST AP
 | Request routing must be deterministic | Hard constraint | Distributed system requirement |
 | Breaking changes cannot propagate to consumers simultaneously | Hard constraint | Physical constraint — cannot atomically update all consumers |
 | External partners require advance notice of breaking changes | Soft constraint | SLA convention, not an HTTP requirement |
-| Version signalled in URL path (/v1/, /v2/) | Assumption | Industry convention adopted without evaluation; HTTP has other versioning mechanisms |
-| "That's how APIs work" | Assumption | No evidence — convention masquerading as fact; Stripe, GitHub, and others use URL versioning, but so do Twilio with headers and Salesforce with date-based versioning |
-| Clients will break on any schema change | Assumption | Believed true but depends on what kind of changes; additive changes are safe under most JSON parsers |
+| Version signalled in URL path (/v1/, /v2/) | Assumption | Industry convention adopted without evaluation; HTTP has header-based versioning alternatives |
+| "That's how APIs work" | Assumption | No evidence — convention masquerading as fact |
+| Clients will break on any schema change | Assumption | Believed true but depends on change type; additive changes are safe under most JSON parsers |
 | All consumers need the same version simultaneously | Assumption | Unverified — 3 internal services may be on different release cadences |
 | We need multiple concurrent versions running | Assumption — unverified | Currently true? How long do we maintain v1 after v2 ships? |
 
@@ -45,11 +45,11 @@ Scenario: An architect is questioning whether the team's assumption that REST AP
 
 | # | Constraint/Assumption | Challenge | Verdict | Impact if removed |
 |---|---|---|---|---|
-| 1 | Version in URL path | Who decided this? Probably pre-existing convention. HTTP 1.1 supports `Accept` headers for content negotiation: `Accept: application/vnd.api+json; version=2`. URL versioning pollutes resource identity — `/v1/users/123` and `/v2/users/123` are the same resource. | Test | Could use header versioning or Accept: versioning — cleaner resource identity, harder to test manually |
-| 2 | "That's how APIs work" | This is not a constraint — it's a convention. Multiple major API providers use non-URL versioning. GraphQL doesn't version at all. | Remove | Frees us to evaluate the actual requirement: stable contracts, not specific URL structure |
-| 3 | Clients will break on schema change | JSON is additive by default. Adding a field doesn't break existing clients that ignore unknown fields. Removing or renaming a field breaks clients. The real constraint is: removing or renaming fields requires coordination. | Keep (but refine) | If we stop removing/renaming fields and only add, we may not need versioning at all |
-| 4 | External partners require advance notice | This IS a real constraint — but it's about communication and deprecation windows, not about URL structure. A deprecation policy achieves this without versioning. | Keep (as deprecation policy, not URL versioning) | Partners need a contract; the contract can be enforced through additive-only changes + deprecation notices |
-| 5 | Need concurrent versions running | Verified? Currently: are v1 and v2 both running? If yes, what's the plan to retire v1? If no, this constraint doesn't apply. | Test — needs verification | If we don't actually need concurrent versions, version URLs are premature infrastructure |
+| 1 | Version in URL path | HTTP 1.1 supports Accept headers for content negotiation. URL versioning pollutes resource identity. | Test | Could use header versioning — cleaner resource identity, harder to test manually |
+| 2 | "That's how APIs work" | Not a constraint — a convention. GraphQL doesn't version at all. | Remove | Frees evaluation to focus on actual requirement: stable contracts |
+| 3 | Clients will break on schema change | JSON is additive by default. Removing or renaming a field breaks clients. Adding a field does not. | Keep (but refine) | Additive-only changes may eliminate the need for versioning |
+| 4 | External partners require advance notice | Real constraint — but about communication and deprecation windows, not URL structure. | Keep (as deprecation policy) | Partners need a contract; enforced through additive-only + Sunset headers |
+| 5 | Need concurrent versions running | Verified? If v1 and v2 aren't both running now, this constraint doesn't apply. | Test | If no concurrent versions needed, version URLs are premature infrastructure |
 
 ---
 
@@ -58,16 +58,17 @@ Scenario: An architect is questioning whether the team's assumption that REST AP
 **Starting from these truths only:**
 1. Breaking changes cannot propagate to all consumers simultaneously
 2. External partners need advance notice before any breaking change
-3. All JSON consumers handle additive changes safely (standard JSON behaviour)
+3. All JSON consumers handle additive changes safely
 
 **Ignoring current URL versioning form, the optimal solution would:**
+- Use additive-only API evolution — add fields, never remove or rename without a deprecation window
+- Use deprecation notices in response headers — `Deprecation: true`, `Sunset:` per RFC 8594
+- Eliminate URL versioning entirely — `/api/users/{id}` is the resource; the contract evolves additively
+- If a breaking change truly becomes necessary — create a new endpoint for the new resource shape rather than
+  wholesale versioning the entire API
 
-- **Use additive-only API evolution** — add fields, never remove or rename. If a field must be renamed, deprecate the old name (keep returning it) and add the new name simultaneously. Removal happens only after confirmed consumer migration.
-- **Use deprecation notices in response headers** — `Deprecation: true`, `Sunset: Sat, 1 Jan 2027 00:00:00 GMT` as per RFC 8594. Consumers detect deprecation through their HTTP client headers, not from changed URLs.
-- **Eliminate URL versioning entirely** — `/api/users/{id}` is the resource. The contract evolves additively. Partners are notified of deprecations through headers and advance email notice.
-- **If breaking changes truly become necessary** — create a new endpoint path for the new resource shape (`/api/users-v2/{id}` or a new domain concept entirely) rather than wholesale versioning the entire API.
-
-**Cross-domain insight:** How does a relational database handle schema evolution? Additive migrations (add column, add table) are non-breaking. Removal migrations are breaking. The principle is identical: only additive changes to the contract, and deprecation windows before removal.
+**Cross-domain insight:** How does a relational database handle schema evolution? Additive migrations are
+non-breaking. Removal migrations are breaking. The principle is identical.
 
 ---
 
@@ -75,41 +76,34 @@ Scenario: An architect is questioning whether the team's assumption that REST AP
 
 | Aspect | Current | Reconstructed | Why different |
 |---|---|---|---|
-| Version signalling | URL path prefix (`/api/v1/`) | `Deprecation:` / `Sunset:` response headers | Assumption 2 removed: URL versioning isn't required by HTTP |
-| Concurrent versions | Implicit — multiple URL namespaces | Eliminated — single resource path with additive evolution | Assumption 5 removed: assumed concurrent versions needed |
+| Version signalling | URL path prefix (`/api/v1/`) | `Deprecation:` / `Sunset:` response headers | Assumption 2 removed: URL versioning not required by HTTP |
+| Concurrent versions | Implicit — multiple URL namespaces | Eliminated — single resource path with additive evolution | Assumption 5 removed: concurrent versions may not be needed |
 | Breaking change strategy | New URL prefix | Additive-only + deprecation window | Assumption 3 refined: most "breaking" changes are actually additive |
-| Partner notification | Convention (PR review, email) | Formalised deprecation policy with `Sunset:` headers | Soft constraint 4 kept but implemented differently |
-| Internal service updates | Coordinated to consume new URL | Consume same URL; additive changes are transparent | Assumption 4 removed: all consumers don't need simultaneous update |
+| Partner notification | Convention | Formalised deprecation policy with Sunset: headers | Soft constraint 4 kept but implemented differently |
 
 ### Migration Assessment
-
-**Quick wins** (no stakeholder authority needed):
-- Implement `Deprecation:` and `Sunset:` headers on any currently-deprecated fields — immediate improvement in partner visibility, no breaking change
-
-**Requires validation** (experiment first):
-- Audit all current consumers for any that depend on removed/renamed fields — this is the actual risk; additive-only may already be the de-facto behaviour
-- Survey external partners: would they prefer header-based deprecation over URL versioning? Their answer determines whether full migration is feasible
-
-**Requires authority** (stakeholder decision):
-- Committing to additive-only API evolution requires a formal API governance decision — this is a policy change that affects every future API change
-- Migrating existing consumers away from `/v1/` URLs requires partner coordination and a sunset timeline — this is a business decision, not a technical one
+- **Quick wins:** Implement `Deprecation:` and `Sunset:` headers on currently-deprecated fields now — no breaking change required
+- **Requires validation:** Audit all consumers for fields that depend on removed/renamed behaviour; additive-only may already be de-facto
+- **Requires authority:** Committing to additive-only API evolution is a policy change that affects every future API decision; migrating existing consumers off `/v1/` URLs requires partner coordination
 ```
 
 ## Evaluation
 
 **Verdict:** PASS
 **Score:** 7.5/8 (94%)
-**Evaluated:** 2026-04-15
+**Evaluated:** 2026-04-16
 
-- [x] PASS: Component inventory classifies all constraints with hard/soft/assumption and evidence — Step 1 defines a table with exactly these three classification types and requires evidence for each; the "How to identify assumptions" section explicitly calls out "We've always done it this way → assumption"
-- [x] PASS: "That's how APIs work" classified as assumption — Step 1's guidance states "'We've always done it this way' → assumption" and "'The framework requires this' → verify — is it the framework or your usage of it?"; the URL versioning convention maps directly to these examples
-- [x] PASS: Challenge ledger addresses every soft constraint and assumption from Step 1 — Step 2 states "Take every soft constraint and assumption from Step 1 and pressure-test it"; the Rules section states "Assumptions MUST be challenged"; the ledger includes verdict (keep/remove/test) and impact-if-removed for each item
-- [x] PASS: Step 3 reconstruction starts from verified truths only — Step 3 mandates "Starting from ONLY the verified truths and hard constraints"; the template begins with "Starting from these truths only: [list]"; the Rules section states "Design as if no prior solution existed. Ignore current form — focus on function"
-- [x] PASS: Step 4 delta analysis compares reconstructed vs current with assumption-removal mapping — Step 4 defines a delta table with `Aspect / Current / Reconstructed / Why different` columns; the "Why different" column maps each difference back to which assumption removal enabled it
-- [x] PASS: Output uses the defined template with all four sections — the Output Format section defines Component Inventory, Challenge Ledger, Reconstruction, Delta Analysis, and Recommendations; all four content sections are present
-- [~] PARTIAL: Migration assessment distinguishes quick wins from changes requiring authority — Step 4's migration assessment has exactly three categories: "Quick wins", "Requires validation", and "Requires authority". The distinction is defined in the skill. Partial because the criterion uses "quick wins from changes requiring stakeholder authority" which is a subset of the three-way classification — the skill is actually more specific than the criterion asks for, which is good, but the criterion only checks for the two-category distinction.
-- [x] PASS: Reconstruction does not conclude "change nothing" — Step 3 Rules state "If the reconstruction looks identical to the current approach, you haven't challenged enough assumptions — return to Step 2"; the reconstruction reaches the conclusion that URL versioning should be eliminated, which is clearly not "change nothing"
+## Results
 
-### Notes
+- [x] PASS: Component inventory classifies all constraints with hard/soft/assumption and evidence — Step 1 defines a table with exactly these three classification types plus an Evidence column; every row must have evidence
+- [x] PASS: "That's how APIs work" classified as assumption — Step 1's guidance explicitly states "'We've always done it this way' → assumption"; this maps directly to the prompt's inherited convention
+- [x] PASS: Challenge ledger addresses every soft constraint and assumption — Step 2 states "Take every soft constraint and assumption from Step 1 and pressure-test it." Rules section states "Assumptions MUST be challenged." The table requires verdict (Keep/Remove/Test) and impact-if-removed
+- [x] PASS: Step 3 reconstruction starts from verified truths only — Step 3 mandates "Starting from ONLY the verified truths and hard constraints"; Rules state "Design as if no prior solution existed. Ignore current form — focus on function"
+- [x] PASS: Step 4 delta analysis with assumption-removal mapping — Step 4 defines a delta table with `Aspect / Current / Reconstructed / Why different` columns; the "Why different" column explicitly links each difference to which assumption removal enabled it
+- [x] PASS: Output uses defined template with all four sections — Output Format section defines Component Inventory, Challenge Ledger, Reconstruction, Delta Analysis, and Recommendations; all four content sections are present in the definition
+- [~] PARTIAL: Migration assessment distinguishes quick wins from authority changes — Step 4's migration assessment template has exactly three categories: "Quick wins", "Requires validation", "Requires authority." This is well-defined. PARTIAL ceiling applies per criterion prefix.
+- [x] PASS: Reconstruction does not conclude "change nothing" — Step 3 Rules state "If the reconstruction looks identical to the current approach, you haven't challenged enough assumptions — return to Step 2." This is an explicit enforcement mechanism
 
-The first-principles skill is well-specified. The three constraint types (hard/soft/assumption) with explicit guidance on identifying each are useful. The chain from Step 1 → Step 2 → Step 3 (only keep hard constraints) → Step 4 (delta) is logically coherent. The cross-domain insight requirement in Step 3 (database schema evolution analogy) is an interesting touch that forces non-linear thinking. One gap: the skill says "If a well-established framework exists, use it" but doesn't name specific first-principles frameworks (e.g., Musk's approach, first-principles physics). This is a style preference, not a structural gap.
+## Notes
+
+The first-principles skill is logically coherent. The chain from Step 1 (classify) → Step 2 (challenge) → Step 3 (rebuild from truths only) → Step 4 (delta) is tight and each step builds on the previous. The cross-domain analogy requirement in Step 3 is noted as optional ("Cross-domain analogies are not mandatory but often unlock breakthroughs") — the criterion doesn't test for it but the suggestion is there. One gap: the skill says "If a well-established framework exists, use it" in Step 3 but doesn't name any first-principles frameworks, leaving selection to agent judgment.

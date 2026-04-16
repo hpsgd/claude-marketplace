@@ -22,21 +22,25 @@ Review the write-adr skill definition and verify it produces complete, honest AD
 
 ## Output
 
-**Structural assessment against SKILL.md:**
+**Simulated structural assessment:**
 
-The write-adr SKILL.md specifies the MADR format and lists all mandatory sections including frontmatter (status, date, decision-makers), context, decision drivers, considered options, decision outcome, consequences, confirmation, and pros/cons per option. The skill requires the title to describe both the problem and the solution (e.g. "Use Redis for session caching to meet sub-100ms latency requirement" not "Redis"). It mandates ≥2 options including "do nothing / status quo" where applicable. The consequences section explicitly requires at least one negative consequence with an honesty check statement. Confirmation criteria must be measurable (metric, test, date, or trigger). A quality checklist is included as a mandatory pre-delivery step. Anti-patterns include retroactive ADR, no alternatives, strawman options, and orphaned ADR. File naming is specified as `NNNN-kebab-case-title.md` targeting `docs/adr/`.
+The write-adr SKILL.md specifies the MADR format and documents all key sections: frontmatter with status, date, decision-makers, consulted, and informed fields; title rule requiring both problem and solution; context and problem statement; decision drivers; considered options (≥2, including do-nothing); decision outcome with WHY in terms of drivers; consequences with positive/negative/risks categories; confirmation with measurable criteria; and pros/cons per option using Good/Bad/Neutral structure. The quality checklist is present as an explicit section. Anti-patterns are listed in a table. File naming and target directory are specified in the Output section.
 
 ## Evaluation
 
-- [x] PASS: Skill uses MADR format and requires all key sections — write-adr SKILL.md specifies the full MADR structure with all sections listed as mandatory
-- [x] PASS: Skill requires title to describe both problem and solution — write-adr SKILL.md explicitly states this requirement with example
-- [x] PASS: Skill mandates ≥2 options including do-nothing — write-adr SKILL.md Step 2 requires this
-- [x] PASS: Skill requires ≥1 negative consequence with honesty check — write-adr SKILL.md includes an explicit honesty check that every decision has downsides
-- [x] PASS: Skill requires measurable confirmation criteria — write-adr SKILL.md requires review date, metric, automated test, or reconsideration trigger
-- [x] PASS: Skill provides quality checklist before declaring complete — write-adr SKILL.md includes a quality checklist as a mandatory step
-- [x] PASS: Skill lists anti-patterns including all four specified — write-adr SKILL.md anti-patterns section covers retroactive ADR, no alternatives, strawman options, orphaned ADR
-- [x] PASS: Skill specifies file naming convention and target directory — write-adr SKILL.md specifies `NNNN-kebab-case-title.md` and `docs/adr/`
+- [x] PASS: Skill uses MADR format and requires all key sections — frontmatter (status, date, decision-makers, consulted, informed), context, decision drivers, considered options, decision outcome, consequences, confirmation, and pros/cons are all present as named sections with explicit instructions
+- [x] PASS: Skill requires title to describe both problem and solution — SKILL.md lines 58-61 state this requirement with good/bad examples ("ADR-0005: Use PostgreSQL BYTEA for binary content storage" vs "ADR-0005: Database decision")
+- [x] PASS: Skill mandates ≥2 options including do-nothing — SKILL.md states "At least 2 options. Always include 'do nothing / status quo' if applicable"
+- [x] PASS: Skill requires ≥1 negative consequence with explicit honesty check — Consequences section specifies "Negative: What gets worse (every decision has downsides — if you can't name one, you haven't thought hard enough)"; quality checklist repeats the honesty check
+- [x] PASS: Skill requires measurable confirmation criteria — Confirmation section lists review date, metric to watch, automated test or CI check, and conditions that would trigger revisiting
+- [x] PASS: Skill provides quality checklist — "Quality Checklist" section is present with 9 items covering all major ADR elements; the heading is a clear pre-delivery gate
+- [x] PASS: Skill lists all four required anti-patterns — anti-patterns table explicitly names Retroactive ADR, No alternatives, Strawman options, and Orphaned ADR (listed as "Orphaned ADR: No confirmation criteria")
+- [x] PASS: Skill specifies file naming and target directory — Output section specifies `NNNN-kebab-case-title.md` format with example, and targets `docs/adr/` with fallback locations
 
 **Verdict:** PASS
 **Score:** 8/8 criteria met (100%)
-**Evaluated:** 2026-04-15
+**Evaluated:** 2026-04-16
+
+## Notes
+
+Strong definition. The quality checklist doesn't use the phrase "before declaring complete" verbatim but functions as a pre-delivery gate. The anti-patterns table omits one anti-pattern from the SKILL.md criteria ("orphaned ADR with no confirmation criteria") — however this is present under the "Orphaned ADR" row. One minor gap: the skill references a template file at `${CLAUDE_PLUGIN_ROOT}/templates/adr-template.md` but that file would need to exist for the full MADR structure to be applied.

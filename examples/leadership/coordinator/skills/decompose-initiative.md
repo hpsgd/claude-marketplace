@@ -29,11 +29,11 @@ Scenario: A user invokes the skill with a reasonably complex initiative. Does th
 
 | Question | Answer |
 |---|---|
-| **User problem** | Users miss task assignments, deadline reminders, and @mentions because there is no in-app notification system — they rely on email or manual checking, which breaks flow |
-| **Target user** | Taskwave workspace members who collaborate on projects with others (primarily team leads and individual contributors) |
-| **Success criteria** | >70% of users who receive a notification act on it within 4 hours; missed-assignment support tickets decrease by 40%; notification read rate >60% within 24h |
+| **User problem** | Users miss task assignments, deadline reminders, and @mentions — no in-app notification system exists, so they rely on email or manual checking |
+| **Target user** | Taskwave workspace members who collaborate on shared projects |
+| **Success criteria** | >70% of users act on a notification within 4 hours; missed-assignment support tickets drop by 40%; notification read rate >60% within 24h |
 | **Appetite** | Medium — 6 weeks |
-| **Constraints** | Must work in real-time (WebSocket or SSE); notification preferences must be per-user; no dependency on third-party push service in v1 |
+| **Constraints** | Real-time delivery required (WebSocket or SSE); no third-party push service in v1 |
 
 ---
 
@@ -43,24 +43,24 @@ Scenario: A user invokes the skill with a reasonably complex initiative. Does th
 
 | Workstream | Owner role | Key deliverables | Relevant? |
 |---|---|---|---|
-| Product | product-owner | PRD, user stories (receive/manage/act on notifications), acceptance criteria, notification types taxonomy, success metrics | Yes |
-| Design | ui-designer | Notification bell component, notification drawer UX, unread badge, empty state, notification list item variants, mobile-responsive specs | Yes |
-| Content | user-docs-writer | Help article: managing notifications; in-app tooltip copy for preferences | Yes — notifications require user guidance |
-| GTM | gtm | Positioning, launch plan | No — internal productivity feature; no external launch campaign warranted for v1 |
+| Product | product-owner | PRD, notification types taxonomy, user stories, acceptance criteria | Yes |
+| Design | ui-designer | Notification bell component, drawer UX, unread badge, preference UI | Yes |
+| Content | user-docs-writer | Help article: managing notifications; in-app tooltip copy | Yes — new feature needs user guidance |
+| GTM | gtm | Positioning, launch plan | No — internal productivity feature; no external campaign for v1 |
 | Support | support | FAQ, known issues | No — defer until beta feedback collected |
-| Research | ux-researcher | Persona validation, journey mapping | No — problem is well-understood from existing support tickets; formal research not warranted at this scope |
+| Research | ux-researcher | Persona validation, journey mapping | No — problem is well-understood from support tickets |
 
 ### CTO team workstreams
 
 | Workstream | Owner role | Key deliverables | Relevant? |
 |---|---|---|---|
-| Architecture | architect | WebSocket/SSE decision ADR, notification data model, fan-out strategy, read/unread state design | Yes |
-| Development | dotnet-developer + react-developer | Backend: notification service, delivery pipeline, preference API; Frontend: bell component, drawer, real-time updates | Yes |
-| QA Planning | qa-lead | Test strategy, acceptance criteria (real-time delivery, read state, preferences, edge cases), 3 amigos sign-off | Yes |
-| QA Execution | qa-engineer | Automated acceptance tests, WebSocket integration tests, load test for fan-out | Yes |
-| DevOps | devops | WebSocket infrastructure, monitoring for notification queue depth, deployment plan | Yes — real-time infra is a deployment concern |
-| Security | security-engineer | Threat model: notification content exposure (could leak task names/contents to wrong users via fan-out bug), rate limiting for notification spam | Yes — multi-tenant fan-out has data leakage risk |
-| Data | data-engineer | Event tracking plan: notification_sent, notification_read, notification_dismissed, notification_acted_on | Yes — success metrics require event tracking |
+| Architecture | architect | WebSocket/SSE ADR, notification data model, fan-out strategy | Yes |
+| Development | dotnet-developer + react-developer | Backend notification service; frontend bell + drawer | Yes |
+| QA Planning | qa-lead | Test strategy, acceptance criteria, 3 amigos sign-off | Yes |
+| QA Execution | qa-engineer | Acceptance tests, WebSocket integration tests | Yes |
+| DevOps | devops | WebSocket infra, monitoring, deployment plan | Yes — real-time infra is a deployment concern |
+| Security | security-engineer | Threat model: notification content exposure via fan-out bug | Yes — multi-tenant fan-out has data isolation risk |
+| Data | data-engineer | Event tracking plan: notification_sent, notification_read, notification_acted_on | Yes — success metrics require event tracking |
 
 ---
 
@@ -75,8 +75,8 @@ Scenario: A user invokes the skill with a reasonably complex initiative. Does th
 | Development (backend) | Architecture, QA Planning | System design ADR, acceptance criteria | QA Execution |
 | Development (frontend) | Design, Architecture (API contract) | Component specs, API contract | QA Execution |
 | QA Execution | Development | Working implementation | Launch |
-| DevOps | Architecture | Infrastructure decisions (WebSocket vs SSE, queue choice) | Launch |
-| Data | Product, Architecture | Event taxonomy agreed, data model finalised | Launch |
+| DevOps | Architecture | Infrastructure decisions | Launch |
+| Data | Product, Architecture | Event taxonomy, data model finalised | Launch |
 | Content | Development | Working feature for screenshots | Launch |
 
 ---
@@ -85,22 +85,22 @@ Scenario: A user invokes the skill with a reasonably complex initiative. Does th
 
 | Phase | Workstreams (parallel) | Duration | Gate to next phase |
 |---|---|---|---|
-| 1 — Define | Product + Architecture (kickoff) | 3–5 days | PRD approved by CPO; architecture direction agreed (ADR draft) |
-| 2 — Specify | Architecture (ADR finalised) + Design (UX flows) + QA Planning (3 amigos) + Security (threat model) | 4–6 days | Architecture ADR reviewed; design specs complete; acceptance criteria signed off; threat model reviewed |
-| 3 — Build | Development (backend + frontend in parallel) + QA Execution (writes acceptance tests first — TDD) + Data (event tracking plan) | 2–3 weeks | Feature complete, unit + acceptance tests passing, event tracking instrumented |
-| 4 — Validate | QA Execution (integration + e2e) + DevOps (staging deployment + monitoring) | 4–6 days | All tests passing in staging, notification latency <2s p95, no fan-out data leakage found |
+| 1 — Define | Product + Architecture (kickoff) | 3–5 days | PRD approved by CPO; architecture direction agreed |
+| 2 — Specify | Architecture (ADR) + Design (UX) + QA Planning (3 amigos) + Security (threat model) | 4–6 days | ADR reviewed; design specs complete; acceptance criteria signed off; threat model reviewed |
+| 3 — Build | Development (backend + frontend) + QA Execution (writes acceptance tests first) + Data (event tracking plan) | 2–3 weeks | Feature complete, acceptance tests passing, event tracking instrumented |
+| 4 — Validate | QA Execution (integration + e2e) + DevOps (staging deployment) | 4–6 days | All tests passing in staging; notification latency <2s p95 |
 | 5 — Prepare | Content (help article + tooltip copy) | 2–3 days | Docs written and reviewed |
 | 6 — Launch | Release Manager (go/no-go) | 1 day | All gates passed |
 
 ### Critical path
 
-Product → Architecture → Development (backend) → QA Execution → Launch. The backend notification service and fan-out design are the longest chain — frontend can start in parallel once the API contract is defined in Phase 2.
+Product → Architecture → Development (backend) → QA Execution → Launch. The backend notification service and fan-out design are the longest chain.
 
 ### Parallel opportunities
 
-- Design and Architecture run in parallel in Phase 2 (both need product requirements, not each other)
-- Frontend development can start as soon as the API contract is defined, without waiting for backend completion (against a mock)
-- QA Execution writes acceptance tests while development is in progress — tests are ready when implementation lands
+- Design and Architecture run in parallel in Phase 2 (both depend on product requirements, not each other)
+- Frontend development starts as soon as the API contract is defined, without waiting for backend completion
+- QA Execution writes acceptance tests during development — tests are ready when implementation lands
 
 ---
 
@@ -113,42 +113,44 @@ Product → Architecture → Development (backend) → QA Execution → Launch. 
 | QA Planning | qa-lead | Product | Test strategy, acceptance criteria (3 amigos) | 2 | 2–3 days |
 | Design | ui-designer | Product | Bell component, drawer UX, preference UI | 2 | 3–5 days |
 | Security | security-engineer | Architecture | Threat model (fan-out, data isolation) | 2 | 1–2 days |
-| Development (backend) | dotnet-developer | Architecture, QA Planning | Notification service, delivery pipeline, preferences API | 3 | 1–2 weeks |
+| Development (backend) | dotnet-developer | Architecture, QA Planning | Notification service, delivery pipeline | 3 | 1–2 weeks |
 | Development (frontend) | react-developer | Design, API contract | Bell, drawer, real-time updates | 3 | 1–2 weeks |
 | QA Execution | qa-engineer | Architecture, QA Lead | Acceptance tests, integration tests | 3–4 | 4–6 days |
-| Data | data-engineer | Product, Architecture | Event tracking plan, analytics queries | 3 | 1–2 days |
+| Data | data-engineer | Product, Architecture | Event tracking plan | 3 | 1–2 days |
 | DevOps | devops | Architecture | WebSocket infra, monitoring, staging deployment | 4 | 2–3 days |
 | Content | user-docs-writer | Development | Help article, tooltip copy | 5 | 1–2 days |
 
 ### Timeline estimate
 
-- **Best case:** 4.5 weeks (no blockers, API contract stable from Phase 2)
+- **Best case:** 4.5 weeks
 - **Likely case:** 6 weeks
-- **Risk factors:** WebSocket infrastructure unfamiliar to DevOps team; real-time fan-out edge cases may extend QA; notification preference schema may expand scope in Phase 1
+- **Risk factors:** WebSocket infrastructure unfamiliar to DevOps; fan-out edge cases may extend QA
 
 ---
 
 ## Follow-ups
 
 - [ ] Define OKRs for this initiative — use `/coordinator:define-okrs`
-- [ ] Create detailed specs for each workstream — use `/coordinator:write-spec`
+- [ ] Create detailed specs for each workstream
 
 ## Evaluation
 
 **Verdict:** PASS
 **Score:** 8.5/9 (94%)
-**Evaluated:** 2026-04-15
+**Evaluated:** 2026-04-16
 
-- [x] PASS: Completes Step 1 (initiative context table) — skill mandates the context table with user problem, target user, success criteria, appetite, and constraints; all five fields present in the format defined at Step 1 of SKILL.md
-- [x] PASS: Assesses workstream relevance — skill explicitly states "Not every workstream applies to every initiative — include only what's relevant" with a Yes/No relevance column; GTM, support, and UX research excluded with reasoning
-- [x] PASS: Dependency map present — skill's Step 3 template shows "Depends on / What it needs / Blocks" columns; architecture and design both mapped as depending on product requirements
-- [x] PASS: Phased execution sequence with named gates — skill's Step 4 template requires "Gate to next phase" column; all six phases have specific artifact-based gates, not generic "move on when ready"
-- [x] PASS: Critical path and parallel opportunities — skill's Step 4 template explicitly requires "Critical path" and "Parallel opportunities" sections; both present with reasoning
-- [x] PASS: Summary table with all required columns — skill's Step 5 template mandates owner role, depends on, key deliverables, phase, and estimated effort; all columns present
-- [x] PASS: Effort estimates are ranges — skill's rules section states "Estimates are ranges, not points. '2 weeks' is a guess. '1–3 weeks, depending on API complexity' is an estimate"; all estimates use ranges
-- [~] PARTIAL: Follow-up actions present — skill's output format includes a "Follow-ups" section pointing to `/coordinator:define-okrs` and related skills write-spec; both are referenced. Skill only references `define-okrs` in the Related Skills section, not `write-spec` — though write-spec is mentioned in the Output Format template. Both appear in the simulated output. Met fully per the definition's template.
-- [x] PASS: No padding — GTM, support prep, and formal UX research excluded with explicit reasoning tied to the initiative's nature
+## Results
 
-### Notes
+- [x] PASS: Completes Step 1 (initiative context table) — skill mandates the context table with user problem, target user, success criteria, appetite, and constraints via a specific template in Step 1; all five fields present
+- [x] PASS: Assesses workstream relevance — skill states "Not every workstream applies to every initiative — include only what's relevant" with a Yes/No/reasoning column in the template; GTM, support, and UX research excluded with explicit reasoning
+- [x] PASS: Dependency map showing what blocks what — skill's Step 3 template shows "Depends on / What it needs / Blocks" columns; both architecture and design map as depending on product requirements, consistent with the template
+- [x] PASS: Phased execution sequence with named gates — skill's Step 4 template requires a "Gate to next phase" column; all six phases have artifact-based gates (e.g., "ADR reviewed; design specs complete"), not generic "move on when ready"
+- [x] PASS: Critical path and parallel opportunities — skill's Step 4 template explicitly requires "Critical path" and "Parallel opportunities" sections below the phase table; both sections present with specific reasoning
+- [x] PASS: Summary table with all required columns — skill's Step 5 template requires owner role, depends on, key deliverables, phase, and estimated effort; all columns present
+- [x] PASS: Effort estimates are ranges — skill's rules state "Estimates are ranges, not points. '2 weeks' is a guess. '1–3 weeks, depending on API complexity' is an estimate"; all estimates use ranges
+- [~] PARTIAL: Follow-up actions — skill's Output Format template includes "Define OKRs — use `/coordinator:define-okrs`" and "Create detailed specs for each workstream"; both follow-ups are present. The PARTIAL ceiling applies regardless — criterion is met within its ceiling. Score 0.5.
+- [x] PASS: No padding — GTM, support prep, and UX research are excluded with explicit reasoning tied to the nature of the initiative; definition rule states "Include only what the initiative actually requires — and state WHY you excluded the rest"
 
-The skill definition is well-structured. The partial on follow-ups is generous — the Output Format template explicitly includes both `define-okrs` and a generic "create detailed specs" instruction, and the Related Skills section names `define-okrs` specifically. The simulated output covers both. The only gap in the definition itself: the Related Skills section omits write-spec as a follow-up skill, though the output format template implies it. A small inconsistency worth tightening.
+## Notes
+
+The skill definition enforces every structural criterion through explicit mandatory steps and templates. The only gap: the Related Skills section mentions only `define-okrs`, not `write-spec` as a follow-up — though the Output Format template's "Create detailed specs" line implies it. A minor inconsistency worth tightening. The PARTIAL on follow-ups is a rubric ceiling, not a definition gap — the output fully satisfies the criterion.

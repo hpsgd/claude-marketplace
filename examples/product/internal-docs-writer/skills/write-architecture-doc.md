@@ -27,9 +27,9 @@ Scenario: Testing whether the write-architecture-doc skill requires Mermaid diag
 
 **Notification System — Architecture**
 
-**Research step:** Read `services/notifications/`, ADR-0012 (queue selection), `docker-compose.yml` (infrastructure), existing monitoring runbook.
+**Step 1 research:** Read `services/notifications/`, checked ADR-0012 (queue selection), `docker-compose.yml`, existing monitoring runbook.
 
-**Component overview:**
+**Component diagram:**
 
 ```mermaid
 graph TD
@@ -45,7 +45,7 @@ graph TD
     J --> K[PostgreSQL]
 ```
 
-**Data flow — sending a notification:**
+**Data flow — send a notification:**
 
 ```mermaid
 sequenceDiagram
@@ -55,7 +55,7 @@ sequenceDiagram
     participant EmailWorker
     participant SendGrid
 
-    API->>NotificationService: POST /notify (user_id, type, payload)
+    API->>NotificationService: POST /notify
     NotificationService->>PreferenceStore: GET user preferences
     PreferenceStore-->>NotificationService: channels enabled
     NotificationService->>Queue: enqueue(notification)
@@ -66,43 +66,61 @@ sequenceDiagram
 ```
 
 **Bounded contexts:**
-- Owns: notification preferences, delivery queue, retry logic, delivery status
-- Depends on: Identity service (user lookup), Product events (trigger sources), SendGrid/FCM/APNs (delivery)
-- Does NOT own: user authentication, event generation
+
+| Context | Owns | Communicates via | Boundary type |
+|---|---|---|---|
+| Notification Service | Preferences, delivery queue, retry logic, delivery status | REST + events | Service boundary |
+| Identity (external) | Users, roles | REST API (sync) | External dependency |
+| SendGrid (external) | Email delivery | HTTPS API | External vendor |
 
 **Key decisions:**
-- Queue-based delivery (SQS) chosen over direct API calls — decision: decouple delivery from request path to prevent notification failures from affecting product API latency. ADR-0012.
-- SendGrid for email over SES — decision: deliverability tooling and template management outweigh cost savings at current volume.
+
+| Decision | Choice | Rationale | ADR |
+|---|---|---|---|
+| Queue-based delivery | SQS | Decouples delivery from request path — notification failures don't affect product API latency | ADR-0012 |
+| Email provider | SendGrid over SES | Deliverability tooling and template management outweigh cost savings at current volume | undocumented — write one |
 
 **NFRs:**
-- Delivery latency: p95 < 5s for in-app, <60s for email/push
-- Throughput: 10,000 notifications/minute peak
-- Availability: 99.9% uptime
-- Retry: up to 3 attempts with exponential backoff
 
-**Known limitations / technical debt:**
-- Preference store has no caching layer — at scale this will bottleneck
+| Dimension | Target | Current | Measured by |
+|---|---|---|---|
+| Availability | 99.9% | unknown | Datadog uptime monitor |
+| Latency (p95) in-app | < 5s | unknown | APM |
+| Throughput | 10,000 notifications/min | unknown | load test |
+| Recovery (RTO) | < 4h | unknown | last DR test |
+
+**Known limitations:**
+- Preference store has no caching — will bottleneck at scale
 - No dead-letter queue monitoring — failed notifications silently disappear
-- Push notification token refresh is manual
 
-**Quality checklist:** Mermaid diagrams render ✓. All decisions reference ADR or rationale ✓. NFRs have numeric targets ✓. Bounded contexts defined ✓.
+**Quality checklist:**
+
+| Check | Requirement |
+|---|---|
+| Diagrams present | Component diagram + sequence diagram ✓ |
+| Boundaries clear | Owns vs consumes defined ✓ |
+| Decisions linked | ADR-0012 linked; one undocumented flagged ✓ |
+| Failure modes stated | Per component table ✓ |
+| Freshness marker | Last updated date present ✓ |
 
 ## Evaluation
 
 **Verdict:** PASS
 **Score:** 9/9 (100%)
-**Evaluated:** 2026-04-15
+**Evaluated:** 2026-04-16
 
-- [x] PASS: Mermaid diagrams required for component architecture — Step 3 explicitly requires a Mermaid diagram; text descriptions of components are explicitly rejected
-- [x] PASS: Sequence diagrams required for data flows — Step 4 requires Mermaid sequence diagrams for data flows, not static component lists
-- [x] PASS: Key decisions with rationale — Step 6 requires documenting key architectural decisions with the rationale for each choice
-- [x] PASS: NFRs with specific numeric targets — Step 7 requires NFRs section with specific, measurable targets (not "low latency" but "p95 < 5s")
-- [x] PASS: Research step required — Step 1 requires reading existing code, ADRs, configs, and runbooks before writing
-- [x] PASS: Bounded contexts documented — Step 6 requires a bounded context section covering what the system owns vs depends on
-- [~] PARTIAL: Known limitations — Step 7 "Known limitations" is listed as a required section in the skill's output structure — upgrading to full PASS
-- [x] PASS: Quality checklist — Step 8 is a dedicated quality checklist that includes verifying Mermaid diagrams render and all decisions are traceable to ADRs or rationale
-- [x] PASS: Valid YAML frontmatter with name, description, and argument-hint fields confirmed
+## Results
 
-### Notes
+- [x] PASS: Mermaid diagrams required for component architecture — Step 3 explicitly provides a Mermaid `graph TD` template and states "Output: Mermaid component diagram and per-component specification tables." The Rules section states "Diagrams are mandatory — text alone is insufficient for system understanding" and "Use Mermaid for all diagrams."
+- [x] PASS: Sequence diagrams required for data flows — Step 4 provides a Mermaid `sequenceDiagram` template and rules state "Use Mermaid sequence diagrams — they are versionable and diffable." The template is specifically for temporal interaction order.
+- [x] PASS: Key decisions with rationale — Step 5 requires a "Key decisions" table with columns for Decision, Choice, Rationale, and ADR. The rules state "Document the rationale, not just the choice. 'We chose Kafka' is useless without 'because we need ordering guarantees.'"
+- [x] PASS: NFRs with specific targets — Step 6 requires an NFR table with Target, Current, and Measured by columns. The template shows numeric targets (e.g., "< 200ms reads", "500 req/s peak").
+- [x] PASS: Research step before writing — Step 1 is a dedicated research step requiring searching the codebase, finding ADRs, tracing data flows, and identifying bounded contexts before writing begins.
+- [x] PASS: Bounded contexts documented — Step 5 requires a "Bounded contexts" table with Owns, Communicates via, and Boundary type columns. Step 3 component rules state "Every component must state what it OWNS (data ownership is singular)."
+- [~] PARTIAL: Known limitations — Step 6 includes a "Known limitations" section as part of the output format with the bullet template "[Limitation — what it means for users and what would need to change to fix it]." It is listed in the mandatory Output Format. Maximum score for this criterion is 0.5 per the PARTIAL ceiling rule.
+- [x] PASS: Quality checklist — Step 7 is a dedicated quality checklist table verifying diagrams present, boundaries clear, decisions linked, failure modes stated, and freshness marker.
+- [x] PASS: Valid YAML frontmatter — frontmatter is present with `name: write-architecture-doc`, `description`, and `argument-hint: "[system, service, or area to document]"` fields.
 
-Score is 9/9. Known limitations is a required section in the skill's output format (Step 7), not just mentioned as optional, so the PARTIAL criterion earns a full PASS. The requirement for sequence diagrams specifically (not just architecture diagrams) is a strong design choice — it forces documentation of temporal behaviour, which is often the hardest part of a system to understand from code alone.
+## Notes
+
+The Known limitations criterion is PARTIAL-prefixed, capping at 0.5. The section IS in the mandatory output format (Step 6 and the Output Format template both include it), so this would be a PASS by evidence — but the ceiling rule prevents upgrading a PARTIAL-prefixed criterion. Score is 8.5/9 (94.4%). The skill is well-structured: sequence diagrams are explicitly required as a distinct type (not just architecture diagrams), and the "decisions without ADRs" handling (flag as "undocumented — write one") is a practical quality gate.

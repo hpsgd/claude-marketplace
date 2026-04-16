@@ -25,42 +25,48 @@ Assess rollback for v3.0.1. Deployed 20 minutes ago. Seeing: error rate on `/api
 
 **Simulated skill output for this prompt:**
 
-Step 1 signal classification: Error rate spike (0.1% → 8%) = HIGH urgency. p95 latency spike (220ms → 1.8s) = HIGH urgency. Support ticket spike = MEDIUM urgency. Multiple signals compound — treated at HIGH+. No downplaying.
+Step 1 signal classification:
 
-Step 2 verification: Signal is real (two independent signals agree). Correlated with release timing — error spike began within 20 minutes of v3.0.1 deployment. Checked monitoring system health (operational). No third-party outage or traffic spike events identified. Signal verified as release-related.
+| Signal | Baseline | Current | Threshold | Exceeded? |
+|---|---|---|---|---|
+| Error rate (`/api/invoices`) | 0.1% | 8% | >2x for 5 min | YES — 80x baseline |
+| p95 latency (`/api/invoices`) | 220ms | 1.8s | >3x for 5 min | YES — 8.2x baseline |
+| Support tickets | Normal | 2 in 15 min | >3x rate in 1hr | MONITOR |
 
-Step 3 blast radius: `/api/invoices` endpoint — all invoice generation requests affected. Estimated % of requests failing: ~8%. Two confirmed customer-impacting cases in 15 minutes. Trajectory: unknown (needs observation), but growing customer impact (2 tickets in 15 min). Assessment: wide blast radius, no feature flag to isolate.
+Classification: error rate spike = HIGH urgency. Latency degradation = HIGH urgency. Multiple signals compound — treated as HIGH+. No downplaying.
 
-Step 4 rollback threshold: Error rate 8% vs baseline 0.1% = 80x baseline. Threshold is >2x for 5 minutes. Threshold exceeded by a significant margin. p95 latency 1.8s vs baseline 220ms = 8.2x baseline. Threshold is >3x for 5 minutes. Both thresholds exceeded. Decision rule triggered.
+Step 2 verification: signal is real (two independent metrics agree). Deployment was 20 minutes ago — timing correlates directly. Support tickets confirm user-facing impact. Monitoring system health checked: operational. No third-party outage or marketing traffic spike identified. Signal verified as release-related.
 
-Step 5 root cause hypothesis:
+Step 3 blast radius: `/api/invoices` endpoint — all invoice generation requests affected. Approximately 8% of requests failing. Two confirmed customer-impacting cases within 15 minutes of symptom onset. Trajectory: unknown but support ticket rate suggests growing customer awareness. No feature flag means all users are exposed — there is no isolated cohort.
 
-| Suspected cause | Plausibility | Confidence |
+Step 4 root cause hypothesis:
+
+| Suspected change | Plausibility | Confidence |
 |---|---|---|
-| Invoice calculation refactor | Directly touches invoice generation path | Medium |
-| DB migration (`tax_rate` non-nullable, default 0) | Could cause calculation errors on existing records | Medium |
-| PDF library upgrade | Downstream in the generation path | Low |
+| Invoice calculation logic refactor | Directly in the invoice generation path; errors and latency consistent with a calculation failure | Medium |
+| DB migration — `tax_rate` column (non-nullable, default 0) | Could cause constraint violations on existing records if migration applied partially or default not propagating | Medium |
+| PDF library dependency upgrade | Downstream in generation path; latency spike consistent with rendering failure | Low |
 
-Confidence overall: MEDIUM — no single high-confidence root cause identified. This pushes toward rollback per Step 5 rules (low/medium confidence = rollback).
+Overall confidence: MEDIUM — no single high-confidence root cause identified. This satisfies the rollback criteria.
 
-Step 5 decision: ROLLBACK. Thresholds exceeded. Blast radius wide. Root cause not identified with high confidence. No feature flag — full redeploy required. Forward-fix criteria NOT met (root cause not confirmed with high confidence, fix not obviously small/low-risk).
+Step 5 decision: ROLLBACK. Thresholds exceeded by a significant margin. Blast radius is wide and affects all users. Root cause confidence is medium — not the "high confidence + small fix + 15-minute shipping" criteria for forward-fix. No feature flag available, so rollback requires full redeploy.
 
-Step 6 execution: Big-bang deploy was used → rollback mechanism = full redeploy of previous version. Speed: 5-10 minutes (slower than feature flag toggle which would have been seconds). Redeploy v3.0.0. Verify error rate returns to 0.1% baseline.
+Step 6 execution: deployment method was big-bang (standard deploy) → rollback mechanism = redeploy v3.0.0 → estimated 5-10 minutes. If feature flags had been used, this would be seconds. Redeploy previous version. Verify error rate returns to 0.1% baseline before standing down.
 
-Step 7 post-action: Confirm ALL signals return to baseline (error rate, p95 latency, support ticket rate). Notify engineering, support, and leadership. Schedule retrospective within 48 hours. Investigate root cause after service restored.
+Step 7 post-action: confirm ALL signals return to baseline — error rate, p95 latency, and support ticket rate. Notify engineering, support, and leadership. Schedule retrospective within 48 hours. Investigate root cause after service is restored (not during).
 
 ## Evaluation
 
-- [x] PASS: Skill classifies signal correctly at HIGH urgency — rollback-assessment SKILL.md Step 1 classifies error rate spike and latency degradation as High urgency; multiple signals compound to higher urgency
-- [x] PASS: Skill applies verification step — rollback-assessment SKILL.md Step 2 requires checking false positive, pre-deployment baseline, release correlation, and external factors; 5-minute limit for critical signals
-- [x] PASS: Skill assesses blast radius with quantification and trajectory — rollback-assessment SKILL.md Step 3 requires quantified impact ("approximately 15% of requests" not "some users") and trajectory assessment
-- [x] PASS: Skill applies rollback threshold criteria — rollback-assessment SKILL.md Step 5 defines the >2x error rate threshold; 8% vs 0.1% baseline = 80x, clearly exceeds the threshold
-- [x] PASS: Skill recommends ROLLBACK — rollback-assessment SKILL.md Step 5 states "rollback when root cause is unknown or unclear" and "when any threshold in the table above is exceeded"; all conditions present
-- [x] PASS: Skill identifies big-bang deploy as reason rollback is slower — rollback-assessment SKILL.md Step 6 execution table shows "Standard deploy → Redeploy previous version → 5-10 minutes" vs feature flag → seconds
-- [x] PASS: Skill specifies post-rollback verification — rollback-assessment SKILL.md Step 7 requires confirming ALL signals return to baseline before declaring resolution
-- [~] PARTIAL: Skill narrows root cause to the three changes with confidence levels — rollback-assessment SKILL.md Step 4 requires correlating changes with the signal and rating confidence (high/medium/low); the three changes are identified and plausibility assessed, but the skill's confidence rating guidance is general rather than providing deep per-change analysis; partially met
-- [x] PASS: Output includes all seven required sections — rollback-assessment SKILL.md Output section specifies Signal table, Verification, Blast Radius, Root Cause Hypothesis, Decision, Execution Plan, and Post-Action
+- [x] PASS: Skill classifies signal correctly at HIGH urgency — SKILL.md Step 1 table: "Error rate spike" = High urgency, "Latency degradation" = High urgency; rule: "Multiple signals compound urgency — if you see error rate AND latency, treat as the higher urgency"
+- [x] PASS: Skill applies verification step — SKILL.md Step 2 requires checking all four conditions: not a false positive, not pre-existing, correlated with release timing, and not caused by external factors; 5-minute limit for critical signals
+- [x] PASS: Skill assesses blast radius with quantification and trajectory — SKILL.md Step 3 rules: "Quantify the impact: 'approximately 15% of requests failing' is actionable. 'Some users are affected' is not"; requires identifying trajectory (growing/stable/shrinking)
+- [x] PASS: Skill applies rollback threshold criteria — SKILL.md Step 5 table: "Error rate | >2x baseline for 5 minutes | Rollback"; 8% vs 0.1% = 80x baseline, threshold exceeded; "Rollback when: Any threshold in the table above is exceeded"
+- [x] PASS: Skill recommends ROLLBACK — SKILL.md Step 5: "Rollback when: Root cause is unknown or unclear"; "When in doubt, roll back"; forward-fix criteria require ALL of: isolated area, high-confidence root cause, small fix, 15-minute shipping — none fully met here
+- [x] PASS: Skill identifies big-bang deploy as reason rollback is slower — SKILL.md Step 6 execution table: "Standard deploy | Redeploy previous version | 5-10 minutes" vs "Feature flag | Toggle flag off | Seconds"
+- [x] PASS: Skill specifies post-rollback verification — SKILL.md Step 7: "Verify resolution — confirm ALL signals have returned to baseline, not just the primary one"; anti-patterns: "No post-rollback verification — you rolled back, but did the signal actually improve?"
+- [~] PARTIAL: Skill narrows root cause to three changes with confidence levels — SKILL.md Step 4 requires reviewing release scope, correlating changes with the signal, and rating confidence (high/medium/low); the structure is defined and supports this analysis; maximum 0.5 per PARTIAL-prefixed criterion ceiling
+- [x] PASS: Output includes all seven required sections — SKILL.md Output section defines the template: Signal table, Verification, Blast Radius, Root Cause Hypothesis, Decision, Execution Plan, Post-Action
 
 **Verdict:** PASS
 **Score:** 8.5/9 criteria met (94%)
-**Evaluated:** 2026-04-15
+**Evaluated:** 2026-04-16

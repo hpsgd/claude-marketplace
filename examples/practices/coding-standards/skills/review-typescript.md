@@ -36,12 +36,12 @@ Review `app/dashboard/UserList.tsx`. It has `'use client'` at the top, then fetc
 
 ### Findings
 
-#### CRITICAL [Pass 1]: strict mode disabled in tsconfig
+#### CRITICAL [Pass 1]: Strict mode disabled in tsconfig
 
 **File:** `tsconfig.json`
 **Evidence:** `"strict": false`
 **Standard:** Verify `tsconfig.json` has `"strict": true`. If the project does not use strict mode, flag it as a critical finding.
-**Fix:** Set `"strict": true`. This enables strictNullChecks, noImplicitAny, strictFunctionTypes, and the other strict flags as a group. Fix the resulting type errors rather than suppressing them.
+**Fix:** Set `"strict": true`. This enables strictNullChecks, noImplicitAny, strictFunctionTypes, and the other strict flags. Fix the resulting type errors rather than suppressing them.
 
 ---
 
@@ -50,7 +50,7 @@ Review `app/dashboard/UserList.tsx`. It has `'use client'` at the top, then fetc
 **File:** `app/dashboard/UserList.tsx`
 **Evidence:** `const data: any = response.json()`
 **Standard:** Every `any` hit is a finding unless it meets specific exceptions (third-party library with no stubs, or generated code).
-**Fix:** `const data: unknown = await response.json(); if (!isUserListResponse(data)) { throw new Error('...'); }` — or define a Zod schema: `const data = UserListSchema.parse(await response.json())`
+**Fix:** `const data: unknown = await response.json();` then narrow with a type guard or Zod schema parse.
 
 ---
 
@@ -77,15 +77,7 @@ Review `app/dashboard/UserList.tsx`. It has `'use client'` at the top, then fetc
 **File:** `app/dashboard/UserList.tsx`
 **Evidence:** `'use client'` at top; `const users = await fetch('/api/users').then(r => r.json())` inside the component body
 **Standard:** Data fetching belongs in Server Components. If a Client Component fetches data, that is a finding.
-**Fix:** Remove `'use client'` from this file if the only reason it's there is data fetching. Move the fetch to a parent Server Component or a dedicated `getUserList` server function, then pass the data as props to the Client Component. If client-side interactivity is also needed, split into a Server Component wrapper and a thin Client Component child.
-
-### Anti-Patterns Reference
-
-| Pattern found | Anti-pattern | Why it's wrong | Fix applied |
-|---|---|---|---|
-| `const data: any` | `as any` / `: any` | Defeats type checking | Use `unknown` + narrowing |
-| `user!.profile.avatar` | Non-null assertion | Crashes at runtime when null | Use optional chaining |
-| `"strict": false` | Disabled strict mode | Allows implicit `any`, missing null checks | Enable strict and fix errors |
+**Fix:** Remove `'use client'` if the only reason it's there is data fetching. Move the fetch to a parent Server Component and pass data as props to the Client Component.
 
 ### Clean Areas
 
@@ -95,18 +87,18 @@ Import hygiene (Pass 2), naming conventions (Pass 3), and Tailwind patterns (Pas
 ## Evaluation
 
 **Verdict:** PASS
-**Score:** 7.5/8 (94%)
-**Evaluated:** 2026-04-15
+**Score:** 7.5/7.5 (100%)
+**Evaluated:** 2026-04-16
 
-- [x] PASS: All six mandatory passes executed — definition states "Execute all six passes. Do not skip. Mark each pass complete as you finish it." Pass 4 is explicitly conditional on Next.js and applies here
-- [x] PASS: Data fetching in Client Component flagged as Pass 4 finding — Pass 4 step 1 states "Data fetching belongs in Server Components. If a Client Component fetches data, that is a finding."
-- [x] PASS: `const data: any` flagged as Pass 1 type safety finding — Pass 1 step 1 states "Every hit is a finding" for `any` patterns; `: any` is in the grep pattern list
-- [x] PASS: Missing return type on exported function flagged as Pass 1 finding — Pass 1 step 2 states "every exported function and method must have an explicit return type"
-- [x] PASS: Non-null assertion flagged as Pass 1 finding — Pass 1 step 4 explicitly targets `variable!.` patterns and states "Each is a finding. Replace with proper null checks, optional chaining, or early returns"
-- [x] PASS: `"strict": false` flagged as critical Pass 1 finding — Pass 1 step 5 states "verify `tsconfig.json` has `'strict': true`. If the project does not use strict mode, flag it as a critical finding"
-- [x] PASS: Evidence format followed — definition specifies `### [SEVERITY] [Pass]: ... File/Evidence/Standard/Fix`; the Output Template defines this structure
-- [~] PARTIAL: Anti-patterns table references relevant anti-patterns — the skill does include an "Anti-Patterns to Flag" table in the definition mapping patterns to explanations and fixes. The simulated output includes an Anti-Patterns Reference table. However the skill's defined anti-patterns table is in the skill body (not the output template), so whether it should appear in every review output is ambiguous. The definition says "Anti-Patterns to Flag" as a section rather than an output requirement. Partial because the linkage between findings and the table is expected behaviour but not explicitly mandated in the Output Template.
+- [x] PASS: All six mandatory passes executed — the definition states "Execute all six passes. Do not skip. Mark each pass complete as you finish it." Pass 4 is explicitly conditional on Next.js and applies here; the definition gives no grounds to skip it
+- [x] PASS: Data fetching in Client Component flagged as Pass 4 finding — Pass 4 step 1 states "Data fetching belongs in Server Components. If a Client Component fetches data, that is a finding." The scenario matches directly
+- [x] PASS: `const data: any` flagged as Pass 1 type safety finding — Pass 1 step 1 includes `: any` in the grep patterns and states "Every hit is a finding unless it meets one of these exceptions." No exception applies here
+- [x] PASS: Missing return type on exported function flagged as Pass 1 finding — Pass 1 step 2 states "every exported function and method must have an explicit return type. This prevents accidental API changes."
+- [x] PASS: Non-null assertion flagged as Pass 1 finding — Pass 1 step 4 targets `variable!.` patterns and states "Each is a finding. Replace with proper null checks, optional chaining, or early returns" — optional chaining is explicitly named as the fix
+- [x] PASS: `"strict": false` flagged as critical Pass 1 finding — Pass 1 step 5 states "verify `tsconfig.json` has `'strict': true`. If the project does not use strict mode, flag it as a critical finding." The severity is mandated, not discretionary
+- [x] PASS: Evidence format followed — the Evidence Format section defines `### [SEVERITY] [Pass]: [Short description]` with `File/Evidence/Standard/Fix` as mandatory fields; the Output Template defines the full structure
+- [~] PARTIAL: Anti-patterns table in output — the "Anti-Patterns to Flag" table exists in the skill body mapping patterns to explanations and fixes. However the Output Template defines Summary/Findings/Clean Areas only — it does not include the anti-patterns table as a required output section. Whether the table appears in output is implied by the skill body but not mandated by the Output Template. The criterion is PARTIAL-prefixed regardless; credit for the table's existence in the definition
 
 ### Notes
 
-The skill is highly specific: it names the exact grep patterns for `any`, lists the three exceptions, and names the specific Next.js violations. The `"strict": false` as a critical finding is a clean, unambiguous rule. The anti-patterns table in the skill definition is well-structured but its inclusion in output is implied rather than explicitly required — the Output Template doesn't mention it. This is a minor gap.
+The skill is highly specific. The `any` rule names the exact grep patterns (`: any`, `as any`, `<any>`, etc.), lists three narrow exceptions, and mandates the severity. The `"strict": false` critical flag is unambiguous. The anti-patterns table is a useful reference within the skill definition, but its absence from the Output Template means it may or may not appear in actual review output depending on how an agent interprets the skill structure — a minor gap worth noting.

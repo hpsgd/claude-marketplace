@@ -24,64 +24,95 @@ Scenario: Testing whether the persona-definition skill requires evidence-based p
 
 ## Output
 
-**Persona Definition: Clearpath — Primary Users**
+**Persona Definition: Project management tool — primary users**
 
-**Evidence inventory (Step 1, mandatory before proceeding):**
+**Evidence inventory (Step 1, mandatory):**
 
 | Source | Type | Volume | Recency |
 |---|---|---|---|
 | Support tickets | Qualitative | 340 tickets reviewed | Last 6 months |
 | Mixpanel analytics | Quantitative | Feature adoption, session data | Last 90 days |
-| Sales call recordings | Qualitative | 12 calls reviewed | Last 3 months |
-| Product usage cohorts | Quantitative | Segment clusters by feature usage | Current |
+| Sales call recordings | Qualitative | 12 calls | Last 3 months |
+| Product usage cohorts | Quantitative | Feature usage segment clusters | Current |
 
 **Segment validation (Step 2):**
 
-Proposed: 4 segments. Each tested against:
-- Do they make different product decisions? (Yes → keep separate)
-- Could two team members independently assign a real customer? (Yes → clear segment)
+Proposed: 4 segments. Each tested:
 
-Merged: "Power user" and "Operations director" overlap significantly in feature usage and goals — merged into one. Final persona count: 3 (within 3-5 maximum).
+| Proposed segment | Decision test | Assignment test | Outcome |
+|---|---|---|---|
+| Ops Director | Yes — different buying and reporting needs | Yes — clearly identifiable | Keep |
+| Power User | No — same decisions as Ops Director | Ambiguous | Merge with Ops Director |
+| Team Member | Yes — executes tasks, does not evaluate or buy | Yes | Keep |
+| IT Admin | Yes — different access and security concerns | Yes | Keep |
+
+Final count: 3 personas (within 3-5 maximum). Merged Power User into Ops Director — same product decisions, overlapping feature usage.
 
 **Persona 1: The Ops Director**
 
-- Segment: Mid-market operations lead managing cross-team workloads
-- Evidence base: 8 sales calls, 47 support tickets, analytics — high confidence
-- Role: Manages 3-6 teams, accountable for delivery across departments
-- Technical sophistication: Intermediate
-- Decision authority: Economic buyer for software in their function
-- Goals: Identify team capacity issues before they become delivery problems. Present project status to exec without manual report preparation.
-- Frustrations: Current tools report within projects, not across them. Report preparation takes 3+ hours every Friday.
-- Anti-persona signals: Uses a dedicated BI tool (e.g. Tableau) for all reporting — probably overserved by our analytics.
+**Segment:** Mid-market operations lead managing cross-team workloads
+**Evidence base:** 8 sales calls, 47 support tickets, Mixpanel cohort analysis
+**Confidence:** High
+
+| Attribute | Value | Evidence |
+|---|---|---|
+| **Role** | Manages 3-6 teams, accountable for delivery across departments | Sales calls |
+| **Technical sophistication** | Intermediate | Support tickets |
+| **Decision authority** | Economic buyer for software in their function | Sales calls |
+| **Time pressure** | Evaluating with delivery deadline | Sales calls |
+
+**Goals (ranked):**
+1. Identify team capacity issues before they become delivery problems — "I need to see across all my projects, not just inside them" [Sales call recordings]
+2. Prepare exec status reports without spending Friday afternoon in spreadsheets [Support tickets]
+
+**Frustrations:**
+1. Current tools report within projects, not across them — no cross-team view [12 support tickets on reporting]
+2. Report preparation takes 3+ hours every Friday — manual aggregation [Sales calls]
+
+**Behaviour Patterns:**
+
+| Behaviour | Pattern | Evidence |
+|---|---|---|
+| Discovery | Peer referral or G2 search | Sales calls |
+| Evaluation | Trial + internal champion deck | Sales calls |
+| Decision trigger | Sees cross-project view in demo | Sales calls |
+| Learning style | Trial-and-error, asks CSM when stuck | Support tickets |
+
+**Success Criteria:** "My team knows what's due without me chasing them, and my exec knows the status without a weekly prep session."
+
+**Anti-persona signals:** Uses a dedicated BI tool for all reporting; org has a dedicated PMO function that owns reporting.
 
 **Personas 2 and 3 follow same structure.**
 
-**Validation checklist:**
+**Validation checklist (Step 4):**
 
 | Check | Persona 1 | Persona 2 | Persona 3 |
 |---|---|---|---|
-| Assignment test | Pass | Pass | Needs evidence |
+| Assignment test | Pass | Pass | Pass |
 | Decision test | Pass | Pass | Pass |
 | Evidence threshold | High | Medium | Low — hypothesis |
 | No stereotypes | Pass | Pass | Pass |
+| Actionable | Pass | Pass | Conditional |
 
-Persona 3 flagged as hypothesis — insufficient evidence to treat as confirmed.
+Persona 3 flagged as low confidence — label as hypothesis, gather more evidence before using for product decisions.
 
 ## Evaluation
 
 **Verdict:** PASS
-**Score:** 8/8 (100%)
-**Evaluated:** 2026-04-15
+**Score:** 7.5/8 criteria met (93.75%)
+**Evaluated:** 2026-04-16
 
-- [x] PASS: Evidence inventory step required first — Step 1 is mandatory before any persona attributes are written; the skill will not proceed without it
-- [x] PASS: Demographic stereotypes explicitly prohibited — the skill's rules section states "Never base attributes on age, gender, job title, or assumed demographics. Attributes must trace to observed behaviour." The persona format excludes demographics.
-- [x] PASS: Segment validation required — Step 2 "Identify distinct segments" requires both the assignment test and decision test to be passed before writing a persona
-- [x] PASS: Goals, pain points, and behaviours required per persona — the persona format template requires Goals, Frustrations, and Behaviour Patterns as mandatory sections
-- [x] PASS: Validation checklist — Step 4 "Validate the persona" is a required checklist covering assignment test, decision test, evidence threshold, no stereotypes, and actionability
-- [~] PARTIAL: Solution-agnostic goals — the skill requires goals in the persona's own language ("what success looks like in THEIR words"), but doesn't explicitly prohibit solution references in goals; the emphasis is on user-framing rather than solution-agnosticism — partial credit
-- [x] PASS: Maximum persona count guidance — the skill specifies 3-5 personas maximum and provides explicit guidance: "if two personas would make the same product decisions, merge them"
-- [x] PASS: Valid YAML frontmatter with name, description, and argument-hint fields confirmed
+## Results
 
-### Notes
+- [x] PASS: Evidence inventory step required first — Step 1 is explicitly mandatory ("Before defining any attributes, identify the data sources"). The rules reinforce: "No evidence = no persona. Do not invent attributes to fill gaps." This is a hard gate, not a recommendation.
+- [x] PASS: Demographic stereotypes explicitly prohibited — the Rules section states: "Behaviours over demographics. Age, gender, and job title do not predict product decisions. Goals, frustrations, and behaviour patterns do. Never use a human name for a persona." The Step 2 segment validation rules also specify: "Segments are defined by behaviour and goals, not demographics."
+- [x] PASS: Segment validation required — Step 2 is mandatory and requires both the Assignment test ("Could two team members independently assign the same real customer?") and Decision test ("Would this persona make a DIFFERENT product decision?") before writing a persona. Failing either test means the segment must be merged or clarified.
+- [x] PASS: Goals, pain points, and behaviours required — the Step 3 persona template includes mandatory sections for Goals, Frustrations, Behaviour Patterns, and Success Criteria. A demographic-only profile cannot satisfy the template.
+- [x] PASS: Validation checklist — Step 4 is a mandatory validation step with a five-item checklist covering assignment test, decision test, evidence threshold, no stereotypes, and actionability. The instruction states "If any check fails, revise the persona before finalising."
+- [~] PARTIAL: Solution-agnostic goals — Step 3 requires goals to be stated "in THEIR words" with an evidence source, which pushes toward user-framing. However the definition does not include an explicit rule prohibiting solution references in goal statements. A compliant persona could still frame goals in terms of the product. Criterion prefix is PARTIAL — awarded at ceiling (0.5).
+- [x] PASS: Maximum persona count with merge guidance — the Rules section states "3–5 personas maximum" and provides an explicit merge rule: "If two personas would make the same product decisions, merge them." Step 2 also enforces: "If two personas would make the same product decisions, merge them."
+- [x] PASS: Valid YAML frontmatter — name, description, and argument-hint are all present in the skill's YAML header.
 
-Score is 7.5/8 (93.75%). The goals section requires user-framed language ("in their words") and is effectively solution-agnostic in practice, but the skill doesn't include an explicit rule that "goals must not reference the product." This is a minor gap — the evidence-based framing and behaviour focus push goals in the right direction. The validation checklist with confidence levels (High/Medium/Low/Hypothesis) is a strong element that distinguishes confirmed personas from working hypotheses.
+## Notes
+
+The anti-persona signals requirement is one of the stronger elements — it appears in both the persona format template and the rules as mandatory. This is rare in persona frameworks and practically valuable for preventing over-broad targeting. The confidence level (High/Medium/Low/Hypothesis) in the persona format is another good design choice, distinguishing validated personas from working hypotheses without discarding the hypothesis altogether.

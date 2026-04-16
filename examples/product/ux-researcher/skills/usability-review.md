@@ -27,71 +27,98 @@ Scenario: Testing whether the usability-review skill requires Nielsen's heuristi
 **Usability Review: Account Settings**
 
 **Scope and walkthrough:**
-- Feature: Account Settings area
-- Target user: Mid-market ops director (intermediate tech sophistication)
-- Entry point: Account menu (top right) → Settings
-- Success state: User can find Team Members, Billing, and API Keys tabs without assistance
+
+**Feature/flow:** Account Settings area
+**Target user:** Mid-market ops director (intermediate tech sophistication)
+**Entry point:** Account menu (top right) → Settings
+**Success state:** User locates Team Members, Billing, and API Keys without assistance
 
 Walkthrough notes:
-1. Settings landing page shows 9 tabs with no grouping. User must scan all 9 to find what they want.
-2. "Members" tab (team management) is in alphabetical position; "Billing" is tab 2; "API" is not visible — it's under "Developer" tab, which is not intuitive for non-technical users.
-3. No search within settings. No breadcrumbs showing current location.
+1. Settings landing page shows 9 tabs with no grouping or visual hierarchy — user must scan all 9.
+2. "Members" tab (team management) is in alphabetical order; easily found.
+3. "Billing" is tab 2; visible.
+4. API keys are under "Developer" tab — non-technical users do not self-identify as developers and don't look there.
+5. No search within settings. No breadcrumbs. No indication of where you are.
 
 **Findings:**
 
 **Finding 1: Settings tabs have no visual hierarchy or grouping**
-- Heuristic: 6 — Recognition over recall
-- Severity: Major
-- What happens: User sees 9 undifferentiated tabs and must read all of them
-- Why it's a problem: Non-technical users don't know to look under "Developer" for API keys; high support ticket volume confirms this
-- Recommendation: Group tabs into 3 categories (Account, Team, Developer); surface with visual separation or sub-navigation
+- **Heuristic:** 6 — Recognition over recall
+- **Location:** Settings landing page — all 9 tabs
+- **Severity:** Major
+- **What happens:** User sees 9 undifferentiated tabs and must read all of them to find what they want.
+- **Why it's a problem:** No grouping means no mental model — users can't predict where something lives. High support ticket volume confirms this.
+- **Recommendation:** Group tabs into 3 categories (Account, Team, Developer) with visual separation or sub-navigation.
 
-**Finding 2: "API Keys" hidden under "Developer" tab**
-- Heuristic: 2 — Match between system and real world
-- Severity: Major
-- What happens: Users searching for API keys look for "API" not "Developer"
-- Why it's a problem: "Developer" is internal vocabulary; non-technical users don't identify as developers
-- Recommendation: Rename to "API & Integrations" or surface API keys under a searchable label
+**Finding 2: API keys hidden under "Developer" tab**
+- **Heuristic:** 2 — Match between system and real world
+- **Location:** "Developer" tab
+- **Severity:** Major
+- **What happens:** Users searching for API keys look for "API," not "Developer."
+- **Why it's a problem:** "Developer" is internal vocabulary. Non-technical ops directors don't identify as developers; they skip this tab.
+- **Recommendation:** Rename to "API & Integrations" or surface API key access under a searchable label.
 
-**Finding 3: No settings search**
-- Heuristic: 6 — Recognition over recall
-- Severity: Minor
-- Recommendation: Add search-within-settings (low effort, high discoverability improvement)
+**Finding 3: No search within settings**
+- **Heuristic:** 6 — Recognition over recall
+- **Location:** Settings global navigation
+- **Severity:** Minor
+- **What happens:** Users with a specific goal must browse all tabs.
+- **Why it's a problem:** As settings grow, browsing becomes untenable.
+- **Recommendation:** Add search-within-settings (low effort, high discoverability payoff).
 
 **Findings summary:**
 
 | # | Heuristic | Severity | Finding | Location | Fix |
 |---|---|---|---|---|---|
 | 1 | Recognition over recall | Major | No tab grouping | Settings landing | Group into 3 categories |
-| 2 | Match real world | Major | Developer ≠ API Keys | Developer tab | Rename + surfacing |
+| 2 | Match real world | Major | "Developer" ≠ API Keys | Developer tab | Rename + surface |
 | 3 | Recognition over recall | Minor | No settings search | Settings global | Add search |
 
-**Severity distribution:** Critical: 0. Major: 2. Minor: 1. Enhancement: 0.
+**Severity distribution:**
+- Critical: 0
+- Major: 2 — fix in current sprint
+- Minor: 1 — fix when touching the area
+- Enhancement: 0
 
-**Heuristic coverage:** No violations found in: Visibility of system status, User control, Error prevention, Error recovery, Help and docs.
+**Heuristic coverage:**
+
+| Heuristic | Findings | Worst severity |
+|---|---|---|
+| 1. Visibility of system status | 0 | No issues |
+| 2. Match real world | 1 | Major |
+| 3. User control and freedom | 0 | No issues |
+| 4. Consistency and standards | 0 | No issues |
+| 5. Error prevention | 0 | No issues |
+| 6. Recognition over recall | 2 | Major |
+| 7. Flexibility and efficiency | 0 | No issues |
+| 8. Aesthetic and minimalist design | 0 | No issues |
+| 9. Help users recover from errors | 0 | No issues |
+| 10. Help and documentation | 0 | No issues |
 
 **Top 3 recommendations:**
-1. Group settings tabs — addresses all three reported support complaints simultaneously
-2. Rename Developer tab to "API & Integrations" — directly addresses the API key findability issue
-3. Add in-settings search — longer-term solution, prevents future findability issues as settings grow
+1. Group settings tabs — addresses all three reported support complaints simultaneously.
+2. Rename Developer tab to "API & Integrations" — directly addresses the highest-volume support request.
+3. Add in-settings search — longer-term findability solution as settings grow.
 
-**What works well:** Settings page loads quickly; once you're on the right tab, content is well-organised and clearly labelled.
+**What works well:** Settings page loads quickly; content within each tab is well-organised and clearly labelled once you're in the right place.
 
 ## Evaluation
 
 **Verdict:** PASS
-**Score:** 8/8 (100%)
-**Evaluated:** 2026-04-15
+**Score:** 7.5/8 criteria met (93.75%)
+**Evaluated:** 2026-04-16
 
-- [x] PASS: Nielsen's 10 heuristics — the skill evaluates against all 10 named Nielsen heuristics; the per-heuristic evaluation table is a mandatory step
-- [x] PASS: Severity ratings per finding — the skill assigns Critical/Major/Minor/Enhancement to each finding; unrated findings are not permitted
-- [x] PASS: Structured walkthrough required — Step 1 "Define scope and walkthrough" is mandatory; the reviewer must trace the complete flow (including error states) before evaluating
-- [x] PASS: Prioritised synthesis — Step 4 produces a synthesis with Top 3 Recommendations and severity distribution; the catalogue alone is not the deliverable
-- [x] PASS: Each finding tied to a specific heuristic — the finding template requires "Heuristic: [number and name]" as a mandatory field
-- [~] PARTIAL: Blocking vs non-blocking distinction — the severity scale (Critical = cannot complete task, Major = significant struggle) does this work implicitly; Critical and Major are de facto blocking, Minor and Enhancement are non-blocking — partial credit, as the explicit distinction between "task failure" and "experience quality" is in the severity definitions but not stated as a separate classification dimension
-- [x] PASS: Recommendations per finding — the finding template requires "Recommendation" as a mandatory field; problem-only findings are rejected
-- [x] PASS: Valid YAML frontmatter with name, description, and argument-hint fields confirmed
+## Results
 
-### Notes
+- [x] PASS: Nielsen's 10 heuristics — Step 2 is mandatory and evaluates against all 10 Nielsen heuristics by name and number. The full heuristic table is a required step; a generic checklist is not a valid substitute.
+- [x] PASS: Severity ratings per finding — Step 3 is a mandatory severity rating step with explicit criteria for Critical/Major/Minor/Enhancement. The finding template in Step 2 requires "Severity" as a mandatory field. Unrated findings are not permitted.
+- [x] PASS: Structured walkthrough before evaluation — Step 1 is mandatory and requires defining scope, target user, entry point, and success state, plus annotated walkthrough notes. Rules state: "Complete the ENTIRE flow, not just the happy path."
+- [x] PASS: Prioritised synthesis — Step 4 is a mandatory synthesis step that produces a findings summary table, severity distribution, heuristic coverage table, and Top 3 Recommendations. The catalogue alone is not the deliverable.
+- [x] PASS: Each finding tied to a specific heuristic — the Step 2 finding template requires "Heuristic: [number and name]" as a mandatory field. The rules state: "Every finding must map to a specific heuristic and explain the impact on task completion."
+- [~] PARTIAL: Blocking vs non-blocking distinction — the severity scale defines Critical as "Users cannot complete the task at all" (task failure) and Major as "Users struggle significantly or abandon frequently" (high friction). Critical and Major are de facto blocking; Minor and Enhancement are non-blocking. The distinction is implicit in the severity definitions, not a separate classification dimension. Criterion prefix is PARTIAL — awarded at ceiling (0.5).
+- [x] PASS: Recommendations per finding — the Step 2 finding template requires "Recommendation: [specific fix]" as a mandatory field. The rules state: "'Improve the error handling' is not a recommendation." Generic recommendations are explicitly rejected.
+- [x] PASS: Valid YAML frontmatter — name, description, and argument-hint are all present in the skill's YAML header.
 
-Score is 7.5/8 (93.75%). The blocking/non-blocking distinction is implicit in the severity scale (Critical = task failure, Major = significant difficulty) rather than an explicit dual classification. Adding a "Task completion: Blocking / Non-blocking" field to the finding template would fully address this. The "What works well" section requirement is a thoughtful design choice — it prevents design teams from feeling attacked by an audit and helps them understand what to preserve.
+## Notes
+
+The "What works well" section is a required element in the output format template, not optional. This is a good design choice — it prevents design teams from feeling under attack and helps preserve what already works. The rules also explicitly state "Zero findings is a valid result" — this guards against manufactured findings, which is a real risk in heuristic reviews when the reviewer feels pressure to justify the time spent.

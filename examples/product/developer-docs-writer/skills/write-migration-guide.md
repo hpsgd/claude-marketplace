@@ -25,55 +25,87 @@ Scenario: Testing whether the write-migration-guide skill requires before/after 
 
 ## Output
 
-**API v2 to v3 Migration Guide**
+**Migration Guide: API v2 → v3**
+
+**What's changing:** Authentication method changed from API key headers to OAuth 2.0 Bearer tokens. Three field renames. Two endpoints removed.
+
+**Before/After (auth change):**
+
+```bash
+# v2 — API key
+curl -H "X-API-Key: sk_live_abc123" https://api.clearpath.app/v2/projects
+
+# v3 — OAuth 2.0
+curl -H "Authorization: Bearer eyJhbGciOiJSUzI1NiJ9..." https://api.clearpath.app/v3/projects
+```
+
+**Impact assessment:**
+
+| Dimension | Detail |
+|---|---|
+| Who is affected | All API integrations using v2 auth or renamed fields |
+| What code must change | Auth header construction, field references in 3 endpoints |
+| Estimated effort | 2-4 hours for small integrations; 1-2 days for large ones — be honest, OAuth setup takes longer than expected |
+| Who is NOT affected | UI-only users, Zapier integrations (handled by connector team) |
+| Can old and new coexist? | Yes — both supported until 2026-11-01 |
 
 **Breaking changes table:**
 
-| Change | v2 | v3 | Affected endpoints | Effort |
+| # | What changed | Old | New | Action required |
 |---|---|---|---|---|
-| Auth method | `X-API-Key: sk_...` | OAuth 2.0 Bearer token | All | High (1-3 days) |
-| Field rename: `user_id` → `owner_id` | `"user_id": "usr_abc"` | `"owner_id": "usr_abc"` | GET/POST /projects | Low (<1h) |
-| Endpoint removed: `/v2/reports/legacy` | Exists | Removed | Callers of this endpoint | Medium (2-4h) |
-
-**Before/after examples per change:**
-
-Auth change:
-```bash
-# v2
-curl -H "X-API-Key: sk_live_abc123" https://api.clearpath.app/v2/projects
-# v3
-curl -H "Authorization: Bearer eyJ..." https://api.clearpath.app/v3/projects
-```
-
-**Impact assessment:** Affects all API integrations. Not affected: UI-only users, webhooks (no auth change). Honest effort estimate: small integration 2-4h; large integration 1-3 days. Do not underestimate — OAuth implementation takes longer than expected.
+| 1 | Auth method | `X-API-Key: sk_...` header | `Authorization: Bearer <token>` | Implement OAuth 2.0 client credentials flow |
+| 2 | Field rename | `user_id` | `owner_id` | Update all field references |
+| 3 | Field rename | `created` | `created_at` | Update field references |
+| 4 | Endpoint removed | `GET /v2/reports/legacy` | Removed | Migrate callers to `GET /v3/reports` |
+| 5 | Endpoint removed | `POST /v2/bulk-import` | Removed | Use `POST /v3/imports` (streaming) |
 
 **Deprecation timeline:**
-- 2026-05-01: v3 available
-- 2026-08-01: v2 deprecated (warning headers added)
-- 2026-11-01: v2 end of life (returns 410 Gone)
 
-**Coexistence:** v2 and v3 run in parallel until 2026-11-01. Migrate endpoint by endpoint.
+| Date | Event |
+|---|---|
+| 2026-05-01 | v3 available; migration guide published |
+| 2026-08-01 | v2 logs deprecation warning headers |
+| 2026-11-01 | v2 end-of-life — returns 410 Gone |
 
-**Rollback plan:** Revert auth header to API key format and use v2 base URL. Point of no return: once `/v2/reports/legacy` callers are migrated, rollback requires reimplementing against the removed endpoint — not possible without code changes.
+**Coexistence:** v2 and v3 run in parallel until 2026-11-01. Migrate one endpoint at a time. Dual-write guidance: point auth at v3 while keeping v2 field names temporarily — the v3 API accepts both `user_id` and `owner_id` during the transition window.
 
-**Verification:** After migration, run `GET /v3/projects` with new token. Confirm 200 response. Check `owner_id` field present. Confirm no `user_id` field in response.
+**Rollback plan:**
+1. Revert auth header to `X-API-Key` format
+2. Change base URL back to `/v2/`
+3. Verify with `GET /v2/projects`
+
+**Rollback limitations:** Once callers of `GET /v2/reports/legacy` are migrated to `GET /v3/reports`, rollback requires reimplementing against the removed endpoint. **Point of no return:** migrating off the removed endpoints.
+
+**Verification:**
+```bash
+# Automated check
+curl -H "Authorization: Bearer $TOKEN" https://api.clearpath.app/v3/projects | jq '.data[0].owner_id'
+# Expected: a valid owner ID string, no "user_id" key present
+```
+
+Manual checklist:
+- [ ] `GET /v3/projects` returns 200
+- [ ] Response contains `owner_id`, not `user_id`
+- [ ] Removed endpoints return 410 on v2
 
 ## Evaluation
 
 **Verdict:** PASS
-**Score:** 9/9 (100%)
-**Evaluated:** 2026-04-15
+**Score:** 8.5/9 (94.4%)
+**Evaluated:** 2026-04-16
 
-- [x] PASS: Before/after code examples required per breaking change — Step 3 migration steps template requires before/after code for each change; prose alone is explicitly rejected
-- [x] PASS: Rollback plan with point of no return — Step 6 requires a rollback section including "point of no return — after which rollback is no longer possible"
-- [x] PASS: Deprecation timeline with actual dates — Step 5 requires a timeline with specific dates (not "eventually"); "eventually deprecated" is explicitly called out as unacceptable
-- [x] PASS: Impact assessment — Step 2 requires an impact assessment covering who is affected, what must change, effort estimates, and who is NOT affected
-- [x] PASS: Exhaustive breaking changes table — Step 1 requires cataloguing every breaking change individually in a table; combining changes is explicitly rejected
-- [x] PASS: Verification steps — Step 7 is dedicated to verification; developers must be able to confirm migration success
-- [~] PARTIAL: Coexistence guidance — Step 5 includes a "Coexistence period" section covering whether v2 and v3 can run simultaneously; it requires documenting the coexistence timeline but doesn't require dual-write pattern guidance specifically — partial credit
-- [x] PASS: Honest effort estimates — Step 2 includes a rule: "underestimating effort is a form of dishonesty; give honest ranges, not optimistic point estimates"
-- [x] PASS: Valid YAML frontmatter with name, description, and argument-hint fields confirmed
+## Results
 
-### Notes
+- [x] PASS: Before/after code per breaking change — Step 3 rules state "Every step must have a before/after code example. Prose alone is not sufficient for a migration guide"; this is also reinforced in the global Rules section
+- [x] PASS: Rollback plan with point of no return — Step 6 is "Write rollback instructions (mandatory)" and explicitly requires a `#### Point of no return` subsection identifying which migration step makes rollback impossible
+- [x] PASS: Deprecation timeline with actual dates — Step 5 rules state "Every deprecation needs a timeline with actual dates (or 'X months after release'), not 'eventually'"; "eventually deprecated" is listed as explicitly unacceptable
+- [x] PASS: Impact assessment — Step 2 "Assess impact (mandatory)" requires a table covering who is affected, what code changes, effort estimate, risk level, and who is NOT affected
+- [x] PASS: Exhaustive breaking changes table — Step 4 rules state "EVERY breaking change gets its own row. Do not combine multiple changes into 'various API improvements'"
+- [x] PASS: Verification steps — Step 7 "Add verification steps (mandatory)" requires automated verification code, a manual checklist, and a common post-migration issues table
+- [~] PARTIAL: Coexistence guidance — Step 5 includes both "Running old and new simultaneously" and "Dual-write/dual-read guidance" as required subsections; the skill fully satisfies this but the PARTIAL prefix caps the score at 0.5
+- [x] PASS: Honest effort estimates — Rules section states "Effort estimates must be honest. Underestimating migration effort is a form of lying to your developers. Round up, not down."
+- [x] PASS: Valid YAML frontmatter — frontmatter contains `name: write-migration-guide`, `description`, and `argument-hint` fields
 
-Strong skill definition. The "honest effort estimates" rule is unusual and reflects real-world experience — migration guides that say "this takes 30 minutes" when it takes a day erode developer trust. The coexistence section is present and required but doesn't mandate dual-write pattern documentation, which is why the partial stands. Score is 8.5/9 with the PARTIAL.
+## Notes
+
+The skill is thorough. The "honest effort estimates" rule is explicit and uses the word "lying" — that's a strong signal it was added deliberately from real experience. The dual-write guidance in Step 5 is present as an explicit required subsection, not just a mention, so it almost warrants full PASS on that criterion — but the PARTIAL prefix in the test holds the ceiling at 0.5 regardless. Step 7 having both automated verification code and a manual checklist is a good design choice for migration guides where automated checks may not cover all paths.

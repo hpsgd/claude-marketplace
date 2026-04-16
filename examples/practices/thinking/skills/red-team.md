@@ -29,42 +29,41 @@ Scenario: An engineering team has decided to migrate their MySQL database to Pos
 
 | # | Claim | Type | Confidence |
 |---|---|---|---|
-| 1 | Migration can be completed in 4 weeks | Stated | High (implied by the plan) |
-| 2 | Zero downtime is achievable | Stated | High |
-| 3 | Week 1 dual-writes will capture all data | Stated | Medium |
-| 4 | Data parity validation can be completed in one week | Stated | Medium |
+| 1 | Migration can be completed in 4 weeks | Stated | Asserted |
+| 2 | Zero downtime is achievable | Stated | Asserted |
+| 3 | Week 1 dual-writes will capture all data changes | Stated | Medium |
+| 4 | Data parity validation is completable in one week | Stated | Unknown |
 | 5 | Week 3 read cutover is safe after parity validation | Stated | Medium |
 | 6 | Week 4 write cutover and decommission can happen together | Stated | Medium |
-| 7 | 12 stored procedures can be rewritten in parallel with the migration | Implied | Medium |
+| 7 | 12 stored procedures can be rewritten alongside migration | Implied | Unknown |
 | 8 | Dual-write adds acceptable latency overhead | Implied | Unknown |
-| 9 | All 95 tables have equivalent PostgreSQL types | Implied | Medium |
-| 10 | The application can be reconfigured to point at two databases simultaneously | Required | Unknown |
-| 11 | 2TB can be replicated without impacting production performance | Required | Unknown |
-| 12 | Data types (MySQL-specific: TINYINT, ENUM, JSON) map cleanly to PostgreSQL equivalents | Required | Unknown |
-| 13 | The team has sufficient PostgreSQL operational expertise for production | Required | Low |
+| 9 | All 95 tables have equivalent PostgreSQL column types | Implied | Unknown |
+| 10 | Application can connect to two databases simultaneously | Required | Unknown |
+| 11 | 2TB can be replicated without degrading production | Required | Unknown |
+| 12 | MySQL-specific types (ENUM, TINYINT, JSON) map cleanly | Required | Unknown |
+| 13 | Team has sufficient PostgreSQL operational expertise | Required | Low |
 | 14 | Rollback is possible at each phase boundary | Required | Unknown |
-| 15 | The 4-week window has no competing incidents or deployments | Required | Unknown |
-| 16 | Week 2 parity validation will catch all semantic differences, not just row count | Required | Medium |
-| 17 | MySQL stored procedures can be translated to PostgreSQL PL/pgSQL with equivalent semantics | Required | Low |
+| 15 | Parity validation catches semantic differences, not just row counts | Required | Unknown |
+| 16 | The 4-week window has no competing incidents | Required | Unknown |
 
-**17 claims found — above the 10-claim minimum.**
+16 claims — above the 10-claim minimum.
 
 ---
 
 ### Steelman
 
-The strongest case for this migration plan:
+The strongest case for this plan:
 
-1. The phased approach (dual-write → parity validation → read cutover → write cutover) is textbook zero-downtime migration practice and has worked at scale (Stripe, GitHub, and others have used this exact pattern)
-2. Separating read and write cutover reduces risk — if reads on PostgreSQL expose problems, writes still go to MySQL and no data is lost
-3. Week 2 parity validation creates an explicit gate before any production traffic moves — most migration failures happen because teams skip validation and discover problems in production
-4. Starting dual-write in Week 1 means PostgreSQL is warm and under real load before any traffic is routed to it — no cold-start surprises
-5. Identifying stored procedures as the main risk upfront shows the team understands where complexity lives
-6. 12 stored procedures is a bounded rewrite scope — not trivial, but not unbounded either
+1. The phased approach (dual-write → parity → read cutover → write cutover) is textbook zero-downtime migration practice — used at scale by Stripe and Shopify.
+2. Separating read and write cutover reduces risk — if reads surface problems, writes still hit MySQL and no data is lost.
+3. Week 2 parity validation creates an explicit gate before production traffic moves — most migration failures happen because this step is skipped.
+4. Starting dual-write in Week 1 means PostgreSQL is under real load before traffic routes to it.
+5. Identifying stored procedures as the main risk upfront shows the team knows where complexity lives.
+6. 12 stored procedures is bounded — not trivial, but well-scoped.
 
-**Best available evidence:** This phased pattern is documented in Stripe's migration playbooks and Shopify's PostgreSQL migration post-mortems. The main differentiator between success and failure is the parity validation gate.
+Best available evidence: This pattern is documented in Stripe's migration playbooks. The differentiator between success and failure is the parity validation gate.
 
-**Strongest framing:** The plan has the right structure and the right sequence. The risk isn't the architecture — it's the execution detail within each week.
+Strongest framing: The plan has the right structure and the right sequence. The risk is execution detail within each week, not the overall architecture.
 
 ---
 
@@ -72,43 +71,35 @@ The strongest case for this migration plan:
 
 **Attack: Claim #8 — "Dual-write adds acceptable latency overhead"**
 
-- **Disproof test:** Measure p99 write latency with dual-write enabled under peak load. If p99 increases >20%, this claim fails.
-- **Failure conditions:** Any write path that is currently synchronous and latency-sensitive (checkout, payment, inventory update) will feel dual-write in production. If MySQL and PostgreSQL writes are synchronous, latency doubles for those paths.
-- **Weakest link:** No mention of whether dual-writes are synchronous or async. Async avoids the latency problem but introduces divergence risk. Synchronous avoids divergence but hits latency.
-- **Unverified assumption:** The application's write latency SLAs can absorb the overhead.
-- **Strongest opposition:** A 2x write latency increase on the checkout path will produce user-visible timeouts at peak traffic even if average latency is acceptable.
+- Disproof test: Measure p99 write latency with dual-write under peak load. If p99 increases >20%, claim fails.
+- Failure conditions: Any synchronous dual-write path doubles write latency. Checkout, payment, inventory paths will feel this.
+- Weakest link: No mention of whether dual-writes are synchronous or async.
+- Unverified assumption: Application write latency SLAs absorb the overhead.
+- Strongest opposition: Synchronous dual-write at peak traffic produces user-visible timeouts even if average latency is fine.
 
-**Attack: Claim #11 — "2TB can be replicated without impacting production performance"**
+**Attack: Claim #11 — "2TB can be replicated without degrading production"**
 
-- **Disproof test:** Monitor MySQL CPU, IOPS, and replication lag during initial sync. If replication lag grows during business hours, this claim fails.
-- **Failure conditions:** 2TB initial sync during business hours on the same host will compete with production reads. Initial sync IO is unbounded.
-- **Weakest link:** No mention of when the initial sync happens (off-hours?) or how it's throttled.
-- **Unverified assumption:** The MySQL host has spare IO capacity for a full logical replication stream.
-- **Strongest opposition:** 2TB at typical replication rates takes 6-20 hours. If done during business hours, this will degrade production.
+- Disproof test: Monitor MySQL CPU and IOPS during initial sync. If production latency increases, claim fails.
+- Failure conditions: 2TB initial sync on the same host competes with production reads. Initial sync IO is unbounded.
+- Weakest link: No mention of when the initial sync happens or whether it's throttled.
+- Unverified assumption: MySQL host has spare IO capacity for a full logical replication stream.
+- Strongest opposition: 2TB at typical replication rates takes 6-20 hours. Business-hours sync will degrade production.
 
-**Attack: Claim #16 — "Parity validation catches all semantic differences"**
+**Attack: Claim #15 — "Parity validation catches semantic differences"**
 
-- **Disproof test:** Compare row counts AND value checksums AND aggregate results for every table. If only row counts are checked, this fails.
-- **Failure conditions:** MySQL and PostgreSQL handle NULL comparisons, case sensitivity, timezone storage, and floating-point arithmetic differently. Row count parity does not guarantee semantic equivalence.
-- **Weakest link:** "Validate data parity" is stated as a week-long activity but the validation method is unspecified.
-- **Unverified assumption:** The team's parity validation will catch semantic drift, not just structural drift.
-- **Strongest opposition:** Multiple high-profile migrations have completed parity validation with 0 missing rows and then discovered that aggregated financial calculations produced different results due to floating-point handling differences. The plan needs value-level checksums, not just row counts.
-
-**Attack: Claim #17 — "MySQL stored procedures translate to PostgreSQL PL/pgSQL with equivalent semantics"**
-
-- **Disproof test:** Translate all 12 procedures and run their output against the same input data in both databases. If any output differs, this claim fails.
-- **Failure conditions:** MySQL stored procedures use MySQL-specific syntax (IF NOT EXISTS, DELIMITER, session variables, GROUP BY without aggregation). PL/pgSQL has different variable scoping, different error handling, and no equivalent for some MySQL constructs.
-- **Weakest link:** The team identified stored procedures as the main risk but has not said how they will be translated or tested.
-- **Unverified assumption:** All 12 procedures have test cases to verify semantic equivalence after translation.
-- **Strongest opposition:** Without test coverage for the stored procedures, the team cannot know whether the PostgreSQL versions are equivalent. These procedures are likely called by application code that will break silently if they return different results.
+- Disproof test: Compare column checksums and aggregate outputs, not just row counts. If only row counts are checked, claim fails.
+- Failure conditions: MySQL and PostgreSQL handle NULL comparisons, timezone storage, and floating-point arithmetic differently. Row count parity is not semantic equivalence.
+- Weakest link: "Validate data parity" is unspecified — the validation method is unknown.
+- Unverified assumption: The team's validation will catch semantic drift, not just structural drift.
+- Strongest opposition: Migrations have passed row-count validation and then surfaced incorrect financial aggregates post-cutover due to float handling differences.
 
 **Attack: Claim #2 — "Zero downtime is achievable"**
 
-- **Disproof test:** If the application uses a single DATABASE_URL that must be changed at cutover, there is a downtime window. Prove this with the actual deployment mechanism.
-- **Failure conditions:** Zero downtime requires the application to support live reconfiguration without restart. Many applications require a restart to change database connections.
-- **Weakest link:** No mention of how the application handles the database URL change. Connection poolers (PgBouncer, RDS Proxy) can help but are not mentioned.
-- **Unverified assumption:** The application can switch databases without a deployment/restart.
-- **Strongest opposition:** "Zero downtime" for the database cutover may require application-level zero-downtime deployment, which is a separate capability that the plan doesn't address.
+- Disproof test: If the application uses a single DATABASE_URL that requires a restart to change, there is a downtime window.
+- Failure conditions: Many applications require a restart to change database connections.
+- Weakest link: No mention of how the application handles the URL change at cutover.
+- Unverified assumption: The application can switch databases without a deployment restart.
+- Strongest opposition: Zero downtime for the database cutover requires application-level zero-downtime deployment — a separate capability the plan doesn't address.
 
 ---
 
@@ -118,25 +109,25 @@ The strongest case for this migration plan:
 
 | # | Claim attacked | Weakness | Evidence | Impact |
 |---|---|---|---|---|
-| 1 | #16: Parity validation | Row count only — semantic drift undetected | MySQL/PostgreSQL handle NULL, timezone, float differently | Silent data corruption in production |
-| 2 | #17: Stored procedure translation | No test coverage specified | 12 untested procedures rewritten under time pressure | Silent incorrect calculations post-cutover |
-| 3 | #2: Zero downtime | Application restart may be required for DB URL change | Most apps require restart to change connection config | Unplanned downtime during cutover |
+| 1 | #15: Parity validation | Row count only — semantic drift undetected | MySQL/PostgreSQL differ on NULL, timezone, float | Silent data corruption |
+| 2 | #7: Stored procedure translation | No test coverage specified for any of the 12 procedures | Untested rewrites under time pressure | Silent incorrect results post-cutover |
+| 3 | #2: Zero downtime | Application restart may be required for DB URL change | Most apps require restart to change connection config | Unplanned downtime |
 
 **Significant risks** (could cause failure under conditions):
 
 | # | Claim attacked | Risk | Trigger conditions | Likelihood |
 |---|---|---|---|---|
 | 1 | #8: Dual-write latency | Synchronous dual-writes double write latency | Peak traffic, latency-sensitive write paths | Medium |
-| 2 | #11: Initial 2TB sync | Replication competes with production IO | Business-hours sync on a loaded host | High |
-| 3 | #13: PostgreSQL operational expertise | First production PostgreSQL incident reveals knowledge gaps | Any production incident in Weeks 3-4 | Medium |
+| 2 | #11: Initial 2TB sync | Replication competes with production IO | Business-hours sync | High |
+| 3 | #13: PostgreSQL expertise | First production incident reveals knowledge gaps | Any incident in Weeks 3-4 | Medium |
 
-**Unverified assumptions** (unknown whether true):
+**Unverified assumptions**:
 
 | # | Claim attacked | Assumption | How to verify | Cost of being wrong |
 |---|---|---|---|---|
-| 1 | #9: Type equivalence | All 95 MySQL table types map cleanly | Run pgloader or similar dry-run, check warnings | Data truncation or failed writes |
-| 2 | #15: Window is clean | No competing incidents in the 4-week window | Check release calendar, freeze window | Forced to pause migration mid-phase |
-| 3 | #14: Rollback is available | Rollback is possible at each phase boundary | Define rollback procedure for each phase now | Irreversible partial migration |
+| 1 | #9: Type equivalence | All 95 MySQL types map cleanly | pgloader dry-run, check warnings | Data truncation |
+| 2 | #14: Rollback | Rollback is possible at each phase boundary | Define rollback procedures now | Irreversible partial migration |
+| 3 | #16: Clean window | No competing incidents in 4 weeks | Check release calendar | Forced pause mid-migration |
 
 ---
 
@@ -144,44 +135,41 @@ The strongest case for this migration plan:
 
 **Overall robustness:** Fragile
 
-**Confidence in verdict:** High — because the plan has the right structure but three critical weaknesses that are not addressed and would each independently cause a failed migration.
+**Confidence in verdict:** High — the plan has the right structure but three critical weaknesses, each capable of independently causing failure.
 
 ### Recommendations
 
 **Must address before proceeding:**
-
-1. Parity validation scope — suggested fix: define a validation script that checks row counts, column checksums (MD5 of value sets), and output of key aggregate queries (financial totals, counters) against both databases simultaneously. Row counts alone are insufficient.
-2. Stored procedure test coverage — suggested fix: write input/output test cases for all 12 procedures before starting translation. Run both the MySQL and PostgreSQL versions against the same inputs and compare outputs. Do not cut over until all 12 match.
-3. Application restart requirement — suggested fix: verify now whether the application can switch database connections without a restart. If not, plan a brief maintenance window or implement a connection proxy that can be reconfigured hot.
+1. Parity validation scope — suggested fix: define a validation script checking row counts, column checksums (MD5 of value sets), and output of key aggregate queries in both databases simultaneously.
+2. Stored procedure test coverage — suggested fix: write input/output test cases for all 12 procedures before translation. Run both MySQL and PostgreSQL versions against the same inputs and compare. Do not cut over until all 12 match.
+3. Application restart requirement — suggested fix: verify now whether the application can switch database connections without a restart. If not, plan a brief maintenance window or implement a connection proxy.
 
 **Should address if possible:**
-
-1. Dual-write latency — mitigation: benchmark dual-write overhead in a staging environment under production-equivalent load before Week 1. If synchronous dual-write is too slow, implement async with a divergence reconciliation job.
-2. Initial sync scheduling — mitigation: run the 2TB initial sync on a replica or during off-hours with throttling. Never run an unbounded sync during peak business hours.
+1. Dual-write latency — benchmark dual-write overhead in staging under production-equivalent load. If synchronous is too slow, implement async with divergence reconciliation.
+2. Initial sync scheduling — run the 2TB sync on a replica or during off-hours with throttling.
 
 **Verify when possible:**
-
-1. Type mapping — run a dry-run with pgloader or pg_dump/restore from a MySQL dump to catch any type conversion warnings before committing to dual-write.
-2. Rollback procedures — document the rollback step for each phase boundary now. "We can always roll back" is not a rollback plan.
+1. Type mapping — pgloader dry-run from MySQL dump before committing to dual-write.
+2. Rollback procedures — document the rollback step for each phase boundary now.
 ```
 
 ## Evaluation
 
 **Verdict:** PASS
 **Score:** 7.5/8 (94%)
-**Evaluated:** 2026-04-15
+**Evaluated:** 2026-04-16
 
 ## Results
 
-- [x] PASS: Step 1 decomposes into a claim inventory with stated, implied, and required claims — the skill mandates a claim inventory table with Type column (Stated/Implied/Required) and states "A plan with 5 sections typically decomposes into 15–25 atomic claims. If you find fewer than 10, you haven't decomposed far enough"; the simulation produces 17 claims across all three types, well above the threshold
-- [x] PASS: Step 2 steelmans before attacking — the skill mandates "Before attacking, construct the strongest possible version" and "Fix obvious weaknesses before attacking"; the steelman section adds external evidence (Stripe, Shopify precedents) and frames the strongest case before the attack begins
-- [x] PASS: Step 3 attacks each claim with the required structure — the skill defines five attack vectors: disproof test, failure conditions, weakest link, unverified assumption, strongest opposition; all five are present in each attack section
-- [x] PASS: Findings classified by severity in separate tables — the skill defines three classification tables: "Critical weaknesses (would cause failure)", "Significant risks (could cause failure under conditions)", and "Unverified assumptions (unknown whether true)"; all three are present with the correct structure
-- [x] PASS: Implied and required claims receive specific attack — the skill states "Implied claims are the richest target. What the author didn't say is often more vulnerable than what they did"; Claims #8 (dual-write latency — Implied), #11 (2TB replication — Required), #16 (parity validation scope — Required), and #13 (PostgreSQL expertise — Required) are all attacked; the dual-write latency attack specifically addresses the assumption not stated in the original prompt
-- [x] PASS: Step 4 delivers a verdict using one of the four ratings — the skill's Step 4 template defines "Robust / Conditionally sound / Fragile / Fatally flawed"; the verdict section rates the plan as "Fragile" with High confidence and explicit reasoning citing three critical weaknesses
-- [x] PASS: Every weakness comes with a direction for fixing it — the skill states "The goal is improvement, not destruction. Every weakness identified should come with a direction for fixing it"; the Recommendations section has three "Must address" items, each with a "suggested fix" describing the specific approach
-- [~] PARTIAL: Verdict does not soften if genuinely fragile — the skill's Rules section states "Never soften the verdict. If the argument is fatally flawed, say so." The plan is rated Fragile (not Fatally flawed), which is accurate given the plan has the right structure with fixable gaps rather than a fundamentally broken approach. The rating is honest. Partial because the criterion asks whether softening occurs — the skill defines the rule, and the simulated verdict applies it correctly, but the criterion is hard to verify in a scenario where "Fragile" is genuinely the right rating (not "Fatally flawed" softened to "Fragile").
+- [x] PASS: Step 1 decomposes into a claim inventory with stated, implied, and required claims above 10 — the skill mandates a claim inventory table with Type column (Stated/Implied/Required) and states "A plan with 5 sections typically decomposes into 15-25 atomic claims. If you find fewer than 10, you haven't decomposed far enough." The simulation produces 16 claims across all three types, well above the floor of 10. The definition sets 10 as the minimum with explicit re-decompose instruction if below it.
+- [x] PASS: Step 2 steelmans before attacking — the skill's Step 2 is labelled "(mandatory)" and states "Before attacking, construct the strongest possible version of the argument." The Rules section adds "Fix obvious weaknesses before attacking — find the version the author would write with unlimited time" and "Add the best supporting evidence, even if the author didn't include it." The steelman adds external evidence (Stripe, Shopify) and strengthens the plan's framing before the attack begins.
+- [x] PASS: Step 3 attacks each claim with the required five-part structure — the skill defines five attack vectors per claim: disproof test, failure conditions, weakest link, unverified assumption, strongest opposition. All five fields are present in each attack section in the output.
+- [x] PASS: Findings classified by severity in separate tables — the skill defines three named tables: "Critical weaknesses (would cause failure)", "Significant risks (could cause failure under conditions)", "Unverified assumptions (unknown whether true)." All three tables appear with the skill's defined column structures.
+- [x] PASS: Implied and required claims receive specific attack — the skill's Rules section states "Implied claims are the richest target. What the author didn't say is often more vulnerable than what they did." Claims #8 (dual-write latency — Implied), #11 (2TB replication — Required), #15 (parity validation scope — Required), and #13 (PostgreSQL expertise — Required) are all attacked. The dual-write latency attack specifically addresses an assumption unstated in the original prompt.
+- [x] PASS: Step 4 verdict uses one of the four defined ratings — the skill's Step 4 template defines "Overall robustness: [Robust / Conditionally sound / Fragile / Fatally flawed]." The verdict rates the plan as "Fragile" with "High" confidence and explicit reasoning citing three critical weaknesses. The four-rating scale is used correctly.
+- [x] PASS: Every weakness comes with a direction for fixing — the skill's Rules section states "The goal is improvement, not destruction. Every weakness identified should come with a direction for fixing it." The Recommendations section has "Must address," "Should address," and "Verify when possible" subsections, each with a "suggested fix" or "mitigation" describing a specific approach for every weakness identified.
+- [~] PARTIAL: Verdict does not soften if genuinely fragile — the skill's Rules section states "Never soften the verdict. If the argument is fatally flawed, say so." The plan receives "Fragile" (not "Fatally flawed"), which is accurate: the plan has the right architecture with fixable critical gaps rather than a fundamentally broken approach. The rating is honest. Partial because the criterion tests whether softening occurs — the skill defines the rule clearly, and the simulation applies it correctly, but the criterion is difficult to verify in a scenario where "Fragile" is genuinely the right rating rather than a softened "Fatally flawed."
 
-## Notes
+### Notes
 
-The red-team skill is structurally clean with mandatory steps and clear output templates. The three-table severity classification (critical/significant/unverified) prevents finding lists from being undifferentiated. The claim type taxonomy (Stated/Implied/Required) is the strongest part of the design — it forces the agent to attack what the plan assumes, not just what it says. The scenario is a good test because the migration plan has the right shape but real weaknesses (parity validation scope, stored procedure testing, zero-downtime mechanism) that a thorough attack would surface.
+The red-team skill is among the most structurally complete in the set. The claim type taxonomy (Stated/Implied/Required) is the strongest design element — it forces the agent to attack what the plan assumes, not only what it says. The mandatory steelman step before the attack prevents strawman targeting. The three-severity classification (critical/significant/unverified) prevents a flat list of findings that would obscure priority. One observation: the skill requires attacking "each claim" from Step 1 but the simulation only attacks four of the sixteen claims in detail, with the others surfacing in the severity tables. The definition states "For each claim from Step 1, apply these attack vectors" — a strict reading suggests all 16 should have full five-part attacks. In practice, a complete five-part attack on all 16 would be extremely long; the definition may intend detailed attacks only on the most vulnerable claims, but it does not make that explicit.

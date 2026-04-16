@@ -26,50 +26,63 @@ Scenario: Testing whether the churn-analysis skill requires timeline reconstruct
 
 **Churn Analysis: Bradwick & Sons**
 
-**Signal inventory:** Login frequency dropped from 4x/week to 1x/week (month 10). Last active user session: 18 days ago. 3 support tickets in month 12-13 (all unresolved >7 days). No QBR held in 6 months. Champion contact left company (month 11). Health score: 38/100.
+**Signal inventory (Step 1):** Login frequency dropped from 4x/week to 1x/week around month 10. Last active user session: 18 days ago. 3 support tickets in months 12-13, all unresolved beyond 7 days. No QBR held in 6 months. Champion contact left company at month 11. Health score: 38/100.
 
-**Timeline:** Month 1-6: Strong adoption, 8 active users, weekly logins. Month 7: Champion Jessica P. leaves. Month 8: New contact unresponsive to onboarding outreach. Months 9-10: Usage decline begins. Month 11: Health score drops below 60. Months 12-13: Three unresolved tickets. Month 14: Cancellation submitted.
+**Timeline (Step 2):**
 
-**Root cause:** Champion departure + failed re-onboarding of replacement contact. Product fit was adequate (usage was solid pre-departure). Primary cause: relationship breakdown / onboarding failure for new stakeholder. Secondary: unresolved support tickets eroded trust.
+| Date | Event | Signal |
+|---|---|---|
+| Month 1-6 | Strong adoption, 8 active users, weekly logins | Healthy trajectory |
+| Month 7 | Champion departs | Relationship risk |
+| Month 8 | New contact unresponsive to re-onboarding | Engagement drop |
+| Month 10 | Login frequency halved | Usage decline begins |
+| Month 11 | Health score drops below 60 | At Risk classification |
+| Month 12-13 | Three unresolved support tickets | Trust erosion |
+| Month 14 | Cancellation submitted | Churn confirmed |
 
-**Churn probability score:** 16/18 — Extreme risk.
+**Root cause (Step 3):** Champion departure followed by failed re-onboarding of replacement contact. Product fit was adequate — usage was solid pre-departure. Primary cause: relationship failure. Contributing: unresolved support tickets eroded trust. Addressable: partially — relationship can be rebuilt but the 14-month trajectory limits recovery odds.
 
-| Factor | Score |
+**Churn probability score (Step 4):**
+
+| Factor | Score (1-3) | Evidence |
+|---|---|---|
+| Usage trend | 3 | Declining >4 weeks |
+| Engagement | 3 | Unresponsive |
+| Sponsor status | 3 | No champion |
+| Value realisation | 3 | Goals not met |
+| Contract timeline | 2 | Cancellation submitted — no contract remaining |
+| Competitive activity | 1 | No signals |
+| **Total** | **15** | High risk |
+
+**Intervention design (Step 5):** Emergency executive call within 48h. Offer dedicated re-onboarding session for the replacement contact. Assign senior CSM. 60-day extension with health milestone checkpoints. Recovery probability realistic at 15-20% given the depth of decline.
+
+**Retention economics (Step 6):**
+
+| Metric | Value |
 |---|---|
-| Health score <40 | 3 |
-| Usage trend severely declining | 3 |
-| Champion/sponsor change | 3 |
-| Open unresolved support issues | 2 |
-| No QBR in 6+ months | 3 |
-| Cancellation submitted | 2 |
-
-**Intervention options:** Emergency executive call within 48h. Offer free onboarding session for new contact. Assign senior CSM. Provide 60-day extension with health milestone checkpoints. Realistic recovery probability: 15-20%.
-
-**Retention economics:**
-- ARR at risk: $68,000
-- LTV (3-year): ~$204,000
-- Recovery probability: 15-20%
-- Expected value of intervention: $30,600-$40,800
-- Intervention cost estimate: $2,000-$4,000 (CSM time + concessions)
-- Proceed with recovery attempt: YES
-
-**Trend check:** Second champion-departure churn in Q3. Warrants pattern review across accounts with recent contact changes.
+| ARR at risk | $68,000 |
+| Replacement cost | $340,000-$476,000 (5-7x retention cost) |
+| Lifetime value remaining | ~$204,000 (3-year est.) |
+| Intervention cost | $2,000-$4,000 (CSM time + concessions) |
+| ROI of retention attempt | 17x-34x |
 
 ## Evaluation
 
 **Verdict:** PASS
-**Score:** 8/8 (100%)
-**Evaluated:** 2026-04-15
+**Score:** 7.5/8 (94%)
+**Evaluated:** 2026-04-16
 
-- [x] PASS: Skill requires signal identification — Step 1 explicitly catalogues all available signals (usage data, support tickets, health scores, engagement) before forming hypotheses
-- [x] PASS: Skill requires timeline reconstruction — Step 2 is dedicated to "Timeline Reconstruction" building a chronological view to identify when health started declining
-- [x] PASS: Skill produces a root cause diagnosis — Step 3 explicitly distinguishes between product fit, onboarding failure, relationship breakdown, competitive displacement, and external factors
-- [x] PASS: Skill requires a churn probability score — Step 4 includes a 6-factor scoring table (1-3 scale, total 6-18) with explicit probability classification
-- [x] PASS: Skill includes an intervention design — Step 5 covers recovery actions, timing, and realistic recovery probability
-- [x] PASS: Skill requires retention economics — Step 6 requires ARR at risk, LTV calculation, intervention cost, and expected value comparison
-- [x] PARTIAL: Skill feeds findings into a pattern — mentioned in Step 6 output format ("Flag if this represents a broader trend") but not required as a standalone analysis step — partial credit
-- [x] PASS: Valid YAML frontmatter with name, description, and argument-hint fields confirmed
+## Results
 
-### Notes
+- [x] PASS: Skill requires signal identification — Step 1 explicitly catalogues all available signals (usage data, support tickets, health scores, engagement) before forming hypotheses. The Step 1 table structure requires evidence for each signal category with dates and metrics.
+- [x] PASS: Skill requires timeline reconstruction — Step 2 is a dedicated "Timeline Reconstruction" step requiring a chronological table with dates, events, and signals. The step explicitly asks for inflection points, accelerating decline, and correlated events.
+- [x] PASS: Skill produces a root cause diagnosis — Step 3 provides a structured table distinguishing product-market fit, onboarding failure, value delivery gap, relationship failure, product quality, competitive pressure, and internal change. Rules require identifying the PRIMARY root cause, not just a list.
+- [x] PASS: Skill requires a churn probability score — Step 4 is a 6-factor scoring table (1-3 scale, total 6-18) with explicit probability thresholds: 6-9 Low, 10-13 Medium, 14-18 High. This is a quantified classification, not qualitative assessment.
+- [x] PASS: Skill includes an intervention design — Step 5 maps root causes to intervention types with timelines, and requires each intervention to have an owner, first action within 48 hours, success criteria, checkpoint, and escalation path.
+- [x] PASS: Skill requires retention economics — Step 6 requires ARR at risk, replacement cost, lifetime value remaining, intervention cost, and ROI of retention. The table template is explicit.
+- [~] PARTIAL: Skill feeds findings into a pattern/trend — the output format template includes "Flag if this represents a broader trend" in the checkpoint section, but it is not a required process step. It is present as a prompt in the output format, not enforced as a Step 7. Ceiling is PARTIAL: 0.5 points.
+- [x] PASS: Valid YAML frontmatter — the skill has name, description, and argument-hint fields in valid YAML frontmatter.
 
-Strong skill definition. The 6-factor scoring table (Step 4) is a standout element — it makes probability classification consistent and auditable rather than subjective. The retention economics step is more rigorous than most CS frameworks require. The trend check is present in the output template but not enforced as a mandatory step, which is why it earned partial rather than full credit.
+## Notes
+
+The 6-factor scoring table in Step 4 is the standout design choice — it makes churn probability classification consistent and auditable across CSMs rather than relying on gut feel. The retention economics step is more rigorous than most CS frameworks: it quantifies replacement cost (5-7x retention cost) and computes intervention ROI, which frames urgency in business terms rather than just "we should try to save them." The trend check earns PARTIAL rather than PASS because the PARTIAL ceiling is set by the test author, and the definition includes it only in the output template, not as a mandatory analytical step.

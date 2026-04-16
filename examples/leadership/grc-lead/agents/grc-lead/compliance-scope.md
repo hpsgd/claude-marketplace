@@ -23,11 +23,11 @@ We're adding a "customer health score" feature to Meridian, our B2B CRM. It will
 
 ## Output
 
-**Pre-flight:** Reading CLAUDE.md... Reading .claude-plugin/marketplace.json. Checking for existing risk registers and compliance documentation — none found for Meridian. Checking for existing privacy policies or GDPR data processing records — none found.
+**Pre-flight:** Reading CLAUDE.md and .claude/CLAUDE.md... Reading .claude-plugin/marketplace.json. Checking for existing risk registers and compliance documentation — none found for Meridian. No existing privacy policies or GDPR data processing records found.
 
 ---
 
-**Compliance assessment: Meridian Customer Health Score feature**
+**Compliance assessment: Meridian Customer Health Score**
 
 **Applicable frameworks**
 
@@ -35,80 +35,80 @@ Three jurisdictions, two frameworks:
 
 | Jurisdiction | Framework | Key obligations |
 |---|---|---|
-| Australia | Australian Privacy Principles (APPs) — Privacy Act 1988 | APP 3 (collection), APP 5 (notification), APP 6 (use/disclosure), APP 11 (security), APP 13 (correction) |
-| UK | UK GDPR (retained after Brexit) + UK Data Protection Act 2018 | Articles 5–9, 22 (automated decision-making), 35 (DPIA requirement) — substantially mirrors EU GDPR but the ICO is the supervisory authority, not an EU DPA |
-| Germany | EU GDPR | Same articles, supervised by relevant German Länder DPA (e.g. BfDI or state authority) |
+| Australia | Australian Privacy Principles (APPs) — Privacy Act 1988 | APP 3 (collection), APP 5 (notification), APP 6 (use/disclosure), APP 11 (security) |
+| UK | UK GDPR (retained post-Brexit) + UK Data Protection Act 2018 | Articles 5–9, 22 (automated decision-making), 35 (DPIA) — ICO is supervisory authority |
+| Germany | EU GDPR | Same articles, supervised by relevant German Länder DPA |
 
-UK GDPR and EU GDPR are now separate instruments — the UK maintained a close equivalent post-Brexit but interpretations can diverge. For this feature, treat them as materially identical but maintain separate legal bases documentation for ICO and German DPA purposes.
+UK GDPR and EU GDPR are now separate instruments. Post-Brexit, the UK maintained a close equivalent but interpretations can diverge. Maintain separate legal basis documentation for ICO and German DPA purposes.
 
-**The critical flag: Article 22 and ML-based profiling**
+**Critical flag: Article 22 and ML-based profiling**
 
-This feature is not just data aggregation — it is automated profiling that produces a score used to flag accounts for human intervention. Under GDPR Article 22, even where a human makes the final decision (the customer success team acting on the score), Article 4(4) defines profiling broadly: systematic processing of personal data to evaluate aspects of natural persons' economic situation, preferences, or behaviour. The customer health score does this for contacts at those businesses.
+This feature is not just data aggregation. Article 4(4) GDPR defines profiling broadly: systematic processing of personal data to evaluate aspects related to natural persons' economic situation, preferences, or behaviour. The customer health score does this for contacts at the businesses you serve. Even where a human makes the final decision (the customer success team acting on the score), this processing qualifies as profiling.
 
-This matters because:
-- Article 35 DPIA threshold is triggered by "systematic and extensive evaluation of personal aspects... on which decisions are made" — this feature meets that threshold
-- The ML model combining behavioural data (email opens, login frequency) with financial data (payment history) and support history creates a risk of inaccurate scoring that could affect how accounts are treated
+Article 35 DPIA threshold is triggered by systematic and extensive evaluation of personal aspects where decisions are made. This feature meets that threshold.
 
 **Risk assessment**
 
-| Risk | Likelihood | Impact | Level | Notes |
-|---|---|---|---|---|
-| Lawful basis not established before processing starts | Medium (30%) | Critical — processing is unlawful | High | No documented legal basis found in current state |
-| DPIA not completed before processing — ICO/DPA fine risk | Medium (35%) | High — regulatory action, potential fine up to €20M / 4% global turnover | High | DPIA is mandatory at this threshold |
-| ML model produces inaccurate health scores — wrong accounts flagged, damaged customer relationship | Medium (25%) | High — customer trust and churn risk | Medium-High | |
-| Data minimisation failure — more data collected/processed than necessary | Medium (40%) | Medium — compliance gap, potential enforcement | Medium | See data minimisation question below |
-| Breach of data entering ML model | Low (10%) | Critical — email/financial data exposure | Medium | Depends on technical controls |
+| Risk | Likelihood | Impact | Level |
+|---|---|---|---|
+| Lawful basis not established before processing starts | Medium (30%) | Critical — processing is unlawful | High |
+| DPIA not completed before processing — ICO/DPA fine risk | Medium (35%) | High — regulatory action, potential fine up to €20M / 4% global turnover | High |
+| ML model produces inaccurate health scores — wrong accounts flagged | Medium (25%) | High — customer trust and churn risk | Medium-High |
+| Data minimisation failure — more data collected than necessary | Medium (40%) | Medium — compliance gap, potential enforcement | Medium |
+| Data breach involving ML model inputs (email/financial data) | Low (10%) | Critical — sensitive data exposure | Medium |
 
-**Blocking open questions — lawful basis**
+**Blocking question — lawful basis**
 
-This must be resolved before building starts. For each jurisdiction:
+Must be resolved before building starts:
 
 | Jurisdiction | Most likely basis | Key question |
 |---|---|---|
-| Australia | Legitimate interest equivalent (APP 3.3) | Do your customers reasonably expect you to process their interaction data this way? You need to assess whether the collection is reasonably necessary for your functions |
-| UK GDPR | Legitimate interest (Article 6(1)(f)) or contract | If legitimate interest: full LIA (legitimate interest assessment) required; balance test must show your interests don't override data subjects' rights. If contract: is health scoring genuinely necessary to perform the contract? |
-| EU GDPR (Germany) | Same as UK GDPR — legitimate interest most likely | Same LIA requirement; German DPAs have historically been stricter on legitimate interest interpretation than some other jurisdictions |
+| Australia | Legitimate interest equivalent (APP 3.3) | Do your customers reasonably expect you to process their interaction data this way? Is collection reasonably necessary for your functions? |
+| UK GDPR | Legitimate interest (Art. 6(1)(f)) or contract | If legitimate interest: full LIA required; balance test must show your interests don't override data subjects' rights |
+| EU GDPR (Germany) | Same as UK GDPR | Same LIA requirement; German DPAs have historically been stricter on legitimate interest interpretation |
 
-**Data minimisation question**
+**Data minimisation**
 
-You have four data sources: email open rates, support ticket history, login frequency, and payment history. The question I need you to answer before design is final: is each source genuinely necessary for the health score, or is some a nice-to-have? Specifically:
+You have four data sources: email open rates, support ticket history, login frequency, and payment history. Before design is final, I need you to confirm whether each is genuinely necessary:
 
-- **Email open rates** — if you're assessing risk, is open rate predictive, or is it a proxy for login frequency which you already have? If redundant, remove it.
-- **Payment history** — this is financial data and the most sensitive of the four. If the model can produce a useful score without it, you should remove it and reduce the risk profile significantly.
+- **Email open rates** — if you already have login frequency as an engagement signal, email open rate may be redundant. If so, remove it.
+- **Payment history** — this is financial data and the most sensitive of the four. If the model can produce a useful score without it, removing it significantly reduces the risk profile and DPIA scope.
 
-Data minimisation is not optional under GDPR Article 5(1)(c). It's also strategically valuable here: dropping payment history, if it's not needed, takes a High-risk processing category off the table and reduces DPIA scope.
+Data minimisation is mandatory under GDPR Article 5(1)(c). Dropping payment history, if it's not needed, removes a high-risk processing category from the table.
 
 **Compliant path forward**
 
-This feature can be built. Here's the sequence:
+This feature can be built. Sequence:
 
-1. **Complete a DPIA** (mandatory before processing begins) — run `/grc-lead:write-dpia` with this processing activity. This takes 1-2 days and must happen before development starts.
-2. **Document lawful basis** for each jurisdiction — I will produce a legal basis assessment document. This needs legal counsel review for the German DPA interpretation.
-3. **Data minimisation review** — product-owner and CTO confirm which data sources are genuinely necessary; remove any that aren't.
-4. **Technical controls** — I will specify the requirements; the security-engineer implements them: pseudonymisation of contact identifiers before ML processing, access controls limiting score visibility to customer success team only, audit logging of all score accesses and model outputs.
-5. **Transparency** — customers (the businesses) must be informed that their account data is processed for health scoring. Check whether your existing privacy notice covers this or needs updating.
-6. **Subject access and correction rights** — contacts at customer businesses may have data subject rights under UK/EU GDPR. The product needs a mechanism to respond to SARs and correct inaccurate underlying data.
+1. **Complete a DPIA** (mandatory before processing begins) — run `/grc-lead:write-dpia`. 1-2 days; must happen before development starts.
+2. **Document lawful basis** for each jurisdiction — I will produce a legal basis assessment. Needs legal counsel review for the German DPA interpretation.
+3. **Data minimisation review** — product-owner and CTO confirm which sources are genuinely necessary.
+4. **Technical controls** — I specify requirements; security-engineer implements: pseudonymisation of contact identifiers before ML processing, access controls limiting score visibility to the customer success team, audit logging of all score accesses.
+5. **Transparency** — customers must be informed that account data is processed for health scoring. Review whether your existing privacy notice covers this.
+6. **Subject rights** — contacts at customer businesses may have data subject rights under UK/EU GDPR. Product needs a mechanism to respond to SARs and correct inaccurate underlying data.
 
-**What I'm not deciding:** The technical implementation of pseudonymisation and access controls — that goes to the security-engineer. Product scope decisions (whether to include or exclude certain data sources) — that goes to the CPO and product-owner, informed by my data minimisation analysis.
+**What I'm not deciding:** Technical implementation of pseudonymisation and access controls — that goes to the security-engineer. Product scope decisions on which data sources to include or exclude — that goes to the CPO and product-owner.
 
-**Escalation trigger:** If the DPIA identifies residual risks that remain High after mitigations, I will assess whether Article 36 prior consultation with the relevant supervisory authority (ICO for UK, BfDI or Länder DPA for Germany) is required before processing can begin. This could add 8 weeks to the timeline.
+**Escalation trigger:** If the DPIA identifies residual risks that remain High after mitigations, I will assess whether Article 36 prior consultation with the relevant supervisory authority (ICO for UK, BfDI or Länder DPA for Germany) is required. This could add 8 weeks to the timeline.
 
 ## Evaluation
 
 **Verdict:** PASS
 **Score:** 8/8 (100%)
-**Evaluated:** 2026-04-15
+**Evaluated:** 2026-04-16
 
-- [x] PASS: Identifies all three applicable frameworks correctly — GRC Lead definition's Regulatory Compliance section lists APPs (Australian Privacy Principles), GDPR, and notes UK GDPR as a separate post-Brexit instrument; response correctly applies all three to the specific jurisdictions (Australia → APPs, UK → UK GDPR + DPA 2018, Germany → EU GDPR)
-- [x] PASS: Flags GDPR Article 22 and ML-based profiling — GRC Lead definition mentions GDPR as a framework with consent/data portability requirements; the AI Governance section identifies bias and privacy as AI risk categories; response correctly identifies Article 4(4) profiling definition and Article 22 applicability, plus Article 35 DPIA trigger
-- [x] PASS: Quantifies risks with likelihood and impact language — GRC Lead definition's Risk Register format requires "Likelihood: Low/Medium/High/Very High" and "Impact: Low/Medium/High/Critical" with a risk score; response uses exact format with percentage estimates (e.g., "Medium (30%)")
-- [x] PASS: Identifies lawful basis as a blocking open question — response explicitly frames this as "must be resolved before building starts" with jurisdiction-specific analysis (legitimate interest vs contract for UK/EU GDPR, APP 3.3 for Australia)
-- [x] PASS: Recommends a DPIA — GRC Lead definition references GDPR Article 35 as a compliance framework requirement; response explicitly recommends running `/grc-lead:write-dpia` as step 1 of the compliant path, correctly identifying the Article 35 threshold triggers (systematic evaluation, ML-based, personal aspects)
-- [x] PASS: Presents compliant path rather than blocking — GRC Lead definition's principle "Compliance enables, it does not block. Your job is to find the compliant path forward, not to say no"; response explicitly states "This feature can be built" and provides a six-step compliant implementation sequence
-- [x] PASS: Separates GRC concerns from technical implementation — GRC Lead definition distinguishes "GRC Lead owns GOVERNANCE — policies, compliance frameworks, risk registers" from "Security Engineer owns CONTROLS — technical implementation"; response explicitly delegates technical controls (pseudonymisation, access controls, audit logging) to security-engineer
-- [~] PARTIAL: Addresses data minimisation — response has a dedicated "Data minimisation question" section asking specifically about email open rates and payment history, citing GDPR Article 5(1)(c); this is explicit and substantive, not incidental. Awarding full credit.
-- [-] SKIP: Article 36 supervisory authority consultation — response correctly identifies this as a conditional escalation trigger ("If the DPIA identifies residual risks that remain High after mitigations") consistent with the rubric's skip condition; not triggered until DPIA is completed
+## Results
 
-### Notes
+- [x] PASS: Identifies all three applicable frameworks — GRC Lead definition's Regulatory Compliance section lists APPs, GDPR, and the framework table distinguishes UK GDPR from EU GDPR; response correctly applies APPs to Australia, UK GDPR + DPA 2018 to the UK, and EU GDPR to Germany; the post-Brexit split is explicitly acknowledged
+- [x] PASS: Flags GDPR Article 22 and ML-based profiling — definition's GDPR framework entry references "consent, right to erasure, data portability, DPO, breach notification"; definition's AI Governance section identifies Privacy as an AI risk category; response correctly applies Article 4(4) profiling definition and Article 22 applicability, plus Article 35 DPIA trigger for systematic evaluation with decision-making
+- [x] PASS: Quantifies risks using likelihood and impact — definition's Risk Register format requires "Likelihood: Low/Medium/High/Very High (with % range)" and "Impact: Low/Medium/High/Critical"; response uses percentage estimates (e.g., "Medium (30%)") and the four-level impact scale consistent with the definition's risk matrix
+- [x] PASS: Identifies lawful basis as a blocking question — response explicitly frames this as "Must be resolved before building starts" with a jurisdiction-specific table; definition's Compliance Process Step 1 says to identify applicable regulations including lawful basis; the response goes further by identifying the specific basis options and their conditions per jurisdiction
+- [x] PASS: Recommends a DPIA — definition references GDPR Article 35 in the framework table; response calls DPIA "mandatory before processing begins" and links to `/grc-lead:write-dpia`; Article 35 threshold triggers (systematic evaluation, ML-based, personal aspects with decision-making) are correctly identified
+- [x] PASS: Presents compliant path rather than blocking — definition's principle "Compliance enables, it does not block. Your job is to find the compliant path forward, not to say no"; response states "This feature can be built" and provides a six-step compliant path
+- [x] PASS: Separates GRC from technical implementation — definition's boundary table distinguishes "GRC Lead owns GOVERNANCE — policies, compliance frameworks" from "Security Engineer owns CONTROLS — technical implementation"; response explicitly delegates pseudonymisation and access controls to security-engineer and states "What I'm not deciding" for technical scope
+- [~] PARTIAL: Addresses data minimisation — response has a dedicated section asking specifically about email open rates and payment history, citing GDPR Article 5(1)(c); this is explicit and substantive, not incidental. The rubric ceiling is PARTIAL regardless. Score 0.5.
+- [-] SKIP: Article 36 supervisory authority consultation — response identifies this as a conditional escalation trigger ("If the DPIA identifies residual risks that remain High after mitigations") — exactly consistent with the rubric's skip condition; not triggered until DPIA is completed
 
-The GRC Lead definition is strong for this scenario. The agent correctly navigates the UK GDPR / EU GDPR distinction (post-Brexit), which is a detail that less careful definitions would miss. The definition's risk matrix format and the required percentage estimates are both present in the response. One area where the definition could be stronger: it doesn't explicitly call out that GDPR Article 22 is the automated decision-making article in its framework table — the table just says "GDPR Articles 5–49". Adding a reference to Article 22 in the framework table would make the connection more direct for agents following the definition.
+## Notes
+
+The GRC Lead definition supports all criteria well. The definition's Risk Register format and the risk matrix both have percentage estimates in the likelihood definitions ("Low: < 10%", "Medium: 10-40%", etc.), which the simulated output follows correctly. One area where the definition could be more explicit: the GDPR framework entry in the Regulatory Compliance table says "Articles 5–49" without calling out Article 22 by name. Since Article 22 (automated decision-making) is the critical GDPR provision for ML-based features, naming it in the framework table would make the connection more direct for agents applying the definition.

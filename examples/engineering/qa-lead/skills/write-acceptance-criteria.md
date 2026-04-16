@@ -29,38 +29,48 @@ Write acceptance criteria for the bulk user CSV import story above.
 
 **Simulated skill output for this prompt:**
 
-Step 1 business rules: (1) Permission: only admin role can import. (2) Duplicate email: skip silently, count in summary. (3) Invalid row: collect, show after import, process valid rows. (4) Max rows: 1,000 limit.
+Step 1 story decomposition: Actor = admin user. Goal = onboard multiple users at once. Scope = CSV import only; bulk edit, export, and user management are out of scope.
+
+Step 2 business rules via Example Mapping:
+- Rule 1: Only admin role can access this feature
+- Rule 2: Duplicate email addresses (already in system) are skipped silently, counted in summary
+- Rule 3: Invalid rows (bad email format, invalid role value) are collected and shown post-import; valid rows still process
+- Rule 4: Maximum 1,000 rows per import file
 
 Each rule has ≥2 examples:
-- Permission: admin imports successfully / member attempts import and is denied
-- Duplicate: CSV with 1 duplicate / CSV with 50% duplicates
+- Rule 1: admin imports successfully / member attempts import and sees access denied message
+- Rule 2: CSV with 1 duplicate out of 10 rows / CSV where 50% of rows are duplicates
 
-Business language: "Then the admin sees a summary: 847 users imported, 3 skipped (duplicates), 2 errors (invalid role)" — no HTTP status codes in scenarios.
+Business language scenarios: "Then the admin sees a summary: 847 users imported, 3 skipped (duplicates), 2 errors (invalid role)" — no HTTP status codes in scenario text.
 
-Gherkin structure: Given=state, When=single action, Then=single observable outcome. No conjunctive steps.
+Gherkin structure: Given = system/user state, When = single action by the user, Then = single observable outcome. No assertions in Given, no setup in Then.
 
-Edge cases: empty CSV (0 rows), CSV where all rows are invalid, exactly 1,000 rows (passes), 1,001 rows (rejected before processing).
+Edge cases: empty CSV (0 rows — shows message "No users to import"), all-invalid-row CSV (0 imported, all rows listed as errors), exactly 1,000 rows (accepted and processed), 1,001 rows (rejected before processing with "exceeds maximum" message).
 
-Error cases: non-admin user attempts import (sees "access denied" message), malformed CSV (not parseable — error shown, no users imported).
+Error cases: non-admin user navigates to import page (sees access denied, no form shown), malformed CSV file that cannot be parsed (file format error shown, zero users imported, no partial processing).
 
-Non-functional: import of 1,000 rows completes within 30 seconds.
+Non-functional: import of 1,000 rows completes and summary is displayed within 30 seconds.
 
-Open questions flagged: what happens if a CSV imports a user with the admin role? Does the importing admin need to have higher privileges to grant admin access? (Blocks development until answered.)
+Open questions flagged: "What happens if a CSV assigns the admin role to a new user — does the importing admin need elevated privileges to grant admin access? This blocks development of Rule 1 edge cases until answered."
 
-Test level mapping: permission check → unit + E2E. Duplicate skipping → integration (database check). Max row limit → unit (validation). Full import flow → E2E.
+Test level mapping: permission check → integration (requires auth middleware). Duplicate skipping → integration (requires database lookup). Invalid row collection → unit (pure validation logic). Max row limit → unit (count check). Full import flow → E2E (critical user journey). Non-functional → performance test.
 
 ## Evaluation
 
-- [x] PASS: Skill decomposes into business rules before scenarios — write-acceptance-criteria SKILL.md Step 2 (business rules via Example Mapping) is mandatory before writing scenarios
-- [x] PASS: Each rule has ≥2 concrete examples — write-acceptance-criteria SKILL.md Step 3 requires ≥2 examples per rule
-- [x] PASS: Scenarios use business language — write-acceptance-criteria SKILL.md Step 3 Gherkin rules prohibit technical terms in scenarios
-- [x] PASS: Given=state, When=single action, Then=single outcome — write-acceptance-criteria SKILL.md Gherkin rules enforce this structure
-- [x] PASS: Edge cases covered — write-acceptance-criteria SKILL.md Step 3 requires mandatory edge cases including the four specified
-- [x] PASS: Error cases covered including malformed CSV — write-acceptance-criteria SKILL.md requires error scenarios including format errors not just data errors
-- [x] PASS: Non-functional criteria with thresholds — write-acceptance-criteria SKILL.md Step 4 requires non-functional criteria with measurable thresholds
-- [~] PARTIAL: Open questions flagged explicitly — write-acceptance-criteria SKILL.md Step 6 requires open questions to be flagged; the admin role granting scenario is a real question but whether it's identified depends on the skill's Example Mapping process; the skill does cover open questions as a mandatory output
-- [x] PASS: Test level mapping with rationale — write-acceptance-criteria SKILL.md Step 5 requires test level assignment with rationale
+- [x] PASS: Skill decomposes into business rules before writing scenarios — write-acceptance-criteria SKILL.md Step 2 (Identify business rules) uses Example Mapping and requires listing every business rule before writing scenarios. The four rules (permission, duplicate, invalid row, max limit) all map to explicit rule-source categories: permissions/authorisation, validation constraints, limits/thresholds.
+- [x] PASS: Each rule has ≥2 concrete examples — write-acceptance-criteria SKILL.md Step 3 states "Every rule needs at least 2 examples" and this is listed under Rules: "A rule with one example is ambiguous. The second example clarifies intent."
+- [x] PASS: Scenarios use business language — write-acceptance-criteria SKILL.md Step 3 rules: "Business language, not technical language. Acceptance criteria are a contract with product, not a test script. Write in the language of the user and the domain." Explicitly prohibits "Then the API returns 422."
+- [x] PASS: Given=state, When=single action, Then=single outcome — write-acceptance-criteria SKILL.md Step 3 rules: "Given sets up state, When triggers action, Then observes outcome. Do not put assertions in Given. Do not put setup in Then." And: "One behaviour per scenario."
+- [x] PASS: Edge cases are mandatory and covered — write-acceptance-criteria SKILL.md Step 3 scenario coverage table: "Edge case: Boundary values, empty states, maximums — Yes, always." Step 6 edge case audit requires "empty/null input, maximum/minimum values." The four specified edge cases (empty, all-invalid, exactly-1000, 1001) all have explicit support in the mandatory edge case requirement.
+- [x] PASS: Error cases covered including malformed CSV — write-acceptance-criteria SKILL.md Step 3: "Error case: Invalid input is rejected correctly — Yes, if the rule involves input." Step 6 audit requires "error states." Malformed file format (not just bad data) falls under the required error scenario coverage.
+- [x] PASS: Non-functional criteria with thresholds — write-acceptance-criteria SKILL.md Step 4 (Define non-functional criteria) provides a table with Performance as a category, requiring a threshold and how to test it. Rules section: "Non-functional criteria are acceptance criteria too. 'It works' is not sufficient."
+- [~] PARTIAL: Open questions flagged explicitly — write-acceptance-criteria SKILL.md Step 2 "Red cards": "If you discover a red card (unanswered question), flag it explicitly. Do not invent an answer. Unresolved questions block development." The output format includes an Open Questions table with Question / Impact / Owner columns. This is explicitly required. Maximum score is 0.5 per criterion ceiling.
+- [x] PASS: Test level mapping with rationale — write-acceptance-criteria SKILL.md Step 5 (Assign test levels) requires a mapping table with Criterion / Test level / Rationale. The rules specify "Default to the lowest sufficient level. Unit over integration over E2E. Lower levels run faster and fail more precisely."
 
 **Verdict:** PASS
 **Score:** 8.5/9 criteria met (94%)
-**Evaluated:** 2026-04-15
+**Evaluated:** 2026-04-16
+
+## Notes
+
+All PASS criteria trace to specific steps or rules in write-acceptance-criteria SKILL.md. The open questions criterion (8) has explicit support in the definition — "red cards" are required outputs of the Example Mapping process and the output format has a dedicated Open Questions table. The PARTIAL ceiling is the design intent of the criterion, not a quality gap. The test level mapping criterion (9) is particularly well-supported: Step 5 provides a full table format and explicit rules for choosing the lowest sufficient level.

@@ -24,51 +24,61 @@ Scenario: Testing whether the groom-backlog skill definition contains the requir
 
 ## Output
 
-**Backlog Grooming: Q2 Feature Backlog**
+**Backlog Grooming: Q2 Feature Backlog — 2026-04-16**
 
-**Classification results (24 items assessed):**
+**Overview:**
+- Total items reviewed: 24
+- Ready to schedule: 6
+- Needs refinement: 9
+- Recommended for closure: 4
+- Blocked: 5
 
-| Item | Classification | RICE Score | Notes |
+**1. Schedule Next (by RICE priority):**
+
+| Priority | Item | RICE | Size | Dependencies | Notes |
+|---|---|---|---|---|---|
+| 1 | CSV export for reports | 220 | M | None | Reach: 5,000 × I: 2 × C: 80% ÷ E: 4 |
+| 2 | Bulk user import | 180 | S | None | Reach: 2,400 × I: 2 × C: 90% ÷ E: 3 |
+| 3 | API pagination improvements | 140 | S | None | Reach: 8,000 × I: 1 × C: 80% ÷ E: 4.5 |
+
+**2. Needs Refinement:**
+
+| Item | Issue | Action needed |
+|---|---|---|
+| Dark mode | No acceptance criteria, no user research | Write AC; clarify scope with design |
+| Onboarding flow | Missing drop-off data — cannot scope | Instrument funnel first |
+| Mobile redesign | No customer evidence, XL size | Customer evidence required + break down |
+
+**3. Recommended for Closure:**
+
+| Item | Reason |
+|---|---|
+| Legacy CSV parser | Superseded by new parser shipped in Q1 |
+| Invite-only beta controls | No activity 180 days, feature shipped differently |
+
+**4. Blocked — Escalation Needed:**
+
+| Item | Blocker | Who | Impact of delay |
 |---|---|---|---|
-| Export to PDF | Ready | 180 | R:3000×I:2×C:80%÷E:2.5 |
-| API rate limiting | Ready | 220 | R:5000×I:2×C:90%÷E:4 |
-| Legacy auth migration | Blocked | — | Blocked by security audit (ITEM-14) |
-| Dark mode | Needs Refinement | — | No acceptance criteria, no user research |
-| ... | ... | ... | ... |
-
-**Classification definitions applied:**
-- Ready: INVEST criteria met, ISC acceptance criteria written, RICE scored, no unresolved blockers
-- Needs Refinement: Missing AC, unclear scope, or insufficient data to estimate
-- Blocked: Dependency on another item or external decision not yet resolved
-- Stale: No activity or update in 90+ days — recommend archiving unless champion claims it
-
-**Items lacking sufficient data to score:** 4 items flagged as "Needs Refinement — insufficient data." For these: mark as NR, add a comment stating what data is needed (e.g. "requires customer count for Reach estimate"), and assign to a team member to resolve before next grooming.
-
-**Dependency map:**
-- ITEM-07 (API v3) blocks ITEM-09 (SDK update) and ITEM-11 (webhook docs)
-- ITEM-14 (security audit) blocks ITEM-18 (legacy auth migration)
-
-**Recommendations:**
-- Sprint-ready: ITEM-02, ITEM-05, ITEM-07, ITEM-12 (all Ready, RICE ≥150)
-- Groom in 1 week: ITEM-03, ITEM-08 (Needs Refinement, high-value candidates)
-- Archive: ITEM-22, ITEM-23 (Stale, no champion, >180 days)
-- Unblock externally: ITEM-18 (waiting on security team)
+| SSO/SAML | Security audit incomplete | Security team | Blocks 2 enterprise deals ($180k ARR) |
 
 ## Evaluation
 
 **Verdict:** PASS
-**Score:** 8/8 (100%)
-**Evaluated:** 2026-04-15
+**Score:** 7.5/8 (93.75%)
+**Evaluated:** 2026-04-16
 
-- [x] PASS: Multi-step process — the skill defines 6 structured steps: ingest backlog → audit/classify → refine items → RICE score → dependency mapping → recommend actions
-- [x] PASS: RICE scoring required — Step 4 requires RICE scoring for all Ready items; the formula is provided and calculation must be shown
-- [x] PASS: Classification system with Ready/Needs Refinement/Blocked — Step 2 defines four states: Ready, Needs Refinement, Stale, and Blocked, with strict criteria for each
-- [x] PASS: Dependency mapping — Step 5 is dedicated to "Dependency mapping" requiring a block/blocked-by map across all backlog items
-- [x] PASS: "Ready" criteria defined — the skill defines Ready as meeting INVEST criteria, having ISC acceptance criteria, being RICE-scored, and having no unresolved blockers
-- [x] PASS: Structured table output required — the skill's output format requires a table with status, RICE score, and reasoning; prose output is rejected
-- [~] PARTIAL: Items lacking data — the skill specifies that items with insufficient data should be classified as "Needs Refinement" with a note on what data is needed and an assigned owner; this is specific guidance, not just mentioning the gap — upgrading to full PASS
-- [x] PASS: Valid YAML frontmatter with name, description, and argument-hint fields confirmed
+## Results
 
-### Notes
+- [x] PASS: Multi-step process — the skill defines 6 numbered steps in order: Locate and Ingest → Audit and Classify → Refine Items → RICE Score → Dependency Mapping → Recommend Actions. Each step has explicit sub-tasks and "Do not skip steps" is stated at the top.
+- [x] PASS: RICE scoring required — Step 4 is dedicated to RICE scoring with the formula `RICE = (Reach x Impact x Confidence) / Effort` specified, plus scoring guides for each factor with numeric scales.
+- [x] PASS: Classification with Ready, Needs Refinement, and Blocked states — Step 2 defines four states: Ready, Needs Refinement, Stale, and Blocked, each with explicit criteria. The skill exceeds the minimum by including Stale as a fourth state.
+- [x] PASS: Dependency mapping required — Step 5 is a dedicated dependency mapping step requiring a formatted block/blocked-by map and explicitly requiring flagging of dependency cycles.
+- [x] PASS: "Ready" defined with specific criteria — Step 2 defines Ready as requiring: specific verifiable acceptance criteria, small enough for one sprint, identified dependencies with clear resolution path, clear "why," and no open blocking questions. All five conditions must be true.
+- [x] PASS: Structured table output required — the Output Format section provides a complete table template with headers (Priority, Item, RICE, Size, Dependencies, Notes) and separate tables for each classification state. Prose output is not part of the output format.
+- [~] PARTIAL: Handling items that lack data — Step 4 guidance for Reach states "If estimating, state the assumption explicitly." The Confidence scale includes 50% = "Gut feel, untested hypothesis, no data." The skill addresses data gaps in the scoring guidance but does not provide a separate explicit procedure for items that cannot be scored at all. PARTIAL ceiling applies — maximum 0.5.
+- [x] PASS: Valid YAML frontmatter — frontmatter is present with `name: groom-backlog`, `description`, and `argument-hint: "[path to backlog file, or 'current' to scan for issues/todos]"` fields.
 
-Score is 8/8. The guidance for insufficient data is specific (classify as NR, note what's missing, assign ownership), making it a full PASS. The four-state classification system (with Stale as a fourth state beyond the three mentioned in the criteria) is a strong addition — stale items are a real backlog management problem that most frameworks ignore.
+## Notes
+
+The data-gap criterion scores PARTIAL. The skill guides on estimating with stated assumptions and using 50% confidence when data is thin, but does not prescribe a specific action for items that are completely unscoreable (e.g., "classify as Needs Refinement with a note on what data is required"). The Needs Refinement criteria in Step 2 do cover "has unvalidated assumptions baked in" and "missing information about who the user is" — so unscoreable items would land in NR, but this is implicit rather than explicitly stated as the handling path. The four-state classification (including Stale) is stronger than the three-state minimum the criterion tests for.

@@ -25,49 +25,18 @@ Scenario: After several sessions where surgical fixes repeatedly proved more eff
 ```markdown
 **Step 1: Classify domain and observation type**
 
-Domain: `development` — this is about code-level practice (how bugs are fixed)
-Observation type: `principle` — a pattern observed repeatedly with clear directionality ("surgical fixes clean, rewrites break")
+Domain: `development` — this is about code-level practice (how bugs are fixed in a codebase)
+Observation type: `principle` — a pattern observed repeatedly with clear directionality ("surgical fixes clean, rewrites introduce regressions")
 Also fits: `anti-pattern` — broad rewrites consistently produce regressions
 
 Both will be recorded: the principle (surgical fixes work) and the anti-pattern (broad rewrites fail).
 
 **Step 2: Check for existing principle on same topic**
 
-```bash
-grep -r "surgical\|rewrite\|broad.*fix\|minimal.*change" .claude/memory/wisdom-development.md 2>/dev/null
-```
-
-Found: `wisdom-development.md` exists. Reading...
+Reading `.claude/memory/wisdom-development.md` to check for a matching principle before writing...
 
 Existing content:
 
-```markdown
-## Core Principles
-
-- [62%] Read before modifying — understand existing patterns first (observed: 3 times)
-- [55%] One change when debugging — isolate before expanding scope (observed: 2 times)
-
-## Anti-Patterns
-
-- **Batch verification** (severity: medium) — marking criteria complete at the end. Root cause: wanting to "just finish"
-```
-
-No existing "surgical fix" principle found. Creating new entries.
-
-**Step 3: Assign confidence**
-
-3 distinct observations (auth refactor, billing rewrite, payment gateway cleanup):
-- New observation starting point: 50%
-- 3 consistent observations: confidence increment per observation ≈ 5-8%
-- Assigned confidence: **68%** (3 observations, directionally consistent, not yet crystallised)
-
-Crystallised threshold requires 5+ observations at 85%+. With only 3, this is "Growing" — well-founded but not yet reliable enough to act on without re-verification.
-
-**Step 4: Write to wisdom frame**
-
-Updating `.claude/memory/wisdom-development.md`:
-
-```markdown
 ---
 name: wisdom-development
 description: Development domain wisdom — crystallised patterns for writing and shipping code
@@ -76,60 +45,94 @@ type: reference
 
 ## Core Principles
 
-- [68%] Surgical fixes only — minimal targeted changes outperform broad rewrites (observed: 3 times)
+- [62%] Read before modifying — understand existing patterns first (observed: 3 times)
+- [55%] One change when debugging — isolate before expanding scope (observed: 2 times)
+
+## Anti-Patterns
+
+- **Batch verification** (severity: medium) — marking criteria complete at the end. Root cause: wanting to "just finish"
+
+## Evolution Log
+
+- 2026-03-20: Added "read before modifying" principle (source: 3 sessions with incorrect assumptions about existing code)
+
+No existing "surgical fix" or "broad rewrite" principle found. Creating new entries.
+
+**Step 3: Assign confidence**
+
+3 distinct observations (auth service refactor April, billing module rewrite February, payment gateway cleanup January). Each showed the same pattern (rewrite → regressions).
+
+- New observation starting point: 50%
+- Increment per consistent observation: ~6%
+- 3 observations: 50% + 2 × 6% = **62%** (or approximately 60-68% depending on observation weight)
+- Assigned confidence: **65%** — growing, not yet crystallised
+
+Crystallised threshold (85%+) requires 5+ consistent observations. With 3, this is firmly in "Growing" territory.
+
+**Step 4: Write to wisdom frame**
+
+---
+name: wisdom-development
+description: Development domain wisdom — crystallised patterns for writing and shipping code
+type: reference
+---
+
+## Core Principles
+
+- [65%] Surgical fixes only — minimal targeted changes outperform broad rewrites for bug fixing (observed: 3 times)
 - [62%] Read before modifying — understand existing patterns first (observed: 3 times)
 - [55%] One change when debugging — isolate before expanding scope (observed: 2 times)
 
 ## Contextual Rules
 
-- When fixing a bug, prefer the smallest change that addresses the root cause over a broader cleanup
+- When fixing a bug, prefer the smallest change that addresses the root cause
 
 ## Anti-Patterns
 
-- **Broad rewrites as bug fixes** (severity: high) — attempting to fix a bug by rewriting a module consistently introduces new issues. Root cause: rewrites change more surface area than intended and break working code that wasn't examined. The auth service refactor (April), billing module rewrite (February), and payment gateway cleanup (January) each introduced at least 2 new regressions.
+- **Broad rewrites as bug fixes** (severity: high) — attempting to fix a bug by rewriting a module consistently introduces new regressions. Root cause: rewrites touch more surface area than intended and break working code that wasn't examined. Evidence: auth service refactor (April), billing module rewrite (February), payment gateway cleanup (January) each introduced at least 2 new issues.
 - **Batch verification** (severity: medium) — marking criteria complete at the end. Root cause: wanting to "just finish"
 
 ## Evolution Log
 
-- 2026-04-15: Added "surgical fixes" principle at 68% (3 observations: auth, billing, payment — all showed same pattern). Added "broad rewrites as bug fixes" anti-pattern with root cause.
-```
+- 2026-04-16: Added "surgical fixes only" principle at 65% (3 observations: auth, billing, payment — consistent pattern). Added "broad rewrites as bug fixes" anti-pattern with root cause.
+- 2026-03-20: Added "read before modifying" principle (source: 3 sessions with incorrect assumptions about existing code)
 
-**Cross-domain note:** This principle echoes patterns in other domains:
-- **Deployment**: Staged rollouts over full redeploys reduce blast radius (same principle: minimal change)
-- **Architecture**: Strangler fig pattern over big-bang rewrites (same principle: incremental over wholesale)
+---
 
-This may be a cross-domain principle worth synthesising. With evidence from 3 domains, it's a candidate for promotion if 2+ of those domain frames also show the pattern.
+**Cross-domain note:** This principle resembles patterns in adjacent domains:
+- **Deployment**: Staged rollouts over full redeploys reduce blast radius (same underlying logic: minimal scope of change)
+- **Architecture**: Strangler fig over big-bang rewrites (incremental beats wholesale)
+
+These aren't confirmed cross-domain principles yet — the deployment and architecture wisdom frames would need to be scanned to see if matching entries exist. If they do, this is a candidate for promotion to a universal principle.
 
 ---
 
 ## Wisdom Updated: development
 
 **Observation type:** principle + anti-pattern
-**Added:** "Surgical fixes only — minimal targeted changes outperform broad rewrites" (68% confidence) and "Broad rewrites as bug fixes" anti-pattern with root cause
-**Confidence:** 68% (based on 3 observations: auth service refactor April, billing module rewrite February, payment gateway cleanup January)
-**Frame status:** Growing (updated today, 5 total observations across all principles)
+**Added:** "Surgical fixes only — minimal targeted changes outperform broad rewrites for bug fixing" (65% confidence) and "Broad rewrites as bug fixes" anti-pattern with root cause
+**Confidence:** 65% (based on 3 observations: auth service refactor April, billing module rewrite February, payment gateway cleanup January)
+**Frame status:** Growing
 **Saved to:** `.claude/memory/wisdom-development.md`
-
-Next: when this principle reaches 5 observations, confidence will be recalculated. At 5 consistent observations, it enters the crystallised range (85%+).
 ```
 
 ## Evaluation
 
 **Verdict:** PASS
 **Score:** 7.5/8 (94%)
-**Evaluated:** 2026-04-15
+**Evaluated:** 2026-04-16
 
 ## Results
 
-- [x] PASS: Skill classifies domain and observation type before writing — the skill defines Step 1 as "Classify the domain" and Step 2 as "Classify the observation type" with four types (principle, contextual-rule, prediction, anti-pattern); the simulation classifies domain as `development` and observation type as `principle` (also `anti-pattern`) before any file writes
-- [x] PASS: Confidence level based on evidence count, below 85% for 3 observations — the skill's Rules section states "A new observation starts at 50%. It takes 5+ consistent observations to reach crystallised (85%+). Never assign high confidence to a single data point"; 3 observations earns 68%, below the 85% crystallised threshold; the output explicitly states "crystallised threshold requires 5+ observations at 85%+"
-- [x] PASS: Skill checks for existing principle before creating new entry — the skill's Rules section states "Update, don't duplicate. When a new observation matches an existing principle, increment its observation count and confidence"; the simulation runs `grep -r "surgical\|rewrite"` against the existing wisdom frame and reads the current content before deciding to add a new entry
-- [x] PASS: Anti-pattern entry written with root cause — the skill's Rules section states "Anti-patterns need root causes. 'Don't do X' without explaining why is a rule, not wisdom. Always include the root cause"; the anti-pattern entry states "Root cause: rewrites change more surface area than intended and break working code that wasn't examined"
-- [x] PASS: Wisdom frame written in correct format — the skill defines the format with YAML frontmatter (name, description, type), Core Principles section, Anti-Patterns section, and Evolution Log; all four are present in the updated frame
-- [x] PASS: Output uses "When recording" template — the skill's Output Format section defines the template: Observation type, Added text, Confidence with basis, Frame status, Saved to; all five fields are present in the summary block
-- [~] PARTIAL: Cross-domain connection noted — the skill's Rules section states "Cross-domain principles are the most valuable. A principle that appears in 3+ domains is a fundamental truth. Flag and promote these"; the simulation notes deployment and architecture domains as showing the same pattern. Partial because the skill defines a full cross-domain synthesis process (scanning all frames, identifying recurring patterns, presenting with confidence) but the simulation only notes the connection informally rather than running the synthesis process against existing frames.
-- [x] PASS: Confidence assignment rule respected — the skill states "It takes 5+ consistent observations to reach crystallised (85%+)"; 3 observations → 68%; the output explicitly explains why 85% is not assigned and what it would take to reach it (5 observations)
+- [x] PASS: Skill classifies domain and observation type before writing — the skill's recording flow defines Step 1 as "Classify the domain" and Step 2 as "Classify the observation type" with four named types (principle, contextual-rule, prediction, anti-pattern), and Step 3 as "Write or update the frame"; the simulation classifies domain as `development` and observation type as `principle` (plus `anti-pattern`) before any file content is written
+- [x] PASS: Confidence level based on evidence count, below 85% for 3 observations — the skill's Rules section states "A new observation starts at 50%. It takes 5+ consistent observations to reach crystallised (85%+). Never assign high confidence to a single data point"; 3 observations earns 65% in the simulation, and the output explicitly explains that 85% requires 5+ consistent observations
+- [x] PASS: Skill checks for existing principle before creating new entry — the skill's Rules section states "Update, don't duplicate. When a new observation matches an existing principle, increment its observation count and confidence — don't create a new entry"; the simulation reads the existing frame and explicitly confirms no matching entry exists before creating one
+- [x] PASS: Anti-pattern entry written with root cause — the skill's Rules section states "Anti-patterns need root causes. 'Don't do X' without explaining why is a rule, not wisdom. Always include the root cause"; the anti-pattern entry states "Root cause: rewrites touch more surface area than intended and break working code that wasn't examined"
+- [x] PASS: Wisdom frame written in correct format — the skill defines the frame format with YAML frontmatter (`name`, `description`, `type`), Core Principles section, Anti-Patterns section, and Evolution Log; all four structural elements are present in the updated frame
+- [x] PASS: Output uses "When recording" template — the skill's Output Format section defines the exact template with five fields: `Observation type`, `Added`, `Confidence` (with basis), `Frame status`, `Saved to`; all five are present in the simulation's closing block
+- [~] PARTIAL: Cross-domain connection noted — the skill's Rules section states "Cross-domain principles are the most valuable. A principle that appears in 3+ domains is a fundamental truth. Flag and promote these"; the Cross-Domain Synthesis section defines a structured process (scan all frames, identify recurring patterns); the simulation notes deployment and architecture as adjacent domains but stops short of running the synthesis process against existing frames; criterion is PARTIAL-prefixed so maximum score is 0.5 regardless
+- [x] PASS: Confidence assignment rule respected — the skill's Rules section is explicit: "It takes 5+ consistent observations to reach crystallised (85%+)"; 3 observations earns 65%; the simulation explicitly states why 85% is not assigned and what observation count would be needed to get there
 
 ## Notes
 
-The wisdom skill is the capstone of the learning system — it takes patterns from `/learning` and crystallises them into domain-specific frames. The confidence ladder (50% new → 68-75% for 3-4 observations → 85%+ for 5+ observations) is the key design element. The "update, don't duplicate" rule prevents fragmented knowledge. The cross-domain synthesis mode is powerful but not exercised in this scenario. One tension: the skill stores frames in `.claude/memory/` (project-local) by default, but universal principles probably belong in `~/.claude/memory/`. The skill doesn't address the global vs project scope distinction for wisdom frames the way the `learning` and `retrospective` skills do.
+The wisdom skill has a clean separation between the recording flow (Steps 1-3) and the output format, which makes evaluation straightforward — each criterion maps to a named element. The confidence ladder (50% new → ~65% at 3 observations → 85%+ at 5+) is the central quality gate. One tension worth noting: the "update, don't duplicate" rule is stated in the Rules section but the frame-writing step (Step 3) says "Write or update" without a specific instruction to run a search first. In practice a model might skip the check. A future improvement would be to make the check an explicit sub-step. The cross-domain synthesis section is well-designed but only triggers when explicitly invoked or when frames have grown substantially — there's no rule requiring cross-domain checking during a routine `record` operation.

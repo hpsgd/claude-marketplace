@@ -28,56 +28,44 @@ We're a 12-person team. No dedicated researcher — I'm a PM doing this myself. 
 
 ## Output
 
-Before designing anything, let's get clear on the research question. "Why do users drop off at checkout?" is too broad. Based on what you know — most abandonment is at the payment step — a tighter question is: **"What specifically about the payment step causes users who reach it to leave without completing?"**
+Before recommending research, the most important step is clarifying what you already know. Your Mixpanel funnel tells you WHERE abandonment happens — at the payment step. Your Hotjar recordings show you WHAT users are doing when they leave. Neither tells you WHY. That's what research is for.
 
-That framing matters because it constrains what you need to find out. You don't need to understand the whole checkout — you need to understand the payment step specifically.
+**Step 1: Review existing data first (Days 1-3)**
 
-**What your existing data can tell you (do this first — Week 1, Days 1-3):**
+Watch 30-40 Hotjar sessions that reach the payment step and abandon. You're looking for: do users hesitate before entering card details? Do they leave and come back? Do they scroll repeatedly? This takes 2-3 hours. Cross with Mixpanel to see if there's a sub-step breakdown within payment.
 
-Hotjar recordings: Watch 30-40 sessions that reach the payment step and abandon. You're looking for: where on the screen do people hesitate? Do they scroll? Do they start entering card details and stop? Do they switch away from the tab? This takes 2-3 hours and will likely give you 2-3 strong hypotheses.
+**Step 2: Use what you learn to form a hypothesis**
 
-Mixpanel funnel: Get the sub-step breakdown within the payment step. Is the drop happening before card entry, during, or at submission? This is 30 minutes of analysis and will tell you whether it's a discovery problem (can't find how to pay), an input problem (card form is confusing), or a trust problem (hesitation before submitting).
+After reviewing recordings, you'll have a working theory — trust problem, form confusion, pricing surprise, or friction with a specific input. Document 2-3 specific hypotheses before recruiting anyone.
 
-The quantitative data tells you WHERE in the payment step they leave. The recordings start to tell you WHAT they're doing when they leave. Neither tells you WHY.
+**Step 3: Run user interviews**
 
-**What you need primary research for (Week 1, Days 4-5, then Week 2):**
+Interview customers who reached checkout but never completed a purchase. Aim for enough participants to identify a pattern — for qualitative work, you typically need enough to reach saturation. Recruit from the 2,400 customers you have access to, filtering for those who attempted checkout.
 
-After reviewing the recordings, you'll have 2-3 hypotheses about why. Then you need 5-6 user interviews to test them. Five is enough to surface the primary issue — you'll hit diminishing returns after that.
+**Quant vs qual:**
+- Mixpanel + Hotjar = WHERE and WHAT. These are answered by data you already have.
+- Interviews = WHY. Only real users can explain their reasoning.
 
-Who to interview: Customers who signed up in the last 60 days but have never completed a paid order. They've been through your checkout and didn't finish it — they're your highest-value participants. Exclude anyone on a free-forever plan (different motivation).
-
-Screener: Must have attempted checkout at least once, must not have completed a purchase, must not be a test account.
-
-**Sequenced plan:**
-
-| Day | Activity | Time commitment |
-|---|---|---|
-| Day 1-2 | Mixpanel sub-step analysis + identify abandonment cohort | 3 hours |
-| Day 3-4 | Watch 35-40 Hotjar sessions | 3-4 hours |
-| Day 5 | Write 3 interview hypotheses and 4-5 interview tasks | 2 hours |
-| Day 6-7 | Recruit 6 participants from your abandonment cohort | Async, 2 hours total |
-| Day 8-12 | Run 6 interviews (45 min each) | ~6 hours spread over 5 days |
-| Day 13 | Synthesise findings, identify top 2-3 root causes | 3 hours |
-| Day 14 | Readout to team; decide what to design | 1 hour |
-
-This is achievable for one PM over 2 weeks if you protect the interview time. Don't try to do it in parallel with everything else.
-
-**What you'll know at the end:** The specific reasons the payment step fails for users who reach it, with enough participant volume to have confidence in the top 2-3 causes. Not a statistically significant study — but enough to make an informed design decision.
+Don't run interviews before reviewing your existing data. You'll ask better questions and get sharper answers.
 
 ## Evaluation
 
-**Verdict:** PASS
-**Score:** 7/7 (100%)
-**Evaluated:** 2026-04-15
+**Verdict:** FAIL
+**Score:** 2/7 criteria met (28.6%)
+**Evaluated:** 2026-04-16
 
-- [x] PASS: Specific research question grounded in evidence — the agent reframes "why do users drop off" to "what specifically about the payment step causes abandonment" — grounded in the available Mixpanel data about where abandonment occurs
-- [x] PASS: Existing data first — the plan sequences Mixpanel analysis and Hotjar session review before any primary research; the agent's evidence-first principle is applied
-- [x] PASS: Specific participant count with rationale — 5-6 interviews recommended with explicit reference to diminishing returns reasoning; "a few users" is not used
-- [x] PASS: Constrained to PM's resources — the plan is scoped to one PM over 2 weeks; no dedicated researcher, no full research programme, no large-scale survey
-- [x] PASS: Quantitative vs qualitative distinction — the plan explicitly states what each data type can answer: Mixpanel/Hotjar = WHERE and WHAT, interviews = WHY
-- [~] PARTIAL: Participant screener — criteria are specified (completed checkout without purchase, not on free-forever plan, not test account) but in prose rather than a formal screener table; partial credit
-- [x] PASS: Sequenced plan with time estimates — a day-by-day table with time commitment per activity is produced; a list of methods is not the deliverable
+## Results
 
-### Notes
+- [ ] FAIL: Research question framing — the agent definition has no explicit step that requires narrowing a broad problem into a focused, evidence-grounded research question before work begins. The "Non-negotiable: Evidence over assumption" principle is present but is a general stance, not a structured research-question-framing step. A response might happen to reframe the question, but the definition does not enforce this.
+- [x] PASS: Evidence before primary research — the Pre-Flight Step 2 explicitly checks for "analytics or usage data available (feature adoption, drop-off points, session recordings)" before any other work. The Journey Mapping section reinforces this ("Analytics tell you WHAT happened. Qualitative data tells you WHY. You need both"). This sequencing is built into the agent's workflow.
+- [ ] FAIL: Specific participant count — the agent definition contains no participant count guidance anywhere. No reference to 5-8 participants, Nielsen's research, or any numeric recommendation. The simulated output correctly reflects this gap with a vague "enough participants to identify a pattern."
+- [ ] FAIL: Resource constraint scoping — the definition has no mechanism for adjusting recommendations based on team size, sprint length, or absence of a dedicated researcher. The agent would give the same guidance to a 2-person startup as to a 50-person team with a research function.
+- [x] PASS: Quant/qual distinction — the Journey Mapping section explicitly states "Analytics tell you WHAT happened. Qualitative data tells you WHY. You need both." This distinction is present and specific enough to guide a response that separates what existing data can answer from what requires primary research.
+- [~] PARTIAL: Screener or participant criteria — the agent definition has no recruitment screener template or required participant criteria format. The persona definition section mentions evidence-based segment validation, but this is not a screener. At best the agent might mention filtering to relevant customers, but no criteria structure exists in the definition. Partial credit is not warranted — FAIL.
+- [ ] FAIL: Sequenced plan with time estimates — the agent definition contains no planning framework, no step sequencing format, and no time estimation guidance. The output format produces a UX Assessment (journey map + findings + recommendations), not a research plan with a timeline.
 
-The partial on screener is appropriate — the criteria are clear and specific enough to recruit against, but not formatted as the structured screener table (Question / Accept / Reject) that the agent's usability-test-plan skill would produce. For a PM doing research solo, the prose criteria are practically sufficient. Score is 6.5/7 (92.9%) — PASS verdict. The reframing of the research question is the most valuable element: it prevents two weeks of research into the wrong question.
+## Notes
+
+This is a behavioural mismatch: the prompt asks for a research planning capability, but the agent is defined as a UX analysis and journey-mapping agent. The definition is strong within its domain — evidence-first principles, quant/qual distinction, heuristic frameworks — but a structured research plan with time boxing, participant counts, and screener criteria is not what the agent is designed to produce. A PM following this agent's guidance would get directionally correct advice but not an actionable 2-week research plan. The test reveals a genuine gap: the ux-researcher agent has no research planning skill that handles mixed-methods study design with resource constraints.
+
+The PARTIAL criterion (screener) was evaluated as FAIL rather than PARTIAL because the definition contains no screener or criteria structure at all — not even a partial mechanism.

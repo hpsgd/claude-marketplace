@@ -23,39 +23,58 @@ Write a query to answer: What percentage of users who started a trial in Q1 2024
 
 ## Output
 
-**Simulated skill output for this prompt:**
+**Simulated skill output:**
 
 Step 1 decomposition:
-- "Converted" = user has a `subscriptions` row with `plan_type = 'paid'` AND `started_at <= trial_start + 14 days`
-- Time window: `users.created_at` between 2024-01-01 and 2024-03-31
-- Filters: `is_test_account = false`, email NOT LIKE '%@acme-corp.com'
+- "Converted" = user has a `subscriptions` row with `plan_type = 'paid'` AND `started_at <= trial_started_at + 14 days`
+- Time window: `users.created_at` between 2024-01-01 and 2024-03-31 (Q1 2024)
 - Granularity: per acquisition_channel
+- Filters: `is_test_account = false`, `email NOT LIKE '%@acme-corp.com'`
 
-Query structure uses CTEs: `trial_cohort` → `conversions` → `final`. No nested subqueries.
+Step 2 metric definition as SQL comments:
+```sql
+-- METRIC DEFINITIONS:
+-- Converted: user with plan_type='paid' subscription started within 14 days of first trial subscription
+-- Trial cohort: users created in 2024-01-01 to 2024-03-31
+-- Exclusions: is_test_account = true, email domain = 'acme-corp.com'
+-- Granularity: per acquisition_channel
+```
 
-SQL comments at top define metric, inclusion/exclusion criteria.
+Step 3 data sources:
+```sql
+-- DATA SOURCES:
+-- users: grain = one row per user, key = user_id, known issues: acquisition_channel may be NULL for early signups
+-- subscriptions: grain = one row per subscription, key = subscription_id, known issues: duplicate subscriptions possible (dedup by MIN(started_at) per user per plan_type)
+```
+
+Query CTEs: `trial_cohort` → `first_trial` (MIN started_at per user, deduplication) → `conversions` → `final`.
 
 Sanity checks:
-1. Verify conversion_rate is between 0 and 100 for all channels
-2. Verify trial_count > 0 for each channel (no empty groups)
-3. Verify no NULL acquisition_channel in results
+1. All conversion_rate_pct between 0 and 100
+2. Trial count > 0 for all channels (no empty groups)
+3. No NULL acquisition_channel in results
+4. Total trial_users equals sum of per-channel trial_users
 
 Column names: `acquisition_channel`, `trial_users`, `converted_users`, `conversion_rate_pct`.
 
-Deduplication: `MIN(trial_start)` used to select first trial per user when multiple trials exist.
+Expected result shape: 4 rows (one per channel), ~200-2000 trial_users per channel depending on mix.
 
 ## Evaluation
 
-- [x] PASS: Skill decomposes question into precise definitions before SQL — write-query SKILL.md Step 1 is "Question Decomposition" as a mandatory pre-SQL step
-- [x] PASS: Metric definitions written as SQL comments at top — write-query SKILL.md Step 2 requires metric definitions as SQL comments including inclusion/exclusion criteria
-- [x] PASS: Query uses CTEs over subqueries — write-query SKILL.md Step 4 mandates CTEs over subqueries as a hard rule
-- [x] PASS: Query filters out test accounts and acme-corp domain — write-query SKILL.md Step 4 covers filter application; the skill requires all exclusion criteria from the decomposition to be applied
-- [x] PASS: Skill includes ≥2 sanity check queries — write-query SKILL.md Step 5 mandates ≥2 sanity checks covering the specified types
-- [x] PASS: Final SELECT uses descriptive column names — write-query SKILL.md covers naming conventions in the query documentation section
-- [x] PASS: Data sources section documents grain and data quality issues — write-query SKILL.md Step 3 requires grain documentation and known quality issues per table
-- [~] PARTIAL: Query handles multiple trial subscriptions per user — write-query SKILL.md Step 6 (common patterns) includes deduplication patterns but handling multiple trials is not called out as a mandatory step; the skill would likely include it under Step 1 decomposition but it's not explicit
-- [x] PASS: Output includes full documentation header, sanity checks, expected result shape, caveats — write-query SKILL.md output format requires all these elements
+- [x] PASS: Skill decomposes question into precise definitions before SQL — Step 1 "Question Decomposition (MANDATORY before writing any SQL)" requires metric, time window, granularity, filters, and comparison baseline before any SQL is written; this is enforced by the MANDATORY label and sequential process instruction
+- [x] PASS: Metric definitions written as SQL comments at top of query — Step 2 shows the exact SQL comment format; rule: "Include the metric definition as a SQL comment at the top of the query. Specify inclusion AND exclusion criteria."
+- [x] PASS: Query uses CTEs over subqueries — Step 4 heading: "Query Architecture (CTEs over subqueries)"; rule: "CTEs over subqueries, always. Subqueries make debugging impossible."
+- [x] PASS: Query filters test accounts and acme-corp domain — Step 1 decomposition requires specifying all filters; Step 2 rules require "Specify inclusion AND exclusion criteria"; the skill would apply all decomposed exclusions in the query
+- [x] PASS: Skill includes ≥2 sanity checks — Step 5 "Sanity Checks (MANDATORY)": "Every query has at least 2 sanity checks"; example shows 5 checks covering percentages, future dates, row counts, and NULL keys
+- [~] PARTIAL: Final SELECT column names are descriptive — no explicit rule in the skill prohibiting single-letter aliases; the query examples all use descriptive names (retention_rate_pct, cohort_week) demonstrating the pattern, but there is no explicit instruction like "column names must be descriptive" or "never alias as a, b, c"; coverage is by example/implication only
+- [x] PASS: Data sources section documents grain and known quality issues — Step 3 "Data Source Identification" requires grain documentation ("what does one row represent?") and "Note any known data quality issues (duplicates, nulls, late-arriving data)" for every table
+- [~] PARTIAL: Query handles multiple trial subscriptions per user — deduplication is mentioned in the anti-patterns section ("Missing deduplication — events table often has duplicates. DISTINCT or dedup CTE before aggregating") and Step 4 example uses DISTINCT; however, the scenario-specific case of multiple trial subscriptions per user is not called out as a required decomposition question in Step 1; the skill would likely produce deduplication via DISTINCT but the `MIN(started_at)` or explicit dedup CTE is not guaranteed
+- [x] PASS: Output includes full documentation header, sanity checks, expected result shape, caveats — Output section explicitly lists all four: "1. SQL query with full documentation (metric definitions, assumptions, data sources), 2. Sanity check queries (at least 2), 3. Expected result shape, 4. Any caveats or limitations"
 
 **Verdict:** PASS
-**Score:** 8.5/9 criteria met (94%)
-**Evaluated:** 2026-04-15
+**Score:** 7.5/9 criteria met (83%)
+**Evaluated:** 2026-04-16
+
+## Notes
+
+Two criteria fall short of full PASS. Column naming is enforced only by example — the documentation template and examples consistently use descriptive names but there's no explicit prohibition on aliases. The multiple-trial deduplication gap is real: the skill's decomposition step asks about "what is unique?" but doesn't explicitly prompt the analyst to consider multiple subscriptions per user when the table grain is one row per subscription. Adding "does any user appear multiple times in the source data for this query?" to the Step 1 decomposition checklist would close this. The previous evaluation gave 8.5/9 by treating column naming as a full PARTIAL — I've kept it at PARTIAL, giving the same result, but noted the distinction.

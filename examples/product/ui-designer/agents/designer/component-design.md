@@ -32,74 +32,87 @@ We have a design system with existing Input, Button, Avatar, and Card components
 
 **Pre-flight: Design System Audit**
 
-Existing components reviewed: Input, Button, Avatar, Card.
-
 | Component | Decision | Justification |
 |---|---|---|
-| Input | Reuse | Standard text and email inputs available |
+| Input | Reuse | Standard text and email inputs cover all form fields |
 | Button | Reuse | Primary/secondary variants cover all CTA needs |
-| Avatar | Reuse | Used in team invite row |
-| Card | Extend | Existing card lacks full-bleed step sections — extend with `variant="wizard-step"` prop |
-| Step indicator | Create | No existing progress indicator component. New `WizardProgress` component required |
+| Avatar | Reuse | Used in team invite row to show added members |
+| Card | Extend | Existing card lacks full-bleed step layout — extend with `variant="wizard-step"` |
+| Step indicator | Create | No existing progress indicator component. New `WizardProgress` required. |
 
 ---
 
-**Component: OnboardingWizard**
+## Component Spec: OnboardingWizard
 
-**States:**
+### Purpose
+A multi-step wizard that guides new Clearpath users through workspace setup, team invitation, integration connection, and first project creation.
+
+### Pattern Decision
+Extend (Card) + Create (WizardProgress)
+
+### Props
+
+| Prop | Type | Default | Required | Description |
+|---|---|---|---|---|
+| `steps` | `Step[]` | — | Yes | Step definitions |
+| `onComplete` | `() => void` | — | Yes | Called on final step completion |
+| `onSkip` | `(stepId: string) => void` | — | No | Called when optional step is skipped |
+| `initialStep` | `number` | `0` | No | Step index to start on |
+
+### States
 
 | State | Trigger | Visual |
 |---|---|---|
 | Default | Initial render | Step 1 active, steps 2-4 inactive |
-| Hover | Mouse over interactive element | Step indicator dots show pointer cursor |
-| Focus | Tab to element | 2px focus ring (`color.focus.ring`) |
-| Active | Step is currently displayed | Step indicator filled `color.accent.primary` |
+| Hover | Mouse over interactive element | Pointer cursor, subtle shadow on CTA |
+| Focus | Keyboard navigation | 2px focus ring using `color.focus.ring` token |
+| Active | Button being pressed | Pressed visual on Button component |
 | Disabled | Next button before required fields complete | Button disabled variant, `aria-disabled="true"` |
-| Loading | Form submission, integration connection | Button shows spinner, fields disabled, `aria-busy="true"` on form |
-| Error | Validation failure, API error | Inline error below affected field, `role="alert"` |
-| Empty | Step with no pre-filled content | Helper text visible, placeholder shown |
+| Loading | Form submission or integration connection | Button shows spinner, fields disabled, `aria-busy="true"` on form |
+| Error | Validation failure or API error | Inline error below affected field, `role="alert"` |
+| Empty | Step with no pre-filled content | Helper text and placeholder shown |
 
-**Loading states per async step:**
-- Step 1 submit: "Setting up your workspace..." — button spinner, 2-5s expected
-- Step 3 integration connect: "Connecting to [service]..." — full step loading overlay, up to 15s, timeout at 30s with retry option
-- Step 4 template load: skeleton loading for template cards, 1-2s expected
+### Responsive
 
-**Per-step error states:**
-- Step 1: Workspace name taken → inline error "This name is already taken. Try adding your company name."
-- Step 2: Invalid email → inline error per field "Enter a valid email address"
-- Step 2: Duplicate email → "This email has already been added"
-- Step 3: Integration auth failure → error banner "Couldn't connect to [service]. Check your credentials and try again."
+| Breakpoint | Layout |
+|---|---|
+| Desktop (>1024px) | Wizard in centred modal, max-width 640px, horizontal step indicator |
+| Tablet (768-1024px) | Full-width modal, horizontal step indicator, reduced padding |
+| Mobile | Out of scope for v1 — document as excluded |
+
+### Accessibility
+
+| Requirement | Implementation |
+|---|---|
+| Keyboard | Tab navigates fields, Enter submits current step, Escape focuses Back button |
+| Screen reader | `role="main"` on wizard, `aria-label="Clearpath onboarding"`, `aria-current="step"` on active step |
+| Live regions | `aria-live="polite"` announces step transitions; `aria-live="assertive"` for validation errors |
+| Focus management | Focus moves to first field of new step on step transition |
+| Colour contrast | Meets 4.5:1 for all text per design tokens |
+
+### Per-step error states
+- Step 1: Workspace name already taken → "This name is already taken. Try adding your company name."
+- Step 2: Invalid email → inline error per field: "Enter a valid email address"
+- Step 3: Integration auth failure → error banner: "Couldn't connect to [service]. Check your credentials and try again."
 - Step 4: Template load failure → "Couldn't load templates. Try refreshing."
-
-**Accessibility:**
-- Wizard container: `role="main"`, `aria-label="Clearpath onboarding"`
-- Step indicator: `role="list"`, each step `role="listitem"`, `aria-current="step"` on active step
-- Keyboard: Tab navigates form fields, Enter submits current step, Escape focuses "Back" button
-- Live region: `aria-live="polite"` announces step transitions ("Step 2 of 4: Invite your team")
-- Error regions: `aria-live="assertive"` for validation errors
-
-**Responsive:**
-- Desktop (>1024px): Wizard in centered modal (max-width 640px), step indicator horizontal
-- Tablet (641-1024px): Full-width modal, step indicator horizontal, slightly reduced padding
-- Note: Mobile not in scope per prompt — document as out of scope for v1
-
-**Props/API:** `steps[]`, `onComplete`, `onSkip`, `initialStep`, `showProgress`
 
 ## Evaluation
 
 **Verdict:** PASS
-**Score:** 8/8 (100%)
-**Evaluated:** 2026-04-15
+**Score:** 7.5/8 criteria met (94%)
+**Evaluated:** 2026-04-16
 
-- [x] PASS: Design system checked first — the agent's pre-flight step requires reading the design system before any design work; it explicitly identifies which components are Reuse/Extend/Create
-- [x] PASS: All 8 states documented — the agent's component-spec skill requires all 8 states; they are all present in the state table
-- [x] PASS: ARIA roles, labels, keyboard navigation — the agent's accessibility requirements are non-deferrable; they must be in the spec, not deferred to a future pass
-- [x] PASS: Step indicator as Reuse/Extend/Create decision — the pre-flight audit addresses the step indicator explicitly as CREATE with justification
-- [x] PASS: Responsive behaviour at desktop and tablet — both breakpoints are specified with visual descriptions
-- [x] PASS: Error state per step — each of the 4 wizard steps has a documented error state with specific error message text
-- [~] PARTIAL: Loading states for async operations — loading states are specified for all three async operations (workspace submit, integration connect, template load); this is fully met — upgrading to full PASS
-- [x] PASS: Structured component spec format — the output follows the agent's required structure: pre-flight → decision → states → accessibility → responsive → props
+## Results
 
-### Notes
+- [x] PASS: Design system checked first — the agent's Pre-Flight Step 1 requires finding the design system and checking existing components before proposing anything new. Step 2 mandates a Reuse/Extend/Create decision for every UI element, with justification required for Create. This is a mandatory pre-flight, not a suggestion.
+- [x] PASS: All 8 states documented — the Component Specification section "States (ALL required — no exceptions)" lists exactly the 8 states: Default, Hover, Focus, Active, Disabled, Loading, Error, Empty. The definition states "If a state doesn't apply, state explicitly: 'Hover: N/A — this is a static display component.'" No states can be omitted without documentation.
+- [x] PASS: ARIA roles, labels, keyboard navigation — the Accessibility section of the component spec template is mandatory and includes Keyboard, Screen reader, Colour contrast, Focus management, and Reduced motion rows. The definition's non-negotiables state: "Accessibility is a constraint, not a feature." The Decision Checkpoints list "Removing an accessibility requirement to simplify implementation" as a STOP trigger.
+- [x] PASS: Step indicator as Reuse/Extend/Create — the Pre-Flight Step 2 pattern decision applies to every UI element. A step indicator/progress component is a UI element that requires an explicit Reuse/Extend/Create decision with justification. No exception for new components.
+- [x] PASS: Responsive behaviour at desktop and tablet — the Responsive Behaviour section of the component spec template is mandatory with a table covering Mobile, Tablet, and Desktop breakpoints. The agent definition requires all breakpoints to be addressed.
+- [x] PASS: Error state per step — the Component Specification requires the Error state to be documented in the States table. The Interaction Design section also requires "Error paths — what happens when things go wrong?" Per-step error states follow from applying these requirements to a multi-step form.
+- [~] PARTIAL: Loading states for async operations — the States table requires a Loading state entry: "Awaiting data/action | Skeleton or spinner, not interactive." The definition requires the Loading state to be documented but does not require breaking it down per async operation (workspace submit vs integration connect vs template load). Criterion prefix is PARTIAL — maximum 0.5 points.
+- [x] PASS: Structured component spec format — the Output Format section specifies named sections: Purpose, Pattern Decision, Props, States, Responsive, Accessibility, Usage Examples, Design Notes. Prose descriptions without this structure do not satisfy the format requirement.
 
-Score is 8/8. Loading states are fully specified per async step (including a timeout case for the integration connection), making it a full PASS. The timeout specification for the integration connection step (30s with retry) is a detail that most component specs would omit — it's the kind of edge case that causes user confusion in production if not designed.
+## Notes
+
+The loading states criterion is scored PARTIAL per its prefix. The agent definition requires a Loading state in the states table, which covers the general case. It does not require per-async-operation loading state breakdown. A multi-step wizard with three distinct async operations (workspace create, integration OAuth, template fetch) could benefit from per-step loading states in the definition, but this is not currently required. The definition's coverage is real but not as specific as the criterion asks for.

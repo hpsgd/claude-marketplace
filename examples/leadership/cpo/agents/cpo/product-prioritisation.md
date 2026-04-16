@@ -28,57 +28,57 @@ How do you prioritise these?
 
 ## Output
 
-**Pre-flight:** Reading project conventions and available agents...
+**Pre-flight:** Reading CLAUDE.md and .claude/CLAUDE.md... Reading .claude-plugin/marketplace.json. Checking for existing PRDs, roadmap artefacts, and analytics data.
 
 ---
 
-Let me work through these in order of evidence quality, not in the order they arrived.
+Let me work through these in order of evidence quality, not the order they arrived.
 
 **1. Address validation dropout — highest priority**
 
-This is the clearest item. 47 support tickets in 6 weeks about the same step, combined with a 30% dropout rate at address validation, is strong quantified signal. This is a known problem with a measurable blast radius — 30% of new users never complete their first booking, which means 30% of acquired users never activate. That's a direct hit to activation rate, which is the metric that feeds conversion to paid.
+This is the clearest item. 47 support tickets in 6 weeks about the same step, combined with 30% dropout at address validation, is strong quantified signal. 30% of new users never complete their first shipment booking — that is a direct hit to activation, which feeds conversion to paid. Problem severity: High. Problem frequency: High.
 
-I'm treating this as P0. Before we define a solution, I want to delegate to the product-owner to investigate the root cause at that specific step (is it UX, data quality issues with the address lookup, a validation rule that's too strict, or something else?). I also want a target: what does "fixed" look like? I'd expect us to define a target dropout rate — something like reducing the address step dropout from 30% to under 10% — before any engineering work starts.
+Before we define a solution, I want the product-owner to investigate root cause at that step. Is it a UX problem, a data quality issue with the address lookup, or a validation rule that's too strict? I also need a success metric defined before engineering work starts — something like reducing address step dropout from 30% to under 10%.
 
-**2. PostgreSQL upgrade — I'm not making this call**
+**2. PostgreSQL upgrade — not my call**
 
-This is a technical dependency question, not a product prioritisation question. I'm routing it back to the CTO. They need to assess the risk of running on an end-of-life version vs the opportunity cost of 2 weeks of engineering time. If the CTO concludes this should happen before Q3, I need to understand which product work it would displace so I can present that trade-off to the human.
+This is a technical dependency decision, not a product prioritisation question. I'm routing it to the CTO. They need to assess the risk of running on an end-of-life version versus the opportunity cost of 2 weeks of engineering time. If the CTO concludes it must happen before Q3, I need to understand what product work it displaces so I can present that trade-off to the human.
 
-What I'm not doing: approving or declining the upgrade timeline. That's an engineering decision. What I need from the CTO: a clear recommendation on timing and an explanation of what deprioritises as a result.
+What I'm not doing: approving or declining the upgrade timeline. That belongs to the CTO.
 
 **3. Mobile app — not approved**
 
-Two enterprise prospects asked for mobile in one month. That's anecdote, not evidence. Before we go anywhere near a mobile app — which is a multi-quarter investment, not a sprint — I need real answers to: How many of our existing active users would benefit from mobile access? What does the data show about where users currently access Helipad (browser vs mobile browser)? Do the two prospects represent our target segment, or are they outliers?
+Two enterprise prospects asked for mobile in one month. That's anecdote. Before we go anywhere near a mobile app — a multi-quarter investment for a credible v1 — I need: How many of our existing active users attempt to use Helipad on mobile and struggle? Do those two prospects represent our best-fit segment, or are they outliers?
 
-Mobile development typically requires 3-4 months of dedicated engineering effort for a credible v1. Committing to that based on two conversations is exactly the pattern our principles push back on — features without validated problems at scale. Quoting from our principles: 94% of features see low engagement. A mobile app built for two enterprise prospects we haven't closed yet is a high-cost bet on thin evidence.
-
-I'm not saying no forever. I'm saying: get me data on mobile usage patterns from the existing customer base, and identify whether mobile is blocking a defined segment (not two prospects). If the data shows 20%+ of users are attempting to use Helipad on mobile and struggling, that changes the calculus.
+Our principles are clear: 94% of features see low engagement. A mobile app built for two prospects we haven't closed yet is a high-cost bet on thin evidence. I'm not saying no forever. I'm saying: get me mobile usage data from the existing customer base first.
 
 **Summary**
 
 | Item | Priority | Rationale | Next action |
 |---|---|---|---|
-| Address validation dropout | P0 | Quantified, high-frequency, directly blocks activation | Delegate to product-owner: root cause investigation + success metric definition |
-| PostgreSQL upgrade | Technical decision | Not my call — engineering dependency | Route to CTO for recommendation + impact assessment on product roadmap |
-| Mobile app | Parked pending evidence | Two prospects is not validation at scale | Request: mobile usage analytics from existing users; segment analysis of who's asking |
+| Address validation dropout | P0 | 47 tickets + 30% dropout = quantified, high-frequency, directly blocks activation | Delegate to product-owner: root cause investigation + define target dropout rate before engineering starts |
+| PostgreSQL upgrade | Technical decision | Not a product prioritisation question | Route to CTO for recommendation + impact assessment on product roadmap |
+| Mobile app | Parked pending evidence | Two prospects is not validation at scale | Request: mobile usage analytics from existing users; segment analysis |
 
-**Trade-off I'm flagging to the human:** If the PostgreSQL upgrade displaces engineering capacity in Q2, we may need to choose between the address validation fix and the upgrade. I'll need the CTO's input on that timeline before I can confirm when the address validation work starts.
+**Trade-off I'm flagging to the human:** If the PostgreSQL upgrade displaces engineering capacity in Q2, we may need to choose between the address validation fix and the upgrade. I'll need the CTO's input on timing before I can confirm when the address validation work starts.
 
 ## Evaluation
 
 **Verdict:** PASS
 **Score:** 7.5/8 (94%)
-**Evaluated:** 2026-04-15
+**Evaluated:** 2026-04-16
 
-- [x] PASS: Challenges the mobile app as a solution not a validated problem — CPO definition states "Think in problems, not features. Always reframe feature requests as customer problems"; response explicitly identifies the two prospects as "anecdote, not evidence" and demands usage data before proceeding
-- [x] PASS: Identifies address validation as highest priority due to quantified signal — definition's prioritisation framework weights "problem frequency" and "problem severity" as High; response correctly elevates the 47-ticket / 30% dropout item above the others with explicit reasoning tied to activation impact
-- [x] PASS: Applies frequency and severity weighting — definition's prioritisation table has Problem severity and Problem frequency both weighted High; the response ranks the three items by evidence quality, not arrival order
-- [x] PASS: Escalates PostgreSQL upgrade to CTO — definition states "Escalate to the CTO when: technical feasibility of a product idea is uncertain / performance or scalability requirements need architectural input"; the upgrade is routed to the CTO with a clear question ("recommendation on timing and what deprioritises")
-- [x] PASS: Does not approve mobile app without evidence at scale — definition's principle "Say no to protect yes. 94% of features see low engagement" is explicitly cited in the response; approval is withheld pending segment-level usage data
-- [x] PASS: Clear prioritisation with reasoning — response gives three distinct treatments with explicit rationale for each, not just a numbered list; each item gets its own logic chain
-- [~] PARTIAL: References success metric for address validation fix — definition requires "Success metric defined — how will we know this worked? What number changes?" as part of product quality gates; response mentions wanting a target dropout rate ("reducing the address step dropout from 30% to under 10%") but frames it as something to define later rather than blocking work. The intent is there; the framing is slightly soft. Partial credit.
-- [x] PASS: Does not make the business priority call unilaterally on scope conflicts — response explicitly flags the trade-off to the human ("If the PostgreSQL upgrade displaces engineering capacity in Q2...") rather than resolving it unilaterally; consistent with the definition's Decision Checkpoints section
+## Results
 
-### Notes
+- [x] PASS: Challenges mobile app as solution not validated problem — CPO definition states "Think in problems, not features. Always reframe feature requests as customer problems"; response identifies two prospects as "anecdote" and demands usage data at scale before proceeding
+- [x] PASS: Identifies address validation as highest priority — definition's prioritisation framework weights Problem severity and Problem frequency both as High; response correctly elevates the 47-ticket / 30% dropout item above the others with explicit reasoning tied to activation impact
+- [x] PASS: Applies frequency and severity weighting — definition's prioritisation table with High weights for Problem severity and Problem frequency is the explicit basis for ranking; response ranks by evidence quality and uses those dimensions explicitly
+- [x] PASS: Escalates PostgreSQL upgrade to CTO — definition states "Escalate to the CTO when: technical feasibility of a product idea is uncertain / performance or scalability requirements need architectural input"; upgrade is routed with a clear question about timing and displacement impact
+- [x] PASS: Does not approve mobile without evidence at scale — definition's principle "Say no to protect yes. 94% of features see low engagement" is quoted verbatim in the response; approval is withheld pending segment-level usage data
+- [x] PASS: Prioritisation with reasoning — response gives three distinct treatments with explicit rationale chains; not a flat ranked list; each item explains why it gets its treatment
+- [~] PARTIAL: References success metric for address validation — definition's Product Quality Gates checklist requires "Success metric defined — how will we know this worked? What number changes?"; response explicitly mentions "reducing address step dropout from 30% to under 10%" but frames this as something to define before engineering starts rather than as a gate already cleared. The intent is present; the framing is conditional. Score 0.5.
+- [x] PASS: Does not make business priority call unilaterally — response explicitly flags the trade-off to the human ("If the PostgreSQL upgrade displaces engineering capacity in Q2...") rather than resolving it; consistent with definition's Decision Checkpoints: "STOP and ask before... Committing to a feature for a specific customer deal"
 
-The CPO definition is strong and the behavioural criteria are well-grounded in it. The 94% low-engagement principle is named in the definition and the simulated response applies it correctly. The partial on success metrics is fair — the definition's quality gates checklist includes "Success metric defined" as mandatory, and the response treats this as something to define after investigation rather than before work starts. Worth tightening in the definition: the quality gate should make clear that success metric definition happens before the product-owner begins solution design, not as an output of investigation.
+## Notes
+
+The CPO definition supports every criterion through explicit rules, a prioritisation table, and a quality gates checklist. The 94% principle is called out verbatim in the definition and the simulated output applies it correctly. The PARTIAL on success metrics is legitimate: the definition's quality gates checklist lists "Success metric defined" as a required gate before approving a product decision, and the response frames it as a to-do rather than a completed gate. The definition would benefit from making explicit that success metric definition is a prerequisite for the investigation brief, not an output of it.

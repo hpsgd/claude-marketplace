@@ -28,9 +28,9 @@ Scenario: A developer joins a new project and wants to understand the current st
 ## Project Health Report
 
 ### Summary
-- Rules: 8 installed (5 from marketplace, 3 project-specific/learned)
-- Plugins: checking settings...
-- Documentation: CLAUDE.md present
+- Rules: 8 installed (5 from marketplace, 3 learned)
+- Plugins: none configured (no project-level settings.json)
+- Documentation: CLAUDE.md present at project root
 - Memory: 12 learning files (2 Critical, unresolved)
 - Wisdom: 2 frames (0 growing, 0 stable, 2 stale)
 - Learnings: 12 captured (2 critical, 10 other)
@@ -80,16 +80,15 @@ No project-level plugin configuration. Relying on global settings only.
 
 `CLAUDE.md` at project root: **present**
 `.claude/CLAUDE.md`: not found
-Sub-project CLAUDE.md files: not scanned (no `src/` subdirectories detected)
+Sub-project CLAUDE.md files: none found
 
-Coverage: basic. Single CLAUDE.md at root — no workspace-level documentation.
+Coverage: basic — single CLAUDE.md at root; no workspace-level documentation.
 
 ---
 
 #### 4. Memory Health
 
-`.claude/memory/` or equivalent: checking...
-Found 12 learning files.
+`.claude/memory/` found — 12 learning files
 
 | Type | Count |
 |---|---|
@@ -113,9 +112,6 @@ Found 2 frames in `.claude/memory/`:
 | wisdom-development | 14 | 45 days ago | **STALE** (>30 days) |
 | wisdom-architecture | 9 | 47 days ago | **STALE** (>30 days) |
 
-Crystallised principles: 3 (across both frames)
-Cross-domain principles: 1
-
 ---
 
 #### 6. Learning Coverage
@@ -128,36 +124,39 @@ Cross-domain principles: 1
 | Important | 7 | No |
 | Minor | 3 | No |
 
-⚠️ **2 Critical learnings remain unresolved.** Unresolved Critical learnings indicate incidents whose prevention rules have not been applied or verified.
+⚠️ **2 Critical learnings remain unresolved.** These indicate incidents whose prevention has not been applied.
 
-Pattern candidates (5+ in same category): METHOD has 5 learnings — possible pattern candidate.
+Pattern candidates: METHOD has 5 learnings — possible pattern candidate.
 
 ---
 
 ### Recommendations
 
-1. **Resolve 2 Critical learnings** — read `.claude/memory/` critical learning files and confirm their prevention rules are either: (a) implemented and working, or (b) captured as learned rules in `.claude/rules/`
-2. **Update wisdom-development frame** — 45 days stale; 14 observations but no update in 45 days suggests new work isn't being fed back into the frame. Run `/wisdom` to review and update
-3. **Update wisdom-architecture frame** — same issue, 47 days stale
-4. **Create project-level settings.json** — currently relying on global settings only; add plugin configuration for this project if needed
-5. **Review METHOD pattern candidate** — 5 METHOD learnings may be ready to synthesise into a pattern; run `/thinking:learning` to review
+1. **Resolve 2 Critical learnings** — read the critical learning files in `.claude/memory/` and confirm their
+   prevention rules are implemented or captured as learned rules in `.claude/rules/`
+2. **Update wisdom-development frame** — 45 days stale; run `/wisdom` to review and update
+3. **Update wisdom-architecture frame** — 47 days stale; same action
+4. **Create project-level settings.json** — add plugin configuration for this project if needed
+5. **Review METHOD pattern candidate** — 5 METHOD learnings may be ready to synthesise; run `/thinking:learning`
 ```
 
 ## Evaluation
 
 **Verdict:** PASS
 **Score:** 7.5/8 (94%)
-**Evaluated:** 2026-04-15
+**Evaluated:** 2026-04-16
 
-- [x] PASS: Skill checks both global and project-level rule locations using tool calls — the skill's Section 1 mandates `ls -la ~/.claude/rules/` and `ls -la .claude/rules/` as actual bash commands; the Rules section states "Every health-check item must be verified with a tool call (ls, grep, read). Do not report based on memory"
-- [x] PASS: Report distinguishes marketplace from learned rules with counts — Section 1 instructs checking "Which plugin installed it (from the namespace prefix, e.g., `coding-standards--`)" and "Whether it's a learned rule (`learned--` prefix)"; the output shows both categories with counts
-- [x] PASS: Stale wisdom frames flagged as stale — Section 5 Wisdom Frame Health defines "Stale: Not updated in 30+ days"; 45 days clearly exceeds this threshold; the Rules section states "Staleness is a finding"
-- [x] PASS: Unresolved Critical learnings explicitly flagged — Section 6 Learning Coverage checks for "unresolved critical learnings"; the Rules section states "Never fabricate coverage. If a section has no data... report 'none found' — do not skip the section"; the simulated output flags unresolved criticals as a specific warning
-- [x] PASS: Each section reports what IS found, not what should be — the Rules section states "Report what IS, not what SHOULD BE. A health check describes current state. Recommendations go in a separate section, not mixed with findings"; sections describe state, recommendations are separate
-- [x] PASS: Missing project-level settings.json reported as "none found" — the skill mandates checking `.claude/settings.json` as part of Section 2; the Rules section states "Never fabricate coverage... report 'none found'" — not skipping the section
-- [x] PASS: Report uses the defined output format — the Output Format section defines summary header then per-section details structure; all six sections (Rules, Config, CLAUDE.md, Memory, Wisdom, Learning) are present with the defined summary at top
-- [~] PARTIAL: Recommendations produce specific actions — the skill's output format includes a Recommendations section; the Rules section doesn't prescribe specificity level for recommendations, but the criterion asks for specific actionable suggestions. The simulated output names specific frames and specific files. Partial because the definition includes a Recommendations section but doesn't mandate minimum specificity — leaving this to agent judgment.
+## Results
 
-### Notes
+- [x] PASS: Skill checks both global and project-level rule locations using tool calls — Section 1 mandates `ls -la ~/.claude/rules/` and `ls -la .claude/rules/` as bash commands; Rules section states "Every health-check item must be verified with a tool call (ls, grep, read). Do not report based on memory"
+- [x] PASS: Report distinguishes marketplace from learned rules with counts — Section 1 checks "Which plugin installed it (from the namespace prefix)" and "Whether it's a learned rule (learned-- prefix)"; the report format includes "breakdown by source (marketplace vs learned)"
+- [x] PASS: Stale wisdom frames flagged as stale — Section 5 defines "Stale: Not updated in 30+ days"; Rules section states "Staleness is a finding." 45 days exceeds the threshold; the definition provides the specific threshold required to produce the correct classification
+- [x] PASS: Unresolved Critical learnings explicitly flagged as a finding — Section 6 checks for "unresolved critical learnings" as a distinct check item. Rules section states "Never fabricate coverage. If a section has no data... report 'none found'" — the unresolved status is a finding, not just a count
+- [x] PASS: Each section reports what IS found, recommendations separate — Rules section states "Report what IS, not what SHOULD BE. A health check describes current state. Recommendations go in a separate section, not mixed with findings"
+- [x] PASS: Missing settings.json reported as "none found" — Section 2 covers `.claude/settings.json` explicitly; Rules section states "Never fabricate coverage... report 'none found' — do not skip the section"
+- [x] PASS: Output uses defined format with summary header then per-section details — Output Format section defines the exact structure: summary header, then "### Details" with per-section content, then "### Recommendations"
+- [~] PARTIAL: Recommendations produce specific actions — Output Format includes a Recommendations section. The definition doesn't prescribe specificity level — it says "[specific actions to improve coverage]" in the template but the Rules section doesn't enforce this. PARTIAL ceiling applies per criterion prefix.
 
-The health-check skill is more procedural than analytical — it's a systematic scan rather than a decision skill. The six-section structure is clear and consistent. The staleness thresholds (7/30 days for growing/stable/stale) are well-defined. The rule against reporting based on memory (must use tool calls) is an important guard against hallucinated health reports. One gap: the skill doesn't explicitly define what "unresolved" means for a Critical learning — the agent would need to infer this from context.
+## Notes
+
+The health-check skill is procedural and scan-based rather than analytical. The six-section structure is clear. The rule requiring tool calls for every check (not memory-based reporting) is an important guard against hallucinated health reports. One gap: the skill doesn't define what "unresolved" means for a Critical learning — the agent would need to infer from context whether "unresolved" means no follow-up action exists, no learned rule has been created, or the incident recurred.

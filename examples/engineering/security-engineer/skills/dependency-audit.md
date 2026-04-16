@@ -24,40 +24,60 @@ Review the dependency-audit skill definition and verify it produces a triaged, e
 
 **Simulated skill output for this prompt:**
 
-Step 2 vulnerability scan: runs per-stack tools with JSON output — `npm audit --json`, `pip-audit --format=json`, `dotnet list package --vulnerable --include-transitive`, `govulncheck ./...`, `cargo audit`. Structured output required; errors noted with alternative attempted.
+Step 2 vulnerability scan — per-stack tools with JSON output:
+- Node.js: `npm audit --json`
+- .NET: `dotnet list package --vulnerable --include-transitive`
+- Python: `pip-audit --format=json`
+- Go: `govulncheck ./...`
+- Rust: `cargo audit`
 
-Step 3 reachability analysis — three specific questions per CVE:
-1. Is the vulnerable code path reachable? (grep import chain, check if the vulnerable function is called)
-2. Is the vulnerability exploitable in this context? (network access, user input, environment requirements)
-3. What is the actual impact? (RCE = Critical regardless; data exposure depends on what data; DoS depends on availability requirements)
+Structured output required. If a tool fails to run, the error is noted and an alternative attempted. Full output captured — not truncated.
 
-Step 4 triage — four categories with criteria, action, timeline:
-- Fix now: reachable, HIGH/CRITICAL severity, fix available → today
-- Fix soon: reachable, MEDIUM severity → this sprint
-- Monitor: not reachable or LOW severity → next review
-- Accept: non-exploitable in context, documented → review in 90 days
+Step 3 reachability analysis (MANDATORY for each vulnerability):
 
-Every "Accept" requires an owner and a review date.
+Question 1 — Is the vulnerable code path reachable? Grep the import chain, check whether the vulnerable function is actually called in this codebase.
 
-Step 5 CVE assessment: for each HIGH/CRITICAL finding — package name, version, fixed version, CVSS score, vector string, attack vector, description, reachability evidence (import chain with file:line), exploitability assessment, recommended action.
+Question 2 — Is the vulnerability exploitable in this context? Does the CVE require network access the package doesn't have? User input it never receives? Windows-only conditions on a Linux deployment?
 
-Step 6 outdated/deprecated check: `npm outdated`, `dotnet list package --outdated`, `pip list --outdated`. Packages assessed by maintenance risk (major version behind, critical dependency type, deprecation status with recommended replacement).
+Question 3 — What is the actual impact? RCE = Critical regardless of reachability assessment. Data exposure severity depends on what data. DoS severity depends on availability requirements.
 
-Step 7 license compliance: `npx license-checker --summary`, `pip-licenses`. GPL/AGPL flagged as requiring legal review (copyleft may require open-sourcing). Non-commercial and no-license flagged as incompatible.
+Step 4 triage — four categories:
 
-Anti-patterns documented: `npm audit fix` blindly, ignoring transitive vulnerabilities, suppressing without reason/owner/expiry.
+| Category | Criteria | Action | Timeline |
+|---|---|---|---|
+| Fix now | Reachable, HIGH/CRITICAL, fix available | Upgrade or patch immediately | Today |
+| Fix soon | Reachable, MEDIUM severity | Schedule fix | This sprint |
+| Monitor | Not reachable or LOW severity | Track for changes | Next review |
+| Accept | Assessed non-exploitable in context | Document with owner + expiry | Review in 90 days |
+
+Every "Accept" requires an owner and a review date. Accepted risks are re-evaluated, not closed.
+
+Step 5 CVE assessment detail — for each HIGH/CRITICAL:
+- Package, version, fixed version
+- CVSS score and vector string
+- Attack vector
+- Description
+- Reachable: YES/NO with import chain evidence (file:line)
+- Exploitability assessment
+- Recommended action
+
+Step 6 outdated/deprecated check: `npm outdated`, `dotnet list package --outdated`, `pip list --outdated`. Each package assessed by risk level (major version behind on critical dependency = High; deprecated with recommended replacement flagged).
+
+Step 7 license compliance: `npx license-checker --summary`, `pip-licenses`. GPL/AGPL flagged as requiring legal review (copyleft may require open-sourcing the codebase). Non-commercial and no-license flagged as incompatible.
+
+Anti-patterns called out: running `npm audit fix` blindly; ignoring transitive vulnerabilities; suppressing findings without a reason, owner, and expiry date.
 
 ## Evaluation
 
-- [x] PASS: Skill requires per-stack audit tools with JSON output — dependency-audit SKILL.md Step 2 lists all five tools (npm audit, pip-audit, dotnet list package --vulnerable, govulncheck, cargo audit) and specifies `--json` flags where available
-- [x] PASS: Skill mandates reachability analysis with three specific questions — dependency-audit SKILL.md Step 3 is titled "Reachability Analysis (MANDATORY for each vulnerability)" and defines Question 1 (reachable?), Question 2 (exploitable in context?), and Question 3 (actual impact?)
-- [x] PASS: Skill defines four triage categories with criteria, action, and timeline — dependency-audit SKILL.md Step 4 table defines Fix now, Fix soon, Monitor, Accept with Criteria, Action, and Timeline columns
-- [x] PASS: Skill requires every Accept to have an owner and review date — dependency-audit SKILL.md Step 4 rules: "Every 'Accept' has an owner and a review date. Accepted risks don't disappear — they're re-evaluated"
-- [x] PASS: Skill requires detailed CVE assessment for HIGH/CRITICAL including CVSS score, vector string, import chain, recommended action — dependency-audit SKILL.md Step 5 template requires all these fields including vector string and import chain evidence
-- [x] PASS: Skill covers outdated and deprecated packages — dependency-audit SKILL.md Step 6 covers outdated packages by risk level (major/minor/patch version) and deprecated packages with replacement evaluation
-- [x] PASS: Skill lists anti-patterns including npm audit fix blindly and suppressing without documentation — dependency-audit SKILL.md Anti-Patterns section explicitly names both
-- [~] PARTIAL: Skill addresses license compliance with GPL/AGPL flagging — dependency-audit SKILL.md Step 7 covers license compliance scanning with specific tools and flags copyleft (GPL, AGPL) as requiring legal review; the section is present and complete but marked as "if applicable" which introduces conditionality
+- [x] PASS: Skill requires per-stack audit tools with JSON output — SKILL.md Step 2 lists all five tools with JSON flags (`npm audit --json`, `pip-audit --format=json`) and rules: "Run the audit tool with JSON output when available — structured data is easier to triage"
+- [x] PASS: Skill mandates reachability analysis with three specific questions — SKILL.md Step 3 is titled "Reachability Analysis (MANDATORY for each vulnerability)" and defines Question 1 (reachable?), Question 2 (exploitable in context?), and Question 3 (actual impact?) explicitly
+- [x] PASS: Skill defines four triage categories with criteria, action, and timeline — SKILL.md Step 4 table with columns: Category, Criteria, Action, Timeline; all four categories present
+- [x] PASS: Skill requires every Accept to have owner and review date — SKILL.md Step 4 rules: "Every 'Accept' has an owner and a review date. Accepted risks don't disappear — they're re-evaluated"
+- [x] PASS: Skill requires CVE assessment detail for HIGH/CRITICAL including CVSS score, vector string, import chain, recommended action — SKILL.md Step 5 template explicitly requires all four fields including "CVSS: [score] ([vector string])" and "Import chain: [your code] -> [package A] -> [vulnerable function]"
+- [x] PASS: Skill covers outdated and deprecated packages — SKILL.md Step 6 is a dedicated section covering outdated packages by risk level (major/minor/patch version behind) and deprecated packages with replacement evaluation
+- [x] PASS: Skill lists anti-patterns including blind npm audit fix and suppressing without documentation — SKILL.md Anti-Patterns section explicitly names "Running `npm audit fix` blindly" and "Suppressing without documenting — audit suppressions must have a reason, an owner, and an expiry date"
+- [~] PARTIAL: Skill addresses license compliance with GPL/AGPL flagging — SKILL.md Step 7 covers license compliance scanning with `npx license-checker` and `pip-licenses`, and explicitly flags "Copyleft (GPL, AGPL) — may require open-sourcing your code. Legal review required"; the section is present and complete but labelled "(if applicable)" which introduces conditionality; maximum 0.5 per PARTIAL-prefixed criterion ceiling
 
 **Verdict:** PASS
 **Score:** 7.5/8 criteria met (94%)
-**Evaluated:** 2026-04-15
+**Evaluated:** 2026-04-16

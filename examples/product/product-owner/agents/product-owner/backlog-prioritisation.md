@@ -35,60 +35,59 @@ Which ones should we do next sprint?
 
 ## Output
 
-Before I give you a priority order, I need to flag some gaps that make real RICE scoring impossible right now — and one item I'd push back on entirely.
+Before prioritising, I need to flag some data gaps that prevent complete RICE scoring — and one item I'd push back on entirely.
 
 **Clarifying questions:**
 
-For items 5 (API rate limit), 6 (onboarding), and 7 (Slack notifications): What does success look like? What does "enough evidence to prioritise" mean for your team? Without drop-off data on onboarding and a count of affected API users, I'd be making up Reach numbers.
-
-For item 3 (SSO): Is the security review blocking the deal or blocking our build? If the deal is blocked pending SSO, the timeline is external — when do you need to ship?
+- Item 3 (SSO): Is the security review a blocker on the deals or on our build? What's the timeline the enterprise customers need?
+- Item 5 (API rate limit): What does success look like? How many users are actually hitting the limit?
+- Item 6 (Onboarding): Where do users drop off? Without that data, any improvement is a guess.
+- Item 7 (Slack notifications): What revenue impact are we expecting? 47 upvotes is social signal, not business case.
 
 ---
 
-**What I can say with confidence:**
+**What I can assess with confidence:**
 
-**SSO/SAML (Item 3) is your highest priority.** $180k ARR in 2 deals with a hard technical dependency. This is revenue-evidenced, not opinion-evidenced. Everything else is noise until this is resolved.
+**Item 3 — SSO/SAML: highest priority.** $180k ARR in two deals with a hard technical dependency. This is revenue-evidenced and deal-blocking. RICE partial estimate: Impact = 3 (massive — deal-blocking); Confidence = 90%; Reach and Effort need input from engineering and security.
 
-RICE estimate (partial — needs effort from security + engineering):
-- Reach: 2 deals × potential ARR multiplier
-- Impact: 3 (massive — deal-blocking)
-- Confidence: 90% (explicit customer requirement)
-- Effort: unknown pending security review
+**Item 2 — CSV export: second priority.** ~200 customers is a real Reach number from the sales team. Internal finance need is active. RICE: Reach = 200; Impact = 2; Confidence = 80%; Effort = TBD from engineering.
 
-**CSV export (Item 2) is second.** ~200 customers is a concrete Reach number. Internal finance request suggests active current need. Revenue connection through sales team is real.
+**Item 8 — Performance improvements: include.** P95 = 4.2s is measurable evidence. This affects all users. Engineering-evidenced. No customer request needed for a measured problem.
 
-**Performance improvements (Item 8) should go in.** P95 of 4.2s is measurable, affects all users, engineering-evidenced. This is tech debt with a real user impact — it doesn't need a customer request.
+**Items I would not build this sprint:**
 
-**Items I'd not build this sprint:**
+Item 4 (Mobile redesign): Zero customer evidence. The design team wanting to do it is not a priority signal. Per our process, prioritisation requires evidence of the underlying user problem. Push back and ask for customer data.
 
-Mobile redesign (Item 4): No customer evidence. Design team wanting it is not a priority signal. Push back: what problem is this solving for whom? Come back with customer evidence.
+Item 6 (Onboarding improvements): CS anecdote without drop-off data. Building an improvement without knowing where the problem is will miss the actual issue. Instrument the funnel first.
 
-Onboarding improvements (Item 6): CS says users struggle — but "no data on where they drop off" means you don't know what to improve. **Build the instrumentation first.** An unfocused onboarding improvement will miss the actual problem.
+Item 5 (API rate limit): One user. Unknown scope. Not this sprint.
 
-API rate limit (Item 5): One user. Unknown impact. Not this sprint.
+**Social proof items (Items 1 and 7):** CEO opinion and forum upvotes are not the same as revenue impact evidence. Dark mode has 3 enterprise customer requests — real signal, but needs an effort estimate before committing. Slack notifications: unknown revenue impact goes to backlog pending data.
 
-**Social proof items (Dark mode, Slack notifications):** CEO opinion and forum upvotes are not the same as revenue impact. Dark mode is a real customer request (3 enterprise accounts) but needs an effort estimate before committing. Slack notifications with unknown revenue impact go to backlog pending data.
+**Data gathering actions:**
+- Instrument the onboarding funnel (prerequisite for Item 6)
+- Survey API rate-limit users to get Reach count (prerequisite for Item 5)
+- Confirm SSO timeline with deal contacts (Item 3)
 
-**Data gathering actions for next sprint:**
-- Instrument onboarding funnel (Item 6 prerequisite)
-- Survey API rate-limit complainants to get real Reach count (Item 5)
-- Ask SSO deal contacts for exact timeline requirement (Item 3)
+**Recommended sprint:** Items 3, 2, 8 (in that order). Items 1, 6, 7 return to backlog with data requirements attached. Item 4 requires customer evidence before re-submission. Item 5 needs a real Reach number.
 
 ## Evaluation
 
 **Verdict:** PASS
-**Score:** 8/8 (100%)
-**Evaluated:** 2026-04-15
+**Score:** 7.5/8 (93.75%)
+**Evaluated:** 2026-04-16
 
-- [x] PASS: Asks clarifying questions before prioritising — the agent's [NEEDS CLARIFICATION] protocol requires asking before acting when data is insufficient; it identifies missing Reach/Impact data for items 5, 6, and 7
-- [x] PASS: Flags incomplete RICE scoring — the agent knows RICE requires Reach/Impact/Confidence/Effort; it explicitly flags which items can't be scored and why
-- [x] PASS: SSO/SAML identified as highest priority — the agent's revenue-impact orientation and the $180k ARR evidence would surface this clearly; it's deal-blocking with hard evidence
-- [x] PASS: Mobile redesign questioned — the agent requires customer evidence before building; "design team wants it" is explicitly an insufficient signal per the agent's problem validation requirement
-- [~] PARTIAL: RICE framework applied — the agent applies RICE where data allows (SSO partial, others flagged as insufficient); it can't produce full RICE scores without Reach/Impact data — partial credit stands as the framework is referenced and partially applied, not fully scored
-- [x] PASS: Revenue evidence vs social proof distinction — the agent distinguishes SSO/CSV (revenue-evidenced) from dark mode/Slack (social proof/opinion-evidenced)
-- [x] PASS: Data gathering actions recommended — "instrument onboarding funnel" and "survey API complainants" are specific actions before building; this aligns with the agent's evidence-first approach
-- [x] PASS: Prioritised output with reasoning — the agent produces ranked priorities with explicit rationale for each; rank without reasoning is rejected
+## Results
 
-### Notes
+- [x] PASS: Asks clarifying questions before prioritising — the agent's [NEEDS CLARIFICATION] protocol requires marking gaps when data is insufficient. The agent definition explicitly states "If you can't answer these four questions, you're not ready to write a spec" and requires evidence for reach, impact, and confidence before scoring. The agent would ask before acting on items 3, 5, 6, and 7.
+- [x] PASS: Flags incomplete RICE scoring — the agent definition requires RICE scoring with evidence: "Show the calculation. Don't just say 'high priority' — prove it." For items missing Reach or Impact data, the agent marks them as incomplete. This is enforced by the [NEEDS CLARIFICATION] protocol.
+- [x] PASS: SSO/SAML identified as highest priority — the agent's prioritisation framework requires RICE scoring with evidence, and $180k ARR with a hard technical dependency produces the strongest revenue-evidence signal in the list. The agent's principle "94% of features see low engagement — push back on feature requests" cuts the noise; the SSO deal is revenue-evidenced and would surface first.
+- [x] PASS: Mobile redesign questioned — the agent definition requires "How do you know?" as the second problem validation question. "Design team wants it" with no customer evidence fails this gate. The agent's decision checkpoint states "Prioritising a feature without usage data or customer evidence" triggers a STOP.
+- [~] PARTIAL: RICE framework applied — the agent applies RICE where data allows (partial scores for SSO, CSV export, performance) and flags missing data for others. The definition requires showing calculations but cannot produce complete scores without Reach/Effort inputs. This criterion is PARTIAL-prefixed — maximum score is 0.5 regardless.
+- [x] PASS: Revenue evidence vs social proof distinction — the agent's quality checklist requires "Problem statement backed by evidence (not assumption)." The agent distinguishes SSO/CSV (revenue-evidenced) from dark mode/Slack (social proof) through the problem validation requirement: "How do you know?" CEO opinion and forum upvotes do not satisfy the evidence requirement.
+- [x] PASS: Data gathering actions — the agent's principle "Evidence compounds" and the [NEEDS CLARIFICATION] protocol require identifying what data is needed and assigning ownership before building. The agent would recommend instrumenting the onboarding funnel and surveying API users as prerequisites.
+- [x] PASS: Prioritised output with reasoning — the agent's output format requires "RICE: [score] (Reach: X, Impact: Y, Confidence: Z%, Effort: W weeks)" and the quality checklist requires reasoning to be stated. A ranked list without rationale fails the output format requirement.
 
-PARTIAL on RICE is appropriate. The agent can't score items without Reach and Impact data — saying "RICE: unknown" is the correct behaviour, not a failure. Score is 7.5/8 (93.75%) — PARTIAL verdict. The agent's strongest move here is pushing back on onboarding improvements ("instrument first") rather than accepting the request at face value. That's the right PO behaviour and it's grounded in the agent's definition.
+## Notes
+
+PARTIAL on RICE is correct. The agent cannot produce full RICE scores without Reach and Effort data — and the definition correctly requires that missing data be flagged rather than guessed. The agent's strongest enforcement mechanism here is the decision checkpoint: "Prioritising a feature without usage data or customer evidence" is a STOP condition, not just a warning. That gate catches Item 4 (mobile redesign) precisely.

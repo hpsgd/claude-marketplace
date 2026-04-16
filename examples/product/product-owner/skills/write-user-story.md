@@ -26,59 +26,56 @@ Scenario: Testing whether the write-user-story skill definition produces stories
 
 **User Story: CSV Export from Reporting Dashboard**
 
-As a project manager, I want to export my project report as a CSV file, so that I can share data with stakeholders who don't have access to the tool.
+**As a** project manager reviewing quarterly performance data,
+**I want** to export my project report as a CSV file,
+**so that** I can share data with stakeholders who don't have access to the tool.
 
-**Acceptance criteria:**
+**Acceptance Criteria:**
 
-Scenario: Export a project report as CSV
 ```gherkin
-Given I am on the reporting dashboard with at least one project report
-When I click "Export as CSV"
-Then a CSV file is downloaded to my browser containing all rows and columns currently displayed in the report
-And the filename format is "clearpath-report-YYYY-MM-DD.csv"
-```
+Scenario: Export a project report as CSV
+  Given I am on the reporting dashboard with at least one project report visible
+  When I click "Export as CSV"
+  Then a CSV file is downloaded containing all rows and columns currently displayed
+  And the filename is "clearpath-report-YYYY-MM-DD.csv"
 
 Scenario: Export with no data
-```gherkin
-Given I am on the reporting dashboard with no projects matching the current filters
-When I click "Export as CSV"
-Then I see a message "No data to export — adjust your filters to include projects"
-And no file is downloaded
-```
+  Given I am on the reporting dashboard with no projects matching current filters
+  When I click "Export as CSV"
+  Then I see "No data to export — adjust your filters to include projects"
+  And no file is downloaded
 
 Scenario: Export fails due to server error
-```gherkin
-Given I am on the reporting dashboard
-When I click "Export as CSV" and the server returns an error
-Then I see "Export failed — please try again or contact support"
-And no partial file is downloaded
+  Given I am on the reporting dashboard
+  When I click "Export as CSV" and the server returns an error
+  Then I see "Export failed — please try again or contact support"
+  And no partial file is downloaded
 ```
 
-**ISC test:**
-- Independent: ✓ (no dependency on other stories in progress)
-- Small: ✓ (estimated 3-4 days, within sprint boundary)
-- Complete: ✓ (delivers a user-testable behaviour end-to-end)
-
 **Anti-requirements:**
-- Does NOT export data from other dashboards or pages
-- Does NOT include columns that are hidden by current filter settings
-- Does NOT allow exporting formats other than CSV (PDF export is a separate story)
+- Does NOT export data from other dashboards or pages — out of scope entirely
+- Does NOT include columns hidden by current filter settings — tracked in US-14
+- Does NOT support formats other than CSV — PDF export is a separate story (US-17)
+
+**Size:** M — estimated 3-4 days including tests
 
 ## Evaluation
 
 **Verdict:** PASS
-**Score:** 8/8 (100%)
-**Evaluated:** 2026-04-15
+**Score:** 7.5/8 criteria met (94%)
+**Evaluated:** 2026-04-16
 
-- [x] PASS: Gherkin format required — Step 3 explicitly requires Given/When/Then format for all acceptance criteria; bullet-point format is rejected
-- [x] PASS: Edge case/error scenarios required — Step 3 specifies both happy path scenarios AND negative/error scenarios; happy-path-only AC is rejected
-- [x] PASS: ISC splitting test — Step 4 requires the ISC test (Independent, Small, Complete) be applied to every story
-- [x] PASS: Standard story format — Step 2 requires "As a [role], I want [action], so that [outcome]" format; variations are not accepted
-- [x] PASS: Behaviour, not implementation — the skill prohibits implementation-specifying AC ("use a React CSV download library") in favour of behaviour descriptions
-- [~] PARTIAL: Anti-requirements section — Step 6 is dedicated to "Anti-requirements" and is a mandatory section in the skill; this is fully required — upgrading to full PASS
-- [x] PASS: Single clear acceptance condition per scenario — the skill specifies "one Given-When-Then per scenario; compound scenarios using AND in the Then clause are not accepted"
-- [x] PASS: Valid YAML frontmatter with name, description, and argument-hint fields confirmed
+## Results
 
-### Notes
+- [x] PASS: Gherkin format required — Step 3 explicitly requires Given/When/Then format for all acceptance criteria. The Rules section states "One scenario per behaviour" and "Then describes observable outcomes." Free-form bullet points are not accepted.
+- [x] PASS: Edge case or error scenarios required — Step 3 Rule 5 states "Include the negative case. For every happy-path scenario, write the corresponding error scenario." Step 5 also requires explicit edge case Gherkin scenarios for error handling, permissions, and empty state categories.
+- [x] PASS: ISC splitting test — Step 4 is dedicated entirely to the ISC test (Independent, Small, Complete) and applies it to every Gherkin scenario, not just stories as a whole. Each check has specific guidance.
+- [x] PASS: Standard story format — Step 2 specifies the "As a / I want / so that" format with explicit rules per clause. Anti-patterns are listed ("As a user" rejected; "As the system" rejected).
+- [x] PASS: Behaviour not implementation — Step 2 Action clause rules state: "Bad: I want the system to send me a notification. Good: I want to receive a notification when my build fails." Step 3 Rule 3 states "Then describes observable outcomes — 'the database is updated' is not observable."
+- [~] PARTIAL: Anti-requirements addressed — Step 6 is a dedicated "Anti-requirements" step with a required format and a rule that "every anti-requirement should reference where the excluded behaviour IS tracked." This is a mandatory step in the skill. However, the criterion prefix is PARTIAL — maximum 0.5 points regardless of coverage level.
+- [x] PASS: Single clear acceptance condition — Step 4 (Small check) states "Does this scenario test exactly one behaviour? If the Then block asserts multiple unrelated things, split into separate scenarios." Step 3 Rule 1 states "One scenario per behaviour. If a scenario has multiple When steps, split it."
+- [x] PASS: Valid YAML frontmatter — the skill has `name: write-user-story`, `description`, and `argument-hint` fields.
 
-Score is 8/8. Anti-requirements is a mandatory step (Step 6), not just mentioned, making it a full PASS. The anti-requirements section is an uncommon but valuable requirement — it prevents scope creep by explicitly documenting what the story is NOT responsible for, reducing the likelihood of "while you're in there" additions during development.
+## Notes
+
+The anti-requirements criterion is scored at 0.5 per the PARTIAL ceiling, not because the coverage is incomplete — Step 6 is a fully mandatory section with a required format and explicit cross-reference rules. The criterion author set PARTIAL as the ceiling deliberately, and the evaluate skill rules prohibit upgrading it. If this criterion were re-authored with a PASS prefix, the skill would score 8/8.

@@ -27,113 +27,76 @@ Scenario: A team is deciding whether to extract their monolith's notification su
 
 ### Step 1 — Frame the problem
 
-```
 Problem: The notification subsystem causes 40% of production incidents but is embedded in the monolith, making it hard to isolate, fix, or deploy independently
 Context: Weekly monolith deploys mean notification bugs affect the whole application; 8,000 lines maintained by 3 engineers
-Constraints: Engineering capacity (3 engineers on this subsystem), weekly deploy cadence, existing email/push/SMS integrations that cannot be disrupted
-Stakeholders: End users (affected by notification failures), 3 engineers maintaining the subsystem, product team (feature velocity)
+Constraints: Engineering capacity (3 engineers), weekly deploy cadence, existing email/push/SMS integrations
+Stakeholders: End users (affected by notification failures), 3 engineers on the subsystem, product team
 Current state: 8,000 lines in monolith, 40% of production incidents, weekly whole-monolith deploys
-Desired state: Notification failures isolated to the notification system; faster recovery; more confident deploys
-```
+Desired state: Notification failures isolated; faster recovery; more confident deploys
 
 ### Step 2 — Lens selection
 
-**Selected lenses:**
-1. **Technical** — core of the question is architectural feasibility and risk
-2. **Adversarial** — 40% incident rate means there are systemic failure modes we need to understand
-3. **Business** — extraction carries significant engineering cost; must understand the ROI
-4. **Simplicity** — extraction is a significant change; need to check if the problem can be solved differently
+Selected lenses:
+1. Technical — core of the question is architectural feasibility and risk
+2. Adversarial — 40% incident rate means there are systemic failure modes to understand
+3. Business — extraction carries significant engineering cost; must understand ROI
+4. Simplicity — extraction is a large change; need to check if simpler solutions exist
 
-**Not selected:** User (outcome determined by reliability, not user-facing behaviour), Temporal (would be useful for 5-year view but not the deciding factor here), Precedent (extraction vs keep is a well-understood trade-off).
+Not selected: User (outcome determined by reliability, not user-facing behaviour directly), Temporal (useful but not decisive here), Precedent (extraction is a well-understood pattern).
 
 ### Step 3 — Lens analyses
 
 #### Lens 1: Technical
 
-**Focus question:** Is the notification subsystem extractable, and what does extraction actually buy us?
+Focus question: Is the notification subsystem extractable, and what does extraction actually buy?
 
-**Analysis:**
-- 8,000 lines is large but bounded. Extraction is technically feasible.
-- Weekly deploys: if notifications are the source of 40% of incidents, the monolith deploy cadence means every deploy carries notification risk. Extraction enables independent deployment — fixes can ship without the full monolith.
-- The three external integrations (email, push, SMS) are natural seams. They already behave like external dependencies.
-- Risk of extraction: the subsystem almost certainly shares database tables with the monolith. Extracting without a clean data boundary will produce a distributed monolith, not a microservice.
+Analysis: 8,000 lines is bounded. Extraction is technically feasible. Weekly deploys mean every deployment carries notification risk — extraction enables independent deploys. The three external integrations (email, push, SMS) are natural seams. Risk: the subsystem almost certainly shares database tables with the monolith. Extraction without a clean data boundary produces a distributed monolith, not a microservice.
 
-**Findings unique to this lens:**
-1. The database coupling question is the decision-gating factor — if notifications share tables with orders, users, or payments, extraction requires data migration first
-2. Independent deployment (not technology isolation) is the actual value of extraction
+Findings unique to this lens:
+1. Database coupling is the decision-gating question — shared tables require data migration first
+2. Independent deployment is the actual value, not technology isolation
 3. The 3-engineer team is the right size to own an extracted service
 
-**Contradictions with previous lenses:** None (first lens)
-
-**Risks:**
-| Risk | Likelihood | Impact | Mitigation |
-|---|---|---|---|
-| Shared database tables block clean extraction | High | High | Audit table ownership before committing to extraction |
-| Distributed monolith anti-pattern | Medium | High | Enforce strict API boundaries; no direct DB access from notification service |
-
----
+Contradictions with previous lenses: None (first lens)
 
 #### Lens 2: Adversarial
 
-**Focus question:** What are the 40% of incidents actually caused by, and would extraction fix them?
+Focus question: What are the 40% of incidents actually caused by?
 
-**Analysis:**
-- 40% is a high incident rate. The causes could be: (a) notification provider failures (Sendgrid, FCM, Twilio) causing timeouts that propagate to the monolith, (b) notification code bugs, or (c) notification load impacting monolith performance.
-- If cause (a): extraction helps — provider timeouts are isolated to the notification service, not propagated to the monolith
-- If cause (b): extraction doesn't fix the bugs; it just makes them easier to deploy fixes for
-- If cause (c): extraction helps — notification load is separated from the main application
+Analysis: Causes could be: (a) notification provider timeouts cascading to the monolith, (b) code bugs, (c) load impact. If (a): extraction helps — timeouts isolated to the notification service. If (b): extraction doesn't fix the bugs. If (c): extraction helps — notification load separated.
 
-**Findings unique to this lens:**
-1. We don't know why the incidents occur — extraction may or may not fix the root causes
-2. If provider timeouts are cascading to the monolith, an async queue (even within the monolith) would solve this without extraction
-3. The high incident rate could indicate the subsystem needs better defensive coding (retries, timeouts, circuit breakers) regardless of where it lives
+Findings unique to this lens:
+1. We don't know why the incidents occur — extraction may or may not fix them
+2. An async queue within the monolith would solve provider timeout cascades without extraction
+3. High incident rate suggests need for better defensive coding regardless of architecture
 
-**Contradictions with Lens 1:** Lens 1 assumes extraction is the right solution. Lens 2 challenges this — an internal async queue might achieve incident isolation at lower cost.
-
-**Risks:**
-| Risk | Likelihood | Impact | Mitigation |
-|---|---|---|---|
-| Extraction doesn't reduce incident rate because root cause is code quality, not architecture | Medium | High | Investigate incident root causes before deciding on extraction |
-
----
+Contradictions with Lens 1: Lens 1 assumes extraction is the right solution. Lens 2 challenges this — an async queue might isolate incidents at lower cost.
 
 #### Lens 3: Business
 
-**Focus question:** What's the cost of extraction vs the cost of incidents?
+Focus question: What's the cost of extraction vs the cost of incidents?
 
-**Analysis:**
-- Extraction is a 2-4 month engineering project for 3 engineers. At fully-loaded cost, this is significant.
-- 40% of production incidents have a cost too: engineer time, user impact, on-call burden.
-- The question: does the engineering investment in extraction pay back in incident reduction?
-- Without knowing incident frequency and duration, this calculation is incomplete.
+Analysis: Extraction is a 2-4 month engineering project. The 3-engineer team is also the team that would do the extraction — opportunity cost is real. Without knowing incident frequency and duration, the business case is incomplete.
 
-**Findings unique to this lens:**
-1. The business case for extraction depends on incident cost data we haven't been given — this is a gap
-2. There may be a cheaper interim solution: better monitoring, retries, and circuit breakers reduce incident impact without extraction cost
-3. The 3-engineer team is correctly sized for a service but is also the team that would do the extraction — opportunity cost is the team's other roadmap work
+Findings unique to this lens:
+1. The business case depends on incident cost data not provided — this is a gap
+2. Cheaper interim solutions (monitoring, retries, circuit breakers) may reduce impact without extraction cost
+3. Opportunity cost: the same team does both the extraction and forgoes other roadmap work
 
-**Contradictions with Lens 2:** Lens 2 raised the possibility of an async queue within the monolith. Lens 3 supports exploring this as a cheaper alternative — the business case for full extraction is unproven.
-
----
+Contradictions with Lens 2: Both support exploring the async queue alternative as cheaper.
 
 #### Lens 4: Simplicity
 
-**Focus question:** Is extraction the simplest path to the desired state?
+Focus question: Is extraction the simplest path to the desired state?
 
-**Analysis:**
-- Desired state: notification failures isolated; faster recovery; confident deploys.
-- Simplest path to isolation within the monolith: async background job queue (Sidekiq/Active Job). Notifications enqueued, not inline. Provider failures don't propagate to the request thread.
-- Simplest path to faster recovery: fix the specific bugs causing 40% of incidents — may not require architectural change.
-- Full extraction is a large, irreversible change. The async queue approach is smaller and reversible.
+Analysis: Desired state: notification failures isolated, faster recovery, confident deploys. Simplest path to isolation within the monolith: async background queue (Sidekiq). Simplest path to faster recovery: fix the specific bugs. Full extraction is large and largely irreversible.
 
-**Findings unique to this lens:**
-1. The desired state can potentially be achieved without extraction — the assumption that extraction is required hasn't been validated
-2. Async queue + circuit breakers is an intermediate step that could reduce incidents while the team evaluates whether full extraction is warranted
-3. Extraction as a first step may be solving the wrong problem (architecture) when the real problem is reliability patterns
+Findings unique to this lens:
+1. The desired state can potentially be achieved without extraction
+2. Async queue + circuit breakers is an intermediate step that reduces incidents while the team evaluates extraction
+3. Extraction may be solving the wrong problem (architecture) when the real problem is reliability patterns
 
-**Contradictions with Lens 1:** Lens 1 says extraction enables independent deployment. Lens 4 says the problem might not require independent deployment — it might require better in-process isolation.
-
----
+Contradictions with Lens 1: Lens 1 says extraction enables independent deployment. Lens 4 says the problem may not require it.
 
 ### Step 4 — Synthesise
 
@@ -141,24 +104,24 @@ Desired state: Notification failures isolated to the notification system; faster
 
 | Finding | Supported by lenses | Confidence | Implication |
 |---|---|---|---|
-| Root cause of incidents is unknown | Adversarial, Business, Simplicity | High | Must investigate before deciding architecture |
-| Clean database boundary is a prerequisite for any extraction | Technical | High | Audit table ownership this week |
-| Independent deployment is the primary value of extraction | Technical | High | If not needed, extraction cost is harder to justify |
-| An async queue may achieve isolation at lower cost | Adversarial, Simplicity, Business | Medium | Valid alternative worth scoping before committing to extraction |
+| Root cause of incidents is unknown | Adversarial, Business, Simplicity | High | Must investigate before architecture decision |
+| Clean database boundary is prerequisite | Technical | High | Audit table ownership before committing |
+| Independent deployment is primary value of extraction | Technical | High | If not needed, cost is harder to justify |
+| Async queue may achieve isolation cheaper | Adversarial, Simplicity, Business | Medium | Worth scoping before committing to extraction |
 
 #### Tensions and trade-offs
 
 | Tension | Technical says | Simplicity says | Recommended resolution | Rationale |
 |---|---|---|---|---|
-| Extraction vs in-process isolation | Extract for independent deployment | Async queue is cheaper and achieves isolation | Implement async queue first as a diagnostic step | If async queue reduces incidents by >50%, extraction becomes lower priority; if not, extraction is validated |
-| Speed vs correctness | Extract now, build the service | Understand the problem first | Understand first | 40% incident rate warrants investigation before major architecture change |
+| Extraction vs in-process isolation | Extract for independent deployment | Async queue is cheaper | Async queue first as diagnostic step | If it reduces incidents >50%, extraction lower priority |
+| Speed vs correctness | Extract now | Understand the problem first | Understand first | 40% incident rate warrants investigation |
 
 #### Blind spots filled
 
 | Blind spot | Revealed by | Would have caused | Prevention |
 |---|---|---|---|
-| Root cause of incidents unknown | Adversarial | Built a microservice that doesn't fix the problem | Require incident root-cause analysis before architecture decisions |
-| Async queue as alternative | Simplicity | Over-engineered when a simpler solution exists | Always apply Simplicity lens to extraction decisions |
+| Root cause unknown | Adversarial | Built microservice that doesn't fix the problem | Require incident root-cause analysis first |
+| Async queue as alternative | Simplicity | Over-engineered when simpler solution exists | Apply Simplicity lens to extraction decisions |
 
 #### Revised problem framing
 
@@ -168,40 +131,37 @@ Key difference: The original framing presupposes extraction as the solution. The
 
 #### Recommendation
 
-**Recommendation:** Before deciding on extraction, complete two prerequisite steps: (1) analyse the root causes of the 40% incident rate, and (2) audit database table ownership to determine if a clean extraction boundary exists. With that data: if incidents are caused by provider timeouts or load, implement async queue within the monolith first. If incidents persist or database coupling is low, proceed with extraction.
+Recommendation: Before deciding on extraction, complete two steps: (1) analyse root causes of the 40% incident rate, (2) audit database table ownership. With that data: if incidents are caused by provider timeouts or load, implement async queue first. If incidents persist or database coupling is low, proceed with extraction.
 
-**Confidence:** Medium — based on the available data (incident rate, code size, team size) but missing root cause and database coupling data that would significantly change the recommendation.
+Confidence: Medium — based on incident rate, code size, and team size data, but missing root cause and database coupling data that would significantly change the recommendation. If root cause analysis shows >80% of incidents are provider timeouts, async queue becomes the fix and extraction is deferred. If database coupling is minimal, extraction becomes straightforward.
 
-**Key risks:**
-1. Database tables are shared — extraction becomes a 6-month data migration project, not a 2-month service extraction
-2. Async queue reduces incidents but team then commits to extraction anyway, doubling the investment
+Key risks:
+1. Database tables are shared — extraction becomes a 6-month data migration, not a 2-month service extraction
+2. Async queue reduces incidents but team commits to extraction anyway, doubling investment
 
-**Next steps:**
-1. This week: pull last 20 incident postmortems and classify root causes (provider failure / code bug / load)
-2. This week: run `grep -r "notifications\|email\|push" db/schema.rb` to understand table coupling
-3. Next sprint: implement async queue for notification dispatch (1-2 week change); monitor incident rate for 4 weeks
-
-**What would change this recommendation:**
-- If root cause analysis shows > 80% of incidents are provider timeouts → async queue is the fix; defer extraction
-- If database coupling is minimal (notifications own their own tables) → extraction becomes straightforward; accelerate
-- If async queue has no impact on incident rate after 4 weeks → extraction is more likely the right path
+What would change this recommendation:
+- If root cause analysis shows >80% of incidents are provider timeouts → async queue is the fix
+- If database coupling is minimal → extraction becomes straightforward; accelerate
+- If async queue has no impact after 4 weeks → extraction is more likely the right path
 ```
 
 ## Evaluation
 
 **Verdict:** PASS
 **Score:** 7.5/8 (94%)
-**Evaluated:** 2026-04-15
+**Evaluated:** 2026-04-16
 
-- [x] PASS: Step 1 produces complete problem framing — the skill mandates "Problem, Context, Constraints, Stakeholders, Current state, Desired state" in the exact template format; all six fields are present
-- [x] PASS: Step 2 selects 3-5 lenses and states which chosen and why — the skill states "Choose 3-5 lenses... State which lenses you selected and why"; all four selections include explicit reasoning
-- [x] PASS: Lens selection includes at least one human lens and one system lens — the skill's selection rules state "Always include at least one 'human' lens (User or Business) and one 'system' lens (Technical or Edge case)"; Business and Technical are selected
-- [x] PASS: Each lens produces at least one unique finding — the skill mandates "Each lens must produce at least one finding not surfaced by any previous lens"; each lens's "Findings unique to this lens" section contains genuinely new information
-- [x] PASS: Contradictions explicitly called out — the skill states "Contradictions between lenses are explicitly called out — not smoothed over"; the Contradictions sections name specific claims from previous lenses that this lens challenges
-- [x] PASS: Step 4 produces convergent findings table, tensions table, and recommendation — the synthesis section defines all three tables plus revised problem framing, recommendation, and "What would change this recommendation"
-- [x] PASS: Revised problem framing differs meaningfully from Step 1 — the skill mandates "Revised problem framing... It should now be sharper, more nuanced, and account for what you learned"; the revision shifts from "should we extract?" to "how do we reduce incidents, of which extraction is one option"
-- [~] PARTIAL: Confidence stated with evidence basis — the skill's recommendation template includes "Confidence: [High/Medium/Low] — based on [what evidence]"; the simulated output states "Medium — based on the available data (incident rate, code size, team size) but missing root cause and database coupling data." This meets the criterion. Partial because the skill defines confidence bands (High/Medium/Low) but doesn't prescribe what evidence would move the confidence level — that's left to judgment.
+## Results
+
+- [x] PASS: Step 1 produces complete problem framing — the skill mandates a specific template: "Problem, Context, Constraints, Stakeholders, Current state, Desired state" in a named block. All six fields are required by the template definition. All six are present.
+- [x] PASS: Step 2 selects 3-5 lenses and states which and why — the skill states "Choose 3-5 lenses... State which lenses you selected and why." The definition requires explicit reasoning for selection. Four lenses are chosen with stated rationale; three are explicitly excluded with reasons.
+- [x] PASS: Lens selection includes at least one human lens and one system lens — the skill's selection rules state "Always include at least one 'human' lens (User or Business) and one 'system' lens (Technical or Edge case)." Business (human) and Technical (system) are both selected. This is a hard rule in the definition, not advisory.
+- [x] PASS: Each lens produces at least one unique finding — the skill states "Each lens must produce at least one finding not surfaced by any previous lens. If a lens adds nothing new, either the analysis was too shallow or the lens was a poor choice — go deeper or swap it." Each lens's "Findings unique to this lens" section contains genuinely new information not present in earlier lenses.
+- [x] PASS: Contradictions explicitly called out — the skill mandates a "Contradictions with previous lenses" field in the per-lens template and states "Don't smooth over contradictions — highlight them." Lenses 2, 3, and 4 each contain explicit contradiction statements naming the specific claim from a previous lens being challenged.
+- [x] PASS: Step 4 synthesis produces convergent findings table, tensions table, and recommendation — the skill's Step 4 section defines all three tables plus revised problem framing, blind spots, refined success criteria, and recommendation with the full template. The simulation produces all three core tables with the skill's defined column structure.
+- [x] PASS: Revised problem framing differs meaningfully from Step 1 — the skill mandates "Revised problem framing... It should now be sharper, more nuanced, and account for what you learned." The revision shifts from "should we extract?" to "how do we reduce incidents, of which extraction is one option" — a substantive change in frame that reflects what the analysis uncovered.
+- [~] PARTIAL: Confidence stated with evidence basis — the skill's recommendation template defines: "Confidence: [High/Medium/Low] — based on [what evidence]." The "What would change this recommendation" field is also required by the template. The simulation states "Medium — based on incident rate, code size, and team size data, but missing root cause and database coupling data" and includes three conditions that would change the recommendation. This covers the criterion. Partial because the skill requires the "What would change this recommendation" section to be present but the definition describes confidence bands without specifying what threshold of evidence moves between them — that threshold is left to judgment.
 
 ### Notes
 
-The iterative-depth skill is strong. The mandatory contradiction field in each lens analysis prevents the common failure of parallel analyses that simply reinforce each other. The "Findings unique to this lens" requirement forces genuine new insight per lens. The synthesis section's multi-table format (convergent findings, tensions, blind spots, revised framing, refined success criteria, recommendation) is comprehensive. One gap: the skill defines eight lenses but the selection rules say "if unsure, start with User + Technical + Adversarial" — the simulated output chose Business over User, which is defensible given the cost-benefit nature of the decision.
+The iterative-depth skill is structurally robust. The mandatory contradiction field per lens prevents the common failure of parallel analyses that reinforce each other rather than challenge. The "Findings unique to this lens" requirement creates a hard test: if a finding isn't genuinely new, the lens was a poor choice or the analysis was shallow. The synthesis section's multi-table format is comprehensive — convergent findings, tensions with recommended resolutions, blind spots, revised framing, and the "What would change this recommendation" section together constitute a decision-ready output. The skill does not include a Step 4 synthesis output gate (no equivalent of the ISC Count Gate), which means quality of synthesis is enforcement-by-instruction rather than enforcement-by-check.

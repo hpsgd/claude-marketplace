@@ -26,69 +26,81 @@ Scenario: Testing whether the content-strategy skill uses the Diataxis framework
 
 **Content Strategy: Clearpath Help Centre**
 
-**Step 1 — Content inventory (140 articles):**
+**Step 1 — Inventory (140 articles):**
 
-Each article classified by Diataxis type:
+| # | Document | Path | Quadrant | Feature area | Last updated | Status |
+|---|---|---|---|---|---|---|
+| 1 | Getting started with time tracking | /docs/time/start.md | Tutorial | Time tracking | 2023-01-12 | Stale |
+| 2 | How to read utilisation reports | /docs/reports/utilisation.md | How-to | Reporting | 2022-08-04 | Stale |
+| ... | ... | ... | ... | ... | ... | ... |
 
-| Diataxis type | Count | % | Notes |
-|---|---|---|---|
-| Tutorial | 8 | 6% | Heavily underrepresented |
-| How-to | 61 | 44% | Core of current docs |
-| Reference | 42 | 30% | Many stale (product changes) |
-| Explanation | 29 | 20% | Uneven quality |
-| Orphaned (no clear type) | — | — | Found 14 articles with no clear purpose |
+Summary: 8 Tutorial (6%), 61 How-to (44%), 42 Reference (30%), 29 Explanation (20%). 14 orphaned articles with no clear quadrant.
 
-**Step 2 — Gap analysis:**
+**Step 2 — Coverage matrix:**
 
-By product area × Diataxis quadrant:
-
-| Product area | Tutorial | How-to | Reference | Explanation |
+| Feature | Tutorial | How-to | Reference | Explanation |
 |---|---|---|---|---|
-| Time tracking | ✗ Missing | ✓ | Stale | ✗ Missing |
-| Reporting | ✗ Missing | Partial | Stale | ✓ |
-| Integrations | ✗ Missing | ✓ | ✗ Missing | ✗ Missing |
-| Admin settings | ✗ Missing | ✓ | ✓ | ✗ Missing |
+| Time tracking | No | Yes | Stale | No |
+| Reporting | No | Partial | Stale | Yes |
+| Integrations | No | Yes | No | No |
+| Admin settings | No | Yes | Yes | No |
 
-Critical gap: Tutorials are nearly absent. Users who can't find a guided walkthrough default to support tickets — which explains the ticket pattern.
+**Step 3 — Gap analysis:**
 
-**Content standards:**
-- Tutorial: Goal-oriented, from nothing to a working setup, each step numbered with expected result, ≤10 steps
-- How-to: Task-focused, starts with prerequisite check, numbered steps, troubleshooting at end
-- Reference: Comprehensive, updated within 2 weeks of product changes, includes all options and defaults
-- Explanation: Concept-focused, answers "why" not "how", links to relevant how-tos
+Missing content: Tutorials are nearly absent (6%). All admin and integration areas lack explanation docs. Reference docs for time tracking and reporting are stale.
 
-**Coverage matrix:** [140 articles × user task matrix — see attached]
+Stale content: 14 reference articles flagged as outdated by product changes.
 
-**Prioritised roadmap:**
+Orphaned: 14 articles with no inbound links or navigation entry.
 
-P0 (next 30 days — highest ticket volume):
-1. Tutorial: Getting started with time tracking
-2. How-to: Reading utilisation reports (reference is stale)
-3. Tutorial: Setting up your first integration
+Common patterns: Tutorial gap (onboarding path has no guided walkthrough), Freshness gap (major feature changes not reflected).
 
-P1 (next 90 days):
-4-8. [update stale reference articles for top 5 product areas]
+**Step 4 — Prioritised backlog:**
 
-P2 (next 6 months):
-9-15. [fill remaining tutorial gaps, add explanation articles for complex features]
+| Priority | Content piece | Quadrant | Feature | Effort | Owner |
+|---|---|---|---|---|---|
+| P0 | Getting started tutorial | Tutorial | Onboarding | M | Docs lead |
+| P0 | Utilisation reports how-to | How-to | Reporting | S | Docs lead |
+| P1 | Integration reference | Reference | Integrations | L | Docs lead |
 
-**Content maintenance:** Review schedule — product releases trigger an audit of related articles within 5 business days. Owner: Documentation lead. Metric: stale article rate (target: <10% of articles >90 days out of date).
+**Step 5 — Content standards:**
+
+| Quadrant | Structure | Length | Must include |
+|---|---|---|---|
+| Tutorial | Numbered steps with outcomes | 10-30 min | Prerequisites, working example, next steps |
+| How-to | Numbered steps, minimal explanation | 2-5 min | Goal in title, single outcome |
+| Reference | Tables, parameter lists | Complete | Every option, every error code |
+| Explanation | Prose with diagrams | As needed | Why, not how |
+
+**Step 6 — Roadmap:**
+
+Phase 1 (Weeks 1-4): Foundation — onboarding tutorial, top 3 stale how-tos.
+Phase 2 (Weeks 5-8): Completeness — reference docs for integrations and admin.
+Phase 3 (Weeks 9-12): Depth — explanation articles for complex features.
+
+Ongoing maintenance: monthly freshness review, feature-change trigger, quarterly coverage audit, support ticket review.
 
 ## Evaluation
 
 **Verdict:** PASS
-**Score:** 8/8 (100%)
-**Evaluated:** 2026-04-15
+**Score:** 7.5/8 criteria met (94%)
+**Evaluated:** 2026-04-16
 
-- [x] PASS: Diataxis framework applied — Step 1 classifies all content as Tutorial/How-to/Reference/Explanation; other taxonomies are not accepted
-- [x] PASS: Content inventory before recommendations — Step 1 is "Inventory existing content" and is mandatory; no recommendations can be made until this is complete
-- [x] PASS: Gap analysis — Step 3 produces a gap analysis identifying missing or underrepresented content types by product area
-- [x] PASS: Prioritised content roadmap — Step 4 produces a roadmap with P0/P1/P2 prioritisation and rationale based on user impact (ticket volume, coverage gaps)
-- [x] PASS: Content standards per type — Step 5 defines quality standards for each Diataxis content type; "good enough" is defined per type
-- [x] PASS: Coverage matrix required — Step 2 requires a coverage matrix mapping content to user tasks to identify blind spots
-- [~] PARTIAL: Content maintenance — the skill's final step (ongoing maintenance) defines a review process tied to product releases and assigns ownership; this is a required strategy component — upgrading to full PASS
-- [x] PASS: Valid YAML frontmatter with name, description, and argument-hint fields confirmed
+## Results
 
-### Notes
+- [x] PASS: Diataxis framework applied — the skill opens with "using the Diataxis framework" and all six steps classify content as Tutorial, How-to, Reference, or Explanation throughout. The inventory table, coverage matrix, and gap analysis all use Diataxis quadrants as the mandatory taxonomy.
+- [x] PASS: Content inventory before recommendations — Step 1 "Inventory Existing Content" is mandatory and uses Glob/Grep to find and classify all existing documentation before any Steps 2-6 execute.
+- [x] PASS: Gap analysis required — Step 3 "Identify Gaps" is a required step with dedicated tables for missing content, stale content, and orphaned content, structured by feature area and quadrant.
+- [x] PASS: Prioritised content roadmap — Step 4 "Prioritise Content Creation" produces a ranked backlog (P0/P1/P2) with rationale based on user traffic, support ticket volume, and onboarding path impact. Step 6 synthesises this into a phased roadmap.
+- [x] PASS: Content standards per type — Step 5 "Define Content Standards" is a required step with a per-quadrant standards table covering structure, length, and must-include elements.
+- [x] PASS: Coverage matrix required — Step 2 "Map Coverage" explicitly requires a feature-by-quadrant matrix. The output format template shows exactly how it must be structured.
+- [~] PARTIAL: Content maintenance — Step 6's roadmap includes an "Ongoing: Maintenance" section requiring monthly freshness review, feature-change trigger, quarterly coverage audit, and support ticket review. This is a required component of the roadmap output. Maximum score is 0.5 per PARTIAL ceiling — criterion is PARTIAL-prefixed regardless of how fully the definition meets it.
+- [x] PASS: Valid YAML frontmatter — contains `name: content-strategy`, `description`, and `argument-hint` fields.
 
-Score is 8/8. Content maintenance is a required strategy component in the skill (Step 6: "Ongoing maintenance plan" including review triggers, ownership, and staleness metrics), making it a full PASS. The product-release-triggered review cadence is a practical design — calendar-based reviews miss changes that happen between cycles.
+## Notes
+
+This skill is well-structured and closely matches the test criteria. The Diataxis framework is applied consistently across all six steps rather than just mentioned in the introduction.
+
+The content maintenance criterion is PARTIAL-ceilinged by the test author. The definition actually fully requires a maintenance schedule as part of Step 6's output — monthly reviews, feature-change triggers, and ownership are all mandated. The ceiling limits the score to 0.5 regardless.
+
+The prioritisation rationale (Step 4) is notably specific: user traffic, onboarding path, support ticket volume, feature completeness, quadrant balance, and staleness risk are listed with relative weights. This is better than most content strategy skills that just say "prioritise by impact."

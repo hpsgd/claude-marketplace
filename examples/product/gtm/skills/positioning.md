@@ -28,53 +28,94 @@ Scenario: Testing whether the positioning skill applies the April Dunford framew
 **Positioning: Clearpath Analytics**
 
 **Step 1 — Competitive alternatives:**
-What do operations directors use today when they DON'T use Clearpath Analytics?
-- Asana's native reporting (for Asana customers)
-- Monday.com dashboards (for Monday customers)
-- Excel/Sheets manual reporting (the most common alternative)
-- Power BI / Tableau (for data-mature orgs)
 
-**Step 2 — Unique attributes** (relative to Asana/Monday native reporting only — not general claims):
-- Cross-project utilisation data in a single view (Asana/Monday report within, not across, projects)
-- Time-tracking integration built in, not bolted on
-- Exportable to Excel without losing live data connection
+| Alternative | Type | How often chosen | Why customers pick it |
+|---|---|---|---|
+| Asana native reporting | Direct | High | Already in use; no new tool needed |
+| Monday.com dashboards | Direct | High | Visual, flexible, customisable |
+| Excel/Google Sheets | Manual | Very high | Free, familiar, no IT approval |
+| Power BI / Tableau | Adjacent | Low | Data-mature orgs needing deeper analysis |
+| Do nothing / live with it | Status quo | Medium | Switching costs too high |
 
-**Step 3 — Value for operations directors:**
-- Cross-project view → "I can see which team is overloaded before it becomes a crisis"
-- Time tracking → "I have the data I need for client billing without a separate tool"
-- Live export → "My execs get an Excel they trust that doesn't go stale the moment I send it"
+**Step 2 — Unique attributes (relative to alternatives):**
+
+| Unique attribute | Why it matters | Which alternatives lack it |
+|---|---|---|
+| Cross-project utilisation view in one screen | Ops directors manage multiple teams; per-project reports require manual aggregation | Asana, Monday.com (both report within projects) |
+| Time tracking native, not a paid add-on | Client billing and resource analysis without a second tool | Asana (add-on), Monday.com (add-on) |
+| Exportable to Excel with live data connection | Execs trust Excel; stale exports don't | Both competitors export static snapshots only |
+
+**Step 3 — Value mapping:**
+
+| Unique attribute | Capability | Outcome | Business impact |
+|---|---|---|---|
+| Cross-project view | See utilisation across all teams at once | Identify overload before it causes a missed deadline | Reduce late deliveries; protect client relationships |
+| Native time tracking | One tool for resource and billing data | Eliminate the second tool and the Friday reconciliation | Save 2-3 hours/week per ops director |
+| Live Excel export | Send execs a spreadsheet that stays current | Stop the "is this data fresh?" question | Exec reporting time cut from 3 hours to 20 minutes |
 
 **Step 4 — Target customer:**
-Operations directors at 50-500 person companies running 5+ concurrent projects who report to a C-suite that wants numbers, not screenshots.
 
-**Step 5 — Market category:** Advanced project analytics (not "project management reporting").
+Company: 50-500 person companies running 5+ concurrent projects, typically professional services or product companies.
+Buyer: Operations Director or PMO Lead who reports to C-suite and is measured on delivery rate.
+Trigger: Exec asked for a cross-team utilisation report and the ops director had no answer.
+Current solution: Excel, built manually every Friday.
+Must-haves: Cross-project view, export capability, fast onboarding (can't spend 2 weeks configuring).
 
-**Positioning canvas:** [assembled from Steps 1-5 above]
+**Step 5 — Market category:** Advanced project analytics (not "project management" — too broad; not "BI tool" — too technical).
 
-**Positioning statement [DRAFT — requires review]:** "For operations directors managing multi-team workloads at growing companies, Clearpath Analytics is the only project reporting tool that shows cross-project utilisation in real time — so you see capacity problems before they become delivery problems."
+**Positioning canvas:**
 
-**Sales narrative [DRAFT]:** "Your exec wants a number. Asana gives you a project. Clearpath Analytics gives you the number."
+```
+┌─────────────────────────────────────────────────┐
+│ COMPETITIVE ALTERNATIVES                         │
+│ Asana reporting, Monday dashboards, Excel        │
+├─────────────────────────────────────────────────┤
+│ UNIQUE ATTRIBUTES         │ VALUE               │
+│ Cross-project utilisation  │ See overload early  │
+│ Native time tracking       │ Eliminate 2nd tool  │
+│ Live Excel export          │ Fast exec reporting │
+├─────────────────────────────────────────────────┤
+│ TARGET CUSTOMER                                  │
+│ Ops Director, 50-500 person company, 5+ projects │
+├─────────────────────────────────────────────────┤
+│ MARKET CATEGORY                                  │
+│ Advanced project analytics                       │
+└─────────────────────────────────────────────────┘
+```
 
-**Validation questions:** Do prospects immediately understand how this is different from Asana reporting? Do they self-identify with the "ops director with multiple teams" framing? Does "cross-project utilisation" resonate without explanation?
+**Positioning statement:** For operations directors at growing companies managing multiple teams, Clearpath Analytics is the advanced project analytics tool that shows cross-project utilisation in real time. Unlike Asana and Monday reporting, Clearpath gives you the cross-team view — and automatically sends your exec the summary.
 
-**[All copy marked DRAFT — requires GTM, marketing, and leadership review]**
+**Sales narrative:** Your exec wants a number. Right now, your team is building a spreadsheet. Clearpath Analytics gives you the utilisation view across all teams in one screen, plus a weekly summary your exec can read without asking you to explain it. Neither Asana nor Monday can do that without you doing the work manually.
+
+**Step 7 — Validation questions:**
+
+| Question | Tests |
+|---|---|
+| Do ops directors immediately understand "cross-project utilisation"? | Step 2 attribute clarity |
+| Do prospects self-identify with "5+ concurrent projects" framing? | Step 4 specificity |
+| Does "advanced project analytics" help or confuse? | Step 5 category choice |
+| Could a competitor use the same positioning statement? | Overall differentiation |
 
 ## Evaluation
 
 **Verdict:** PASS
-**Score:** 9/9 (100%)
-**Evaluated:** 2026-04-15
+**Score:** 7.5/9 (83.3%)
+**Evaluated:** 2026-04-16
 
-- [x] PASS: April Dunford framework followed — Steps 1-5 map exactly to Dunford's sequence: competitive alternatives → unique attributes → value → target customer → market category
-- [x] PASS: Competitive alternatives as the anchor — Step 1 is "Competitive Alternatives" and the skill states this must come before any attribute or benefit discussion
-- [x] PASS: Unique attributes relative to alternatives — Step 2 explicitly frames attributes as "what only we have that the alternatives don't" — not general strengths
-- [x] PASS: Attributes mapped to specific customer value — Step 3 maps each unique attribute to a specific customer outcome, not generic claims
-- [x] PASS: Complete positioning canvas before messaging — the canvas is assembled in Step 6 from Steps 1-5; taglines and messaging come after
-- [x] PASS: Validation questions — Step 7 is dedicated to "Validation Questions" testing whether the positioning will hold with real customers
-- [x] PASS: Sales narrative as a required section — Step 6 output includes a "Sales narrative" as a required section (not just mentioned) — full PASS
-- [x] PASS: All copy labelled DRAFT — the skill requires all positioning statements, taglines, and narratives to be labelled DRAFT
-- [x] PASS: Valid YAML frontmatter with name, description, and argument-hint fields confirmed
+## Results
 
-### Notes
+- [x] PASS: April Dunford framework — Steps 1-5 map exactly to Dunford's sequence: competitive alternatives → unique attributes → value mapping → target customer → market category; the "Why this order matters" section enforces the sequence explicitly
+- [x] PASS: Competitive alternatives as the anchor — Step 1 is the mandatory first step; the skill states "Most positioning exercises start with the market category... This is wrong" and explains why alternatives must come first
+- [x] PASS: Unique attributes relative to alternatives — Step 2 asks "What do you have that the alternatives don't?" and rules require attributes to be factually true, verifiable, and unique relative to specific alternatives — not general strengths
+- [x] PASS: Attributes mapped to specific value — Step 3 "Value mapping" uses a four-column table: attribute → capability → outcome → business impact; rules require value in customer terms, not product terms, and quantification where possible
+- [x] PASS: Complete canvas before messaging — Step 6 assembles the positioning canvas from Steps 1-5 before the positioning statement and tagline are written; the canvas template comes first in Step 6's output structure
+- [x] PASS: Validation questions — Step 7 "Validation questions" is a dedicated required step with a structured table testing each positioning element against real-world criteria
+- [~] PARTIAL: Sales narrative — Step 6 "Sales narrative" is a required section with a 3-sentence template (problem → outcome → unique attribute); it is fully present in the skill. PARTIAL prefix caps the score at 0.5 regardless.
+- [ ] FAIL: Copy labelled DRAFT — the positioning skill contains no requirement to label the positioning statement, tagline, or sales narrative as DRAFT; no DRAFT rule appears anywhere in the skill definition. This is a gap.
+- [x] PASS: Valid YAML frontmatter — frontmatter contains `name: positioning`, `description`, and `argument-hint` fields
 
-Score is 9/9. The sales narrative is a required section in Step 6 output, not just mentioned, so the PARTIAL criterion earns a full PASS. The Dunford framework implementation is faithful — the competitive-alternatives-first anchoring is the most important element and it's enforced structurally, not just mentioned as a preference.
+## Notes
+
+The DRAFT labelling gap is a real design inconsistency. The GTM agent definition makes DRAFT labelling non-negotiable, but the positioning skill — which is invocable directly — has no such requirement. A user running `/gtm:positioning` without going through the agent would get positioning statements with no DRAFT label. The skill and agent are misaligned here, same issue as in the launch-plan skill.
+
+The Dunford framework implementation is faithful and explicit about sequencing. The "Why this order matters" intro section is unusual and valuable — it pre-empts the most common positioning mistake (leading with category) rather than just listing steps. Step 3's value mapping chain (attribute → capability → outcome → business impact) is more rigorous than most frameworks that stop at "benefit."

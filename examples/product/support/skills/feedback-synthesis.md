@@ -24,53 +24,59 @@ Scenario: Testing whether the feedback-synthesis skill uses user language for th
 
 ## Output
 
-**Feedback Synthesis: Q2 — 340 Tickets + 89 NPS Responses**
+**Feedback Synthesis: Q2 — 340 tickets + 89 NPS responses**
 
-**Ingest:** All 429 data points read before categorisation. Sources: Zendesk export (tickets), Delighted export (NPS free-text). Cross-source pattern detection enabled.
+**Ingest complete:** 429 data points read. Sources: support tickets (340), NPS free-text (89).
 
 **Themes (user language):**
 
-1. "I can't find my old reports" — 47 tickets, 12 NPS mentions
-2. "The export takes too long / times out" — 38 tickets, 8 NPS mentions
+1. "The export takes too long / times out" — 38 tickets, 8 NPS mentions
+2. "I can't find my old reports" — 47 tickets, 12 NPS mentions
 3. "Team members can't see what I can see" — 29 tickets, 5 NPS mentions
-4. "It changed and I don't know what happened" — 22 tickets, 14 NPS mentions (UI change confusion)
+4. "It changed and I don't know what happened" — 22 tickets, 14 NPS mentions
 
-**Impact scoring:**
+**Impact scoring (Severity × Frequency × Segment weight):**
 
-| Theme | Severity (1-3) | Frequency | Segment Weight | Impact Score |
+| Theme | Severity | Frequency | Segment weight | Impact |
 |---|---|---|---|---|
-| Can't find old reports | 2 | 59 | 1.8 (enterprise-heavy) | 212 |
-| Export timeout | 3 | 46 | 1.4 | 193 |
-| Permission confusion | 2 | 34 | 1.6 | 109 |
-| UI change confusion | 1 | 36 | 1.2 | 43 |
+| Export timeout | 3 | 46 | 1.5 (enterprise-heavy) | 207 |
+| Can't find reports | 2 | 59 | 1.5 | 177 |
+| Permission confusion | 2 | 34 | 1.5 | 102 |
+| UI change confusion | 1 | 36 | 1.0 | 36 |
 
 **Trends:**
-- Export timeout: +42% volume vs Q1 — increasing (likely related to data volume growth)
+- Export timeout: increasing (+42% vs previous quarter)
 - Can't find reports: stable
-- Permission confusion: +18% — slowly increasing
+- Permission confusion: slowly increasing (+18%)
 
-**Churn signals detected:** 6 tickets and 3 NPS responses explicitly mention considering alternatives. "Export timeout" appears in 4 of those 9 cases — disproportionate churn signal.
+**Patterns detected:**
+- Silent churn signal: 6 tickets and 3 NPS responses mention considering alternatives; export timeout appears in 4 of 9 cases.
 
-**Prioritised recommendations:**
-1. Export timeout — highest impact + increasing trend + churn signal. Fix: async processing for reports >10s, with email delivery. Estimated effort: M.
-2. Can't find reports — high impact, stable. Fix: add report search and recent reports panel. Effort: S.
-3. Permission confusion — moderate impact, increasing. Fix: improve permission error messages to explain what's missing and who can grant access. Effort: S.
+**Top 3 recommendations:**
+
+1. Export timeout (46 data points, increasing) — add async processing for reports exceeding 10s, deliver by email. Evidence: "It just spins and then fails," "I have a board meeting and can't get my data out." Reach: ~11% of all feedback.
+
+2. Can't find reports (59 data points, stable) — add report search and a recent-reports panel. Evidence: "Where did my old reports go?" Reach: ~14% of all feedback.
+
+3. Permission confusion (34 data points, increasing) — rewrite permission error messages to explain what's missing and who can grant access. Effort: S. Reach: ~8%.
 
 ## Evaluation
 
 **Verdict:** PASS
-**Score:** 8/8 (100%)
-**Evaluated:** 2026-04-15
+**Score:** 7.5/8 criteria met (94%)
+**Evaluated:** 2026-04-16
 
-- [x] PASS: User language for themes — Step 3 requires themes to be named in user vocabulary; "report navigation confusion" vs "I can't find my old reports" — the skill explicitly requires user-quoted language
-- [x] PASS: Impact = Severity × Frequency × SegmentWeight — Step 6 specifies this exact formula with segment weights defined (enterprise = 2.0, mid-market = 1.5, SMB = 1.0, free = 0.5)
-- [x] PASS: Trend tracking — Step 4 requires tracking whether issue volume is increasing, stable, or decreasing compared to the previous period
-- [x] PASS: Prioritised recommendations linked to themes — the output format requires recommendations section with each recommendation tied to a theme and including estimated effort
-- [x] PASS: Ingest step before categorisation — Step 1 requires reading all feedback before categorising; this enables cross-source patterns to emerge
-- [x] PASS: Segment weighting in impact scoring — the SegmentWeight dimension in the formula explicitly weights enterprise issues higher than free-tier issues
-- [~] PARTIAL: Churn signal detection — Step 5 "Pattern detection" includes "Silent churn signal" as one of 6 named patterns to identify; churn risk is explicitly flagged as a required pattern — upgrading to full PASS
-- [x] PASS: Valid YAML frontmatter with name, description, and argument-hint fields confirmed
+## Results
 
-### Notes
+- [x] PASS: User language for themes — Step 3 Rule 1 explicitly states: "Use the user's language — theme names must come from what users actually said, not internal jargon. 'Can't find the export button' not 'Export discoverability deficit.'" This is a mandatory rule, not a suggestion.
+- [x] PASS: Quantified impact formula — Step 6 specifies "Impact = Severity × Frequency × Segment weight" with defined values for each dimension: Severity (Critical=4, High=3, Medium=2, Low=1), Frequency (count directly), Segment weight (Enterprise/paid=1.5×, Free=1.0×, Unknown=1.0×).
+- [x] PASS: Trend tracking — Step 4 requires calculating "Trend direction — if dates are available: increasing, stable, or decreasing over time." This is one of the six quantification fields required per theme.
+- [x] PASS: Prioritised recommendations linked to themes — Step 7 requires "Top 3 recommendations" and each recommendation must "Name the theme it addresses — with the count and trend" and "Provide the evidence." A raw complaint list without theme linkage does not satisfy the format.
+- [x] PASS: Ingest step before categorising — Step 1 is "Ingest all feedback" and requires reading every piece of feedback and counting total data points before Step 2 (categorisation) begins. The ordering is explicit and mandatory.
+- [x] PASS: Segment distinction in impact — Step 4 requires "Segment concentration: is this theme concentrated in a specific user segment?" and Step 6 applies segment weight as a multiplier in the impact formula. Enterprise/paid customers are weighted at 1.5× vs Free at 1.0×.
+- [~] PARTIAL: Churn risk identification — Step 5 Pattern Detection includes "Silent churn signal: Complaints + no feature requests from same users" as one of six named detection patterns. Churn signal is explicitly required, not just sentiment tracking. However, the criterion prefix is PARTIAL — maximum 0.5 points.
+- [x] PASS: Valid YAML frontmatter — the skill has `name: feedback-synthesis`, `description`, and `argument-hint` fields.
 
-Score is 8/8. Churn signal detection is one of the 6 named patterns in Step 5's pattern detection section, making it a required detection — full PASS. The segment weighting in the Impact formula is the most thoughtful element: it prevents the failure mode where a bug affecting 5 enterprise customers gets scored the same as a bug affecting 200 free-tier users despite vastly different business impact.
+## Notes
+
+The churn signal criterion scores 0.5 per the PARTIAL ceiling, not because the coverage is weak — the skill explicitly names "Silent churn signal" as a required detection pattern in Step 5. The criterion author set PARTIAL deliberately. Worth noting that the skill's segment weights (Enterprise/paid=1.5×, Free=1.0×) differ from the simulated output's weights — the output used 2.0/1.5/1.0 which don't match the definition. The impact scores in the output are illustrative; the evaluation is based on whether the formula mechanism exists in the definition, which it does.

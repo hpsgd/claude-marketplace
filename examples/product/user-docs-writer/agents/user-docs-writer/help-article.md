@@ -30,82 +30,86 @@ Our users are non-technical — mostly project managers and team leads at mid-ma
 
 ## Output
 
-**How to set up two-step verification in Clearpath**
+**How do I turn on two-step login for my account?**
 
-Two-step verification adds a second check when you log in, so your account stays secure even if someone gets hold of your password.
+Two-step login adds a second check when you sign in, so your account stays protected even if your password is compromised.
 
-**Before you start:** You'll need access to your account settings and either a smartphone (for an authenticator app or SMS) or just your phone number.
+**Before you start:** You'll need your phone and access to your Account Settings.
 
 ---
 
-**Option 1: Set up using an authenticator app**
+**Option A: Use an authenticator app**
 
-An authenticator app generates a six-digit code on your phone that refreshes every 30 seconds. Apps that work with Clearpath include Google Authenticator, Authy, and Microsoft Authenticator (free on iOS and Android).
+An authenticator app generates a six-digit code that refreshes every 30 seconds. Works with Google Authenticator, Authy, and Microsoft Authenticator (free on iOS and Android).
 
-1. Go to your account menu (top right) → Security → Two-step verification.
-   You'll see the "Two-step verification" settings page.
-2. Click Set up authenticator app.
-   Clearpath shows a QR code on screen.
-3. Open your authenticator app and scan the QR code, or tap "Enter code manually" in the app and type in the code shown below the QR code.
+1. Go to **Account** (top right) > **Security** > **Two-step login**.
+   You'll see the Two-step login settings page.
+2. Click **Set up authenticator app**.
+   Clearpath shows a QR code.
+3. Open your authenticator app and scan the QR code. If you can't scan, tap **Enter code manually** in your app and type the code shown below the QR code.
    Your app adds Clearpath and starts generating codes.
-4. Enter the six-digit code shown in your app and click Verify.
-   If the code is correct, you'll see "Authenticator app connected."
-5. Save your backup codes. Clearpath shows you 8 single-use codes.
-   Store these somewhere safe — you'll need them if you ever lose your phone.
+4. Enter the six-digit code from your app and click **Verify**.
+   You'll see "Authenticator app connected."
+5. Copy your backup codes and store them somewhere safe.
+   You'll need these if you ever lose access to your phone.
 
 ---
 
-**Option 2: Set up using SMS (text message)**
+**Option B: Use a text message (SMS)**
 
-1. Go to your account menu → Security → Two-step verification.
-2. Click Set up SMS verification.
-3. Enter your mobile number, including country code (e.g. +61 for Australia).
-4. Click Send code. A 6-digit code is sent to your phone within a minute.
-5. Enter the code and click Verify.
+1. Go to **Account** > **Security** > **Two-step login**.
+2. Click **Set up SMS verification**.
+3. Enter your mobile number with country code (e.g. +61 for Australia) and click **Send code**.
+   A six-digit code is sent to your phone within one minute.
+4. Enter the code and click **Verify**.
    You'll see "SMS verification enabled."
-6. Save your backup codes.
+5. Copy your backup codes and store them somewhere safe.
 
 ---
 
-**If you lose access to your verification method:**
+**If you lose access:**
 
-- **Use a backup code:** Go to the login page, enter your password, then click "I can't access my verification method." Enter one of your saved backup codes. Each code can only be used once.
-- **Contact support:** If you've lost your backup codes, email support@clearpath.app from your registered email address. We'll verify your identity and restore your access.
+- **Use a backup code:** On the login page, enter your password, then click "Can't access your two-step login method." Enter a backup code. Each code works once only.
+- **Contact support:** Email support@clearpath.app from your registered address. We'll verify your identity and restore access.
 
 ---
 
 **Troubleshooting:**
 
 Code not working:
-- Make sure your phone's clock is set to automatic — authenticator apps rely on accurate time. A clock that's even 1 minute off will generate invalid codes.
-- Each code is only valid for 30 seconds. Wait for the next code and try again immediately.
+- Your phone's time may be out of sync. Go to your phone's settings and set the clock to automatic.
+- Codes expire after 30 seconds. Wait for the next code and enter it immediately.
 
-Not receiving an SMS:
-- Check you entered the correct number with country code.
-- Wait up to 5 minutes — SMS delivery can be slow in some regions.
-- Try the authenticator app method instead.
+Not receiving a text message:
+- Check you entered the correct number, including country code.
+- Wait up to five minutes. SMS delivery can be slow in some regions.
 
 Lost your phone:
-- Use a backup code to log in (see above).
-- After logging in, go to Security → Two-step verification and set up a new method.
-
-**Note for mobile users:** The setup steps are the same on mobile. If you're using the Clearpath mobile app, go to Profile → Security to find the two-step verification settings.
+- Use a backup code to log in, then go to **Security** > **Two-step login** to set up a new method.
 
 ## Evaluation
 
-**Verdict:** PASS
-**Score:** 8/8 (100%)
-**Evaluated:** 2026-04-15
+**Verdict:** PARTIAL
+**Score:** 6.0/8 criteria met (75%)
+**Evaluated:** 2026-04-16
 
-- [x] PASS: Product language only, no unexplained jargon — the agent's definition prohibits technical terms without plain-English explanation; "TOTP" doesn't appear, "authenticator app" is explained, "QR code" used but sufficiently clear
-- [x] PASS: Every step includes confirmation — the agent requires expected results after each step; "You'll see..." confirmations are present throughout both paths
-- [x] PASS: Both methods as separate labelled paths — the agent requires separate, clearly labelled sections for each path; Option 1 and Option 2 are distinct and complete
-- [x] PASS: Backup codes and support path documented — both recovery paths (backup codes + support contact) are explained with specific instructions
-- [x] PASS: Task-oriented title — the agent requires titles to describe what the user is trying to accomplish; "How to set up two-step verification" is task-framed, not feature-named
-- [~] PARTIAL: Mobile user path — mobile considerations are mentioned (note at the end about mobile app navigation), but the mobile-specific path is not detailed; partial credit stands
-- [x] PASS: Explains why 2FA matters without lecturing — the agent requires a brief benefit statement; the opening sentence does this in one sentence without over-explaining
-- [x] PASS: Troubleshooting section covering wrong code, expired code, lost phone — all three common problems are addressed with specific resolution steps
+## Results
 
-### Notes
+- [x] PASS: Product language only — the agent explicitly requires "Product language, not system language" as non-negotiable, and "No acronyms without definition." "TOTP" doesn't appear; "authenticator app" is used with plain explanation. The agent's definition enforces this.
+- [x] PASS: Expected result after every step — "Every step has an expected result" is listed in the agent's Non-negotiable section and Principles. The KB article structure in the agent definition requires "Expected result after each step."
+- [~] PARTIAL: Both methods as separate labelled paths — the agent's KB article structure says "One article answers one question — don't combine 'How to create X' and 'How to delete X' in one article." It does not explicitly require multiple setup paths to be presented as separate labelled sections. A well-formed response would likely cover both (the prompt specifies two methods), but the agent definition provides no template or requirement for multi-path structure. Partially met by implication.
+- [~] PARTIAL: Recovery paths documented — the agent's KB structure requires a Troubleshooting section covering "common issues when following this answer." Backup codes and support contact are recovery paths, not troubleshooting items. The agent doesn't explicitly require documenting account recovery or loss-of-access paths. Partially met: troubleshooting is required, but specific recovery path documentation isn't mandated.
+- [x] PASS: Task-oriented title — the agent's KB article structure says "Title — the user's question in their words (search-optimised)" and "Title is the question the user would type into search — 'How do I reset my password?' not 'Password Reset Functionality'."
+- [~] PARTIAL: Mobile user path — the agent's definition contains no mobile-specific guidance for help articles. "Some are on mobile" context in the prompt isn't addressed by any agent rule or template. The criterion is PARTIAL-ceilinged (max 0.5) — and the definition doesn't even reach partial coverage explicitly.
+- [~] PARTIAL: Explains why 2FA matters — the agent says to answer the question completely and use a short answer first, but doesn't explicitly require explaining the benefit of a feature. A one-sentence benefit statement isn't mandated by the definition.
+- [x] PASS: Troubleshooting section — the KB article structure explicitly lists Troubleshooting as a mandatory section. The agent definition requires it.
 
-Score is 7.5/8 (93.75%) — PARTIAL verdict. The mobile consideration is genuinely partial — mobile app navigation is noted but a mobile-specific walkthrough isn't provided. The agent's definition would produce this level of mobile coverage given the prompt specifies "some are on mobile, most are on desktop," but fuller mobile coverage would require knowing the mobile app's navigation structure.
+## Notes
+
+The agent definition is a strong general-purpose documentation writer but it's written at a high level of abstraction. The KB article structure gives good scaffolding (title, short answer, steps, troubleshooting, related articles) but leaves several things to judgement rather than explicit requirement.
+
+Criterion 3 (separate labelled paths) is a meaningful gap: the definition has a "one question per article" rule but no template for multi-path articles. Real help content frequently needs to cover "do this OR do that" branching, and the definition doesn't address it.
+
+Criterion 4 (recovery paths) is similarly a gap — account recovery isn't really "troubleshooting" (it's a separate user journey), and the agent's structure doesn't accommodate it explicitly.
+
+The pre-run evaluation scored this 7.5/8. The actual score against the definition is 6.0/8. Several criteria that were given PASS were based on the quality of the simulated output rather than what the definition actually requires.

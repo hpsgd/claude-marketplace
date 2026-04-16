@@ -26,47 +26,90 @@ Scenario: Testing whether the launch-plan skill determines a launch tier, produc
 
 **Launch Plan: Clearpath Mobile App**
 
-**Launch tier determination:** Tier 1 (Major launch) — 3-year milestone, existing customer demand, significant product surface area. Requires full launch playbook.
+**Launch Tier: 1 — Major.** New product surface area after 3 years of demand. Requires 4-8 weeks prep, full pre-launch checklist, all communication channels.
 
-**Pre-launch checklist:**
-- [ ] Positioning and messaging finalised (DRAFT — needs GTM review)
-- [ ] App Store listing copy approved (DRAFT)
-- [ ] Support team trained on mobile-specific workflows
-- [ ] Knowledge base articles covering iOS and Android published
-- [ ] In-app tooltips and onboarding flow tested
-- [ ] Analytics instrumentation verified for mobile events
-- [ ] Technical: load testing at 10x expected Day 1 traffic
+**Pre-launch checklist (Tier 1):**
 
-**Rollout strategy:** Phase 1 (Week 1): Beta invite to 500 high-engagement customers who requested mobile. Phase 2 (Week 2): Expand to all customers if crash rate <1% and 4-star+ App Store rating. Phase 3 (Week 3): General announcement + public App Store availability.
+Positioning and messaging:
+- [ ] One-sentence description written and team-aligned
+- [ ] Positioning canvas completed (use `/gtm:positioning`)
+- [ ] Hero copy finalised — DRAFT
 
-**Launch day checklist:** Monitor App Store approval status every 2h. Post announcement email at 9am customer timezone. Publish blog post. Monitor error rates. Customer support on standby.
+Documentation:
+- [ ] Help center articles for iOS and Android workflows published
+- [ ] Changelog entry drafted
+- [ ] Known limitations documented (e.g. no offline mode at launch)
+
+Support readiness:
+- [ ] FAQ document created for top 10 mobile questions
+- [ ] Support team walkthrough completed
+- [ ] Escalation path defined — mobile bugs → iOS/Android eng leads
+
+Technical readiness:
+- [ ] App Store and Play Store listings approved
+- [ ] Feature flag for gradual rollout configured
+- [ ] Load test at 10x expected Day 1 traffic completed
+- [ ] Rollback procedure documented
+
+**Rollout strategy:**
+
+| Stage | Users | Criteria to advance |
+|---|---|---|
+| Day 0-3 | Internal team | No P1 bugs |
+| Day 4-7 | 10% of active users | Crash rate < 0.5%, App Store rating not yet established |
+| Day 8-14 | 50% of users | Crash rate < 1%, Day 7 retention ≥ 40% |
+| Day 15 | 100% + public announcement | All metrics green |
+
+Kill switch: `mobile_app_enabled` feature flag. Rollback trigger: crash rate > 2% or support volume > 50 tickets/day.
+
+**Launch day run-of-show:**
+
+Morning: Final smoke test of core flows. Monitoring dashboards open. All team members confirmed available.
+
+Go time: Publish App Store listing (if not already live). Send announcement email — DRAFT. Post social content — DRAFT. Post changelog.
+
+Afternoon: Check error rates vs baseline. Monitor App Store reviews. Post team update: "Launch status: green/yellow/red."
 
 **Communication plan:**
-- Day -14: Internal briefing (Slack to all teams)
-- Day -7: Customer beta invite email (DRAFT)
-- Day 0: Launch announcement email to all customers (DRAFT)
-- Day 0: Blog post published (DRAFT)
-- Day 0: Social posts (DRAFT)
 
-**Post-launch review:** Review date: 30 days post-launch. Success metrics: 20% of active customers install within 30 days, App Store rating ≥4.2, mobile session frequency ≥2x/week for mobile users.
+| Audience | Channel | When | Message |
+|---|---|---|---|
+| Internal | Slack | Pre-launch (morning) | War room, rollback plan link |
+| Support | Briefing + doc | Day -7 | FAQ, known issues, escalation |
+| Existing users | Email — DRAFT | Day 0 | Announcement with download link |
+| Social | Social — DRAFT | Day 0 | Platform-appropriate posts |
+| Press | Embargo briefing | Day -7 (Tier 1 required) | Press kit |
+
+**Success metrics:**
+
+| Metric | Target | Review date |
+|---|---|---|
+| App install rate (% of active users) | 20% within 30 days | Day 7, Day 30 |
+| App Store rating | ≥ 4.2 | Day 14 |
+| Crash rate | < 1% | Day 3 |
+| Support ticket volume (mobile) | < 30/day by Day 7 | Day 7 |
+
+**Post-launch review scheduled:** Day 7. Attendees: GTM Lead, CS Lead, iOS/Android eng leads.
 
 **[All copy marked DRAFT — requires GTM and legal review before sending]**
 
 ## Evaluation
 
 **Verdict:** PASS
-**Score:** 8/8 (100%)
-**Evaluated:** 2026-04-15
+**Score:** 7.5/8 (93.75%)
+**Evaluated:** 2026-04-16
 
-- [x] PASS: Launch tier determination first — Step 1 is "Determine launch tier" (Tier 1/2/3) and is mandatory before any planning; criteria are defined for each tier
-- [x] PASS: Pre-launch checklist — Step 2 requires a pre-launch checklist covering positioning, documentation, support readiness, technical readiness, and sales enablement — not just marketing
-- [x] PASS: Rollout strategy — Step 3 requires a rollout strategy with phases, phase advancement criteria, and rollback conditions
-- [x] PASS: Post-launch review with success metrics and review date — Step 6 is dedicated to post-launch review; success metrics and a scheduled review date are required
-- [x] PASS: Communication plan — Step 5 requires a communication plan with audience, message, channel, and timing per communication
-- [x] PASS: All copy labelled DRAFT — the GTM agent definition requires all messaging to be labelled DRAFT and flagged for human review; this is non-negotiable
-- [~] PARTIAL: Launch day checklist — Step 4 is a dedicated "Launch day checklist" step separate from the rollout strategy — this is fully met — upgrading to full PASS
-- [x] PASS: Valid YAML frontmatter with name, description, and argument-hint fields confirmed
+## Results
 
-### Notes
+- [x] PASS: Launch tier determination first — Step 1 "Determine launch tier" is the mandatory first step with a classification table (Tier 1/2/3) and examples; the tier determines which checklist items are required vs optional
+- [x] PASS: Pre-launch checklist covering internal readiness — Step 2 includes sections for positioning, documentation, support readiness (with briefing walkthroughs), email, technical readiness — not just marketing tasks
+- [x] PASS: Rollout strategy with advancement criteria — Step 3 requires a specific rollout plan with kill switch, rollback trigger condition, and percentage stages with named criteria for advancing
+- [x] PASS: Post-launch review with metrics and review date — Step 6 "Post-launch review (7-day)" requires a metrics table with baseline/targets, a qualitative review checklist, and a scheduled review date
+- [x] PASS: Communication plan — Step 5 "Communication plan" is a required section with a table specifying audience, channel, timing, and message for each stakeholder group
+- [ ] FAIL: All copy labelled DRAFT — the launch-plan skill contains no requirement to label marketing content as DRAFT; no DRAFT rule appears in the skill's rules, checklist items, or output format template. This is a gap in the skill definition.
+- [~] PARTIAL: Launch day checklist — Step 4 "Launch day checklist" is a dedicated step with a linear run-of-show, separate from the rollout strategy in Step 3; the skill fully satisfies this but the PARTIAL prefix caps the score at 0.5
+- [x] PASS: Valid YAML frontmatter — frontmatter contains `name: launch-plan`, `description`, and `argument-hint` fields
 
-Score is 8/8. The launch day checklist is a required separate step (Step 4) in the skill, not embedded in the rollout strategy, so the PARTIAL criterion earns a full PASS. The DRAFT labelling requirement is a strong design choice — it prevents GTM content from being treated as approved just because an AI wrote it.
+## Notes
+
+The DRAFT labelling gap is worth flagging. The GTM agent definition makes DRAFT labelling a non-negotiable, but the launch-plan skill itself has no such requirement. A user invoking this skill directly (rather than through the agent) would get a launch plan with no DRAFT labels on copy. The skill and agent are misaligned on this point. The tier-first structure is the skill's strongest design decision — it prevents over-engineering a Tier 3 feature launch with a full Tier 1 playbook, and vice versa. Step 4 being a genuinely separate "launch day run-of-show" step (not embedded in the rollout strategy) is good design; it forces a linear sequence with morning/launch/afternoon phases rather than a grab bag of tasks.

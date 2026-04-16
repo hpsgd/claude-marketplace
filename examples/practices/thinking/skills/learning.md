@@ -25,12 +25,9 @@ Scenario: A developer just force-pushed to the wrong branch and wants to capture
 ```markdown
 **Step 1: Classify**
 
-Category: **SYSTEM** — this is about tooling and environment context, not domain knowledge or user feedback. The mistake was caused by operating in the wrong system context (wrong directory/repo).
+Category: SYSTEM — this is about tooling and environment context, not domain knowledge or user feedback. The mistake was caused by operating in the wrong system context (wrong directory/repo).
 
 **Step 2: Write the learning**
-
-Checking for existing learnings on force-push / git / branch safety...
-`grep -r "force.*push\|force-push\|git push.*force" ~/.claude/memory/` → no existing learning found. Creating new file.
 
 Saving to `~/.claude/memory/learned--verify-repo-before-force-push.md`:
 
@@ -44,9 +41,9 @@ A force-push to origin/main in the payments-service repo overwrote 3 commits bec
 
 **Learning:** Always run `git remote -v` and `git branch --show-current` immediately before any force-push or destructive git operation. Verify the repo name and branch match your intent before executing.
 
-**Why:** Force-push is irreversible at the git level. If the target is wrong, recovery requires a backup restore (if one exists) and coordination with the platform team. Even 30 seconds of verification prevents hours of recovery.
+**Why:** Force-push is irreversible at the git level. If the target is wrong, recovery requires a backup restore (if one exists) and platform team coordination. Even 30 seconds of verification prevents hours of recovery.
 
-**How to apply:** Before `git push --force` or `git push --force-with-lease`: (1) run `git remote -v` — confirm repo name matches intent, (2) run `git branch --show-current` — confirm branch matches intent, (3) only then execute. Set up a shell alias that adds these checks automatically.
+**How to apply:** Before `git push --force`: (1) run `git remote -v` — confirm repo name matches intent, (2) run `git branch --show-current` — confirm branch matches intent, (3) only then execute.
 
 **Severity:** Critical
 **Category:** SYSTEM
@@ -55,23 +52,21 @@ A force-push to origin/main in the payments-service repo overwrote 3 commits bec
 
 **Step 3: Rate severity**
 
-Critical — the incident caused data loss (3 commits overwritten), required backup restoration, 20 minutes of deploy freeze affecting production, and 2 hours of engineer rework. This meets the Critical threshold: "Caused visible damage, data loss, or significant rework. Must not happen again."
+Critical — the incident caused data loss (3 commits overwritten), required backup restoration, 20 minutes of deploy freeze, and 2 hours of engineer rework. This meets the Critical threshold.
 
 **Step 4: Failure capture**
 
-```markdown
 ### Failure Analysis
 
-**What happened:** `git push --force origin main` executed in the payments-service repo while intending to operate in a different repository (my-feature-branch project). Working directory was not verified before the command.
+**What happened:** `git push --force origin main` executed in the payments-service repo while intending to operate in a different repository. Working directory was not verified.
 
-**Root cause:** No verification step before executing a destructive command. Git does not prompt for confirmation on force-push. Working directory awareness lapsed when switching between terminal sessions.
+**Root cause:** No verification step before executing a destructive command. Git does not prompt for confirmation on force-push.
 
-**What was tried:** Attempted `git push --force-with-lease` variant first (unclear from context) — did not prevent the issue.
+**What was tried:** None noted — the push executed immediately.
 
 **What worked:** Platform team restored from their backup snapshot.
 
-**Prevention rule:** Never execute `git push --force` or any destructive git operation without first running `git remote -v` and reading the output. The repo name in the remote URL is the last verification point.
-```
+**Prevention rule:** Never execute `git push --force` without first running `git remote -v` and reading the output.
 
 ---
 
@@ -88,17 +83,19 @@ Critical — the incident caused data loss (3 commits overwritten), required bac
 
 **Verdict:** PASS
 **Score:** 7.5/8 (94%)
-**Evaluated:** 2026-04-15
+**Evaluated:** 2026-04-16
 
-- [x] PASS: Step 1 assigns a category with reasoning — the skill defines four categories (SYSTEM, METHOD, DOMAIN, FEEDBACK) and mandates "Output: Category assignment with reasoning"; SYSTEM is the correct classification for a tooling/environment error
-- [x] PASS: Step 2 writes learning in the exact format — the skill defines the exact frontmatter structure (name, description, type) and body fields (What happened, Learning, Why, How to apply, Severity, Category); all fields are present
-- [x] PASS: Learning stated as imperative rule — the skill's Rules section states "The learning must be stated as a rule, not a narrative. 'Always X when Y' not 'I noticed that sometimes...'"; the learning begins with "Always run..."
-- [x] PASS: "Why" field explains consequence of ignoring — the skill states "'Why' must explain the consequence of ignoring it, not just restate the learning"; the Why field explains the irreversibility and recovery cost
-- [x] PASS: Critical severity assigned — the skill's Step 3 severity table defines "Critical: Caused visible damage, data loss, or significant rework. Must not happen again"; the scenario has all three (data loss, significant rework, deploy freeze); the Rules section states "Severity must be honest. Downgrading severity to avoid embarrassment defeats the purpose"
-- [x] PASS: Step 4 failure capture triggered — the skill's Step 4 states "When something goes notably wrong... capture additional detail" with the Failure Analysis template; the skill lists four required fields: What happened, Root cause, What was tried, What worked, Prevention rule
-- [x] PASS: Output follows "When capturing" format — the skill's Output Format section defines "When capturing:" with Name, Category, Severity, Rule, and Saved-to fields; all are present
-- [~] PARTIAL: Skill checks for existing learning before creating — the skill's Rules section states "Never duplicate learnings. Before saving, check if an existing learning covers the same ground. Update the existing one instead"; the simulation shows a grep check. The check is defined in the rules but the skill doesn't include an explicit "Step X: check for duplicates" in the numbered process — it's in the Rules section. Partial because the behaviour is prescribed but not made a numbered mandatory step, leaving its execution to the agent's judgment.
+## Results
+
+- [x] PASS: Step 1 assigns a category with reasoning — the skill defines Step 1 as "mandatory" with four categories (SYSTEM, METHOD, DOMAIN, FEEDBACK) and states "Output: Category assignment with reasoning." SYSTEM is a defensible classification for a tooling/environment error. The definition requires the step and the reasoning.
+- [x] PASS: Step 2 writes learning in the exact format — the skill defines exact frontmatter fields (name, description, type) and exact body fields (What happened, Learning, Why, How to apply, Severity, Category). Step 2 is labelled "mandatory." All required fields are present in the output.
+- [x] PASS: Learning stated as imperative rule — the skill's Rules section states "The learning must be stated as a rule, not a narrative. 'Always X when Y' not 'I noticed that sometimes...'" The learning begins "Always run `git remote -v` and `git branch --show-current`..." — correct imperative form.
+- [x] PASS: "Why" field explains consequence of ignoring — the skill's Rules section states "'The why must explain the consequence of ignoring it, not just restate the learning.'" The Why field explains: "Force-push is irreversible at the git level. Recovery requires a backup restore." This is the consequence, not a restatement of the rule.
+- [x] PASS: Critical severity assigned — the skill's Step 3 severity table defines "Critical: Caused visible damage, data loss, or significant rework. Must not happen again." The scenario has all three: 3 commits overwritten (data loss), 2 hours rework, 20-minute deploy freeze. The Rules section states "Severity must be honest. Downgrading severity to avoid embarrassment defeats the purpose." Critical is the only defensible rating given the skill's own criteria.
+- [x] PASS: Step 4 failure capture triggered — the skill states Step 4 applies "when something goes notably wrong (user frustration, rework needed, significant mistake)." The scenario unambiguously qualifies. The skill's Step 4 template requires: What happened, Root cause, What was tried, What worked, Prevention rule. All five fields are present in the output.
+- [x] PASS: Output follows "When capturing" format — the skill's Output Format section defines the exact "When capturing" template with Name, Category, Severity, Rule, and Saved-to fields. All five are present in the "Learning Captured" summary block.
+- [~] PARTIAL: Skill checks for existing learning before creating — the skill's Rules section states "Never duplicate learnings. Before saving, check if an existing learning covers the same ground. Update the existing one instead of creating a new file." This rule is present and mandatory. However, the skill does not include an explicit numbered step for the duplicate check — it is in the Rules section, not in the sequential steps (Step 1 through Step 4). This means the duplicate check depends on the agent reading and applying the Rules section rather than being enforced by a named step with a defined output. Partial because the behaviour is prescribed but lacks a dedicated process step.
 
 ### Notes
 
-The learning skill format is well-specified with an exact template. The severity criteria are clearly defined and distinguish Critical from Important with concrete conditions. The failure analysis template in Step 4 is a useful addition that captures incident detail beyond just the rule. One observation: the skill mandates "Capture immediately" as a rule — the scenario describes capturing right after the incident, which is the correct timing. The saved-to path correctly uses global scope (`~/.claude/memory/`) for a universal SYSTEM learning rather than project-local scope.
+The learning skill's format is tightly specified with exact template fields. The severity criteria are clear with concrete examples distinguishing Critical from Important. The Step 4 failure analysis captures incident detail beyond the rule itself — the five-field structure (what happened, root cause, what was tried, what worked, prevention rule) is well-designed for incident postmortems. One gap: the skill's frontmatter `type` field in the template is hardcoded as `feedback` regardless of the Step 1 category classification (which might be SYSTEM, METHOD, DOMAIN, or FEEDBACK). The template and the classification step are slightly disconnected.

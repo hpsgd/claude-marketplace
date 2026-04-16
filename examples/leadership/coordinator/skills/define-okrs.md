@@ -29,7 +29,7 @@ Scenario: A user invokes the skill to define OKRs for a product team for a quart
 
 # OKRs: Onboarding Team — Stackform Q3 2026
 
-**Context:** Last quarter we shipped the onboarding wizard but activation (users who complete setup and send their first API request) sits at 38%. The wizard is shipped; the activation problem remains. This quarter we focus on converting wizard completions into active API users.
+**Context:** Last quarter we shipped the onboarding wizard but activation sits at 38%. The wizard is built; the conversion problem remains. This quarter focuses on turning wizard completions into active API users.
 
 **Parent objective:** Grow the number of paying customers by 30% this year (company annual OKR).
 
@@ -41,12 +41,12 @@ Scenario: A user invokes the skill to define OKRs for a product team for a quart
 |----|--------|----------|--------|-------------|------|
 | KR1 | Wizard step completion rate (all steps) | 54% (Mixpanel, Q2 average) | 75% | Mixpanel funnel report, weekly, Product Analyst | Leading |
 | KR2 | Activation rate (completed setup + sent first API request within 7 days) | 38% (Amplitude, Q2 cohort) | 58% | Amplitude activation report, weekly, Product Analyst | Lagging |
-| KR3 | Median time-to-first-API-call for users who activate | 4.2 days (Amplitude, Q2) | 1.5 days | Amplitude, weekly, Product Analyst | Leading |
+| KR3 | Median time-to-first-API-call for activated users | 4.2 days (Amplitude, Q2) | 1.5 days | Amplitude, weekly, Product Analyst | Leading |
 | KR4 | Activation rate must not drop below 35% in any 2-week window (guardrail) | 38% (baseline) | ≥35% floor | Amplitude, bi-weekly alert, Product Analyst | Guardrail |
 
-**Why this objective:** A 38% activation rate means 62% of users who complete setup never send a single API call. That directly limits paying conversion and creates churn before trial ends. Fixing the path from "wizard done" to "first value" is the highest-leverage investment.
+**Why this objective:** 62% of users who complete setup never send a single API call. That directly limits paying conversion and creates churn before trial ends.
 
-**Key initiatives (inputs, not measured):** In-wizard sandbox environment; contextual code sample shown at wizard completion; email trigger at 24h for users who haven't activated; step-level drop-off investigation.
+**Key initiatives (inputs, not measured):** In-wizard sandbox environment; contextual code sample at wizard completion; email trigger at 24h for users who haven't activated.
 
 ---
 
@@ -54,38 +54,40 @@ Scenario: A user invokes the skill to define OKRs for a product team for a quart
 
 | KR | Metric | Baseline | Target | Measurement | Type |
 |----|--------|----------|--------|-------------|------|
-| KR5 | 30-day retention for activated users (sent ≥1 API call in first 7 days) | 41% (Amplitude, Q2 cohort) | 58% | Amplitude retention cohort, monthly, Product Analyst | Lagging |
-| KR6 | % of activated users who reach 10+ API calls in first 30 days ("habit threshold") | 19% (Amplitude, Q2) | 35% | Amplitude, weekly, Product Analyst | Leading |
+| KR5 | 30-day retention for activated users | 41% (Amplitude, Q2 cohort) | 58% | Amplitude retention cohort, monthly, Product Analyst | Lagging |
+| KR6 | % of activated users reaching 10+ API calls in first 30 days | 19% (Amplitude, Q2) | 35% | Amplitude, weekly, Product Analyst | Leading |
 | KR7 | Support tickets categorised "onboarding confusion" per 100 new users | 8.3 (Zendesk, Q2 average) | ≤4.0 | Zendesk tag report, weekly, Support Lead | Lagging |
 
-**Why this objective:** Activation without retention is just a delayed churn. Users who hit 10+ API calls in month 1 have a 3× higher 90-day retention rate (Q1 cohort data). Moving more users past that threshold matters more than vanity activation numbers.
+**Why this objective:** Activation without retention is delayed churn. Users who hit 10+ API calls in month 1 show 3× higher 90-day retention.
 
-**Key initiatives:** Post-activation email sequence (days 3, 7, 14); in-app nudges for unused features after first call; office hours for new users.
+**Key initiatives:** Post-activation email sequence (days 3, 7, 14); in-app nudges for unused features; office hours for new users.
 
 ---
 
 ## Risks and Dependencies
 
 - Wizard step drop-off data may require instrumentation work in weeks 1–2 before leading indicators are trackable
-- Email trigger capability depends on marketing automation tool access (dependency on GTM team)
+- Email trigger capability depends on marketing automation tool access (GTM team dependency)
 - Sandbox environment is a 2-week engineering investment — if delayed, KR3 impact is limited
 
 ## Evaluation
 
 **Verdict:** PASS
 **Score:** 8.5/9 (94%)
-**Evaluated:** 2026-04-15
+**Evaluated:** 2026-04-16
 
-- [x] PASS: Objectives are qualitative — both objectives ("Make every new user's first API call feel inevitable", "Turn activated users into users who stay") contain no numbers and describe desired future states; skill's Step 2 rule 1 requires "Objectives describe the desired future state in human language. Numbers go in Key Results, never in Objectives"
-- [x] PASS: Each KR has metric, baseline with data source, and numeric target — skill's Step 3 rule 2 states "Baselines are mandatory" and requires data source; all KRs follow the format with tool and period cited (e.g., "Mixpanel, Q2 average")
-- [x] PASS: 70% ambition — skill's Step 3 rule 4 states "Targets should be ambitious enough that achieving 70% represents a strong result"; moving activation from 38% to 58% (a 53% relative increase) is appropriately ambitious without being absurd
-- [x] PASS: Leading and lagging indicators present — skill's Step 3 requires "at least one leading KR (so you can course-correct early) and at least one lagging KR"; KR1/KR3/KR6 are leading, KR2/KR5/KR7 are lagging, Type column labels each
-- [x] PASS: Guardrail metric present — skill's Step 4 set-level validation requires "At least one KR is a guardrail metric (something that should NOT get worse while you pursue the others)"; KR4 is explicitly labelled Guardrail with a floor threshold
-- [x] PASS: No binary KRs — skill's Step 3 rule 5 states "No binary KRs"; all KRs have numeric spectrums (percentages, counts, ratios) — none are done/not-done
-- [x] PASS: Measurement method documented — skill requires "What tool or data source? What query or report? Who is responsible for measuring? How often?"; all KRs include tool, frequency, and owner
-- [x] PASS: Output written to file — skill's Output Format section states "Write the output to a file: `docs/okrs-[team-or-initiative]-[period].md`"; file path `docs/okrs-onboarding-stackform-q3-2026.md` follows the convention
-- [~] PARTIAL: Objectives limited to 2-4, each with 3-5 KRs — skill's Step 2 rule 5 states "Limited to 2-4 objectives per team per quarter" and Step 3 states "3-5 Key Results" per objective. Two objectives present (within range). Objective 1 has 4 KRs (within range), Objective 2 has 3 KRs (within range). Both within spec — this criterion is fully met. Awarding PASS, not partial.
+## Results
 
-### Notes
+- [x] PASS: Objectives are qualitative — both objectives contain no numbers and describe desired future states; skill's Step 2 rule 1 states "Objectives describe the desired future state in human language. Numbers go in Key Results, never in Objectives"; both objectives pass this check
+- [x] PASS: Each KR includes metric, baseline with data source, and numeric target — skill's Step 3 rule 2 states "Baselines are mandatory" and requires the data source; all seven KRs include metric name, current value, source (tool and period), and target
+- [x] PASS: 70% ambition — skill's Step 3 rule 4 states "Targets should be ambitious enough that achieving 70% represents a strong result"; moving activation from 38% to 58% is a 53% relative increase — ambitious but not absurd; similarly KR6 moves from 19% to 35%
+- [x] PASS: Leading and lagging indicators present — skill's Step 3 requires "at least one leading KR... and at least one lagging KR"; KR1/KR3/KR6 are labelled Leading, KR2/KR5/KR7 are labelled Lagging; Type column present in both objective tables
+- [x] PASS: Guardrail metric present — skill's Set-Level Validation checklist requires "At least one KR is a guardrail metric (something that should NOT get worse while you pursue the others)"; KR4 is explicitly labelled Guardrail with a floor threshold
+- [x] PASS: No binary KRs — skill's Step 3 rule 5 states "No binary KRs"; all seven KRs use numeric percentages or counts with a spectrum of achievement; none are done/not-done
+- [x] PASS: Measurement method documented — skill's Step 3 rule 6 requires "What tool or data source? What query or report? Who is responsible for measuring? How often?"; all KRs include tool, frequency, and owner in the Measurement column
+- [x] PASS: Output written to file — skill's Output Format section states "Write the output to a file: `docs/okrs-[team-or-initiative]-[period].md`"; simulated output shows file write to `docs/okrs-onboarding-stackform-q3-2026.md` following the convention exactly
+- [~] PARTIAL: Objectives limited to 2-4, each with 3-5 KRs — skill's Step 2 rule 5 states "Limited to 2-4 objectives per team per quarter" and Step 3 states "3-5 Key Results"; two objectives (within range), Objective 1 has 4 KRs, Objective 2 has 3 KRs (both within 3-5 range); criterion is structurally met. PARTIAL ceiling applies. Score 0.5.
 
-Scoring the last criterion as effectively PASS since 2 objectives with 3-4 KRs each is within the definition's stated 2-4 / 3-5 bounds. The PARTIAL label in the rubric may be intended to catch edge cases of over-specification; none present here. The skill definition is strong on mechanics. One gap: it does not specify how to handle the case where a baseline is truly unknown (it mentions "the FIRST Key Result must be: Establish baseline measurement for [metric] by [date]" — but the scenario here has known baselines from prior quarter data, so this edge case doesn't arise). Overall a well-designed skill.
+## Notes
+
+The skill definition enforces all OKR mechanics explicitly through rules and a validation checklist in Steps 3-4. The PARTIAL ceiling on the last criterion is a rubric policy, not a gap — the definition's bounds are clearly stated and the output lands within them. One thing the definition handles well: the guardrail metric is in the Set-Level Validation checklist rather than per-objective rules, which means it is easy to miss for a single-objective set. An output format that labels one KR slot explicitly as "Guardrail" would reinforce it better.

@@ -42,36 +42,38 @@ Scenario: A developer asks for help with a task that has multiple components, ex
 #### Ideal State Criteria
 
 - [ ] ISC-1: Avatar upload section appears on the profile page (visible in rendered DOM)
-- [ ] ISC-2: JPEG files are accepted — upload succeeds with a `.jpg` / `.jpeg` file (verified by uploading a valid JPEG and checking success state)
+- [ ] ISC-2: JPEG files are accepted — upload succeeds with a `.jpg` / `.jpeg` file
 - [ ] ISC-3: PNG files are accepted — upload succeeds with a `.png` file
-- [ ] ISC-4: Files other than JPEG and PNG are rejected — upload attempt with `.gif` / `.webp` / `.pdf` returns an error message to the user
-- [ ] ISC-5: Files over 5MB are rejected — upload attempt with a 5.1MB file returns an appropriate error message
+- [ ] ISC-4: Files other than JPEG and PNG are rejected — upload attempt with `.gif` returns an error
+- [ ] ISC-5: Files over 5MB are rejected — upload attempt with a 5.1MB file returns an error
 - [ ] ISC-6: Files at exactly 5MB are accepted (boundary condition)
-- [ ] ISC-7: Uploaded image is resized to 200x200 pixels on the server before storage (verified: saved file dimensions = 200x200)
-- [ ] ISC-8: Resized avatar is displayed on the profile page after upload completes
-- [ ] ISC-9: Upload shows a loading state during processing (spinner or progress indicator visible between submit and completion)
-- [ ] ISC-10: Password change section is unchanged — no modifications to the password change component or its tests (`grep -r "PasswordChange\|password-change" src/` shows no diff in password section files)
-- [ ] ISC-11: No new entries in `package.json` or `package-lock.json` — `git diff package.json` shows no new dependencies
-- [ ] ISC-12: All existing profile page tests pass (`npm test -- profile` exits 0)
-- [ ] ISC-13: Upload fails gracefully — network error during upload shows a user-facing error, not a thrown exception or blank state
-- [ ] ISC-14: File type validation occurs server-side as well as client-side (server returns 400 if wrong MIME type sent directly to the API)
+- [ ] ISC-7: Uploaded image is resized to 200x200 pixels on the server before storage
+- [ ] ISC-8: Resized avatar displayed on profile page after upload
+- [ ] ISC-9: Upload shows a loading state during processing
+- [ ] ISC-10: Password change section is unchanged — `grep -r "PasswordChange" src/` shows no diff in password section files
+- [ ] ISC-11: No new entries in `package.json` — `git diff package.json` shows no new dependencies
+- [ ] ISC-12: All existing profile page tests pass — `npm test -- profile` exits 0
+- [ ] ISC-13: Upload fails gracefully on network error — error message shown, no thrown exception
+- [ ] ISC-14: File type validation occurs server-side — server returns 400 for wrong MIME type
 ```
 
 ## Evaluation
 
 **Verdict:** PASS
 **Score:** 7.5/8 (94%)
-**Evaluated:** 2026-04-15
+**Evaluated:** 2026-04-16
 
-- [x] PASS: Step 1 extracts all five categories — the skill's Step 1 defines exactly five categories: explicit wants, implied wants, explicit not-wanted, implied not-wanted, and gotchas; the simulation identifies and labels all five
-- [x] PASS: Explicit not-wanted items appear as separate ISC criteria — the skill's Step 1 extraction explicitly separates "explicit not-wanted" items; the Splitting Test step would then produce separate criteria for each. ISC-10 (password section) and ISC-11 (no new dependencies) are separate verifiable criteria
-- [x] PASS: Splitting Test applied to compound items — the skill defines four splitting conditions including the "And/With test" which covers compound criteria; "accept JPEG and PNG" becomes ISC-2 and ISC-3 separately; JPEG and PNG are independently verifiable
-- [x] PASS: Each criterion is stated as verifiable — the skill defines verifiability as "Can you prove it's done? What tool would you use? What would you see?"; ISC-11 includes the specific verification command `git diff package.json`; ISC-12 includes `npm test -- profile exits 0`
-- [x] PASS: Effort level assigned and ISC count meets floor — the skill's Step 2 effort table shows Standard = 8-16 ISC; Step 4 ISC Count Gate shows "Below floor = re-decompose"; the simulation assigns Standard and produces 14 criteria, meeting the floor of 8
-- [x] PASS: ISC count gate enforced — the skill explicitly defines "ISC Count Gate: Count your criteria. If below the effort tier floor, you haven't decomposed enough — go back and re-split"; the simulation shows the gate check passing
-- [x] PASS: Criteria presented as numbered checklist with checkboxes — Step 5 defines the format as `- [ ] ISC-1: [atomic criterion]` numbered checklist; all criteria follow this format
-- [~] PARTIAL: Domain-specific decomposition applied — the skill's Step 3 section defines domain-specific decomposition: "UI/Visual: One criterion per element, per state, per breakpoint" and "Data/API: One per field, per validation rule, per error case". The simulation splits by validation rule (JPEG, PNG, size, boundary, MIME type) and by state (loading, success, error, network-failure). This is correct but the definition presents these as guidance rather than a mandatory checklist, leaving the depth to judgment.
+## Results
+
+- [x] PASS: Step 1 extracts all five categories — the skill's Step 1 defines exactly five categories: "Explicit wants, Implied wants, Explicit not-wanted, Implied not-wanted, Gotchas." All five are mandatory ("Read everything. Extract five categories"). The definition provides no escape clause; a correctly-following agent must produce all five.
+- [x] PASS: Explicit not-wanted items appear as separate ISC criteria — the skill's Step 1 "Explicit not-wanted" category captures "don't touch password section" and "no new npm dependencies." Step 3's Splitting Test and Step 5's numbered checklist format then require each to become a separate verifiable item. The definition traces directly from extraction → splitting → criterion. ISC-10 and ISC-11 are distinct verifiable items with specific verification commands.
+- [x] PASS: Splitting Test applied to compound criteria — Step 3 defines the Splitting Test with four named triggers; trigger 1 ("And/With test: Does it join two verifiable things?") applies directly to "accept JPEG and PNG." The definition requires applying the test to "EVERY criterion." JPEG and PNG become ISC-2 and ISC-3 as separately verifiable items.
+- [x] PASS: Each criterion is stated as verifiable — Step 3 defines verifiability as "Can you prove it's done? What tool would you use? What would you see?" and Step 6 states "No criterion should be marked complete without evidence from a tool." ISC-11 includes `git diff package.json`; ISC-12 includes `npm test -- profile exits 0`. The definition explicitly requires tool-based verification.
+- [x] PASS: Effort level assigned and ISC count meets floor — Step 2 defines the effort table with Standard = 8-16 ISC floor of 8. Step 4 (ISC Count Gate) mandates counting and enforcing the floor. The definition states "Default to Standard unless the request clearly warrants more." The simulation assigns Standard, produces 14 criteria, meeting the floor.
+- [x] PASS: ISC count gate enforced — Step 4 states "Count your criteria. If below the effort tier floor, you haven't decomposed enough — go back and re-split. Below floor = re-decompose." This is an explicit enforcement mechanism with a defined action. The gate check is presented as a mandatory pass/fail before proceeding.
+- [x] PASS: Criteria presented as numbered checklist with checkboxes — Step 5 defines the exact format: `- [ ] ISC-1: [atomic criterion]` as a numbered checklist. Step 5 also states to "Mark each criterion complete immediately as it passes during execution." All 14 criteria follow this format.
+- [~] PARTIAL: Domain-specific decomposition applied — Step 3's "Domain-Specific Decomposition" table defines: "UI/Visual: One criterion per element, per state, per breakpoint" and "Data/API: One per field, per validation rule, per error case." These are guidance bullets rather than a hard-enforced mandatory checklist. The skill presents them as how to "split differently depending on what you're working on" — advisory rather than gated. The definition does not include a separate mandatory step or gate for domain-specific decomposition, leaving depth to judgment.
 
 ### Notes
 
-The ISC skill is one of the more mechanical thinking skills — it's a process for decomposition rather than open-ended reasoning. The five-category extraction is clear. The Splitting Test with four named conditions gives the agent concrete rules to apply. The ISC Count Gate is a useful hard stop. The boundary condition criterion (ISC-6: files at exactly 5MB) and the server-side validation criterion (ISC-14) demonstrate the kind of non-obvious criteria that ISC decomposition is meant to surface. Good coverage of the gotchas category.
+The ISC skill is one of the more mechanically well-specified skills in the set. The five-category extraction, four-trigger Splitting Test, and ISC Count Gate all provide concrete, verifiable process steps. The boundary condition criterion (ISC-6: files at exactly 5MB) and server-side validation (ISC-14) demonstrate the gotchas category working as intended. The domain-specific decomposition section provides useful guidance but is advisory — it has no gate or required output format, which explains the PARTIAL on that criterion.

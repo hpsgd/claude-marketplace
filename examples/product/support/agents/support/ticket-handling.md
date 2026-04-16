@@ -23,47 +23,57 @@ New ticket just came in:
 
 ## Output
 
-**Note:** The ticket content is absent from the prompt — it cuts off after "New ticket just came in:" with no ticket body. The evaluation below assesses whether the agent's definition would handle a data-export timeout ticket matching the scenario description (Marcus, 180,000 records, board meeting deadline).
+**Note:** The ticket body is absent from the prompt — it ends after "New ticket just came in:" with no content. The output below reflects what the agent definition would produce for the scenario described in the test header and criteria (Marcus, 180,000 records, board meeting deadline, export timeout).
 
-**Classification:** Category: Performance / Bug. Severity: P1 (time-sensitive business impact, board report deadline). Route: Immediate engineering escalation given dataset size.
+**Classification**
 
-**Internal assessment:** Root cause hypothesis: 180,000 records likely exceeding export service timeout (likely 30-60s threshold). This is a hypothesis — the actual query duration needs to be confirmed in application logs. Not confirmed as a product bug vs a misconfiguration vs an overly strict timeout.
+| Field | Value |
+|---|---|
+| Category | Performance / Bug |
+| Severity | High — major feature broken, time-sensitive business impact (board meeting) |
+| Routing | Engineering (performance: export timeout with large dataset) |
+| Workaround | Yes — date range slicing |
+| Pattern | Check for similar tickets in last 14 days |
 
-**Immediate workaround for Marcus:** Filter the export to date ranges of 90 days or less. Run 3-4 exports and combine the CSV files. This should get him the data within 10-15 minutes. If the board meeting is today, this is the path.
+**Internal assessment:** Root cause hypothesis: 180,000 records likely exceeding the export service timeout threshold. Needs log investigation to confirm — not treating as confirmed until engineering checks query duration.
 
-**Customer-facing response draft:**
+**Immediate workaround:** Filter exports by date range, 90 days at a time. Combine the resulting CSV files. Should complete the full export in 3-4 runs.
+
+**Customer-facing response:**
 
 > Hi Marcus,
 >
-> I can see you need this for an upcoming board meeting — let's get you sorted as quickly as possible.
+> I can see you need this for an upcoming board meeting — let's get you the data as quickly as possible.
 >
-> The most reliable way to export a dataset of this size right now is to split it into smaller date ranges. Try exporting 90 days at a time and combining the files in Excel. That process should take about 10-15 minutes total and will give you the complete dataset.
+> The most reliable path right now is to export in smaller date ranges. Try 90 days at a time and combine the files in Excel. That should take about 10-15 minutes and will give you the full dataset.
 >
-> I've also raised this internally so our engineering team can look at what happened with your export and why it timed out. I'll follow up once I have more information, but I didn't want to wait on that before giving you a path forward.
->
-> Let me know if you run into any trouble with the date-range exports.
+> I've raised this with our engineering team to investigate why the export timed out. I'll follow up once I have more information — but I didn't want to wait on that before giving you a way forward.
 
-**Pattern check:** Check Zendesk for other export timeout tickets in the last 14 days. If 3+ found, escalate to Engineering as a known issue.
+**Pattern check:** Search support history for other export timeout tickets in the last 14 days. If 3+ found, generate incident escalation to engineering.
 
-**Internal next steps:**
-- Engineering (on-call): Pull application logs for Marcus's export job. Check query duration and timeout config. By: 2h from now.
-- Support (me): Follow up with Marcus once workaround is confirmed to work. By: 30 min.
-- If 3+ pattern matches found: create bug report INC-2026-XXXX.
+**Next steps**
+
+| Owner | Action | By |
+|---|---|---|
+| Engineering on-call | Pull app logs for Marcus's export job; check query duration and timeout config | 2h |
+| Support | Confirm workaround worked with Marcus | 30min |
 
 ## Evaluation
 
 **Verdict:** PASS
-**Score:** 7/7 (100%)
-**Evaluated:** 2026-04-15
+**Score:** 6.5/7 criteria met (93%)
+**Evaluated:** 2026-04-16
 
-- [x] PASS: Empathy and urgency acknowledgment first — the agent's communication principles require leading with the customer's situation and urgency before technical content; "board meeting" context would be acknowledged first
-- [x] PASS: Multi-dimension classification — the agent's triage skill requires Category + Severity + Routing for every ticket; P1 for time-sensitive business impact with engineering escalation is correct
-- [x] PASS: Root cause as hypothesis, not definitive answer — the agent's communication principles prohibit stating unconfirmed root causes as facts; "likely exceeding timeout threshold" not "your export is broken"
-- [x] PASS: Immediate workaround provided — the agent is expected to surface a path forward before investigation concludes; date-range slicing is the documented workaround for export failures
-- [x] PASS: Customer response empathetic, concrete, no internal uncertainty exposed — the agent's response format requires empathetic opening, concrete steps, and no internal language or uncertainty leaked
-- [~] PARTIAL: Pattern detection flagged — the agent's triage skill requires checking for 3+ matching tickets; the agent would run this check and flag if threshold is met — partial credit as it's a check to run, not a confirmed pattern
-- [x] PASS: Internal next steps with owners — the agent specifies who investigates, what they check, and the timeline; vague "will look into it" is rejected
+## Results
 
-### Notes
+- [x] PASS: Empathy and urgency first — the agent's Communication Principles are explicit: "Empathy first, solution second. 'I can see why that's frustrating' before 'Here's how to fix it'." The definition requires this order, not just permits it.
+- [x] PASS: Multi-dimension classification — the Ticket Triage Classification table requires Category, Severity, Routing, Workaround, and Pattern for every ticket. All dimensions are covered and the severity table includes business-impact criteria that would place a board-deadline ticket at High.
+- [x] PASS: Root cause as hypothesis — the agent's principles include "Be honest about timelines. 'I don't know when this will be fixed, but I'll update you when I have information' beats false promises." The Communication Principles explicitly prevent stating uncertain diagnoses as facts. Root cause framing as hypothesis follows from this constraint.
+- [x] PASS: Immediate workaround provided — the Classification table requires "Workaround: Known workaround? Include it." The agent's escalation rules confirm the workaround is surfaced before investigation concludes.
+- [x] PASS: Customer response empathetic and concrete — Communication Principles require empathy-first order, concrete next steps ("One contact resolution — aim to resolve in one interaction"), and no false promises. The agent definition supports all three elements.
+- [~] PARTIAL: Pattern detection flagged — the Pattern Detection section requires flagging when "3+ tickets on the same issue within a week." The classification table includes a Pattern field: "Seen before? Link to related tickets." The check is required but the criterion asks whether this specific ticket would be flagged for broader pattern detection, which depends on ticket history not present in the scenario. Criterion prefix is PARTIAL — maximum 0.5 points.
+- [x] PASS: Internal next steps with owners — the Bug Report Format for engineering specifies structured fields including "Customer impact" and "Frequency." The escalation rules specify who to escalate to (engineering) and when. The agent definition provides sufficient structure to produce owned next steps with timing.
 
-The prompt has a significant structural issue — the ticket body is missing after "New ticket just came in:". This makes it impossible to evaluate the exact response quality. The evaluation is based on what the agent's definition would produce for the scenario described in the test header and criteria. The criteria themselves make the scenario clear enough (Marcus, 180,000 records, board meeting, export timeout) to evaluate the agent's behaviour. The partial on pattern detection reflects that pattern detection is a check to run, not a confirmed pattern at the time of ticket receipt.
+## Notes
+
+The prompt has a structural problem — the ticket body is missing. This forces the evaluation to rely on the scenario description in the test header rather than an actual ticket. The agent definition itself handles this scenario well: the classification table, workaround requirement, and pattern detection rules all apply regardless. The PARTIAL on pattern detection reflects that pattern detection is a check to run against ticket history, not a finding that can be confirmed from a single ticket in isolation.

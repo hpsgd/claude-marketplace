@@ -26,48 +26,63 @@ Scenario: Testing whether the support plugin's write-kb-article skill produces a
 
 **Why is my export failing or taking too long?**
 
-**Short answer:** Exports fail when the date range is too large. Filter your export to a shorter date range — 30-90 days works for most datasets.
+**Short answer:** Exports fail when the date range is too large. Filter your export to 90 days or less — your download will start within a few seconds.
+
+**Prerequisites:** No special requirements. Available on all plans.
 
 **Steps:**
 
-1. Go to Reports → Export.
-2. Set the Date range field to a period of 90 days or less.
-   You'll see the estimated file size update as you adjust the range.
-3. Click Export. The download will start within a few seconds.
+1. **Go to Reports → Export.**
+   Expected result: The Export panel opens with a date range selector.
 
-If you need data beyond 90 days, run multiple exports with non-overlapping date ranges and combine the files.
+2. **Set the Date range to 90 days or less.**
+   Try starting with the most recent 90 days. You'll see the estimated file size update.
+   Expected result: File size estimate drops to a manageable size.
+
+3. **Click Export.**
+   Expected result: Download starts within a few seconds.
+
+If you need data beyond 90 days, run multiple exports with non-overlapping ranges and combine the CSV files.
 
 **Troubleshooting:**
 
-Export still fails after reducing the date range:
-- Try reducing to 30 days. Very large accounts (500+ projects) may need shorter ranges.
-- Check your browser console for timeout errors — if present, contact support with the error text.
+**Problem:** Export still fails after reducing to 90 days.
+**Cause:** Very large accounts (500+ projects) may need shorter ranges.
+**Solution:** Try 30-day ranges. If still failing, contact support with the error message and your account name.
 
-Export button is greyed out:
-- You need the "Export" permission. Ask your admin to grant this in Settings → Roles.
+**Problem:** Export button is greyed out.
+**Cause:** You need the Export permission.
+**Solution:** Ask your admin to grant Export access in Settings → Roles → Permissions.
 
-File downloads but opens as blank in Excel:
-- Try opening as CSV, not XLSX. Go to Data → From Text/CSV in Excel.
+**Problem:** File downloads but opens blank in Excel.
+**Cause:** Excel sometimes misidentifies the file format.
+**Solution:** In Excel, use Data → From Text/CSV to open the file manually.
 
-**Related articles:** How to schedule automatic report delivery. How to share a live report link. How to request a bulk data export for compliance.
+**Related articles:**
+- Next steps: How to schedule automatic report delivery
+- Related topics: How to share a live report link
+- Background: Understanding export limits by plan
 
-**Last verified:** 2026-04-15 | **Product area:** Reporting | **Applies to:** All plans
+---
+Last verified: 2026-04-16 | Product area: Reporting | Applies to: All plans | Tags: export, csv, timeout, reports, large dataset
 
 ## Evaluation
 
 **Verdict:** PASS
-**Score:** 8/8 (100%)
-**Evaluated:** 2026-04-15
+**Score:** 7.5/8 criteria met (94%)
+**Evaluated:** 2026-04-16
 
-- [x] PASS: Title is a question — the skill requires the title to be "a question the user would search, not a feature description"; the title must match how users phrase the problem
-- [x] PASS: Short answer at the top — the skill requires a 1-2 sentence short answer before the steps that resolves the issue without reading further
-- [x] PASS: Step-by-step instructions — Step 2 of the skill requires numbered steps with expected results per step; prose explanations are not accepted for procedural content
-- [x] PASS: Troubleshooting section — the skill requires a troubleshooting section covering variations and edge cases, not just the happy path
-- [x] PASS: Written to deflect repeat tickets — the skill's design principle states "a good article makes it unnecessary to contact support for this issue"; the quality checklist includes "could a user resolve this issue after reading this article, without contacting support?"
-- [~] PARTIAL: Ticket language matching — the skill requires using the user's vocabulary (Step 1: research how users describe the problem in tickets), but doesn't require explicit comparison of article language vs ticket language as a review step — partial credit
-- [x] PASS: Related articles required — the skill requires a related articles section grouped by type (see also, prerequisite, advanced)
-- [x] PASS: Valid YAML frontmatter with name, description, and argument-hint fields confirmed
+## Results
 
-### Notes
+- [x] PASS: Title as a user question — Step 2 Title section requires: "Write the title as the question the user would type into a search bar. Use their vocabulary, not internal terminology." Examples provided distinguish "How do I export my data as a CSV?" (good) from "Data Export Functionality Guide" (bad).
+- [x] PASS: Short answer at the top — Step 2 Short Answer section requires "1-2 sentences that directly answer the question. This is for users who scan. It must be self-contained." The bad example explicitly rules out "Follow the steps below to learn about exporting."
+- [x] PASS: Step-by-step instructions — Step 2 Step-by-step section requires numbered steps, each with an "Expected result" line. Rules specify "One action per step" and "Use the exact names of UI elements as they appear in the product."
+- [x] PASS: Troubleshooting section — Step 2 Troubleshooting section is mandatory and must include "the most common error message for this workflow," "the most common user mistake," and "what happens if the user's environment differs." Each entry uses Problem/Cause/Solution format.
+- [x] PASS: Written to deflect repeat tickets — Step 3 quality rules include "Testable: Could someone follow these steps on the live product right now and succeed?" and the Maintenance rules include "If this article has not been verified in 90 days, flag it for review" and "A high view count with continued ticket volume means the article is not solving the problem — rewrite it." The design orientation is ticket deflection.
+- [~] PARTIAL: Ticket language matching — Step 1 research step says "If based on a support ticket, read the full ticket thread to understand the user's journey — what they tried, where they got stuck, what ultimately worked." Step 3 quality rules include "User vocabulary: Are all terms the ones a user would use? Replace any internal jargon." Plain language is required, but there is no explicit step requiring comparison of article language against original ticket phrasing as a review gate. Criterion prefix is PARTIAL — maximum 0.5 points.
+- [x] PASS: Related articles required — Step 2 Related Articles section requires "Link 3-5 related articles. Group them by relationship: Next steps, Related topics, Background." If articles don't exist, the skill requires listing titles as "[To be created]."
+- [x] PASS: Valid YAML frontmatter — the skill has `name: write-kb-article`, `description`, and `argument-hint` fields.
 
-The partial on ticket language matching is appropriate — the skill requires using user vocabulary (gathered in Step 1 research), but the specific quality check of comparing article language against ticket phrasing is not a required step. Score is 7.5/8 (93.75%). The "deflect repeat tickets" principle as a design goal is well-conceived — it aligns the KB article goal with the actual support metric that matters (ticket volume reduction rather than article comprehensiveness).
+## Notes
+
+The ticket-language matching criterion is accurately PARTIAL. The skill requires user vocabulary (Step 1, Step 3 quality rules) but does not require an explicit review step comparing article phrasing against how users worded the original tickets. A stronger version would add a quality gate: "Read 3 representative tickets for this topic and verify the title and short answer match the user's phrasing, not the internal description of the solution."

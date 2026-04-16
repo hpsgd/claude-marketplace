@@ -26,57 +26,64 @@ Scenario: Testing whether the accessibility-audit skill definition requires WCAG
 
 **Accessibility Audit: Navigation, Search, Data Table**
 
-**Standard:** WCAG 2.2 AA (superset of 2.1 AA — covers all 2.1 criteria plus 2.4.11, 2.5.7, 2.5.8)
+**Standard:** WCAG 2.2 Level AA (published October 2023; supersedes 2.1 AA, covers all 2.1 criteria plus 2.4.11, 2.5.7, 2.5.8)
 
 **Automated checks (Step 1):**
 
 ```bash
-# Run grep-based checks on component source
-grep -r 'alt=""' src/components/  # Missing alt text
-grep -r 'onClick' src/components/ | grep -v 'onKeyDown'  # Click without keyboard handler
-grep -rn 'role=' src/components/navigation/  # ARIA roles audit
+# Missing keyboard handlers (WCAG 2.1.1)
+grep -rn 'onClick' src/components/ | grep -v 'button\|Button\|<a \|Link\|onKeyDown\|onKeyUp'
+
+# Missing focus indicator suppression (WCAG 2.4.7)
+grep -rn 'outline: none\|outline:0\|focus:outline-none' src/components/
+
+# Missing ARIA on role="tab" (WCAG 4.1.2)
+grep -rn 'role="tab"' src/components/ | grep -v 'aria-selected'
 ```
 
 Colour contrast checked via token audit against WCAG 1.4.3 (4.5:1 normal text, 3:1 large text).
 
-**Manual checklist (Step 2 — WCAG 2.2 AA criteria):**
+**Manual checklist (Step 2):**
 
-Perceivable: Text alternatives, captions, contrast (1.4.3), resize to 200% (1.4.4), reflow (1.4.10).
-Operable: Keyboard accessible (2.1.1), no keyboard trap (2.1.2), focus visible (2.4.7, 2.4.11 — new in 2.2), focus not obscured (2.4.12).
-Understandable: Language of page (3.1.1), on focus no context change (3.2.1), labels (3.3.2), error identification (3.3.1).
-Robust: Name/role/value (4.1.2), status messages (4.1.3).
+Perceivable: P1–P10 checked (alt text, contrast, resize, reflow, text spacing).
+Operable: O1–O14 checked (keyboard, focus order, skip link, focus visible, new 2.2 criteria O12-O14).
+Understandable: U1–U8 checked (language, error identification, labels, suggestions).
+Robust: R1–R3 checked (valid HTML, ARIA roles, live regions).
 
-**Keyboard navigation test pattern:** Tab through entire navigation; verify logical tab order. Tab to search field; verify focus indicator visible. Navigate data table; verify header cells, row selection, and sort controls all keyboard accessible. Verify no tab trap in any component.
+**Keyboard navigation test:** Tab through entire navigation — verify logical tab order. Tab to search field — verify focus indicator visible. Navigate data table — verify header cells, row selection, sort controls all keyboard accessible. Verify no keyboard trap in any component.
 
 **Findings:**
 
 | # | WCAG SC | Severity | Finding | Component | Fix |
 |---|---|---|---|---|---|
-| 1 | 1.4.3 | Critical | Text contrast ratio 3.2:1 (minimum 4.5:1) | Nav — secondary items | Darken to #4A4A4A |
-| 2 | 2.1.1 | Critical | Sort buttons in data table not keyboard accessible | Data table header | Add `tabindex="0"` + keydown handler |
-| 3 | 2.4.7 | Major | Focus indicator not visible on search field | Search component | Add `:focus` outline per design tokens |
-| 4 | 4.1.2 | Major | Data table rows missing `role="row"` | Data table | Add ARIA roles |
+| 1 | 1.4.3 | Critical | Text contrast 3.2:1 (minimum 4.5:1) | Nav secondary items | Darken to `#4A4A4A` |
+| 2 | 2.1.1 | Critical | Sort buttons not keyboard accessible | Data table header | Add `tabindex="0"` + keydown handler |
+| 3 | 2.4.7 | Major | Focus indicator not visible | Search input | Add `:focus` outline per design tokens |
+| 4 | 4.1.2 | Major | Data table rows missing `role="row"` | Data table | Add ARIA row roles |
 
 **Remediation priority:**
-- Must fix (compliance-blocking, Critical): Findings 1, 2
-- Should fix (compliance risk, Major): Findings 3, 4
-- Enhancement (usability): [none at this stage]
+
+- Must fix (compliance-blocking): Findings 1, 2 — Critical, fix before next release
+- Should fix (compliance risk): Findings 3, 4 — Major, fix within current sprint
+- Enhancement (usability): None identified at this stage
 
 ## Evaluation
 
 **Verdict:** PASS
-**Score:** 8/8 (100%)
-**Evaluated:** 2026-04-15
+**Score:** 7.5/8 criteria met (94%)
+**Evaluated:** 2026-04-16
 
-- [x] PASS: WCAG 2.2 AA standard — the skill audits against WCAG 2.2 AA (which covers all WCAG 2.1 AA criteria), explicitly including new criteria 2.4.11, 2.5.7, and 2.5.8
-- [x] PASS: Automated and manual checks both required — Step 1 is automated (grep patterns for each criterion), Step 2 is manual checklist; both are mandatory
-- [x] PASS: Severity classification with WCAG SC reference — Step 3 severity classification (Critical/Major/Minor/Best Practice) requires citing the specific WCAG success criterion per finding
-- [x] PASS: All four WCAG principles covered — the manual checklist in Step 2 covers Perceivable, Operable, Understandable, and Robust with specific criteria per principle
-- [x] PASS: Prioritised remediation list — the output format requires a "Must fix / Should fix / Enhancement" priority classification, not just a findings catalogue
-- [~] PARTIAL: Keyboard navigation testing — the skill includes keyboard navigation as a required manual check with a specific test pattern (tab order, focus indicators, keyboard traps); this is a defined test pattern — upgrading to full PASS
-- [x] PASS: Compliance-blocking vs usability distinction — the skill explicitly distinguishes "Critical — blocks WCAG 2.2 AA compliance" from "Best Practice — improves usability beyond compliance"
-- [x] PASS: Valid YAML frontmatter with name, description, and argument-hint fields confirmed
+## Results
 
-### Notes
+- [x] PASS: WCAG 2.2 AA standard — the skill's opening line states "Audit $ARGUMENTS for accessibility compliance against WCAG 2.2 AA (published October 2023, supersedes 2.1)." This is the named standard throughout, not "best practices." WCAG 2.1 AA compliance is a subset, so an audit against 2.2 AA satisfies a 2.1 AA requirement.
+- [x] PASS: Automated and manual checks both required — Step 1 is "Automated Pattern Detection" with grep commands mapped to specific WCAG criteria. Step 2 is "Manual Checklist Audit" with a full WCAG 2.2 AA checklist organised by principle. Both steps are mandatory.
+- [x] PASS: Severity classification with WCAG SC reference — Step 3 specifies a severity matrix (Critical/Major/Minor/Best Practice) with definitions and examples. Step 4 Remediation requires "Which WCAG criterion it violates — the number and name" for every finding.
+- [x] PASS: All four WCAG principles covered — Step 2 Manual Checklist is explicitly organised by principle: Perceivable (P1-P10), Operable (O1-O14), Understandable (U1-U8), Robust (R1-R3). Each principle has specific criteria listed.
+- [x] PASS: Prioritised remediation — Step 4 Remediation Recommendations requires per-finding remediation details. The Output Format requires a "Must fix / Should fix / Enhancement" priority classification distinct from a findings catalogue.
+- [~] PARTIAL: Keyboard navigation as specific required check — Step 2 Operable checklist includes O1: "All functionality available via keyboard | 2.1.1 | Tab through entire interface, activate every control" and O2: "No keyboard traps | 2.1.2 | Verify escape from every component." This is a specific defined test pattern. However, the criterion prefix is PARTIAL — maximum 0.5 points.
+- [x] PASS: Compliance-blocking vs usability distinction — Step 3 severity matrix explicitly separates compliance-blocking findings ("Critical: users with disabilities cannot complete core tasks. Legal risk.") from usability improvements ("Best Practice: not a WCAG violation but improves the experience"). The Output Format reinforces this with separate sections.
+- [x] PASS: Valid YAML frontmatter — the skill has `name: accessibility-audit`, `description`, and `argument-hint` fields.
 
-Score is 8/8. Keyboard navigation has a specific defined test pattern in Step 2 (tab order verification, focus indicator checks, keyboard trap testing), making it a full PASS. The WCAG 2.2 AA coverage (rather than just 2.1 AA) is a genuine improvement over many accessibility audit frameworks — the new criteria (2.4.11 Focus Not Obscured, 2.5.7 Dragging Movements, 2.5.8 Target Size) are increasingly required in enterprise procurement.
+## Notes
+
+The keyboard navigation criterion scores 0.5 per the PARTIAL ceiling, not because the coverage is thin — Step 2 has specific test instructions for keyboard access mapped to WCAG 2.1.1 and 2.1.2. The criterion author set PARTIAL deliberately. The skill's most distinguishing feature is auditing against WCAG 2.2 AA rather than 2.1 AA, which adds three new criteria (2.4.11 Focus Not Obscured, 2.5.7 Dragging Movements, 2.5.8 Target Size) increasingly required in enterprise procurement reviews.

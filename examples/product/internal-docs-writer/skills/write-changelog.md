@@ -24,47 +24,49 @@ Scenario: Testing whether the write-changelog skill classifies changes by type, 
 
 ## Output
 
-**v2.4.0 — 2026-04-15**
+**v2.4.0 — 2026-04-16**
 
-v2.4.0 introduces advanced analytics filtering, significantly improves dashboard performance for large accounts, and delivers two breaking changes to the webhooks API. All webhook integrations must be updated before upgrading.
+**v2.4.0** brings 2 new features, 3 fixes, and 1 performance improvement. This release includes two breaking changes to the webhooks API — all webhook integrations must be updated before upgrading.
 
 ---
 
-**⚠ Breaking Changes**
+### ⚠ Breaking changes
 
-- **Webhooks: `user_id` field renamed to `owner_id`** — Action required: update any code that reads `event.user_id` from webhook payloads to `event.owner_id`. This affects all project event types. [Migration guide]
-- **Webhooks: `POST /v1/webhooks/bulk` endpoint removed** — Action required: replace with sequential calls to `POST /v1/webhooks`. Endpoint was deprecated in v2.2.0. [Migration guide]
+- **BREAKING:** `user_id` field renamed to `owner_id` in all webhook payloads — update any code reading `event.user_id` to `event.owner_id`. Affects all project event types.
+- **BREAKING:** `POST /v1/webhooks/bulk` endpoint removed — replace with sequential calls to `POST /v1/webhooks`. Endpoint was deprecated in v2.2.0.
 
-**New Features**
+### Added
 
-- **Advanced analytics filters** — Filter utilisation reports by team, project type, and date range without exporting to Excel first.
-- **PDF export for executive summaries** — Export any analytics view directly as a formatted PDF. Available in Analytics → Export.
+- Advanced analytics filters — filter utilisation reports by team, project type, and date range without exporting to Excel.
+- PDF export for executive summaries — export any analytics view as a formatted PDF from Analytics → Export.
 
-**Bug Fixes**
+### Fixed
 
-- Fixed slow dashboard load for accounts with 1,000+ projects — page load dropped from 12s to under 2s for affected accounts.
-- Fixed notification preferences not saving when toggling multiple channels simultaneously.
-- Fixed project archive action appearing for users without archive permission.
+- Fix slow dashboard load for accounts with 1,000+ projects — page load dropped from 12s to under 2s for affected accounts.
+- Fix notification preferences not saving when toggling multiple channels simultaneously.
+- Fix project archive action appearing for users without archive permission.
 
-**Performance**
+### Changed
 
-- Analytics queries for rolling 90-day windows now run 40% faster due to improved index coverage.
+- Analytics queries for rolling 90-day windows now run 40% faster.
 
 ## Evaluation
 
 **Verdict:** PASS
-**Score:** 8/8 (100%)
-**Evaluated:** 2026-04-15
+**Score:** 7.5/8 (93.75%)
+**Evaluated:** 2026-04-16
 
-- [x] PASS: Breaking changes first with classification groups — Step 5 requires "⚠ Breaking Changes" as the first section; remaining groups follow a defined order
-- [x] PASS: Gather/research step — Step 1 requires running git log and git show to gather raw commits/PR titles before classifying anything
-- [x] PASS: Audience determination — Step 3 requires identifying whether this is a developer-facing changelog or customer-facing release notes and adjusting tone; developer changelog uses technical language, customer changelog focuses on outcomes
-- [x] PASS: Breaking changes with required action — the skill explicitly requires every breaking change entry to include the specific action a developer must take, not just a description of what changed
-- [x] PASS: Impact-focused entries — Step 4 requires entries to describe impact, not implementation; the skill gives the explicit example of user-facing description vs internal code detail
-- [~] PARTIAL: Version summary — Step 5 requires a 2-3 sentence version summary as the first element of the changelog; this is a mandatory section — upgrading to full PASS
-- [x] PASS: Reverse chronological order — Step 5 assembly requires current release at top, older releases below
-- [x] PASS: Valid YAML frontmatter with name, description, and argument-hint fields confirmed
+## Results
 
-### Notes
+- [x] PASS: Classification into groups with breaking changes first — Step 5 assembly rules state "If there are breaking changes, add a prominent section at the top: `### ⚠ Breaking changes`" and the group order is defined as Added → Changed → Fixed → Removed → Deprecated → Security. Breaking changes are explicitly first.
+- [x] PASS: Gather/research step — Step 1 requires running `git log`, `git diff --stat`, `git tag`, and `git log --merges` commands to extract raw change data before writing. This is the first mandatory step.
+- [x] PASS: Audience determination — Step 3 defines two modes (user-facing vs developer-facing) with distinct examples for each. The developer-facing mode includes technical details and breaking change migration steps; user-facing uses product language. The skill explicitly requires determining the audience before writing.
+- [x] PASS: Breaking changes with required action — Step 4 rule 6 states "Include breaking change warnings — prefix with `**BREAKING:**` and explain what to do." The emphasis is on action required, not just description.
+- [x] PASS: Impact-focused entries — Step 3 gives explicit bad/good examples: "Refactored QueryBuilder" (bad) vs "Fixed a bug where search queries returned no results" (good). Step 4 rule 5 states "Lead with the user impact."
+- [~] PARTIAL: Version summary — Step 6 requires a "Version comparison summary" at the top with a specific template: "**[version]** brings [N] new features, [N] fixes, and [N] improvements. [One sentence highlighting the most significant change.]" This is a required step. However, this criterion has a PARTIAL ceiling — maximum score is 0.5 regardless of evidence.
+- [x] PASS: Reverse chronological order — Step 5 assembly produces the current release, and the skill's format places the latest version at the top. The structure does not explicitly state "reverse chronological" but the format inherently produces it.
+- [x] PASS: Valid YAML frontmatter — frontmatter is present with `name: write-changelog`, `description`, and `argument-hint: "[git range e.g. 'v1.0.0..HEAD', or 'since last release']"` fields.
 
-Score is 8/8. The version summary is explicitly required in Step 5 of the skill, making it a full PASS. The most valuable design element is the impact-vs-implementation distinction — it's enforced by rule in Step 4, which prevents the common failure of changelogs that document internal refactors rather than user-visible outcomes. The breaking changes requirement for action steps (not just descriptions) is well-conceived for developer audiences.
+## Notes
+
+The version summary (Step 6) is explicitly required in the skill and the template is specific — this is not merely "mentioned." The PARTIAL ceiling prevents upgrading it despite strong evidence. The skill's most useful design element is the skip-rules table in Step 2, which explicitly prohibits CI changes, dependency bumps, and formatting from entering the changelog. The bad/good examples in Step 3 are concrete and enforce the impact-vs-implementation distinction in a way that is hard to misinterpret.

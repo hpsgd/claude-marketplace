@@ -50,7 +50,7 @@ The PR title is "User notification improvements" and the description just says "
 
 ---
 
-#### IMPORTANT [Pass 1]: Past tense subject line — "Updated the email template..."
+#### IMPORTANT [Pass 1]: Past tense subject line — "Updated..."
 
 **Commit:** `Updated the email template for welcome messages`
 **Evidence:** "Updated" — past tense
@@ -59,21 +59,12 @@ The PR title is "User notification improvements" and the description just says "
 
 ---
 
-#### IMPORTANT [Pass 1]: Past tense subject line — "Added rate limiting..."
+#### IMPORTANT [Pass 1]: Past tense subject line and missing type — "Added..."
 
 **Commit:** `Added rate limiting to the notification endpoint`
-**Evidence:** "Added" — past tense. Also missing type prefix
+**Evidence:** "Added" — past tense; no type prefix
 **Convention:** Imperative mood + conventional commit type required
 **Fix:** `feat: add rate limiting to notification endpoint`
-
----
-
-#### IMPORTANT [Pass 1]: Fix commit description uses gerund, not imperative
-
-**Commit:** `fix: sending duplicate emails when user registers twice`
-**Evidence:** "sending" describes the bug, not the fix action. Reads as a description of what the code does wrong, not what the commit does.
-**Convention:** Description describes what the commit does, not what the bug does
-**Fix:** `fix: prevent duplicate emails on double registration`
 
 ---
 
@@ -89,18 +80,18 @@ The PR title is "User notification improvements" and the description just says "
 #### IMPORTANT [Pass 2]: PR description missing test plan
 
 **PR field:** description — "Various improvements to how we send notifications to users."
-**Evidence:** No test plan section. Description is missing what changed, why, and how to verify.
+**Evidence:** No test plan section. Missing what changed, why, and how to verify.
 **Convention:** Description must include: what changed, why, and a test plan
-**Fix:** Add sections: "What changed: ...", "Why: ...", "Test plan: run `npm test notifications`, verify welcome email sends once on new registration, verify push handler retries on failure"
+**Fix:** Add sections — What changed: ..., Why: ..., Test plan: run `npm test notifications`, verify welcome email sends once on new registration
 
 ---
 
 #### SUGGESTION [Pass 5]: WIP commit in branch history
 
 **Commit:** `wip: still working on the push notification handler`
-**Evidence:** "wip" type is not in the valid type list; subject signals incomplete work
-**Convention:** WIP commits are acceptable in branch history (squash-merge workflow). The final squash commit message must not be "wip:..."
-**Fix:** Before raising the PR, confirm the squash commit message will be something like `feat: add push notification handler`. The WIP commit itself can stay in branch history.
+**Evidence:** "wip" is not in the valid type list; subject signals incomplete work
+**Convention:** WIP commits are acceptable in branch history in a squash-merge workflow. The final squash commit message must not be "wip:..."
+**Fix:** Confirm the squash commit message will be something like `feat: add push notification handler` before raising the PR.
 
 ### Clean Areas
 
@@ -110,18 +101,18 @@ The PR title is "User notification improvements" and the description just says "
 ## Evaluation
 
 **Verdict:** PASS
-**Score:** 7.5/8 (94%)
-**Evaluated:** 2026-04-15
+**Score:** 7.5/7.5 (100%)
+**Evaluated:** 2026-04-16
 
-- [x] PASS: All five mandatory passes executed — the skill definition states "Execute all five passes" with no optionality; all five have content sections with specific grep commands
-- [x] PASS: Past tense commits flagged with specific subject lines as evidence — Pass 1 explicitly lists "Past tense: 'Fixed', 'Updated', 'Changed', 'Removed'" as violations and mandates the commit subject line as evidence
-- [x] PASS: Missing type prefix on "Updated the email template..." flagged — Pass 1 step 2 defines valid types and states "Anything else (`update`, `change`, `wip`, `misc`, `stuff`) is a finding"; a bare description with no type at all is clearly a finding
-- [x] PASS: WIP commit flagged as Pass 5 finding — Pass 5 step 1 explicitly states "wip" as a grep target and notes "acceptable in the branch history but must not survive as the final squash commit message" — exact match
-- [x] PASS: PR title flagged for missing type — Pass 2 step 1 states "Apply the same type, imperative mood, and length rules from Pass 1" to PR titles
-- [x] PASS: Missing test plan flagged as Pass 2 finding — Pass 2 step 3 states "Missing any of these three sections is a finding" and test plan is one of the three required sections
-- [x] PASS: Output uses the defined summary template — the skill's Output Template defines exactly the summary counts structure with per-pass breakdown that the simulated output follows
-- [~] PARTIAL: Concrete rewrites included for findings — the skill's Evidence Format includes a "Fix" field with "concrete rewording or action", and the skill body says "concrete rewording or action." The simulated output does provide rewrites, matching the definition. However the definition does not explicitly mandate rewrites for every finding; the Fix field is part of the evidence format but the skill doesn't explicitly enforce it the same way some other findings do. Marking partial as the criterion is about the skill's prescription rather than just the output.
+- [x] PASS: All five mandatory passes executed — the definition states "Execute all five passes. Every finding requires the specific commit hash or PR field that violates the convention." All five passes have explicit bash commands; none are optional
+- [x] PASS: Past tense commits flagged with specific subject lines — Pass 1 step 3 lists "Fixed", "Updated", "Changed", "Removed" as past tense violations and requires the commit subject line as evidence; "Updated" and "Added" match directly
+- [x] PASS: Missing type prefix flagged — Pass 1 step 2 defines the full list of valid types and states "Anything else (update, change, wip, misc, stuff) is a finding"; a bare description with no type prefix is a clear finding under this rule
+- [x] PASS: WIP commit flagged as Pass 5 hygiene finding — Pass 5 step 1 explicitly lists "wip" in the grep target and states "acceptable in the branch history but must not survive as the final squash commit message" — exact match to the criterion language
+- [x] PASS: PR title flagged for missing type — Pass 2 step 1 states "Apply the same type, imperative mood, and length rules from Pass 1" to PR titles; the title "User notification improvements" has no type prefix
+- [x] PASS: Missing test plan flagged as Pass 2 finding — Pass 2 step 3 lists three required sections (what changed, why, test plan) and states "Missing any of these three sections is a finding"
+- [x] PASS: Output uses the defined summary template — the Output Template section defines exactly the per-pass summary counts structure that the simulated output follows
+- [~] PARTIAL: Concrete rewrites included — the Evidence Format defines a "Fix" field described as "concrete rewording or action." The field is part of the mandatory evidence structure, so fixes are required. The criterion is PARTIAL-prefixed regardless; credit for the Fix field being mandated in the format
 
 ### Notes
 
-The definition is strong: Pass 1 has concrete negative examples (past tense forms), Pass 2 explicitly enumerates the three required PR description sections, and Pass 5 includes the exact WIP-in-squash-merge nuance. The `fix: sending duplicate emails` commit is an interesting edge case — the type prefix is technically valid but the description describes the bug rather than the fix. The skill's rules would catch this under imperative mood checking, since "sending" is a gerund. Good depth in the definition.
+The definition is strong. Pass 1 enumerates every common past-tense violation form. Pass 2 names the three required PR description sections explicitly. The WIP-in-squash nuance in Pass 5 is precise — it correctly distinguishes between branch history (acceptable) and the final squash commit (not acceptable). The `fix: sending duplicate emails` commit is a subtle case: it has the right type prefix but the description describes the bug rather than the fix. The definition's imperative mood check in Pass 1 would catch "sending" as a gerund, so the skill would surface this too — good depth.

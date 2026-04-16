@@ -24,33 +24,40 @@ Review the recon skill definition and verify it enables thorough passive attack 
 
 **Simulated skill output for this prompt:**
 
-Step 1 scope definition: logs target, authorisation reference, and out-of-scope exclusions. Skill header states: "Reconnaissance that drifts outside the agreed scope can have legal and contractual consequences." Authorisation reference is mandatory — no exceptions. Rules section reiterates: "Authorisation reference must be logged before starting. No exceptions."
+Step 1 scope definition: logs target domain(s), authorisation reference, and explicit out-of-scope exclusions before any work begins. The skill header states: "Reconnaissance that drifts outside the agreed scope can have legal and contractual consequences. When uncertain, check with the client before proceeding." Rules section: "Authorisation reference must be logged before starting. No exceptions."
 
-Passive-only constraint: the skill's opening callout explicitly states "Passive reconnaissance only. This skill collects publicly available information without touching the target's systems." Rules section: "Passive methods only. Nothing in this skill touches the target's systems."
+Passive-only constraint: the skill opens with an IMPORTANT callout: "Passive reconnaissance only. This skill collects publicly available information without touching the target's systems. Active scanning (nmap, Burp, nikto, etc.) is outside this skill's scope." Rules section reiterates: "Passive methods only. Nothing in this skill touches the target's systems."
 
-Step 2 DNS enumeration: crt.sh for certificate transparency (subdomain discovery), SecurityTrails/dnsdumpster for historical DNS data, WHOIS for registrant/nameserver data, Google dorking patterns (`site:target.com -www`, `site:target.com filetype:pdf`, etc.).
+Step 2 DNS enumeration:
+- Certificate transparency via crt.sh — search `%.target.com` for all issued certs (described as "the single most reliable passive subdomain discovery method")
+- Historical DNS data via SecurityTrails or dnsdumpster — subdomains, MX records, past IP associations
+- WHOIS — registrant, nameservers, registration date
+- Google dorking: `site:target.com -www`, `site:target.com filetype:pdf`, `site:target.com inurl:admin`, `site:target.com "index of"`
 
-Step 3 ASN/IP mapping: BGP.he.net for registered ASNs and IP blocks, ipinfo.io for IP validation, APNIC/ARIN/RIPE for RIR allocation records.
+Step 3 ASN and IP range mapping:
+- BGP.he.net — search by organisation name for all registered ASNs and associated IP blocks
+- ipinfo.io — validate specific IPs
+- APNIC (AU/NZ), ARIN (US/CA), RIPE (EU) — RIR allocation records
 
-Step 4 technology fingerprinting: job postings identified as "the most underrated reconnaissance source" — job ads reveal specific technologies, versions, cloud platforms, IaC tools. Also: Wappalyzer, email headers, TXT record analysis.
+Step 4 technology fingerprinting: job postings identified as "the most underrated reconnaissance source" — job ads name specific technologies, versions, cloud platforms, IaC tools. Also: Wappalyzer, BuiltWith, email headers (reveal mail server software), TXT record analysis (reveals SaaS surface area).
 
-Step 5 Shodan/Censys: passive search by organisation name, ASN, IP range. Requirement to flag the scan date of any findings — stale data noted explicitly in rules.
+Step 5 Shodan/Censys passive search: search by organisation name, ASN, IP range. Rule: "Shodan/Censys data has a timestamp. Flag the scan date of any findings — a service that was exposed 6 months ago may have been remediated." Rules section repeats this requirement.
 
-Step 6 credential and breach data: HaveIBeenPwned domain search, GitHub dorking (`"target.com" filename:.env`, `"target.com" api_key`), paste site searches.
+Step 6 credential and breach data: HaveIBeenPwned domain search via `api.haveibeenpwned.com/api/v2/breachedaccount/[email]`, GitHub dorking (`"target.com" filename:.env`, `"target.com" api_key`), paste site searches.
 
-Output format: includes Out-of-scope findings section at the end for assets surfaced outside agreed scope — "noted but not investigated."
+Output format: includes "Out-of-scope findings" section at the end — assets surfaced outside agreed scope are "noted but not investigated." Rules: "Scope discipline. Findings outside the agreed scope get noted separately, not investigated."
 
 ## Evaluation
 
-- [x] PASS: Skill requires authorisation reference before starting — recon SKILL.md Step 1 mandates logging the authorisation reference and states "Reconnaissance that drifts outside the agreed scope can have legal and contractual consequences"; Rules section: "Authorisation reference must be logged before starting. No exceptions"
-- [x] PASS: Skill is strictly passive — recon SKILL.md opens with an IMPORTANT callout: "Passive reconnaissance only. This skill collects publicly available information without touching the target's systems"; Rules section reiterates this
-- [x] PASS: Skill covers domain and DNS enumeration using crt.sh, historical DNS data, WHOIS, and Google dorking — recon SKILL.md Step 2 covers all four: crt.sh, SecurityTrails/dnsdumpster, WHOIS, and four Google dork patterns
-- [x] PASS: Skill covers ASN and IP range mapping using BGP.he.net and RIR records — recon SKILL.md Step 3 specifies BGP.he.net for ASN search and APNIC/ARIN/RIPE for RIR allocation records
-- [x] PASS: Skill covers technology fingerprinting with job postings as "the most underrated reconnaissance source" — recon SKILL.md Step 4 uses exactly that phrase for job postings
-- [x] PASS: Skill covers Shodan/Censys with requirement to cite scan timestamp — recon SKILL.md Step 5 explicitly states "Shodan/Censys data has a timestamp. Flag the scan date of any findings" and rules section reiterates this
-- [x] PASS: Skill covers leaked credential and breach data via HaveIBeenPwned and GitHub/paste site dorking — recon SKILL.md Step 6 covers both with specific API endpoint and dork patterns
-- [~] PARTIAL: Skill output includes out-of-scope findings section — recon SKILL.md Output format includes an "Out-of-scope findings" section at the end; the rules state "Scope discipline. Findings outside the agreed scope get noted separately, not investigated." The section is present but its depth guidance (what to note, what level of detail) is minimal
+- [x] PASS: Skill requires authorisation reference before starting and defines legal risk — SKILL.md Step 1: "Authorisation reference: engagement name, statement of work reference, or authorisation letter"; "Reconnaissance that drifts outside the agreed scope can have legal and contractual consequences"; Rules: "Authorisation reference must be logged before starting. No exceptions."
+- [x] PASS: Skill is strictly passive — SKILL.md opens with an IMPORTANT callout: "Passive reconnaissance only. This skill collects publicly available information without touching the target's systems"; Rules: "Passive methods only. Nothing in this skill touches the target's systems."
+- [x] PASS: Skill covers domain and DNS enumeration with crt.sh, historical DNS, WHOIS, and Google dorking — SKILL.md Step 2 covers all four: crt.sh (with note that it is "the single most reliable passive subdomain discovery method"), SecurityTrails/dnsdumpster, WHOIS, and four specific Google dork patterns
+- [x] PASS: Skill covers ASN and IP range mapping with BGP.he.net and RIR records — SKILL.md Step 3 specifies BGP.he.net for ASN search and APNIC/ARIN/RIPE as the RIR sources for allocation records
+- [x] PASS: Skill covers technology fingerprinting with job postings as "the most underrated reconnaissance source" — SKILL.md Step 4 uses that exact phrase: "Job postings — the most underrated reconnaissance source"
+- [x] PASS: Skill covers Shodan/Censys with requirement to cite scan timestamp — SKILL.md Step 5: "Shodan/Censys data has a timestamp. Flag the scan date of any findings — a service that was exposed 6 months ago may have been remediated"; Rules reiterates: "Shodan/Censys findings cite the scan timestamp — old data shouldn't be presented as current state"
+- [x] PASS: Skill covers leaked credential and breach data via HaveIBeenPwned and GitHub dorking — SKILL.md Step 6 covers both with specific API endpoint (`api.haveibeenpwned.com/api/v2/breachedaccount/[email]`) and specific GitHub dork patterns (`"target.com" filename:.env`, `"target.com" api_key`)
+- [~] PARTIAL: Skill output includes out-of-scope findings section — SKILL.md Output format includes an "Out-of-scope findings" section; Rules: "Findings outside the agreed scope get noted separately, not investigated"; the section exists but depth guidance on what to document (and how much detail) is minimal; maximum 0.5 per PARTIAL-prefixed criterion ceiling
 
 **Verdict:** PASS
 **Score:** 7.5/8 criteria met (94%)
-**Evaluated:** 2026-04-15
+**Evaluated:** 2026-04-16

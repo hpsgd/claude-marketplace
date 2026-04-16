@@ -57,33 +57,52 @@ def request_password_reset(request):
 
 ## Output
 
-**Simulated agent response for this prompt:**
+**Simulated agent response:**
 
-Pass 1 (Context): Password reset handler in Django — authentication-critical code. Reads the full file.
+Pre-flight: reads CLAUDE.md and `.claude/rules/`. Checks for existing auth patterns and security-sensitive code areas.
 
-Pass 2 (Correctness): The f-string SQL query at line 24 is a HARD signal — SQL injection. `cursor.execute(f"... WHERE email = '{email}'")`  — user input interpolated directly. Fix: use parameterised query `cursor.execute("... WHERE email = %s", [email])`. Additionally: token is never set with an expiry time — correctness gap.
+Pass 1 (Context): Password reset handler. Auth-critical code. Reads the full `views.py`. No tests found for this view — noted.
 
-Pass 3 (Security): SQL injection (CRITICAL HARD, `views.py:24`). Missing rate limiting on POST endpoint (HIGH HARD — adversarial analysis: 1000 rapid POSTs would enumerate all valid emails and exhaust the token generation loop). 404 on unknown email leaks account existence.
+Pass 2 (Correctness): Token has no expiry — not stored with a timestamp, no TTL enforced. `User.objects.get()` at line 34 will raise `DoesNotExist` if the previously found `user_id` is not found by the ORM — possible inconsistency if raw SQL and ORM use different user tables.
 
-Pass 4 (Quality): N+1 query at lines 35-38 — `user.linkedprofile_set.all()` followed by individual `.save()` per profile. Fix: `select_related('linkedprofile_set')` or `prefetch_related`, then bulk update.
+Pass 3 (Security):
+- BLOCKER: SQL injection at `views.py:24` — f-string interpolates `email` directly into raw SQL. Fix: `cursor.execute("SELECT id, username FROM auth_user WHERE email = %s", [email])`
+- HIGH: No rate limiting on this endpoint. Adversarial analysis: 1000 POST requests would enumerate all valid emails, exhaust token generation overhead, and flood linked-account email addresses. Django's `django-ratelimit` or a reverse-proxy rate limit is required.
+- MEDIUM: `views.py:28` — `JsonResponse({'error': 'Email not found'}, status=404)` reveals whether an email is registered. Returning 200 with a generic "If that address is registered, you'll receive an email" message removes the user enumeration vector.
 
-Quality score table: Security=1/5 (CRITICAL blocker), Correctness=2/5, Performance=2/5, Maintainability=3/5.
+Pass 4 (Quality):
+- Performance: N+1 at `views.py:35-38` — `linkedprofile_set.all()` executes one SELECT per profile on `.save()`. Fix: use `prefetch_related('linkedprofile_set')` before the loop and batch the saves.
+- No test coverage.
 
-Verdict: BLOCK. SQL injection is a critical security vulnerability in an authentication endpoint. Cannot ship.
+Quality Score:
 
-Every finding includes file:line reference and specific fix.
+| Dimension | Score | Evidence |
+|---|---|---|
+| Security | 0 | SQL injection CRITICAL blocker at views.py:24 |
+| Correctness | 50 | Token expiry missing; ORM/raw SQL mismatch risk |
+| Data integrity | 70 | Token overwrites all profiles — no atomicity |
+| Performance | 40 | N+1 at views.py:35-38 |
+| Maintainability | 50 | No tests, raw SQL mixed with ORM |
+| Test coverage | 0 | No tests found |
+| **Confidence** | **0** | min(HARD) = 0 (Security blocker) |
+
+Verdict: **BLOCK** — SQL injection is a critical vulnerability in an authentication endpoint. Cannot merge.
 
 ## Evaluation
 
-- [x] PASS: Agent identifies SQL injection as blocker with file:line — code-reviewer agent definition mandates Pass 2/3 security scan; SQL injection in f-string is a HARD signal (will cause wrong behaviour in production); agent definition requires specific `file:line` references
-- [x] PASS: Agent identifies N+1 query with specific fix — code-reviewer SKILL.md covers N+1 in the correctness/performance passes; agent requires specific location and fix
-- [x] PASS: Agent flags missing rate limiting as security finding — code-reviewer agent definition's adversarial analysis step would identify this on an auth endpoint; rate limiting on password reset is a standard auth security requirement
-- [x] PASS: Agent produces quality score table covering ≥4 dimensions — code-reviewer agent definition output format includes quality score table with those dimensions
-- [x] PASS: Agent gives BLOCK or REQUEST_CHANGES verdict — code-reviewer agent definition's verdict system: SQL injection is a HARD signal → mandatory BLOCK; agent definition does not allow APPROVE with blockers present
-- [x] PASS: Agent runs adversarial analysis — code-reviewer agent definition includes adversarial analysis as a mandatory step, specifically asks "what happens if called rapidly"
-- [~] PARTIAL: Agent notes 404 leaks account existence (user enumeration) — code-reviewer SKILL.md covers information disclosure in the security pass; this is a SOFT signal (security improvement but not a blocking bug); the agent would likely flag it but the skill treats it as conditional rather than mandatory; partially covered
-- [x] PASS: Every finding cites specific location with concrete fix — code-reviewer agent definition calibration rules prohibit findings without `file:line` and without fix suggestions
+- [x] PASS: Agent identifies SQL injection as blocker with file:line — agent definition mandates Pass 3 security scan covering injection; output format requires `file:line` in findings table; calibration rules require evidence (the code) and a fix. SQL injection is a HARD signal (security = binary blocker). Traceable to `views.py:24`.
+- [x] PASS: Agent identifies N+1 with specific fix — Pass 4 Quality explicitly covers "N+1 queries (database call inside a loop)" under Performance; output format requires Suggestion column with concrete fix. `select_related` / `prefetch_related` is the standard Django fix.
+- [x] PASS: Agent flags missing rate limiting as security finding — Adversarial Analysis section mandates "Repetition: what happens if the same action is performed 1000 times?" for every review. Pass 3 covers auth. Rate limiting on an auth endpoint surfaces through the adversarial analysis step.
+- [x] PASS: Agent produces quality score table covering ≥4 dimensions — output format template defines Security, Correctness, Data integrity, Performance, Maintainability, Test coverage — all 4 required dimensions present.
+- [x] PASS: Agent gives BLOCK verdict — HARD signal rule: "any zero blocks approval." SQL injection → Security = 0 → confidence = 0. Agent definition does not permit APPROVE with a HARD signal at zero.
+- [x] PASS: Agent runs adversarial analysis — Adversarial Analysis is a mandatory section of every review; "Repetition: what happens if the same action is performed 1000 times?" is explicitly listed. The definition enforces this for every review, not just when the reviewer judges it relevant.
+- [~] PARTIAL: Agent notes 404 leaks account existence (user enumeration) — Pass 3 covers "data exposure: Are error messages safe for external users? (no stack traces, no internal paths)" — user enumeration via 404 falls under this. However the definition doesn't name user enumeration specifically, and the data exposure guidance focuses on stack traces and internal paths rather than existence disclosure. The definition partially covers this but would not reliably surface it as a distinct finding.
+- [x] PASS: Every finding cites specific location with concrete fix — calibration rules state "A finding without evidence is not a finding. Show the code" and "A finding without a fix suggestion is incomplete." These are explicit prohibitions in the definition.
 
 **Verdict:** PASS
 **Score:** 7.5/8 criteria met (94%)
-**Evaluated:** 2026-04-15
+**Evaluated:** 2026-04-16
+
+## Notes
+
+The agent definition is strong on security and adversarial coverage. The user enumeration gap (criterion 7) is a real gap — the data exposure guidance focuses on secrets/stack traces rather than boolean existence disclosure. A specific call-out for "does a 404 vs 200 reveal information?" would close this. The quality score table in the definition includes Data integrity and Test coverage dimensions beyond the 4 required — this is a strength.

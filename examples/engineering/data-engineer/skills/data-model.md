@@ -23,34 +23,40 @@ Design a data model for subscription billing. Entities: customers (name, email, 
 
 ## Output
 
-**Simulated skill output for this prompt:**
+**Simulated skill output:**
 
-Step 1 domain discovery: entities=Customer, Plan, Subscription, Invoice, PaymentMethod. Events=SubscriptionCreated, InvoiceIssued, PaymentProcessed. Actors=Customer, Billing system. Invariants=subscription must have a payment method, invoice amount must be positive. Cardinality=1 customer → many subscriptions, 1 customer → many payment methods.
+Step 1 domain discovery: Entities = Customer, Plan, Subscription, Invoice, PaymentMethod. Events = SubscriptionCreated, InvoiceIssued, PaymentProcessed, SubscriptionCancelled. Actors = Customer, Billing system, Payment processor. Invariants = subscription must reference a payment method (NOT NULL FK), invoice amount must be > 0, trial_end_date must be after start_date. Cardinality = 1 customer → many subscriptions, 1 customer → many payment methods, 1 plan → many subscriptions.
 
-Step 2 entity design: all PKs use `gen_random_uuid()`. All timestamps are `TIMESTAMPTZ`. Status columns use `CHECK` constraints: `subscription_status CHECK (status IN ('trial','active','past_due','cancelled'))`.
+Step 2 relationship mapping: Customer → Subscription (one-to-many, FK on Subscription, ON DELETE RESTRICT), Customer → PaymentMethod (one-to-many, ON DELETE RESTRICT), Subscription → Plan (many-to-one), Subscription → PaymentMethod (mandatory FK).
 
-Step 3 access patterns: subscriptions by customer (high freq, <10ms), active subscriptions with upcoming renewal (daily batch), invoices by subscription (medium freq). Indexes defined after access patterns.
+Step 3 entity design: all PKs are `UUID PRIMARY KEY DEFAULT gen_random_uuid()`. All timestamp columns are `TIMESTAMPTZ`. Status columns use `CHECK` constraints: `CHECK (status IN ('trial','active','past_due','cancelled'))`.
 
-Step 4 foreign keys: named constraints, `ON DELETE RESTRICT` for customer deletion (cannot delete a customer with active subscriptions).
+Step 4 access patterns: subscriptions by customer (high freq, <10ms), invoices by subscription (medium freq), active subscriptions with upcoming renewal (daily batch). Indexes defined against these patterns.
 
-Step 5 privacy: PII fields — `customers.email`, `customers.name`, `payment_methods.last4`. Erasure strategy: on account deletion, anonymise email (replace with UUID hash), null name, retain payment method type only.
+Step 5 data integrity: named FK constraints, `ON DELETE RESTRICT` for customer deletion.
 
-Open questions: can a cancelled subscription be reactivated? Is trial period configurable per plan? What happens to outstanding invoices on cancellation?
+Step 8 privacy: PII = `customers.email`, `customers.name`, `payment_methods.last4`, `payment_methods.expiry`. Erasure strategy: anonymise email to `DELETED-{uuid}@deleted.invalid`, null name, retain payment method type only.
+
+Open questions: Can a cancelled subscription be reactivated? Is the trial period configurable per plan or global? What happens to outstanding invoices on cancellation? Can a customer have multiple active subscriptions simultaneously?
 
 Mermaid ER diagram included in output.
 
 ## Evaluation
 
-- [x] PASS: Skill performs domain discovery before tables — data-model SKILL.md Step 1 (domain discovery) is mandatory and covers entities, events, actors, invariants, cardinality
-- [x] PASS: All PKs use UUIDs — data-model SKILL.md Step 3 specifies `gen_random_uuid()` for all PKs as a hard rule
-- [x] PASS: All timestamps use TIMESTAMPTZ — data-model SKILL.md Step 3 specifies `TIMESTAMPTZ` as mandatory
-- [x] PASS: Status fields use CHECK constraints — data-model SKILL.md Step 3 specifies CHECK constraints for status fields; unconstrained text is listed as an anti-pattern
-- [x] PASS: Skill documents access patterns before indexes — data-model SKILL.md Step 4 (access pattern analysis) must precede index definition
-- [x] PASS: Foreign keys have named constraints and appropriate ON DELETE — data-model SKILL.md Step 5 covers integrity rules including named FK constraints and ON DELETE strategies
-- [x] PASS: Privacy section identifies PII with retention and erasure strategy — data-model SKILL.md Step 8 (privacy by design) requires PII identification and erasure strategy
-- [~] PARTIAL: Skill produces Mermaid ER diagram — data-model SKILL.md output format specifies Mermaid ER diagram as a required output element; this is clearly defined but as an output format requirement rather than a mandatory step; the criterion is met in substance
-- [x] PASS: Skill identifies open questions requiring business input — data-model SKILL.md Step 7 (schema evolution) and open questions section covers this
+- [x] PASS: Skill performs domain discovery before tables — Step 1 "Domain Discovery" is the first step in a sequential process; it requires identifying entities, events, actors, and invariants; the per-entity property table also requires cardinality
+- [x] PASS: All PKs use UUIDs via gen_random_uuid() — Schema design rules table explicitly states "UUIDs for primary keys — UUID PRIMARY KEY DEFAULT gen_random_uuid() — no sequential integers (enumeration risk, merge conflicts)"
+- [x] PASS: All timestamps use TIMESTAMPTZ — Schema design rules: "Timestamps with timezone — TIMESTAMPTZ not TIMESTAMP — always store UTC"; anti-patterns list: "TIMESTAMP without timezone — always TIMESTAMPTZ"
+- [x] PASS: Status fields use CHECK constraints — Schema design rules: "CHECK constraints for enums — Database-level validation, not just application-level"; example DDL in Step 3 shows `CHECK (status IN ('active', 'paused', 'archived'))`
+- [x] PASS: Skill documents access patterns before indexes — Step 4 "Access Pattern Analysis (MANDATORY)" explicitly precedes index definition; includes query shape, frequency, and latency SLA columns in the required table
+- [x] PASS: Foreign keys have named constraints and appropriate ON DELETE strategies — Step 5 Data Integrity Rules provides a table of ON DELETE strategies with rationale; example DDL shows `CONSTRAINT uq_sources_name_per_owner`; the default strategy for user-type relationships is RESTRICT
+- [x] PASS: Privacy section identifies PII with retention and erasure strategy — Step 8 "Privacy by Design" requires PII identification, retention policy, and erasure strategy; output format includes a Privacy table with Column, Classification, Retention, and Erasure strategy columns
+- [~] PARTIAL: Skill produces Mermaid ER diagram — output format template includes "## Entity-Relationship Diagram [Mermaid ER diagram]" as a required section; the PARTIAL ceiling is appropriate because this is an output format requirement with no enforcement step in the process
+- [x] PASS: Skill identifies open questions requiring product/business input — output format template includes "## Open Questions [Decisions that need product/business input before finalising]" as an explicit required section
 
 **Verdict:** PASS
 **Score:** 8.5/9 criteria met (94%)
-**Evaluated:** 2026-04-15
+**Evaluated:** 2026-04-16
+
+## Notes
+
+Very solid definition. The Step 4 access pattern analysis being labelled "(MANDATORY)" with the required table format (query shape, frequency, latency SLA) means this won't be skipped. The privacy step (Step 8) is notably thorough — the SQL `COMMENT ON COLUMN` pattern for tagging PII is a good enforcement mechanism. The Mermaid ER diagram is in the output template but there's no process step that produces it, which is why PARTIAL is the right ceiling.

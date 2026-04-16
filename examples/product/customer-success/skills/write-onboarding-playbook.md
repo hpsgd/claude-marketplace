@@ -27,55 +27,67 @@ Scenario: Testing whether the write-onboarding-playbook skill defines TTFV as a 
 
 **Enterprise Onboarding Playbook**
 
-**Segment:** Enterprise — 200+ seats, dedicated IT team, $100k+ ACV, annual contract.
+**Segment (Step 1):** Enterprise — 200+ seats, dedicated IT team, $100k+ ACV, annual contract.
 
-**TTFV definition:** First value = 50+ users have completed 3+ active work sessions within the product. Must be auto-detectable via product analytics. If this event is not currently instrumented, instrument it before building the playbook.
+**TTFV (Step 2):** First value = 50+ users have completed 3+ active work sessions within the product using their own data. Auto-detectable via product analytics event. If this event is not currently instrumented, build the instrumentation before designing the playbook.
 
-**Milestones:**
+**Milestones (Step 3):**
 
-| Milestone | Target date | Success metric | Escalation trigger |
+| # | Milestone | Target day | Success criteria | Owner | Verification | Escalation trigger |
+|---|---|---|---|---|---|---|
+| 1 | Kickoff complete | Day 3 | Champion identified, IT contact confirmed, SSO timeline set | CS | Kickoff notes | No kickoff by Day 5 → escalate to CS Manager |
+| 2 | Technical setup | Day 14 | SSO live, all users provisioned | CS + IT | Automated health check | No IT response by Day 7 → escalate to AE + VP CS |
+| 3 | First use | Day 21 | 3+ teams completed initial sessions with own data | CS | Product event | <50% completion by Day 18 → additional session |
+| 4 | First value (TTFV) | Day 30 | 50+ users with 3+ sessions | CS | Metric threshold | <30 users active by Day 25 → executive sponsor outreach |
+| 5 | Handoff to BAU | Day 45 | ≥70% of licensed seats active, health score green | CS | Handoff checklist | <60% active by Day 40 → churn risk flag |
+
+**Kickoff agenda (Step 4):**
+
+| Time | Topic | Owner | Output |
 |---|---|---|---|
-| Kickoff complete | Day 3 | Champion identified, IT contact confirmed, SSO timeline set | No response by Day 2 → escalate to CSM lead |
-| Technical setup | Day 14 | SSO live, all users provisioned | No IT response by Day 7 → escalate to AE + VP CS |
-| Team training | Day 30 | 3+ teams completed training sessions | <50% completion by Day 25 → schedule additional session |
-| First value | Day 45 | 50+ users with 3+ sessions | <30 users active by Day 40 → executive sponsor outreach |
-| Full adoption | Day 90 | ≥70% of licensed seats active | <50% active by Day 75 → churn risk flag |
+| 0-10 min | Introductions and role mapping | CS | Know who does what on both sides |
+| 10-20 min | Goals alignment | CS + Champion | Documented success criteria in customer's words |
+| 20-30 min | Technical requirements | CS + Tech lead | Integration plan, data migration scope |
+| 30-45 min | Milestone walkthrough | CS | Shared timeline with actual dates |
+| 45-55 min | Access provisioning | CS | Accounts created, invites sent, SSO configured |
+| 55-60 min | Next steps | CS | First 3 actions with owners and deadlines |
 
-**Kickoff agenda:**
-- 0-5min: Introductions and roles (CSM owns)
-- 5-20min: Customer goals and success definition (CSM facilitates, champion outputs)
-- 20-35min: Technical setup walkthrough (Solutions Engineer, output: IT action list with dates)
-- 35-50min: Training plan and team rollout strategy (CSM, output: training calendar)
-- 50-60min: Success milestones agreement (all parties, output: signed milestone plan)
+**Common blockers (Step 5):**
 
-**Common blockers:**
-- IT access delays — early warning: no IT contact confirmed by Day 5
-- Champion change — early warning: champion unresponsive for 3+ days
-- Low team adoption — early warning: <20% completion rate 2 weeks into training
+| Blocker | Early warning sign | Resolution | Escalation path |
+|---|---|---|---|
+| Champion unavailable | Missed first 2 meetings, responses delayed >3 days | Identify backup contact, shift to async | CS Manager → AE |
+| Technical integration delayed | No API key by Day 5, IT unresponsive | Step-by-step guide, solutions engineer call | Solutions Eng → Engineering |
+| Low user adoption | Only champion logging in, team not invited | Champion-led training, team onboarding session | CS Manager → Champion + Exec Sponsor |
 
-**Handoff criteria (onboarding complete when ALL met):**
-- [ ] ≥70% of licensed seats active
+**Handoff criteria (Step 6 — onboarding complete when ALL met):**
+
 - [ ] TTFV event fired (50+ users, 3+ sessions)
+- [ ] ≥70% of licensed seats active
+- [ ] Champion identified and responding within 24h
+- [ ] Executive sponsor named and attended ≥1 meeting
+- [ ] Success criteria documented and agreed
+- [ ] Health score green
 - [ ] First QBR scheduled
-- [ ] Champion has confirmed value in writing
-- [ ] No open critical support tickets
 
 ## Evaluation
 
 **Verdict:** PASS
-**Score:** 9/9 (100%)
-**Evaluated:** 2026-04-15
+**Score:** 8.5/9 (94%)
+**Evaluated:** 2026-04-16
 
-- [x] PASS: TTFV defined as customer-perceived product event — Step 2 explicitly requires defining TTFV as "a specific, measurable product event that signals the customer has received value" and rejects "completed onboarding call"
-- [x] PASS: TTFV must be measurable automatically — Step 2 states "if TTFV cannot be automatically detected, build the instrumentation first"
-- [x] PASS: Every milestone has an escalation trigger with specific day threshold — Step 3 milestone table requires an escalation trigger column with explicit day triggers per milestone
-- [x] PASS: Segment definition required before milestones — Step 1 defines segment characteristics (size, seat count, ACV, contract type) before any milestone design
-- [x] PASS: Kickoff meeting agenda with timing, owners, and outputs — Step 4 requires a structured agenda with time allocations, owners, and outputs per topic
-- [x] PASS: Handoff criteria as a checklist — Step 6 requires a handoff criteria checklist; onboarding is not complete until all items are checked
-- [x] PARTIAL: Common blockers with early warning signs — Step 5 requires both blockers AND early warning signs per blocker ("early warning signs that this blocker is about to occur") — this is fully met, not partial — upgrading to full PASS
-- [x] PASS: Measurable success criteria for every milestone — Step 3 explicitly requires success metrics that are automatically measurable; "complete onboarding call" is rejected
-- [x] PASS: Valid YAML frontmatter with name, description, and argument-hint fields confirmed
+## Results
 
-### Notes
+- [x] PASS: TTFV defined as customer-perceived product event — Step 2 states: "'First value' must be something the CUSTOMER considers valuable, not something you consider complete. 'Completed onboarding call' is not first value — 'generated first report with their own data' is." The TTFV template requires a specific outcome, not a process completion.
+- [x] PASS: TTFV must be automatically measurable — Step 2 states explicitly: "If you cannot measure TTFV automatically, it is not a real metric. Build the instrumentation first." This is a mandatory condition, not a suggestion.
+- [x] PASS: Every milestone has an escalation trigger with specific day threshold — Step 3's milestone table template includes an "Escalation trigger" column, and the rules state "Every milestone has an escalation trigger with a specific day threshold — no open-ended milestones." The example table shows day-specific triggers (e.g., "No kickoff within 5 business days of contract").
+- [x] PASS: Segment definition required before milestones — Step 1 is mandatory and must be completed before Step 3. The rules state "Enterprise onboarding is NOT self-serve onboarding with more meetings. They are fundamentally different playbooks." The segment template requires technical sophistication, goals, decision-maker, and contract type.
+- [x] PASS: Kickoff agenda with timing, owners, and outputs — Step 4 template has columns: Time, Topic, Owner, Output. The output field is required per topic, and the step produces "Kickoff agenda with timing, owners, and outputs per topic."
+- [x] PASS: Handoff criteria as a checklist — Step 6 uses a checklist format with the heading "Handoff is complete when ALL of the following are true." The checklist includes TTFV, adoption %, champion, exec sponsor, success criteria, health score, and QBR scheduled.
+- [~] PARTIAL: Common blockers with early warning signs — Step 5 requires a four-column table: Blocker, Early warning sign, Resolution, Escalation path. The rules state "Every blocker needs an early warning sign — by the time the customer tells you, you've already lost days." Early warning signs are required. However, the criterion prefix is PARTIAL — the ceiling is 0.5 regardless of how fully the definition satisfies it.
+- [x] PASS: Measurable success criteria for every milestone — Step 3 rules state "Every milestone has measurable success criteria — 'complete onboarding call' is not measurable." The milestone template requires a "Success criteria" column. The Rules section reinforces: "Milestones must have measurable success criteria."
+- [x] PASS: Valid YAML frontmatter — the skill has name, description, and argument-hint fields in valid YAML frontmatter.
 
-The skill is unusually rigorous on TTFV — requiring instrumentation before playbook design if the metric isn't measurable is a rare design choice that prevents theatre metrics. The escalation trigger requirement per milestone (with specific day thresholds) turns escalation from a judgment call into a protocol. The blocker early-warning signs requirement is also fully met in the skill definition, so the PARTIAL criterion earns a full PASS.
+## Notes
+
+The TTFV instrumentation requirement in Step 2 is an unusually rigorous design choice — it prevents theatre metrics by refusing to accept "completed onboarding call" as evidence of value. Requiring the instrumentation to be built first is rare in CS playbook frameworks. The escalation trigger per milestone (with specific day thresholds) converts escalation from a judgment call into a protocol. The PARTIAL criterion on blockers/early-warning-signs is correctly scored at 0.5: the definition fully satisfies this criterion, but the test author set the ceiling at PARTIAL and the calibration rules prohibit upgrading it.

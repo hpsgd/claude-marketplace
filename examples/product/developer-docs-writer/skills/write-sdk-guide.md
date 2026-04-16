@@ -26,56 +26,103 @@ Scenario: Testing whether the write-sdk-guide skill requires a quickstart under 
 
 **Clearpath Python SDK Guide**
 
-**Installation:**
+**Installation**
+
 ```bash
 pip install clearpath-sdk
 ```
 
-**Quickstart (12 lines):**
+**Requirements:** Python 3.9+
+
+**Quick start**
+
 ```python
 import clearpath
 
-client = clearpath.Client(api_key="sk_live_your_key_here")
+client = clearpath.Client(api_key="sk_live_abc123xyz")
 
-# List projects
 projects = client.projects.list()
-for project in projects:
+for project in projects.data:
     print(project.name, project.status)
 
-# Create a project
-new_project = client.projects.create(name="Q3 Launch", status="active")
+new_project = client.projects.create(
+    name="Q3 Analytics Launch",
+    status="active"
+)
 print(new_project.id)
 ```
 
-**Common patterns:** Pagination handling, error handling with try/except, bulk operations.
+**Expected output:**
+```
+Q3 Analytics Launch  active
+proj_7k2mNpQr8xLv
+```
 
-**Method reference:**
+**Configuration**
 
-`client.projects.list(status=None, limit=20, cursor=None)` → `ProjectList`
-Raises: `AuthenticationError`, `RateLimitError`, `APIError`
+| Option | Type | Default | Description |
+|---|---|---|---|
+| `api_key` | str | required | API key from Settings → API Keys |
+| `base_url` | str | `https://api.clearpath.app/v1` | Override for staging |
+| `timeout` | int | `30` | Request timeout in seconds |
+| `retries` | int | `3` | Auto-retry on 5xx errors |
 
-`client.projects.create(name, status='active')` → `Project`
-Raises: `ValidationError`, `AuthenticationError`
+**Common patterns**
 
-[Full reference continues for all public methods]
+```python
+# Pagination
+for page in client.projects.list().auto_paging_iter():
+    print(page.name)
 
-**Quality checklist:** Quickstart is 12 lines ✓. All examples are syntactically valid Python ✓. All public methods documented ✓. Return types specified ✓. Exceptions documented ✓.
+# Error handling
+try:
+    project = client.projects.get("proj_notexist")
+except clearpath.NotFoundError as e:
+    print(f"Not found: {e.message}")
+except clearpath.AuthenticationError:
+    print("Check your API key")
+
+# Bulk create with rate limiting
+import time
+for name in project_names:
+    client.projects.create(name=name)
+    time.sleep(0.1)  # Stay under 10 req/s limit
+```
+
+**Method reference**
+
+| Method | Parameters | Returns | Raises |
+|---|---|---|---|
+| `client.projects.list(status=None, limit=20)` | status: str, limit: int | `ProjectList` | `AuthenticationError` |
+| `client.projects.get(id)` | id: str (required) | `Project` | `NotFoundError`, `AuthenticationError` |
+| `client.projects.create(name, status='active')` | name: str (required) | `Project` | `ValidationError`, `AuthenticationError` |
+| `client.projects.update(id, **kwargs)` | id: str (required) | `Project` | `NotFoundError`, `ValidationError` |
+| `client.projects.delete(id)` | id: str (required) | `None` | `NotFoundError` |
+
+**Quality checklist:**
+- Quick start is 12 lines, under the 15-line limit
+- All examples import correctly — no missing imports
+- All public methods documented
+- Return types and exceptions listed per method
+- Realistic data used throughout (`sk_live_abc123xyz`, not `"your_key"`)
 
 ## Evaluation
 
 **Verdict:** PASS
-**Score:** 8/8 (100%)
-**Evaluated:** 2026-04-15
+**Score:** 7.5/8 (93.75%)
+**Evaluated:** 2026-04-16
 
-- [x] PASS: Quickstart ≤15 lines required — Step 2 explicitly requires the quickstart to be "15 lines or fewer, including imports" and states that longer quickstarts defeat their purpose
-- [x] PASS: Method reference required — Step 5 is dedicated to method reference documentation with parameters, return types, and exceptions per method
-- [x] PASS: Research step required — Step 1 requires reading SDK source code to discover all public methods before writing anything
-- [x] PASS: Installation instructions required before quickstart — Step 2 requires installation as the first element before the quickstart code
-- [x] PASS: Complete, runnable examples — the skill explicitly states "no `...` placeholders in runnable code"; all examples must work as written
-- [x] PASS: Quality checklist — Step 6 includes a quality checklist that verifies examples are complete, quickstart meets the line limit, and method reference is exhaustive
-- [~] PARTIAL: Common patterns section — Step 4 is explicitly titled "Common patterns" and is a required distinct section; this is fully met — upgrading to full PASS
-- [x] PASS: Valid YAML frontmatter with name, description, and argument-hint fields confirmed
+## Results
 
-### Notes
+- [x] PASS: Quickstart ≤15 lines — Step 2 explicitly requires "under 15 lines" and states "this is not the place for error handling or edge cases"; the rules reinforce "Must be under 15 lines. Must work with copy-paste"
+- [x] PASS: Method reference section — Step 5 "Write type definitions and method reference" is a required step documenting each method with return type; the rules require "Include the return type for every method"
+- [x] PASS: Research step — Step 1 "Research the SDK" is mandatory before writing; requires Grep/Glob to "identify every public class, method, and configuration option"
+- [x] PASS: Installation before quickstart — Step 2 template places Installation as the first element, before the Quick start code block; the output format also shows Installation first
+- [x] PASS: Complete, runnable examples — Rules state "Every code example must run. A code block that requires the reader to 'fill in the rest' is not an example"; no placeholder ellipsis patterns are permitted
+- [x] PASS: Quality checklist — Step 6 is a dedicated quality checklist verifying the quick start works, all examples are complete, every config option is documented, and error types are covered
+- [~] PARTIAL: Common patterns section — Step 4 "Write common patterns" is a required distinct section covering pagination, error handling, retry, and debugging at minimum; the skill fully satisfies this but the PARTIAL prefix caps the score at 0.5
+- [x] PASS: Valid YAML frontmatter — frontmatter contains `name: write-sdk-guide`, `description`, and `argument-hint` fields
 
-Score is 8/8. The common patterns section (Step 4) is a required distinct section in the skill, not just embedded examples, so the PARTIAL criterion earns a full PASS. The ≤15 line quickstart requirement is a concrete, measurable constraint — it prevents the common failure of "quickstart" guides that require 40 lines of configuration before anything runs.
+## Notes
+
+Step 5 requires grouping methods by resource, not by HTTP method — a good design choice that mirrors how developers think about SDK usage. The quality checklist (Step 6) is specific enough to be actionable: it checks that the quick start stays under the line limit, that examples don't have incomplete snippets, and that all error classes are documented. The common patterns section (Step 4) is a genuinely required distinct step with named subsections, not just "examples required somewhere" — the PARTIAL ceiling is the only thing preventing a full PASS on that criterion.
