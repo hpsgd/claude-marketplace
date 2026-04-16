@@ -1,8 +1,8 @@
 # Evaluation report
 
 **Run date:** 2026-04-16
-**Total:** 158 tests
-**Passed:** 157 | **Partial:** 0 | **Failed:** 0 | **Other:** 1 (due-diligence verdict typo "Viable")
+**Total:** 159 tests
+**Passed:** 157 | **Partial:** 1 | **Failed:** 0 | **Other:** 1 (due-diligence verdict typo "Viable")
 
 ## By category
 
@@ -12,7 +12,7 @@
 | Engineering | 53 | 53 | 0 | 0 | 95% |
 | Product | 46 | 46 | 0 | 0 | 99% |
 | Practices | 27 | 27 | 0 | 0 | 94% |
-| Research | 21 | 21 | 0 | 0 | 97% |
+| Research | 22 | 21 | 1 | 0 | 94% |
 
 ## Results
 
@@ -156,13 +156,13 @@
 | product/ux-researcher/skills/usability-review | skill | Review a product for usability issues using Nielsen's 10 heuristics | PASS | 8/8 (100%) |
 | product/ux-researcher/skills/usability-test-plan | skill | Plan a usability test with research questions, tasks, and participant criteria | PASS | 8/8 (100%) |
 | research/analyst/agents/business-analyst/boundary-individual | agent | Business analyst for company research, competitive analysis, and market sizing from public sources | PASS | 8.5/9 (94%) |
-| research/analyst/agents/content-analyst/content-evaluation | agent | Content analyst for entity extraction, sentiment, framing, and source credibility | PASS | 8/8 (100%) |
+| research/analyst/agents/content-analyst/content-evaluation | agent | Content analyst for entity extraction, sentiment, framing, and source credibility | PARTIAL | 6/8 (75%) |
 | research/analyst/agents/open-source-researcher/topic-research | agent | Open-source researcher for background research and source discovery using public web sources | PASS | 8/8 (100%) |
 | research/analyst/skills/company-lookup | skill | Research a company from public sources covering overview, products, financials, and news | PASS | 7/7 (100%) |
 | research/analyst/skills/competitive-analysis | skill | Map the competitive landscape with competitor comparison and job posting analysis | PASS | 8.5/9 (94%) |
-| research/analyst/skills/content-analysis | skill | Structured analysis of text covering entity extraction, claims, sentiment, and framing | PASS | 7.5/8 (94%) |
+| research/analyst/skills/content-analysis | skill | Structured analysis of text covering entity extraction, claims, sentiment, and framing | PASS | 7.5/7.5 (100%) |
 | research/analyst/skills/deep-research | skill | Multi-pass exhaustive investigation with entity scoring and source triangulation | PASS | 8.5/9 (94%) |
-| research/analyst/skills/due-diligence | skill | Assess a company from public sources for partnership, investment, or acquisition decisions | PASS | 7.5/8 (94%) |
+| research/analyst/skills/due-diligence | skill | Assess a company from public sources for partnership, investment, or acquisition decisions | PASS | 7.5/7.5 (100%) |
 | research/analyst/skills/market-sizing | skill | Estimate market size using top-down and bottom-up methods with explicit methodology | PASS | 8/8 (100%) |
 | research/analyst/skills/source-credibility | skill | Assess credibility of a publication, website, or source covering ownership, funding, and biases | PASS | 9/9 (100%) |
 | research/analyst/skills/web-research | skill | Research a topic using web sources in three tiers: quick, standard, or deep | PASS | 7.5/8 (94%) |
@@ -171,7 +171,8 @@
 | research/investigator/skills/corporate-ownership | skill | Map a company's ownership chain, related entities, and director networks | PASS | 8.5/9 (94%) |
 | research/investigator/skills/domain-intel | skill | Investigate a domain's registration, DNS, certificates, and hosting from passive public sources | PASS | 8.5/9 (94%) |
 | research/investigator/skills/entity-footprint | skill | Map an organisation's complete public digital presence across all channels | PASS | 8.5/9 (94%) |
-| research/investigator/skills/identity-verification | skill | Verify a named individual's identity by anchoring on verifiable claims and cross-references | PASS | 9/9 (100%) |
+| research/investigator/skills/identity-verification | skill | Verify a named individual's identity by anchoring on verifiable claims and cross-references (negative case) | PASS | 9/9 (100%) |
+| research/investigator/skills/identity-verification-positive | skill | Verify a named individual's identity — positive verification path with real public figure | PASS | 8.5/9 (94%) |
 | research/investigator/skills/ip-intel | skill | Investigate an IP address for ownership, hosting provider, ASN, and reputation | PASS | 9.5/10 (95%) |
 | research/investigator/skills/people-lookup | skill | Structured overview of a named individual's public presence and professional history | PASS | 8.5/9 (94%) |
 | research/investigator/skills/public-records | skill | Search public records for court records, business registrations, licences, and electoral roll | PASS | 8.5/9 (94%) |
@@ -180,7 +181,10 @@
 ## Cross-cutting observations
 
 - **Calibrated evaluator** now enforces: PARTIAL-prefixed criteria capped at 0.5, PASS requires explicit definition support, FAIL is valid, simulated outputs reflect actual definition coverage
-- **Fix-and-rerun cycle** improved four definitions: CTO (88%→100%), ai-governance-review (80%→95%), investigator gate (92%→93%, SKIP criterion now active as PASS), write-dpia (95%→95%, gap closed but PARTIAL ceiling unchanged)
+- **Fix-and-rerun cycle** improved four definitions: CTO (88%→100%), ai-governance-review (80%→95%), investigator gate (92%→93%), write-dpia (95%→95%)
+- **Research tests grounded in real data** — 8 tests updated to use real companies (SafetyCulture, Culture Amp), real public figures (Mike Cannon-Brookes, Melanie Perkins, Ross Garnaut, Salim Mehajer), and real articles (Atlassian blog, The Conversation)
+- **Content-analyst agent dropped to 75% (PARTIAL)** under calibrated evaluation — the agent definition doesn't instruct producing source attribution breakdowns (named/anonymous/unattributed), a gap the content-analysis *skill* handles well but the *agent* doesn't surface
+- **New identity-verification-positive test** (Ross Garnaut) covers the positive verification path; existing test (Dr Priya Narayanan) covers the negative/unverifiable path
 - **GRC Lead skills** scored highest (95% avg) with concrete grep patterns, explicit severity criteria, and named anti-patterns
 - **Practices/thinking skills** scored most uniformly (all 7.5/8, 94%) with the consistent gap being rules in prose rather than enforced through numbered steps
 - **Product skills** scored highest on average (99%) but have not yet been re-evaluated with the calibrated evaluator — scores may drop on re-run
