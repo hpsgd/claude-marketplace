@@ -11,5 +11,6 @@ TODO.md
 .claude/learnings/patterns/
 .claude/learnings/metrics/
 
+tmp/
 __pycache__/
 node_modules/
