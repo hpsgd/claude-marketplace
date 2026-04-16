@@ -22,7 +22,7 @@ Review the write-adr skill definition and verify it produces complete, honest AD
 
 ## Output
 
-The write-adr skill, applied to a representative scenario (documenting the decision to use PostgreSQL BYTEA for binary content storage), would produce the following ADR.
+The write-adr skill, applied to documenting the decision to use PostgreSQL BYTEA for binary content storage, would produce the following ADR.
 
 ---
 
@@ -39,62 +39,58 @@ informed: [Engineering Team, Product Engineering]
 
 ## Context and Problem Statement
 
-The platform currently stores uploaded binary content (PDF reports, CSV exports) as
-file paths to an S3-like object store. We need to decide how to store binary content
-produced during processing — specifically intermediate pipeline artefacts that are
-<5MB each, short-lived (24-hour TTL), and accessed exclusively within a single
-transaction context. The question is whether to use PostgreSQL BYTEA (inline storage)
-or continue routing all binary content through the object store.
+The platform currently stores uploaded binary content (PDF reports, CSV exports) as file paths
+to an S3-compatible object store. We need to decide how to store binary artefacts produced
+during processing — intermediate pipeline outputs that are <5MB each, have a 24-hour TTL, and
+are accessed exclusively within a single transaction context. Do we store them inline in
+PostgreSQL, or continue routing all binary content through the object store?
 
 ## Decision Drivers
 
-- Access latency: binary content is read immediately after write in the same request
-- Operational complexity: reducing the number of external service dependencies reduces
-  failure modes
-- Content size: artefacts average 500KB–2MB; all under the BYTEA practical limit
-- Retention: 24-hour TTL makes object store lifecycle rules awkward
-- Consistency: transactional atomicity — if the pipeline fails, orphaned S3 objects
-  are hard to clean up
+- Access latency: artefacts are read immediately after write in the same request
+- Operational complexity: reducing external service dependencies reduces failure modes
+- Content size: artefacts average 500KB–2MB, all under the BYTEA practical limit
+- Retention: 24-hour TTL makes object store lifecycle rules awkward to configure
+- Consistency: if a pipeline transaction fails, orphaned S3 objects are hard to clean up
 
 ## Considered Options
 
 1. PostgreSQL BYTEA inline storage
 2. Object store (S3/MinIO) — status quo
-3. Do nothing — keep routing all binary content through the object store
+3. Do nothing — keep routing all binary content through the object store unchanged
 
 ## Decision Outcome
 
-Chosen option: **Option 1 — PostgreSQL BYTEA inline storage**, because the content is
-small, transactionally-scoped, and short-lived. The operational simplicity of keeping
-the data in the same transaction context outweighs the object store benefits, which
-are designed for large, persistent, independently-accessed content.
+Chosen option: **Option 1 — PostgreSQL BYTEA inline storage**, because the content is small,
+transactionally-scoped, and short-lived. Keeping the data in the transaction context eliminates
+the consistency problem and the extra network hop. Object store benefits (scale, independence)
+are designed for persistent, large, independently-accessed content — none of which applies here.
 
 ## Consequences
 
 **Positive:**
-- No orphaned S3 objects after pipeline failures — BYTEA rolls back with the transaction
-- Eliminates a network round-trip for content that is written and read in the same request
-- Simpler local development — no object store emulator needed
+- No orphaned objects after pipeline failures — BYTEA rolls back with the transaction
+- Eliminates a network round-trip for content written and read in the same request
+- Simpler local development — no object store emulator needed for this use case
 
 **Negative:**
 - PostgreSQL row sizes increase; large TOAST tables can slow vacuum and index scans if
-  content exceeds the 8KB TOAST threshold frequently
-- Migration path is harder if content size requirements grow beyond the practical BYTEA
-  limit (~1GB per row)
+  artefacts frequently exceed the 8KB inline threshold
+- Migration path is harder if content size requirements grow beyond practical BYTEA limits
 - pg_dump backup sizes increase proportionally with stored binary content
 
 **Risks:**
-- If average artefact size grows to >5MB, query performance will degrade and this
-  decision should be revisited
+- If average artefact size grows to >5MB, query performance will degrade — this decision
+  should be revisited if that threshold is crossed
 
 ## Confirmation
 
-- Review date: 2027-01-01 (or if average binary content size exceeds 3MB — monitor
-  via pg_column_size queries on the artefacts table monthly)
-- Metric: `SELECT avg(pg_column_size(content)) FROM pipeline_artefacts` — alert if
-  median exceeds 2MB
-- Automated: pg_stat_user_tables on the artefacts table; vacuum duration alert in
-  monitoring
+- Review date: 2027-01-01 (or sooner if median artefact size exceeds 3MB)
+- Metric: `SELECT avg(pg_column_size(content)) FROM pipeline_artefacts` — alert if median
+  exceeds 2MB
+- Automated: vacuum duration alert on artefacts table in monitoring dashboard
+- Reconsideration trigger: any new binary content type with expected size >5MB must be
+  evaluated against this decision before being routed to the artefacts table
 
 ## Pros and Cons of Options
 
@@ -116,10 +112,9 @@ are designed for large, persistent, independently-accessed content.
 
 ### Option 3: Do nothing
 
-- Good, because no migration work
-- Bad, because consistency problem (S3 artefacts not rolled back with transactions)
-  persists
-- Bad, because adds external dependency for a use case that doesn't need it
+- Good, because no migration work required
+- Bad, because the consistency problem (S3 artefacts not rolled back with transactions) persists
+- Bad, because adds an external dependency for a use case that doesn't benefit from it
 ```
 
 ---
@@ -127,27 +122,25 @@ are designed for large, persistent, independently-accessed content.
 ## Evaluation
 
 **Verdict:** PASS
-**Score:** 8/8 criteria met (100%)
+**Score:** 8/8 (100%)
 **Evaluated:** 2026-04-16
 
-## Results
+- [x] PASS: Skill uses MADR format and requires all key sections — Step 3 lists every section as "(none optional)": frontmatter with status, date, decision-makers, consulted, and informed; Title; Context and Problem Statement; Decision Drivers; Considered Options; Decision Outcome; Consequences (positive/negative/risks); Confirmation; and Pros and Cons of Options. Each has explicit instructions.
 
-- [x] PASS: Skill uses MADR format and requires all key sections — the SKILL.md "Step 3: Write the ADR" section lists all sections as "(none optional)": frontmatter (status, date, decision-makers, consulted, informed), Context and Problem Statement, Decision Drivers, Considered Options, Decision Outcome, Consequences (positive/negative/risks), Confirmation, and Pros and Cons of Options. Every section is explicitly required with instructions.
+- [x] PASS: Skill requires title to describe both problem and solution — line 58: `` `# ADR-NNNN: {Short title — describes the problem AND solution}` `` with concrete good/bad examples: "ADR-0005: Database decision" (too vague) and "ADR-0005: We should use PostgreSQL" (no problem stated) both called out explicitly.
 
-- [x] PASS: Skill requires title to describe both problem and solution — title rule is stated explicitly with good/bad examples: "Good: 'ADR-0005: Use PostgreSQL BYTEA for binary content storage'" vs "Bad: 'ADR-0005: Database decision'" (too vague) and "Bad: 'ADR-0005: We should use PostgreSQL'" (no problem stated).
+- [x] PASS: Skill mandates at least two options including do-nothing — Considered Options instruction: "At least 2 options. Always include 'do nothing / status quo' if applicable."
 
-- [x] PASS: Skill mandates ≥2 options including do-nothing — Considered Options section instruction: "At least 2 options. Always include 'do nothing / status quo' if applicable."
+- [x] PASS: Skill requires at least one negative consequence with explicit honesty check — Consequences section: "every decision has downsides — if you can't name one, you haven't thought hard enough." Quality Checklist item 5 repeats this as a named honesty check.
 
-- [x] PASS: Skill requires ≥1 negative consequence with explicit honesty check — Consequences section: "Negative: What gets worse (every decision has downsides — if you can't name one, you haven't thought hard enough)." Quality Checklist repeats this: "Consequences include at least one negative (honesty check)."
+- [x] PASS: Skill requires measurable confirmation criteria — Confirmation section lists four specific mechanisms (review date, metric, automated test/CI check, reconsideration conditions). Quality Checklist item 7: "Confirmation criteria are measurable or observable."
 
-- [x] PASS: Skill requires measurable confirmation criteria — Confirmation section lists four specific mechanisms: a review date, a metric to watch, an automated test or CI check, and conditions that would trigger revisiting. The Quality Checklist checks "Confirmation criteria are measurable or observable."
+- [x] PASS: Skill provides a quality checklist — 9-item checklist framed as a pre-delivery gate: "Before declaring the ADR complete." Covers title, context, options count, decision drivers specificity, consequences honesty, risks, confirmation measurability, rejected options fairness, and related ADR links.
 
-- [x] PASS: Skill provides quality checklist — "Quality Checklist" section is present with 9 items covering title, context, options count, decision drivers specificity, consequences honesty, risks, confirmation measurability, rejected options fairness, and related ADR links. Framed as a pre-delivery gate ("Before declaring the ADR complete").
+- [x] PASS: Skill lists all four required anti-patterns — Anti-Patterns table names "Retroactive ADR," "No alternatives," "Strawman options," and "Orphaned ADR" (described as no confirmation criteria). All four present with problem and fix columns.
 
-- [x] PASS: Skill lists all four required anti-patterns — Anti-Patterns table names: "Retroactive ADR," "No alternatives," "Strawman options," and "Orphaned ADR" (described as "No confirmation criteria"). All four present.
+- [x] PASS: Skill specifies file naming and target directory — Output section: `NNNN-kebab-case-title.md` with a concrete example, and target directory fallback list: `docs/adr/`, `docs/architecture-decisions/`, `docs/decisions/`. Creates `docs/adr/` if none exists.
 
-- [x] PASS: Skill specifies file naming and target directory — Output section: "File naming: `NNNN-kebab-case-title.md` (e.g., `0005-use-postgresql-bytea-for-content.md`)" and target "the project's ADR directory" with fallback list: `docs/adr/`, `docs/architecture-decisions/`, `docs/decisions/`. Creates `docs/adr/` if none exists.
+### Notes
 
-## Notes
-
-The only notable gap is that the SKILL.md references a template file at `${CLAUDE_PLUGIN_ROOT}/templates/adr-template.md` which would need to exist in the plugin's `templates/` directory. If that file is missing, Step 3 falls back to the inline section instructions, which are complete enough to stand alone. The quality checklist includes "Rejected options have fair representation (not strawmen)" — a nuance beyond the strawman anti-pattern, catching cases where technically-presented options are still unrealistic.
+The SKILL.md references a template file at `${CLAUDE_PLUGIN_ROOT}/templates/adr-template.md`. If that file is missing from the plugin's `templates/` directory, Step 3 falls back to the inline section instructions, which are complete enough to stand alone. The quality checklist includes "Rejected options have fair representation (not strawmen)" as a distinct item beyond the strawman anti-pattern — it catches cases where technically-described options are still unrealistic in practice.

@@ -1,0 +1,159 @@
+{
+  "generated_at": "2026-04-16T00:04:59.790235+00:00",
+  "sessions_total": 24,
+  "days_with_data": 7,
+  "daily": {
+    "2026-04-16": {
+      "sessions": 2,
+      "duration_minutes": 204,
+      "user_turns": 54,
+      "assistant_turns": 148,
+      "corrections_immediate": 2,
+      "corrections_approach": 0,
+      "corrections_reversals": 16,
+      "corrections_total": 18,
+      "successes": 16,
+      "input_tokens": 43008,
+      "output_tokens": 260976
+    },
+    "2026-04-15": {
+      "sessions": 2,
+      "duration_minutes": 25,
+      "user_turns": 10,
+      "assistant_turns": 17,
+      "corrections_immediate": 2,
+      "corrections_approach": 0,
+      "corrections_reversals": 1,
+      "corrections_total": 3,
+      "successes": 2,
+      "input_tokens": 85,
+      "output_tokens": 14418
+    },
+    "2026-04-14": {
+      "sessions": 2,
+      "duration_minutes": 1501,
+      "user_turns": 66,
+      "assistant_turns": 307,
+      "corrections_immediate": 2,
+      "corrections_approach": 0,
+      "corrections_reversals": 10,
+      "corrections_total": 12,
+      "successes": 15,
+      "input_tokens": 9729,
+      "output_tokens": 139672
+    },
+    "2026-04-12": {
+      "sessions": 4,
+      "duration_minutes": 7612,
+      "user_turns": 214,
+      "assistant_turns": 611,
+      "corrections_immediate": 21,
+      "corrections_approach": 1,
+      "corrections_reversals": 15,
+      "corrections_total": 37,
+      "successes": 37,
+      "input_tokens": 6503,
+      "output_tokens": 234575
+    },
+    "2026-04-11": {
+      "sessions": 2,
+      "duration_minutes": 12,
+      "user_turns": 2,
+      "assistant_turns": 14,
+      "corrections_immediate": 0,
+      "corrections_approach": 0,
+      "corrections_reversals": 0,
+      "corrections_total": 0,
+      "successes": 0,
+      "input_tokens": 19520,
+      "output_tokens": 12746
+    },
+    "2026-04-09": {
+      "sessions": 5,
+      "duration_minutes": 3444,
+      "user_turns": 84,
+      "assistant_turns": 376,
+      "corrections_immediate": 12,
+      "corrections_approach": 0,
+      "corrections_reversals": 16,
+      "corrections_total": 28,
+      "successes": 19,
+      "input_tokens": 15231,
+      "output_tokens": 209443
+    },
+    "2026-04-03": {
+      "sessions": 7,
+      "duration_minutes": 7343,
+      "user_turns": 657,
+      "assistant_turns": 1776,
+      "corrections_immediate": 54,
+      "corrections_approach": 2,
+      "corrections_reversals": 107,
+      "corrections_total": 163,
+      "successes": 96,
+      "input_tokens": 215036,
+      "output_tokens": 1670417
+    }
+  },
+  "rolling_7d": {
+    "window": 7,
+    "days_available": 7,
+    "avg_sessions_per_day": 3.4,
+    "avg_corrections_per_day": 37.3,
+    "avg_successes_per_day": 26.4,
+    "avg_correction_rate": 0.2401,
+    "avg_duration_minutes": 839,
+    "total_tokens": {
+      "input": 309112,
+      "output": 2542247
+    }
+  },
+  "rolling_30d": {
+    "window": 30,
+    "days_available": 7,
+    "avg_sessions_per_day": 3.4,
+    "avg_corrections_per_day": 37.3,
+    "avg_successes_per_day": 26.4,
+    "avg_correction_rate": 0.2401,
+    "avg_duration_minutes": 839,
+    "total_tokens": {
+      "input": 309112,
+      "output": 2542247
+    }
+  },
+  "all_time": {
+    "window": 7,
+    "days_available": 7,
+    "avg_sessions_per_day": 3.4,
+    "avg_corrections_per_day": 37.3,
+    "avg_successes_per_day": 26.4,
+    "avg_correction_rate": 0.2401,
+    "avg_duration_minutes": 839,
+    "total_tokens": {
+      "input": 309112,
+      "output": 2542247
+    }
+  },
+  "trend": {
+    "trend": "improving",
+    "first_half_rate": 0.2571,
+    "second_half_rate": 0.2035,
+    "change": -0.21
+  },
+  "signals": {
+    "total_signals": 62,
+    "by_type": {
+      "direction": 20,
+      "correction": 6,
+      "neutral": 10,
+      "praise": 1,
+      "unclassified": 25
+    },
+    "by_confidence": {
+      "claude": 35,
+      "regex": 2,
+      "needs_review": 25
+    },
+    "unclassified": 25
+  }
+}

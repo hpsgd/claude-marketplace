@@ -1,0 +1,103 @@
+{
+  "generated_at": "2026-04-11T01:40:40.264314+00:00",
+  "sessions_total": 14,
+  "days_with_data": 3,
+  "daily": {
+    "2026-04-11": {
+      "sessions": 2,
+      "duration_minutes": 12,
+      "user_turns": 2,
+      "assistant_turns": 14,
+      "corrections_immediate": 0,
+      "corrections_approach": 0,
+      "corrections_reversals": 0,
+      "corrections_total": 0,
+      "successes": 0,
+      "input_tokens": 19520,
+      "output_tokens": 12746
+    },
+    "2026-04-09": {
+      "sessions": 5,
+      "duration_minutes": 3444,
+      "user_turns": 84,
+      "assistant_turns": 376,
+      "corrections_immediate": 12,
+      "corrections_approach": 0,
+      "corrections_reversals": 16,
+      "corrections_total": 28,
+      "successes": 19,
+      "input_tokens": 15231,
+      "output_tokens": 209443
+    },
+    "2026-04-03": {
+      "sessions": 7,
+      "duration_minutes": 7343,
+      "user_turns": 657,
+      "assistant_turns": 1776,
+      "corrections_immediate": 54,
+      "corrections_approach": 2,
+      "corrections_reversals": 107,
+      "corrections_total": 163,
+      "successes": 96,
+      "input_tokens": 215036,
+      "output_tokens": 1670417
+    }
+  },
+  "rolling_7d": {
+    "window": 7,
+    "days_available": 3,
+    "avg_sessions_per_day": 4.7,
+    "avg_corrections_per_day": 63.7,
+    "avg_successes_per_day": 38.3,
+    "avg_correction_rate": 0.2571,
+    "avg_duration_minutes": 771,
+    "total_tokens": {
+      "input": 249787,
+      "output": 1892606
+    }
+  },
+  "rolling_30d": {
+    "window": 30,
+    "days_available": 3,
+    "avg_sessions_per_day": 4.7,
+    "avg_corrections_per_day": 63.7,
+    "avg_successes_per_day": 38.3,
+    "avg_correction_rate": 0.2571,
+    "avg_duration_minutes": 771,
+    "total_tokens": {
+      "input": 249787,
+      "output": 1892606
+    }
+  },
+  "all_time": {
+    "window": 3,
+    "days_available": 3,
+    "avg_sessions_per_day": 4.7,
+    "avg_corrections_per_day": 63.7,
+    "avg_successes_per_day": 38.3,
+    "avg_correction_rate": 0.2571,
+    "avg_duration_minutes": 771,
+    "total_tokens": {
+      "input": 249787,
+      "output": 1892606
+    }
+  },
+  "trend": {
+    "trend": "declining",
+    "first_half_rate": 0.2481,
+    "second_half_rate": 0.3256,
+    "change": 0.31
+  },
+  "signals": {
+    "total_signals": 33,
+    "by_type": {
+      "unclassified": 31,
+      "correction": 2
+    },
+    "by_confidence": {
+      "needs_review": 31,
+      "regex": 2
+    },
+    "unclassified": 31
+  }
+}
