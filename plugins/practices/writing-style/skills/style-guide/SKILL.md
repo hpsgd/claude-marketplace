@@ -44,7 +44,7 @@ Replace the left column with the right:
 | deep dive | look at, examine, review |
 | in order to | to |
 | it should be noted | (cut — just state the thing) |
-| going forward | from now on, next |
+| going forward / moving forward | from now on, next |
 | a myriad of / a plethora of | many |
 | optimal | best |
 | prior to | before |

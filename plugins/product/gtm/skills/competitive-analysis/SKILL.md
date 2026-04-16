@@ -193,6 +193,7 @@ Deliver the analysis in this order:
 - Be honest about where you lose. The analysis is for internal strategy, not marketing copy. Lying to yourself is the most expensive kind of lying.
 - Update this analysis quarterly. Competitive landscapes change. A 6-month-old competitive analysis is a liability, not an asset.
 - When information is unavailable, say so. "Unknown" is better than a guess presented as fact.
+- **All output is DRAFT until human-reviewed.** Label every output with "DRAFT — requires human review" at the top and bottom. Competitive intelligence must be verified by a human before use in strategy decisions or sales materials.
 
 ## Related Skills
 

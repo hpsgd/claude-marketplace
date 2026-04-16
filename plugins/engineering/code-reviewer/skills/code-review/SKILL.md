@@ -175,7 +175,7 @@ Files reviewed: N | Blockers: X | Important: Y | Suggestions: Z
 
 ## Zero-Finding Gate
 
-If the code is clean, say so. "No findings across all four passes. The change is correct, secure, and well-structured. APPROVE." Do not manufacture issues to appear thorough — false positives erode trust.
+If the code is clean, say so and name one positive assertion with a `file:line` reference — something specific that was done well. "No findings across all four passes. The change is correct, secure, and well-structured. Notably, `src/auth/middleware.ts:42` correctly validates the JWT audience claim before extracting permissions. APPROVE." Do not manufacture issues to appear thorough — false positives erode trust.
 
 ## Calibration Rules
 

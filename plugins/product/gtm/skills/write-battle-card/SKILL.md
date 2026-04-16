@@ -140,6 +140,7 @@ Compile the final battle card using this template:
 - **Concise enough for a sales call.** If a rep can't scan the card and find what they need in 30 seconds, the card is too long. Prefer tables and bullets over paragraphs.
 - **One competitor per card.** Do not combine multiple competitors into a single card. Each card is a focused reference for a specific competitive deal.
 - **Proof points must be current.** A case study from 2 years ago or a benchmark on a deprecated version hurts credibility.
+- **All output is DRAFT until human-reviewed.** Label every output with "DRAFT — requires human review" at the top and bottom. Sales-facing content must be reviewed and edited by a human before distribution to the sales team.
 
 ## Related Skills
 

@@ -165,7 +165,7 @@ For each agent, check against the agent template quality criteria:
 
 ### Summary
 - Lines: {count} (target: 150-300)
-- Quality score: {X}/{14} criteria met
+- Quality score: {X}/{15} criteria met
 
 ### Criteria Status
 
@@ -184,6 +184,7 @@ For each agent, check against the agent template quality criteria:
 | No private refs | ✅/⚠️/❌ | {detail} |
 | Tool links | ✅/⚠️/❌ | {detail} |
 | Correct model | ✅/⚠️/❌ | {detail} |
+| Description precision | ✅/⚠️/❌ | {detail} |
 | Line count | ✅/⚠️/❌ | {detail} |
 
 ### Recommended Actions

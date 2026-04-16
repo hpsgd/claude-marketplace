@@ -127,6 +127,8 @@ For each viable option:
 
 Synthesise findings into a clear recommendation with decision timeline.
 
+**Decision checkpoint:** Before recommending infrastructure scaling (new instances, upgraded tiers, additional replicas), stop and present the cost-vs-risk trade-off to the user. Scaling has cost and operational implications. Present: what happens if we don't scale (risk), what scaling costs (monthly/annual estimate), and when the decision needs to be made by (lead time). Do not assume approval — the user decides.
+
 ## Anti-Patterns (NEVER do these)
 
 - **Linear extrapolation of non-linear growth** — viral growth is exponential. Seasonal business has peaks. Don't assume tomorrow looks like today

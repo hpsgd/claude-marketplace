@@ -208,6 +208,7 @@ Output the complete plan as a document with:
 - The launch day checklist is a sequential run-of-show, not a grab bag. Order matters.
 - If the feature can't be feature-flagged, say so — and adjust the rollout strategy to account for the higher risk.
 - Always define what "success" looks like in numbers before launching. If you can't measure it, you can't evaluate it.
+- **All output is DRAFT until human-reviewed.** Label every output with "DRAFT — requires human review" at the top and bottom. Launch plans must be reviewed by the launch owner before execution begins.
 
 ## Output Format
 
