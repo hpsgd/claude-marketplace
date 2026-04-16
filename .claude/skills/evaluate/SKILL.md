@@ -27,7 +27,29 @@ Run test cases against their plugin definitions. Works at three levels:
 
    d. Dispatch to the evaluator agent with the test case details
 
-   e. The evaluator generates the simulated output and evaluation, then rewrites everything below the `<!-- EVALUATION BELOW -->` marker. Content above the marker is preserved.
+   e. The evaluator generates the simulated output and evaluation, then rewrites everything below the `<!-- EVALUATION BELOW -->` marker. Content above the marker is preserved. The structure below the marker MUST be:
+
+      ```
+      ## Output
+
+      [Full simulated output demonstrating what the skill/agent would
+       actually produce for this prompt. This is the most valuable part
+       of the test — it shows what quality output looks like. Must be
+       realistic and substantial, not a summary or stub.]
+
+      ## Evaluation
+
+      **Verdict:** PASS/PARTIAL/FAIL
+      **Score:** X/Y (Z%)
+      **Evaluated:** [date]
+
+      [Per-criterion results with evidence]
+
+      ### Notes
+      [Notable findings]
+      ```
+
+      The `## Output` section is MANDATORY. An evaluation without a simulated output is incomplete. The output should be long enough to demonstrate the skill's actual deliverable — a PRD should look like a PRD, a threat model should look like a threat model, a code review should look like a code review.
 
    f. Collect the verdict and score
 
