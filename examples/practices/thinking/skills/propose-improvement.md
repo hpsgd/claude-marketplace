@@ -27,8 +27,8 @@ Scenario: A developer has a local learned rule that has proven effective across 
 
 Reading settings files...
 Checking ~/.claude/settings.json, .claude/settings.json, .claude/settings.local.json for extraKnownMarketplaces...
-Found: `claude-marketplace.source.path = /Users/martin/Projects/claude-marketplace`
-Verifying: `git status` in `/Users/martin/Projects/claude-marketplace` → on branch main, clean ✓
+Found: `turtlestack.source.path = /Users/martin/Projects/turtlestack`
+Verifying: `git status` in `/Users/martin/Projects/turtlestack` → on branch main, clean ✓
 
 **Step 2: Identify what to propose**
 
@@ -53,7 +53,7 @@ Reading target file... does not exist (new addition).
 **Step 4: Create branch and apply changes**
 
 ```bash
-cd /Users/martin/Projects/claude-marketplace
+cd /Users/martin/Projects/turtlestack
 git fetch origin
 git checkout main
 git pull --ff-only
@@ -109,7 +109,7 @@ gh pr create --title "Learning: verify before declaring complete" --body "..."
 git checkout main
 ```
 
-PR created: https://github.com/org/claude-marketplace/pull/47
+PR created: https://github.com/org/turtlestack/pull/47
 
 **Step 7: Update tracking**
 
@@ -117,21 +117,21 @@ Updating `.claude/learnings/patterns/learned--verify-before-declaring-complete.j
 ```json
 {
   "status": "pr_submitted",
-  "pr_url": "https://github.com/org/claude-marketplace/pull/47",
+  "pr_url": "https://github.com/org/turtlestack/pull/47",
   "pr_submitted_at": "2026-04-16T..."
 }
 ```
 
 Adding note to local learned rule:
 ```
-<!-- Upstream PR: https://github.com/org/claude-marketplace/pull/47 — remove this rule after PR is merged -->
+<!-- Upstream PR: https://github.com/org/turtlestack/pull/47 — remove this rule after PR is merged -->
 ```
 
 Logging to `.claude/learnings/proposals/...`
 
 ## Improvement Proposed: verify before declaring complete
 
-**PR:** https://github.com/org/claude-marketplace/pull/47
+**PR:** https://github.com/org/turtlestack/pull/47
 **Branch:** `learning/verify-before-declaring-complete`
 **Pattern:** 5 instances across 5 sessions
 **Files changed:** 1

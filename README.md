@@ -1,108 +1,29 @@
-# Claude Marketplace
+# Turtlestack
 
-A centralized marketplace for sharing Claude Code plugins, instructions, and configurations across your team.
+A plugin marketplace for sharing Claude Code agents, skills, rules, and configurations across your team.
 
-## Thinking skills — the core of the marketplace
+<p align="center">
+  <img src="assets/logo.png" alt="Turtlestack logo" width="256">
+</p>
 
-The `thinking` plugin is the most important piece. It provides structured reasoning skills, a learning system that improves over time, and project bootstrapping. Install it first.
-
-```
-/plugin install thinking@hpsgd
-```
-
-### Reasoning skills
-
-Invoke with `/thinking:skill-name` or let Claude auto-invoke when the context matches.
-
-| Skill | What it does | When to use |
-|---|---|---|
-| `/thinking:algorithm` | Seven-phase execution: observe → think → plan → adapt → execute → verify → learn | Any non-trivial task that benefits from systematic execution |
-| `/thinking:isc` | Decompose into Identifiable, Specific, Verifiable Criteria | Start of any task — ensures nothing is missed |
-| `/thinking:first-principles` | Deconstruct to fundamental truths, challenge assumptions, rebuild | When stuck or challenging inherited constraints |
-| `/thinking:council` | Structured debate between 4 expert perspectives | Weighing options, making decisions |
-| `/thinking:red-team` | Adversarial stress-testing of an idea or plan | Validating a decision before committing |
-| `/thinking:creative` | Divergent ideation with wild card options | Need novel solutions or multiple distinct approaches |
-| `/thinking:iterative-depth` | Multi-lens analysis from different perspectives | Requirements analysis, architecture decisions |
-| `/thinking:scientific-method` | Goal → hypothesise → experiment → measure → iterate | Debugging, validating assumptions |
-| `/thinking:reconcile-rules` | Review learned rules against marketplace rules for overlap | Reducing context bloat from duplicate rules |
-
-### Learning system
-
-The thinking plugin includes a self-improving learning loop that analyses your sessions, detects corrections, and writes rules to prevent repeated mistakes.
-
-| Skill | What it does |
-|---|---|
-| `/thinking:retrospective full` | Analyse transcripts, classify signals, detect patterns, generate metrics, write learned rules |
-| `/thinking:retrospective latest` | Analyse the most recent completed session |
-| `/thinking:retrospective summary` | Show accumulated metrics and correction rate trends |
-| `/thinking:retrospective patterns` | Detect recurring correction patterns across sessions |
-| `/thinking:retrospective signals` | Classify ambiguous messages and evolve regex patterns |
-| `/thinking:learning` | Capture a learning in the moment (manual) |
-| `/thinking:wisdom` | Record or query crystallised patterns from accumulated experience |
-| `/thinking:health-check` | Audit the project's Claude Code setup — plugins, rules, memory, learnings |
-| `/thinking:review-settings` | Audit settings.json files for broad permissions, overlaps, and redundancy |
-| `/thinking:propose-improvement` | Propose a PR against the marketplace based on a detected pattern |
-
-**How the learning loop works:**
-
-```
-Every message → regex classifier (async, ~5ms) → correction/praise/unclassified
-                                                          ↓
-New session start → analyse previous transcript → extract corrections/reversals
-                  → detect patterns (3+ instances) → generate metrics
-                  → inject recent learnings into context (so Claude remembers)
-                                                          ↓
-/thinking:retrospective → Claude classifies ambiguous signals
-                        → writes learned rules to .claude/rules/ (immediate effect)
-                        → evolves regex patterns (self-improving)
-                        → proposes upstream PRs when patterns mature (5+ instances)
-```
-
-## Agent overview
-
-The marketplace provides a full virtual team organised under a coordinator:
-
-```
-Human (CEO/Founder)
-└── Coordinator
-    ├── CPO
-    │   ├── product-owner — PRDs, user stories, JTBD, story mapping, backlog
-    │   ├── ui-designer — component specs, design tokens, accessibility, design review
-    │   ├── ux-researcher — personas, journey maps, usability testing, service blueprints
-    │   ├── user-docs-writer — user guides, KB articles, onboarding, content strategy
-    │   ├── developer-docs-writer — API docs, SDK guides, integration guides, migration guides
-    │   ├── internal-docs-writer — architecture docs, runbooks, changelogs
-    │   ├── gtm — positioning, launch plans, competitive analysis, battle cards
-    │   ├── support — ticket triage, feedback synthesis, KB articles
-    │   └── customer-success — health scoring, churn analysis, expansion, QBRs, onboarding
-    ├── CTO
-    │   ├── architect — system design, ADRs, API design, technology evaluation
-    │   ├── react-developer, dotnet-developer, python-developer, ai-engineer
-    │   ├── qa-lead — test strategy, acceptance criteria
-    │   ├── qa-engineer — test generation, bug reports
-    │   ├── release-manager — release plans, rollback assessment
-    │   ├── performance-engineer — load testing, profiling, capacity planning
-    │   ├── devops — pipelines, Dockerfiles, IaC, SLOs, incident response
-    │   ├── security-engineer — threat models, security reviews, dependency/supply-chain audits
-    │   ├── data-engineer — data models, event tracking, queries
-    │   └── code-reviewer — multi-pass review, PR creation
-    ├── GRC Lead — risk assessment, compliance audit, AI governance, DPIA
-    └── Research (cross-cutting)
-        ├── open-source-researcher — web research, topic synthesis, source attribution
-        ├── business-analyst — company research, competitive analysis, market sizing
-        ├── content-analyst — content analysis, framing assessment, source credibility
-        ├── osint-analyst — domain/IP/infrastructure investigation (ethical gate required)
-        └── investigator — people and entity investigation (full authorisation gate required)
-```
-
-Each agent has specialised skills, templates, and a bootstrap skill for project scaffolding. The coordinator's `bootstrap-project` skill orchestrates all agents, assembles a tech context from your installed language plugins, and confirms it before scaffolding. Install only what you need — each agent is a separate plugin.
+- [Quick start](#quick-start)
+- [Thinking skills](#thinking-skills--the-core-of-the-marketplace)
+- [Agent overview](#agent-overview)
+- [All plugins](#all-plugins)
+- [How it works](#how-it-works)
+- [Evaluation framework](#evaluation-framework)
+- [Troubleshooting](#troubleshooting)
+- [Creating a new plugin](#creating-a-new-plugin)
+- [Customization](#customization)
+- [Complementary plugins](#complementary-plugins)
+- [Acknowledgements](#acknowledgements)
 
 ## Quick start
 
 ### 1. Add the marketplace
 
 ```
-/plugin marketplace add hpsgd/claude-marketplace
+/plugin marketplace add hpsgd/turtlestack
 ```
 
 ### 2. Install plugins
@@ -262,6 +183,101 @@ After installing plugins, scaffold your project with domain-specific docs, CLAUD
 ```
 
 This delegates to each installed agent's bootstrap skill, creating a `docs/` structure with per-domain documentation and conventions. Idempotent — safe to re-run after adding new plugins.
+
+## Thinking skills — the core of the marketplace
+
+The `thinking` plugin is the most important piece. It provides structured reasoning skills, a learning system that improves over time, and project bootstrapping. Install it first.
+
+```
+/plugin install thinking@hpsgd
+```
+
+### Reasoning skills
+
+Invoke with `/thinking:skill-name` or let Claude auto-invoke when the context matches.
+
+| Skill | What it does | When to use |
+|---|---|---|
+| `/thinking:algorithm` | Seven-phase execution: observe → think → plan → adapt → execute → verify → learn | Any non-trivial task that benefits from systematic execution |
+| `/thinking:isc` | Decompose into Identifiable, Specific, Verifiable Criteria | Start of any task — ensures nothing is missed |
+| `/thinking:first-principles` | Deconstruct to fundamental truths, challenge assumptions, rebuild | When stuck or challenging inherited constraints |
+| `/thinking:council` | Structured debate between 4 expert perspectives | Weighing options, making decisions |
+| `/thinking:red-team` | Adversarial stress-testing of an idea or plan | Validating a decision before committing |
+| `/thinking:creative` | Divergent ideation with wild card options | Need novel solutions or multiple distinct approaches |
+| `/thinking:iterative-depth` | Multi-lens analysis from different perspectives | Requirements analysis, architecture decisions |
+| `/thinking:scientific-method` | Goal → hypothesise → experiment → measure → iterate | Debugging, validating assumptions |
+| `/thinking:reconcile-rules` | Review learned rules against marketplace rules for overlap | Reducing context bloat from duplicate rules |
+
+### Learning system
+
+The thinking plugin includes a self-improving learning loop that analyses your sessions, detects corrections, and writes rules to prevent repeated mistakes.
+
+| Skill | What it does |
+|---|---|
+| `/thinking:retrospective full` | Analyse transcripts, classify signals, detect patterns, generate metrics, write learned rules |
+| `/thinking:retrospective latest` | Analyse the most recent completed session |
+| `/thinking:retrospective summary` | Show accumulated metrics and correction rate trends |
+| `/thinking:retrospective patterns` | Detect recurring correction patterns across sessions |
+| `/thinking:retrospective signals` | Classify ambiguous messages and evolve regex patterns |
+| `/thinking:learning` | Capture a learning in the moment (manual) |
+| `/thinking:wisdom` | Record or query crystallised patterns from accumulated experience |
+| `/thinking:health-check` | Audit the project's Claude Code setup — plugins, rules, memory, learnings |
+| `/thinking:review-settings` | Audit settings.json files for broad permissions, overlaps, and redundancy |
+| `/thinking:propose-improvement` | Propose a PR against the marketplace based on a detected pattern |
+
+**How the learning loop works:**
+
+```
+Every message → regex classifier (async, ~5ms) → correction/praise/unclassified
+                                                          ↓
+New session start → analyse previous transcript → extract corrections/reversals
+                  → detect patterns (3+ instances) → generate metrics
+                  → inject recent learnings into context (so Claude remembers)
+                                                          ↓
+/thinking:retrospective → Claude classifies ambiguous signals
+                        → writes learned rules to .claude/rules/ (immediate effect)
+                        → evolves regex patterns (self-improving)
+                        → proposes upstream PRs when patterns mature (5+ instances)
+```
+
+## Agent overview
+
+The marketplace provides a full virtual team organised under a coordinator:
+
+```
+Human (CEO/Founder)
+└── Coordinator
+    ├── CPO
+    │   ├── product-owner — PRDs, user stories, JTBD, story mapping, backlog
+    │   ├── ui-designer — component specs, design tokens, accessibility, design review
+    │   ├── ux-researcher — personas, journey maps, usability testing, service blueprints
+    │   ├── user-docs-writer — user guides, KB articles, onboarding, content strategy
+    │   ├── developer-docs-writer — API docs, SDK guides, integration guides, migration guides
+    │   ├── internal-docs-writer — architecture docs, runbooks, changelogs
+    │   ├── gtm — positioning, launch plans, competitive analysis, battle cards
+    │   ├── support — ticket triage, feedback synthesis, KB articles
+    │   └── customer-success — health scoring, churn analysis, expansion, QBRs, onboarding
+    ├── CTO
+    │   ├── architect — system design, ADRs, API design, technology evaluation
+    │   ├── react-developer, dotnet-developer, python-developer, ai-engineer
+    │   ├── qa-lead — test strategy, acceptance criteria
+    │   ├── qa-engineer — test generation, bug reports
+    │   ├── release-manager — release plans, rollback assessment
+    │   ├── performance-engineer — load testing, profiling, capacity planning
+    │   ├── devops — pipelines, Dockerfiles, IaC, SLOs, incident response
+    │   ├── security-engineer — threat models, security reviews, dependency/supply-chain audits
+    │   ├── data-engineer — data models, event tracking, queries
+    │   └── code-reviewer — multi-pass review, PR creation
+    ├── GRC Lead — risk assessment, compliance audit, AI governance, DPIA
+    └── Research (cross-cutting)
+        ├── open-source-researcher — web research, topic synthesis, source attribution
+        ├── business-analyst — company research, competitive analysis, market sizing
+        ├── content-analyst — content analysis, framing assessment, source credibility
+        ├── osint-analyst — domain/IP/infrastructure investigation (ethical gate required)
+        └── investigator — people and entity investigation (full authorisation gate required)
+```
+
+Each agent has specialised skills, templates, and a bootstrap skill for project scaffolding. The coordinator's `bootstrap-project` skill orchestrates all agents, assembles a tech context from your installed language plugins, and confirms it before scaffolding. Install only what you need — each agent is a separate plugin.
 
 ## All plugins
 

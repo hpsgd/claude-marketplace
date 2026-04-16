@@ -1,4 +1,4 @@
-# Claude Marketplace — Contributor Guide
+# Turtlestack — Contributor Guide
 
 ## Structure
 
