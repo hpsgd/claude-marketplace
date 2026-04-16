@@ -135,6 +135,11 @@ Compile all gaps into a prioritised remediation plan.
 - **Review date:** [date]
 - **Reviewer:** [who performed this review]
 
+## Deployment Decision
+- **Decision:** [APPROVED / CONDITIONALLY APPROVED / BLOCKED]
+- **Conditions (if conditional):** [specific gaps that must be closed before deployment]
+- **Blocking gaps (if blocked):** [which findings prevent deployment and what remediation is required]
+
 ## Risk Assessment
 | Risk category | Level | Controls in place | Gaps |
 |---|---|---|---|

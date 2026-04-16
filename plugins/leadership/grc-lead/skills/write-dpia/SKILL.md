@@ -77,6 +77,7 @@ Assess risks from the **individual's perspective**, not the organisation's. Cons
 - **Re-identification** — pseudonymised data linked back to individuals
 - **Cross-border exposure** — data transferred to jurisdictions with weaker protections
 - **Discriminatory effects** — processing that disproportionately impacts protected groups
+- **Financial data + behavioural profiling** — combining financial records (transactions, credit, income) with behavioural or ML-derived signals (spending patterns, risk scores, lifestyle inference). This combination enables creditworthiness profiling and financial exclusion, triggering GDPR Art. 35(3)(a) automated decision-making provisions and requiring explicit assessment of discriminatory impact on protected groups
 
 **Likelihood × Severity matrix:**
 
