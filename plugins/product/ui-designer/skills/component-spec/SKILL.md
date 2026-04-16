@@ -103,11 +103,34 @@ Define behaviour at each breakpoint. Use the project's breakpoint system (Tailwi
 - Text must remain readable without horizontal scrolling when viewport is 320px wide
 - Component must not break at intermediate widths between breakpoints
 
+### Performance Considerations
+
+For components that render large datasets (tables, lists, grids, trees), address:
+- **Rendering strategy:** virtualisation (render only visible rows), pagination, or infinite scroll. State which is recommended and why
+- **Threshold:** at what row/item count does the default rendering become problematic? (e.g., ">100 rows without virtualisation causes visible jank")
+- **Sort/filter performance:** does sorting happen client-side or require a server round-trip at scale?
+- **Selection state:** how does multi-select perform at 1,000+ items? Is selection state tracked by ID set or by index?
+
 ### 6. Accessibility Requirements
 
 Every component must meet WCAG 2.1 AA. Specify each requirement explicitly:
 
 #### Keyboard Navigation
+
+For simple components, a single table is sufficient. For compound components with multiple interactive element types (e.g., a data table with sort headers, checkboxes, inline edit fields, and pagination), specify keyboard navigation per element type:
+
+| Element type | Key | Action |
+|---|---|---|
+| [e.g., Sort header] | `Enter` / `Space` | [Toggle sort direction] |
+| [e.g., Row checkbox] | `Space` | [Toggle selection] |
+| [e.g., Inline edit field] | `Enter` | [Save edit] |
+| [e.g., Inline edit field] | `Escape` | [Cancel edit, restore previous value] |
+| [e.g., Pagination] | `Enter` | [Navigate to page] |
+
+Focus management between element types must be specified: where does focus go after saving an inline edit? After selecting a row? After sorting changes the row order?
+
+For simple components use this table instead:
+
 | Key | Action |
 |-----|--------|
 | `Tab` | [Where focus moves to] |

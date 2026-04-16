@@ -127,9 +127,23 @@ Compile the final battle card using this template:
 2. [Their advantage — with mitigation strategy]
 
 ## Objection Handling
+
+For single-persona deals, use a flat table. For enterprise deals with multiple buyer personas, segment by role:
+
+### Economic Buyer (CFO/VP Finance)
 | Objection | Response | Proof |
 |---|---|---|
-| "[objection]" | [response] | [evidence] |
+| "[cost/TCO objection]" | [response] | [evidence] |
+
+### Technical Buyer (VP Eng/CTO)
+| Objection | Response | Proof |
+|---|---|---|
+| "[integration/migration/API objection]" | [response] | [evidence] |
+
+### End User
+| Objection | Response | Proof |
+|---|---|---|
+| "[UX/workflow objection]" | [response] | [evidence] |
 
 ## Landmine Questions
 - "[Question to ask]" — reveals [what]
@@ -140,8 +154,10 @@ Compile the final battle card using this template:
 - "[Dangerous question]" — if it comes up: [how to handle]
 
 ## Key Proof Points
-- **Customer quote:** "[quote]" — [customer name/type]
-- **Benchmark:** [metric comparison with source]
+- **Customer quote:** "[quote]" — [customer name/type, segment: SMB/mid-market/enterprise]
+- **Benchmark:** [metric comparison with source and date]
+
+Proof points must match the deal segment. An SMB case study doesn't carry weight in an enterprise deal. Tag each proof point with the segment it applies to so reps can pick the right one for the room they're in.
 - **Case study:** [summary with link]
 
 ## Competitive Intel Sources
