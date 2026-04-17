@@ -75,21 +75,21 @@ A plugin marketplace for Claude Code. Agents, skills, rules, and conventions tha
 Start with the core plugins (rules, thinking skills, and code review), then add agents for your stack:
 
 ```
-/plugin install coding-standards@hpsgd
-/plugin install writing-style@hpsgd
-/plugin install security-compliance@hpsgd
-/plugin install thinking@hpsgd
-/plugin install tooling@hpsgd
-/plugin install code-reviewer@hpsgd
-/plugin install ai-engineer@hpsgd
+/plugin install coding-standards@turtlestack
+/plugin install writing-style@turtlestack
+/plugin install security-compliance@turtlestack
+/plugin install thinking@turtlestack
+/plugin install tooling@turtlestack
+/plugin install code-reviewer@turtlestack
+/plugin install ai-engineer@turtlestack
 ```
 
 Add a technology stack if relevant:
 
 ```
-/plugin install dotnet-stack@hpsgd
-/plugin install nextjs-stack@hpsgd
-/plugin install python-stack@hpsgd
+/plugin install dotnet-stack@turtlestack
+/plugin install nextjs-stack@turtlestack
+/plugin install python-stack@turtlestack
 ```
 
 Then reload:
@@ -109,7 +109,7 @@ Browse the full [plugin list](#plugins) below to see what else is available.
 ```json
 {
   "enabledPlugins": {
-    "writing-style@hpsgd": false
+    "writing-style@turtlestack": false
   }
 }
 ```
@@ -124,44 +124,44 @@ Browse the full [plugin list](#plugins) below to see what else is available.
 ```json
 {
   "enabledPlugins": {
-    "coding-standards@hpsgd": true,
-    "writing-style@hpsgd": true,
-    "security-compliance@hpsgd": true,
-    "thinking@hpsgd": true,
-    "tooling@hpsgd": true,
-    "code-reviewer@hpsgd": true,
-    "dotnet-stack@hpsgd": true,
-    "nextjs-stack@hpsgd": true,
-    "python-stack@hpsgd": true,
-    "plugin-curator@hpsgd": true,
-    "coordinator@hpsgd": true,
-    "cpo@hpsgd": true,
-    "product-owner@hpsgd": true,
-    "ui-designer@hpsgd": true,
-    "ux-researcher@hpsgd": true,
-    "user-docs-writer@hpsgd": true,
-    "developer-docs-writer@hpsgd": true,
-    "internal-docs-writer@hpsgd": true,
-    "gtm@hpsgd": true,
-    "support@hpsgd": true,
-    "customer-success@hpsgd": true,
-    "grc-lead@hpsgd": true,
-    "cto@hpsgd": true,
-    "architect@hpsgd": true,
-    "react-developer@hpsgd": true,
-    "dotnet-developer@hpsgd": true,
-    "python-developer@hpsgd": true,
-    "ai-engineer@hpsgd": true,
-    "qa-lead@hpsgd": true,
-    "qa-engineer@hpsgd": true,
-    "release-manager@hpsgd": true,
-    "performance-engineer@hpsgd": true,
-    "devops@hpsgd": true,
-    "security-engineer@hpsgd": true,
-    "data-engineer@hpsgd": true,
-    "analyst@hpsgd": true,
-    "investigator@hpsgd": true,
-    "workflow-tools@hpsgd": true
+    "coding-standards@turtlestack": true,
+    "writing-style@turtlestack": true,
+    "security-compliance@turtlestack": true,
+    "thinking@turtlestack": true,
+    "tooling@turtlestack": true,
+    "code-reviewer@turtlestack": true,
+    "dotnet-stack@turtlestack": true,
+    "nextjs-stack@turtlestack": true,
+    "python-stack@turtlestack": true,
+    "plugin-curator@turtlestack": true,
+    "coordinator@turtlestack": true,
+    "cpo@turtlestack": true,
+    "product-owner@turtlestack": true,
+    "ui-designer@turtlestack": true,
+    "ux-researcher@turtlestack": true,
+    "user-docs-writer@turtlestack": true,
+    "developer-docs-writer@turtlestack": true,
+    "internal-docs-writer@turtlestack": true,
+    "gtm@turtlestack": true,
+    "support@turtlestack": true,
+    "customer-success@turtlestack": true,
+    "grc-lead@turtlestack": true,
+    "cto@turtlestack": true,
+    "architect@turtlestack": true,
+    "react-developer@turtlestack": true,
+    "dotnet-developer@turtlestack": true,
+    "python-developer@turtlestack": true,
+    "ai-engineer@turtlestack": true,
+    "qa-lead@turtlestack": true,
+    "qa-engineer@turtlestack": true,
+    "release-manager@turtlestack": true,
+    "performance-engineer@turtlestack": true,
+    "devops@turtlestack": true,
+    "security-engineer@turtlestack": true,
+    "data-engineer@turtlestack": true,
+    "analyst@turtlestack": true,
+    "investigator@turtlestack": true,
+    "workflow-tools@turtlestack": true
   }
 }
 ```
@@ -199,7 +199,7 @@ See the [thinking plugin](#thinking) section below for the full skill list, or t
 TypeScript, .NET, Python conventions, git workflow, testing, architecture, AI steering. Installed as rules that apply to every session.
 
 ```
-/plugin install coding-standards@hpsgd
+/plugin install coding-standards@turtlestack
 ```
 
 **Rules:**
@@ -232,7 +232,7 @@ Marketplace maintenance. Creates agents and skills from templates, audits for st
 Also includes the [evaluator](plugins/practices/plugin-curator/agents/evaluator.md) agent, which runs test cases against plugin definitions and produces pass/fail verdicts.
 
 ```
-/plugin install plugin-curator@hpsgd
+/plugin install plugin-curator@turtlestack
 ```
 
 | Skill | Description | Example |
@@ -248,7 +248,7 @@ Also includes the [evaluator](plugins/practices/plugin-curator/agents/evaluator.
 Security baseline rules and deep audit capability.
 
 ```
-/plugin install security-compliance@hpsgd
+/plugin install security-compliance@turtlestack
 ```
 
 **Rules:**
@@ -266,9 +266,9 @@ Security baseline rules and deep audit capability.
 Framework-specific conventions. Install what matches your project.
 
 ```
-/plugin install dotnet-stack@hpsgd    # JasperFx (Wolverine/Marten) on .NET
-/plugin install nextjs-stack@hpsgd    # Next.js, React, Vercel
-/plugin install python-stack@hpsgd    # Django, python-eventsourcing
+/plugin install dotnet-stack@turtlestack    # JasperFx (Wolverine/Marten) on .NET
+/plugin install nextjs-stack@turtlestack    # Next.js, React, Vercel
+/plugin install python-stack@turtlestack    # Django, python-eventsourcing
 ```
 
 **dotnet-stack rules:**
@@ -288,7 +288,7 @@ Framework-specific conventions. Install what matches your project.
 Structured reasoning, learning system, project health checks. See [Thinking and learning](#thinking-and-learning) for the overview.
 
 ```
-/plugin install thinking@hpsgd
+/plugin install thinking@turtlestack
 ```
 
 | Skill | Description | Example |
@@ -314,7 +314,7 @@ Structured reasoning, learning system, project health checks. See [Thinking and 
 Organisational tooling conventions. Ensures agents reference the correct tools.
 
 ```
-/plugin install tooling@hpsgd
+/plugin install tooling@turtlestack
 ```
 
 **Rules:**
@@ -328,7 +328,7 @@ Organisational tooling conventions. Ensures agents reference the correct tools.
 AI tell avoidance, banned vocabulary, sentence structure, markdown formatting, personal voice.
 
 ```
-/plugin install writing-style@hpsgd
+/plugin install writing-style@turtlestack
 ```
 
 **Rules:**
@@ -350,7 +350,7 @@ AI tell avoidance, banned vocabulary, sentence structure, markdown formatting, p
 Web research, company analysis, content analysis. Three agents in one plugin.
 
 ```
-/plugin install analyst@hpsgd
+/plugin install analyst@turtlestack
 ```
 
 **Rules:**
@@ -387,7 +387,7 @@ Web research, company analysis, content analysis. Three agents in one plugin.
 OSINT investigation with mandatory ethical authorisation gates.
 
 ```
-/plugin install investigator@hpsgd
+/plugin install investigator@turtlestack
 ```
 
 **Rules:**
@@ -421,7 +421,7 @@ OSINT investigation with mandatory ethical authorisation gates.
 CEO/founder proxy. Decomposes cross-team initiatives, coordinates CPO and CTO, resolves conflicts, defines OKRs. Produces dispatch plans rather than doing the work directly. See [initiative decomposition example](examples/leadership/coordinator/agents/coordinator/initiative-decomposition/result.md).
 
 ```
-/plugin install coordinator@hpsgd
+/plugin install coordinator@turtlestack
 ```
 
 **Rules:**
@@ -454,7 +454,7 @@ Human (CEO/Founder)
 Coordinates product, design, content, GTM, and support teams. Routes work to the right specialist. No skills — coordination only. See [product prioritisation example](examples/leadership/cpo/agents/cpo/product-prioritisation/result.md).
 
 ```
-/plugin install cpo@hpsgd
+/plugin install cpo@turtlestack
 ```
 
 #### [CTO](plugins/leadership/cto/agents/cto.md)
@@ -462,7 +462,7 @@ Coordinates product, design, content, GTM, and support teams. Routes work to the
 Coordinates architecture, development, QA, DevOps, security, and data engineering. Routes technical work. No skills — coordination only. See [technical decision example](examples/leadership/cto/agents/cto/technical-decision/result.md).
 
 ```
-/plugin install cto@hpsgd
+/plugin install cto@turtlestack
 ```
 
 #### [GRC Lead](plugins/leadership/grc-lead/agents/grc-lead.md)
@@ -470,7 +470,7 @@ Coordinates architecture, development, QA, DevOps, security, and data engineerin
 Governance, risk management, regulatory compliance, AI governance, audit readiness. See [compliance scoping example](examples/leadership/grc-lead/agents/grc-lead/compliance-scope/result.md).
 
 ```
-/plugin install grc-lead@hpsgd
+/plugin install grc-lead@turtlestack
 ```
 
 | Skill | Description | Example |
@@ -487,7 +487,7 @@ Governance, risk management, regulatory compliance, AI governance, audit readine
 Health monitoring, churn prevention, expansion, onboarding quality. See [account review example](examples/product/customer-success/agents/customer-success/account-review/result.md).
 
 ```
-/plugin install customer-success@hpsgd
+/plugin install customer-success@turtlestack
 ```
 
 | Skill | Description | Example |
@@ -503,7 +503,7 @@ Health monitoring, churn prevention, expansion, onboarding quality. See [account
 API references, SDK guides, integration tutorials, code examples. See [API documentation example](examples/product/developer-docs-writer/agents/developer-docs-writer/api-documentation/result.md).
 
 ```
-/plugin install developer-docs-writer@hpsgd
+/plugin install developer-docs-writer@turtlestack
 ```
 
 | Skill | Description | Example |
@@ -518,7 +518,7 @@ API references, SDK guides, integration tutorials, code examples. See [API docum
 Positioning, launch strategy, competitive analysis, battle cards. See [launch strategy example](examples/product/gtm/agents/gtm/launch-strategy/result.md).
 
 ```
-/plugin install gtm@hpsgd
+/plugin install gtm@turtlestack
 ```
 
 | Skill | Description | Example |
@@ -533,7 +533,7 @@ Positioning, launch strategy, competitive analysis, battle cards. See [launch st
 Architecture docs, runbooks, changelogs, post-mortems. See [runbook creation example](examples/product/internal-docs-writer/agents/internal-docs-writer/runbook-creation/result.md).
 
 ```
-/plugin install internal-docs-writer@hpsgd
+/plugin install internal-docs-writer@turtlestack
 ```
 
 | Skill | Description | Example |
@@ -547,7 +547,7 @@ Architecture docs, runbooks, changelogs, post-mortems. See [runbook creation exa
 Requirements, user stories, acceptance criteria, backlog prioritisation. See [backlog prioritisation example](examples/product/product-owner/agents/product-owner/backlog-prioritisation/result.md).
 
 ```
-/plugin install product-owner@hpsgd
+/plugin install product-owner@turtlestack
 ```
 
 | Skill | Description | Example |
@@ -563,7 +563,7 @@ Requirements, user stories, acceptance criteria, backlog prioritisation. See [ba
 Ticket triage, feedback synthesis, knowledge base, bug escalation. See [ticket handling example](examples/product/support/agents/support/ticket-handling/result.md).
 
 ```
-/plugin install support@hpsgd
+/plugin install support@turtlestack
 ```
 
 | Skill | Description | Example |
@@ -577,7 +577,7 @@ Ticket triage, feedback synthesis, knowledge base, bug escalation. See [ticket h
 Visual design, design system, component specifications, accessibility. See [component design example](examples/product/ui-designer/agents/designer/component-design/result.md).
 
 ```
-/plugin install ui-designer@hpsgd
+/plugin install ui-designer@turtlestack
 ```
 
 | Skill | Description | Example |
@@ -592,7 +592,7 @@ Visual design, design system, component specifications, accessibility. See [comp
 User guides, tutorials, KB articles, onboarding content. See [help article example](examples/product/user-docs-writer/agents/user-docs-writer/help-article/result.md).
 
 ```
-/plugin install user-docs-writer@hpsgd
+/plugin install user-docs-writer@turtlestack
 ```
 
 | Skill | Description | Example |
@@ -607,7 +607,7 @@ User guides, tutorials, KB articles, onboarding content. See [help article examp
 Customer journeys, personas, usability assessment, information architecture. See [research plan example](examples/product/ux-researcher/agents/ux-researcher/research-plan/result.md).
 
 ```
-/plugin install ux-researcher@hpsgd
+/plugin install ux-researcher@turtlestack
 ```
 
 | Skill | Description | Example |
@@ -625,7 +625,7 @@ Customer journeys, personas, usability assessment, information architecture. See
 Prompt engineering, model evaluation, RAG pipelines, embeddings. See [RAG design example](examples/engineering/ai-engineer/agents/ai-engineer/rag-design/result.md).
 
 ```
-/plugin install ai-engineer@hpsgd
+/plugin install ai-engineer@turtlestack
 ```
 
 **Rules:**
@@ -645,7 +645,7 @@ Prompt engineering, model evaluation, RAG pipelines, embeddings. See [RAG design
 System design, ADRs, technology evaluation, API strategy. See [system design example](examples/engineering/architect/agents/architect/system-design-request/result.md).
 
 ```
-/plugin install architect@hpsgd
+/plugin install architect@turtlestack
 ```
 
 | Skill | Description | Example |
@@ -660,7 +660,7 @@ System design, ADRs, technology evaluation, API strategy. See [system design exa
 Multi-pass code review with quality scoring and adversarial analysis. See [review with issues example](examples/engineering/code-reviewer/agents/code-reviewer/review-with-issues/result.md).
 
 ```
-/plugin install code-reviewer@hpsgd
+/plugin install code-reviewer@turtlestack
 ```
 
 | Skill | Description | Example |
@@ -673,7 +673,7 @@ Multi-pass code review with quality scoring and adversarial analysis. See [revie
 Data pipelines, analytics, event tracking, metrics, data lineage. See [pipeline design example](examples/engineering/data-engineer/agents/data-engineer/pipeline-design/result.md).
 
 ```
-/plugin install data-engineer@hpsgd
+/plugin install data-engineer@turtlestack
 ```
 
 **Rules:**
@@ -693,7 +693,7 @@ Data pipelines, analytics, event tracking, metrics, data lineage. See [pipeline 
 Infrastructure-as-code, CI/CD, deployment, monitoring, incident response. See [deployment strategy example](examples/engineering/devops/agents/devops/deployment-strategy/result.md).
 
 ```
-/plugin install devops@hpsgd
+/plugin install devops@turtlestack
 ```
 
 **Rules:**
@@ -718,7 +718,7 @@ Infrastructure-as-code, CI/CD, deployment, monitoring, incident response. See [d
 .NET/C# with Wolverine, Marten, event sourcing, CQRS, Alba testing. See [endpoint implementation example](examples/engineering/dotnet-developer/agents/dotnet-developer/endpoint-implementation/result.md).
 
 ```
-/plugin install dotnet-developer@hpsgd
+/plugin install dotnet-developer@turtlestack
 ```
 
 | Skill | Description | Example |
@@ -731,7 +731,7 @@ Infrastructure-as-code, CI/CD, deployment, monitoring, incident response. See [d
 Load testing, profiling, capacity planning, performance budgets. See [bottleneck investigation example](examples/engineering/performance-engineer/agents/performance-engineer/bottleneck-investigation/result.md).
 
 ```
-/plugin install performance-engineer@hpsgd
+/plugin install performance-engineer@turtlestack
 ```
 
 | Skill | Description | Example |
@@ -745,7 +745,7 @@ Load testing, profiling, capacity planning, performance budgets. See [bottleneck
 Python with Ruff, mypy strict, BDD (pytest-bdd), Hypothesis, DDD. See [feature implementation example](examples/engineering/python-developer/agents/python-developer/feature-implementation/result.md).
 
 ```
-/plugin install python-developer@hpsgd
+/plugin install python-developer@turtlestack
 ```
 
 **Rules:**
@@ -764,7 +764,7 @@ Python with Ruff, mypy strict, BDD (pytest-bdd), Hypothesis, DDD. See [feature i
 Test automation, E2E acceptance tests, coverage analysis, bug investigation. See [test planning example](examples/engineering/qa-engineer/agents/qa-engineer/test-planning/result.md).
 
 ```
-/plugin install qa-engineer@hpsgd
+/plugin install qa-engineer@turtlestack
 ```
 
 **Rules:**
@@ -783,7 +783,7 @@ Test automation, E2E acceptance tests, coverage analysis, bug investigation. See
 Test strategy, acceptance criteria, 3 amigos, edge case identification. See [strategy review example](examples/engineering/qa-lead/agents/qa-lead/strategy-review/result.md).
 
 ```
-/plugin install qa-lead@hpsgd
+/plugin install qa-lead@turtlestack
 ```
 
 | Skill | Description | Example |
@@ -796,7 +796,7 @@ Test strategy, acceptance criteria, 3 amigos, edge case identification. See [str
 React/Next.js with TypeScript, Tailwind, content-collections, Vitest. See [component implementation example](examples/engineering/react-developer/agents/react-developer/component-implementation/result.md).
 
 ```
-/plugin install react-developer@hpsgd
+/plugin install react-developer@turtlestack
 ```
 
 **Rules:**
@@ -815,7 +815,7 @@ React/Next.js with TypeScript, Tailwind, content-collections, Vitest. See [compo
 Release coordination, go/no-go, rollback decisions, deployment scheduling. See [release coordination example](examples/engineering/release-manager/agents/release-manager/release-coordination/result.md).
 
 ```
-/plugin install release-manager@hpsgd
+/plugin install release-manager@turtlestack
 ```
 
 | Skill | Description | Example |
@@ -828,7 +828,7 @@ Release coordination, go/no-go, rollback decisions, deployment scheduling. See [
 Threat modelling, security audits, CVSS scoring, vulnerability management. Includes a separate [prompt-injection-tester](plugins/engineering/security-engineer/agents/prompt-injection-tester.md) agent for adversarial LLM testing (see [LLM testing example](examples/engineering/security-engineer/agents/prompt-injection-tester/test-llm-endpoint/result.md)).
 
 ```
-/plugin install security-engineer@hpsgd
+/plugin install security-engineer@turtlestack
 ```
 
 **Rules:**
@@ -853,7 +853,7 @@ Threat modelling, security audits, CVSS scoring, vulnerability management. Inclu
 Utility skills for common engineering patterns.
 
 ```
-/plugin install workflow-tools@hpsgd
+/plugin install workflow-tools@turtlestack
 ```
 
 | Skill | Description | Example |
