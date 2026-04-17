@@ -227,7 +227,9 @@ TypeScript, .NET, Python conventions, git workflow, testing, architecture, AI st
 
 #### [Plugin Curator](plugins/practices/plugin-curator/agents/plugin-curator.md)
 
-Marketplace maintenance. Creates agents and skills from templates, audits for structural consistency. See [audit request example](examples/practices/plugin-curator/agents/plugin-curator/audit-request/result.md).
+Marketplace maintenance. Creates agents and skills from templates, audits for structural consistency, runs the evaluation framework. See [audit request example](examples/practices/plugin-curator/agents/plugin-curator/audit-request/result.md).
+
+Also includes the [evaluator](plugins/practices/plugin-curator/agents/evaluator.md) agent, which runs test cases against plugin definitions and produces pass/fail verdicts.
 
 ```
 /plugin install plugin-curator@hpsgd
@@ -239,6 +241,7 @@ Marketplace maintenance. Creates agents and skills from templates, audits for st
 | [create-skill](plugins/practices/plugin-curator/skills/create-skill/SKILL.md) | Create skill from template | [Skill creation](examples/practices/plugin-curator/skills/create-skill/result.md) |
 | [audit-agent](plugins/practices/plugin-curator/skills/audit-agent/SKILL.md) | Audit agent against template | [Agent audit](examples/practices/plugin-curator/skills/audit-agent/result.md) |
 | [audit-skill](plugins/practices/plugin-curator/skills/audit-skill/SKILL.md) | Audit skill against template | [Skill audit](examples/practices/plugin-curator/skills/audit-skill/result.md) |
+| [evaluate](plugins/practices/plugin-curator/skills/evaluate/SKILL.md) | Run test cases against plugin definitions | N/A |
 
 #### Security Compliance
 
@@ -890,9 +893,9 @@ The regex classifier self-evolves. Each retrospective that classifies an ambiguo
 
 ### Evaluation framework
 
-Every plugin definition is tested against a calibrated evaluator. Each test has a [realistic prompt, criteria, simulated output, and per-criterion evaluation](examples/). The Example column in each plugin table links to the evaluated output.
+Every plugin definition is tested against a calibrated [evaluator agent](plugins/practices/plugin-curator/agents/evaluator.md). Each test has a [realistic prompt, criteria, simulated output, and per-criterion evaluation](examples/). The Example column in each plugin table links to the evaluated output.
 
-Run evaluations:
+Run evaluations via the [evaluate skill](plugins/practices/plugin-curator/skills/evaluate/SKILL.md):
 
 ```
 /evaluate                          # all tests
