@@ -1,6 +1,6 @@
 {
   "extraKnownMarketplaces": {
-    "hpsgd": {
+    "turtlestack": {
       "source": {
         "source": "github",
         "repo": "hpsgd/turtlestack"
@@ -8,7 +8,7 @@
     }
   },
   "enabledPlugins": {
-    "thinking@hpsgd": true,
-    "plugin-curator@hpsgd": true
+    "thinking@turtlestack": true,
+    "plugin-curator@turtlestack": true
   }
 }

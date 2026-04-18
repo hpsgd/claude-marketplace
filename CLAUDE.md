@@ -47,5 +47,5 @@ plugins/<category>/<name>/
 
 1. Create `plugins/<category>/<name>/.claude-plugin/plugin.json`
 2. Add skills, agents, rules, and hooks as needed
-3. Add an entry to `.claude-plugin/marketplace.json` with `source` pointing to the nested path (e.g., `engineering/architect`)
+3. Add an entry to `.claude-plugin/marketplace.json` with `source` pointing to the nested path (e.g., `./plugins/engineering/architect`)
 4. Update `README.md` with usage instructions
