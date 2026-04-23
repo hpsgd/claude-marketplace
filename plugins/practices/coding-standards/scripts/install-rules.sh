@@ -3,9 +3,14 @@
 # install-rules.sh — Syncs rule files from a marketplace plugin into the
 # appropriate .claude/rules/ directory.
 #
-# If the plugin is enabled globally (~/.claude/settings.json), rules go to ~/.claude/rules/
-# If the plugin is enabled in the project, rules go to <project>/.claude/rules/
-# If both, rules go to both.
+# If the plugin is enabled globally (~/.claude/settings.json), rules go to
+# ~/.claude/rules/ ONLY — no project-level copy (global rules apply everywhere).
+# If the plugin is enabled only in the project, rules go to <project>/.claude/rules/.
+#
+# Also cleans up:
+# - Stale versioned files (e.g., 1.6.0--foo.md, 1.7.2--foo.md) from older installs
+# - Plugin-prefixed files for rules that no longer exist in the source
+# - Project-level duplicates when a plugin is globally enabled
 #
 # Usage: install-rules.sh <plugin-dir> [<target-project-dir>]
 #
@@ -28,9 +33,6 @@ fi
 # Derive plugin name from the directory
 PLUGIN_NAME="$(basename "$PLUGIN_DIR")"
 
-# Determine which targets to install to
-TARGETS=()
-
 # Helper: check if plugin is enabled in a settings file
 plugin_enabled_in() {
   local settings_file="$1"
@@ -49,36 +51,78 @@ for k, v in d.get('enabledPlugins', {}).items():
   [[ "$result" == "yes" ]]
 }
 
-# Temporarily disable errexit for checks (python3 exits non-zero when plugin not found)
 set +e
 
-# Check if plugin is globally enabled
+GLOBAL_ENABLED=false
 plugin_enabled_in "$HOME/.claude/settings.json" "$PLUGIN_NAME"
-[[ $? -eq 0 ]] && TARGETS+=("$HOME/.claude/rules")
+[[ $? -eq 0 ]] && GLOBAL_ENABLED=true
 
-# Check if plugin is enabled in project settings
-PROJECT_ADDED=false
+PROJECT_ENABLED=false
 for settings_file in "$PROJECT_DIR/.claude/settings.json" "$PROJECT_DIR/.claude/settings.local.json"; do
   plugin_enabled_in "$settings_file" "$PLUGIN_NAME"
   if [[ $? -eq 0 ]]; then
-    TARGETS+=("$PROJECT_DIR/.claude/rules")
-    PROJECT_ADDED=true
+    PROJECT_ENABLED=true
     break
   fi
 done
 
 set -e
 
-# Fallback: if we couldn't determine scope, install to project (backward compat)
-if [[ ${#TARGETS[@]} -eq 0 ]]; then
+# Global takes precedence — if enabled globally, only install there
+TARGETS=()
+if [[ "$GLOBAL_ENABLED" == "true" ]]; then
+  TARGETS+=("$HOME/.claude/rules")
+elif [[ "$PROJECT_ENABLED" == "true" ]]; then
+  TARGETS+=("$PROJECT_DIR/.claude/rules")
+else
   TARGETS+=("$PROJECT_DIR/.claude/rules")
 fi
 
-# Deduplicate targets
-UNIQUE_TARGETS=$(printf '%s\n' "${TARGETS[@]}" | sort -u)
+# Build list of expected filenames from source
+EXPECTED_FILES=()
+for rule_file in "$RULES_SRC"/*.md; do
+  [[ -f "$rule_file" ]] || continue
+  EXPECTED_FILES+=("${PLUGIN_NAME}--$(basename "$rule_file")")
+done
+
+# Helper: remove versioned copies of this plugin's rules from a directory
+cleanup_versioned() {
+  local dir="$1"
+  [[ -d "$dir" ]] || return 0
+  for rule_file in "$RULES_SRC"/*.md; do
+    [[ -f "$rule_file" ]] || continue
+    local filename
+    filename="$(basename "$rule_file")"
+    for versioned in "$dir"/[0-9]*.[0-9]*.[0-9]*--"${filename}"; do
+      [[ -f "$versioned" ]] || continue
+      rm "$versioned"
+    done
+  done
+}
+
+# Helper: remove plugin-prefixed rules that no longer exist in source
+cleanup_stale() {
+  local dir="$1"
+  [[ -d "$dir" ]] || return 0
+  for existing in "$dir"/"${PLUGIN_NAME}"--*.md; do
+    [[ -f "$existing" ]] || continue
+    local existing_name
+    existing_name="$(basename "$existing")"
+    local found=false
+    for expected in "${EXPECTED_FILES[@]}"; do
+      if [[ "$existing_name" == "$expected" ]]; then
+        found=true
+        break
+      fi
+    done
+    if [[ "$found" == "false" ]]; then
+      rm "$existing"
+    fi
+  done
+}
 
 # Install rules to each target
-for RULES_DEST in $UNIQUE_TARGETS; do
+for RULES_DEST in "${TARGETS[@]}"; do
   mkdir -p "$RULES_DEST"
 
   for rule_file in "$RULES_SRC"/*.md; do
@@ -91,4 +135,20 @@ for RULES_DEST in $UNIQUE_TARGETS; do
       cp "$rule_file" "$dest_file"
     fi
   done
+
+  cleanup_stale "$RULES_DEST"
+  cleanup_versioned "$RULES_DEST"
 done
+
+# If globally enabled, clean up any project-level copies (they're redundant)
+if [[ "$GLOBAL_ENABLED" == "true" ]]; then
+  PROJECT_RULES="$PROJECT_DIR/.claude/rules"
+  if [[ -d "$PROJECT_RULES" ]]; then
+    cleanup_stale "$PROJECT_RULES"
+    # Also remove the plugin-prefixed files from project since global covers it
+    for expected in "${EXPECTED_FILES[@]}"; do
+      [[ -f "$PROJECT_RULES/$expected" ]] && rm "$PROJECT_RULES/$expected"
+    done
+    cleanup_versioned "$PROJECT_RULES"
+  fi
+fi
