@@ -214,6 +214,7 @@ TypeScript, .NET, Python conventions, git workflow, testing, architecture, AI st
 | [python](plugins/practices/coding-standards/rules/python.md) | Python language conventions and engineering standards |
 | [spec-driven-development](plugins/practices/coding-standards/rules/spec-driven-development.md) | Specs before code, acceptance criteria before implementation |
 | [strict-validation](plugins/practices/coding-standards/rules/strict-validation.md) | Strict validation principles |
+| [review-conventions](plugins/practices/coding-standards/rules/review-conventions.md) | Review workflow conventions and inline decision markers |
 | [testing](plugins/practices/coding-standards/rules/testing.md) | General testing principles |
 | [typescript](plugins/practices/coding-standards/rules/typescript.md) | TypeScript coding conventions |
 
@@ -234,6 +235,12 @@ Also includes the [evaluator](plugins/practices/plugin-curator/agents/evaluator.
 ```
 /plugin install plugin-curator@turtlestack
 ```
+
+**Rules:**
+
+| Rule | Description |
+|---|---|
+| [hook-design](plugins/practices/plugin-curator/rules/hook-design.md) | Hook design principles: structural checks, silent on pass, actionable on block |
 
 | Skill | Description | Example |
 |---|---|---|
@@ -290,6 +297,13 @@ Structured reasoning, learning system, project health checks. See [Thinking and 
 ```
 /plugin install thinking@turtlestack
 ```
+
+**Rules:**
+
+| Rule | Description |
+|---|---|
+| [session-discipline](plugins/practices/thinking/rules/session-discipline.md) | Session focus, scope-drift detection, and deferred work markers |
+| [mechanism-design](plugins/practices/thinking/rules/mechanism-design.md) | Design recurring actions as mechanisms with triggers and failure handling |
 
 | Skill | Description | Example |
 |---|---|---|
@@ -981,3 +995,4 @@ This marketplace incorporates concepts and methodologies from:
 - [withzombies/hyperpowers](https://github.com/withzombies/hyperpowers) — Parallel agent orchestration protocol, markdown-first state management
 - [Equilateral-AI/equilateral-agents-open-core](https://github.com/Equilateral-AI/equilateral-agents-open-core) — Standards injection, knowledge harvest methodology
 - [adrianpuiu/specification-document-generator](https://github.com/adrianpuiu/specification-document-generator) — Anti-slop protocol, evidence-based architecture, citation trails
+- [christophecapel/claude-mechanisms](https://github.com/christophecapel/claude-mechanisms) — Session discipline, mechanism design principles, hook design patterns, cascade tracing, review-in-artifact conventions
