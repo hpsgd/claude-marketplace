@@ -206,17 +206,17 @@ TypeScript, .NET, Python conventions, git workflow, testing, architecture, AI st
 
 | Rule | Description |
 |---|---|
-| [ai-steering](plugins/practices/coding-standards/rules/ai-steering.md) | Behavioral rules for how Claude should approach work |
-| [architecture](plugins/practices/coding-standards/rules/architecture.md) | General architecture principles |
-| [dotnet](plugins/practices/coding-standards/rules/dotnet.md) | .NET / C# language conventions and project patterns |
-| [event-sourcing](plugins/practices/coding-standards/rules/event-sourcing.md) | Event Sourcing, CQRS, and DDD patterns |
-| [git-and-ci](plugins/practices/coding-standards/rules/git-and-ci.md) | Git workflow, branching, CI/CD, and commit conventions |
-| [python](plugins/practices/coding-standards/rules/python.md) | Python language conventions and engineering standards |
-| [spec-driven-development](plugins/practices/coding-standards/rules/spec-driven-development.md) | Specs before code, acceptance criteria before implementation |
-| [strict-validation](plugins/practices/coding-standards/rules/strict-validation.md) | Strict validation principles |
-| [review-conventions](plugins/practices/coding-standards/rules/review-conventions.md) | Review workflow conventions and inline decision markers |
-| [testing](plugins/practices/coding-standards/rules/testing.md) | General testing principles |
-| [typescript](plugins/practices/coding-standards/rules/typescript.md) | TypeScript coding conventions |
+| [ai-steering](plugins/practices/coding-standards/rule-source/ai-steering.md) | Behavioral rules for how Claude should approach work |
+| [architecture](plugins/practices/coding-standards/rule-source/architecture.md) | General architecture principles |
+| [dotnet](plugins/practices/coding-standards/rule-source/dotnet.md) | .NET / C# language conventions and project patterns |
+| [event-sourcing](plugins/practices/coding-standards/rule-source/event-sourcing.md) | Event Sourcing, CQRS, and DDD patterns |
+| [git-and-ci](plugins/practices/coding-standards/rule-source/git-and-ci.md) | Git workflow, branching, CI/CD, and commit conventions |
+| [python](plugins/practices/coding-standards/rule-source/python.md) | Python language conventions and engineering standards |
+| [spec-driven-development](plugins/practices/coding-standards/rule-source/spec-driven-development.md) | Specs before code, acceptance criteria before implementation |
+| [strict-validation](plugins/practices/coding-standards/rule-source/strict-validation.md) | Strict validation principles |
+| [review-conventions](plugins/practices/coding-standards/rule-source/review-conventions.md) | Review workflow conventions and inline decision markers |
+| [testing](plugins/practices/coding-standards/rule-source/testing.md) | General testing principles |
+| [typescript](plugins/practices/coding-standards/rule-source/typescript.md) | TypeScript coding conventions |
 
 | Skill | Description | Example |
 |---|---|---|
@@ -240,7 +240,7 @@ Also includes the [evaluator](plugins/practices/plugin-curator/agents/evaluator.
 
 | Rule | Description |
 |---|---|
-| [hook-design](plugins/practices/plugin-curator/rules/hook-design.md) | Hook design principles: structural checks, silent on pass, actionable on block |
+| [hook-design](plugins/practices/plugin-curator/rule-source/hook-design.md) | Hook design principles: structural checks, silent on pass, actionable on block |
 
 | Skill | Description | Example |
 |---|---|---|
@@ -262,7 +262,7 @@ Security baseline rules and deep audit capability.
 
 | Rule | Description |
 |---|---|
-| [security-baseline](plugins/practices/security-compliance/rules/security-baseline.md) | Security baseline — always-on rules for writing secure code |
+| [security-baseline](plugins/practices/security-compliance/rule-source/security-baseline.md) | Security baseline — always-on rules for writing secure code |
 
 | Skill | Description | Example |
 |---|---|---|
@@ -282,13 +282,13 @@ Framework-specific conventions. Install what matches your project.
 
 | Rule | Description |
 |---|---|
-| [jasperfx](plugins/practices/dotnet-stack/rules/jasperfx.md) | JasperFx ecosystem conventions — Wolverine command bus and Marten event store |
+| [jasperfx](plugins/practices/dotnet-stack/rule-source/jasperfx.md) | JasperFx ecosystem conventions — Wolverine command bus and Marten event store |
 
 **nextjs-stack rules:**
 
 | Rule | Description |
 |---|---|
-| [nextjs](plugins/practices/nextjs-stack/rules/nextjs.md) | Next.js and React conventions |
+| [nextjs](plugins/practices/nextjs-stack/rule-source/nextjs.md) | Next.js and React conventions |
 
 #### Thinking
 
@@ -302,8 +302,8 @@ Structured reasoning, learning system, project health checks. See [Thinking and 
 
 | Rule | Description |
 |---|---|
-| [session-discipline](plugins/practices/thinking/rules/session-discipline.md) | Session focus, scope-drift detection, and deferred work markers |
-| [mechanism-design](plugins/practices/thinking/rules/mechanism-design.md) | Design recurring actions as mechanisms with triggers and failure handling |
+| [session-discipline](plugins/practices/thinking/rule-source/session-discipline.md) | Session focus, scope-drift detection, and deferred work markers |
+| [mechanism-design](plugins/practices/thinking/rule-source/mechanism-design.md) | Design recurring actions as mechanisms with triggers and failure handling |
 
 | Skill | Description | Example |
 |---|---|---|
@@ -335,7 +335,7 @@ Organisational tooling conventions. Ensures agents reference the correct tools.
 
 | Rule | Description |
 |---|---|
-| [tooling-conventions](plugins/practices/tooling/rules/tooling-conventions.md) | Organisational tooling conventions — which tool for which function |
+| [tooling-conventions](plugins/practices/tooling/rule-source/tooling-conventions.md) | Organisational tooling conventions — which tool for which function |
 
 #### Writing Style
 
@@ -349,9 +349,9 @@ AI tell avoidance, banned vocabulary, sentence structure, markdown formatting, p
 
 | Rule | Description |
 |---|---|
-| [tone-and-voice](plugins/practices/writing-style/rules/tone-and-voice.md) | Writing rules and AI tell avoidance |
-| [personal-voice](plugins/practices/writing-style/rules/personal-voice.md) | Personal writing voice patterns and habits |
-| [markdown-formatting](plugins/practices/writing-style/rules/markdown-formatting.md) | Markdown formatting conventions and GFM compliance |
+| [tone-and-voice](plugins/practices/writing-style/rule-source/tone-and-voice.md) | Writing rules and AI tell avoidance |
+| [personal-voice](plugins/practices/writing-style/rule-source/personal-voice.md) | Personal writing voice patterns and habits |
+| [markdown-formatting](plugins/practices/writing-style/rule-source/markdown-formatting.md) | Markdown formatting conventions and GFM compliance |
 
 | Skill | Description | Example |
 |---|---|---|
@@ -371,7 +371,7 @@ Web research, company analysis, content analysis. Three agents in one plugin.
 
 | Rule | Description |
 |---|---|
-| [source-citations](plugins/research/analyst/rules/source-citations.md) | Source citation quality — every cited source must be verifiable |
+| [source-citations](plugins/research/analyst/rule-source/source-citations.md) | Source citation quality — every cited source must be verifiable |
 
 **[Open-source researcher](plugins/research/analyst/agents/open-source-researcher.md)** — web research with source attribution (see [topic research example](examples/research/analyst/agents/open-source-researcher/topic-research/result.md)):
 
@@ -408,7 +408,7 @@ OSINT investigation with mandatory ethical authorisation gates.
 
 | Rule | Description |
 |---|---|
-| [source-citations](plugins/research/investigator/rules/source-citations.md) | Source citation quality — every cited source must be verifiable |
+| [source-citations](plugins/research/investigator/rule-source/source-citations.md) | Source citation quality — every cited source must be verifiable |
 
 **[OSINT analyst](plugins/research/investigator/agents/osint-analyst.md)** — domain and infrastructure intelligence (see [domain investigation example](examples/research/investigator/agents/osint-analyst/domain-investigation/result.md)):
 
@@ -442,8 +442,8 @@ CEO/founder proxy. Decomposes cross-team initiatives, coordinates CPO and CTO, r
 
 | Rule | Description |
 |---|---|
-| [delegate-first](plugins/leadership/coordinator/rules/delegate-first.md) | Before starting any non-trivial work, determine which specialist agent should handle it and delegate |
-| [coordination-rule](plugins/leadership/coordinator/rules/coordination-rule.md) | Delegate non-trivial work to specialist agents instead of doing it yourself |
+| [delegate-first](plugins/leadership/coordinator/rule-source/delegate-first.md) | Before starting any non-trivial work, determine which specialist agent should handle it and delegate |
+| [coordination-rule](plugins/leadership/coordinator/rule-source/coordination-rule.md) | Delegate non-trivial work to specialist agents instead of doing it yourself |
 
 The coordinator owns the org structure:
 
@@ -646,7 +646,7 @@ Prompt engineering, model evaluation, RAG pipelines, embeddings. See [RAG design
 
 | Rule | Description |
 |---|---|
-| [spec-first](plugins/engineering/ai-engineer/rules/spec-first.md) | Check for a spec before starting implementation |
+| [spec-first](plugins/engineering/ai-engineer/rule-source/spec-first.md) | Check for a spec before starting implementation |
 
 | Skill | Description | Example |
 |---|---|---|
@@ -694,7 +694,7 @@ Data pipelines, analytics, event tracking, metrics, data lineage. See [pipeline 
 
 | Rule | Description |
 |---|---|
-| [spec-first](plugins/engineering/data-engineer/rules/spec-first.md) | Check for a spec before starting implementation |
+| [spec-first](plugins/engineering/data-engineer/rule-source/spec-first.md) | Check for a spec before starting implementation |
 
 | Skill | Description | Example |
 |---|---|---|
@@ -714,10 +714,10 @@ Infrastructure-as-code, CI/CD, deployment, monitoring, incident response. See [d
 
 | Rule | Description |
 |---|---|
-| [spec-first](plugins/engineering/devops/rules/spec-first.md) | Check for a spec before starting implementation |
-| [pulumi](plugins/engineering/devops/rules/pulumi.md) | Pulumi infrastructure-as-code patterns and conventions |
-| [moonrepo](plugins/engineering/devops/rules/moonrepo.md) | Moon monorepo manager conventions |
-| [sonarcloud](plugins/engineering/devops/rules/sonarcloud.md) | SonarCloud code quality enforcement and configuration |
+| [spec-first](plugins/engineering/devops/rule-source/spec-first.md) | Check for a spec before starting implementation |
+| [pulumi](plugins/engineering/devops/rule-source/pulumi.md) | Pulumi infrastructure-as-code patterns and conventions |
+| [moonrepo](plugins/engineering/devops/rule-source/moonrepo.md) | Moon monorepo manager conventions |
+| [sonarcloud](plugins/engineering/devops/rule-source/sonarcloud.md) | SonarCloud code quality enforcement and configuration |
 
 | Skill | Description | Example |
 |---|---|---|
@@ -766,7 +766,7 @@ Python with Ruff, mypy strict, BDD (pytest-bdd), Hypothesis, DDD. See [feature i
 
 | Rule | Description |
 |---|---|
-| [spec-first](plugins/engineering/python-developer/rules/spec-first.md) | Check for a spec before starting implementation |
+| [spec-first](plugins/engineering/python-developer/rule-source/spec-first.md) | Check for a spec before starting implementation |
 
 | Skill | Description | Example |
 |---|---|---|
@@ -785,7 +785,7 @@ Test automation, E2E acceptance tests, coverage analysis, bug investigation. See
 
 | Rule | Description |
 |---|---|
-| [spec-first](plugins/engineering/qa-engineer/rules/spec-first.md) | Check for a spec before starting implementation |
+| [spec-first](plugins/engineering/qa-engineer/rule-source/spec-first.md) | Check for a spec before starting implementation |
 
 | Skill | Description | Example |
 |---|---|---|
@@ -817,7 +817,7 @@ React/Next.js with TypeScript, Tailwind, content-collections, Vitest. See [compo
 
 | Rule | Description |
 |---|---|
-| [spec-first](plugins/engineering/react-developer/rules/spec-first.md) | Check for a spec before starting implementation |
+| [spec-first](plugins/engineering/react-developer/rule-source/spec-first.md) | Check for a spec before starting implementation |
 
 | Skill | Description | Example |
 |---|---|---|
@@ -849,7 +849,7 @@ Threat modelling, security audits, CVSS scoring, vulnerability management. Inclu
 
 | Rule | Description |
 |---|---|
-| [spec-first](plugins/engineering/security-engineer/rules/spec-first.md) | Check for a spec before starting implementation |
+| [spec-first](plugins/engineering/security-engineer/rule-source/spec-first.md) | Check for a spec before starting implementation |
 
 **[Security engineer](plugins/engineering/security-engineer/agents/security-engineer.md)** skills (see [vulnerability assessment example](examples/engineering/security-engineer/agents/security-engineer/vulnerability-assessment/result.md)):
 
@@ -880,7 +880,7 @@ Utility skills for common engineering patterns.
 
 Claude Code plugins support tools, agents, skills, and output styles. Team instructions (coding standards, security rules, writing guidelines) use two approaches:
 
-**Rules** are `.md` files in each plugin's `rules/` directory. A `SessionStart` hook copies them into your project's `.claude/rules/` with a namespace prefix (e.g., `coding-standards--typescript.md`). They're always active.
+**Rules** are `.md` files in each plugin's `rule-source/` directory. A `SessionStart` hook copies them into your project's `.claude/rules/` with a namespace prefix (e.g., `coding-standards--typescript.md`). They're always active.
 
 **Skills** are context-specific. Claude auto-invokes them when the situation matches (e.g., a code review skill activates when reviewing code), or you call them directly with `/plugin:skill-name`.
 
@@ -930,7 +930,7 @@ Full results in [examples/REPORT.md](examples/REPORT.md).
    │   └── my-skill/SKILL.md
    ├── agents/                      # Optional
    │   └── my-agent.md
-   ├── rules/                       # Optional: installed into projects
+   ├── rule-source/                  # Optional: installed into projects
    │   └── my-rules.md
    ├── templates/                   # Optional: reference templates
    └── hooks/                       # Optional: if you have rules to install

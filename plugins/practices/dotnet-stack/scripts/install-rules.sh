@@ -15,7 +15,7 @@
 # Usage: install-rules.sh <plugin-dir> [<target-project-dir>]
 #
 # Rules are namespaced to avoid conflicts:
-#   plugins/coding-standards/rules/typescript.md
+#   plugins/coding-standards/rule-source/typescript.md
 #   → .claude/rules/coding-standards--typescript.md
 
 set -euo pipefail
@@ -23,7 +23,7 @@ set -euo pipefail
 PLUGIN_DIR="${1:?Usage: install-rules.sh <plugin-dir> [<target-project-dir>]}"
 PROJECT_DIR="${2:-${CLAUDE_PROJECT_DIR:-$(pwd)}}"
 
-RULES_SRC="${PLUGIN_DIR}/rules"
+RULES_SRC="${PLUGIN_DIR}/rule-source"
 
 # Nothing to do if the plugin has no rules
 if [[ ! -d "$RULES_SRC" ]]; then
