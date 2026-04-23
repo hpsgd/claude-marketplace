@@ -167,12 +167,12 @@ Map the learning to a file in the target marketplace repo:
 
 | Learning type | Target in marketplace |
 |---|---|
-| New rule (process/convention) | `plugins/{category}/{plugin}/rule-source/{topic}.md` |
+| New rule (process/convention) | `plugins/{category}/{plugin}/rules/{topic}.md` |
 | Skill update (methodology change) | `plugins/{category}/{plugin}/skills/{skill}/SKILL.md` |
 | Agent update (responsibility change) | `plugins/{category}/{plugin}/agents/{agent}.md` |
 | Regex pattern evolution | `scripts/classify-message.py` or `scripts/analyse-session.py` |
 | Template improvement | `plugins/{category}/{plugin}/templates/{template}.md` |
-| Cross-cutting rule | `plugins/practices/coding-standards/rule-source/{topic}.md` |
+| Cross-cutting rule | `plugins/practices/coding-standards/rules/{topic}.md` |
 
 If the target repo is not the current working directory, clone or locate it first:
 
