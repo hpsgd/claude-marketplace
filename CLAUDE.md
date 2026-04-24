@@ -22,7 +22,7 @@ plugins/<category>/<name>/
 │   └── <skill-name>/SKILL.md
 ├── agents/                      # Optional: subagent definitions
 │   └── <agent-name>.md
-├── rules/                       # Optional: instruction files (auto-installed by Claude Code)
+├── rules/                       # Optional: instruction files (installed by thinking plugin hook)
 │   └── <topic>.md
 ├── hooks/                       # Optional: lifecycle hooks
 │   └── hooks.json
@@ -33,7 +33,7 @@ plugins/<category>/<name>/
 
 - Never put anything except `plugin.json` (and `marketplace.json` at root) inside `.claude-plugin/`
 - Skills, agents, hooks, rules, and templates go at the plugin root level
-- Rules in `rules/` are instruction files auto-installed by Claude Code into `.claude/rules/`
+- Rules in `rules/` are instruction files installed into `.claude/rules/` by the thinking plugin's SessionStart hook
 - Skills in `skills/` are for context-specific guidance that Claude auto-invokes
 - Register every new plugin in `.claude-plugin/marketplace.json`
 - Use `leadership/` for coordination and C-level agents
@@ -41,7 +41,8 @@ plugins/<category>/<name>/
 - Use `engineering/` for technical implementation agents
 - Use `practices/` for standards, conventions, and methodologies
 - Use `research/` for research, analysis, and investigation agents
-- Claude Code auto-installs files from `rules/` directories as `<version>--<filename>` in `.claude/rules/`
+- The `thinking` plugin's SessionStart hook installs rules from all enabled plugins into `.claude/rules/` as `<marketplace>--<plugin>--<version>--<filename>.md`
+- **`thinking` must be enabled** for any plugin's rules to be installed — it is the rule delivery mechanism for the marketplace
 
 ## Adding a new plugin
 
