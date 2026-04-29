@@ -1,109 +1,49 @@
-# Rollback assessment after deployment causes elevated errors
-
-Developer invokes the rollback-assessment skill after deploying v3.0.1 — 20 minutes post-deploy, error rate on `/api/invoices` climbed from 0.1% to 8%, and two customers have raised support tickets about invoice generation failures.
-
-## Prompt
-
-> Assess rollback for v3.0.1. Deployed 20 minutes ago. Seeing: error rate on `/api/invoices` jumped from 0.1% (baseline) to 8%. p95 latency on that endpoint went from 220ms to 1.8s. Two support tickets in the last 15 minutes — customers can't generate invoices. The release included: a refactor of the invoice calculation logic, a DB migration adding a `tax_rate` column (non-nullable with default 0), and a dependency upgrade for our PDF library. No feature flags were used — it was a big-bang deploy.
-
-## Output
-
-**Step 1 — Signal classification:**
-
-| Signal | Baseline | Current | Threshold | Exceeded? |
-|---|---|---|---|---|
-| Error rate (`/api/invoices`) | 0.1% | 8% | >2x baseline for 5 min | YES — 80x baseline |
-| p95 latency (`/api/invoices`) | 220ms | 1,800ms | >3x baseline for 5 min | YES — 8.2x baseline |
-| Support tickets | Normal rate | 2 in 15 min | >3x rate within 1 hour | MONITOR — trending toward threshold |
-
-Classification: error rate spike = HIGH urgency. Latency degradation = HIGH urgency. Multiple signals compound — treated as HIGH+. No downplaying. Signal started ~20 minutes ago, correlates directly with deployment time.
-
-**Step 2 — Verification:**
-
-Not a false positive: two independent metrics (error rate + latency) both elevated simultaneously. Monitoring system health checked: operational.
-
-Not pre-existing: baseline values were 0.1% error rate and 220ms p95. Both were stable before deployment.
-
-Correlated with release: signal started within minutes of v3.0.1 deployment completing. No other deployments in the past hour.
-
-External factors checked: no known third-party outages, no traffic spike from marketing activity, no infrastructure events. Signal is release-correlated.
-
-Verification completed in under 5 minutes.
-
-**Step 3 — Blast radius:**
-
-Users affected: all users attempting to generate invoices. The `/api/invoices` endpoint is core functionality — not a peripheral feature.
-
-Features affected: invoice generation (primary). Downstream features (invoice download, billing history) likely affected.
-
-Trajectory: unknown but growing — support ticket rate is accelerating (2 tickets in 15 minutes is above baseline, and the deployment was only 20 minutes ago). No feature flag means all users are exposed — no isolated cohort.
-
-Quantification: approximately 8% of `/api/invoices` requests failing, affecting all users with active billing.
-
-**Step 4 — Root cause hypothesis:**
-
-```bash
-git log --oneline v3.0.0..v3.0.1
-```
-
-| Suspected change | Plausibility | Confidence |
-|---|---|---|
-| Invoice calculation logic refactor | Directly in the request path; errors + latency consistent with calculation failure or unhandled exception | Medium |
-| DB migration — `tax_rate` column (non-nullable, default 0) | Could cause constraint violations on existing records if backfill failed, or if application code expects nullable | Medium |
-| PDF library dependency upgrade | Downstream in the generation path; latency spike consistent with rendering failure or changed API | Low |
-
-Overall confidence: MEDIUM — no single high-confidence root cause identified. Unable to pinpoint the specific line in under 10 minutes. This satisfies the rollback condition: "root cause is unknown or unclear."
-
-**Step 5 — Decision: ROLLBACK**
-
-Threshold exceeded: 8% error rate is 80x baseline; 1.8s latency is 8.2x baseline. Both thresholds exceeded with compound urgency.
-
-Forward-fix criteria not met: root cause confidence is MEDIUM (not high). Fix is not identifiable in under 15 minutes. Blast radius is wide (all users). No feature flag means rollback is the right mechanism.
-
-"When in doubt, roll back."
-
-**Step 6 — Execution:**
-
-Deployment method: standard deploy (big-bang) → rollback mechanism = redeploy v3.0.0 → estimated 5-10 minutes.
-
-If feature flags had been used for the invoice refactor, rollback would be seconds (toggle off). Big-bang deployments have slower rollback — this is why feature flags are the preferred strategy for changes with uncertainty.
-
-Rollback steps:
-1. Trigger redeploy of v3.0.0 via CI/CD pipeline
-2. Verify error rate returns to 0.1% baseline
-3. Verify p95 latency returns to ~220ms
-4. Notify support that incident is under control
-
-**Step 7 — Post-action:**
-
-Verify resolution: confirm ALL signals return to baseline — error rate, p95 latency, and support ticket rate. Not just the primary metric.
-
-Notify stakeholders: engineering (what happened, what was done), support (whether tickets should be closed, what to tell customers), leadership (SEV summary).
-
-Schedule retrospective within 48 hours. Root cause investigation happens after service is restored, not during.
-
-Update release plan: document what happened and what gate would have caught this.
-
-## Evaluation
-
+# Result: Rollback assessment after deployment causes elevated errors
 
 | Field | Value |
 |---|---|
-| Verdict | PASS |
-| Score | 8.5/9 criteria met (94%) |
-| Evaluated | 2026-04-16 |
+| **Verdict** | PARTIAL |
+| **Score** | 16/19 criteria met (84%) |
+| **Evaluated** | 2026-04-29 |
+| **Skill source** | `plugins/engineering/release-manager/skills/rollback-assessment/SKILL.md` |
 
+---
 
-- [x] PASS: Skill classifies signal correctly at HIGH urgency — rollback-assessment SKILL.md Step 1 table: "Error rate spike" = High urgency, "Latency degradation" = High urgency. Rule: "Multiple signals compound urgency — if you see error rate AND latency, treat as the higher urgency."
-- [x] PASS: Skill applies verification step — rollback-assessment SKILL.md Step 2 requires checking all four conditions: not a false positive, not pre-existing, correlated with release timing, not caused by external factors. "Verification should take no more than 5 minutes for critical signals."
-- [x] PASS: Skill assesses blast radius with quantification and trajectory — rollback-assessment SKILL.md Step 3 rules: "Quantify the impact: 'approximately 15% of requests failing' is actionable. 'Some users are affected' is not." Requires identifying trajectory (growing/stable/shrinking).
-- [x] PASS: Skill applies rollback threshold criteria — rollback-assessment SKILL.md Step 5 table: "Error rate | >2x baseline for 5 minutes | Rollback." 8% vs 0.1% = 80x baseline, clearly exceeds threshold. "Rollback when: Any threshold in the table above is exceeded."
-- [x] PASS: Skill recommends ROLLBACK — rollback-assessment SKILL.md Step 5: "Rollback when: Root cause is unknown or unclear" and "When in doubt, roll back." Forward-fix criteria require ALL of: isolated area, high confidence, small fix, 15-minute shipping — none fully met here.
-- [x] PASS: Skill identifies big-bang deploy as reason rollback is slower — rollback-assessment SKILL.md Step 6 execution table: "Standard deploy | Redeploy previous version | 5-10 minutes" vs "Feature flag | Toggle flag off | Seconds."
-- [x] PASS: Skill specifies post-rollback verification — rollback-assessment SKILL.md Step 7: "Verify resolution — confirm ALL signals have returned to baseline, not just the primary one." Anti-patterns: "No post-rollback verification — you rolled back, but did the signal actually improve?"
-- [~] PARTIAL: Skill narrows root cause to three changes with confidence levels — rollback-assessment SKILL.md Step 4 requires reviewing release scope, correlating changes with the signal, and rating confidence (high/medium/low). The structure supports this analysis. Maximum score is 0.5 per PARTIAL-prefixed criterion ceiling.
-- [x] PASS: Output includes all seven required sections — rollback-assessment SKILL.md Output section defines: Signal table, Verification, Blast Radius, Root Cause Hypothesis, Decision, Execution Plan, Post-Action. All seven present.
+## Results
 
-### Notes
+### Criteria
 
-The 10-minute root cause investigation limit in Step 4 is a meaningful design constraint — the skill explicitly prevents over-investigation during an active incident. The post-rollback verification criterion (7) is unusually precise: the definition requires checking ALL signals return to baseline, not just the one that triggered the rollback. The DB migration adds an additional complexity: if the `tax_rate` column has been written by any requests, rolling back the code does not roll back the schema. This is not surfaced as a criterion here but would be a notable observation in a real assessment.
+- [x] PASS: Skill classifies the signal correctly — error rate spike (High urgency) + health impact — and does not downplay severity. Step 1 table classifies "Error rate spike" as "High — users are failing" and "Latency degradation" as "High — users are waiting." The rule "Multiple signals compound urgency — if you see error rate AND latency, treat as the higher urgency" is explicit.
+- [x] PASS: Skill applies the verification step — checks the signal is real, correlated with the release timing, and not a false positive or external factor. Step 2 defines all three checks: false positive (monitoring health, multiple vantage points), pre-existing baseline comparison, timing correlation, and external factors. The 5-minute cap on verification for critical signals is stated.
+- [x] PASS: Skill assesses blast radius — quantifies affected users/requests, identifies trajectory (growing/stable/shrinking). Step 3 requires quantification ("approximately 15% of requests failing is actionable; 'Some users are affected' is not") and lists trajectory as a required dimension with escalation rules for each state.
+- [x] PASS: Skill applies the rollback threshold criteria — error rate >2x baseline for 5 minutes is the threshold, and 8% vs 0.1% baseline clearly exceeds it. Step 5 decision table states: "Error rate | >2x baseline for 5 minutes | Rollback." The scenario is 80x baseline.
+- [x] PASS: Skill recommends ROLLBACK (not forward-fix) given: unknown root cause confidence, wide blast radius, no feature flag available, and threshold exceeded. Step 5 "Rollback when" list covers all four conditions. Forward-fix requires ALL conditions including high-confidence root cause — not met here.
+- [x] PASS: Skill identifies the big-bang deploy as the reason rollback is slower (full redeploy) vs feature flag (toggle off). Step 6 execution table contrasts "Feature flag → Toggle flag off → Seconds" with "Standard deploy → Redeploy previous version → 5–10 minutes."
+- [x] PASS: Skill specifies post-rollback verification — confirm error rate returns to baseline before declaring resolution. Step 6 requires "Verify resolution — confirm the signal that triggered the assessment has returned to baseline." Step 7 strengthens this: "confirm ALL signals have returned to baseline, not just the primary one." Anti-patterns section names "No post-rollback verification" explicitly.
+- [~] PARTIAL: Skill narrows the root cause hypothesis to the three changes (invoice refactor, migration, PDF library upgrade) and rates confidence level for each. Step 4 instructs reviewing release scope, correlating each change with the signal, and rating confidence. However, the output template provides a single `Suspected cause` and single `Confidence` field — it does not enforce per-change confidence ratings. An agent would surface all three candidates in analysis but the template pulls them into a composite rating rather than a per-change table.
+- [x] PASS: Output includes Signal table, Verification, Blast Radius, Root Cause Hypothesis, Decision with reasoning, Execution Plan, and Post-Action steps. The Output section defines all seven sections with required sub-fields and a prescriptive template.
+
+### Output expectations
+
+- [x] PASS: Output's signal table lists the exact prompt facts — error rate jumped from 0.1% baseline to 8% (80x), p95 went from 220ms to 1.8s (8x), 2 support tickets in 15 min, 20 minutes since deploy — with the timestamp anchors. Step 1 mandates recording "metric name, current value, normal baseline, when it started" and the Signal table template captures Baseline/Current/Threshold/Exceeded.
+- [x] PASS: Output's verification step correlates the spike with the deploy timestamp (20 min ago) and rules out external factors. Step 2 explicitly covers all three checks: timing correlation with deploy, false positive ruling (monitoring health), and external factors (third-party outage, traffic spike, infrastructure event).
+- [x] PASS: Output's blast radius quantifies affected requests/customers and notes trajectory. Step 3 mandates quantification and trajectory as a required dimension ("Growing blast radius = escalate urgency"). An agent following Step 3 would estimate requests/min at 8% failure and note the growing ticket pattern.
+- [x] PASS: Output applies the rollback threshold rule explicitly. Step 5 decision table provides the exact rule ("Error rate | >2x baseline for 5 minutes | Rollback"), and an agent citing this table would produce the "80x for ≥15 min" calculation the criterion requires.
+- [x] PASS: Output recommends ROLLBACK and names the four reasons: unknown root cause confidence, wide blast radius, no feature flag toggle, threshold exceeded for >5 minutes. Step 5 "Rollback when" covers all four; "When in doubt, roll back" is the cardinal rule.
+- [x] PASS: Output flags the big-bang deploy as the reason rollback is slower and quantifies expected duration. Step 6 table gives "Standard deploy → Redeploy previous version → 5–10 minutes" — an agent would cite this directly.
+- [~] PARTIAL: Output's root cause hypothesis lists all three changes with a confidence rating and reasoning per change. Step 4 instructs correlating each change with the signal and rating confidence, but the output template collapses this into a single `Suspected cause` / `Confidence` pair. An agent producing a per-change table would be following Step 4's process but overriding the template. The template gap means this is not reliably enforced.
+- [~] PARTIAL: Output's execution plan includes specific steps including a decision on whether to roll back the migration. Step 6 covers redeploy, verify, and notify. The migration rollback decision is addressed in Step 5's forward-fix criteria ("rolling back a migration that has already been applied to production data") but the execution plan template and Step 6 instructions do not specifically prompt the agent to surface the migration decision as a distinct step. An agent would likely include it as a note but the skill does not enforce it.
+- [x] PASS: Output's post-rollback verification requires confirming error rate returns to 0.1% baseline AND p95 returns to ~220ms before declaring resolution. Step 7 explicitly says "confirm ALL signals have returned to baseline, not just the primary one."
+- [~] PARTIAL: Output's post-action steps include a blameless retro addressing why no feature flag was used, why staging tests didn't catch this, and whether this category of change needs a stricter gate. Step 7 schedules a retrospective and mentions "understand what gates missed the issue" — but does not enumerate the three specific sub-questions. An agent would run a retro but would not reliably surface all three angles without prompting.
+
+---
+
+## Notes
+
+The skill is well-constructed. The 7-step sequential structure, the decision table with explicit thresholds, and the cardinal rule ("when in doubt, roll back") set the right disposition for a time-pressured incident response skill. The anti-patterns section is particularly strong — naming "No post-rollback verification" and "Forward-fixing when root cause is unknown" as explicit failure modes steers agents away from the most common mistakes.
+
+Two structural gaps recur across both the Criteria and Output expectations sections. First, the root cause hypothesis template (single `Suspected cause` / `Confidence` pair) doesn't match the Step 4 process that asks for per-change correlation and confidence. In a multi-change release, this means the structured output will compress what should be a table into a sentence. Widening the template to a per-change table would close this without changing the process logic.
+
+Second, the execution plan in Step 6 doesn't explicitly address DB migration handling as a rollback consideration. The skill surfaces this in Step 5's forward-fix criteria ("rolling back a migration that has already been applied to production data"), but by Step 6 the decision is already made and the migration question may not resurface. Adding a migration checkpoint to Step 6 ("If the release included schema migrations, assess whether rolling back the application code is sufficient or whether the migration also needs to be reversed") would make this reliable.
+
+The retrospective in Step 7 mentions "what gates missed the issue" but doesn't enumerate the sub-questions an agent should bring to that retro. For a skill that ends at the point of resolution, this is a minor gap — the retro is out of scope for the assessment itself.

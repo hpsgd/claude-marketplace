@@ -1,143 +1,39 @@
-# Security audit injection and access control findings
+# Output: security-audit injection and access control findings
 
-A security review is requested on a newly added API module that handles user-submitted report queries. The code has SQL string concatenation with user input and a missing ownership check on a resource endpoint.
+**Verdict:** PASS
+**Score:** 16.5/17 criteria met (97%)
+**Evaluated:** 2026-04-29
 
-## Prompt
+## Results
 
-> /security-audit src/api/reports/
->
-> The directory has two files: `query-builder.py` which constructs SQL using f-strings with `request.args.get('filter')` directly interpolated, and `report-routes.py` with a `GET /api/reports/{report_id}` endpoint that fetches the report from the database by ID but doesn't check if `request.user.id` matches the report's owner.
+### Criteria
 
-```markdown
+- [x] PASS: Step 1 classifies both files by risk level — query-builder.py as Critical (data access), report-routes.py as Critical (auth/identity) — met. The classification table in Step 1 maps "Data access" and "Auth / Identity" both to Critical.
+- [x] PASS: Step 2 produces a data flow map tracing user input from entry point through processing to storage/output — met. Step 2 mandates the five-section template (entry points, processing, storage, output, external calls) and requires trust boundary identification.
+- [x] PASS: SQL f-string with user input is flagged as an A03 (Injection) finding with HIGH confidence after tracing the data flow — met. Step 3 A03 patterns target `f".*SELECT` etc. in Python files; Step 5 calibration confirms HIGH when string concat + user input + no parameterisation are all confirmed in the data flow.
+- [x] PASS: Missing ownership check on the report endpoint is flagged as an A01 (Broken Access Control) finding — IDOR — met. Step 3 A01 explicitly checks for "Direct object references without ownership check" and mandates verifying authenticated user ownership for every resource-by-ID endpoint.
+- [x] PASS: Confidence calibration is applied correctly — HIGH requires confirming the dangerous pattern AND that no mitigating control exists in the data flow — met. Step 5 defines the exact rule and states "Never rate something HIGH based on grep alone — you must trace the data flow."
+- [x] PASS: OWASP coverage table with all 10 categories showing pass/fail/N/A — met. Step 6 mandates the complete A01–A10 table as required output.
+- [x] PASS: "What was NOT checked" section is present — met. The Rules section marks it mandatory and Step 6 output template includes it as a required subsection.
+- [~] PARTIAL: Any positive security practices found are acknowledged alongside findings — partially met. The skill mandates a "Positive findings" subsection in Step 6 and the Rules state "Acknowledge good practices." The structural mechanism is present. With only two vulnerable files in scope and no positive practices described in the scenario, the section would exist but may contain nothing substantive. Mechanism present; substance scenario-dependent. Score: 0.5.
 
-## Output
+### Output expectations
 
-#### Scope summary
+- [x] PASS: Output classifies `query-builder.py` as Critical (data access / SQL execution path) and `report-routes.py` as Critical (auth / identity / IDOR potential) — explicitly, with reasoning — met. The Step 1 classification table drives this deterministically for these file types.
+- [x] PASS: Output's data flow map traces `request.args.get('filter')` from the HTTP request through `query-builder.py` to SQL execution — met. Step 2's template requires entry points → processing → storage, and the A03 search patterns would surface this exact path.
+- [x] PASS: Output flags SQL injection as A03:2021 with HIGH confidence, citing f-string interpolation, with the fix being parameterised queries — met. Step 3 A03 grep patterns target the f-string SQL pattern; Step 5 confirms HIGH; Step 6 finding table example cites "string concatenation + parameterised queries" as the fix.
+- [x] PASS: Output flags the IDOR as A01:2021 — citing the missing `request.user.id == report.owner_id` check — with the fix showing explicit ownership comparison — met. Step 3 A01 explicitly requires the ownership check verification and the finding table requires a Recommendation column.
+- [x] PASS: Output's confidence calibration is HIGH for both findings only after confirming no upstream validation or middleware mitigates — met. Step 5 requires tracing the full data flow as a precondition for HIGH; "Never rate something HIGH based on grep alone."
+- [x] PASS: Output's OWASP Top 10 coverage table lists all 10 categories with PASS/FAIL/N/A and evidence per — met. Step 6 mandates the table; Step 3 per-category search patterns provide the evidence basis for each entry.
+- [x] PASS: Output includes a "What was NOT checked" section — met. Mandatory per Rules and prescribed in the Step 6 output template.
+- [~] PARTIAL: Output's findings include severity, CWE reference (CWE-89 for SQLi, CWE-639 for IDOR), location, evidence snippet, and concrete code fix — partially met. The findings table in Step 6 prescribes Severity, Confidence, Category, Finding, Location, Data flow, and Recommendation — but CWE numbers are not a named column in the schema. Severity, location, evidence, and fix are fully prescribed. CWE references would need to be inferred or added ad hoc; they are not structurally required. Score: 0.5.
+- [x] PASS: Output's recommended fix for the IDOR uses an authorisation check (server-side ownership verification from the authenticated user, not just a where-clause) — met. Step 3 A01 states "verify that the code checks whether the authenticated user owns or has access to that resource" — this is server-side ownership verification from the authenticated context, not a URL-trusting where-clause.
+- [~] PARTIAL: Output acknowledges positive security practices — partially met. Same as Criteria item 8: the structural requirement (mandatory "Positive findings" section, Rules directive) is present; substance depends on what the scenario's files actually contain. Score: 0.5.
 
-Files analysed: 2
-Risk classification: 2 Critical, 0 High, 0 Medium, 0 Low
-Data flow entry points: 2
+## Notes
 
----
+The skill is methodologically strong. Confidence calibration in Step 5 is the standout — worked examples and the "never HIGH from grep alone" rule prevent the most common audit failure mode. The mandatory data flow map before vulnerability scanning is the right ordering and it is structurally enforced, not just advised.
 
-#### Data flow map
+The one material gap is CWE references. The test's Output expectations criterion 8 asks for CWE-89 and CWE-639 explicitly, but the Step 6 findings table schema does not include a CWE column. A well-formed output would likely mention CWEs in the Finding or Category text given the OWASP-to-CWE mapping, but it is not structurally required by the skill. Adding a CWE column to the findings table would close this gap cleanly.
 
-1. **User input entry points:**
-   - `query-builder.py:12` — `filter` parameter from `request.args.get('filter')` (GET query parameter, unvalidated)
-   - `report-routes.py:8` — `report_id` from URL path parameter
-
-2. **Processing / transformation:**
-   - `query-builder.py:15` — f-string interpolation directly into SQL: `f"SELECT * FROM reports WHERE {filter}"`
-   - `report-routes.py:11` — integer cast of `report_id`, then direct DB lookup — no further processing
-
-3. **Storage / persistence:**
-   - `query-builder.py:18` — SQL query executed against reports database
-   - `report-routes.py:13` — DB fetch by primary key
-
-4. **Output / rendering:**
-   - Both files return query results as JSON API response
-
-5. **External system calls:**
-   - None identified
-
-**Trust boundary:** Client → API server (both parameters are client-controlled and untrusted)
-
----
-
-#### Findings table
-
-| # | Severity | Confidence | Category | Finding | Location | Data flow | Recommendation |
-|---|---|---|---|---|---|---|---|
-| 1 | Critical | HIGH | A03: Injection | SQL query built with f-string using unvalidated user input | `query-builder.py:15` | `request.args.get('filter')` → f-string → SQL query → database | Use parameterised queries: `cursor.execute("SELECT * FROM reports WHERE category = %s", (filter,))` |
-| 2 | High | HIGH | A01: Broken Access Control | `GET /api/reports/{report_id}` fetches report by ID without checking `request.user.id` matches report owner — IDOR | `report-routes.py:11` | URL param → DB lookup → response | Add ownership check: `if report.owner_id != request.user.id: abort(403)` |
-
----
-
-#### Data flow diagram
-
-**Finding #1:**
-```
-request.args.get('filter')  [untrusted client input]
-  -> query-builder.py:15 (no validation, direct interpolation)
-  -> f"SELECT * FROM reports WHERE {filter}"  [SQL injection point]
-  -> database execution
-
-VULNERABILITY: User-controlled string reaches SQL query without parameterisation
-```
-
-**Finding #2:**
-```
-URL path parameter: report_id
-  -> report-routes.py:11 (integer cast only)
-  -> db.query("SELECT * FROM reports WHERE id = ?", report_id)
-  -> response returned to caller
-
-MISSING: ownership check between request.user.id and report.owner_id
-VULNERABILITY: Any authenticated user can read any report by guessing/enumerating IDs
-```
-
----
-
-#### OWASP coverage
-
-| Category | Status | Notes |
-|---|---|---|
-| A01: Broken Access Control | FAIL | IDOR on GET /api/reports/{report_id} |
-| A02: Cryptographic Failures | N/A | No crypto operations in scope |
-| A03: Injection | FAIL | SQL f-string with user input in query-builder.py |
-| A04: Insecure Design | PASS | Rate limiting not checked (out of scope) |
-| A05: Security Misconfiguration | N/A | No config files in scope |
-| A06: Vulnerable Components | N/A | No dependency manifest in scope |
-| A07: Auth Failures | PASS | Authentication appears to be in place (request.user.id present) |
-| A08: Data Integrity Failures | N/A | No deserialization in scope |
-| A09: Logging Failures | N/A | Logging not visible in the 2 files reviewed |
-| A10: SSRF | N/A | No outbound requests in scope |
-
----
-
-#### Summary and priorities
-
-**Overall security posture: Critical**
-
-**Top priorities (fix these first):**
-1. [Finding #1] SQL injection — directly exploitable by any user; can read or modify all report data — estimated effort: 30 minutes
-2. [Finding #2] IDOR — directly exploitable by any authenticated user; can read any report — estimated effort: 15 minutes
-
-**Positive findings:**
-- Authentication middleware is in place — `request.user.id` is available on all routes, indicating a functioning auth layer
-- The `report_id` parameter is cast to integer before use — prevents trivial string injection on that parameter
-
-**Systemic issues:**
-- Both findings share a root cause: user input reaches sensitive operations without validation or authorisation checks
-
-**What was NOT checked:**
-- Dependency versions and known CVEs
-- Authentication implementation (is the token properly validated?)
-- Database connection security (SSL, credentials)
-- Other API endpoints outside src/api/reports/
-- Infrastructure configuration, secrets management
-- Logging and monitoring configuration
-```
-
-## Evaluation
-
-
-| Field | Value |
-|---|---|
-| Verdict | PASS |
-| Score | 7.5/8 (94%) |
-| Evaluated | 2026-04-16 |
-
-
-- [x] PASS: Step 1 classifies both files by risk level — the Step 1 classification table maps "Auth / Identity: Critical" and "Data access: Critical." `query-builder.py` (constructs SQL queries) maps to "Data access: Critical." `report-routes.py` (handles user auth context and resource fetching) maps to "Auth / Identity: Critical." The table is explicit and the definition requires classifying every file in scope.
-- [x] PASS: Step 2 produces a data flow map with the five required sections — Step 2 defines the exact template: User input entry points, Processing/transformation, Storage/persistence, Output/rendering, External system calls. The definition states "Every vulnerability is a data flow problem — untrusted input reaching a sensitive operation without adequate validation or sanitisation. The data flow map tells you where to look." This is mandatory before the vulnerability scan.
-- [x] PASS: SQL f-string flagged as A03 HIGH confidence — Step 3 A03 grep patterns include `grep -rn "f\".*SELECT\|f\".*INSERT\|f\".*UPDATE\|f\".*DELETE"`. Step 5 confidence rules state: "If a SQL query uses string concatenation AND the input comes from user input AND there is no parameterisation or sanitisation in the path: HIGH." All three conditions are met. The definition mandates tracing the data flow before assigning HIGH.
-- [x] PASS: Missing ownership check flagged as A01 IDOR — Step 3 A01 states "For every endpoint that accesses a resource by ID, verify that the code checks whether the authenticated user owns or has access to that resource." The `GET /api/reports/{report_id}` endpoint fetches by ID with no ownership check — this matches the criterion exactly.
-- [x] PASS: Confidence calibration applied — Step 5 defines HIGH as "Dangerous pattern found AND no mitigating control in the data flow" and explicitly states "Never rate something HIGH based on grep alone — you must trace the data flow." This forces the two-step process: find pattern, then trace to confirm no mitigation exists.
-- [x] PASS: OWASP coverage table included — Step 6 output format defines the coverage table with all 10 categories (A01–A10) as mandatory output with PASS/FAIL/N/A values. The definition's exact table structure is reproduced in the output.
-- [x] PASS: "What was NOT checked" section present — the Rules section states "Explicitly state what was NOT audited. The 'What was NOT checked' section is mandatory." Step 6 output format includes this as a required subsection of Summary and priorities.
-- [~] PARTIAL: Positive security practices acknowledged — the Rules section states "Acknowledge good practices. If auth is solid, say so. Audits that only report negatives are demoralising and get ignored." Step 6 output template includes a "Positive findings" subsection. Both the rule and the template exist in the definition. The definition doesn't require a minimum count of positive observations. PARTIAL ceiling applies per criterion prefix.
-
-### Notes
-
-The security-audit skill is well-structured. The confidence calibration rules in Step 5 are the strongest part — they prevent the common failure of treating grep matches as confirmed vulnerabilities. The mandatory "What was NOT checked" section is an important honesty mechanism that prevents overconfidence in audit scope. One gap: the skill instructs "If you find a Critical/HIGH finding, check the rest of the codebase for the same pattern" (in the Rules section) but the scope is limited to `src/api/reports/` — this creates a tension where the rule suggests broader scanning but the scope argument limits it. The skill doesn't resolve this tension explicitly.
+The related skills references (`/security-engineer:threat-model`, `/security-engineer:dependency-audit`) assume those plugins are installed — worth flagging as soft dependencies for marketplace consumers.

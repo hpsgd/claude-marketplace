@@ -18,7 +18,7 @@ Run test cases against their plugin definitions. Works at three levels:
 
    a. Parse the path to determine test type: `/skills/` → skill test, `/agents/` → agent test
 
-   b. Read `test.md` from the test directory. It contains the scenario, prompt, and criteria checklist.
+   b. Read `test.md` from the test directory. It contains the scenario, prompt, and rubric. The rubric may have one or both of `## Criteria` (scored against the definition) and `## Output expectations` (scored against the simulated output). Both contribute to a single combined verdict.
 
    c. Resolve the plugin source path:
       - Skill: replace `examples/` prefix with `plugins/`, walk up to the skill name directory, find `SKILL.md` (e.g. `examples/.../skills/company-lookup/test.md` → `plugins/.../skills/company-lookup/SKILL.md`)

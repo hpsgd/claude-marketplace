@@ -16,3 +16,15 @@ Review the dependency-audit skill definition and verify it produces a triaged, e
 - [ ] PASS: Skill covers outdated and deprecated packages beyond just CVEs — assesses maintenance risk by package age and deprecation status
 - [ ] PASS: Skill lists anti-patterns including running npm audit fix blindly and suppressing findings without reason, owner, and expiry
 - [ ] PARTIAL: Skill addresses license compliance scanning and flags GPL/AGPL copyleft licenses as requiring legal review
+
+## Output expectations
+
+- [ ] PASS: Output is structured as a verification of the skill (verdict per requirement) rather than running an actual audit
+- [ ] PASS: Output verifies the per-stack tool list — npm audit, pip-audit, dotnet list package --vulnerable, govulncheck, cargo audit — each with JSON output flag for parseability
+- [ ] PASS: Output confirms reachability analysis is mandatory and names the three-question framework (path reachable? exploitable in this context? actual impact?) — not just "check severity"
+- [ ] PASS: Output verifies the four triage categories are defined — Fix Now, Fix Soon, Monitor, Accept — each with criteria, action, and timeline
+- [ ] PASS: Output confirms every Accept entry requires a named owner AND a review date, with the rule that accepted risks must be re-evaluated, not silently closed
+- [ ] PASS: Output verifies HIGH/CRITICAL findings require detailed CVE assessment with CVSS score, full vector string, import-chain evidence (e.g. dependency tree showing why the package is included), and recommended action
+- [ ] PASS: Output confirms the audit covers more than CVEs — outdated/unmaintained packages assessed by last-release date and deprecation status
+- [ ] PASS: Output verifies the anti-patterns list includes `npm audit fix` blind run, suppressing findings without reason/owner/expiry, and "no findings — done" rubber-stamps
+- [ ] PARTIAL: Output identifies any genuine gaps — e.g. no SBOM generation requirement, no rule on transitive vs direct dependency severity weighting, no provenance/attestation guidance for new packages

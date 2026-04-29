@@ -1,57 +1,57 @@
-# Deployment strategy
+# Result: deployment strategy
 
-An engineering lead asks the DevOps agent to define a deployment strategy for migrating a Django application from a bare-metal server to containers, including the CI/CD pipeline and rollback plan.
-
-## Prompt
-
-> We're running a Django 4.2 app called PalletTrack on a single Ubuntu 22.04 bare-metal server right now. We want to move it to containers and set up proper CI/CD. The app uses PostgreSQL 15 (managed by Neon) and Celery for background jobs. We deploy to production roughly twice a week. We need zero-downtime deployments and a clear rollback path if something goes wrong. What would you recommend?
-
-Given this prompt, the DevOps agent would:
-
-1. Run Pre-Flight Step 2 — glob for `**/Pulumi.yaml`, `**/*.tf`, `.github/workflows/*.yml`, `**/Dockerfile*`. Finding nothing, it notes it is starting from scratch.
-2. Trigger Decision Checkpoint — "Creating new cloud resources with ongoing cost" — and stop to ask about cloud provider and budget before proposing a hosting platform.
-3. Produce a multi-stage Python Dockerfile with `python:3.13-slim` (pinned), non-root user, and HEALTHCHECK for the web service. Reference the Worker and Background Containers section for the Celery container (graceful shutdown via `SIGTERM`, no HTTP health endpoint, queue depth monitoring).
-4. Define a GitHub Actions pipeline with stages: lint → build → unit tests → integration tests → security scan → deploy.
-5. Select rolling update as the zero-downtime strategy for a stateless Django web service (no database migration in scope), per the strategy table. Note blue/green if a migration is included.
-6. Document the rollback path: redeploy the previous image tag (one command), verify with health checks and smoke tests. Address whether the migration is reversible before committing to a strategy.
-7. Reference "cattle not pets" when explaining that the bare-metal server will be decommissioned.
-
-## Output
-
-
-
-## Evaluation
-
-
-| Field | Value |
-|---|---|
-| Verdict | PASS |
-| Score | 8/8 criteria met (100%) |
-| Evaluated | 2026-04-16 |
-
+**Verdict:** PARTIAL
+**Score:** 14/18 criteria met (77.8%)
+**Evaluated:** 2026-04-29
 
 ## Results
 
-- [x] PASS: Agent checks for existing IaC, CI workflows, and Dockerfiles first — Pre-Flight Step 2 explicitly lists glob patterns for all three: `**/Pulumi.yaml` or `**/*.tf` (IaC), `.github/workflows/*.yml` (CI/CD), `**/Dockerfile*` (containers). All three checks are required before proceeding.
+### Criteria
 
-- [x] PASS: Agent produces Dockerfile with multi-stage build, non-root user, pinned versions, HEALTHCHECK — the Containers section provides a complete working example with all four elements: multi-stage (`builder` and `runtime` stages), `node:22-alpine` (pinned), `addgroup`/`adduser` + `USER app` (non-root), and `HEALTHCHECK CMD wget...`. Python stack follows the same pattern.
+- [x] PASS: Agent checks for existing IaC, CI workflows, and Dockerfiles first — Pre-Flight Step 2 is MANDATORY and lists explicit glob patterns for all three: `**/Pulumi.yaml` or `**/*.tf` (IaC), `.github/workflows/*.yml` (CI/CD), `**/Dockerfile*` (containers), with an instruction to read existing IaC before adding anything new.
 
-- [x] PASS: Agent defines CI/CD pipeline in correct stage order — the Pipeline Structure section lists exactly: Lint & format check → Build → Unit tests → Integration tests → Security scan → Deploy, numbered 1-6.
+- [x] PASS: Agent produces a Dockerfile with multi-stage build, non-root user, pinned base image, HEALTHCHECK — the Containers section provides a complete worked example with all four elements (builder + runtime stages, `addgroup`/`adduser` + `USER app`, `node:22-alpine` pinned, `HEALTHCHECK CMD wget...`), plus rules below the example restating each requirement.
 
-- [x] PASS: Agent addresses zero-downtime deployments with mechanism and reasoning — the new Deployment Strategies section has a three-row table covering rolling update ("Replace instances one at a time. New version serves traffic as each instance comes up healthy. Cheapest option"), blue/green ("Switch traffic once health checks pass. Keep the old version warm for fast rollback"), and canary ("Route a small percentage (5-10%) of traffic to the new version"). Rules add health-check gating and connection draining. The agent would recommend rolling update for a stateless Django API and explain why.
+- [x] PASS: Agent defines CI/CD pipeline in the correct stage order — Pipeline Structure lists exactly: Lint & format check → Build → Unit tests → Integration tests → Security scan → Deploy (6 numbered steps), matching the required lint → build → test → security scan → deploy sequence.
 
-- [x] PASS: Agent defines a rollback plan with specific commands — the new Rollback Procedures section defines four numbered steps: automated rollback trigger (>5% error rate within 10 minutes), manual rollback ("one command to revert to the previous version" — for containers: "redeploy the previous image tag"; for IaC: "`pulumi up` with the previous commit"), database rollback considerations (reversible vs irreversible migrations), and post-rollback verification ("run the same health checks and smoke tests that gate the forward deployment"). These are specific enough that the agent can produce a concrete runbook entry.
+- [x] PASS: Agent addresses zero-downtime deployments with a named mechanism and reasoning — Deployment Strategies has a three-row table (rolling update, blue/green, canary) each with "When to use" and "How it works" columns, plus rules on health-check gating before traffic and connection draining before termination.
 
-- [x] PASS: Agent stops and asks before recommending new cloud resources — the Decision Checkpoints table explicitly lists "Creating new cloud resources with ongoing cost" as a mandatory stop-and-ask trigger with the reason "Budget decision."
+- [x] PASS: Agent defines a rollback plan with specific commands — Rollback Procedures gives four numbered steps including specific commands: "redeploy the previous image tag" for containers and "`pulumi up` with the previous commit" for IaC, plus automated trigger conditions and post-rollback verification.
 
-- [x] PARTIAL: Agent addresses Celery worker migration — the new Worker and Background Containers section directly covers background workers: graceful shutdown (`SIGTERM` handler, drain in-flight items, configurable termination grace period), monitoring via queue depth and last-processed timestamp rather than HTTP health endpoint, separate scaling on queue depth, and idempotency requirements. The content is substantive and maps directly to Celery. PARTIAL-prefixed criterion — capped at 0.5.
+- [x] PASS: Agent stops and asks before recommending new cloud resources — Decision Checkpoints table marks "Creating new cloud resources with ongoing cost" as a MANDATORY STOP with reason "Budget decision."
 
-- [x] PASS: Agent references cattle-not-pets — the Principles section states: "Cattle not pets. Infrastructure is disposable and reproducible. No snowflake servers."
+- [~] PARTIAL: Agent addresses Celery worker migration — Worker and Background Containers section covers graceful SIGTERM shutdown, queue-depth monitoring instead of HTTP health endpoints, separate scaling, and idempotency for safe retry. Celery is not named but the patterns apply directly. Capped at 0.5 per criterion label.
+
+- [x] PASS: Agent references cattle-not-pets — Principles section states "Cattle not pets. Infrastructure is disposable and reproducible. No snowflake servers." Core section repeats it as a headline principle.
+
+### Output expectations
+
+- [x] PASS: Output's Dockerfile is a multi-stage build with non-root user, pinned base image, and explicit HEALTHCHECK — the Containers section includes a complete worked example with all four elements and the agent would apply the same template to a Python base image.
+
+- [x] PASS: Output addresses two distinct workloads as separate containers/processes — the dedicated "Worker and Background Containers" section distinguishes workers from web services (different health checks, different scaling approach), which drives separate treatment of the Django web app and Celery workers.
+
+- [x] PASS: Output's CI/CD pipeline names the tool consistent with project conventions — Pipeline Structure gives the correct stage order; the installed tooling-conventions rule names GitHub Actions as the standard CI/CD tool; Pre-Flight Step 1 instructs the agent to read installed rules before acting.
+
+- [x] PASS: Output's zero-downtime mechanism is named explicitly with reasoning — the Deployment Strategies table names rolling update, blue/green, and canary with "When to use" guidance, giving the agent a basis for a named, reasoned recommendation. The twice-weekly cadence is not a named selection factor in the definition, but the agent would choose and justify based on service characteristics (stateless, migration presence).
+
+- [ ] FAIL: Output's rollback plan includes a stated time budget — Rollback Procedures gives specific commands (redeploy previous image tag, `pulumi up` with previous commit) but is silent on a time budget for restoration. The criterion requires a stated time target (e.g. "restore service within 5 minutes"); the definition provides no basis for one.
+
+- [~] PARTIAL: Output addresses Django migrations explicitly — Deployment Strategies states "Database migrations must be backward-compatible" and "deploy the migration separately from the code change if needed"; Rollback Procedures covers migration reversibility and blue/green for irreversible migrations. But the definition does not address when migrations run within the deployment sequence, or what happens if a migration fails mid-rolling-update. Coverage is present but incomplete for the full criterion.
+
+- [x] PASS: Output stops and asks before recommending new infrastructure with ongoing cost — Decision Checkpoints MANDATORY table covers this explicitly.
+
+- [~] PARTIAL: Output addresses environment configuration — Pipeline Rules state "Secrets via environment variables — never hardcoded, never in logs"; the Pulumi section covers encrypted config for provider tokens. But the agent definition does not explicitly address runtime env var injection into containers or how Neon Postgres credentials reach the container at runtime without being baked into an image layer. Pipeline secrets and container runtime secrets are distinct concerns; only the former is clearly covered.
+
+- [~] PARTIAL: Output addresses observability for the new deployment — Monitoring & Alerting section covers metrics (p50/p95/p99, error rate, throughput), structured JSON logging, and health endpoints. However, the definition does not specifically address the transition challenge: moving from a single bare-metal server with familiar logs to ephemeral containers where log aggregation and health endpoints need deliberate setup.
+
+- [ ] FAIL: Output addresses migration path as incremental cutover rather than big-bang — the agent definition has no section, rule, or principle covering parallel running, traffic shifting, or incremental cutover patterns from bare-metal to containers. "Cattle not pets" describes the end state, not the migration approach. The definition gives no basis for this output.
 
 ## Notes
 
-The definition was updated with three new sections since the previous evaluation: Deployment Strategies, Rollback Procedures, and Worker and Background Containers. These directly close the two criteria that previously failed. The zero-downtime mechanism is now explicitly defined with a decision table and rules. The rollback procedure now has specific commands (redeploy previous image tag, `pulumi up` with previous commit) rather than just acknowledging rollback is needed.
+The agent definition handles the structural and operational aspects of container deployments well — the Pre-Flight checks, Dockerfile template, pipeline stages, rollback commands, and worker separation are all concrete and actionable.
 
-The Celery criterion moves from PARTIAL at 0.5 to PARTIAL at 0.5 — the content improved from "nothing specific" to "directly applicable" but the criterion prefix cap holds regardless.
+The two outright failures both relate to things the definition never needed to cover before: rollback time budgets and bare-metal-to-container migration paths. Neither is an unreasonable omission for a general-purpose DevOps agent definition, but they are gaps for this specific scenario.
 
-Score moves from 5.5/8 (69%, FAIL) to 8/8 (100%, PASS).
+The three PARTIAL results (migrations, secrets, observability) reflect cases where the definition has relevant material that falls short of the criterion's specificity. The Django migration coverage is the closest to a pass — the backward-compatibility rule and blue/green guidance for irreversible migrations are substantive, but the timing and failure-path questions are unanswered.
+
+The environment configuration gap is worth flagging: the Pulumi section explicitly says provider tokens go in encrypted Pulumi config and *not* in environment variables, which is in tension with the Pipeline Rules saying secrets go via environment variables. This ambiguity would surface if the agent tried to address how Neon credentials reach the container.

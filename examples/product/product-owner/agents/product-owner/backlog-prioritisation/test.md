@@ -29,3 +29,16 @@ Which ones should we do next sprint?
 - [ ] PASS: Distinguishes between items with revenue impact evidence (SSO, CSV export) and items with only social proof (dark mode, Slack notifications)
 - [ ] PASS: Recommends data gathering actions for items that cannot be scored yet (e.g. instrument onboarding funnel before building improvements)
 - [ ] PASS: Produces a prioritised output with reasoning, not just a ranked list
+
+## Output expectations
+
+- [ ] PASS: Output ranks SSO/SAML as highest priority — citing the $180k ARR at risk, blocked-in-security-review status, and the pattern that enterprise SSO is a hard requirement (deals don't progress without it) — not a guess
+- [ ] PASS: Output applies a RICE-style scoring with explicit numbers per item — Reach (users affected), Impact (1/2/3 scale), Confidence (% based on data quality), Effort (story points or weeks) — even when fields are uncertain, with the uncertainty flagged
+- [ ] PASS: Output flags the Mobile App Redesign explicitly as having NO customer evidence — "design team wants this; no recorded customer request" — and questions whether it should be in the next sprint at all
+- [ ] PASS: Output flags the Onboarding Flow Improvements as needing data BEFORE building — "no drop-off data; CS team's perception alone insufficient" — with a recommendation to instrument the funnel first (a 1-2 day data task)
+- [ ] PASS: Output flags the API Rate Limit Increase as needing scope discovery — "1 power user requested; unclear how many others affected" — recommending a quick analytics query to size the impact before committing engineering time
+- [ ] PASS: Output's reasoning per item shows the source of the score — for items with revenue evidence (SSO $180k, CSV export ~200 customers), the math is shown; for items with social signal (Slack notifications 47 upvotes), the lack of revenue evidence is acknowledged
+- [ ] PASS: Output asks at least 2-3 clarifying questions before the prioritisation — sprint capacity, team composition (full-stack vs frontend-heavy), any commitments already made — rather than assuming
+- [ ] PASS: Output addresses Performance Improvements as a candidate for inclusion — p95 4.2s is a quantified problem with broad impact, but lacks a tied business outcome; output rates it medium priority pending a customer-impact view
+- [ ] PASS: Output's recommendation distinguishes "ship in next sprint" (likely SSO and a quick win) from "do data work now, ship next sprint" (onboarding instrumentation), from "do not pull in" (mobile redesign without evidence)
+- [ ] PASS: Output does not unilaterally prioritise — frames the recommendation as a proposal to discuss with the team, since headcount and CEO-pet-feature politics are out of scope for the agent

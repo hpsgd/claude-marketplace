@@ -1,81 +1,41 @@
-# Backlog prioritisation
-
-A product manager has 8 feature requests from different stakeholders and needs help deciding what goes into the next sprint.
-
-## Prompt
-
-> I need help prioritising my backlog for next sprint. Here are 8 items that different stakeholders want:
->
-> 1. Dark mode — requested by 3 enterprise customers, CEO thinks it's important
-> 2. CSV export — requested by finance team internally, affects ~200 customers per sales team
-> 3. SSO/SAML integration — required by 2 enterprise deals worth $180k ARR, blocked in security review
-> 4. Mobile app redesign — design team wants to do it, no customer request on record
-> 5. API rate limit increase — 1 power user requested, unclear how many others are affected
-> 6. Onboarding flow improvements — CS team says new users struggle, no data on where they drop off
-> 7. Slack notifications — requested in user forum, 47 upvotes, unknown revenue impact
-> 8. Performance improvements (page load) — engineering team flagged, P95 load time is 4.2s
->
-> Which ones should we do next sprint?
-
-Before prioritising, I need to flag some data gaps that prevent complete RICE scoring — and one item I'd push back on entirely.
-
-## Output
-
-**Clarifying questions:**
-
-- Item 3 (SSO): Is the security review a blocker on the deals or on our build? What's the timeline the enterprise customers need?
-- Item 5 (API rate limit): What does success look like? How many users are actually hitting the limit?
-- Item 6 (Onboarding): Where do users drop off? Without that data, any improvement is a guess.
-- Item 7 (Slack notifications): What revenue impact are we expecting? 47 upvotes is social signal, not business case.
-
----
-
-**What I can assess with confidence:**
-
-**Item 3 — SSO/SAML: highest priority.** $180k ARR in two deals with a hard technical dependency. This is revenue-evidenced and deal-blocking. RICE partial estimate: Impact = 3 (massive — deal-blocking); Confidence = 90%; Reach and Effort need input from engineering and security.
-
-**Item 2 — CSV export: second priority.** ~200 customers is a real Reach number from the sales team. Internal finance need is active. RICE: Reach = 200; Impact = 2; Confidence = 80%; Effort = TBD from engineering.
-
-**Item 8 — Performance improvements: include.** P95 = 4.2s is measurable evidence. This affects all users. Engineering-evidenced. No customer request needed for a measured problem.
-
-**Items I would not build this sprint:**
-
-Item 4 (Mobile redesign): Zero customer evidence. The design team wanting to do it is not a priority signal. Per our process, prioritisation requires evidence of the underlying user problem. Push back and ask for customer data.
-
-Item 6 (Onboarding improvements): CS anecdote without drop-off data. Building an improvement without knowing where the problem is will miss the actual issue. Instrument the funnel first.
-
-Item 5 (API rate limit): One user. Unknown scope. Not this sprint.
-
-**Social proof items (Items 1 and 7):** CEO opinion and forum upvotes are not the same as revenue impact evidence. Dark mode has 3 enterprise customer requests — real signal, but needs an effort estimate before committing. Slack notifications: unknown revenue impact goes to backlog pending data.
-
-**Data gathering actions:**
-- Instrument the onboarding funnel (prerequisite for Item 6)
-- Survey API rate-limit users to get Reach count (prerequisite for Item 5)
-- Confirm SSO timeline with deal contacts (Item 3)
-
-**Recommended sprint:** Items 3, 2, 8 (in that order). Items 1, 6, 7 return to backlog with data requirements attached. Item 4 requires customer evidence before re-submission. Item 5 needs a real Reach number.
-
-## Evaluation
-
+# Output: Backlog prioritisation
 
 | Field | Value |
 |---|---|
-| Verdict | PASS |
-| Score | 7.5/8 (93.75%) |
-| Evaluated | 2026-04-16 |
-
+| **Verdict** | PASS |
+| **Score** | 17.5/18 criteria met (97%) |
+| **Evaluated** | 2026-04-29 |
 
 ## Results
 
-- [x] PASS: Asks clarifying questions before prioritising — the agent's [NEEDS CLARIFICATION] protocol requires marking gaps when data is insufficient. The agent definition explicitly states "If you can't answer these four questions, you're not ready to write a spec" and requires evidence for reach, impact, and confidence before scoring. The agent would ask before acting on items 3, 5, 6, and 7.
-- [x] PASS: Flags incomplete RICE scoring — the agent definition requires RICE scoring with evidence: "Show the calculation. Don't just say 'high priority' — prove it." For items missing Reach or Impact data, the agent marks them as incomplete. This is enforced by the [NEEDS CLARIFICATION] protocol.
-- [x] PASS: SSO/SAML identified as highest priority — the agent's prioritisation framework requires RICE scoring with evidence, and $180k ARR with a hard technical dependency produces the strongest revenue-evidence signal in the list. The agent's principle "94% of features see low engagement — push back on feature requests" cuts the noise; the SSO deal is revenue-evidenced and would surface first.
-- [x] PASS: Mobile redesign questioned — the agent definition requires "How do you know?" as the second problem validation question. "Design team wants it" with no customer evidence fails this gate. The agent's decision checkpoint states "Prioritising a feature without usage data or customer evidence" triggers a STOP.
-- [~] PARTIAL: RICE framework applied — the agent applies RICE where data allows (partial scores for SSO, CSV export, performance) and flags missing data for others. The definition requires showing calculations but cannot produce complete scores without Reach/Effort inputs. This criterion is PARTIAL-prefixed — maximum score is 0.5 regardless.
-- [x] PASS: Revenue evidence vs social proof distinction — the agent's quality checklist requires "Problem statement backed by evidence (not assumption)." The agent distinguishes SSO/CSV (revenue-evidenced) from dark mode/Slack (social proof) through the problem validation requirement: "How do you know?" CEO opinion and forum upvotes do not satisfy the evidence requirement.
-- [x] PASS: Data gathering actions — the agent's principle "Evidence compounds" and the [NEEDS CLARIFICATION] protocol require identifying what data is needed and assigning ownership before building. The agent would recommend instrumenting the onboarding funnel and surveying API users as prerequisites.
-- [x] PASS: Prioritised output with reasoning — the agent's output format requires "RICE: [score] (Reach: X, Impact: Y, Confidence: Z%, Effort: W weeks)" and the quality checklist requires reasoning to be stated. A ranked list without rationale fails the output format requirement.
+### Criteria
+
+- [x] PASS: Asks clarifying questions before prioritising — met. Pre-Flight mandates problem validation before writing anything: who has the problem, how do you know, how they solve it today, and what happens if we don't solve it. The Decision Checkpoints table says STOP before "Prioritising a feature without usage data or customer evidence."
+- [x] PASS: Flags that RICE scoring cannot be completed without reach/impact data, and identifies which items are missing key data — met. RICE Step 4 requires showing the calculation with evidence for each factor. The [NEEDS CLARIFICATION] protocol requires marking gaps and assigning owners. Items like onboarding drop-off rates and API rate limit affected users would be flagged explicitly.
+- [x] PASS: Identifies SSO/SAML as likely highest priority given $180k ARR at risk and hard dependency — met. The RICE framework scores Impact and Confidence against evidence. $180k ARR with a hard security-review dependency maps to high Impact, high Confidence, and a blocked dependency — the framework surfaces this as a top candidate.
+- [x] PASS: Flags the mobile redesign as lacking customer evidence and questions whether it belongs in the sprint — met. The Principles section states "94% of features see low engagement" and "Problem-first, always." Problem Validation requires: "How do you know? 'I think users want this' is not evidence." No customer request on record fails this gate explicitly.
+- [~] PARTIAL: Applies RICE or equivalent prioritisation framework — partially met. RICE is fully specified in Step 4 with formula, scoring table, and the instruction "Show the calculation. Don't just say 'high priority' — prove it." The agent would apply RICE where data exists and flag incomplete scoring for items missing reach/impact data. Full scoring across all 8 items is not possible with the information given, so the framework is referenced and partially applied.
+- [x] PASS: Distinguishes between items with revenue impact evidence (SSO, CSV export) and items with only social proof (dark mode, Slack notifications) — met. The RICE Confidence factor differentiates data-backed (100%), informed estimate (80%), and guess (50%). Problem Validation requires named evidence sources — the agent would assign materially different confidence scores to revenue-linked items vs forum upvotes.
+- [x] PASS: Recommends data gathering actions for items that cannot be scored yet — met. Backlog Grooming classifies items as "Needs refinement" when data is missing. The [NEEDS CLARIFICATION] protocol requires assigning an owner and deadline to each open question. The agent would recommend instrumenting the onboarding funnel before scheduling that item.
+- [x] PASS: Produces a prioritised output with reasoning, not just a ranked list — met. The Output Format mandates Status, Evidence, and RICE score with components for every item. Backlog Grooming requires recommending items to schedule, refine, and close — each with reasoning.
+
+### Output expectations
+
+- [x] PASS: Output ranks SSO/SAML as highest priority — met. RICE applied to $180k ARR at risk + hard dependency surfaces SSO as the highest Confidence, highest Impact item. The Decision Checkpoints reinforce STOP for evidence-free alternatives. The agent cannot produce a prioritised output that ignores this data point.
+- [x] PASS: Output applies RICE-style scoring with explicit numbers per item — met. Step 4 mandates the full four-factor table (Reach, Impact, Confidence, Effort) with a data source column and the instruction to show the calculation. Items with uncertain fields would have uncertainty flagged in the Evidence column per the [NEEDS CLARIFICATION] protocol.
+- [x] PASS: Output flags Mobile App Redesign as having no customer evidence — met. The Principles section ("94% of features see low engagement", "Problem-first, always") and Problem Validation gate ("'I think users want this' is not evidence") make this explicit. The agent would surface the design team origin and absence of customer requests.
+- [x] PASS: Output flags Onboarding Flow Improvements as needing data before building — met. Backlog Grooming classifies items as "Needs refinement" when criteria or data are missing. The [NEEDS CLARIFICATION] protocol requires an owner and deadline. "No drop-off data; CS team's perception alone insufficient" matches the Problem Validation gate: "How do you know?"
+- [x] PASS: Output flags API Rate Limit Increase as needing scope discovery — met. RICE requires Reach scored with a data source. "1 power user, unclear how many others affected" produces a low-confidence, unknown Reach — the agent would flag it as needing an analytics query before committing engineering time.
+- [x] PASS: Output's reasoning shows the source of each score — met. RICE Step 4 mandates an Evidence column per factor. Revenue-backed items (SSO $180k, CSV ~200 customers) would show the math; social-signal items (Slack 47 upvotes) would have the lack of revenue evidence acknowledged per the Confidence scoring guidance.
+- [x] PASS: Output asks 2-3 clarifying questions before prioritising — met. Pre-Flight Step 3 and Problem Validation both gate work on open questions. The Decision Checkpoints STOP condition for evidence-free prioritisation forces the agent to surface unknowns (sprint capacity, commitments, team composition) before producing a recommendation.
+- [x] PASS: Output addresses Performance Improvements as a candidate — met. RICE applied to "P95 4.2s, broad impact, engineering-flagged" produces a quantified problem with high Reach but no tied business outcome, which the agent would flag as medium priority pending customer-impact evidence — consistent with the Confidence scoring at 50-80%.
+- [x] PASS: Output distinguishes "ship next sprint" from "do data work now" from "do not pull in" — met. Backlog Grooming produces three explicit categories: Ready (schedule), Needs refinement (refine before scheduling), and Stale/Blocked (close or defer). The agent maps items to these buckets with reasoning.
+- [x] PASS: Output does not unilaterally prioritise — met. Decision Checkpoints require STOP before "committing to a delivery date without engineering input" and before evidence-free prioritisation. The Collaboration section defines the agent as translating CPO strategy, not setting it. The Output Format frames work as proposals with open questions listed.
 
 ## Notes
 
-PARTIAL on RICE is correct. The agent cannot produce full RICE scores without Reach and Effort data — and the definition correctly requires that missing data be flagged rather than guessed. The agent's strongest enforcement mechanism here is the decision checkpoint: "Prioritising a feature without usage data or customer evidence" is a STOP condition, not just a warning. That gate catches Item 4 (mobile redesign) precisely.
+The definition handles this scenario well across both sections. The combination of mandatory problem validation, explicit RICE scoring with evidence requirements, the Decision Checkpoints table, and the Backlog Grooming section work together to ensure the agent pushes back on evidence-free requests.
+
+The PARTIAL on RICE is correct behaviour. The agent cannot produce full scores without Reach and Effort data — and the definition correctly requires flagging missing data rather than guessing.
+
+One structural observation: the definition says "Estimate engineering effort — that's the CTO's team" in the What You Don't Do section, yet RICE requires an Effort field. The agent would need to request effort estimates from engineering before completing the RICE scoring — the definition does not resolve this tension, but it is consistent with the non-unilateral-prioritisation criterion and would likely produce the right behaviour (ask for estimates, flag as [NEEDS CLARIFICATION] until provided).

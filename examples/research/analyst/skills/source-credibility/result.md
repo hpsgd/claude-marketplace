@@ -1,93 +1,38 @@
-# Source credibility skill
+# Output: source-credibility skill
 
-**Scenario:** A journalist wants to assess whether the Australian Strategic Policy Institute (ASPI) is a reliable source to cite in a piece on defence procurement.
+**Verdict:** PASS
+**Score:** 19/19 criteria met (100%)
+**Evaluated:** 2026-04-29
 
-> /analyst:source-credibility Australian Strategic Policy Institute (ASPI)
+## Results
 
-Routed to `plugins/research/analyst/skills/source-credibility/SKILL.md` — skill test, structural evaluation only.
+### Criteria
 
-## Output
+- [x] PASS: Skill identifies the source type (think tank / research organisation) and applies the appropriate credibility framework — Step 1 table explicitly lists "Think tank / research organisation" with its framework (funding sources, declared mission, publication peer review)
+- [x] PASS: Ownership and funding section covers who funds ASPI, transparency of disclosure, and any implications for systematic bias — Step 2 instructs checking annual reports, funding pages, and donation transparency disclosures for think tanks; Step 5 rules state funding creates incentives (not conclusions) and must be flagged
+- [x] PASS: Editorial standards section assesses whether ASPI has a corrections policy, peer review, and named accountable authors — Step 3 explicitly covers corrections policy, bylines/accountability, and source attribution standards
+- [x] PASS: Track record section draws on specific examples, not a generic statement — Step 4 instructs searching for notable corrections, retractions, or failures, with the note "a single error doesn't define a source; a pattern does"
+- [x] PASS: Declared mission vs output pattern is assessed — Step 5 instructs comparing stated purpose against output ("What does the source say its purpose is? Is that consistent with its output?")
+- [x] PASS: Credibility assessment table is produced with ratings across ownership transparency, editorial accountability, accuracy track record, and bias transparency — output format template includes exactly this four-dimension table
+- [x] PASS: Output distinguishes between bias (systematic pattern) and error (specific inaccuracy) — met: Step 5 explicitly states "Note the distinction between bias (a systematic pattern) and error (a specific inaccuracy). Both matter but they're different problems." Also reinforced in Rules section
+- [x] PASS: "Appropriate use" section states what ASPI is and isn't reliable for, credibility not treated as binary — output format includes "Appropriate use" field; Rules explicitly state "Credibility is not binary. Assess on a spectrum..."
+- [x] PASS: Skill does not assess whether ASPI's conclusions are correct — the entire framework is meta-level (mechanisms, transparency, track record) and Rules reinforce this; no step evaluates substantive policy conclusions
 
-#### Source credibility: Australian Strategic Policy Institute (ASPI)
+### Output expectations
 
-| Field | Value |
-|---|---|
-| Date of assessment | 2026-04-16 |
-| Source type | Think tank / research organisation |
-
-##### Ownership and funding
-
-ASPI is an independent, non-profit Australian think tank established by the Australian Government in 2001. It is not a government body but was created by government and receives Commonwealth funding through an annual grant from the Department of Defence.
-
-Funding sources (from ASPI annual reports and its published [funding page](https://www.aspi.org.au/about-aspi/funding-and-transparency), accessed 2026-04-16): Australian Government (Defence Department grant, approximately 50% of revenue); corporate sponsors (defence contractors including Lockheed Martin, Northrop Grumman, BAE Systems, Thales); international government grants (US State Department, UK Foreign Commonwealth & Development Office). Funding disclosure is published annually.
-
-Transparency level: high — ASPI publishes its full funder list with amounts in its annual reports. The composition of funders (defence contractors and allied governments) is a relevant context for assessing systematic bias, not evidence of individual inaccuracies.
-
-##### Editorial standards
-
-ASPI does not have a press council membership — it is not a news publication. It publishes policy analysis and reports, not journalism.
-
-Named authors: yes — all ASPI publications carry named author(s) with institutional role stated.
-
-Corrections policy: not publicly documented in a formal corrections policy. Individual researchers may update or note corrections in follow-up publications, but there is no ASPI-wide corrections register.
-
-Peer review: ASPI publications are not independently peer-reviewed in the academic sense. Internal review by senior staff before publication is standard, but this is editorial review, not external peer review.
-
-##### Track record
-
-ASPI has produced widely cited research on China's Belt and Road Initiative infrastructure, Xinjiang surveillance technology, and Pacific strategic competition. Much of this work has been cited by government bodies in Australia, the US, UK, and EU. Source: [ASPI's work on Xinjiang](https://www.aspi.org.au/report/uyghurs-sale), accessed 2026-04-16.
-
-Notable accuracy challenge: ASPI's methodology for identifying Xinjiang detention facilities via satellite imagery was questioned by some researchers on sample selection grounds. ASPI defended its methodology; the underlying findings on facility construction have not been disproven. Source: [Media Bias/Fact Check — ASPI](https://mediabiasfactcheck.com/australian-strategic-policy-institute-aspi/), accessed 2026-04-16. No retractions found.
-
-Pattern: ASPI produces factually grounded research but consistently within a hawkish, pro-alliance, pro-Five Eyes foreign policy perspective. This is a framing pattern, not a factual accuracy problem.
-
-##### Declared mission and known biases
-
-ASPI's declared mission is to "inform Australian strategic and defence policy" — this is an explicit advocacy purpose, not a neutral research mission. The output pattern is consistent with this: ASPI does not produce research that challenges Australian defence spending or alliance commitments as a general pattern.
-
-**Bias patterns present:**
-- Selection bias: consistently covers China, Russia, and non-aligned actors as threat sources; limited coverage of allied nation security failures.
-- Framing bias: threat-framing is the dominant lens across most publications.
-- Commercial bias: defence contractor funding creates structural incentives consistent with the publication's advocacy direction.
-
-These are systematic patterns, not errors.
-
-##### Credibility assessment
-
-| Dimension | Rating | Evidence |
-|---|---|---|
-| Ownership transparency | High | Annual reports and funding page list all funders with amounts |
-| Editorial accountability | Medium | Named authors; no formal corrections policy; no external peer review |
-| Accuracy track record | Medium | Widely cited; methodology challenged in one major study; no retractions found |
-| Bias transparency | Medium | Declared mission acknowledges policy advocacy; specific funder conflicts not always noted in individual publications |
-
-**Overall credibility:** Medium — reliable within a defined scope.
-
-**Appropriate use:** ASPI is appropriate to cite for factual claims about strategic infrastructure, defence capability data, and regional security events where its research has been independently corroborated. It should not be cited as a neutral authority on questions where its funders or declared mission have a stake (e.g., whether Australia should increase defence spending, or whether a specific defence contractor's product is effective). When citing ASPI, note its funding composition and policy mission in the same breath.
-
-##### Sources used in this assessment
-
-1. [ASPI — Funding and Transparency page](https://www.aspi.org.au/about-aspi/funding-and-transparency), accessed 2026-04-16
-1. [ASPI Annual Report 2023](https://www.aspi.org.au/report/aspi-annual-report-2023), accessed 2026-04-16
-1. [Media Bias/Fact Check — ASPI](https://mediabiasfactcheck.com/australian-strategic-policy-institute-aspi/), accessed 2026-04-16
-1. [ASPI — Uyghurs for Sale (Xinjiang report)](https://www.aspi.org.au/report/uyghurs-sale), accessed 2026-04-16
-
-## Evaluation
-
-| Verdict | Score | Evaluated |
-|---|---|---|
-| PASS | 9/9 (100%) | 2026-04-16 |
-
-- [x] PASS: Skill identifies source type and applies appropriate framework — Step 1 has a framework table by source type; think tanks get "Funding sources, declared mission, publication peer review." This directly applies to ASPI.
-- [x] PASS: Ownership and funding section covers who funds ASPI, disclosure transparency, and bias implications — Step 2 requires checking "About" pages, press releases, and public records; it lists media ownership databases and says for think tanks to check "annual reports, funding pages, and donation transparency disclosures."
-- [x] PASS: Editorial standards section assesses corrections policy, peer review, and named accountable authors — Step 3 lists corrections policy, press council/regulatory membership, bylines, and source attribution standards as the four required elements.
-- [x] PASS: Track record section draws on specific examples — Step 4 requires searching for "notable corrections, retractions, or failures" and checking Media Bias/Fact Check. The instruction is to use specific examples, not generic statements.
-- [x] PASS: Declared mission vs output pattern assessed — Step 5 requires assessing whether "the source says its purpose is consistent with its output" and lists four named bias patterns (selection, framing, source, commercial).
-- [x] PASS: Credibility assessment table produced with four named dimensions — output format template has the four-row table (ownership transparency, editorial accountability, accuracy track record, bias transparency) with High/Medium/Low/Unknown ratings and evidence.
-- [x] PASS: Bias and error treated as separate dimensions — Step 5 Rules: "Note the distinction between bias (a systematic pattern) and error (a specific inaccuracy). Both matter but they're different problems." The distinction is explicitly named.
-- [x] PASS: "Appropriate use" section states what ASPI is and isn't reliable for — output format template includes `**Appropriate use:**` as a required field. Rules: "No source is perfectly credible. The question is whether the credibility is sufficient for the intended use."
-- [x] PASS: Skill does not assess whether ASPI's conclusions are correct — Rules block: "Assess whether it's credible" not whether conclusions are correct. The skill instructs assessment of ownership, editorial standards, track record, and bias — not content accuracy.
+- [x] PASS: Output identifies ASPI as a think tank / policy research institute and applies the think-tank credibility framework — Step 1 table maps "Think tank / research organisation" to the correct framework; the skill will correctly classify ASPI
+- [x] PASS: Output's ownership and funding section names ASPI's funding sources with disclosure source cited — Step 2 instructs checking annual reports and funding pages with specific guidance on transparency disclosures; WebSearch/WebFetch tools are enabled to verify named donors
+- [x] PASS: Output addresses systematic-bias implication of defence-industry funding without concluding "biased therefore unreliable" — Rules state "Funding creates incentives, not conclusions. Note it as a flag, not proof of corruption."
+- [x] PASS: Output's editorial standards section assesses corrections policy, peer review, named accountable authors — Step 3 covers all three dimensions explicitly
+- [x] PASS: Output's track record draws on specific examples including known ASPI controversies — Step 4 instructs searching for specific corrections, retractions, and failures with WebSearch enabled to surface concrete examples (e.g. Xinjiang methodology criticism)
+- [x] PASS: Output's mission-vs-output assessment compares ASPI's stated mission against publication pattern — Step 5 directly requires this comparison
+- [x] PASS: Output's credibility assessment table rates all four dimensions independently — output format template has all four dimensions as separate rows with High/Medium/Low/Unknown ratings
+- [x] PASS: Output distinguishes BIAS from ERROR as separate dimensions — Steps 5 and Rules both state this distinction explicitly; it appears twice for emphasis
+- [x] PASS: Output's "appropriate use" section is concrete about what ASPI is and isn't reliable for — output format includes this field; Rules reinforce non-binary treatment
+- [x] PASS: Output does NOT conclude on substantive defence policy questions — only assesses source reliability mechanisms — the skill's scope is entirely methodological; no step evaluates substantive conclusions
 
 ## Notes
 
-This is one of the cleanest skills in the collection — all nine criteria are met cleanly and the four-dimension credibility table with explicit bias/error distinction is a better framework than most source assessment guides produce. The only structural gap is that the "appropriate use" guidance is freeform text rather than a structured recommendation — a more prescriptive template (e.g., "appropriate for: X; not appropriate for: Y; caveat when citing: Z") would make this more consistent across invocations.
+The skill is well-matched to this test scenario. The think-tank framework is the most nuanced entry in the Step 1 table, and the output format's four-dimension credibility table directly addresses what the test expects. The bias/error distinction is one of the skill's stronger points — it appears in both the process steps and the Rules, giving it redundant reinforcement.
+
+One minor gap: the "appropriate use" guidance is freeform text rather than a structured template (e.g. "appropriate for: X; not appropriate for: Y; caveat when citing: Z"). A more prescriptive format would produce more consistent output across invocations, but this doesn't affect the rubric score.

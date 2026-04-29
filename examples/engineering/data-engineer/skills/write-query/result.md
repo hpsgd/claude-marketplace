@@ -1,175 +1,40 @@
-# Write a trial to paid conversion funnel query
+# Result: Write a trial-to-paid conversion funnel query
 
-Developer invokes the write-query skill to answer: "What percentage of trial users convert to a paid subscription within 14 days, broken down by the acquisition channel they signed up through?"
-
-## Prompt
-
-> Write a query to answer: What percentage of users who started a trial in Q1 2024 converted to a paid subscription within 14 days, broken down by acquisition channel (organic, paid_search, referral, direct)? Exclude internal test accounts and users from the 'acme-corp' domain. Data is in: `users` (user_id, created_at, acquisition_channel, email, is_test_account), `subscriptions` (subscription_id, user_id, status, started_at, plan_type where 'trial' or 'paid').
-
-The write-query skill, applied to this conversion funnel question, would produce the following.
-
----
-
-```sql
--- ============================================================
--- METRIC DEFINITIONS
--- ============================================================
--- Metric: Trial-to-Paid Conversion Rate by Acquisition Channel
--- Converted: user has a plan_type='paid' subscription with
---            started_at <= first_trial_started_at + 14 days
--- Trial cohort: users with first trial subscription in Q1 2024
---               (started_at BETWEEN 2024-01-01 AND 2024-03-31)
--- Exclusions:
---   - is_test_account = true
---   - email LIKE '%@acme-corp.com'
---   - acquisition_channel IS NULL (data quality — cannot group)
--- Granularity: per acquisition_channel
--- ============================================================
--- DATA SOURCES
--- users: grain = one row per user, key = user_id
---        known issues: acquisition_channel NULL for users before
---        2023-06-01 feature launch
--- subscriptions: grain = one row per subscription, key = subscription_id
---        known issues: duplicate subscriptions exist for users who
---        cancelled and restarted — dedup by MIN(started_at) per user
---        per plan_type
--- ============================================================
-
-WITH trial_cohort AS (
-    -- Eligible users: signed up for a trial in Q1 2024, not test, not acme-corp
-    SELECT
-        u.user_id,
-        u.acquisition_channel,
-        MIN(s.started_at) AS first_trial_started_at
-    FROM users u
-    INNER JOIN subscriptions s
-        ON s.user_id = u.user_id
-        AND s.plan_type = 'trial'
-        AND s.started_at BETWEEN '2024-01-01' AND '2024-03-31'
-    WHERE
-        u.is_test_account = false
-        AND u.email NOT LIKE '%@acme-corp.com'
-        AND u.acquisition_channel IS NOT NULL
-    GROUP BY
-        u.user_id,
-        u.acquisition_channel
-),
-
-conversions AS (
-    -- Users who converted: paid subscription started within 14 days of first trial
-    SELECT DISTINCT
-        tc.user_id
-    FROM trial_cohort tc
-    INNER JOIN subscriptions s
-        ON s.user_id = tc.user_id
-        AND s.plan_type = 'paid'
-        AND s.started_at <= tc.first_trial_started_at + INTERVAL '14 days'
-),
-
-summary AS (
-    SELECT
-        tc.acquisition_channel,
-        COUNT(DISTINCT tc.user_id)           AS trial_users,
-        COUNT(DISTINCT c.user_id)            AS converted_users
-    FROM trial_cohort tc
-    LEFT JOIN conversions c ON c.user_id = tc.user_id
-    GROUP BY tc.acquisition_channel
-)
-
-SELECT
-    acquisition_channel,
-    trial_users,
-    converted_users,
-    ROUND(
-        converted_users::numeric / NULLIF(trial_users, 0) * 100,
-        1
-    )                                        AS conversion_rate_pct
-FROM summary
-ORDER BY trial_users DESC;
-
--- ============================================================
--- SANITY CHECKS
--- ============================================================
-
--- 1. All conversion rates between 0 and 100
-SELECT acquisition_channel, conversion_rate_pct
-FROM (
-    -- [paste main query as CTE here or run inline]
-) q
-WHERE conversion_rate_pct < 0 OR conversion_rate_pct > 100;
--- Expected: 0 rows
-
--- 2. No channel has zero trial users (would indicate a filter error)
-SELECT acquisition_channel, trial_users
-FROM (...)
-WHERE trial_users = 0;
--- Expected: 0 rows
-
--- 3. Sum of trial_users per channel equals total eligible trial users
-SELECT SUM(trial_users) AS total_from_channels
-FROM (...);
--- Expected: matches COUNT(DISTINCT user_id) from trial_cohort CTE directly
-
--- 4. No NULL acquisition_channel in results (should be filtered above)
-SELECT COUNT(*) FROM (...) WHERE acquisition_channel IS NULL;
--- Expected: 0
-
--- ============================================================
--- EXPECTED RESULT SHAPE
--- ============================================================
--- 4 rows (one per channel: organic, paid_search, referral, direct)
--- trial_users: 100–2000 per channel depending on mix
--- conversion_rate_pct: typically 5–30% for SaaS trial-to-paid
--- Channels with NULL acquisition_channel are excluded — check data
--- quality note in DATA SOURCES above
-
--- ============================================================
--- CAVEATS
--- ============================================================
--- 1. acquisition_channel IS NULL for users before 2023-06-01 — these
---    are silently excluded from this query. If Q1 2024 has significant
---    early-signup accounts, run a separate count to size the exclusion.
--- 2. Users with multiple trial subscriptions are deduped to first trial
---    only. A user who cancelled and retried is counted once.
--- 3. If a user has both trial and paid subscriptions with the same
---    started_at, they are counted as converted. Verify this edge case
---    is intentional with the product team.
-```
-
-## Output
-
-
-
-## Evaluation
-
-
-| Field | Value |
-|---|---|
-| Verdict | PASS |
-| Score | 7.5/9 criteria met (83%) |
-| Evaluated | 2026-04-16 |
-
+**Verdict:** PARTIAL
+**Score:** 17/19 criteria met (89%)
+**Evaluated:** 2026-04-29
 
 ## Results
 
-- [x] PASS: Skill decomposes question into precise definitions before SQL — Step 1 "Question Decomposition (MANDATORY before writing any SQL)" requires metric definition, time window, granularity, filters, and comparison baseline. The MANDATORY label and sequential process instruction enforce this. The simulated output's Step 1 section defines "converted," the cohort window, and all filters before any SQL is written.
+### Criteria
 
-- [x] PASS: Metric definitions written as SQL comments at top — Step 2 shows the exact SQL comment block format; rule: "Include the metric definition as a SQL comment at the top of the query. Specify inclusion AND exclusion criteria." Both the format and the inclusion/exclusion requirement are explicit.
+- [x] PASS: Skill decomposes the question into precise definitions before writing SQL — Step 1 is explicitly mandatory ("MANDATORY before writing any SQL"), requiring metric, window, granularity, filters, and comparison baseline to be stated before any SQL is written. Met.
+- [x] PASS: Metric definitions are written as SQL comments at the top of the query — Step 2 requires metric definitions as SQL comments at the top, including inclusion and exclusion criteria and time window. The format is shown with a concrete example. Met.
+- [x] PASS: Query uses CTEs over subqueries — Step 4 is titled "Query Architecture (CTEs over subqueries)"; the CTE rules section states "CTEs over subqueries, always. Subqueries make debugging impossible." The anti-patterns list also prohibits nested subqueries. Met.
+- [x] PASS: Query filters out test accounts and acme-corp domain explicitly — the skill prescribes the technique: Step 2 requires "Specify inclusion AND exclusion criteria"; Step 3 examples show `is_bot = FALSE` and `email NOT LIKE '%@example.com'`; Step 1 requires decomposing all filters. The pattern is taught; the scenario-specific field names arrive via arguments. Met.
+- [x] PASS: Skill includes at least 2 sanity check queries — Step 5 mandates "Every query has at least 2 sanity checks" and the template examples cover percentage-bounds checks, NULL key checks, and row count checks. Met.
+- [x] PASS: Final SELECT column names are descriptive — the anti-patterns list warns against "Over-precision" in reporting and every query example throughout the skill uses descriptive names. Step 4 CTE rules state "Final SELECT is clean — no complex logic." The skill establishes the pattern consistently by demonstration. Met.
+- [x] PASS: Data sources section documents grain of each table and known quality issues — Step 3 explicitly requires "Document the grain (what does one row represent?) for every table used" and "Note any known data quality issues (duplicates, nulls, late-arriving data)." Met.
+- [~] PARTIAL: Query handles multiple trial subscriptions (deduplication logic) — the anti-patterns section covers "Missing deduplication" with `DISTINCT or dedup CTE`, but this addresses event-level duplicates. The specific problem of reducing multiple rows per user (e.g. multiple trial subscriptions for the same user) to one row using `MIN(started_at)` or `ROW_NUMBER()` is not taught. Partially met: 0.5.
+- [x] PASS: Output includes full documentation header, sanity checks, expected result shape, and caveats — the Output section lists all four explicitly: "The SQL query with full documentation", "Sanity check queries (at least 2)", "Expected result shape", "Any caveats or limitations." Met.
 
-- [x] PASS: Query uses CTEs over subqueries — Step 4 heading: "Query Architecture (CTEs over subqueries)"; rule: "CTEs over subqueries, always. Subqueries make debugging impossible." The simulated query uses named CTEs (`trial_cohort`, `conversions`, `summary`) with no nested subqueries.
+### Output expectations
 
-- [x] PASS: Query filters test accounts and acme-corp domain — Step 1 requires decomposing all filters; Step 2 requires "Specify inclusion AND exclusion criteria." Both `is_test_account = false` and `email NOT LIKE '%@acme-corp.com'` are applied in the `trial_cohort` CTE.
-
-- [x] PASS: Skill includes ≥2 sanity checks — Step 5 "Sanity Checks (MANDATORY)": "Every query has at least 2 sanity checks." The simulated output provides 4 sanity checks covering rates 0-100, zero-row channels, cross-check sum, and NULL channels. All four are clearly labelled.
-
-- [~] PARTIAL: Final SELECT column names are descriptive — no explicit rule in the SKILL.md prohibiting single-letter aliases or requiring descriptive names. The query examples throughout the definition consistently use descriptive names (e.g., `retention_rate_pct`, `cohort_week`), establishing the pattern by demonstration. However the definition does not include an explicit instruction like "column aliases must be descriptive" or "never use a, b, c as aliases." This is enforced by example and convention, not by a stated rule.
-
-- [x] PASS: Data sources section documents grain and known quality issues — Step 3 "Data Source Identification" requires "what does one row represent?" (grain) and "Note any known data quality issues (duplicates, nulls, late-arriving data)" for every table. Both `users` and `subscriptions` are documented with grain and known issues in the SQL header.
-
-- [~] PARTIAL: Query handles multiple trial subscriptions per user — the anti-patterns section mentions "Missing deduplication — events table often has duplicates" and examples use DISTINCT or explicit dedup CTEs. However Step 1 decomposition does not include a required prompt like "does any user appear multiple times in the source?" The skill would produce some deduplication via the `MIN(started_at) GROUP BY user_id` pattern in the trial_cohort CTE, but the specific case of multiple trial subscriptions is not guaranteed by the definition. Coverage is partial — likely but not required.
-
-- [x] PASS: Output includes full documentation header, sanity checks, expected result shape, caveats — Output section lists all four: SQL query with full documentation (metric definitions, assumptions, data sources), sanity check queries (at least 2), expected result shape, and any caveats. All four are present in the simulated output.
+- [x] PASS: Documentation header defines "trial user", "converted", and the 14-day window — Step 2 and Step 7 both require metric definitions as SQL comments covering inclusion/exclusion criteria and time windows. The skill would produce these definitions. Met.
+- [~] PARTIAL: Output filters Q1 by trial start, not by paid conversion date — the funnel pattern in Step 6 implicitly shows this (step1 defines the cohort window, steps 2/3 extend it to later windows), but the skill never states the rule explicitly: cohort membership is defined by the entry event's date, not the outcome event's date. A reader following the skill could filter Q1 on `paid.started_at` and silently exclude valid conversions. Partially met: 0.5.
+- [x] PASS: Both filters visible at the cohort-defining stage — Step 2 requires exclusion criteria in the metric definitions block; Step 3 requires data quality notes. The skill prescribes documenting and applying exclusions at the data-sourcing stage, not buried in a later CTE. Met.
+- [x] PASS: CTEs named for what they compute — Step 4 states "CTE names describe what the data IS, not what it does: `active_users` not `get_active_users`." Multiple named examples reinforce this. Met.
+- [x] PASS: Final SELECT groups by acquisition_channel, reports count and rate with descriptive column names — Step 4 requires a clean final SELECT; anti-patterns prohibit single-letter aliases; the skill's examples consistently use names like `retention_rate_pct`, `cohort_size`. Met.
+- [~] PARTIAL: Deduplicates to one trial per user (earliest in Q1) before joining — anti-patterns section covers generic dedup (`DISTINCT or dedup CTE`), but the specific pattern of reducing a one-to-many user-subscription relationship to one row per user via `MIN(started_at)` or `ROW_NUMBER()` is not described. This is a different problem from event-level dedup and is not taught by the skill. Partially met: 0.5.
+- [x] PASS: At least 2 sanity checks including rate in [0,100] and non-NULL acquisition_channel — Step 5 templates include both a percentage-bounds check (`WHERE retention_rate_pct > 100 OR retention_rate_pct < 0`) and a NULL keys check (`WHERE cohort_week IS NULL`). These map directly to the required checks. Met.
+- [x] PASS: Documents grain of users (one per user) and subscriptions (multiple per user possible) — Step 3 requires grain documentation for every table used; the subscriptions table's one-to-many nature would be captured there. Met.
+- [~] PARTIAL: Addresses edge cases — churn/re-subscribe, paid-before-trial, overlapping windows — Step 7 includes a "KNOWN LIMITATIONS" section in the documentation template, but the skill does not enumerate these specific edge cases or prompt the analyst to consider them. The template slot exists; the content is not prescribed. Partially met: 0.5.
+- [x] PASS: Includes expected result shape with approximate row count and conversion rate range — the Output section step 3 requires "Expected result shape (columns, approximate row count, sample values)." This directly covers the criterion. Met.
 
 ## Notes
 
-Two partial criteria lower the score from the 94% achieved on most other tests. The column naming gap is a soft one — every query example in the definition uses descriptive names, and the model would follow that pattern, but the definition would benefit from an explicit rule. The multiple-trial-subscriptions gap is more substantive: without a prompt in Step 1 to ask "how many rows can one user have in the subscriptions table for the same plan_type?", an analyst might miss the deduplication need. Adding this as a Step 1 decomposition question alongside granularity would close it.
+The skill is strong and well-structured. The two recurring gaps both come from the same underlying issue: the skill teaches deduplication generically (event-level `DISTINCT`) but does not address entity-level deduplication — reducing a one-to-many join to one canonical row per user. The `subscriptions` table has exactly this shape (multiple plan rows per user), and the skill does not teach the `MIN()`/`ROW_NUMBER()` over partition pattern that handles it. Adding this as a named pattern in Step 4 or Step 6 would close both the Criteria and Output expectations gaps.
+
+The cohort-filtering gap (Output expectation #2) is the subtler risk. The skill teaches funnel analysis but never states the principle that separates correct cohort analysis from common errors: filter cohort membership on the cohort-entry event's date, not the outcome event's date. A single rule added to Step 1 ("for time-bounded cohorts, filter on the event that defines membership — not the event you're measuring") would make this explicit.
+
+Everything else is well-covered. The mandatory decomposition step, metric definitions as comments, CTE architecture, sanity check templates, and documentation structure are all prescribed clearly and would reliably produce correct output.

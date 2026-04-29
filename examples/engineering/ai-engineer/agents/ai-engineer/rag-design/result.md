@@ -1,216 +1,59 @@
-# RAG pipeline for internal documentation search
-
-User wants to build a RAG pipeline so employees can ask natural language questions against the company's internal documentation corpus (~2,000 Confluence pages and ~500 PDF runbooks).
-
-## Prompt
-
-> We want to let our support and engineering teams search our internal docs using natural language. We have about 2,000 Confluence pages (mostly Markdown/HTML) and ~500 PDF runbooks, totalling roughly 800MB. Documents are updated a few times a week. Questions are things like "what's the rollback procedure for the payments service?" or "which team owns the authentication microservice?". We need citations so users know where answers came from. Budget is $500/month for AI costs. Can you design this RAG pipeline?
-
-The ai-engineer agent definition classifies RAG pipeline work under "RAG pipeline" type (Step 3 classification table) and would invoke the `rag-pipeline` skill. The agent's Pre-Flight reads CLAUDE.md and checks installed rules before proceeding. Below is the realistic output it would produce.
-
----
-
-## Output
-
-# RAG Pipeline Design: Internal Documentation Search (Confluence + PDF Runbooks)
-
-### Pre-Flight
-
-Reading CLAUDE.md... No existing AI integrations found. No cost controls configured.
-
-**Decision checkpoint triggered:** A $500/month budget for AI costs is stated. Per the agent definition, "Choosing between 2+ models for a use case" requires a STOP. Model selection will be escalated to stakeholders with cost projections before final implementation.
-
----
-
-### Evaluation Criteria (defined before implementation)
-
-Per the rag-pipeline skill: evaluation criteria are defined before any pipeline configuration is recommended.
-
-| Criterion | Target |
-|---|---|
-| Retrieval Precision@5 | >= 80% |
-| Retrieval Recall@5 | >= 70% |
-| Retrieval MRR | >= 0.8 |
-| Answer faithfulness | 100% — hallucination is a failure |
-| Citation accuracy | >= 95% |
-| Answer accuracy | >= 90% |
-| p95 query latency | < 5 seconds end-to-end |
-
-Retrieval is evaluated first. Generation is not evaluated until retrieval passes all three retrieval metrics.
-
----
-
-### Corpus Profile
-
-| Property | Value |
-|---|---|
-| Document types | Confluence pages (Markdown/HTML), PDF runbooks |
-| Volume | ~2,500 documents, ~800MB |
-| Update frequency | A few times per week (~10–20 docs/week estimated) |
-| Language | English |
-| Content structure | Confluence: H1–H3 headings, well-structured; PDFs: variable, some may need OCR |
-| Quality | Confluence: clean; PDFs: require inspection — some may be scanned |
-
-Sample review (10–15 docs): Confluence pages follow consistent heading structure — ideal for semantic chunking. PDFs require a separate parsing pass; older runbooks may be image-based and need OCR.
-
----
-
-### Chunking Configuration
-
-Semantic chunking on H2/H3 boundaries for Confluence. Fixed-size (512 tokens, 20% overlap) as fallback for PDFs without detectable structure.
-
-**Chunk metadata schema (MANDATORY):**
-
-| Field | Type | Purpose |
-|---|---|---|
-| source_id | string | Confluence page ID or PDF filename hash |
-| source_name | string | Human-readable page title or runbook name |
-| chunk_index | integer | Position within source document |
-| section_heading | string | Nearest H2/H3 above this chunk |
-| created_at | datetime | UTC indexing timestamp |
-| content_hash | string | SHA-256 of chunk text — detects changes on re-index |
-
----
-
-### Embedding Selection
-
-**Do not select by benchmark. Evaluate on 20 representative queries from actual users.**
-
-Evaluation method:
-1. Collect 20 queries from support and engineering (e.g., "rollback procedure for payments service", "who owns authentication microservice")
-2. Identify 3–5 ground-truth documents per query
-3. Embed corpus with candidate models
-4. Measure Precision@5 and Recall@5 against ground truth
-5. Select cheapest model meeting >= 80% Precision@5
-
-Candidates: `text-embedding-3-small` (lower cost) and `text-embedding-3-large` (higher quality). Select small unless eval shows it fails the precision threshold.
-
----
-
-### Retrieval Configuration
-
-- Strategy: Similarity search (cosine), K=5 as default
-- Add hybrid search (similarity + BM25) only if eval shows retrieval misses exact-match queries (e.g., service names, error codes)
-- Filters: `doc_type` filter for runbooks-only scope; `team_owner` where populated in metadata
-
----
-
-### Prompt Template
-
-```
-You are a documentation assistant for engineering and support teams.
-Answer questions using ONLY the provided context documents.
-If the answer is not in the context, say "I don't have enough information from the available documentation."
-Always cite the source document for each claim using [Source: document name].
-
-<context>
-[Source: {source_name_1}]
-{chunk_text_1}
-
-[Source: {source_name_2}]
-{chunk_text_2}
-</context>
-
-Question: {user_query}
-```
-
-**Citation is MANDATORY.** Every factual claim must reference its source. If the model cannot cite a source for a claim, that claim must not appear.
-
----
-
-### Model Selection Checkpoint (STOP)
-
-**DECISION REQUIRED before proceeding.** The $500/month budget triggers the model selection decision checkpoint. Two options for stakeholder review:
-
-| Option | Model class | Est. cost/query | Est. monthly at 5k queries/day |
-|---|---|---|---|
-| A | Haiku-class | ~$0.001 | ~$150 |
-| B | Sonnet-class | ~$0.006 | ~$900 |
-
-Option B exceeds the stated budget. Cannot proceed to implementation without stakeholder decision.
-
----
-
-### Evaluation Plan
-
-**Phase 1 — Retrieval (run first, fix before moving to Phase 2):**
-
-| Metric | Target |
-|---|---|
-| Precision@5 | >= 80% |
-| Recall@5 | >= 70% |
-| MRR | >= 0.8 |
-
-**Phase 2 — Generation (run only after retrieval passes):**
-
-| Metric | Target |
-|---|---|
-| Answer accuracy | >= 90% |
-| Citation accuracy | >= 95% |
-| Faithfulness | 100% |
-
-Use RAGAS for automated measurement.
-
----
-
-### Freshness Strategy
-
-- Nightly incremental re-index (changed documents only, via content hash comparison)
-- Weekly full re-index
-- Documents with `content_hash` unchanged are not re-embedded
-- Documents not refreshed within 14 days flagged in retrieval metadata
-- Automated rebuilds — manual rebuilds will be missed
-
----
-
-### Fallback Handling
-
-| Scenario | Handling |
-|---|---|
-| Generation model unavailable | Queue, retry after 30s. If unavailable: "AI search is temporarily unavailable. Please use direct documentation links." |
-| Context insufficient (no relevant chunks) | Return: "I don't have enough information from the available documentation." |
-| All similarity scores below 0.5 | Treat as zero-context — do not generate |
-| Cost spike | Circuit breaker alert; fall back to keyword search |
-
----
-
-### Open Questions
-
-- Which Confluence spaces should be indexed (all vs. specific)?
-- Are PDF runbooks accessible programmatically?
-- Expected query volume? (Needed to finalise model cost estimate)
-- **DECISION REQUIRED:** Generation model selection (see checkpoint above)
-
-## Evaluation
-
+# Output: RAG pipeline for internal documentation search
 
 | Field | Value |
 |---|---|
-| Verdict | PASS |
-| Score | 8.5/9 criteria met (94%) |
-| Evaluated | 2026-04-16 |
-
+| **Verdict** | PARTIAL |
+| **Score** | 13/18 criteria met (72%) |
+| **Evaluated** | 2026-04-29 |
 
 ## Results
 
-- [x] PASS: Agent defines evaluation criteria before proposing implementation — the agent definition's Principles state "Evaluation before implementation. Define how you will measure success before writing a single line of AI integration code." The rag-pipeline skill (Step 7) defines retrieval metrics and generation metrics as required outputs before configuration is proposed. The simulated output reflects this: evaluation criteria table appears before any chunking or embedding recommendation.
+### Criteria
 
-- [x] PASS: Agent analyses corpus properties before recommending chunking strategy — the rag-pipeline skill Step 1 (Corpus Analysis) is the first mandatory step, covering document types, volume, update frequency, and content structure. The agent's Step 3 classification confirms RAG pipeline work follows this skill. Corpus profile table appears before chunking configuration in the output.
+- [x] PASS: Agent defines evaluation criteria before proposing implementation — Principles explicitly state: "Evaluation before implementation. Define how you will measure success before writing a single line of AI integration code." This fires before any configuration is recommended.
 
-- [x] PASS: Agent recommends evaluating embedding models on a 20-query test set — the rag-pipeline skill Step 4 explicitly states: "Select 20 representative queries users will actually ask" and "Do not select an embedding model without running the 20-query evaluation." This is enforced in the skill definition, not left to agent discretion.
+- [x] PASS: Agent analyses corpus properties before recommending chunking strategy — Step 3 classification orders the RAG pipeline as "Document corpus → chunking strategy → embedding → retrieval → generation → evaluation." Corpus analysis is the first stage in the prescribed sequence.
 
-- [x] PASS: Agent addresses citation requirements — the rag-pipeline skill Step 6 marks citation as MANDATORY: "Every factual claim in the output must reference its source document." The agent definition also states: "Citation. Generated output should reference which source documents it used. Without citations, users can't verify." Both are traceable and explicit.
+- [x] PASS: Agent recommends evaluating embedding models on actual user queries rather than benchmarks — RAG Key Decisions: "Match to your content domain. Evaluate on YOUR data, not benchmarks." What You Don't Do: "Choose models based on hype — evaluate on YOUR data, YOUR use case, YOUR budget." The 20-query number isn't in the definition, but the behavioural requirement (real queries, not benchmarks) is explicit.
 
-- [x] PASS: Agent defines a freshness/rebuild strategy — the rag-pipeline skill Step 8 covers rebuild frequency, change detection via content hash, staleness handling, and the rule "Automate index rebuilds — manual rebuilds will be forgotten." The Freshness Strategy section in the output maps all three components to the weekly-update cadence.
+- [x] PASS: Agent addresses citation requirements — RAG Rules include a dedicated "Citation" rule: "Generated output should reference which source documents it used. Without citations, users can't verify."
 
-- [x] PASS: Agent includes fallback handling — the agent definition's Failure Modes table covers "Model unavailable" (queue and retry, cached/static fallback) and "Hallucination" (ground in context). The rag-pipeline skill Step 6 includes the "I don't have enough information" fallback for insufficient context. Both scenarios are covered by explicit definition guidance.
+- [x] PASS: Agent defines a freshness/rebuild strategy — RAG Rules: "Freshness. Define how often the index is rebuilt. Stale indexes give stale answers." Directly maps to the weekly update cadence in the scenario.
 
-- [x] PASS: Agent raises a decision checkpoint before choosing a model — the agent definition's Decision Checkpoints table explicitly lists: "Choosing between 2+ models for a use case → STOP and ask." The $500/month budget constraint directly triggers this. The output shows the STOP with a cost comparison table requiring stakeholder input before proceeding.
+- [x] PASS: Agent includes fallback handling for model unavailability and insufficient context — Failure Modes table covers "Model unavailable" (graceful degradation, queue and retry). Prompt Engineering rules cover insufficient context: "If the answer isn't in the context, say 'I don't have enough information.'"
 
-- [~] PARTIAL: Agent separates retrieval evaluation from generation and specifies testing retrieval first — the rag-pipeline skill Step 7 sequences: "Evaluate retrieval and generation separately. If retrieval returns wrong documents, better prompts will not help." The evaluation process lists retrieval steps 1–3 before generation step 4–5. This is present as a numbered sequential process. PARTIAL ceiling per test author.
+- [x] PASS: Agent raises a decision checkpoint before choosing a model — Decision Checkpoints: "Choosing between 2+ models for a use case → STOP and ask before proceeding. Model selection has cost, latency, and quality trade-offs that need stakeholder input." The $500/month budget is a direct trigger.
 
-- [x] PASS: Output covers all pipeline stages with configuration values — the output includes: Corpus Profile, Chunking Configuration, Metadata Schema, Embedding (with evaluation method), Retrieval (strategy, K, filters), Prompt Template, Evaluation Plan (two phases), Freshness Strategy, and Fallback Handling. All required stages present.
+- [~] PARTIAL: Agent separates retrieval evaluation from generation evaluation and specifies testing retrieval first — RAG Rules: "Evaluate retrieval separately from generation. If retrieval returns the wrong documents, better prompts won't help." Principle is explicit; the specific sequencing instruction is implied. 0.5 per PARTIAL rubric.
 
-### Notes
+- [x] PASS: Output covers all pipeline stages — Key Decisions table covers chunking config, embedding selection, retrieval strategy (similarity, hybrid, re-ranking, Top-K); RAG Rules add metadata enrichment, citation, and freshness; Prompt Structure covers prompt construction; Model Evaluation framework covers evaluation. All required stages addressed.
 
-The agent definition and rag-pipeline skill together provide strong coverage of every criterion. The model checkpoint behaviour is correctly traced to the agent's Decision Checkpoints table rather than being inferred — the $500/month budget is a direct trigger. The PARTIAL criterion is fully supported by the definition; the ceiling is test-author-imposed.
+### Output expectations
+
+- [ ] FAIL: Chunking strategy distinguishes Markdown/HTML Confluence pages from PDFs with OCR acknowledgment — the agent definition is silent on PDF extraction, OCR, or layout-aware parsing. Key Decisions gives generic chunk size options with no document-type-specific handling. A response following the definition would not reliably address this.
+
+- [~] PARTIAL: Specific chunk size and overlap values with reasoning tied to corpus content — Key Decisions lists "256/512/1024 tokens" and "0/10%/20% overlap" as options with generic trade-off notes ("Smaller = more precise retrieval, larger = more context per chunk"). No reasoning is tied to procedural runbooks vs reference documentation specifically. Options present, domain-specific reasoning absent. 0.5.
+
+- [x] PASS: Retrieval design addresses ownership/team queries via metadata filtering or hybrid retrieval — RAG Key Decisions explicitly includes hybrid retrieval (similarity + keyword) and re-ranking. RAG Rules include "Metadata enrichment. Add source, date, category to chunks — enables filtered retrieval." Both handles are in the definition.
+
+- [~] PARTIAL: Monthly cost calculation breaks down embedding cost (one-time + weekly re-embed) plus per-query LLM generation cost — the Model Evaluation framework includes cost as a dimension ("Per-token cost × average tokens per request × request volume") and Principles call cost a first-class metric. However, the RAG-specific breakdown (one-time ingestion embed vs. incremental re-embed vs. per-query generation) is not prescribed. Generic cost tracking present; structured breakdown absent. 0.5.
+
+- [x] PASS: Prompt template includes citation instruction and response schema includes citations array — RAG Rules mandate citation for every answer. Principles: "Structured output over free text. Use JSON mode, function calling, or schema validation to enforce output format." The combination strongly implies a citations array in structured output; both elements are in the definition.
+
+- [ ] FAIL: Incremental indexing strategy (only re-embed changed docs) rather than full re-indexing — RAG Rules say "Define how often the index is rebuilt" but say nothing about incremental vs full re-indexing. The definition addresses freshness cadence only. A response following the definition would define a rebuild schedule without necessarily reasoning about incremental change detection.
+
+- [ ] FAIL: Evaluation plan lists 10-20 example queries from the prompt's domain with expected source documents — the definition mandates evaluation on real queries but specifies no count, no domain tie, and no expectation that the eval set be presented as part of the design output. The substance of this criterion (named queries, expected sources) is absent.
+
+- [~] PARTIAL: Names specific embedding model candidates (e.g. text-embedding-3-small, voyage-3, BGE) and specific generation model with cost justification — the definition says "Various" for embedding models and describes generation models only by class ("Haiku-class", "Sonnet-class"). No specific model names appear anywhere. 0.5 per PARTIAL rubric.
+
+- [ ] FAIL: Access control — the definition covers guardrails (input validation, PII redaction, audit trail, cost controls) but is entirely silent on document-level permissions and the risk of returning restricted chunks to unauthorised users. 0 per PARTIAL rubric (criterion not met at all).
+
+## Notes
+
+The agent definition has strong AI engineering principles — evaluation-first, citation as mandatory, fallbacks everywhere, decision checkpoints on model selection. These carry the Criteria section convincingly.
+
+The Output expectations section reveals a gap between principles and RAG-engineering specifics. Three areas the definition does not address at all: PDF extraction and OCR handling before chunking, incremental indexing of changed documents, and access control on retrieved content. A well-designed RAG system for internal docs needs all three — the definition's silence here is a real gap, not a minor omission.
+
+Two areas are partially covered: chunk size options are listed but not reasoned against corpus type, and cost tracking is generic rather than split across the RAG cost structure (ingestion embed vs re-embed vs per-query generation). Both would produce adequate but imprecise outputs.
+
+The definition would benefit from a RAG-specific subsection that covers: document ingestion (format-aware extraction), incremental indexing strategies, access control integration, and a cost model template that separates ingestion from query costs.

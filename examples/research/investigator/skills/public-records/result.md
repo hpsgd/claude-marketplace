@@ -1,119 +1,44 @@
-# Public records skill
+# Output: public-records skill
 
-**Scenario:** A journalist is checking public records for Salim Mehajer in connection with a story about property development and local government in western Sydney.
+**Verdict:** PARTIAL
+**Score:** 15.5/17 criteria met (91%)
+**Evaluated:** 2026-04-29
 
-> /investigator:public-records Salim Mehajer, Sydney-based property developer and former Auburn deputy mayor — checking court records, business registrations, director disqualifications, and any relevant professional licences in AU
+## Results
 
-Routed to `plugins/research/investigator/skills/public-records/SKILL.md` — skill test, structural evaluation only.
+### Criteria
 
-## Output
+- [x] PASS: Skill requires and references an authorisation gate record before starting — the `[!IMPORTANT]` callout mandates the investigator agent's full authorisation gate before invocation; the output format includes a `Gate record` field at the top.
+- [x] PASS: Court records are searched via AustLII for published decisions involving the subject as plaintiff, defendant, or party — Step 1 explicitly names AustLII as the AU court records source with this framing.
+- [x] PASS: Business registrations checked via ASIC Connect for current and historical director appointments and any insolvency notices — Step 2 explicitly lists ASIC Connect for "current and historical appointments, insolvency notices."
+- [x] PASS: ABN Lookup checked for business name registrations — Step 2 lists ABN Lookup for "ABN/ACN cross-reference, business name registration."
+- [x] PASS: Property records noted as requiring paid/in-person access in AU, not attempted, manual follow-up flagged — Step 3 states records are "largely restricted to paid searches or in-person access. Note as requiring manual follow-up if within scope." Rules reinforce: "don't attempt paid searches."
+- [x] PASS: AU electoral rolls noted as not publicly searchable online — Step 5 "Australia" states this explicitly; Rules require "note clearly, don't skip without explanation."
+- [x] PASS: Skill distinguishes "no records found" from "not checked" — Rules state this directly; the source log output template has both `Searched` and `Result` columns making the distinction mechanical.
+- [~] PARTIAL: Follow-on routing to `/investigator:corporate-ownership` suggested if company records reveal complex ownership — present in the Follow-on skills section, but detached from the output format template; no threshold or signal for what "complex" means is provided.
+- [x] PASS: Jurisdiction documented for every record found — Rules open with "Document jurisdiction for every record found"; output format requires `Jurisdiction focus` in the header.
 
-> [!IMPORTANT]
-> This skill requires the investigator agent's full authorisation gate before invocation.
+### Output expectations
 
-**Gate record (assumed complete from investigator agent):**
-
-```
-Authorisation:  Journalism — editorial oversight in place.
-Purpose:        Public interest reporting — property development and local
-                government, western Sydney.
-Scope:          Court records, business registrations, director
-                disqualifications, professional licences (AU).
-                Personal life (address, family) out of scope.
-Subject aware:  No — pre-publication research standard in journalism.
-                N/A for journalism with editorial oversight.
-```
-
----
-
-#### Public records: Salim Mehajer
-
-**Gate record:** Logged above.
-**Jurisdiction focus:** Australia (NSW primary)
-**Date:** 2026-04-16
-
-##### Court records
-
-[AustLII](https://www.austlii.edu.au) — search for "Salim Mehajer" across published AU court decisions.
-
-Salim Mehajer has an extensive public court record (well-documented in public press reporting). AustLII returns published decisions including criminal proceedings and civil matters. Note: not all first-instance decisions are published online in AU — many trial-level decisions require in-person access to court records. Published appellate decisions are accessible.
-
-Source: [AustLII — search results for Salim Mehajer](https://austlii.edu.au/cgi-bin/sinosrch.cgi?query=salim+mehajer), accessed 2026-04-16.
-
-Jurisdiction documented: NSW Supreme Court, District Court, Local Court (where published).
-
-##### Business registrations
-
-[ASIC Connect](https://connect.asic.gov.au) — director search for "Salim Mehajer."
-
-ASIC director search returns current and historical company appointments in AU, including any insolvency notices, disqualifications, or regulatory actions.
-
-Disqualification check: ASIC maintains a publicly searchable register of persons disqualified from managing corporations. Source: [ASIC — disqualified persons register](https://connectonline.asic.gov.au/RegistrySearch/faces/landing/searchDisqualified.jspx), accessed 2026-04-16.
-
-[ABN Lookup](https://abn.business.gov.au): business name registrations for Salim Mehajer and associated business names.
-
-##### Property records
-
-AU property records are managed by state land registries (NSW LRS for this jurisdiction). These are largely restricted to paid searches or in-person access. **Not attempted** — requires paid/manual access. Flagged as requiring manual follow-up if within scope.
-
-Source: [NSW Land Registry Services](https://nswlrs.com.au) — paid search required; not accessed, accessed 2026-04-16.
-
-##### Professional licences
-
-No specific professional licence check prompted by the gate scope (property developer is not a licensed profession in NSW in the same way as, e.g., a builder's licence). Checked:
-
-- [AHPRA](https://www.ahpra.gov.au) — not applicable (not a health practitioner)
-- NSW Fair Trading builder/contractor licence search — checked for any related licence
-- [ASIC Financial Advisers Register](https://moneysmart.gov.au/financial-advice/financial-advisers-register) — checked; not listed as a financial adviser
-
-Source: [NSW Fair Trading — licence check](https://www.fairtrading.nsw.gov.au/trades-and-businesses/licensing-requirements), accessed 2026-04-16.
-
-##### Electoral roll
-
-AU electoral rolls are **not publicly searchable online**. AEC electoral rolls can only be inspected in person at AEC offices. This source is noted as checked but inaccessible via public search — not silently skipped.
-
-Source: [AEC — electoral roll access](https://aec.gov.au/Enrolling_to_vote/Enrolment_Deadlines/files/electoral-roll-factsheet.pdf), accessed 2026-04-16.
-
-##### Source log
-
-| Source | Searched | Result |
-|---|---|---|
-| AustLII | Yes | Published court decisions found |
-| ASIC Connect — director search | Yes | Company appointments and history found |
-| ASIC — disqualified persons register | Yes | TBD — check result |
-| ABN Lookup | Yes | Business name registrations found |
-| NSW LRS (property records) | Not accessed | Paid/restricted — manual follow-up required |
-| AEC electoral roll | Not searchable online | Inaccessible via public search — noted |
-| AHPRA | Yes | Not listed |
-| NSW Fair Trading licences | Yes | TBD — check result |
-| ASIC Financial Advisers Register | Yes | Not listed |
-
-##### Gaps and limitations
-
-- Property records require paid/in-person access (NSW LRS) — not attempted.
-- Electoral roll not publicly searchable — not accessible.
-- Not all first-instance court decisions are published in AustLII — trial-level records may require in-person court registry access.
-
-**Follow-on:** Company records reveal multiple associated entities. Route to `/investigator:corporate-ownership` if the full ownership structure of those entities is required for the story.
-
----
-
-## Evaluation
-
-| Verdict | Score | Evaluated |
-|---|---|---|
-| PASS | 8.5/9 (94%) | 2026-04-16 |
-
-- [x] PASS: Skill requires and references an authorisation gate record before starting — `[!IMPORTANT]` callout at the top of the skill. Journalism is an accepted authorisation type in the investigator definition.
-- [x] PASS: Court records searched via AustLII — Step 1 "Australia" section: "AustLII — published court decisions and tribunal decisions (free, comprehensive coverage of published judgments)." AustLII is the correct primary source for AU published decisions.
-- [x] PASS: Business registrations checked via ASIC Connect — Step 2 "Australia" section: ASIC Connect for director appointments, insolvency notices; ABN Lookup for ABN/ACN and business name registration.
-- [x] PASS: ABN Lookup checked for business name registrations — Step 2 explicitly names ABN Lookup alongside ASIC Connect. Both are required.
-- [x] PASS: Property records noted as requiring paid/in-person access with manual follow-up flagged — Step 3 "Australia" section: "Property records are managed by state-level land registries (NSW LRS, Titles Victoria, LINZ for NZ). These are largely restricted to paid searches or in-person access. Note as requiring manual follow-up if within scope." Rules: "AU property records are largely paid/restricted — don't attempt paid searches. Note as requiring manual follow-up."
-- [x] PASS: AU electoral rolls noted as not publicly searchable online — Step 5 "Australia" section: "AU electoral rolls are NOT publicly searchable online. AEC rolls can only be inspected in person at AEC offices. Note this as checked but inaccessible via public search." Rules reinforce: "AU electoral rolls cannot be searched online — note clearly, don't skip without explanation."
-- [x] PASS: Skill distinguishes "no records found" from "not checked" — Rules: "Distinguish between 'no records found' (searched, nothing returned) and 'not checked' (didn't search this source)." Output format has a source log table with `Searched` column. The skill's design makes skipped sources visible.
-- [~] PARTIAL: Follow-on routing to `/investigator:corporate-ownership` suggested if company records reveal complex ownership — "Follow-on skills" section: "If company records surface a complex ownership structure worth mapping, hand off to `/investigator:corporate-ownership`." This routing is defined. Scored 0.5 because the routing instruction is in a separate section rather than being prompted in the output format — it could be missed.
-- [x] PASS: Jurisdiction documented for every record found — Rules: "Document jurisdiction for every record found. 'Court records' without jurisdiction is meaningless." Output format requires `Jurisdiction focus` in the header. Source log table documents per-source jurisdiction context.
+- [x] PASS: Output gate record at the top references journalism authorisation — the skill's output format template requires a `Gate record` field and the authorisation gate requirement covers public-interest journalism use cases.
+- [x] PASS: Output court records search uses AustLII, returns specific case names, court, dates, and subject role — Step 1 directs AustLII for AU; the output format captures findings per jurisdiction; a well-formed response would populate these fields with specifics.
+- [x] PASS: Output ASIC Connect search returns directorships (current and historical with appointment dates and entities) and insolvency notices — Step 2 specifies this coverage; output format captures it under Business registrations.
+- [x] PASS: Output ABN Lookup returns business name registrations with ABN, registered status, and historical name changes — Step 2 covers ABN Lookup; output format captures this.
+- [x] PASS: Output addresses property records explicitly, flagging AU Land Registry searches require paid/in-person access and noting manual follow-up — skill is explicit at Step 3 and in the Rules.
+- [x] PASS: Output addresses AU electoral rolls explicitly — skill states "AU electoral rolls are NOT publicly searchable online" and instructs explicit noting rather than silent skipping.
+- [x] PASS: Output source log distinguishes "no records found" from "not checked" — source log template has `Searched` and `Result` columns; Rules require this distinction.
+- [x] PASS: Output documents jurisdiction per finding — Rules require jurisdiction for every record; output format enforces this.
+- [ ] FAIL: Output handles Salim Mehajer as a public figure with extensive media coverage — skill has no instruction about subjects with substantial existing media coverage, distinguishing media-reported cases from primary-record retrieval, or flagging when a media archive search is warranted alongside public records.
+- [~] PARTIAL: Output recommends follow-on routing — `/investigator:corporate-ownership` for complex ASIC findings, `/analyst:source-credibility` if citing media reports not in AustLII — the skill recommends `/investigator:corporate-ownership` but makes no mention of `/analyst:source-credibility`. Only half the expected routing is present.
 
 ## Notes
 
-The public-records skill's most valuable features are the explicit treatment of inaccessible sources (property records, electoral roll) and the source log table that distinguishes "searched with no results" from "not searched." These prevent the common failure mode of silently skipping sources that happen to have no results. The PARTIAL on corporate-ownership follow-on routing is a structural design issue shared across several skills — the follow-on sections are present but detached from the output format. A mandatory next-steps or routing section in each output template would improve consistency.
+The skill is structurally strong. The gate requirement, AU-specific source coverage, explicit handling of inaccessible sources (property records, electoral roll), and source-log discipline are all well-defined and would produce reliable behaviour.
+
+Two gaps stand against the output expectations:
+
+The skill has no guidance for high-profile subjects with dense media coverage. For a subject like Salim Mehajer (multiple criminal convictions, extensive NSW Supreme Court and Federal Court history, substantial media trail), the skill gives no instruction on how to handle the relationship between primary records and media-reported cases. The test expects the output to note major media-reported cases while not substituting media coverage for primary-record retrieval via AustLII — a distinction the skill never establishes.
+
+The `/analyst:source-credibility` routing for media-sourced cases is absent. The Follow-on skills section references only `/investigator:corporate-ownership` and `/investigator:people-lookup`. A subject with this profile almost certainly generates outputs that cite media reports of cases not yet fully resolved in AustLII, making the source-credibility routing practically relevant.
+
+The PARTIAL on follow-on routing also reflects a structural pattern across this plugin: follow-on skill references sit in a standalone section that the output format template doesn't mirror. Adding a `Follow-on` block to the output format template would make routing more reliable.

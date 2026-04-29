@@ -1,116 +1,40 @@
-# Usability review
+# Output: Usability review
 
-Testing whether the usability-review skill requires Nielsen's heuristics with severity ratings, and produces a prioritised synthesis rather than a flat list of observations.
-
-## Prompt
-
-> /ux-researcher:usability-review of our account settings area — users frequently contact support saying they can't find how to manage team members, billing, or their API keys.
-
-## Output
-
-**Usability Review: Account Settings**
-
-**Scope and walkthrough:**
-
-
-| Field | Value |
+| | |
 |---|---|
-| Feature/flow | Account Settings area |
-| Target user | Mid-market ops director (intermediate tech sophistication) |
-| Entry point | Account menu (top right) → Settings |
-| Success state | User locates Team Members, Billing, and API Keys without assistance |
-
-
-Walkthrough notes:
-1. Settings landing page shows 9 tabs with no grouping or visual hierarchy — user must scan all 9.
-2. "Members" tab (team management) is in alphabetical order; findable with effort.
-3. "Billing" is tab 2; visible.
-4. API keys are under "Developer" tab — non-technical users do not self-identify as developers and don't look there.
-5. No search within settings. No breadcrumbs. No indication of current location.
-
-**Findings:**
-
-**Finding 1: Settings tabs have no visual hierarchy or grouping**
-- **Heuristic:** 6 — Recognition over recall
-- **Location:** Settings landing page — all 9 tabs
-- **Severity:** Major
-- **What happens:** User sees 9 undifferentiated tabs and must read all of them to find what they want.
-- **Why it's a problem:** No grouping means no mental model — users can't predict where something lives. High support ticket volume confirms this.
-- **Recommendation:** Group tabs into 3 categories (Account, Team, Developer) with visual separation or sub-navigation.
-
-**Finding 2: API keys hidden under "Developer" tab**
-- **Heuristic:** 2 — Match between system and real world
-- **Location:** "Developer" tab
-- **Severity:** Major
-- **What happens:** Users searching for API keys look for "API," not "Developer."
-- **Why it's a problem:** "Developer" is internal vocabulary. Non-technical ops directors don't identify as developers; they skip this tab.
-- **Recommendation:** Rename to "API & Integrations" or surface API key access under a searchable label.
-
-**Finding 3: No search within settings**
-- **Heuristic:** 6 — Recognition over recall
-- **Location:** Settings global navigation
-- **Severity:** Minor
-- **What happens:** Users with a specific goal must browse all tabs.
-- **Why it's a problem:** As settings grow, browsing becomes untenable.
-- **Recommendation:** Add search-within-settings (low effort, high discoverability payoff).
-
-**Findings summary:**
-
-| # | Heuristic | Severity | Finding | Location | Fix |
-|---|---|---|---|---|---|
-| 1 | Recognition over recall | Major | No tab grouping | Settings landing | Group into 3 categories |
-| 2 | Match real world | Major | "Developer" ≠ API Keys | Developer tab | Rename + surface |
-| 3 | Recognition over recall | Minor | No settings search | Settings global | Add search |
-
-**Severity distribution:**
-- Critical: 0
-- Major: 2 — fix in current sprint
-- Minor: 1 — fix when touching the area
-- Enhancement: 0
-
-**Heuristic coverage:**
-
-| Heuristic | Findings | Worst severity |
-|---|---|---|
-| 1. Visibility of system status | 0 | No issues |
-| 2. Match real world | 1 | Major |
-| 3. User control and freedom | 0 | No issues |
-| 4. Consistency and standards | 0 | No issues |
-| 5. Error prevention | 0 | No issues |
-| 6. Recognition over recall | 2 | Major |
-| 7. Flexibility and efficiency | 0 | No issues |
-| 8. Aesthetic and minimalist design | 0 | No issues |
-| 9. Help users recover from errors | 0 | No issues |
-| 10. Help and documentation | 0 | No issues |
-
-**Top 3 recommendations:**
-1. Group settings tabs — addresses all three reported support complaints simultaneously.
-2. Rename Developer tab to "API & Integrations" — directly addresses the highest-volume support request.
-3. Add in-settings search — longer-term findability solution as settings grow.
-
-**What works well:** Settings page loads quickly; content within each tab is well-organised and clearly labelled once you're in the right place.
-
-## Evaluation
-
-
-| Field | Value |
-|---|---|
-| Verdict | PASS |
-| Score | 7.5/8 criteria met (93.75%) |
-| Evaluated | 2026-04-16 |
-
+| **Verdict** | PARTIAL |
+| **Score** | 14.5/17 criteria met (85%) |
+| **Evaluated** | 2026-04-29 |
 
 ## Results
 
-- [x] PASS: Nielsen's 10 heuristics — Step 2 is mandatory and evaluates against all 10 Nielsen heuristics by name and number. The full heuristic table is a required output; a generic checklist is not a valid substitute. The skill links directly to the NNGroup definition in the header.
-- [x] PASS: Severity ratings per finding — Step 3 is a mandatory severity rating step with explicit criteria for Critical/Major/Minor/Enhancement. The finding template in Step 2 requires "Severity" as a mandatory field for every finding. Unrated findings are not permitted.
-- [x] PASS: Structured walkthrough before evaluation — Step 1 is mandatory and requires defining scope, target user, entry point, and success state, plus annotated walkthrough notes. Rules state: "Complete the ENTIRE flow, not just the happy path."
-- [x] PASS: Prioritised synthesis — Step 4 is a mandatory synthesis step producing a findings summary table, severity distribution, heuristic coverage table, and Top 3 Recommendations. The catalogue alone is not the deliverable.
-- [x] PASS: Each finding tied to a specific heuristic — the Step 2 finding template requires "Heuristic: [number and name]" as a mandatory field. Rules state: "Don't conflate aesthetics with usability. Every finding must map to a specific heuristic and explain the impact on task completion."
-- [~] PARTIAL: Blocking vs non-blocking distinction — the severity scale defines Critical as "Users cannot complete the task at all" (task failure) and Major as "Users struggle significantly or abandon frequently" (high friction). Critical/Major are de facto blocking; Minor/Enhancement are non-blocking. The distinction exists implicitly in the severity definitions but there is no explicit "blocking/non-blocking" classification dimension. Criterion ceiling is PARTIAL — 0.5.
-- [x] PASS: Recommendations per finding — the Step 2 finding template requires "Recommendation: [specific fix]" as a mandatory field. Rules state: "'Improve the error handling' is not a recommendation" — generic recommendations are explicitly rejected.
-- [x] PASS: Valid YAML frontmatter — name, description, and argument-hint are all present in the skill's YAML header. `user-invocable: true` and `argument-hint: "[feature, flow, or area to review]"` are explicit.
+### Criteria
 
-### Notes
+- [x] PASS: Skill evaluates against Nielsen's 10 usability heuristics — met: Step 2 lists all 10 heuristics by name and number with explicit violation examples
+- [x] PASS: Skill assigns severity ratings to each finding (Critical/Major/Minor/Enhancement) — met: Step 3 defines the scale and Step 2 template requires severity per finding
+- [x] PASS: Skill requires a structured walkthrough of the interface before evaluation — met: Step 1 mandates scope definition, entry point, success state, and full annotated walkthrough before any heuristic evaluation
+- [x] PASS: Skill produces a prioritised synthesis with the top issues identified — met: Step 4 explicitly requires "Top 3 Recommendations (by impact)" and a prioritised findings table
+- [x] PASS: Each finding is tied to a specific heuristic violation — met: finding template requires "Heuristic: [number and name]" and rules state "every finding must map to a specific heuristic"
+- [~] PARTIAL: Skill distinguishes between blocking and non-blocking issues — partially met: the severity scale implicitly covers this (Critical = "cannot complete the task", Enhancement = "not blocked"), but the skill never uses "blocking" / "non-blocking" terminology explicitly
+- [x] PASS: Skill includes recommendations for each finding — met: finding template requires "Recommendation: [specific fix]" and rules explicitly ban vague feedback
+- [x] PASS: Skill has valid YAML frontmatter with name, description, and argument-hint fields — met: all three fields present in frontmatter
 
-The "What works well" section is a required element in the output format template, not optional — this is a deliberate design choice that prevents the review from reading as an attack. The Rules section states "Zero findings is a valid result," which guards against manufactured findings when reviewers feel pressure to justify the exercise. Both are practically valuable and distinguish this from most heuristic review templates. The severity scale does the work of blocking/non-blocking classification implicitly, which is why the criterion ceiling is PARTIAL rather than a hard failure.
+### Output expectations
+
+- [x] PASS: Output would evaluate against all 10 heuristics by name — met: Step 2 table lists all 10 with names, numbers, check criteria, and common violations; the structure guarantees coverage by name
+- [x] PASS: Output's structured walkthrough traces actual user paths — met: Step 1 requires tracing the full flow from entry point to success state including unhappy paths and "try to break the flow" instruction
+- [x] PASS: Output's findings each have severity + heuristic citation + specific location — met: finding template mandates all three fields; rules require "every finding needs a location"
+- [~] PARTIAL: Output's findings address the prompt's specific symptom — partially met: H6 (Recognition over recall) and H4 (Consistency) are both in the heuristics table and the skill evaluates $ARGUMENTS. However, the skill has no explicit instruction to cross-reference support-ticket signals against findings; the symptom-to-heuristic connection depends on agent inference rather than skill direction
+- [x] PASS: Output's prioritised synthesis names top 3-5 issues — met: Step 4 calls for "Top 3 Recommendations (by impact)" with reasoning
+- [x] PASS: Output's recommendations are concrete per finding — met: rules give an explicit bad-vs-good example ("Replace the 'Error 500' message with..." pattern) and ban "improve this" style feedback
+- [x] PASS: Output distinguishes blocking from non-blocking — met: Critical = "Users cannot complete the task at all" (blocking) vs lower severities (friction, annoyance), which covers the distinction through severity even without explicit labels
+- [ ] FAIL: Output addresses information architecture explicitly — not met: the skill has no mention of IA, navigation structure, sitemap, or information architecture. For a prompt about users unable to find things, this is a notable gap — the skill surfaces individual heuristic violations but does not prompt IA-level recommendations
+- [~] PARTIAL: Output addresses search/find-as-fallback — partially met: H7 (Flexibility and efficiency) and H10 (Help and documentation) are in the heuristics table, and "searchable docs" in H10's common violations could surface settings search. However, there is no explicit instruction to consider global search or find-as-fallback as a recovery mechanism for navigation failure
+
+## Notes
+
+The skill is structurally strong. The four-step mandatory process (scope, evaluate, rate, synthesise) is well-sequenced, the finding template is complete, and the rules section actively prevents common quality failures (vague feedback, missing locations, manufactured findings).
+
+The main gap is information architecture. The skill finds heuristic violations at the interaction level but does not prompt the agent to step back and evaluate whether the navigation structure itself is the problem. For the test prompt — users unable to find team, billing, and API keys — the root cause is almost certainly IA (wrong labels, wrong grouping, wrong hierarchy), not individual interaction bugs. The skill would surface H6 and H4 violations but may not produce the sitemap/navigation restructuring recommendations the prompt warrants.
+
+The blocking/non-blocking distinction works implicitly through severity, which is functional but less explicit than it could be for teams who need to triage findings by task-criticality.

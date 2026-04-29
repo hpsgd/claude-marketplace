@@ -1,133 +1,36 @@
-# Review git non conventional commits
+# Output: review-git non-conventional commits
 
-A developer asks for a git review of their feature branch before raising a PR. Several commits use past tense, one has no type prefix, and the PR description is missing a test plan.
+**Verdict:** PASS
+**Score:** 16/16.5 criteria met (97%)
+**Evaluated:** 2026-04-29
 
-## Prompt
+## Results
 
-> Can you review my branch `feature/user-notifications` before I raise a PR? The last 4 commits are:
-> - `Updated the email template for welcome messages`
-> - `fix: sending duplicate emails when user registers twice`
-> - `Added rate limiting to the notification endpoint`  
-> - `wip: still working on the push notification handler`
->
-> The PR title is "User notification improvements" and the description just says "Various improvements to how we send notifications to users."
+### Criteria
 
-```markdown
+- [x] PASS: Skill executes all five mandatory passes — Pass 1 through Pass 5 are all defined with explicit checks; the mandatory process header states "Execute all five passes"
+- [x] PASS: Commits using past tense ("Updated", "Added") are flagged as Pass 1 findings with the specific commit subject line as evidence — Pass 1 step 3 explicitly targets past tense ("Updated", "Changed", "Removed") and requires the Evidence Format citing the actual message
+- [x] PASS: Commit without a type prefix ("Updated the email template...") is flagged as a missing conventional commit type — Pass 1 step 1 requires `<type>[optional scope]: <description>`; a bare description with no prefix violates the format check
+- [x] PASS: WIP commit is flagged as a Pass 5 hygiene finding — Pass 5 step 1 explicitly targets "wip" in the grep pattern and states it is acceptable in branch history but must not survive as the squash commit message
+- [x] PASS: PR title "User notification improvements" is flagged for lacking a conventional commit type prefix — Pass 2 step 1 applies the same type rules from Pass 1 to PR titles
+- [x] PASS: PR description missing a test plan is flagged as a Pass 2 finding — Pass 2 step 3 lists "Test plan" as a required section; missing it is an explicit finding
+- [x] PASS: Output uses the defined summary template with per-pass finding counts — the Output Template defines per-pass counts for all five passes including passes with zero findings
+- [~] PARTIAL: Each finding includes a concrete rewrite suggestion, not just identification — the Evidence Format mandates a "Fix: [concrete rewording or action]" field, making rewrites structurally required; however the skill does not explicitly require showing the imperative rewrite verbatim as a formatted example
 
-## Output
+### Output expectations
 
-### Git Review
+- [x] PASS: Output flags both past-tense commits by exact subject line with imperative-mood rewrite suggestion — Pass 1 step 3 requires checking each subject line; Evidence Format mandates the exact message as evidence and a Fix field with concrete rewording
+- [x] PASS: Output flags the missing type prefix on "Updated the email template for welcome messages" and assigns a specific Conventional Commits type with reasoning — Pass 1 step 1 format check catches the missing prefix; the Fix field requires concrete rewording with a valid type assigned
+- [x] PASS: Output identifies the WIP commit as a Pass 5 hygiene finding with the recommendation to rewrite or squash before merge — Pass 5 step 1 addresses this precisely including the squash-merge workflow nuance
+- [x] PASS: Output flags the PR title for missing the conventional commit prefix and being too vague — Pass 2 step 1 applies type and imperative mood rules; the Fix field requires a concrete rewrite
+- [x] PASS: Output flags the PR description's missing test plan as a Pass 2 finding with a concrete suggestion — Pass 2 step 3 lists the three required sections; the Fix field mandates actionable guidance
+- [x] PASS: Output executes all five mandatory passes and reports per-pass finding counts including passes with zero findings — the Output Template includes all five pass counts; "Execute all five passes" is stated as mandatory
+- [x] PASS: Output's findings each cite the exact subject line or PR text as evidence — the Evidence Format requires `**Evidence:** [the actual message or diff output]`, not paraphrased
+- [x] PASS: Output provides concrete rewrite suggestions per finding — the Evidence Format requires `**Fix:** [concrete rewording or action]`
+- [~] PARTIAL: Output's PR-description recommendation aligns with the project's PR template and points to Conventional Commits + project README convention — the skill requires "What changed", "Why", and "Test plan" sections, which partially aligns with the project template; however it does not reference the project README or PR template by name, only generic section labels
 
-#### Summary
-- Commits reviewed: 4
-- Commit format: 3 findings
-- PR standards: 2 findings
-- Branch model: 0 findings
-- Content dates: N/A
-- Commit hygiene: 1 finding
+## Notes
 
-#### Findings
+The skill is well-specified for this scenario. Pass 1 enumerates every common past-tense form so "Updated" and "Added" are unambiguously caught. The WIP nuance in Pass 5 — acceptable in branch history, not in the final squash message — is precise and matches real-world squash-merge workflows. The mandatory Fix field in the Evidence Format means a finding-without-rewrite is not a valid output.
 
-##### IMPORTANT [Pass 1]: Missing conventional commit type prefix
-
-
-| Field | Value |
-|---|---|
-| Commit | `Updated the email template for welcome messages` |
-| Evidence | No `type:` prefix. Does not match `<type>[optional scope]: <description>` |
-| Convention | Every commit must start with a valid type (feat, fix, docs, style, refactor, test, chore, ci, perf, build, revert) |
-| Fix | `docs: update email template for welcome messages` or `feat: update welcome email template` |
-
-
----
-
-##### IMPORTANT [Pass 1]: Past tense subject line — "Updated..."
-
-
-| Field | Value |
-|---|---|
-| Commit | `Updated the email template for welcome messages` |
-| Evidence | "Updated" — past tense |
-| Convention | Imperative mood required. "Add feature" not "Added feature" |
-| Fix | `docs: update email template for welcome messages` |
-
-
----
-
-##### IMPORTANT [Pass 1]: Past tense subject line and missing type — "Added..."
-
-
-| Field | Value |
-|---|---|
-| Commit | `Added rate limiting to the notification endpoint` |
-| Evidence | "Added" — past tense; no type prefix |
-| Convention | Imperative mood + conventional commit type required |
-| Fix | `feat: add rate limiting to notification endpoint` |
-
-
----
-
-##### IMPORTANT [Pass 2]: PR title missing conventional commit type prefix
-
-
-| Field | Value |
-|---|---|
-| PR field | title — "User notification improvements" |
-| Evidence | No type prefix. The PR title becomes the squash commit message. |
-| Convention | PR title must match conventional commit format |
-| Fix | `feat: improve user notification delivery` |
-
-
----
-
-##### IMPORTANT [Pass 2]: PR description missing test plan
-
-
-| Field | Value |
-|---|---|
-| PR field | description — "Various improvements to how we send notifications to users." |
-| Evidence | No test plan section. Missing what changed, why, and how to verify. |
-| Convention | Description must include: what changed, why, and a test plan |
-| Fix | Add sections — What changed: ..., Why: ..., Test plan: run `npm test notifications`, verify welcome email sends once on new registration |
-
-
----
-
-##### SUGGESTION [Pass 5]: WIP commit in branch history
-
-
-| Field | Value |
-|---|---|
-| Commit | `wip: still working on the push notification handler` |
-| Evidence | "wip" is not in the valid type list; subject signals incomplete work |
-| Convention | WIP commits are acceptable in branch history in a squash-merge workflow. The final squash commit message must not be "wip:..." |
-| Fix | Confirm the squash commit message will be something like `feat: add push notification handler` before raising the PR. |
-
-
-#### Clean Areas
-
-`fix: sending duplicate emails...` uses the correct type prefix. Branch name `feature/user-notifications` follows the `feature/description` convention.
-```
-
-## Evaluation
-
-
-| Field | Value |
-|---|---|
-| Verdict | PASS |
-| Score | 7.5/7.5 (100%) |
-| Evaluated | 2026-04-16 |
-
-
-- [x] PASS: All five mandatory passes executed — the definition states "Execute all five passes. Every finding requires the specific commit hash or PR field that violates the convention." All five passes have explicit bash commands; none are optional
-- [x] PASS: Past tense commits flagged with specific subject lines — Pass 1 step 3 lists "Fixed", "Updated", "Changed", "Removed" as past tense violations and requires the commit subject line as evidence; "Updated" and "Added" match directly
-- [x] PASS: Missing type prefix flagged — Pass 1 step 2 defines the full list of valid types and states "Anything else (update, change, wip, misc, stuff) is a finding"; a bare description with no type prefix is a clear finding under this rule
-- [x] PASS: WIP commit flagged as Pass 5 hygiene finding — Pass 5 step 1 explicitly lists "wip" in the grep target and states "acceptable in the branch history but must not survive as the final squash commit message" — exact match to the criterion language
-- [x] PASS: PR title flagged for missing type — Pass 2 step 1 states "Apply the same type, imperative mood, and length rules from Pass 1" to PR titles; the title "User notification improvements" has no type prefix
-- [x] PASS: Missing test plan flagged as Pass 2 finding — Pass 2 step 3 lists three required sections (what changed, why, test plan) and states "Missing any of these three sections is a finding"
-- [x] PASS: Output uses the defined summary template — the Output Template section defines exactly the per-pass summary counts structure that the simulated output follows
-- [~] PARTIAL: Concrete rewrites included — the Evidence Format defines a "Fix" field described as "concrete rewording or action." The field is part of the mandatory evidence structure, so fixes are required. The criterion is PARTIAL-prefixed regardless; credit for the Fix field being mandated in the format
-
-### Notes
-
-The definition is strong. Pass 1 enumerates every common past-tense violation form. Pass 2 names the three required PR description sections explicitly. The WIP-in-squash nuance in Pass 5 is precise — it correctly distinguishes between branch history (acceptable) and the final squash commit (not acceptable). The `fix: sending duplicate emails` commit is a subtle case: it has the right type prefix but the description describes the bug rather than the fix. The definition's imperative mood check in Pass 1 would catch "sending" as a gerund, so the skill would surface this too — good depth.
+One subtlety: `fix: sending duplicate emails when user registers twice` has the right type prefix but "sending" is a gerund, which Pass 1 step 3 lists as a violation. The scenario presents this as a clean commit, but the skill would flag it too. Not a gap in the skill — the skill is more thorough than the test scenario credits.

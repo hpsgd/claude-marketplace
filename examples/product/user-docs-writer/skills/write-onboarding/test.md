@@ -18,3 +18,16 @@ Scenario: Testing whether the write-onboarding skill defines a value path before
 - [ ] PARTIAL: Skill addresses what happens if a user skips or abandons onboarding mid-flow — partial credit if this is mentioned but not required as a design consideration
 - [ ] PASS: Skill uses plain language only — no technical terms or internal product jargon
 - [ ] PASS: Skill has a valid YAML frontmatter with name, description, and argument-hint fields
+
+## Output expectations
+
+- [ ] PASS: Output defines the value path explicitly — the minimum sequence from sign-up to first project milestone — naming each step and why it leads to value, BEFORE writing any UI copy or interaction details
+- [ ] PASS: Output's "aha moment" step is concrete and specific to Clearpath — "user sees their first project milestone marked Complete with a status update visible to their team" — not generic "user gets it"
+- [ ] PASS: Output's welcome step contextualises what the user will achieve — "In the next 5 minutes you'll set up your first project and complete your first milestone, so you can see how Clearpath tracks status across your work"
+- [ ] PASS: Output's per-step copy includes the BENEFIT — e.g. "Add your first task — this is what you'll mark complete to see your milestone update"; not just "click here to add a task"
+- [ ] PASS: Output's progress indicator is named and specified — e.g. "1 of 5: Set up your project" — visible across all steps so users know where they are and how far to go
+- [ ] PASS: Output addresses skip / abandon paths — what happens if the user skips milestone setup (re-engagement nudge in the empty-state of the project view, in-product tip on next visit) and how to resume
+- [ ] PASS: Output uses plain language only — no jargon like "milestone", "objective" if those aren't customer-facing terms; if Clearpath uses these as product terms, they're explained on first mention
+- [ ] PASS: Output's onboarding length is appropriate — short enough not to lose users (≤5 steps to first value), long enough to cover the value path; explicit reasoning for the count
+- [ ] PASS: Output addresses success measurement — what completion rate, time-to-aha-moment, and 30-day retention look like as the metrics that the onboarding flow optimises for
+- [ ] PARTIAL: Output addresses celebration / reinforcement at the aha moment — making the moment of first value visible (animation, congratulatory message, share-with-team prompt) so users feel the win rather than just completing the flow

@@ -74,23 +74,36 @@ An architect is questioning whether the team's assumption that REST API versioni
 
 ## Evaluation
 
+**Verdict:** PASS
+**Score:** 15.5/17 criteria met (91%)
+**Evaluated:** 2026-04-29
 
-| Field | Value |
-|---|---|
-| Verdict | PASS |
-| Score | 7.5/8 (94%) |
-| Evaluated | 2026-04-16 |
+## Results
 
+### Criteria
 
-- [x] PASS: Component inventory classifies all constraints with hard/soft/assumption and evidence — Step 1 defines a table with exactly three classification types (Hard constraint, Soft constraint, Assumption) and an Evidence column. The definition states "For each assumption, state: What evidence would prove this wrong?" and every row must have evidence.
-- [x] PASS: "That's how APIs work" classified as assumption — Step 1's guidance explicitly states "'We've always done it this way' → assumption." This maps directly to the prompt's "that's how APIs work" and "we've always done it this way."
-- [x] PASS: Challenge ledger addresses every soft constraint and assumption — Step 2 states "Take every soft constraint and assumption from Step 1 and pressure-test it." The Rules section states "Assumptions MUST be challenged." The table requires verdict (Keep/Remove/Test) and impact-if-removed for every item.
-- [x] PASS: Step 3 reconstruction starts from verified truths only — Step 3 mandates "Starting from ONLY the verified truths and hard constraints." The Rules section states "Design as if no prior solution existed. Ignore current form — focus on function." Both are explicit and unambiguous.
-- [x] PASS: Step 4 delta analysis with assumption-removal mapping — Step 4 defines a delta table with `Aspect / Current / Reconstructed / Why different` columns where the "Why different" column explicitly links each difference to which assumption removal enabled it.
-- [x] PASS: Output uses defined template with all four sections — the Output Format section defines Component Inventory, Challenge Ledger, Reconstruction, and Delta Analysis (plus Recommendations) as mandatory sections. All four content sections are present.
-- [~] PARTIAL: Migration assessment distinguishes quick wins from authority changes — Step 4's migration assessment template defines exactly three categories: "Quick wins," "Requires validation," "Requires authority." These three are defined in the definition's Step 4 template explicitly. PARTIAL ceiling applies per criterion prefix regardless of definition quality.
-- [x] PASS: Reconstruction does not conclude "change nothing" — Step 3 Rules state "If the reconstruction looks identical to the current approach, you haven't challenged enough assumptions — return to Step 2." This is an explicit enforcement mechanism that prevents a null output.
+- [x] PASS: Step 1 produces a complete component inventory classifying every constraint as hard constraint, soft constraint, or assumption with evidence for each — the SKILL.md mandates a classified component inventory table with Type and Evidence columns, covering all three categories with explicit guidance on how to distinguish them
+- [x] PASS: "That's how APIs work" and similar inherited conventions are correctly classified as assumptions — the skill's "How to identify assumptions" section explicitly maps "We've always done it this way → assumption", directly covering the prompt's phrasing
+- [x] PASS: Step 2 challenge ledger addresses every soft constraint and assumption with a verdict and impact-if-removed analysis — the template requires Verdict and "Impact if removed" columns, and the rules state "Assumptions MUST be challenged"
+- [x] PASS: Step 3 reconstruction starts only from verified truths and hard constraints — the skill states "Starting from ONLY the verified truths and hard constraints" and "Ignore current form — focus on function"
+- [x] PASS: Step 4 delta analysis compares reconstructed approach against current state with assumption-removal traceability — the delta table template includes "Why different" requiring "which assumption removal enabled this"
+- [x] PASS: Output uses the defined first-principles template with all four sections — Output Format section defines all four mandatory sections and the simulated output includes all of them
+- [~] PARTIAL: Migration assessment distinguishes quick wins from changes requiring stakeholder authority — the three migration tiers are present (quick wins, requires validation, requires authority), satisfying the distinction; partial applied per criterion prefix
+- [x] PASS: Reconstruction does not conclude "change nothing" — the skill's self-correcting rule ("return to Step 2 if reconstruction looks identical") structurally prevents this outcome
 
-### Notes
+### Output expectations
 
-The first-principles skill has a logically tight chain: Step 1 (classify) → Step 2 (challenge) → Step 3 (rebuild from truths only) → Step 4 (delta). Each step builds directly on the previous. The "return to Step 2" rule if reconstruction looks identical is a self-correcting mechanism. One gap: Step 3 says "Cross-domain analogies are not mandatory but often unlock breakthroughs" — the definition makes the cross-domain analogy optional, so an output without one would not fail the skill. The three migration assessment categories (quick wins, requires validation, requires authority) are clearly defined and match the criterion.
+- [x] PASS: Output classifies "that's how APIs work" and "clients will break otherwise" explicitly as ASSUMPTIONS — the simulated output labels both as Assumption with evidence stating "convention masquerading as fact" and "believed true but depends on change type"
+- [x] PASS: Hard constraints are limited to function-grounded truths — hard constraints in the output are physical/logical (atomic update impossibility, deterministic routing), not URL-shape conventions
+- [x] PASS: Challenge ledger gives every soft constraint and assumption a verdict with impact-if-removed analysis — all five rows in the challenge ledger have Verdict and Impact columns populated
+- [x] PASS: Reconstruction starts from versioning's actual function and considers viable forms — the reconstruction section considers additive-only evolution, header-based deprecation, and endpoint-level isolation as alternatives to URL versioning
+- [x] PASS: Output addresses the small consumer set (3 internal + 2 external) as a relevant fact — the component inventory flags the internal/external split as a constraint, and the migration assessment addresses partner coordination separately
+- [x] PASS: Delta analysis compares reconstructed approach to current /v1/, /v2/ form with traceability to removed assumptions — the delta table maps each row to a specific numbered assumption
+- [x] PASS: Reconstruction does NOT conclude "no change" — the output proposes eliminating URL versioning in favour of additive evolution and deprecation headers
+- [x] PASS: Migration assessment distinguishes quick wins from stakeholder-authority changes — three-tier migration assessment covers this explicitly
+- [~] PARTIAL: Output addresses API evolution mechanism (additive vs breaking) alongside versioning — the reconstruction section covers additive-only evolution, but the skill definition doesn't explicitly prompt for this as a separate topic; the simulated output addresses it as part of reconstruction rather than as a distinct mechanism analysis
+- [ ] FAIL: Output references real-world examples (Stripe, GitHub) as evidence — the simulated output does not name Stripe, GitHub, or any concrete external example; the skill's "cross-domain insight" prompt yields a database analogy rather than named API versioning precedents; the skill does not require named examples
+
+## Notes
+
+The skill definition is structurally strong and well-suited to the API versioning scenario. The self-correcting "return to Step 2" rule is the standout quality mechanism. The main gap between the skill's output ceiling and the output expectations is the absence of named real-world versioning examples (Stripe, GitHub) — the skill prompts for cross-domain analogies but doesn't specifically require named industry examples. The API evolution mechanism (additive vs breaking changes) is covered but as part of reconstruction rather than as a named standalone topic, which is consistent with the skill's function-over-form framing.

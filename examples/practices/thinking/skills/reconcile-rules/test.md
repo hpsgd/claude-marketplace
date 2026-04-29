@@ -18,3 +18,16 @@ Scenario: A developer runs reconcile-rules after a new version of the coding-sta
 - [ ] PASS: Skill presents recommendations and waits for user approval before deleting anything — never auto-deletes
 - [ ] PASS: Context token savings estimate is included in the summary
 - [ ] PARTIAL: After user-approved cleanup, the reconciliation snapshot is updated so the SessionStart hook won't prompt again until plugins change
+
+## Output expectations
+
+- [ ] PASS: Output enumerates rules from BOTH `~/.claude/rules/` (global / marketplace) AND `.claude/rules/` (project / learned) using actual file reads — not assuming the listing
+- [ ] PASS: Output extracts each rule's core imperative from the rule body (e.g. "Always verify before declaring complete" rather than guessing from the filename)
+- [ ] PASS: Output classifies `learned--verify-before-declaring-complete` as SUPERSEDED by `coding-standards--ai-steering`'s "Never assert without verification" rule — with the specific overlapping content quoted from both files
+- [ ] PASS: Output classifies `learned--read-files-before-modifying` as SUPERSEDED by the marketplace rule's "Read before modifying" — quoting the matching content
+- [ ] PASS: Output classifies `learned--monorepo-run-full-ci` as KEEP (no marketplace coverage) — explicitly checking the marketplace rules and confirming nothing addresses monorepo CI
+- [ ] PASS: Output's recommendations table has columns for rule name, classification (Superseded / Partial overlap / No overlap), and recommended action (Remove / Review / Keep)
+- [ ] PASS: Output presents recommendations and STOPS for user approval — never auto-deletes any rule file, even when classification is unambiguous
+- [ ] PASS: Output includes a context-token-savings estimate — e.g. "removing 2 superseded rules saves approximately X tokens per SessionStart" — based on the rule file sizes
+- [ ] PASS: Output's partial-overlap (if any) recommendation flags what to review rather than auto-deleting — the user verifies before removal
+- [ ] PARTIAL: Output updates the reconciliation snapshot file after user-approved cleanup so the next SessionStart's reconcile prompt is suppressed until the plugin set changes

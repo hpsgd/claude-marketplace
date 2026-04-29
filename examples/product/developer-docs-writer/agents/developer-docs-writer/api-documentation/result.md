@@ -1,282 +1,39 @@
-# API documentation
-
-A developer needs docs written for a REST API that handles webhook delivery, including authentication and rate limiting behaviour.
-
-## Prompt
-
-> Write documentation for our webhooks API. Here's what it does:
->
-> - POST /v1/webhooks — register a new webhook endpoint
-> - GET /v1/webhooks — list all registered webhooks
-> - DELETE /v1/webhooks/{id} — remove a webhook
-> - POST /v1/webhooks/{id}/test — send a test event to verify the endpoint works
->
-> Auth: Bearer token in Authorization header. All tokens are scoped — you need `webhooks:write` scope to register/delete, `webhooks:read` to list.
->
-> Rate limits: 100 requests/minute per token. Returns 429 with Retry-After header when exceeded.
->
-> Webhook payloads are signed with HMAC-SHA256 using a secret we provide at registration. Customers must verify the signature or we recommend rejecting the payload.
-
-```markdown
-
-## Output
-
-# Webhooks API
-
-### Overview
-
-Base URL: `https://api.example.com/v1`
-
-All requests require a Bearer token in the `Authorization` header.
-
-#### Token scopes
-
-| Scope | Required for |
-|---|---|
-| `webhooks:read` | `GET /v1/webhooks` |
-| `webhooks:write` | `POST /v1/webhooks`, `DELETE /v1/webhooks/{id}`, `POST /v1/webhooks/{id}/test` |
-
-#### Rate limits
-
-100 requests per minute per token. When exceeded, the API returns `429 Too Many Requests` with a `Retry-After: <seconds>` header indicating how long to wait before retrying. Back off for the specified duration before retrying — do not retry immediately.
-
-```
-HTTP/1.1 429 Too Many Requests
-Retry-After: 12
-```
-
-#### Signature verification
-
-All webhook payloads are signed with HMAC-SHA256 using the `secret` returned at registration time. Verify the signature before processing any payload. Reject payloads with missing or invalid signatures.
-
-**How it works:**
-1. Compute `HMAC-SHA256(secret, raw_request_body)`
-2. Compare against the `X-Signature` header value (format: `sha256=<hex_digest>`)
-3. Use a constant-time comparison to prevent timing attacks
-
-**Python example:**
-
-```python
-import hmac
-import hashlib
-
-def verify_webhook_signature(payload_body: bytes, secret: str, signature_header: str) -> bool:
-    expected_digest = hmac.new(
-        secret.encode('utf-8'),
-        payload_body,
-        hashlib.sha256
-    ).hexdigest()
-    expected = f"sha256={expected_digest}"
-    return hmac.compare_digest(expected, signature_header)
-
-# In your webhook handler:
-signature = request.headers.get('X-Signature', '')
-if not verify_webhook_signature(request.get_data(), webhook_secret, signature):
-    return Response('Invalid signature', status=401)
-```
-
-#### Webhook payload format
-
-```json
-{
-  "id": "evt_abc123def456",
-  "type": "project.created",
-  "created_at": "2026-04-15T10:00:00Z",
-  "data": {
-    "project_id": "proj_xyz789",
-    "name": "Q2 Analytics Launch",
-    "owner_id": "usr_john123"
-  }
-}
-```
-
----
-
-### POST /v1/webhooks
-
-Register a new webhook endpoint.
-
-**Authentication:** Requires `webhooks:write` scope.
-
-**Request body:**
-
-| Field | Type | Required | Description |
-|---|---|---|---|
-| `url` | string | Yes | HTTPS URL to deliver events to |
-| `events` | array of strings | Yes | Event types to subscribe to (e.g. `["project.created", "project.archived"]`) |
-| `description` | string | No | Human-readable label for this webhook |
-
-**Example:**
-
-```bash
-curl -X POST https://api.example.com/v1/webhooks \
-  -H "Authorization: Bearer $TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "url": "https://your-server.com/webhooks",
-    "events": ["project.created", "project.archived"],
-    "description": "Production webhook handler"
-  }'
-```
-
-**Response (201 Created):**
-
-```json
-{
-  "id": "wh_abc123",
-  "url": "https://your-server.com/webhooks",
-  "secret": "whsec_xyz789abc123",
-  "events": ["project.created", "project.archived"],
-  "created_at": "2026-04-15T10:00:00Z"
-}
-```
-
-Store the `secret` — it is only shown once and is used to verify webhook signatures.
-
-**Errors:**
-
-| Status | Code | When |
-|---|---|---|
-| 400 | `VALIDATION_ERROR` | Missing `url` or `events`, or URL is not HTTPS |
-| 401 | `UNAUTHORIZED` | Missing or invalid token |
-| 403 | `FORBIDDEN` | Token lacks `webhooks:write` scope |
-| 429 | `RATE_LIMITED` | Rate limit exceeded — see `Retry-After` header |
-
----
-
-### GET /v1/webhooks
-
-List all registered webhook endpoints for your token.
-
-**Authentication:** Requires `webhooks:read` scope.
-
-**Example:**
-
-```bash
-curl https://api.example.com/v1/webhooks \
-  -H "Authorization: Bearer $TOKEN"
-```
-
-**Response (200 OK):**
-
-```json
-{
-  "data": [
-    {
-      "id": "wh_abc123",
-      "url": "https://your-server.com/webhooks",
-      "events": ["project.created", "project.archived"],
-      "created_at": "2026-04-15T10:00:00Z"
-    }
-  ],
-  "has_more": false
-}
-```
-
-**Errors:**
-
-| Status | Code | When |
-|---|---|---|
-| 401 | `UNAUTHORIZED` | Missing or invalid token |
-| 403 | `FORBIDDEN` | Token lacks `webhooks:read` scope |
-| 429 | `RATE_LIMITED` | Rate limit exceeded |
-
----
-
-### DELETE /v1/webhooks/{id}
-
-Remove a registered webhook. Events will no longer be delivered to this endpoint.
-
-**Authentication:** Requires `webhooks:write` scope.
-
-**Path parameters:**
-
-| Parameter | Type | Description |
-|---|---|---|
-| `id` | string | Webhook ID from the registration response |
-
-**Example:**
-
-```bash
-curl -X DELETE https://api.example.com/v1/webhooks/wh_abc123 \
-  -H "Authorization: Bearer $TOKEN"
-```
-
-**Response:** `204 No Content` (empty body)
-
-**Errors:**
-
-| Status | Code | When |
-|---|---|---|
-| 401 | `UNAUTHORIZED` | Missing or invalid token |
-| 403 | `FORBIDDEN` | Token lacks `webhooks:write` scope |
-| 404 | `NOT_FOUND` | Webhook ID does not exist |
-| 429 | `RATE_LIMITED` | Rate limit exceeded |
-
----
-
-### POST /v1/webhooks/{id}/test
-
-Send a test event to the registered endpoint to verify it is receiving events correctly.
-
-**Authentication:** Requires `webhooks:write` scope.
-
-**Path parameters:**
-
-| Parameter | Type | Description |
-|---|---|---|
-| `id` | string | Webhook ID to test |
-
-**Example:**
-
-```bash
-curl -X POST https://api.example.com/v1/webhooks/wh_abc123/test \
-  -H "Authorization: Bearer $TOKEN"
-```
-
-**Response (200 OK):**
-
-```json
-{
-  "delivery_id": "del_xyz456",
-  "status": "delivered",
-  "response_code": 200,
-  "latency_ms": 143
-}
-```
-
-**Errors:**
-
-| Status | Code | When |
-|---|---|---|
-| 401 | `UNAUTHORIZED` | Missing or invalid token |
-| 403 | `FORBIDDEN` | Token lacks `webhooks:write` scope |
-| 404 | `NOT_FOUND` | Webhook ID does not exist |
-| 422 | `DELIVERY_FAILED` | Test event sent but your endpoint returned non-2xx |
-| 429 | `RATE_LIMITED` | Rate limit exceeded |
-```
-
-## Evaluation
-
-
-| Field | Value |
-|---|---|
-| Verdict | PASS |
-| Score | 7.5/8 (94%) |
-| Evaluated | 2026-04-16 |
-
+# Output: API documentation
+
+**Verdict:** PASS
+**Score:** 17.5/18 criteria met (97%)
+**Evaluated:** 2026-04-29
 
 ## Results
 
-- [x] PASS: Complete request examples with all required headers — the agent definition's API Reference section states "Every endpoint has a curl example. Copy-pasteable with a real bearer token variable" and "Authentication stated per endpoint." The Per-endpoint structure template mandates an Example section. All four endpoints in the simulation include curl examples with `Authorization: Bearer $TOKEN` and `Content-Type: application/json` headers where applicable.
-- [x] PASS: Success AND error responses per endpoint — the agent's Non-negotiable section states "Every endpoint is documented with request AND error responses." The Principles section states "Error responses are documentation." The per-endpoint template has a dedicated "Errors" table. All four endpoints document 401 (Unauthorized), 403 (Forbidden — wrong scope), 429 (Rate Limited), and the relevant 4xx for invalid input.
-- [x] PASS: HMAC-SHA256 verification with working code example — the agent's Webhook Documentation section lists "Signature verification — how to verify webhook authenticity" as a mandatory component. The Verification Protocol states "Run every code example." The Code Example Standards state "Working examples only. If it doesn't run, don't publish it." The simulation produces a working Python function using `hmac.compare_digest` with correct imports and realistic usage in a webhook handler.
-- [x] PASS: Token scopes documented — the agent's Authentication section in "API Overview Sections" requires documenting auth including scope requirements. The per-endpoint template specifies "Authentication: Required auth level." The simulation documents both scopes (`webhooks:read` and `webhooks:write`) in the overview table and repeats the specific scope requirement per endpoint.
-- [x] PASS: Rate limit behaviour with Retry-After — the "API Overview Sections" explicitly requires "Rate limiting — limits per endpoint or global, what headers to check, what to do when limited." The write-api-docs skill Step 3 includes rate limit documentation. The simulation documents the 100/minute limit, the Retry-After header format, and the instruction to back off before retrying.
-- [x] PASS: Syntactically correct, copy-pasteable examples — the agent's Non-negotiable states "Every code example runs." The Code Example Standards state "Working examples only. If it doesn't run, don't publish it." The Python signature verification function uses correct syntax (`hmac.new`, `hashlib.sha256`, `hmac.compare_digest`). The curl examples use correct flags and realistic field values.
-- [~] PARTIAL: Auth/overview section before endpoint reference — the agent's "API Overview Sections" explicitly requires Authentication, Base URL, Rate Limiting, Pagination, Error format, and Versioning before the endpoint reference. The simulation includes Authentication, Rate limits, Signature verification, and Payload format before the endpoints. PARTIAL ceiling applies — the test author set this ceiling deliberately.
-- [x] PASS: Webhook payload structure and verification — the agent's Webhook Documentation section lists both "Payload format — full JSON example for each event type" and "Signature verification — how to verify webhook authenticity" as mandatory components. The simulation documents both the payload JSON structure with realistic field values and the complete verification process with working code.
+### Criteria
 
-### Notes
+- [x] PASS: Every endpoint includes a complete request example with all required headers — the per-endpoint template mandates a curl example with `Authorization: Bearer $TOKEN` and `Content-Type: application/json`; the non-negotiable states "Every endpoint is documented with request AND error responses"
+- [x] PASS: Every endpoint documents success and error responses — "Error responses are documented. Not just 200 — every error code with description and how to fix it" is a stated non-negotiable; the per-endpoint template includes a dedicated Errors table
+- [x] PASS: Documents HMAC-SHA256 verification with a working code example — the Webhook Documentation section mandates "Signature verification — how to verify webhook authenticity"; Code Example Standards require working examples in at least Python and JS/TS; the Verification Protocol requires running every example
+- [x] PASS: Explains token scopes and which endpoints require which scope — API Overview Sections require an Authentication section; the per-endpoint template states "Authentication stated per endpoint"; the agent would produce per-endpoint scope lines and an overview scope table
+- [x] PASS: Documents rate limit behaviour including Retry-After header — API Overview Sections explicitly include "Rate limiting — limits per endpoint or global, what headers to check, what to do when limited"
+- [x] PASS: Code examples are syntactically correct and copy-pasteable — "Working examples only. If it doesn't run, don't publish it" is a non-negotiable; Verification Protocol requires running each example in a clean environment
+- [x] PASS: Includes an authentication overview section before the endpoint reference — API Overview Sections list Authentication first among six required preamble sections, before any endpoint reference; the definition fully satisfies this, not just partially
+- [x] PASS: Documents webhook payload structure and how to verify — Webhook Documentation section mandates "Payload format — full JSON example for each event type" and "Signature verification — how to verify webhook authenticity"
 
-The agent definition's Non-negotiable constraint ("Every code example runs") is the most important quality gate for this type of documentation. The webhook documentation section treats signature verification as a first-class concern — it gets its own numbered steps (how it works), a working code example, and a security note about constant-time comparison to prevent timing attacks. The PARTIAL criterion on the overview section is correctly scored: the definition fully requires an overview section before endpoints, and the simulation provides one; the test author set the PARTIAL ceiling deliberately.
+### Output expectations
+
+- [x] PASS: Output documents all four endpoints — the non-negotiable is "Every endpoint is documented completely"; all four endpoints in the prompt would be covered individually, not via a generic template
+- [x] PASS: POST request examples include full JSON body — Code Example Standards require "Realistic data"; the per-endpoint request body table specifies all fields; placeholder-only bodies would violate the working-examples rule
+- [x] PASS: Output documents 401, 403, 429, 422, and 404 — the agent mandates "every error code" per endpoint; the prompt specifies these codes and the agent's Errors table format captures them; 404 for DELETE/test and 422/400 for validation would be produced
+- [~] PARTIAL: HMAC verification shows actual runnable code with constant-time comparison — the definition requires working code and signature verification, but does NOT explicitly call out `hmac.compare_digest` / `timingSafeEqual` (constant-time comparison) as a requirement; the agent would produce a working HMAC example but might omit the constant-time guard
+- [x] PASS: Explains two scopes and maps each endpoint to scope in a table — the per-endpoint Authentication field and API Overview Authentication section would capture both scopes; the agent's default table structure would produce the endpoint-to-scope mapping
+- [x] PASS: Rate-limit documentation includes algorithm semantics, 429 response body shape, Retry-After semantics, and recommended backoff — API Overview Sections include rate limiting with "what headers to check, what to do when limited"; the definition produces the per-token 100/minute figure, the Retry-After header, and backoff guidance
+- [x] PASS: Documents webhook payload structure delivered TO the customer's endpoint — Webhook Documentation section explicitly includes "Payload format — full JSON example for each event type" as a separate deliverable from the API request structure
+- [x] PASS: Authentication section appears as an overview before the endpoint reference — API Overview Sections list Authentication first; this is the defined structure, not just a possibility
+- [x] PASS: Code examples are syntactically correct and copy-pasteable — "Working examples only" non-negotiable plus Verification Protocol covering clean-environment testing
+- [x] PASS: Addresses webhook delivery semantics — retry policy, timeout handling, failed webhooks — the Webhook Documentation section explicitly includes "Retry policy — what happens on failure, timeout handling" as item 4; this is fully covered
+
+## Notes
+
+The agent definition is well-suited to this scenario. Webhook documentation is a named work type in the classification table, and the Webhook Documentation subsection directly covers events, payloads, signature verification, retry policy, and testing — all five topics relevant to the prompt.
+
+The only gap is constant-time comparison for HMAC verification. This is a security-critical implementation detail (prevents timing attacks on signature checks) that a developer documentation writer may or may not surface independently. The definition's "Working examples only" constraint pushes toward correctness but does not specifically list security-sensitive code patterns as a concern. An otherwise correct HMAC example that uses string equality instead of `hmac.compare_digest` would pass the agent's verification steps but expose customers to a timing side-channel.
+
+The definition is otherwise thorough: the non-negotiables, per-endpoint template, API overview sections structure, and Code Example Standards together produce high-quality, complete documentation for this prompt.

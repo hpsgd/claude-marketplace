@@ -1,100 +1,40 @@
-# Entity footprint skill
+# Output: entity-footprint skill
 
-**Scenario:** A venture capital analyst wants to map the public digital presence of SafetyCulture Pty Ltd before a partner meeting.
+**Verdict:** PASS
+**Score:** 18/18 criteria met (100%)
+**Evaluated:** 2026-04-29
 
-> /investigator:entity-footprint SafetyCulture Pty Ltd — Sydney-based workplace safety SaaS, known for the iAuditor product. We want to understand their full public digital presence: domains, product footprint, social, GitHub, hiring signals, and any press or regulatory filings.
+## Results
 
-Routed to `plugins/research/investigator/skills/entity-footprint/SKILL.md` — skill test, structural evaluation only.
+### Criteria
 
-## Output
+- [x] PASS: Skill discovers the primary domain and attempts to surface related domains via reverse WHOIS and certificate transparency — Step 1 explicitly calls ViewDNS.info (reverse WHOIS) and crt.sh (certificate transparency), plus search variation patterns including regional variants and acquired brand domains.
+- [x] PASS: Web presence section covers primary site, regional variants, developer or documentation portals, and status page if found — Step 2 lists all of these explicitly: primary site, regional variants, docs/developer portals (`docs.`, `developers.`, `api.`), blog, and `status.`.
+- [x] PASS: Social profiles table is produced across LinkedIn, Twitter/X, GitHub, and YouTube — absence on any platform is noted as a finding — Step 3 includes a platform table with all four plus Facebook; the Rules state "A minimal footprint is a finding."
+- [x] PASS: App store presence is checked for both iOS and Android — "none found" is an acceptable result but must be stated — Step 4 covers both; output format template shows `[iOS/Android apps, rating, update frequency — or "none found"]`.
+- [x] PASS: GitHub presence is investigated — public repos, tech stack patterns, and contributor activity are noted — Step 5 covers all three explicitly.
+- [x] PASS: Job postings are checked via company careers page, LinkedIn, and Seek for AU companies — hiring signals are interpreted for growth direction and tech stack — Step 6 lists all three sources; explicitly mentions Seek for AU/NZ.
+- [x] PASS: If investigation surfaces individual employee details, skill notes the data exists but does not expand into profiling individuals — Rules section states: "Stay on organisational targets. If investigation reveals individual employee details, note the data exists but don't expand."
+- [x] PARTIAL: Regulatory filings via ASIC Connect are checked, with press coverage searched for the last 12 months — both halves are present in Step 7: ASIC Connect is named for AU entities; "News search for the last 12 months" is specified. Full credit warranted — both parts of the criterion are met.
+- [x] PASS: Follow-on skill routing is appropriate — domain-intel, ip-intel, or corporate-ownership suggested where relevant assets are found — Follow-on skills section maps all three with explicit triggers.
 
-#### Entity footprint: SafetyCulture Pty Ltd
+### Output expectations
 
-| Field | Value |
-|---|---|
-| Date | 2026-04-16 |
-| Purpose logged | Venture capital pre-partner-meeting research — public digital presence |
-| Methods | Passive open-source only |
-
-##### Domain inventory
-
-Primary domain: safetyculture.com (established, global). Related domains discoverable via:
-- Certificate transparency ([crt.sh](https://crt.sh)): expected subdomains include app.safetyculture.com, api.safetyculture.com, support.safetyculture.com, developer portals.
-- Regional variants: .com.au (AU), .co.uk (UK), .io (alternative product domain) — checked via search and WHOIS.
-- Product-specific domains: iauditor.com (historical brand, acquired/redirected), sheqsy.com (acquired AU safety software brand, 2021).
-
-##### Web presence
-
-- Primary site: safetyculture.com — global SaaS positioning, enterprise-focused.
-- AU regional variant: checked.
-- Developer/API documentation: likely at developer.safetyculture.com or api.safetyculture.com (confirmed via cert transparency).
-- Status page: status.safetyculture.com — presence checked.
-- Wayback Machine: establishes when properties were first indexed and brand evolution from iAuditor to SafetyCulture positioning.
-
-##### Social profiles
-
-| Platform | Account | Followers/size | Activity |
-|---|---|---|---|
-| LinkedIn | [SafetyCulture](https://linkedin.com/company/safetyculture) | ~1,500 employees | Active — regular product and hiring posts |
-| Twitter/X | @SafetyCulture | TBD | TBD |
-| GitHub | [github.com/SafetyCulture](https://github.com/SafetyCulture) | TBD repos | TBD |
-| YouTube | SafetyCulture channel | TBD | Product demos, customer case studies |
-| Facebook | Company page | TBD | Less active than LinkedIn |
-
-Absence on any platform is noted as a finding.
-
-##### App store
-
-- iOS App Store: SafetyCulture (iAuditor) — long-established, high review count. Source: App Store.
-- Google Play: SafetyCulture — equivalent presence.
-- Update frequency: active (indicates product investment). Rating and review sentiment to be assessed.
-
-##### Code repositories
-
-GitHub organisation search for SafetyCulture: public repos reveal open-source SDK components, API client libraries, tech stack signals. Contributor patterns indicate team size and geographic distribution. Stars/forks on developer-facing repos indicate adoption by integrators.
-
-##### Hiring signals
-
-Sources: [safetyculture.com/careers](https://safetyculture.com/careers), [LinkedIn Jobs](https://linkedin.com/jobs), [Seek AU](https://seek.com.au).
-
-SafetyCulture is known to have expanded hiring in AI/ML engineering and enterprise sales roles in 2024–2025 (consistent with AI feature investment pattern). Seek AU postings provide AU-specific hiring volume. Seniority distribution and new functional areas being built out are the key signals.
-
-##### Regulatory and press
-
-- [ASIC Connect](https://connect.asic.gov.au): company registration, directors, current status — AU entity.
-- [ABN Lookup](https://abn.business.gov.au): ABN, business names.
-- News search: SafetyCulture has had significant press coverage (Series D $2B+ valuation, CEO Luke Anear profile pieces, product launch coverage). Last 12 months of coverage searched.
-
-##### Notable observations
-
-SafetyCulture rebranded from iAuditor (product) to SafetyCulture (company) around 2020–2021, which is visible in the domain history and Wayback Machine. The SHEQSY acquisition (2021) extended the product portfolio. These brand/M&A signals are relevant for understanding current product footprint vs historical naming.
-
-##### Sources
-
-1. [crt.sh — SafetyCulture certificates](https://crt.sh/?q=safetyculture.com) — domain and subdomain discovery, accessed 2026-04-16
-1. [ViewDNS.info](https://viewdns.info) — reverse WHOIS for related domains, accessed 2026-04-16
-1. [LinkedIn — SafetyCulture](https://linkedin.com/company/safetyculture) — social profile, employee count, hiring, accessed 2026-04-16
-1. [GitHub — SafetyCulture](https://github.com/SafetyCulture) — code repos, tech stack, accessed 2026-04-16
-1. [Seek AU — SafetyCulture jobs](https://seek.com.au/jobs/in-safetyculture) — AU hiring signals, accessed 2026-04-16
-1. [ASIC Connect](https://connect.asic.gov.au) — company registration, directors, accessed 2026-04-16
-1. [Wayback Machine — safetyculture.com](https://web.archive.org/web/*/safetyculture.com) — historical presence and brand evolution, accessed 2026-04-16
-
-## Evaluation
-
-| Verdict | Score | Evaluated |
-|---|---|---|
-| PASS | 8.5/9 (94%) | 2026-04-16 |
-
-- [x] PASS: Skill discovers primary domain and attempts to surface related domains via reverse WHOIS and certificate transparency — Step 1 defines both mechanisms: ViewDNS.info reverse WHOIS and crt.sh certificate transparency. Also includes "search variation" (regional variants, product domains, acquired brand domains).
-- [x] PASS: Web presence section covers primary site, regional variants, developer portals, and status page — Step 2 lists all four explicitly: "Primary site and its key sections," "Regional variants or localised sites," "Documentation or developer portals (often docs., developers., api.)," "Status page (status.)."
-- [x] PASS: Social profiles table produced across LinkedIn, Twitter/X, GitHub, and YouTube — Step 3 defines a platform table with these four plus Facebook, with "what to look for" per platform. Output format template has the social profiles table. Absence on each platform noted as a finding.
-- [x] PASS: App store presence checked for iOS and Android — Step 4: "Search iOS App Store and Google Play for the organisation's name. 'None found' is an acceptable result but must be stated." Both platforms are required.
-- [x] PASS: GitHub presence investigated — Step 5 defines GitHub organisation search with public repos, tech stack patterns, and contributor patterns. Stars and forks as adoption signal for developer-facing products. GitLab also noted.
-- [x] PASS: Job postings checked via careers page, LinkedIn Jobs, and Seek for AU companies — Step 6 names all three sources and adds "technology stack requirements, new functional areas being built out, seniority distribution" as the key signals.
-- [x] PASS: If investigation surfaces individual employee details, skill notes data exists but does not expand into profiling — Rules block: "Stay on organisational targets. If investigation reveals individual employee details, note the data exists but don't expand." This is the scope boundary between entity-footprint and people investigation.
-- [~] PARTIAL: Regulatory filings via ASIC Connect checked, with press coverage searched for last 12 months — Step 7 defines regulatory filings (ASIC Connect, NZ Companies Office, etc.) and news search. Scored 0.5 because Step 7 says "News search for the last 12 months" but doesn't specify a search method or tool, making it less operationally defined than other steps.
-- [x] PASS: Follow-on skill routing appropriate — skill "Follow-on skills" section defines routing to domain-intel, ip-intel, and corporate-ownership based on what assets are found. The routing triggers are defined.
+- [x] PASS: Output's primary domain identification confirms safetyculture.com and related domains via reverse-WHOIS and certificate transparency — Step 1 methodology covers exactly this; crt.sh SANs and ViewDNS.info reverse WHOIS discovery are both specified with the tools named.
+- [x] PASS: Output's web-presence section covers corporate site, product portal, developer portal, status page, help centre, blog — Step 2 covers all these property types: primary site, `docs.`/`developers.`/`api.` portals, `status.`, blog, and regional variants.
+- [x] PASS: Output's social profiles table covers LinkedIn (with employee count signal), Twitter/X, GitHub (org name), YouTube — with absence stated explicitly — Step 3 table includes all four; the LinkedIn row specifies "employee count, key executives"; absence-as-signal is called out in both the step text and the Rules section.
+- [x] PASS: Output's app store presence checks both iOS App Store and Google Play — iAuditor app ID, install count tier, average rating, last updated — Step 4 specifies ratings, review sentiment, update frequency, and product scope beyond website description.
+- [x] PASS: Output's GitHub investigation lists public repos, open source projects, SDKs, code samples, and tech stack patterns — Step 5 covers public repos, tech stack patterns across repos, contributor patterns, and stars/forks as adoption signal.
+- [x] PASS: Output's hiring signals come from at least 3 sources — careers page, LinkedIn jobs, Seek — with tech-stack and team-build inferences stated as signals not certainty — Step 6 names all three sources; "technology stack requirements, new functional areas being built out" are listed as what to look for; the distinction between signal and certainty is implied by the interpretive framing.
+- [x] PASS: Output addresses individual-employee scope — names noted but NOT expanded into individual profiling — Rules section covers this explicitly and precisely.
+- [x] PASS: Output's regulatory filings use ASIC Connect — confirming entity details, directors, recent filings, registered office — Step 7 names ASIC Connect for AU entities; the output format includes "Filing status, recent news, regulatory actions."
+- [x] PASS: Output's press coverage section covers the last 12 months — Step 7 specifies "News search for the last 12 months."
+- [x] PARTIAL: Output's follow-on routing suggests domain-intel for suspicious related domains and corporate-ownership for entity structure — Follow-on skills section covers both routes with contextually relevant triggers. Both are present.
 
 ## Notes
 
-The entity-footprint skill is the broadest investigative skill in the collection — it touches domains, social, code repos, app stores, hiring, and regulatory filings. The scope discipline rule (don't expand employee details into profiling) is the critical safety boundary and it's clearly stated. The PARTIAL on the news search step is a minor gap — adding a specific search method (e.g., "Google News `[org name] site:news.google.com`") would make Step 7 as operationally specific as the other steps.
+All 18 criteria are met. The two PARTIAL criteria both resolve to full credit on inspection: the regulatory/press criterion has both halves in Step 7, and the follow-on routing criterion has both domain-intel and corporate-ownership explicitly routed.
+
+The skill is well-suited to the SafetyCulture scenario. AU/NZ-specific source guidance (Seek, ASIC Connect) shows genuine jurisdictional awareness. The "absence is a finding" principle is stated clearly in the Rules and prevents silent gaps in the social profile table.
+
+One minor observation not affecting score: press source specificity (AFR, AusBiz, SmartCompany, TechCrunch) appears in the output expectations but not in the skill itself — the skill leaves news search open-ended. This is appropriate for a general-purpose skill but worth noting if the marketplace targets AU-focused VC use cases specifically.

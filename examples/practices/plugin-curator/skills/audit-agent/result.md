@@ -1,75 +1,39 @@
-# Audit agent single agent full evaluation
+# Result: audit-agent single agent full evaluation
 
-A contributor asks for a full audit of the `devops` agent to check structural consistency before proposing it for the marketplace.
-
-## Prompt
-
-> /audit-agent devops
-
-```markdown
-[Step 1: Reading template]
-Read(file_path="${CLAUDE_PLUGIN_ROOT}/templates/agent-template.md") ✓
-
-[Step 2: Finding devops agent]
-find plugins -path '*/agents/devops.md' → plugins/engineering/devops/agents/devops.md (243 lines)
-
-## Output
-
-### Agent Audit: devops
-
-#### Summary
-- **Lines:** 243 (target: 150–300) ✅
-- **Quality score:** 12/15 criteria met
-- **Model:** sonnet (correct — devops is a specialist)
-
-#### Criteria
-
-| # | Criterion | Status | Evidence |
-|---|---|---|---|
-| 1 | Line count (150–300) | ✅ | 243 lines |
-| 2 | Core statement | ✅ | Line 8: "You own the full deployment pipeline..." — second person, clear ownership |
-| 3 | Non-negotiable rules | ✅ | 5 specific rules, all falsifiable |
-| 4 | Pre-Flight | ✅ | Reads CLAUDE.md at line 18 and .claude/CLAUDE.md at line 22 |
-| 5 | Mandatory methodology | ✅ | Steps framed as mandatory throughout |
-| 6 | Output format | ✅ | Deployment report template at line 148 |
-| 7 | Failure caps | ❌ | No failure caps section found anywhere in the file |
-| 8 | Decision checkpoints | ⚠️ | Checkpoint table present (line 178) but only 2 triggers; template requires blast-radius, auth changes, data migrations |
-| 9 | Collaboration table | ✅ | Line 195: table with 6 roles |
-| 10 | Principles | ✅ | 8 principles, domain-specific |
-| 11 | What You Don't Do | ✅ | Line 221: present, names owners for all excluded activities |
-| 12 | No private refs | ✅ | No private names, internal URLs, or proprietary tool references found |
-| 13 | Tool links | ⚠️ | Line 56: "Terraform" mentioned without hyperlink. Line 67: "k6" mentioned without hyperlink |
-| 14 | Correct model | ✅ | sonnet — devops is a specialist |
-| 15 | Description precision | ⚠️ | Description: "DevOps engineer — CI/CD, deployment, infrastructure" — missing trigger conditions |
-
-#### Recommended Actions
-1. **Add failure caps section** (structural gap — criterion 7) — add: "3 consecutive pipeline failures without root cause → stop and escalate"
-2. **Fix tool links** (criterion 13) — add hyperlinks for Terraform and k6 at lines 56 and 67
-3. **Expand decision checkpoints** (criterion 8) — add triggers for blast-radius changes, auth rotation, and database migrations
-4. **Add trigger conditions to description** (criterion 15) — append "Use when deploying services, configuring CI pipelines, or managing infrastructure changes"
-```
-
-## Evaluation
-
-
-| Field | Value |
-|---|---|
-| Verdict | PASS |
-| Score | 8/8 criteria met (100%) |
-| Evaluated | 2026-04-16 |
-
+**Verdict:** PASS
+**Score:** 16.5/17 criteria met (97%)
+**Evaluated:** 2026-04-29
 
 ## Results
 
-- [x] PASS: Step 1 reads agent template before evaluating — the skill's Process section opens with Step 1: `Read(file_path="${CLAUDE_PLUGIN_ROOT}/templates/agent-template.md")`, explicitly labelled "The template defines the MANDATORY structure. The quality criteria at the bottom of the template are the audit checklist." This is the first instruction before any agent is located or evaluated.
-- [x] PASS: All 15 criteria evaluated and scored — Step 3 defines all 15 criteria by number with ✅/⚠️/❌ scoring instructions. The Output Format's single-agent template shows a 15-row criteria table covering all criteria from line count (criterion 1) through description precision (criterion 15). The Anti-Patterns section states "Scoring without reading" as a failure mode, implying all criteria require active evaluation.
-- [x] PASS: Non-passing criteria include specific evidence — Step 4 "Evidence requirements" mandates three components for every non-passing criterion: (1) what was looked for, (2) what was found or not found, (3) where it was found or expected. The Anti-Patterns section reinforces with a concrete counter-example: "'links need work' is not a finding. 'Line 91: k6 mentioned without hyperlink' is a finding."
-- [x] PASS: Output includes X/15 score and line count with 150-300 target — the Output Format Summary block shows `Quality score: {X}/15 criteria met ({Y} N/A)` and `Lines: {count} (target: 150–300)` as required fields.
-- [x] PASS: Model correctness checked — Criterion 14 defines the model table: "Leadership (coordinator, cpo, cto, grc-lead): opus; Specialists (all others): sonnet." The Output Format row 14 template shows `{model} — expected {expected}`. The check is explicit and required.
-- [x] PASS: Tool links criterion checks for hyperlinks on first mention — Criterion 13 states "Tool names mentioned in prose should have markdown hyperlinks on first mention." The Anti-Patterns section reinforces: "cite the SPECIFIC unlinked tool mention with its line number." Both the definition and the enforcement pattern are present.
-- [x] PASS: Recommended actions are prioritised — Step 5 "Prioritise findings" (lines 125–127) now states the ordering rule explicitly within the skill: "Order recommended actions by impact: structural gaps first (missing sections, wrong template structure), then content gaps (vague rules, weak principles), then style issues (formatting, link text)." Previously this rule existed only in the parent agent; it is now in the skill definition itself.
-- [~] PARTIAL: Frontmatter description precision criterion applied — Criterion 15 is explicitly defined: "The `description` field must include: (1) the role, (2) what it does, (3) when to use it. Format: '{Role} — {what it owns}. Use when {triggers}.'" Well-specified. PARTIAL ceiling applies per criterion prefix regardless of quality.
+### Criteria section
+
+- [x] PASS: Step 1 reads the agent template file before evaluating — the skill's Step 1 explicitly calls `Read(file_path="${CLAUDE_PLUGIN_ROOT}/templates/agent-template.md")` and names the template quality criteria as the audit checklist
+- [x] PASS: All 15 criteria are evaluated and scored — the skill enumerates Criterion 1 through 15 explicitly with scoring guidance for each; none are left blank
+- [x] PASS: Every non-passing criterion requires specific evidence — Step 4 mandates what was looked for, what was found or not found, and where (file location / line number); Anti-Patterns section reinforces with a concrete counter-example ("Line 91: 'k6' mentioned without hyperlink")
+- [x] PASS: Output includes quality score in X/15 format and line count with 150–300 target — the output format template shows `**Lines:** {count} (target: 150–300)` and `**Quality score:** {X}/15 criteria met ({Y} N/A)` in the Summary block
+- [x] PASS: Model correctness is checked for sonnet — Criterion 14 table explicitly maps specialists to sonnet and leadership to opus; devops is a specialist so sonnet is expected
+- [x] PASS: Tool links criterion checks external tools in prose for markdown hyperlinks on first mention — Criterion 13 covers this, and Anti-Patterns enforces citation of the specific unlinked tool and line number
+- [x] PASS: Recommended actions are prioritised — Step 5 mandates structural gaps first, then content gaps, then style issues
+- [~] PARTIAL: Frontmatter description precision criterion checks role, domain summary, and trigger conditions — Criterion 15 specifies all three elements and the required format, but the output format evidence column only says `{includes role + domain + triggers?}` rather than requiring the actual description text to be quoted; the check is defined but quoting is implicit rather than mandatory
+
+### Output expectations section
+
+- [x] PASS: Output evaluates all 15 template criteria for the devops agent — the skill's process evaluates all 15 explicitly; Step 6 specifies full 15-criterion detail for single agent audits
+- [x] PASS: Output scores each criterion with specific evidence reference for non-MET findings — Step 4 mandates this; Anti-Patterns reinforces with concrete examples
+- [x] PASS: Output reports quality score as X/15 and actual line count with 150–300 target band — output format template explicitly includes both
+- [x] PASS: Output verifies model is sonnet for specialist agents — Criterion 14 covers this with explicit table; output format shows `{model} — expected {expected}`
+- [x] PASS: Output's tool-links criterion checks agent body for third-party tool mentions and confirms markdown hyperlinks — Criterion 13 covers this with exemption only for agents mentioning no specific external tools; Anti-Patterns enforce line-level citations
+- [~] PARTIAL: Output's frontmatter description check verifies description includes role, domain summary, and trigger conditions, quoting the actual description — the check is defined in Criterion 15 with the required format, but the output template's evidence column does not explicitly require quoting the actual description text; the quoting requirement is implicit
+- [x] PASS: Output's recommended actions are prioritised — Step 5 and the output format both enforce structural gaps → content gaps → style ordering
+- [x] PASS: Output checks for private references / company names — Criterion 12 explicitly covers this
+- [x] PASS: Output verifies all mandatory sections per template — the skill reads the template in Step 1 and uses its quality criteria as the checklist; Criterion 4 (Pre-Flight), Criterion 7 (Failure Caps), and Criterion 8 (Decision Checkpoints) are individually enumerated
+- [-] SKIP: Output identifies genuine gaps relative to peer specialist agents — the skill has no mechanism for cross-agent comparison; this criterion was marked PARTIAL in the test but cannot be fairly evaluated as a structural check since the skill makes no claim about peer comparison
 
 ## Notes
 
-The previously-failing criterion 7 (prioritisation rule) is now fully met. Step 5 was added to the skill definition with the explicit ordering: structural gaps > content gaps > style issues. The skill now contains all the rules needed to produce well-structured audit output independently of the parent agent. No remaining gaps.
+The skill is mature and well-constructed. The Anti-Patterns section is a strong differentiator — naming failure modes explicitly with concrete counter-examples meaningfully constrains bad outputs in a way that a bare criterion list would not.
+
+The one genuine gap is the quoting requirement on Criterion 15. Both criterion and output-expectation sections flag it the same way (PARTIAL), which is consistent. In practice, a model following this skill would likely quote the description text because the format template implies it, but it is not explicitly required.
+
+The peer comparison criterion (output expectation 10) is marked PARTIAL in the test. The skill simply does not address this — there is no step comparing against peer agents for depth parity. Treated as SKIP here because the skill does not claim to do it, and the test expectation appears aspirational rather than structural.

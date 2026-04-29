@@ -1,114 +1,42 @@
-# Positioning
-
-Testing whether the positioning skill applies the April Dunford framework, leads with competitive alternatives, and produces a complete positioning canvas before any messaging.
-
-## Prompt
-
-> /gtm:positioning for Clearpath Analytics — our new reporting add-on competing against native reporting in Asana and Monday.com, targeting operations directors at 50-500 person companies.
-
-## Output
-
-**DRAFT — requires human review before publication or use in sales materials**
-
-**Positioning: Clearpath Analytics**
-
-**Step 1 — Competitive alternatives:**
-
-| Alternative | Type | How often chosen | Why customers pick it |
-|---|---|---|---|
-| Asana native reporting | Direct | High | Already in use; no new tool needed |
-| Monday.com dashboards | Direct | High | Visual, flexible, customisable |
-| Excel/Google Sheets | Manual | Very high | Free, familiar, no IT approval |
-| Power BI / Tableau | Adjacent | Low | Data-mature orgs needing deeper analysis |
-| Do nothing / live with it | Status quo | Medium | Switching costs too high |
-
-**Step 2 — Unique attributes (relative to alternatives):**
-
-| Unique attribute | Why it matters | Which alternatives lack it |
-|---|---|---|
-| Cross-project utilisation view in one screen | Ops directors manage multiple teams; per-project reports require manual aggregation | Asana, Monday.com (both report within projects) |
-| Time tracking native, not a paid add-on | Client billing and resource analysis without a second tool | Asana (add-on), Monday.com (add-on) |
-| Exportable to Excel with live data connection | Execs trust Excel; stale exports don't | Both competitors export static snapshots only |
-
-**Step 3 — Value mapping:**
-
-| Unique attribute | Capability | Outcome | Business impact |
-|---|---|---|---|
-| Cross-project view | See utilisation across all teams at once | Identify overload before it causes a missed deadline | Reduce late deliveries; protect client relationships |
-| Native time tracking | One tool for resource and billing data | Eliminate the second tool and the Friday reconciliation | Save 2-3 hours/week per ops director |
-| Live Excel export | Send execs a spreadsheet that stays current | Stop the "is this data fresh?" question | Exec reporting time cut from 3 hours to 20 minutes |
-
-**Step 4 — Target customer:**
-
-Company: 50-500 person companies running 5+ concurrent projects, typically professional services or product companies.
-Buyer: Operations Director or PMO Lead who reports to C-suite and is measured on delivery rate.
-Trigger: Exec asked for a cross-team utilisation report and the ops director had no answer.
-Current solution: Excel, built manually every Friday.
-Must-haves: Cross-project view, export capability, fast onboarding (can't spend 2 weeks configuring).
-
-**Step 5 — Market category:** Advanced project analytics (not "project management" — too broad; not "BI tool" — too technical).
-
-**Positioning canvas:**
-
-```
-┌─────────────────────────────────────────────────┐
-│ COMPETITIVE ALTERNATIVES                         │
-│ Asana reporting, Monday dashboards, Excel        │
-├─────────────────────────────────────────────────┤
-│ UNIQUE ATTRIBUTES         │ VALUE               │
-│ Cross-project utilisation  │ See overload early  │
-│ Native time tracking       │ Eliminate 2nd tool  │
-│ Live Excel export          │ Fast exec reporting │
-├─────────────────────────────────────────────────┤
-│ TARGET CUSTOMER                                  │
-│ Ops Director, 50-500 person company, 5+ projects │
-├─────────────────────────────────────────────────┤
-│ MARKET CATEGORY                                  │
-│ Advanced project analytics                       │
-└─────────────────────────────────────────────────┘
-```
-
-**Positioning statement:** For operations directors at growing companies managing multiple teams, Clearpath Analytics is the advanced project analytics tool that shows cross-project utilisation in real time. Unlike Asana and Monday reporting, Clearpath gives you the cross-team view — and automatically sends your exec the summary.
-
-**Sales narrative:** Your exec wants a number. Right now, your team is building a spreadsheet. Clearpath Analytics gives you the utilisation view across all teams in one screen, plus a weekly summary your exec can read without asking you to explain it. Neither Asana nor Monday can do that without you doing the work manually.
-
-**Step 7 — Validation questions:**
-
-| Question | Tests |
-|---|---|
-| Do ops directors immediately understand "cross-project utilisation"? | Step 2 attribute clarity |
-| Do prospects self-identify with "5+ concurrent projects" framing? | Step 4 specificity |
-| Does "advanced project analytics" help or confuse? | Step 5 category choice |
-| Could a competitor use the same positioning statement? | Overall differentiation |
-
-**DRAFT — requires human review before publication or use in sales materials**
-
-## Evaluation
-
+# Output: Positioning
 
 | Field | Value |
 |---|---|
-| Verdict | PASS |
-| Score | 8.5/9 (94.4%) |
-| Evaluated | 2026-04-16 |
-
+| **Verdict** | PASS |
+| **Score** | 17.5/18 criteria met (97.2%) |
+| **Evaluated** | 2026-04-29 |
 
 ## Results
 
-- [x] PASS: April Dunford framework — Steps 1-5 map exactly to Dunford's sequence: competitive alternatives → unique attributes → value mapping → target customer → market category; the skill states "Follow the five steps below in exact order — the sequence matters."
-- [x] PASS: Competitive alternatives as the anchor — Step 1 is mandatory first; the "Why this order matters" section states "Most positioning exercises start with the market category... This is wrong" and enforces the alternative-first approach explicitly.
-- [x] PASS: Unique attributes relative to alternatives — Step 2 requires attributes to be "Factually true," "Verifiable," and "Unique — the alternative genuinely lacks this, not 'we do it slightly better'"; rules require specificity relative to named alternatives.
-- [x] PASS: Attributes mapped to specific value — Step 3 "Value mapping" uses a four-column table: unique attribute → capability → outcome → business impact; rules require value in customer terms and quantification where possible.
-- [x] PASS: Complete canvas before messaging — Step 6 assembles the positioning canvas from Steps 1-5 before the positioning statement and tagline are written; the canvas template is the first element of Step 6's output structure.
-- [x] PASS: Validation questions — Step 7 "Validation questions" is a dedicated required section with a structured table testing each positioning element; includes "If 'no'" guidance per question.
-- [~] PARTIAL: Sales narrative — Step 6 "Sales narrative" is a required section with an explicit 3-sentence template (problem → outcome → unique attribute); it is fully present and required by the skill. PARTIAL prefix caps the score at 0.5 regardless.
-- [x] PASS: All output labelled DRAFT — the Rules section states "All output is DRAFT until human-reviewed. Label every output with 'DRAFT — requires human review' at the top and bottom." Explicit and required. The skill definition now includes this requirement.
-- [x] PASS: Valid YAML frontmatter — frontmatter contains `name: positioning`, `description`, and `argument-hint` fields.
+### Criteria
+
+- [x] PASS: April Dunford framework — Steps 1-5 map exactly to Dunford's sequence: competitive alternatives → unique attributes → value mapping → target customer → market category. The skill states "Follow the five steps below in exact order — the sequence matters" and provides a rationale for the ordering.
+- [x] PASS: Competitive alternatives as anchor — Step 1 is mandatory first. The "Why this order matters" section explicitly states "Most positioning exercises start with the market category... This is wrong" and enforces alternatives-first.
+- [x] PASS: Unique attributes relative to alternatives — Step 2 requires attributes be "Unique — the alternative genuinely lacks this, not 'we do it slightly better'." Rules require specificity over general claims ("3-step setup vs. 12-step wizard" not "better UX") and mapping to named alternatives from Step 1.
+- [x] PASS: Attributes mapped to specific value — Step 3 uses a four-column table (unique attribute → capability → outcome → business impact). Rules require customer-language framing and quantification: "Save 10 hours per week beats Save time."
+- [x] PASS: Complete canvas before messaging — Step 6 assembles the positioning canvas as the first element, before the positioning statement, tagline, and sales narrative are written.
+- [x] PASS: Validation questions — Step 7 is a dedicated required section with a structured table that tests each positioning step and includes "If 'no'" remediation guidance per question.
+- [~] PARTIAL: Sales narrative — Step 6 includes a required "Sales narrative" section with an explicit 3-sentence template (problem → outcome → unique attribute). Fully present as a required structured output. Scoring at 0.5 per PARTIAL convention.
+- [x] PASS: All output labelled DRAFT — Rules section states: "All output is DRAFT until human-reviewed. Label every output with 'DRAFT — requires human review' at the top and bottom." Explicit and required.
+- [x] PASS: Valid YAML frontmatter — frontmatter contains `name: positioning`, `description`, and `argument-hint: "[product or feature to position]"` fields.
+
+### Output expectations
+
+- [x] PASS: Competitive alternatives listed first — Step 1 is mandatory before any other step. The skill requires listing direct competitors, adjacent competitors, manual processes, status quo, and in-house solutions with a minimum of five alternatives.
+- [x] PASS: Unique attributes are differentiating relative to alternatives, concrete and verifiable — Step 2 requires attributes be "Factually true," "Verifiable," and "Unique." Rules explicitly discard table stakes and vague claims, and require specificity tied to named alternatives from Step 1.
+- [x] PASS: Each unique attribute maps to specific customer value — Step 3 four-column table (attribute → capability → outcome → business impact) with quantifiable outcomes required.
+- [x] PASS: Target customer is precise — Step 4 requires company characteristics, buyer role, trigger, current behaviour, must-haves, and deal-breakers. The example "Mid-market SaaS companies with 50-200 employees who have outgrown spreadsheet-based customer tracking" demonstrates the expected specificity level.
+- [x] PASS: Market category named explicitly — Step 5 requires naming a category using one of three explicit strategies, with a rule against categories that require explanation and a "Google test" for whether the target customer would search for the term.
+- [x] PASS: Positioning canvas covers all five Dunford elements in a structured layout — Step 6 assembles a structured canvas with labelled sections for all five elements before any copy is written.
+- [x] PASS: Validation questions test whether real customers will recognise the positioning — Step 7 questions include "Would your best customers agree with the competitive alternatives list?" with the remediation "Talk to customers," indicating the test is customer-grounded, not internal.
+- [x] PASS: Sales narrative follows the canvas — the 3-sentence template in Step 6 follows: problem in customer words → outcome not feature → unique attribute alternatives lack. This sequence matches the requirement.
+- [x] PASS: Every customer-facing tagline / message draft labelled DRAFT — the blanket rule "Label every output with 'DRAFT — requires human review' at the top and bottom" covers all output including the tagline in Step 6.
+- [~] PARTIAL: Output addresses where the canvas may shift on pricing — partially met: business model (pricing, packaging, terms) is listed as a category of unique attributes in Step 2, which means a per-seat add-on price could surface as an attribute. However, there is no explicit prompt to reason about what pricing signals to the market or how the pricing tier interacts with the market category choice. An operations director evaluating a $15/seat add-on versus bundled platform reporting would weigh this differently, and the skill does not surface that interaction.
 
 ## Notes
 
-The previous evaluation scored this FAIL on criterion 8 (DRAFT labelling). The skill has since been updated to include "All output is DRAFT until human-reviewed. Label every output with 'DRAFT — requires human review' at the top and bottom" in the Rules section. This criterion now passes, moving the score from 7.5/9 (83.3%) to 8.5/9 (94.4%). Verdict remains PASS.
+The Dunford framework is implemented faithfully. The "Why this order matters" intro is a genuine quality signal — it pre-empts the most common positioning mistake rather than just listing steps.
 
-The Dunford framework implementation is faithful and the "Why this order matters" intro is a genuine quality signal — it pre-empts the most common positioning mistake rather than just listing steps. Step 3's four-column value chain (attribute → capability → outcome → business impact) is more rigorous than most frameworks that stop at "benefit."
+Step 3's four-column value chain (attribute → capability → outcome → business impact) is more rigorous than frameworks that stop at "benefit." The distinction forces specificity that prevents generic claims from passing unchallenged.
 
-The PARTIAL on criterion 7 is correct per the ceiling rule. The sales narrative is fully present and structured in the skill — the PARTIAL prefix was set deliberately by the test author and cannot be upgraded regardless of definition quality.
+The only substantive gap is the pricing-canvas interaction. For an add-on product positioned against bundled platform reporting, the price tier communicates something about the buyer's perceived value and affects which market category lands credibly. The skill touches business model as an attribute category but does not prompt the practitioner to reason about what their pricing signals to the market.

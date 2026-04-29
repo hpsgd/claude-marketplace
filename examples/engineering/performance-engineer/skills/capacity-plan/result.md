@@ -1,107 +1,49 @@
-# Capacity plan for a document processing API
-
-Developer invokes the capacity-plan skill for a document processing API that currently handles 200 requests/day but is expected to grow to 10,000 requests/day within 6 months after a major product launch.
-
-## Prompt
-
-> Create a capacity plan for our document processing API. Current load: ~200 requests/day, peak of about 20 concurrent requests during business hours. Each request takes 2-8 seconds (it calls an LLM and writes to Postgres). The server is a single t3.large (2 vCPU, 2GB RAM) on AWS currently at ~30% CPU and ~45% memory at peak. We expect to grow 50x over the next 6 months after our product launch in 3 months.
-
-The skill would produce the following after completing its sequential steps:
-
----
-
-## Output
-
-# Capacity Plan: Document Processing API
-
-### Current State
-
-| Metric | Average | Peak | Trend |
-|---|---|---|---|
-| Requests/day | 200 | — | Growing |
-| Requests/sec | 0.0023 | ~0.006 (during business hours) | Growing |
-| Concurrent users | ~8 | 20 | Growing |
-| Data volume | — | — | Establish baseline |
-
-Note: Little's Law applied — with avg response time of 5s (midpoint of 2-8s range) and 20 concurrent requests at peak: λ = L / W = 20 / 5 = 4 req/s peak throughput. Current t3.large can handle this, but the 2-8s variance (LLM calls) means concurrency headroom is the binding constraint, not raw throughput.
-
-### Resource Utilisation
-
-| Resource | Normal | Peak | Headroom | Status |
-|---|---|---|---|---|
-| CPU | ~15% | ~30% | 70% | OK |
-| Memory | ~25% | ~45% | 55% | OK |
-| Storage | — | — | Establish growth rate | OK |
-
-Currently comfortable. 30% CPU and 45% memory at peak leaves headroom, but a single t3.large with LLM calls means any spike to 40+ concurrent requests will exhaust the connection pool or CPU before memory.
-
-### Growth Projections
-
-50x growth over 6 months from launch (3 months away). Using step-function model — product launches drive non-linear growth.
-
-| Horizon | Requests/day | Requests/sec (peak) | Concurrent users (peak) | Storage |
-|---|---|---|---|---|
-| 3 months (launch) | ~500–2,000 | ~0.5 | ~50 | Low |
-| 6 months | ~10,000 | ~2–4 | ~200 | Medium |
-| 12 months | ~20,000+ | ~5–10 | ~400 | High |
-
-At 6 months: 200 concurrent requests at 5s avg response time requires infrastructure supporting 200 concurrent requests. Current single t3.large handles ~20–30 concurrent before degradation.
-
-### Bottleneck Analysis
-
-| Component | Current peak | Breaking point | Headroom | Time to scale |
-|---|---|---|---|---|
-| Application (t3.large) | 20 concurrent | ~30–40 concurrent | ~1.5x | **NOW — below 2x minimum** |
-| Postgres connections | 20 concurrent | ~80–100 (default pool) | ~4x | 3–4 months |
-| LLM API throughput | 20 req/peak | Depends on provider tier | Unknown — check provider limits | Establish now |
-
-The application tier is already below the 2x headroom minimum. Current peak (20 concurrent) is 1.5x below estimated breaking point (~30 concurrent). Scaling is overdue for the projected growth.
-
-Applying the Universal Scalability Law: doubling to 2 instances will not double throughput. Contention (σ) from shared Postgres connections and coherence (κ) from shared state means real-world gains are sub-linear. A 2-instance deployment will give approximately 1.7x–1.9x capacity, not 2x.
-
-### Recommendations
-
-| Priority | Action | Cost/month | Capacity gain | Lead time |
-|---|---|---|---|---|
-| 1 | Move to async processing (queue LLM jobs) | ~$20 (SQS/Redis) | Decouples peak from processing | 1–2 weeks |
-| 2 | Add read replica for Postgres | ~$60–120 | Offloads read queries, doubles DB capacity | 1–2 days |
-| 3 | Horizontal scale: 2–3 t3.large instances behind ALB | ~$150–220/month add | ~1.7–2.5x application capacity | Hours (ASG) |
-| 4 | Vertical: upgrade to t3.xlarge | ~$70/month add | ~2x CPU/memory, single point of failure | Hours |
-
-Async processing (option 1) is the highest-leverage change. LLM calls taking 2-8s are the reason concurrency backs up. Moving to a queue-worker model means the API returns immediately (202 Accepted) and workers process at their own pace — this fundamentally changes the concurrency profile.
-
-### Decision Timeline
-
-- **Immediate:** Establish LLM API rate limits and quotas with the provider. Instrument Postgres connection pool utilisation. Set up alerting on CPU > 60% and connection pool > 70%.
-- **30 days:** Decision required on async processing architecture. If async is adopted, begin implementation — lead time is 1–2 weeks and launch is 3 months away. If synchronous is retained, provision horizontal scaling (ASG with 2+ instances) before launch.
-- **90 days:** Pre-launch load test at 3x projected launch traffic. Verify Postgres can handle connection count at 200 concurrent workers. Review LLM provider tier — 10,000 req/day may require an enterprise plan.
-
-> **Decision checkpoint:** The recommendations above involve infrastructure scaling changes (new instances, read replicas, queue infrastructure). These have cost and operational implications. What happens if we don't act: the service degrades at launch — P99 will blow out past 30s, errors will occur as the connection pool exhausts. Estimated monthly cost of recommended changes: $230–360/month additional. The decision to proceed needs confirmation from whoever owns the infrastructure budget and the DevOps team.
-
-## Evaluation
-
+# Result: Capacity plan for a document processing API
 
 | Field | Value |
 |---|---|
-| Verdict | PASS |
-| Score | 8.5/9 criteria met (94%) |
-| Evaluated | 2026-04-16 |
+| **Verdict** | PARTIAL |
+| **Score** | 16.5/19 criteria met (87%) |
+| **Evaluated** | 2026-04-29 |
+| **Skill** | `plugins/engineering/performance-engineer/skills/capacity-plan/SKILL.md` |
 
+## Criteria
 
-## Results
+- [x] PASS: Skill captures current load profile (average, peak, concurrent, utilisation at normal and peak) — Step 1 and Step 2 both have explicit tables covering req/sec average and peak, concurrent users, and all resource utilisation metrics at normal and peak, with thresholds and red flags
+- [x] PASS: Skill applies Little's Law to translate between concurrent requests and required capacity — Step 5 states L = λ × W with a worked example: 100 req/s at 200ms = 20 concurrent requests
+- [x] PASS: Skill identifies headroom — current peak vs breaking point, time until scaling needed — Step 4 covers breaking point identification; Step 5 provides both headroom and time-to-scale formulas with a component-level table
+- [x] PASS: Skill projects forward 3, 6, and 12 months with request volume, concurrent user count, and storage — Step 3 explicitly requires all four metrics at each of the three horizons; the Output Format template has a matching Growth Projections table
+- [x] PASS: Skill identifies the minimum 2x headroom rule and flags when the threshold will be breached — Step 5 Rules: "Minimum acceptable headroom: 2x above current peak. Plan to scale BEFORE headroom drops below 2x"
+- [x] PASS: Skill raises a decision checkpoint before recommending infrastructure scaling changes — Step 8: "Before recommending infrastructure scaling... stop and present the cost-vs-risk trade-off to the user. Do not assume approval — the user decides."
+- [x] PASS: Skill evaluates multiple scaling options (vertical, horizontal, caching, async processing) with cost, capacity gain, and lead time — Step 6 lists six strategies covering all four named option types; per-option cost, capacity gain, complexity, and time to implement are all required
+- [~] PARTIAL: Skill references the Universal Scalability Law to explain why doubling servers doesn't double throughput — Step 5 names USL, links to Gunther's work, identifies contention (σ) and coherence (κ), and states "doubling servers does not double throughput." Coverage is substantive — criterion type caps score at 0.5
+- [x] PASS: Output includes a decision timeline with immediate actions, 30-day decisions, and 90-day planned activities — Output Format template includes a Decision Timeline section with exactly those three entries
 
-- [x] PASS: Skill captures current load profile — Step 1 (Current Load Profile) is the mandatory first step with a table requiring requests/sec, concurrent users, data volume, and bandwidth at average and peak, plus daily/weekly/seasonal patterns. Traceable to Step 1.
-- [x] PASS: Skill applies Little's Law — Step 5 (Headroom Calculation) explicitly cites Little's Law with the formula `L = λ x W` and a worked example (100 req/s at 200ms = 20 concurrent requests). Traceable to Step 5.
-- [x] PASS: Skill identifies headroom and breaking point — Step 4 (Breaking Point Identification) requires identifying at what load the system degrades, what fails first, and how far current peak is from the breaking point. Step 5 includes the formula `Headroom = (Breaking point - Current peak) / Current peak`. Traceable to Steps 4 and 5.
-- [x] PASS: Skill projects forward 3, 6, and 12 months — Step 3 (Growth Projection) states "Project forward: 3 months, 6 months, 12 months. For each time horizon: expected request volume, expected data volume, expected concurrent users, expected storage consumption." The Output Format includes this table. Traceable to Step 3.
-- [x] PASS: Skill identifies 2x headroom rule and flags breach — Step 5 states "Minimum acceptable headroom: 2x above current peak" and "Plan to scale BEFORE headroom drops below 2x". Traceable to Step 5.
-- [x] PASS: Skill raises a decision checkpoint before recommending infrastructure scaling changes — Step 8 (Recommendation) contains an explicit decision checkpoint: "Before recommending infrastructure scaling (new instances, upgraded tiers, additional replicas), stop and present the cost-vs-risk trade-off to the user. Present: what happens if we don't scale (risk), what scaling costs (monthly/annual estimate), and when the decision needs to be made by (lead time). Do not assume approval — the user decides." Traceable to Step 8.
-- [x] PASS: Skill evaluates multiple scaling options with cost, capacity, lead time — Step 6 (Scaling Options) provides a table covering vertical, horizontal, caching, read replicas, async processing, and architectural options with lead time and cost impact. The skill also requires per-option estimates of cost, capacity gain, complexity, and implementation time. Traceable to Step 6.
-- [~] PARTIAL: Skill references Universal Scalability Law — Step 5 cites USL by name with a link, identifies the mechanism (contention σ and coherence κ), and explicitly states "doubling servers does not double throughput." Coverage is substantive. Criterion is prefixed PARTIAL so maximum score is 0.5 regardless. Traceable to Step 5.
-- [x] PASS: Output includes decision timeline with immediate/30-day/90-day format — the Output Format section includes a "Decision Timeline" block with exactly these three timeframes: Immediate, 30 days, 90 days. Traceable to Output Format.
+**Criteria score: 8.5/9 (94%)**
 
-### Notes
+## Output expectations
 
-The previous evaluation scored criterion 6 as FAIL because the decision checkpoint existed only in the agent definition, not in the skill. That gap has been closed. Step 8 now contains an explicit stop instruction with three required elements: risk framing, cost estimate, and decision deadline. The "Do not assume approval" line is the key addition — it makes the checkpoint non-skippable by instruction rather than convention.
+- [x] PASS: Output's current load profile reproduces the prompt facts — the skill's Step 1 and Step 2 tables are structured to capture the exact inputs provided (req/day, concurrent peak, response time, instance type, CPU/mem utilisation) verbatim or close paraphrase
+- [x] PASS: Output applies Little's Law explicitly, showing the math from current concurrency to projected concurrency at 50x growth — Step 5 provides the formula and a worked example; the skill would apply it to the 50x projection scenario rather than just naming the law
+- [x] PASS: Output projects 3, 6, and 12 months forward with both request volume and concurrent capacity needs, plus storage — Step 3 and the Growth Projections table in the Output Format require all three dimensions at all three horizons
+- [x] PASS: Output identifies when the 2x headroom rule will be breached given 50x growth in 6 months — Step 5's time-to-scale formula ("Headroom / Growth rate") applied to the 50x scenario would yield a specific month, not just "soon"
+- [x] PASS: Output evaluates at least 3 scaling options (vertical, horizontal, async) with cost, capacity gain, and lead time per option — Step 6 lists all three plus three others; per-option estimates are required for cost, capacity gain, complexity, and implementation time
+- [~] PARTIAL: Output addresses the LLM dependency as a likely bottleneck — Step 4 asks "What component fails first?" with "external API" as one option, and Step 2 tracks connection pools. However, the skill never explicitly names LLM provider rate limits or concurrent request quotas as a constraint class. A practitioner would infer it; the skill doesn't foreground it for this architecture pattern.
+- [x] PASS: Output stops and asks before committing to an infrastructure direction — Step 8 decision checkpoint requires risk framing, cost estimate, and decision deadline before any recommendation; "Do not assume approval" is explicit
+- [x] PASS: Output references USL to explain that doubling capacity won't double throughput — Step 5 covers contention (σ) and coherence (κ) and states "doubling servers does not double throughput"
+- [x] PASS: Output's decision timeline separates immediate, 30-day, and 90-day actions with the launch date anchoring the 90-day deadline — the Output Format template has all three tiers; the growth projection step would anchor the 90-day slot to the 3-month launch window
+- [~] PARTIAL: Output addresses async processing as a structural shift (job queue + worker pool) for the 2-8s LLM call — Step 6 lists async processing as a strategy with "queues, workers" and "write-heavy, batch operations" as the use-case trigger. It doesn't specifically flag synchronous LLM-backed request-response as a pattern where async is the first-order fix, not an option among equals.
 
-The USL PARTIAL ceiling reflects the criterion prefix, not coverage quality. The definition's USL coverage is thorough.
+**Output expectations score: 8/10 (80%)**
+
+## Notes
+
+The skill is well-structured and covers the core capacity planning discipline thoroughly. The decision checkpoint in Step 8 is genuinely protective — three required elements and an explicit "Do not assume approval" make it non-skippable.
+
+Two gaps emerge from the output expectations section that don't appear in the structural criteria:
+
+First, the LLM bottleneck gap. For a service where a third-party LLM call is the dominant latency source, the rate limit and concurrent request quota of that provider is a hard ceiling that no amount of application-tier scaling can bypass. The skill identifies "external API" as a possible first-failing component in Step 4, but it's listed alongside database, cache, and network as peers. For this architecture class the LLM provider constraint should be called out explicitly, not left for the practitioner to notice.
+
+Second, the async processing weight. The skill lists async processing as one of six equivalent strategies in Step 6. For synchronous services with 2-8 second response times driven by an external API call, async is the structural solution, not one option among equals. Vertical and horizontal scaling both hit the same ceiling (concurrent connections blocked on LLM response time). The skill would benefit from a routing note — something like "if average response time exceeds 2 seconds, evaluate async before vertical or horizontal."
+
+Neither gap causes a failure — the skill produces valid capacity plans — but they represent cases where a less-experienced user would get a structurally correct plan that misses the highest-leverage action for this workload pattern.

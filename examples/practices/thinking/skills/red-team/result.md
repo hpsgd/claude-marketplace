@@ -6,8 +6,6 @@ An engineering team has decided to migrate their MySQL database to PostgreSQL ov
 
 > /red-team Our plan: migrate from MySQL to PostgreSQL in 4 weeks with zero downtime. Week 1 — set up Postgres and run dual-writes. Week 2 — validate data parity. Week 3 — cut reads over to Postgres. Week 4 — cut writes and decommission MySQL. We have 2TB of data, 95 tables, 12 stored procedures. Main risk we've identified is the stored procedure rewrite.
 
-```markdown
-
 ## Output
 
 ### Red Team: MySQL → PostgreSQL 4-week zero-downtime migration
@@ -75,7 +73,7 @@ Strongest framing: The plan has the right architecture. The risks are execution-
 **Attack: Claim #15 — "Parity validation catches semantic differences"**
 
 - Disproof test: Run column-level checksum comparison, not just row count. If only row counts are checked, this claim fails.
-- Failure conditions: MySQL and PostgreSQL differ on NULL comparisons, timezone storage, float arithmetic, and case sensitivity in string comparisons. Row count parity ≠ semantic equivalence.
+- Failure conditions: MySQL and PostgreSQL differ on NULL comparisons, timezone storage, float arithmetic, and case sensitivity in string comparisons. Row count parity does not equal semantic equivalence.
 - Weakest link: "Validate data parity" is unspecified — the validation method is unknown.
 - Unverified assumption: The team's validation scope covers semantic drift, not just structural drift.
 - Strongest opposition: Migrations have passed row-count validation and then surfaced incorrect financial aggregates post-cutover due to float handling differences between engines.
@@ -138,7 +136,7 @@ Strongest framing: The plan has the right architecture. The risks are execution-
 
 1. Parity validation scope — suggested fix: define a validation script that checks row counts AND column-level checksums AND output of key aggregate queries run against both databases simultaneously with identical inputs.
 2. Stored procedure test coverage — suggested fix: write input/output test cases for all 12 procedures before translation begins. Run both the MySQL and PostgreSQL versions against identical inputs and compare outputs. Do not cut over until all 12 match.
-3. Application restart requirement — suggested fix: verify now whether the application can switch database connections without a restart. If not, plan a brief maintenance window (even 30 seconds counts) or implement a connection proxy such as PgBouncer.
+3. Application restart requirement — suggested fix: verify now whether the application can switch database connections without a restart. If not, plan a brief maintenance window or implement a connection proxy such as PgBouncer.
 
 **Should address if possible:**
 
@@ -149,29 +147,43 @@ Strongest framing: The plan has the right architecture. The risks are execution-
 
 1. Type mapping — run a pgloader dry-run from a MySQL dump before committing to dual-write. Check warnings for type coercions.
 2. Rollback procedures — document the rollback steps for each phase boundary now, before starting.
-```
 
 ## Evaluation
-
 
 | Field | Value |
 |---|---|
 | Verdict | PASS |
-| Score | 7.5/8 (94%) |
-| Evaluated | 2026-04-16 |
-
+| Score | 17.5/18 (97%) |
+| Evaluated | 2026-04-29 |
 
 ## Results
 
-- [x] PASS: Step 1 decomposes into a claim inventory with all three types above 10 — the skill's Step 1 defines the claim inventory table with Type column (Stated/Implied/Required) and states "A plan with 5 sections typically decomposes into 15–25 atomic claims. If you find fewer than 10, you haven't decomposed far enough." The definition explicitly requires all three claim types. The simulation produces 16 claims with examples of all three types, well above the floor of 10.
-- [x] PASS: Step 2 steelmans before attacking — the skill's Step 2 is labelled "(mandatory)" and states "Before attacking, construct the strongest possible version of the argument." The Rules section adds "Fix obvious weaknesses before attacking" and "Add the best supporting evidence, even if the author didn't include it." The steelman adds external evidence (Brandur Leach/Stripe) and frames the strongest version before the attack begins.
-- [x] PASS: Step 3 attacks use the required five-part structure — the skill defines five vectors per claim: disproof test, failure conditions, weakest link, unverified assumption, strongest opposition. All five fields appear in each attack section in the output. The template in the definition is explicit.
-- [x] PASS: Findings classified by severity in three separate tables — Step 3 of the definition specifies exactly "Critical weaknesses (would cause failure)", "Significant risks (could cause failure under conditions)", and "Unverified assumptions (unknown whether true)" as three distinct tables with defined column schemas. All three tables appear in the output with matching structure.
-- [x] PASS: Implied and required claims receive specific attack — the skill's Rules section states "Implied claims are the richest target." Claims #8 (dual-write latency — Implied), #11 (2TB replication — Required), #15 (parity validation scope — Required), and #7 (stored procedure coverage — Implied) are all attacked in detail. The dual-write latency claim is unstated in the original prompt and is the kind of Required/Implied target the skill specifically directs attention toward.
-- [x] PASS: Step 4 delivers a verdict using one of the four defined ratings — the skill's Step 4 template states "Overall robustness: [Robust / Conditionally sound / Fragile / Fatally flawed]." The output rates the plan as "Fragile" with High confidence and explicit reasoning. This is one of the four valid ratings.
-- [x] PASS: Every weakness comes with a direction for fixing — the skill's Rules section states "Every weakness identified should come with a direction for fixing it." The Recommendations section has "Must address," "Should address," and "Verify when possible" subsections, each with a "suggested fix" or "mitigation" for every identified weakness.
-- [~] PARTIAL: Verdict does not soften if genuinely fragile — the skill's Rules section states "Never soften the verdict. If the argument is fatally flawed, say so." The plan receives "Fragile" rather than "Fatally flawed." This is the honest rating for a plan with fixable critical gaps rather than a fundamentally broken architecture. The criterion is PARTIAL-prefixed, so the ceiling is 0.5 regardless. The definition clearly contains the no-softening rule, and the simulation applies it: "Fragile" is not softened from what the evidence supports.
+### Criteria
 
-### Notes
+- [x] PASS: Step 1 decomposes the plan into a claim inventory with stated, implied, and required claims above 10 — the skill's Step 1 defines a claim inventory table with a Type column (Stated/Implied/Required) and states "A plan with 5 sections typically decomposes into 15–25 atomic claims. If you find fewer than 10, you haven't decomposed far enough." The simulated output yields 16 claims across all three types, well above the floor.
+- [x] PASS: Step 2 steelmans the plan before attacking — Step 2 is labeled mandatory. The rules require fixing obvious weaknesses and adding best supporting evidence before attacking. The simulated output adds external evidence (Brandur Leach/Stripe), adds the parity gate as an explicit strength, and completes before any attack begins.
+- [x] PASS: Step 3 attacks each claim with the required five-part structure — the skill defines exactly five attack vectors per claim: disproof test, failure conditions, weakest link, unverified assumption, strongest opposition. All five appear in each attack section of the simulated output.
+- [x] PASS: Findings are classified by severity in three separate tables — Step 3 specifies "Critical weaknesses", "Significant risks", and "Unverified assumptions" as three distinct tables with defined column schemas. The simulated output matches this structure.
+- [x] PASS: Implied and required claims receive specific attack — the skill's Rules section states "Implied claims are the richest target. Focus on Required and Implied claims." Claim #8 (dual-write latency — Implied) and claim #7 (stored procedures — Implied) are unstated in the prompt; claims #11 and #15 (Required) are also attacked with full five-part structure.
+- [x] PASS: Step 4 delivers a verdict using one of the four defined ratings — the Step 4 template specifies exactly "Robust / Conditionally sound / Fragile / Fatally flawed." The simulated output rates the plan "Fragile" with explicit confidence level and reasoning.
+- [x] PASS: Every weakness in the verdict section comes with a direction for fixing it — the skill's Rules section states "Every weakness identified should come with a direction for fixing it." All three critical weaknesses in Recommendations include a "suggested fix" with concrete approach.
+- [~] PARTIAL: Verdict does not soften if the plan is genuinely fragile — the rule "Never soften the verdict. If the argument is fatally flawed, say so" is present and explicit in the skill. The plan receives "Fragile" rather than "Fatally flawed." Three critical weaknesses could support "Fatally flawed." However, the steelman established the architecture is sound and gaps are fixable, which arguably makes "Fragile" the honest verdict rather than a softer one. Structural rule is present; runtime compliance cannot be verified without live execution, and the boundary between "Fragile" and "Fatally flawed" here is a judgment call. Scored 0.5.
 
-The claim type taxonomy (Stated/Implied/Required) is the skill's most valuable structural element — it forces the model to attack what the plan assumes, not only what it says. The mandatory steelman prevents the red-team from attacking a weak version of the plan. One genuine tension: the definition's Step 3 says "For each claim from Step 1, apply these attack vectors" — a strict reading requires 16 five-part attacks. In practice only 5 claims receive full five-part treatment in the output, with the remainder surfacing in the severity tables. The definition does not explicitly limit detailed attacks to the most vulnerable claims, though in practice attacking all 16 would produce an unusably long output. This is a gap in the definition's instructions that the skill's authors may want to clarify.
+### Output expectations
+
+- [x] PASS: Output's claim inventory enumerates well over 10 atomic claims — 16 claims produced, covering stated (1–6), implied (7–9), and required (10–16). The skill mandates all three types and flags fewer than 10 as insufficient.
+- [x] PASS: Output's steelman strengthens the plan before attacking — adds external evidence (Stripe/Brandur Leach), names the parity gate as the critical success differentiator, and frames the plan's architecture as sound before any attack begins. Fixes the "what parity validation means" ambiguity by naming the gate explicitly.
+- [x] PASS: Output attacks the stored procedure rewrite specifically — claim #7 receives a full five-part attack. Flags absence of test coverage, MySQL-specific syntax risk (SIGNAL, GROUP_CONCAT), and the 2–3x underestimation pattern for proc rewrites.
+- [x] PASS: Output attacks the dual-write latency assumption — claim #8 is the first dedicated attack. Names synchronous vs async as the key decision, identifies p99 degradation as the failure mode, and flags that the plan does not specify which approach is used.
+- [x] PASS: Output attacks the parity validation — claim #15 attacks the unspecified validation method, identifies MySQL/PostgreSQL semantic differences (NULL, timezone, float), and names the failure mode (silent data corruption from row-count-only validation).
+- [x] PASS: Output attacks the cutover step — claim #2 attacks the zero-downtime assumption at write cutover. Identifies application restart risk, and the findings table classifies it as a critical weakness capable of independently causing failure.
+- [x] PASS: Output's findings use three separate tables — Critical weaknesses (3 entries), Significant risks (3 entries), and Unverified assumptions (3 entries) with all required columns populated.
+- [x] PASS: Output's verdict uses one of the four defined ratings — "Fragile" is one of the four valid options and is appropriate given three critical weaknesses on a 4-week zero-downtime migration of 2TB + 12 procs.
+- [x] PASS: Output's verdict does not soften — "Fragile" with "High" confidence and explicit statement that "three critical weaknesses, each capable of independently causing failure" is not a hedge. The verdict does not say the plan will probably be fine.
+- [x] PASS: Output's weaknesses each include a direction for fixing — all three critical weaknesses in Recommendations name a concrete fix (validation script with checksums, input/output test cases for all 12 procs before translation, connection proxy or maintenance window).
+
+## Notes
+
+The skill's claim taxonomy (Stated/Implied/Required) is its strongest structural element. Directing attack at Required and Implied claims — rather than just what the plan says — is what surfaces the latency budget, the semantic parity gap, and the rollback absence, none of which the team mentioned.
+
+One structural ambiguity worth flagging: Step 3 says "For each claim from Step 1" which implies 16 five-part attacks for this prompt. In practice only the critical claims get full five-part treatment; others surface only in the severity tables. The definition does not explicitly permit selective depth, which creates tension between thoroughness and usability. The authors may want to add language like "prioritise low-confidence, Implied, and Required claims for full five-part treatment" to make selective depth explicit rather than implied.

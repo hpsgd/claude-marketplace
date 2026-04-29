@@ -1,111 +1,58 @@
-# Review with issues
-
-A developer asks the code reviewer agent to review a Python Django view that handles user password reset. The code contains a SQL injection risk, an N+1 query, and missing rate limiting on the endpoint.
-
-## Prompt
-
-> Can you review this code? It's the password reset handler in our Django app.
->
-> ```python
-> # views.py
-> from django.http import JsonResponse
-> from django.contrib.auth.models import User
-> from django.db import connection
-> import secrets
->
-> def request_password_reset(request):
->     if request.method != 'POST':
->         return JsonResponse({'error': 'Method not allowed'}, status=405)
->
->     email = request.POST.get('email', '')
->
->     # Find user by email
->     with connection.cursor() as cursor:
->         cursor.execute(f"SELECT id, username FROM auth_user WHERE email = '{email}'")
->         row = cursor.fetchone()
->
->     if not row:
->         return JsonResponse({'error': 'Email not found'}, status=404)
->
->     user_id, username = row
->     token = secrets.token_urlsafe(32)
->
->     # Save token and send to all user's linked accounts
->     user = User.objects.get(id=user_id)
->     for profile in user.linkedprofile_set.all():
->         profile.reset_token = token
->         profile.save()
->         # Send email for each linked account
->         send_reset_email(profile.email, token)
->
->     return JsonResponse({'message': 'Reset email sent'})
-> ```
-
-The code reviewer agent, given this prompt, would produce the following response.
-
----
-
-## Output
-
-**Pre-flight:** reads `CLAUDE.md` and installed rules. Checks for existing auth patterns and security-sensitive files.
-
-**Pass 1 (Context):** Single view function — password reset handler. Auth-critical code path. Reads full `views.py`. No accompanying tests found. No rate limiting middleware visible in settings.
-
-**Pass 2 (Correctness):**
-- Token has no expiry — `reset_token` is stored but no timestamp or TTL field exists. A token issued months ago would still be valid.
-- `User.objects.get(id=user_id)` at line 34 will raise `User.DoesNotExist` if the raw SQL query and ORM operate on different user tables (unlikely but possible in multi-tenant setups). No exception handling around this call.
-
-**Pass 3 (Security):**
-- **BLOCKER — SQL injection** `views.py:24`: f-string interpolates `email` directly into raw SQL. Any value like `' OR '1'='1` passes through unescaped. **Fix:** `cursor.execute("SELECT id, username FROM auth_user WHERE email = %s", [email])`
-- **HIGH — No rate limiting** on this endpoint. **Adversarial analysis:** 1000 POST requests would enumerate valid emails from 404 vs 200 responses, exhaust `secrets.token_urlsafe()` overhead, and flood linked-account email addresses with reset emails. `django-ratelimit` or a reverse-proxy rate limit (e.g. nginx `limit_req`) is required before this ships.
-- **MEDIUM — User enumeration** `views.py:27-28`: `JsonResponse({'error': 'Email not found'}, status=404)` reveals whether an email address is registered. **Fix:** Return `JsonResponse({'message': 'If that address is registered, you will receive an email.'}, status=200)` regardless of whether the user exists.
-
-**Pass 4 (Quality):**
-- **N+1 query** `views.py:35-38`: `linkedprofile_set.all()` inside a loop fires one SELECT per profile's `.save()` call. For a user with 10 linked profiles this makes 10 update queries sequentially. **Fix:** `user = User.objects.prefetch_related('linkedprofile_set').get(id=user_id)` before the loop, then batch token updates.
-- No test coverage.
-
-**Quality score table:**
-
-| Dimension | Score | Evidence |
-|---|---|---|
-| Security | 0 | SQL injection blocker at `views.py:24` |
-| Correctness | 45 | Token has no expiry; `DoesNotExist` not caught at line 34 |
-| Data integrity | 65 | Token overwrites all profiles atomically but no transaction wrapper |
-| Performance | 40 | N+1 at `views.py:35-38` |
-| Maintainability | 40 | Raw SQL mixed with ORM; no tests |
-| Test coverage | 0 | No tests found |
-| **Confidence** | **0** | min(HARD) = 0 — Security blocker |
-
-**Verdict: BLOCK** — SQL injection in an authentication endpoint is a critical vulnerability. Cannot merge.
-
-## Evaluation
-
+# Result: review with issues
 
 | Field | Value |
 |---|---|
-| Verdict | PASS |
-| Score | 7.5/8 criteria met (94%) |
-| Evaluated | 2026-04-16 |
-
+| **Verdict** | PARTIAL |
+| **Score** | 14.0/17 criteria met (82.4%) |
+| **Evaluated** | 2026-04-29 |
+| **Agent** | `plugins/engineering/code-reviewer/agents/code-reviewer.md` |
 
 ## Results
 
-- [x] PASS: Agent identifies SQL injection as blocker with file:line — the agent definition mandates Pass 3 (Security) covering injection; the output format requires `file:line` on every finding; HARD signal rule means any security = 0 blocks approval. The definition is explicit: "Injection — is any user input concatenated into SQL queries, shell commands, file paths?" under Pass 3. Reference traces to `views.py:24`.
+### Criteria
 
-- [x] PASS: Agent identifies N+1 with specific fix (prefetch_related) — Pass 4 Quality explicitly covers "N+1 queries (database call inside a loop)" under Performance. The calibration rule "A finding without a fix suggestion is incomplete" enforces a concrete fix. `select_related` / `prefetch_related` is the standard Django pattern.
+- [x] PASS: Agent identifies the SQL injection vulnerability as a blocker with specific file:line reference — Pass 3 explicitly checks "SQL/command/path injection risks? (string concatenation in queries)". The output format mandates Blocker severity and a `file:line` citation on every finding. HARD signal makes Security = 0 structurally certain.
 
-- [x] PASS: Agent flags missing rate limiting as security finding — the Adversarial Analysis section is mandatory for every review: "Repetition: what happens if the same action is performed 1000 times?" This steer surfaces rate limiting on a public auth endpoint as a required finding, not an optional one.
+- [x] PASS: Agent identifies the N+1 query with a specific fix — Pass 4 Quality lists "N+1 queries" under Performance. The agent's principles require every suggestion to explain why — `prefetch_related` is the Django-standard fix and would appear in the Suggestion column.
 
-- [x] PASS: Agent produces quality score table covering ≥4 dimensions — the agent definition's output format template defines Security, Correctness, Data integrity, Performance, Maintainability, Test coverage as required dimensions. All four specified dimensions are present.
+- [x] PASS: Agent flags missing rate limiting as a security finding — Adversarial Analysis is mandatory for every review. "Repetition: what happens if the same action is performed 1000 times?" is explicitly listed. An unauthenticated password reset endpoint with no throttle is the direct answer.
 
-- [x] PASS: Agent gives BLOCK verdict — HARD signal rule is explicit: "any zero blocks approval." SQL injection → Security = 0 → overall confidence = min(HARD scores) = 0. The agent definition does not permit APPROVE or REQUEST_CHANGES when a HARD signal is zero.
+- [x] PASS: Agent produces quality score table covering Security, Correctness, Performance, Maintainability — The output format template defines all six dimensions as mandatory columns. All four required dimensions are present.
 
-- [x] PASS: Agent runs adversarial analysis — Adversarial Analysis is a mandatory review section per the agent definition. The "Repetition: 1000 times" heuristic is listed explicitly. The definition enforces this for every review regardless of the reviewer's judgment about relevance.
+- [x] PASS: Agent gives BLOCK verdict given the SQL injection — Principles state "Blockers are blockers. Security issues … block the merge regardless." min(HARD) with Security = 0 produces Confidence = 0, which maps to BLOCK. No judgment call required.
 
-- [~] PARTIAL: Agent notes 404 leaks account existence (user enumeration) — Pass 3 covers "data exposure: Are error messages safe for external users?" which partially covers existence disclosure. However the agent definition focuses on stack traces, internal paths, and secret leakage rather than boolean account existence via status codes. The definition partially supports this finding but would not reliably require it as a distinct item. The simulated output produces it; a different agent implementation might subsume it under the rate-limiting finding.
+- [x] PASS: Agent runs adversarial analysis considering 1000 rapid calls — Adversarial Analysis is a mandatory section. "Repetition: what happens if the same action is performed 1000 times?" is explicitly listed. The definition does not permit skipping it.
 
-- [x] PASS: Every finding cites specific location with concrete fix — calibration rules state: "A finding without evidence is not a finding. Show the code." and "A finding without a fix suggestion is incomplete. Propose the change." Both are explicit prohibitions enforced across all findings.
+- [~] PARTIAL: Agent notes 404 leaks account existence and recommends returning 200 — The "think like an attacker" instruction and adversarial abuse cases section would likely surface this. However, differential HTTP response codes as a user enumeration vector are not explicitly listed in Pass 3 Security. Not structurally guaranteed by the definition.
+
+- [x] PASS: Every finding cites specific location and concrete fix — Output format template requires a Location column with `file:line` and a Suggestion column on every findings row. Principles state "Every finding cites a specific location. Every suggestion explains why." Both are non-negotiable.
+
+### Output expectations
+
+- [x] PASS: Output recommends parameterised queries or Django ORM as the SQL injection fix — The agent's output format requires a specific Suggestion on every finding. Pass 3 identifies "string concatenation in queries" as the risk pattern; the natural, concrete fix is `cursor.execute("... WHERE email = %s", [email])` or the ORM equivalent. The principles prohibit vague suggestions.
+
+- [x] PASS: Output assigns confidence levels per finding — Confidence Calibration defines HIGH (80+), MODERATE (60-79), LOW (<60) for individual findings. The Findings table template includes a `Confidence` column with examples like "HIGH (90)" and "MODERATE (65)". This is a structural requirement of the output format.
+
+- [x] PASS: Security score is 0 and overall confidence reflects min(HARD signals) — The scoring formula explicitly states Security = 0 when a vulnerability is found. Overall confidence = `min(HARD signals)`. The output format template shows this calculation in the Confidence row.
+
+- [x] PASS: Output flags `User.objects.get(id=user_id)` as correctness or robustness issue — Pass 2 Correctness checks "Are all code paths handled?" and "Null/undefined risks — what happens if an optional value is absent?" The unhandled `DoesNotExist` exception from `User.objects.get()` is a direct correctness hit.
+
+- [ ] FAIL: Output identifies that the same reset token is reused across every linked profile — Token reuse across multiple profiles is a design-level security concern. Pass 3 Security does not explicitly check for token uniqueness or reuse. Pass 2 Correctness checks logical soundness but wouldn't structurally require surfacing this token-handling concern. The definition does not guarantee this finding.
+
+- [~] PARTIAL: Output notes `reset_token` stored in plaintext and recommends hashing at rest — Pass 3 checks "Secrets exposed? (hardcoded keys, tokens in logs, credentials in error messages)". Plaintext token storage is adjacent but not the same as secrets in logs or hardcoded keys. The adversarial "think like an attacker" framing would likely lead there, but the definition does not explicitly require checking token storage security.
+
+- [~] PARTIAL: Output flags absence of token expiry/TTL as a security concern — Not listed in Pass 2 Correctness or Pass 3 Security. The adversarial analysis ("what happens if the same action is performed 1000 times?") and Abuse Cases section would likely surface a never-expiring token as a risk, but it is not a required check item. Partially supported, not guaranteed.
+
+- [~] PARTIAL: Output calls out synchronous email sending inside the request handler — Pass 4 Quality checks Performance ("unnecessary loops, redundant computation, oversized payloads") and Maintainability. Synchronous I/O blocking the response is a performance concern, but the definition lists no explicit check for in-request side effects or async offloading. A thorough run would likely surface this; the definition does not require it.
+
+- [x] PASS: Output includes "Positive Observations" or "Questions for the Author" section — Both `### Positive Observations` and `### Questions for the Author` are explicit sections in the mandatory output format template. Their presence is not optional.
 
 ## Notes
 
-The agent definition is strong on the HARD signal path — SQL injection in an auth handler will always surface as a BLOCK given the security pass + adversarial analysis combination. The user enumeration gap is a real limitation in the definition: the data exposure check focuses on secrets and stack traces rather than boolean existence leakage via HTTP status codes. Adding "does any response reveal account existence?" to Pass 3's data exposure checklist would close this. The quality score table including Data integrity and Test coverage beyond the minimum four required dimensions is a strength.
+The agent definition handles the three planted issues well. The SQL injection triggers a HARD signal zero, making the BLOCK verdict structurally forced. Adversarial analysis is mandatory and directly surfaces the rate-limiting gap. The output format's required columns guarantee file:line citations and specific suggestions on every finding.
+
+The new output expectations reveal a meaningful gap: the definition does not structurally require deeper token-handling analysis. Token reuse across profiles (criterion 5) is not covered by any explicit pass checklist item — it would only surface if the reviewer happened to reason about the token lifecycle, which the definition doesn't mandate. Token storage security (plaintext hashing, criterion 6) and token expiry (criterion 7) are similarly unguaranteed.
+
+The Positive Observations and Questions for Author sections were marked PARTIAL in the test rubric, but the agent's output format template makes them mandatory — these should score PASS.
+
+One gap worth addressing: Pass 3 Security has no explicit check for "does any response reveal account existence?" — user enumeration via differential status codes (404 vs 200) is an OWASP-documented pattern absent from the checklist.

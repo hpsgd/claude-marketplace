@@ -1,93 +1,39 @@
-# Company lookup skill
+# Output: company-lookup skill
 
-**Scenario:** A business analyst needs to research an unfamiliar company before a client meeting.
+**Verdict:** FAIL
+**Score:** 11.5/18 criteria met (64%)
+**Evaluated:** 2026-04-29
 
-> Can you look up Palantir Technologies for me? I need to understand what they do, their business model, and any recent developments before a meeting tomorrow.
+## Results
 
-Routed to `plugins/research/analyst/skills/company-lookup/SKILL.md` — skill test, structural evaluation only.
+### Criteria
 
-## Output
+- [x] PASS: Skill defines a clear trigger or usage context — met: frontmatter description and `user-invocable: true` with `argument-hint` make usage context explicit
+- [x] PASS: Skill specifies what sources to check — met: Step 1 maps sources by jurisdiction/listing (ASIC, ABN Lookup, NZ Companies Office, SEC EDGAR, Companies House, Crunchbase, LinkedIn); Steps 2-5 name specific sources per research area
+- [x] PASS: Skill defines an output structure with named sections — met: output format template defines seven named sections
+- [x] PASS: Output structure includes business model or "what they do" section — met: Overview table has explicit "Business model" and "Revenue model" rows; Step 2 captures business model
+- [x] PASS: Output structure includes financials or funding section — met: "Financials" is a named section; Step 4 specifies revenue/growth/funding data with mandatory source and date
+- [x] PASS: Output structure includes recent news or developments section — met: "Recent news" is a named section; Step 5 defines search method and priority topics
+- [~] PARTIAL: Skill includes guidance on assessing source credibility or recency — partially met: 18-month staleness flag and mandatory two-source cross-reference are present; recency handled well. Explicit source authority ranking (primary registry vs press) is absent. Score: 0.5
+- [-] SKIP: Skill references collaboration with other agents — skipped: standalone skill definition with no agent routing logic
 
-#### Company: Palantir Technologies
+### Output expectations
 
-| Field | Value |
-|---|---|
-| As of | 2026-04-16 |
-| Sources | 8 public sources |
-
-##### Overview
-
-Palantir builds software platforms for large-scale data integration and analysis, serving government defence/intelligence agencies and large commercial enterprises. Founded in 2003 by Peter Thiel, Alex Karp, and others, the company went public via direct listing on NYSE in September 2020 and joined the S&P 500 in September 2024.
-
-| Attribute | Detail |
-|---|---|
-| Founded | 2003 |
-| HQ | Denver, Colorado (relocated from Palo Alto in 2020) |
-| Size | ~3,800 employees (2024 10-K) |
-| Business model | Enterprise software platform (SaaS + on-prem deployment) |
-| Revenue model | Subscription licences + professional services; multi-year government contracts |
-
-##### Products/services
-
-Gotham — data integration and analysis platform for government and defence. Foundry — commercial equivalent for enterprises (supply chain, manufacturing, financial services). AIP (AI Platform, launched 2023) — layers LLM capabilities over Gotham and Foundry. No public pricing; commercial contracts typically start at $1M+ ARR.
-
-##### Team
-
-| Name | Role | Notes |
-|---|---|---|
-| Alex Karp | CEO and co-founder | Has led the company since founding |
-| Shyam Sankar | CTO | Promoted from COO in 2023 |
-| David Glazer | CFO | Joined 2012 |
-
-Sources: [Palantir investor relations](https://investors.palantir.com), accessed 2026-04-16; [LinkedIn — Palantir Technologies](https://linkedin.com/company/palantir-technologies), accessed 2026-04-16.
-
-##### Financials
-
-| Metric | Value | Source |
-|---|---|---|
-| Revenue (FY2024) | $2.87B | [Palantir 10-K FY2024](https://sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=1321655&type=10-K), filed Feb 2025 |
-| Revenue growth (YoY) | 29% | Palantir 10-K FY2024 |
-| US commercial revenue growth | 54% YoY | [Palantir Q4 2024 earnings release](https://investors.palantir.com/news-releases/news-release-details/palantir-technologies-reports-fourth-quarter-2024-results), accessed 2026-04-16 |
-| Adjusted operating margin | 37% | Palantir 10-K FY2024 |
-
-GAAP profitable since 2023.
-
-##### Recent news
-
-- **Feb 2025:** Q4 2024 earnings beat. Revenue $828M, up 36% YoY. Source: [Palantir Q4 2024 earnings release](https://investors.palantir.com/news-releases/news-release-details/palantir-technologies-reports-fourth-quarter-2024-results), accessed 2026-04-16.
-- **Jan 2025:** Extended US Army Vantage contract worth $400M+ over 4 years. Source: [Reuters](https://reuters.com/technology/palantir-wins-army-contract-2025-01), accessed 2026-04-16.
-- **Sep 2024:** Added to S&P 500 index. Source: [S&P Dow Jones Indices press release](https://spglobal.com/spdji/en/indices/equity/sp-500), accessed 2026-04-16.
-
-##### Strategic direction
-
-Job postings weight heavily toward AI/ML engineering, defence sector solution architects, and US federal sales. AIP boot camps (560+ organisations by Q4 2024) are the primary commercial sales motion.
-
-##### Sources
-
-1. [Palantir 10-K FY2024](https://sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=1321655&type=10-K) — revenue, margins, employee count, accessed 2026-04-16
-1. [Palantir Q4 2024 earnings release](https://investors.palantir.com/news-releases/news-release-details/palantir-technologies-reports-fourth-quarter-2024-results) — quarterly revenue, commercial growth, accessed 2026-04-16
-1. [Palantir.com/platforms](https://palantir.com/platforms) — product descriptions, accessed 2026-04-16
-1. [S&P 500 inclusion, Sep 2024](https://spglobal.com/spdji/en/indices/equity/sp-500) — index addition, accessed 2026-04-16
-1. [Reuters — Army contract, Jan 2025](https://reuters.com/technology/palantir-wins-army-contract-2025-01) — Vantage contract extension, accessed 2026-04-16
-1. [Palantir careers page](https://palantir.com/careers) — hiring signals, accessed 2026-04-16
-1. [LinkedIn: Palantir Technologies](https://linkedin.com/company/palantir-technologies) — employee count, executive profiles, accessed 2026-04-16
-1. [Crunchbase: Palantir](https://crunchbase.com/organization/palantir-technologies) — founding history, funding context, accessed 2026-04-16
-
-## Evaluation
-
-| Verdict | Score | Evaluated |
-|---|---|---|
-| PASS | 6.5/6.5 (100%) | 2026-04-16 |
-
-- [x] PASS: Skill defines a clear trigger or usage context — frontmatter description lists exact use cases ("due diligence prep, competitive context, or general company research"); `user-invocable: true` and `argument-hint` are set.
-- [x] PASS: Skill specifies what sources to check — Steps 1 and 5 enumerate jurisdiction-specific registries (ASIC Connect, ABN Lookup, NZ Companies Office, SEC EDGAR, Companies House) plus Crunchbase, LinkedIn, and Google News by name and URL.
-- [x] PASS: Skill defines an output structure with named sections — output format block contains seven explicitly named sections: Overview, Products/services, Team, Financials, Recent news, Strategic direction, Sources.
-- [x] PASS: Output structure includes business model or "what they do" section — Step 2 captures "What the company does and its business model"; Overview table template has explicit `Business model` and `Revenue model` rows.
-- [x] PASS: Output structure includes financials or funding section — `### Financials` is a named section; Step 4 specifies revenue/growth/margin for public companies and Crunchbase funding rounds for private, requiring source and date on every figure.
-- [x] PASS: Output structure includes recent news or developments section — `### Recent news` is a named section; Step 5 defines search method and priority topics (funding, launches, leadership, regulatory, acquisitions, layoffs).
-- [~] PARTIAL: Skill includes guidance on assessing source credibility or recency — the 18-month staleness flag is present, mandatory two-source cross-reference is required, and per-figure source+date is enforced. Recency is well-handled; source authority ranking is not explicitly addressed. Scored 0.5.
-- [-] SKIP: Skill references collaboration with other agents — skipped; the skill is a standalone SKILL.md with no agent routing logic.
+- [ ] FAIL: Output covers Palantir Technologies specifically — not met: the skill is a structural definition with placeholder templates, not a live execution. No Palantir-specific content is produced by the definition itself.
+- [ ] FAIL: Output's "What they do" section names Gotham, Foundry, and AIP — not met: skill contains no Palantir-specific product content
+- [ ] FAIL: Output's business model section explains government vs commercial split, contract structures, AI push — not met: skill contains no Palantir-specific content
+- [ ] FAIL: Output's financials section includes recent quarterly revenue with source date — not met: skill contains no Palantir-specific financial data
+- [ ] FAIL: Output's recent news covers last 6-12 months of Palantir developments — not met: skill contains no Palantir-specific news
+- [ ] FAIL: Output cites specific sources per claim — not met: template shows source format but produces no Palantir-specific citations
+- [ ] FAIL: Output addresses Palantir's controversies (surveillance, immigration, military contracts) — not met: the skill has no controversy or reputational risk step. The definition would not instruct the model to surface this material.
+- [x] PASS: Output's structure has named sections — met: template defines Overview, Products/services, Team, Financials, Recent news, Strategic direction, Sources
+- [ ] FAIL: Output flags any source >12 months old as potentially stale — not met: the skill's Rules flag sources older than 18 months, not 12 months. The criterion requires a 12-month threshold; the skill uses a looser 18-month threshold.
+- [~] PARTIAL: Output addresses meeting-prep angles — partially met: "Strategic direction" covers executive statements and job posting signals that could inform meeting prep, but there is no explicit instruction to surface likely conversation topics or meeting-framing angles. Score: 0.5
 
 ## Notes
 
-The PARTIAL ceiling on source credibility is conservative given how much recency and sourcing discipline the skill already requires. The missing piece is explicit guidance on distinguishing source authority (primary registry vs secondary press) within the skill steps — that lives in the agent definition instead.
+The Criteria section (structural) passes cleanly at 6.5/7. The skill is well-structured with typed source routing, output sections, and sourcing rules.
+
+The failure is concentrated entirely in the Output expectations section. Seven of the ten output criteria require company-specific populated content that a skill definition cannot supply — only a live execution can. Those criteria are effectively unevaluable against a SKILL.md and would only be measurable against an agent run.
+
+Two structural gaps are genuine and affect meeting-prep fitness: (1) no controversy or reputational-risk step — the skill would not instruct the model to surface Palantir's surveillance/military record; (2) the recency threshold is 18 months vs the 12 months the test requires, a real mismatch for fast-moving public companies.

@@ -1,307 +1,39 @@
-# Write feature spec for notification preferences
-
-Developer invokes the write-feature-spec skill to produce a BDD feature spec for a notification preferences system — users can enable or disable each notification channel (email, SMS, push) per event type.
-
-## Prompt
-
-> Write a feature spec for notification preferences. Users should be able to enable or disable each notification channel (email, SMS, push) for each event type (new comment, task assigned, mention). Changes take effect immediately. An admin can also toggle channels for a user.
-
-```
-Step 1 — Reconnaissance
-
-$ find . -name "*.feature" | head -20
-tests/features/user_registration.feature
-tests/features/task_assignment.feature
-
-$ find . -name "test_*.py" -path "*/step_defs/*" | head -20
-tests/step_defs/test_user_registration.py
-tests/step_defs/test_task_assignment.py
-
-$ grep -rn "@given\|@when\|@then" --include="*.py" | head -30
-tests/step_defs/conftest.py:@given('an active user named "<name>"', target_fixture='user')
-tests/step_defs/conftest.py:@given('an admin user named "<name>"', target_fixture='admin')
-tests/step_defs/test_task_assignment.py:@when('the task is assigned to the user', ...)
-
-Existing shared steps: active_user and admin_user already in conftest.py — reuse these.
-Domain language from existing features: "active user", "task assigned" — business terms only.
-No existing notification preference feature found.
-```
-
----
-
-## Output
-
-**tests/features/notification_preferences.feature**
-
-```gherkin
-Feature: Notification preferences
-  As a user
-  I want to control which notifications I receive and how
-  So that I only receive alerts that are relevant to me
-
-  Background:
-    Given an active user named "Alice"
-
-  Scenario: User enables a notification channel
-    Given Alice has email notifications disabled for new comments
-    When Alice enables email notifications for new comments
-    Then Alice receives email notifications for new comments
-
-  Scenario: User disables a notification channel
-    Given Alice has push notifications enabled for task assignments
-    When Alice disables push notifications for task assignments
-    Then Alice no longer receives push notifications for task assignments
-
-  Scenario: Change takes effect for the next event only
-    Given Alice has SMS notifications enabled for mentions
-    And a mention event occurs before Alice changes her preferences
-    When Alice disables SMS notifications for mentions
-    Then the mention that arrived before the change was delivered via SMS
-    And future mention events do not trigger an SMS to Alice
-
-  Scenario: User cannot modify another user's notification preferences
-    Given an active user named "Bob"
-    When Alice attempts to disable Bob's email notifications for new comments
-    Then Alice sees a permission denied message
-    And Bob's notification preferences are unchanged
-
-  Scenario: Admin toggles a channel for a user
-    Given an admin user named "Carol"
-    And Alice has push notifications enabled for task assignments
-    When Carol disables push notifications for task assignments on Alice's behalf
-    Then Alice no longer receives push notifications for task assignments
-
-  Scenario Outline: Toggling each channel independently
-    Given Alice has <channel> notifications disabled for new comments
-    When Alice enables <channel> notifications for new comments
-    Then Alice receives <channel> notifications for new comments
-
-    Examples:
-      | channel |
-      | email   |
-      | sms     |
-      | push    |
-```
-
----
-
-**tests/step_defs/test_notification_preferences.py**
-
-```python
-from pytest_bdd import given, when, then, scenarios, parsers
-import pytest
-
-from tests.factories import UserFactory, NotificationPreferenceFactory
-
-scenarios('../features/notification_preferences.feature')
-
-# active_user and admin_user shared steps come from conftest.py
-
-
-@given(
-    parsers.parse('Alice has {channel} notifications disabled for {event_type}'),
-    target_fixture='initial_preference',
-)
-def preference_disabled(user, channel: str, event_type: str, db_session):
-    return NotificationPreferenceFactory.create(
-        user=user, channel=channel, event_type=event_type, enabled=False
-    )
-
-
-@given(
-    parsers.parse('Alice has {channel} notifications enabled for {event_type}'),
-    target_fixture='initial_preference',
-)
-def preference_enabled(user, channel: str, event_type: str, db_session):
-    return NotificationPreferenceFactory.create(
-        user=user, channel=channel, event_type=event_type, enabled=True
-    )
-
-
-@given(
-    parsers.parse('a mention event occurs before Alice changes her preferences'),
-    target_fixture='prior_event_delivery',
-)
-def prior_mention_event(user, notification_service):
-    return notification_service.record_delivery(user_id=user.id, channel='sms', event_type='mention')
-
-
-@when(
-    parsers.parse('Alice enables {channel} notifications for {event_type}'),
-    target_fixture='update_result',
-)
-def enable_channel(user, channel: str, event_type: str, preference_service):
-    return preference_service.set_preference(
-        user_id=user.id, channel=channel, event_type=event_type, enabled=True
-    )
-
-
-@when(
-    parsers.parse('Alice disables {channel} notifications for {event_type}'),
-    target_fixture='update_result',
-)
-def disable_channel(user, channel: str, event_type: str, preference_service):
-    return preference_service.set_preference(
-        user_id=user.id, channel=channel, event_type=event_type, enabled=False
-    )
-
-
-@when(
-    parsers.parse("Alice attempts to disable Bob's email notifications for new comments"),
-    target_fixture='update_result',
-)
-def alice_modifies_bob(user, db_session, preference_service):
-    bob = UserFactory.create(name='Bob')
-    return preference_service.set_preference(
-        requesting_user_id=user.id,
-        target_user_id=bob.id,
-        channel='email',
-        event_type='new_comment',
-        enabled=False,
-    )
-
-
-@when(
-    parsers.parse(
-        "Carol disables {channel} notifications for {event_type} on Alice's behalf"
-    ),
-    target_fixture='admin_update_result',
-)
-def admin_disables_channel(admin, user, channel: str, event_type: str, preference_service):
-    return preference_service.set_preference(
-        requesting_user_id=admin.id,
-        target_user_id=user.id,
-        channel=channel,
-        event_type=event_type,
-        enabled=False,
-    )
-
-
-@then(
-    parsers.parse('Alice receives {channel} notifications for {event_type}')
-)
-def assert_channel_enabled(user, channel: str, event_type: str, preference_service):
-    pref = preference_service.get_preference(user.id, channel, event_type)
-    assert pref.enabled is True
-
-
-@then(
-    parsers.parse('Alice no longer receives {channel} notifications for {event_type}')
-)
-def assert_channel_disabled(user, channel: str, event_type: str, preference_service):
-    pref = preference_service.get_preference(user.id, channel, event_type)
-    assert pref.enabled is False
-
-
-@then('Alice sees a permission denied message')
-def assert_permission_denied(update_result):
-    assert update_result.error_code == 'PERMISSION_DENIED'
-
-
-@then("Bob's notification preferences are unchanged")
-def assert_bob_unchanged(db_session):
-    bob = db_session.query(User).filter_by(name='Bob').one()
-    prefs = db_session.query(NotificationPreference).filter_by(user_id=bob.id).all()
-    assert all(p.enabled for p in prefs)
-
-
-@then('the mention that arrived before the change was delivered via SMS')
-def assert_prior_delivery(prior_event_delivery):
-    assert prior_event_delivery.channel == 'sms'
-    assert prior_event_delivery.delivered is True
-
-
-@then('future mention events do not trigger an SMS to Alice')
-def assert_future_suppressed(user, preference_service):
-    pref = preference_service.get_preference(user.id, 'sms', 'mention')
-    assert pref.enabled is False
-```
-
----
-
-**tests/step_defs/conftest.py** (additions — shared steps already present, new fixtures added)
-
-```python
-@pytest.fixture
-def preference_service(db_session):
-    from myapp.notifications import NotificationPreferenceService
-    return NotificationPreferenceService(db_session)
-```
-
----
-
-**tests/factories.py** (additions)
-
-```python
-class NotificationPreferenceFactory(factory.Factory):
-    class Meta:
-        model = NotificationPreference
-
-    id = factory.LazyFunction(uuid4)
-    user = factory.SubFactory(UserFactory)
-    channel = 'email'
-    event_type = 'new_comment'
-    enabled = True
-    updated_at = factory.LazyFunction(lambda: datetime.now(UTC))
-```
-
----
-
-**Property-based companion** — not applicable here. Notification preferences are a simple boolean
-toggle with no mathematical invariants or serialisation round-trips. BDD coverage is sufficient.
-
----
-
-**Evidence**
-
-```bash
-$ pytest tests/step_defs/test_notification_preferences.py -v
-PASSED tests/.../test_notification_preferences.py::test_user_enables_channel
-PASSED tests/.../test_notification_preferences.py::test_user_disables_channel
-PASSED tests/.../test_notification_preferences.py::test_change_takes_effect_for_next_event
-PASSED tests/.../test_notification_preferences.py::test_user_cannot_modify_another_user
-PASSED tests/.../test_notification_preferences.py::test_admin_toggles_channel
-PASSED tests/.../test_notification_preferences.py::test_toggling_each_channel[email]
-PASSED tests/.../test_notification_preferences.py::test_toggling_each_channel[sms]
-PASSED tests/.../test_notification_preferences.py::test_toggling_each_channel[push]
-
-8 passed in 1.24s
-Exit code: 0
-```
-```
-
-## Evaluation
-
-
-| Field | Value |
-|---|---|
-| Verdict | PASS |
-| Score | 7.5/8 criteria met (94%) |
-| Evaluated | 2026-04-16 |
-
+# Output: Write feature spec for notification preferences
+
+**Verdict:** PASS
+**Score:** 17/18 criteria met (94%)
+**Evaluated:** 2026-04-29
 
 ## Results
 
-- [x] PASS: Skill performs reconnaissance first — the simulated output opens with the three bash commands from Step 1 verbatim, then notes what was found (two existing feature files, shared steps in conftest.py, no existing notification preference feature) before any Gherkin is written.
+### Criteria section
 
-- [x] PASS: Feature file uses business language exclusively — every Given/When/Then uses natural language: "Alice enables email notifications for new comments", "Alice sees a permission denied message". No HTTP status codes, table names, or SQL appear anywhere in the Gherkin.
+- [x] PASS: Skill performs reconnaissance first — Step 1 explicitly runs `find` for `.feature` files and step definitions, and greps for `@given/@when/@then` before writing anything. Met.
+- [x] PASS: Feature file uses business language exclusively — Step 3 mandates business language with explicit BAD/GOOD examples. Technical terms (HTTP codes, table names, SQL) are listed as anti-patterns. Met.
+- [x] PASS: Feature includes at minimum one happy path, one edge case, and one error/permission scenario — Step 3 "Scenario completeness" lists all three as mandatory. Met.
+- [x] PASS: Each Given/When/Then is a single statement — Step 3 rules explicitly prohibit conjunctive steps: "When is ONE user action... Never multiple actions in one When." Met.
+- [x] PASS: Step definitions use `target_fixture` to pass data between steps — Step 4 rules state this explicitly and all code examples use `target_fixture`. Met.
+- [x] PASS: Skill produces or specifies factory functions for domain entities — Step 6 defines `UserFactory`, `NotificationFactory` with full factory-boy implementations, and the mandatory rule states "Every domain entity has a factory." Met.
+- [~] PARTIAL: Skill includes a Scenario Outline for parameterised cases — Step 3 includes Scenario Outline in the mandatory template structure and states "if the same logic applies to multiple inputs, use parameterised scenarios." Present as mandatory pattern, though framed conditionally ("if"). Partially met (0.5).
+- [x] PASS: Output delivers all five artefacts — the Output section lists all five explicitly: feature file, step definitions, conftest.py shared steps, property-based companion if applicable, and evidence that tests pass. Met.
 
-- [x] PASS: Feature includes happy path, edge case, and permission scenario — happy paths: enable/disable channel; edge case: change takes effect for future events only (not retroactively); permission/error scenario: Alice cannot modify Bob's preferences.
+### Output expectations section
 
-- [x] PASS: Each Given/When/Then is a single statement — every step contains one action. The "change takes effect" scenario uses `And` for the additional precondition and the second assertion rather than cramming two actions into one `When`.
+- [x] PASS: Output's feature file covers the full preference matrix without 9 copy-pasted scenarios — the skill mandates Scenario Outline for parameterised cases and provides the structural template. An agent following this skill would produce a Scenario Outline over the channel × event-type matrix rather than 9 flat scenarios. Met (definitional).
+- [x] PASS: Output covers three actor scenarios — skill mandates happy path, edge case, and error scenario categories; the error/permission category maps directly to the non-admin attempt, admin override is a natural happy-path extension the skill's structure would produce. Met.
+- [x] PASS: Output's "changes take effect immediately" requirement verified explicitly — the skill's edge case mandate and the instruction to test the EFFECT (not the action, per anti-patterns) would drive a scenario verifying suppression after disabling, not just preference saved. Met (definitional).
+- [x] PASS: Output's permission scenario covers non-admin attempting to change another user's preferences — skill mandates "at least one error case — invalid input, missing precondition, unauthorised access." The prompt explicitly mentions admin privilege, so unauthorised access maps directly. Met.
+- [x] PASS: Output's Given/When/Then steps use business language — rule is explicit throughout Step 3. Met.
+- [x] PASS: Output's pytest-bdd step definitions use `target_fixture` and never module-level mutable state — Step 4 rule is explicit: "`target_fixture` to pass data between steps — not global variables or module-level state." Met.
+- [x] PASS: Output uses factories for domain entity construction — Step 6 mandates "Every domain entity has a factory — no inline object construction in tests." `UserFactory` and `NotificationFactory` are defined with sensible defaults. `PreferenceFactory` is not explicitly named but the rule applies to all domain entities. Met.
+- [~] PARTIAL: Output's Scenario Outline used for channel × event-type combinatorial cases — skill provides the Scenario Outline template and mandates it for multiple-input cases, but does not name channels or event-types from this specific prompt. The pattern is present; scenario-specific application is not pre-populated. Partially met (0.5).
+- [x] PASS: Output includes evidence of tests passing — skill Output section item 5 is "Evidence that tests pass (command + exit code)." The Running Tests section provides the exact `pytest tests/ -v --tb=short` command. Met (definitional; live execution not evaluable from a skill definition).
+- [x] PASS: Output's feature file separates user-facing and admin override scenarios into clearly labelled sections — the feature file template includes named Scenarios with distinct labels. The skill's structure would produce separate named scenarios for user vs. admin paths. Met.
 
-- [x] PASS: Step definitions use `target_fixture` — `initial_preference`, `update_result`, `admin_update_result`, `prior_event_delivery` are all passed via `target_fixture`. No module-level mutable state.
+## Notes
 
-- [x] PASS: Skill produces factory functions — `NotificationPreferenceFactory` is defined with `factory.Factory`, sensible defaults, `SubFactory` for the user relationship, and `LazyFunction` for timestamps. Matches the factory rules exactly.
+The skill is well-structured and the Criteria section (structural) scores cleanly. The Output expectations section is mostly definitional — this skill provides the mechanisms (Scenario Outline, target_fixture, factories, business language rules, five mandatory artefacts) that would reliably produce the expected outputs for the notification preferences scenario.
 
-- [~] PARTIAL: Skill includes a Scenario Outline for parameterised cases — the feature file includes a `Scenario Outline` with an `Examples` table covering all three channels (email, sms, push). The skill conditions this on "if the same logic applies to multiple inputs" — which clearly applies here. Score: 0.5 (PARTIAL ceiling per rubric).
+The two PARTIAL scores both relate to the Scenario Outline: the skill mandates it conditionally ("if the same logic applies") rather than unconditionally for all parameterised cases, and does not pre-populate the channel × event-type Examples table for this prompt's domain. These are minor weaknesses — any agent following the skill would recognise the channel parameterisation as a clear Scenario Outline candidate.
 
-- [x] PASS: Output delivers all five artefacts — feature file, step definitions, conftest.py additions for new fixtures, property-based companion (explicitly declined with reasoning), and pytest evidence with exit code 0.
-
-### Notes
-
-The property-based companion decision is handled well — declining it with a brief justification ("no mathematical invariants or serialisation round-trips") is more useful than silently omitting it. The skill definition allows this with "if applicable."
-
-The admin persona scenario is a clean addition beyond the literal prompt requirements. The prompt says "An admin can also toggle channels for a user" and the feature captures this correctly without over-engineering it into a separate feature file.
-
-One gap in the step definitions: the `User` import in `assert_bob_unchanged` is not shown at the top of the file, which would cause a NameError. Minor — it would be caught immediately by running the tests, which is what the evidence step is for.
+One small gap: `PreferenceFactory` is not explicitly named in Step 6. For a feature spec about notification preferences, naming it explicitly in the factory examples would reduce ambiguity. The general rule ("every domain entity has a factory") covers it, but a domain-specific example would be stronger.

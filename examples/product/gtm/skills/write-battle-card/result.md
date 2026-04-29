@@ -1,86 +1,39 @@
-# Write battle card
+# Output: Write battle card
 
-Testing whether the write-battle-card skill produces at least 4 objection/response pairs, includes landmine questions, and fits on a single page for sales use.
-
-## Prompt
-
-> /gtm:write-battle-card for competing against Monday.com — our sales team keeps losing deals when Monday comes up late in the evaluation and we don't have a consistent response.
-
-## Output
-
-**Battle Card: Clearpath vs. Monday.com**
-**DRAFT — requires human review before distribution to sales team**
-
-**Last updated:** 2026-04-16 | **Confidence:** Medium (pending win/loss data review)
-
-**TL;DR:** We win on reporting depth and onboarding speed. We lose on brand recognition and integration count. When Monday appears late in evaluation, anchor on cross-team utilisation reporting — it's the one thing their board model can't do.
-
-**Quick comparison:**
-
-| Dimension | Clearpath | Monday.com | Verdict |
-|---|---|---|---|
-| Cross-project reporting | Native, cross-team | Board-level only | Win |
-| Onboarding time | ~2 days | 2-3 weeks | Win |
-| Price (100 seats/mo) | ~$2,400 | ~$4,200 | Win |
-| Integration count | ~40 native | 200+ native | Lose |
-| Brand recognition | Growing | Established | Lose |
-
-**Objection handling:**
-
-| Objection | Response | Proof |
-|---|---|---|
-| "Monday has more integrations" | "Monday connects to everything and masters nothing. Our native time tracking and utilisation reporting replace 2-3 tools Monday needs you to connect." | Customer case study: [link] |
-| "Monday looks easier to use / more visual" | "Visual flexibility comes with a 2-3 week implementation cost. Most Clearpath customers are running in 2 days." | G2 reviews on implementation time |
-| "Monday is more established / more users" | "More users means more configuration complexity — their community forums are 40% 'how do I automate X.' We don't need a community to explain us." | G2 rating comparison |
-| "We're already evaluating Monday" | "What's driving the evaluation? If it's reporting across teams, that's exactly where Monday breaks down — it reports within boards, not across them." | Demo: cross-team utilisation view |
-| "Monday is cheaper" | "At 100 seats Monday is $4,200/month vs our $2,400, before implementation time. What's their onboarding support model?" | Public pricing pages |
-
-**Landmine questions to ask:**
-
-| Question | Reveals |
-|---|---|
-| "How do you currently report resource utilisation across multiple teams?" | Whether they're building this manually — our strongest win |
-| "What's your timeline for being productive after onboarding?" | Exposes their 2-3 week setup requirement |
-| "Who handles Monday configuration when your admin leaves?" | Highlights dependency on specialist knowledge |
-
-**Questions to avoid:**
-
-| Question | Why dangerous | If it comes up |
-|---|---|---|
-| "Have you seen Monday's pricing?" | Opens price negotiation before value is anchored | Redirect: "Let me show you the utilisation view first" |
-| "How many integrations do you need?" | Invites comparison of our 40 vs their 200+ | Redirect: "Which integrations are must-haves? We likely cover them" |
-
-**Competitive intel sources:**
-- Monday.com pricing page — checked 2026-04-16
-- G2 reviews (Monday.com category) — checked 2026-04-16
-
-**DRAFT — requires human review before distribution to sales team**
-
-## Evaluation
-
-
-| Field | Value |
-|---|---|
-| Verdict | PASS |
-| Score | 6.5/8 (81.3%) |
-| Evaluated | 2026-04-16 |
-
+**Verdict:** PARTIAL
+**Score:** 14/17 criteria met (82%)
+**Evaluated:** 2026-04-29
 
 ## Results
 
-- [x] PASS: Research step required — Step 1 "Research the competitor" requires checking existing analysis, competitor profile, recent changes, and win/loss data before writing; the rule states "Every claim on the battle card must have a source."
-- [x] PASS: Win/loss analysis required — Step 2 "Identify win/lose dynamics" is a required step; Step 1 explicitly requires searching "deal retrospectives, CRM notes, or customer feedback that mentions this competitor."
-- [x] PASS: At least 4 objection/response pairs — Step 3 states "Build at least 4 objection-response pairs. Prioritise by frequency"; the template includes objection, why they say it, response, and proof point per pair.
-- [x] PASS: Landmine questions — Step 4 "Create landmine questions" is a dedicated required section covering both questions to ask (to expose competitor weaknesses) and questions to avoid (to protect our own weaknesses).
-- [x] PASS: Single page, scannable — the Rules section states "If a rep can't scan the card and find what they need in 30 seconds, the card is too long. Prefer tables and bullets over paragraphs." The battle card template uses tables throughout.
-- [x] PASS: All messaging labelled DRAFT — the Rules section states "All output is DRAFT until human-reviewed. Label every output with 'DRAFT — requires human review' at the top and bottom." This is explicit and required by the skill definition.
-- [~] PARTIAL: Buyer type/deal stage segmentation — the objection handling step (Step 3) does not segment responses by buyer persona or deal stage; one set of responses covers all scenarios regardless of whether the buyer is an ops director, IT buyer, or finance approver, or whether the deal is early-stage or a late competitive displacement. PARTIAL prefix applies: 0.5.
-- [x] PASS: Valid YAML frontmatter — frontmatter contains `name: write-battle-card`, `description`, and `argument-hint` fields.
+### Criteria (skill definition — 7.5/8)
+
+- [x] PASS: Research step required — Step 1 mandates checking existing analysis, competitor profile, recent changes, and win/loss data before writing. The rule "Every claim on the battle card must have a source" reinforces this as a hard gate, not a suggestion.
+- [x] PASS: Win/loss analysis required — Step 2 "Identify win/lose dynamics" is a dedicated required step with a structured table. Step 1 explicitly requires searching "deal retrospectives, CRM notes, or customer feedback that mentions this competitor." The rules state "Include where we lose. A battle card that claims we win everywhere is not credible."
+- [x] PASS: At least 4 objection/response pairs — Step 3 states "Build at least 4 objection-response pairs. Prioritise by frequency." The structured format (objection, why they say it, response, proof point) is required per pair.
+- [x] PASS: Landmine questions — Step 4 "Create landmine questions" is a dedicated required step covering questions to ask (expose competitor weaknesses) and questions to avoid (expose our own weaknesses), with structured tables.
+- [x] PASS: Single page, scannable — description calls it "one-page sales reference" and "scannable in under 30 seconds." Rules state "If a rep can't scan the card and find what they need in 30 seconds, the card is too long. Prefer tables and bullets over paragraphs."
+- [x] PASS: All messaging labelled DRAFT — Rules explicitly state "Label every output with 'DRAFT — requires human review' at the top and bottom." Both the rule and the template header enforce this.
+- [~] PARTIAL: Buyer type/deal stage segmentation — Step 3 includes explicit buyer persona segmentation (Economic buyer/CFO, Technical buyer/VP Eng, End user) and the template carries through. The segmentation is conditional on enterprise deals, which is honest — but the criteria expects segmented responses or deal-stage differentiation regardless. The skill handles this as optional rather than required, so partial credit.
+- [x] PASS: Valid YAML frontmatter — frontmatter contains `name: write-battle-card`, `description`, and `argument-hint` fields, all populated with appropriate values.
+
+### Output expectations (simulated output — 6.5/9)
+
+- [~] PARTIAL: Research notes on Monday.com are sourced — pricing cited from public pages, G2 mentioned. However, no win/loss data, no mention of Monday's CRM expansion, no recent positioning shifts, no product gap specifics. The research reads like it was synthesised from general knowledge rather than sourced intelligence.
+- [~] PARTIAL: Win/loss analysis identifies WHY Clearpath loses to Monday late in deals — the output has a quick comparison and TL;DR but does not explain the late-stage dynamic specifically: why Monday appears late, what decision context triggers it, what objections arise at that stage vs earlier. The scenario specifically calls this out and the output doesn't address it directly.
+- [x] PASS: At least 4 objection/response pairs — 5 pairs shown, each with objection, response, and proof point.
+- [x] PASS: Landmine questions surface Monday weaknesses — 3 questions with explanations of what they reveal. Questions target cross-team reporting, onboarding timelines, and admin dependency — all genuine Monday weaknesses.
+- [x] PASS: Fits single page — tables and bullets throughout, no narrative paragraphs. Scannable in under 60 seconds.
+- [x] PASS: Competitive truth is honest — explicitly shows where Monday wins (integrations: 200+ vs 40, brand recognition: established vs growing). Not a one-sided card.
+- [x] PASS: All messaging labelled DRAFT — appears at top and bottom of the output.
+- [x] PASS: Tone is calm and confident — not defensive, not bashing. Responses redirect to Clearpath strengths rather than attacking Monday directly.
+- [~] PARTIAL: Responses include proof points — some proof points are vague placeholders ("Customer case study: [link]", "G2 reviews on implementation time"). The pricing comparison is specific and credible. The case study link is not real. A sales-ready card would need real links and real quotes. Partial credit because the structure is right but the substance is placeholder.
+- [ ] FAIL: Output addresses different buyer types — no segmentation by IT decision-maker, Operations leader, or End-user team lead. All objections are flat. The skill's own template includes buyer persona tables but the simulated output doesn't use them.
 
 ## Notes
 
-The previous evaluation scored this FAIL on criterion 6 (DRAFT labelling). The skill has since been updated to include "All output is DRAFT until human-reviewed. Label every output with 'DRAFT — requires human review' at the top and bottom" in the Rules section. This criterion now passes, moving the verdict from PARTIAL (75%) to PASS (81.3%).
+The skill definition is strong. The output exposes a gap between the skill's stated requirements and what a model actually produces. The skill mandates buyer persona segmentation for enterprise deals and provides a template for it, but the simulated output flattens everything into a single objection table.
 
-The landmine questions design is notably good: requiring both questions to ask and questions to avoid is more practical than most battle card frameworks. A rep who doesn't know what not to ask can hand the competitor an opening.
+The research step is the other structural weakness in the output. The skill correctly requires sourced intelligence before writing, but the output's sources are public pages checked on a single day. No CRM data, no win/loss retrospectives, no recent positioning intel (Monday's CRM push is a meaningful competitive development that goes unmentioned). The skill cannot force an agent to have access to internal data, but the output should at minimum flag where internal data was unavailable rather than proceeding as if generic sources are sufficient.
 
-The buyer segmentation gap is the remaining substantive weakness. A late-stage competitive displacement against an IT buyer needs different framing than an early-stage comparison against an ops director. The skill doesn't address this.
+The "questions to avoid" section in Step 4 is the most practically useful element most battle card templates omit. It survives into the output and is stronger for it.

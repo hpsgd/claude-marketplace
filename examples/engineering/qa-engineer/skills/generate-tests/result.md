@@ -1,56 +1,38 @@
-# Generate tests for a discount code validation function
-
-Developer invokes the generate-tests skill targeting a `validate_discount_code` function in Python. The function checks if a code is valid, not expired, not already used by this customer, and applies a percentage or fixed discount.
-
-## Prompt
-
-> Generate tests for `src/billing/discount.py::validate_discount_code`. The function signature is `validate_discount_code(code: str, customer_id: UUID, order_total: Decimal) -> DiscountResult`. It should: return a DiscountResult with amount when valid, raise `DiscountNotFoundError` for unknown codes, raise `DiscountExpiredError` for expired codes, raise `DiscountAlreadyUsedError` if this customer already used this code, and raise `DiscountMinimumNotMetError` if the order total is below the discount's minimum.
-
-## Output
-
-**Simulated skill output for this prompt:**
-
-Step 1: reads `src/billing/discount.py::validate_discount_code` completely — inspects inputs (code, customer_id, order_total), output (DiscountResult), error types (4 specific exceptions), and database call pattern to fetch the discount code.
-
-TDD Iron Law: RED test first. `pytest tests/billing/test_discount.py -v` → exit code 1 with `ModuleNotFoundError` or `NotImplementedError`. Then GREEN → exit code 0.
-
-Test cases:
-- Happy path: valid percentage discount (20% off), valid fixed discount ($10 off)
-- Edge cases: minimum order exactly met (boundary value), code expiring at midnight today
-- Error cases: unknown code → `DiscountNotFoundError`, expired code → `DiscountExpiredError`, already used → `DiscountAlreadyUsedError`, minimum not met → `DiscountMinimumNotMetError`
-
-Run mode: `pytest tests/billing/test_discount.py -v`. Not watch mode.
-
-One assertion per test: each test has a single `assert` or `pytest.raises` block.
-
-Mocking: only the database call (`get_discount_by_code` repository function) at the boundary. Not mocking `validate_discount_code` itself.
-
-Factories: `DiscountFactory(code="SAVE20", type="percentage", amount=20)` via `@pytest.fixture`. No inline magic strings.
-
-Hypothesis: property-based test for discount calculation — percentage discount result is always between 0 and `order_total`.
-
-Evidence table: test name | command | exit code | PASS/FAIL.
-
-## Evaluation
-
-- [x] PASS: Skill reads function completely before writing tests — generate-tests SKILL.md Step 1 (Reconnaissance) is explicitly marked MANDATORY before writing any test; mandates reading inputs, outputs, side effects, and error paths.
-- [x] PASS: Skill follows TDD Iron Law — generate-tests SKILL.md opens with the Iron Law section: RED → confirm exit code 1 with meaningful failure message → GREEN → confirm exit code 0. This is marked "not a suggestion."
-- [x] PASS: Test cases cover all required categories — generate-tests SKILL.md Step 2 mandates happy path (MUST have), edge cases including boundary values (MUST have), and error cases including invalid inputs that throw (MUST have). All four error exception types fall under error cases.
-- [x] PASS: Tests run in run mode — generate-tests SKILL.md Step 4 specifies `pytest tests/path/to/test_file.py -v` as the run mode command; never watch mode.
-- [x] PASS: Each test has one assertion — generate-tests SKILL.md Step 3 mandates "Assert — verify ONE expected outcome"; Anti-Patterns lists "Multiple assertions per test" as never do.
-- [x] PASS: Skill mocks only external boundaries — generate-tests SKILL.md Anti-Patterns: "Mocking what you own — mock at external boundaries only (HTTP, database, file system). Use real implementations for your own code."
-- [x] PASS: Skill uses factories for test data — generate-tests SKILL.md Python/pytest-bdd section specifies "`@pytest.fixture` for test data factories and shared setup"; Anti-Patterns: "Inline test data — magic strings and numbers scattered through tests. Use factories."
-- [x] PASS: Evidence table produced — generate-tests SKILL.md Evidence Requirements section mandates the table with test name, exact command, exit code, and PASS/FAIL result. Format is explicitly specified.
-- [~] PARTIAL: Skill uses Hypothesis for property-based testing — generate-tests SKILL.md Python/pytest-bdd section mentions "Hypothesis for property-based testing alongside BDD scenarios" but this is listed as a rule in the stack-specific patterns section, not a mandatory step. It is referenced as an expected approach for Python, supporting a 0.5 score. Maximum score is 0.5 per criterion ceiling.
-
+# Output: Generate tests for a discount code validation function
 
 | Field | Value |
 |---|---|
-| Verdict | PASS |
-| Score | 8.5/9 criteria met (94%) |
-| Evaluated | 2026-04-16 |
+| **Verdict** | PARTIAL |
+| **Score** | 18/19 criteria met (94.7%) |
+| **Evaluated** | 2026-04-29 |
 
+## Results
+
+### Criteria
+
+- [x] PASS: Skill reads the function completely before writing any test — Step 1 (Reconnaissance) is explicitly marked MANDATORY before writing any test; requires reading inputs, outputs, side effects, and error paths.
+- [x] PASS: Skill follows TDD Iron Law — the skill opens with the Iron Law section specifying RED → confirm exit code 1 with meaningful failure message → GREEN → confirm exit code 0. Marked "not a suggestion."
+- [x] PASS: Test cases cover all required categories — Step 2 mandates happy path (MUST have) with multiple valid input variations, edge cases including boundary values (MUST have), and error cases including inputs that throw (MUST have). All four error types fall under the error cases category.
+- [x] PASS: Tests run in run mode — Step 4 specifies `pytest tests/path/to/test_file.py -v` as the run command, with an explicit note that watch mode is never used.
+- [x] PASS: Each test has one assertion — Step 3 mandates "Assert — verify ONE expected outcome"; Anti-Patterns lists "Multiple assertions per test" as never-do.
+- [x] PASS: Skill mocks only external boundaries — Anti-Patterns: "Mocking what you own — mock at external boundaries only (HTTP, database, file system). Use real implementations for your own code."
+- [x] PASS: Skill uses factories for test data — Python/pytest-bdd section specifies `@pytest.fixture` for test data factories and shared setup; Anti-Patterns: "Inline test data — magic strings and numbers scattered through tests. Use factories."
+- [x] PASS: Evidence table is produced with test name, exact command, exit code, and PASS/FAIL result — Evidence Requirements section mandates exactly this table format with all four columns specified.
+- [~] PARTIAL: Skill uses Hypothesis for property-based testing — Python/pytest-bdd section references "Hypothesis for property-based testing alongside BDD scenarios" as a rule, but it is not a mandatory step in the main process. Present but not enforced. Score: 0.5.
+
+### Output expectations
+
+- [x] PASS: Output produces tests for every named exception — Error cases are MUST have in Step 2, and Reconnaissance mandates reading all error paths. All four exceptions (`DiscountNotFoundError`, `DiscountExpiredError`, `DiscountAlreadyUsedError`, `DiscountMinimumNotMetError`) are covered by the mandatory error cases category with `pytest.raises` implied by the stack-specific patterns.
+- [x] PASS: Output's happy-path tests cover both percentage and fixed discount — Step 2 mandates "Multiple valid input variations if the function branches on input type." The function branches on discount type, so both must appear.
+- [x] PASS: Output's edge cases include exact minimum boundary and expiry boundary — Step 2 mandates "Boundary values (min, max, off-by-one, first, last)" as MUST have for edge cases. Both boundary conditions are captured.
+- [x] PASS: Output uses `Decimal` for `order_total` and amount values — Reconnaissance (Step 1) requires reading actual inputs and outputs. The function signature uses `Decimal`; tests derived from it must match the type.
+- [x] PASS: Output writes RED first — TDD Iron Law is mandatory and requires showing `pytest` with exit code 1 before implementation, then exit code 0.
+- [x] PASS: Output mocks only the database lookup boundary — Anti-Patterns explicitly states "mock at external boundaries only (HTTP, database, file system)" and "never mock what you own."
+- [x] PASS: Output uses factories or fixtures for Discount, Customer, and DiscountUsage entities — Anti-Patterns bans inline test data with magic strings; Python rules specify `@pytest.fixture` for factories.
+- [x] PASS: Output's tests follow one-assertion-per-test — Anti-Patterns bans "Multiple assertions per test" with a clear rationale.
+- [x] PASS: Output's evidence table lists every test with name, exact command, exit code, and PASS/FAIL result — Evidence Requirements section mandates this exact four-column format.
+- [~] PARTIAL: Output includes Hypothesis property-based tests — Hypothesis is referenced in the Python/pytest-bdd rules but sits outside the mandatory process. An agent following only the mandatory steps may omit it. Score: 0.5.
 
 ## Notes
 
-All PASS criteria are explicitly supported by specific steps, anti-patterns, or mandatory sections in generate-tests SKILL.md. The Hypothesis criterion is genuinely referenced in the definition (Python section) but not as a mandatory step, which correctly maps to the 0.5 PARTIAL ceiling.
+Both PARTIAL criteria point to the same gap: Hypothesis is present in the skill but positioned as a stack-specific rule rather than a mandatory step. An agent following the process strictly could skip it without violating any mandatory marker. Elevating Hypothesis to a numbered step in the Python process section (e.g., Step 2.5 for property-based tests when using pytest) would close this gap. All other criteria are covered by explicit, named mandatory sections or unambiguous anti-patterns.

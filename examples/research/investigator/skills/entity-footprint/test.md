@@ -17,3 +17,16 @@ Scenario: A venture capital analyst wants to map the public digital presence of 
 - [ ] PASS: If investigation surfaces individual employee details, skill notes the data exists but does not expand into profiling individuals
 - [ ] PARTIAL: Regulatory filings via ASIC Connect are checked, with press coverage searched for the last 12 months
 - [ ] PASS: Follow-on skill routing is appropriate — domain-intel, ip-intel, or corporate-ownership suggested where relevant assets are found
+
+## Output expectations
+
+- [ ] PASS: Output's primary domain identification confirms safetyculture.com (the corporate domain) and any related — safetyculture.io, iauditor.com (legacy / brand-specific), regional variants — discovered via reverse-WHOIS and certificate transparency
+- [ ] PASS: Output's web-presence section covers — corporate site (safetyculture.com), product portal (app.safetyculture.com), developer portal (developer.safetyculture.com if exists), status page (status.safetyculture.com), help centre, blog
+- [ ] PASS: Output's social profiles table covers LinkedIn (with employee count signal), Twitter/X, GitHub (org name), YouTube — with absence on any platform stated explicitly as a finding rather than silently skipped
+- [ ] PASS: Output's app store presence checks both iOS App Store and Google Play — iAuditor app ID, install count tier, average rating, last updated — confirming the consumer-facing mobile footprint
+- [ ] PASS: Output's GitHub investigation lists public repos — open source projects, SDKs, code samples — and tech stack patterns (languages, frameworks evident from repo activity)
+- [ ] PASS: Output's hiring signals come from at least 3 sources — careers page on safetyculture.com, LinkedIn job posts, Seek (since they're AU-headquartered) — with the tech-stack and team-build inferences stated as signals not certainty
+- [ ] PASS: Output addresses individual-employee scope — if employee names surface (founder profiles, key engineers in GitHub commits, executive team page) the names are noted but NOT expanded into individual profiling, per the entity-not-person scope of the skill
+- [ ] PASS: Output's regulatory filings use ASIC Connect — confirming SafetyCulture Pty Ltd entity details, directors, recent filings (annual returns, charges), and registered office — with sources cited
+- [ ] PASS: Output's press coverage section covers the last 12 months — funding announcements, executive moves, product launches — with sources from AFR, AusBiz, SmartCompany, TechCrunch
+- [ ] PARTIAL: Output's follow-on routing suggests — `/investigator:domain-intel` for any suspicious-looking related domain, `/investigator:corporate-ownership` for the entity structure if the partner-meeting context warrants ownership clarity

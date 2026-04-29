@@ -1,91 +1,41 @@
-# Write JTBD
+# Output: Write JTBD
 
-Testing whether the write-jtbd skill definition requires functional, emotional, and social job statements, an outcome table with opportunity scoring, and hiring/firing criteria.
-
-## Prompt
-
-> /product-owner:write-jtbd for the reporting and analytics area of our project management tool, focusing on how operations directors use our data.
-
-## Output
-
-**JTBD: Reporting and Analytics — Operations Director**
-
-**Job Performer:**
-
-| Field | Description |
-|---|---|
-| **Performer** | Operations director responsible for portfolio of 10+ active projects |
-| **Triggering context** | Weekly exec meeting preparation, or when a project sponsor asks for a status update |
-| **Current solution** | Manual data export + Excel pivot tables + PowerPoint slides |
-| **Frequency** | Weekly for status reports, ad-hoc for board presentations |
-| **Emotional state** | Anxious — worried about missing a problem that hasn't surfaced yet |
-
-**Core functional job:** When I need to report on project portfolio health to my leadership team, I want to quickly identify which projects are at risk, so I can intervene before delivery failures become crises.
-
-**Related jobs:**
-
-Functional:
-| Sequence | Job Statement | Relationship |
-|---|---|---|
-| Before | When I start a planning cycle, I want to see resource utilisation across all teams, so I can spot overload before it affects delivery | Precondition |
-| During | When reviewing portfolio status, I want to drill into any project from the summary view, so I can verify a concern without re-running the report | Concurrent |
-| After | When presenting to executives, I want to share a live report link rather than a static export, so the data stays current if questions arise | Follow-up |
-
-Emotional:
-- I want to feel confident I haven't missed something important when I present to the board.
-- I want to avoid feeling caught off-guard when an executive asks about a project I haven't reviewed.
-
-Social:
-- I want to be seen as the person who has full visibility across the portfolio.
-- I want to be known as someone who surfaces problems before they become crises, not after.
-
-**Outcome table:**
-
-| # | Outcome Statement | Importance | Satisfaction | Opportunity |
-|---|---|---|---|---|
-| 1 | Minimise time to identify at-risk projects | 9 | 3 | 9 + max(9-3,0) = **15** |
-| 2 | Minimise likelihood of resource overload going undetected | 9 | 3 | **15** |
-| 3 | Minimise time to generate an exec-ready report | 8 | 3 | **13** |
-| 4 | Minimise manual data consolidation before presenting | 8 | 2 | **14** |
-| 5 | Increase confidence that report data is accurate | 8 | 4 | **12** |
-| 6 | Reduce time to compare team performance across projects | 7 | 4 | **10** |
-| 7 | Minimise effort to track on-time delivery trends | 7 | 5 | **9** |
-| 8 | Increase ability to schedule automated report delivery | 7 | 2 | **12** |
-| 9 | Minimise effort to share live report vs static export | 5 | 3 | **7** |
-
-Underserved (>12): outcomes 1, 2, 3, 4.
-
-**Hiring criteria:**
-| Push | Pull | Anxiety | Habit |
-|---|---|---|---|
-| Current tool requires 45+ min to prep a stakeholder report | Saw a demo where the report generated in under 2 minutes | Will I lose 3 years of historical data? | My team already knows the spreadsheet workflow |
-
-**Firing criteria:**
-1. Reports require too much manual configuration each time — gradual erosion
-2. Exec questions the accuracy of the data — sudden loss of trust
-3. Switching to a competitor whose reporting is faster — gradual substitution
-
-## Evaluation
-
-
-| Field | Value |
-|---|---|
-| Verdict | PASS |
-| Score | 7.5/8 (93.75%) |
-| Evaluated | 2026-04-16 |
-
+**Verdict:** PARTIAL
+**Score:** 15.5/18 criteria met (86%)
+**Evaluated:** 2026-04-29
 
 ## Results
 
-- [x] PASS: Core functional job in canonical format — Step 2 specifies the exact template "When I [situation/context], I want to [motivation/action], so I can [expected outcome/goal]" and states "Write exactly one core functional job." The output format also requires the job statement in this form.
-- [x] PASS: Emotional AND social jobs required — Step 3 defines three types of related jobs (Functional, Emotional, Social) and states "Do not skip emotional and social jobs. They are often the real reason someone switches products." Emotional and social are listed as separate required categories with their own formats.
-- [x] PASS: Outcome table with Importance, Satisfaction, and Opportunity Score — Step 4 provides the table template with columns: #, Job, Outcome Statement, Importance (1-10), Current Satisfaction (1-10), Opportunity. All three required columns are present.
-- [x] PASS: Opportunity Score formula with thresholds — Step 4 states "Opportunity Score = Importance + max(Importance - Satisfaction, 0). Scores above 12 are underserved. Scores below 6 are overserved." Both the formula and both thresholds are explicitly defined.
-- [x] PASS: Hiring and firing criteria — Step 5 defines Hiring Criteria with four switching trigger types (Push, Pull, Anxiety, Habit) and Firing Criteria requiring the top 5 firing moments with sudden/gradual classification. Both directions are explicitly required.
-- [x] PASS: Solution-specific statements prohibited — the Rules section explicitly states "Never define a job using your product's features — 'I want to use the dashboard' describes a solution, not a job." The rule is stated as "Never" and the exact phrase "use the dashboard" is called out.
-- [~] PARTIAL: At least 8 outcome statements required — Step 4 states "Write at least 8 outcomes for the core job." This is explicitly specified with a numeric minimum. However, this criterion has a PARTIAL ceiling — maximum score is 0.5 regardless of the definition's strength.
-- [x] PASS: Valid YAML frontmatter — frontmatter is present with `name: write-jtbd`, `description`, and `argument-hint: "[product area, customer segment, or problem space]"` fields.
+### Criteria
+
+- [x] PASS: Skill requires a core functional job statement in the canonical format: "When I [situation], I want to [motivation], so I can [outcome]" — met: Step 2 defines the exact three-part format and states "Write exactly one core functional job"
+- [x] PASS: Skill requires emotional jobs AND social jobs — met: Step 3 covers both as separate required categories with their own templates, reinforced by "Do not skip emotional and social jobs"
+- [x] PASS: Skill requires an outcome table with Importance, Current Satisfaction, and Opportunity Score columns — met: Step 4 defines the table with all three columns and an example row
+- [x] PASS: Skill defines the Opportunity Score formula with underserved/overserved thresholds — met: formula is `Importance + max(Importance - Satisfaction, 0)`, thresholds stated as >12 (underserved) and <6 (overserved)
+- [x] PASS: Skill requires hiring and firing criteria — met: Step 5 covers both directions, with a Push/Pull/Anxiety/Habit table for switching triggers and a top-5 firing moments list with sudden/gradual classification
+- [x] PASS: Skill prohibits solution-specific job statements — met: the Rules section explicitly calls out `"I want to use the dashboard"` as wrong, with an explanation and a corrected alternative
+- [~] PARTIAL: Skill requires at least 8 outcome statements for the core job — fully met (criterion has PARTIAL ceiling, scored at 0.5): Step 4 states "Write at least 8 outcomes for the core job" with the minimum count explicitly specified
+- [x] PASS: Skill has valid YAML frontmatter with name, description, and argument-hint fields — met: all three fields present in the frontmatter block
+
+### Output expectations
+
+- [x] PASS: Output's core functional job is in the canonical format — met: Step 2 mandates the three-part format with solution-agnostic rules; the output template shows the exact format; a well-formed agent following this skill would produce a portfolio-framed functional job statement for the given prompt
+- [x] PASS: Output identifies the operations director as the JTBD performer with context — met: Step 1 requires "specific role + circumstance", triggering context, current solution, and emotional state in a performer table; the prompt's "operations directors" framing would produce the required specificity
+- [x] PASS: Output produces emotional jobs AND social jobs — met: Step 3 requires both categories with distinct templates and an explicit "Do not skip" instruction; both would appear in output
+- [x] PASS: Output's outcome table has at least 8 rows — met: Step 4 explicitly requires "at least 8 outcomes for the core job"; the output template includes the full table structure
+- [~] PARTIAL: Output's Opportunity Scores are computed via the formula with math shown — partially met: the formula is defined in Step 4 and scores are included in the table, but the skill does not require showing the arithmetic inline per row; a compliant output would have correct scores but might not show the calculation — partially met: formula present, inline math not required
+- [~] PARTIAL: Output's hiring criteria name concrete switching triggers — partially met: Step 5 models concrete examples (e.g. "My spreadsheet broke when we hit 10,000 rows") but does not require this level of specificity in the output; the output template uses "..." placeholders; a compliant output could produce vague hiring triggers and still satisfy the skill
+- [x] PASS: Output's firing criteria name what causes operations directors to switch away — met: Step 5 requires the top 5 firing moments with sudden/gradual classification; the output template includes this section
+- [x] PASS: Output is solution-agnostic — met: the Rules section prohibits solution references in two places; the skill would prevent outputs that reference product features as jobs
+- [~] PARTIAL: Output addresses the data dimension explicitly — partially met: Step 4's outcome format would capture data-related outcomes if the agent applies the "reporting and analytics" context correctly, but the skill does not require data-specific outcome categories (freshness, accuracy, drill-down, export); whether this appears depends on context application, not on a skill requirement
+- [~] PARTIAL: Output addresses team-level vs portfolio-level outcomes — partially met: Step 1 asks the agent to identify the performer's circumstance, which would surface portfolio scope for an operations director, but the skill does not explicitly require distinguishing portfolio vs team-level framing; this distinction may or may not appear in the output
 
 ## Notes
 
-The 8-outcome minimum is explicitly stated in Step 4 of the skill definition — "Write at least 8 outcomes for the core job." This would be a full PASS by evidence, but the PARTIAL ceiling prevents upgrading it. The skill's strongest design element is Step 5's Firing Criteria: requiring classification of each firing moment as "sudden" or "gradual" forces more honest analysis than a simple list. Most JTBD frameworks stop at identifying the criteria; this skill requires understanding the mechanism.
+The existing result only scored the Criteria section (8 items). This evaluation adds the Output expectations section (10 items) as required by the test format.
+
+The skill is methodologically strong. It references both Christensen and Ulwick, the Opportunity Score formula is precise, and the prohibition on solution-specific statements is reinforced in multiple places.
+
+The main gaps are in the Output expectations section: the skill models concrete examples in its instructions but does not require that level of specificity in the output. An agent following the skill to the letter could produce vague hiring triggers, omit inline math for opportunity scores, and miss the portfolio/team distinction — all while remaining compliant with the skill definition.
+
+One dependency worth noting: the final line references `templates/jtbd-canvas.md` as the output structure, but this is not validated within the skill definition. If that template is absent, the reference is a dead end.

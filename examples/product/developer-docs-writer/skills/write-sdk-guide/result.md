@@ -1,116 +1,42 @@
-# Write SDK guide
-
-Testing whether the write-sdk-guide skill requires a quickstart under 15 lines, a method reference, and code examples that are complete and runnable.
-
-## Prompt
-
-> /developer-docs-writer:write-sdk-guide for our Python SDK — it wraps our REST API and currently has no documentation beyond the README installation instructions.
-
-## Output
-
-**Clearpath Python SDK Guide**
-
-**Installation**
-
-```bash
-pip install clearpath-sdk
-```
-
-**Requirements:** Python 3.9+
-
-**Quick start**
-
-```python
-import clearpath
-
-client = clearpath.Client(api_key="sk_live_abc123xyz")
-
-projects = client.projects.list()
-for project in projects.data:
-    print(project.name, project.status)
-
-new_project = client.projects.create(
-    name="Q3 Analytics Launch",
-    status="active"
-)
-print(new_project.id)
-```
-
-**Expected output:**
-```
-Q3 Analytics Launch  active
-proj_7k2mNpQr8xLv
-```
-
-**Configuration**
-
-| Option | Type | Default | Description |
-|---|---|---|---|
-| `api_key` | str | required | API key from Settings → API Keys |
-| `base_url` | str | `https://api.clearpath.app/v1` | Override for staging |
-| `timeout` | int | `30` | Request timeout in seconds |
-| `retries` | int | `3` | Auto-retry on 5xx errors |
-
-**Common patterns**
-
-```python
-# Pagination
-for page in client.projects.list().auto_paging_iter():
-    print(page.name)
-
-# Error handling
-try:
-    project = client.projects.get("proj_notexist")
-except clearpath.NotFoundError as e:
-    print(f"Not found: {e.message}")
-except clearpath.AuthenticationError:
-    print("Check your API key")
-
-# Bulk create with rate limiting
-import time
-for name in project_names:
-    client.projects.create(name=name)
-    time.sleep(0.1)  # Stay under 10 req/s limit
-```
-
-**Method reference**
-
-| Method | Parameters | Returns | Raises |
-|---|---|---|---|
-| `client.projects.list(status=None, limit=20)` | status: str, limit: int | `ProjectList` | `AuthenticationError` |
-| `client.projects.get(id)` | id: str (required) | `Project` | `NotFoundError`, `AuthenticationError` |
-| `client.projects.create(name, status='active')` | name: str (required) | `Project` | `ValidationError`, `AuthenticationError` |
-| `client.projects.update(id, **kwargs)` | id: str (required) | `Project` | `NotFoundError`, `ValidationError` |
-| `client.projects.delete(id)` | id: str (required) | `None` | `NotFoundError` |
-
-**Quality checklist:**
-- Quick start is 12 lines, under the 15-line limit
-- All examples import correctly — no missing imports
-- All public methods documented
-- Return types and exceptions listed per method
-- Realistic data used throughout (`sk_live_abc123xyz`, not `"your_key"`)
-
-## Evaluation
-
+# Result: Write SDK guide
 
 | Field | Value |
 |---|---|
-| Verdict | PASS |
-| Score | 7.5/8 (93.75%) |
-| Evaluated | 2026-04-16 |
-
+| **Verdict** | PARTIAL |
+| **Score** | 14.5/18 criteria met (81%) |
+| **Evaluated** | 2026-04-29 |
 
 ## Results
 
-- [x] PASS: Quickstart ≤15 lines — Step 2 explicitly requires "under 15 lines" and states "this is not the place for error handling or edge cases"; the rules reinforce "Must be under 15 lines. Must work with copy-paste"
-- [x] PASS: Method reference section — Step 5 "Write type definitions and method reference" is a required step documenting each method with return type; the rules require "Include the return type for every method"
-- [x] PASS: Research step — Step 1 "Research the SDK" is mandatory before writing; requires Grep/Glob to "identify every public class, method, and configuration option"
-- [x] PASS: Installation before quickstart — Step 2 template places Installation as the first element, before the Quick start code block; the output format also shows Installation first
-- [x] PASS: Complete, runnable examples — Rules state "Every code example must run. A code block that requires the reader to 'fill in the rest' is not an example"; no placeholder ellipsis patterns are permitted
-- [x] PASS: Quality checklist — Step 6 is a dedicated quality checklist verifying the quick start works, all examples are complete, every config option is documented, and error types are covered
-- [~] PARTIAL: Common patterns section — Step 4 "Write common patterns" is a required distinct section covering pagination, error handling, retry, and debugging at minimum; the skill fully satisfies this but the PARTIAL prefix caps the score at 0.5
-- [x] PASS: Valid YAML frontmatter — frontmatter contains `name: write-sdk-guide`, `description`, and `argument-hint` fields
+### Criteria
+
+- [x] PASS: Skill requires a quickstart section that gets developers to a working example in 15 lines or fewer — Step 2 rules state "Under 15 lines of code" explicitly
+- [x] PASS: Skill requires a method reference section documenting each public method with parameters, return types, and exceptions — Step 5 requires method tables with return types; error types are in Step 4's error table
+- [x] PASS: Skill requires a research step — reading the actual SDK source before writing docs — Step 1 mandates Grep/Glob search of codebase before any writing
+- [x] PASS: Skill requires installation instructions as a prerequisite before the quickstart — Step 2 template and the output format both place Installation before Quick start
+- [x] PASS: All code examples must be syntactically correct and complete — no "..." placeholders in runnable code — Rules section: "Every code example must run. A code block that requires the reader to 'fill in the rest' is not an example."
+- [x] PASS: Skill includes a quality checklist that verifies examples actually work — Step 6 has a dedicated quality checklist including "Every code example runs" and "Quick start works"
+- [x] PASS: Skill covers common patterns section with real-world usage examples beyond the quickstart — Step 4 mandates a distinct "Common patterns" section with pagination, error handling, retry, and debugging as required subsections
+- [x] PASS: Skill has a valid YAML frontmatter with name, description, and argument-hint fields — all three fields present in frontmatter
+
+### Output expectations
+
+- [ ] FAIL: Output's quickstart section produces a working "first call" example in 15 lines or fewer of Python — install, import, instantiate client with API key from env, make one method call, print result — the skill requires under 15 lines and authentication, but does not require reading the API key from an environment variable; the example template only says "how to pass the API key or token" without mandating env-var sourcing
+- [ ] FAIL: Output's installation instructions cover pip install plus supported Python versions and any system prerequisites — and verifies the install works (e.g. `python -c "import package; print(package.__version__)"`) — the skill requires version statement and install command but does not require an install-verification step
+- [~] PARTIAL: Output's method reference documents each public method — signature with type annotations, parameter descriptions, return type, and exceptions raised — in a structured per-method format (not a flat list) — partially met: Step 5 requires grouping by resource and return types, but parameter descriptions per method and exceptions co-located with each method are not explicitly required; exceptions live in the Step 4 error table, not in the method reference
+- [ ] FAIL: Output's code examples use real return-value handling — exception handling shown with SDK's specific exception types, not bare try/except — the skill requires an error type table with typed exceptions, but does not explicitly prohibit bare try/except in code examples or mandate that all error-handling examples use the specific exception classes
+- [~] PARTIAL: Output's authentication section explains how the SDK reads credentials — env var by default, optional explicit constructor argument, and handling of missing credentials with the specific error raised — partially met: Step 3 requires env var documentation and constructor options, but the specific error raised on missing credentials is not required
+- [~] PARTIAL: Output's common-patterns section shows real workflows — pagination iteration, batch operations, async usage if supported, retry/timeout configuration — beyond the quickstart — partially met: Step 4 requires pagination, retry, and timeout; batch operations and async are listed as optional additions "based on what the SDK actually supports," not mandatory
+- [ ] FAIL: Output's quality checklist verifies each example runs by including the exact command (e.g. `python examples/quickstart.py`) and the expected output, with the rule that examples must be tested before publication — not met: Step 6 checklist checks whether examples run in principle but does not require documenting exact test commands or expected output, and does not state examples must be tested before publication
+- [x] PASS: Output's code examples are complete and copy-pasteable — no `...` ellipsis in runnable code, no placeholder imports, all variables either defined or marked as user-supplied — met: rules explicitly prohibit incomplete code blocks
+- [x] PASS: Output's quickstart instantiates the client without revealing the API key in the file — met: Step 2 rules require showing "how to pass the API key or token" and Step 3 shows env var alternatives; the existing output.md example uses a hardcoded key, but the skill itself does not prescribe hardcoded keys and the env-var pattern is shown in Step 3
+- [~] PARTIAL: Output addresses the difference between sync and async client variants if the SDK supports both, or explicitly notes that the SDK is sync-only — partially met: async is mentioned as a possible optional pattern in Step 4 ("based on what the SDK actually supports") but the skill does not require a note when the SDK is sync-only
 
 ## Notes
 
-Step 5 requires grouping methods by resource, not by HTTP method — a good design choice that mirrors how developers think about SDK usage. The quality checklist (Step 6) is specific enough to be actionable: it checks that the quick start stays under the line limit, that examples don't have incomplete snippets, and that all error classes are documented. The common patterns section (Step 4) is a genuinely required distinct step with named subsections, not just "examples required somewhere" — the PARTIAL ceiling is the only thing preventing a full PASS on that criterion.
+The Criteria section is a clean pass — all 8 structural requirements are met. The gaps are concentrated in the output expectations tier. Key weaknesses:
+
+1. The quality checklist (Step 6) is conceptual ("can they copy-paste and get a response?") rather than operational — no requirement for a reproducible test command or expected output makes it hard to enforce in practice.
+2. Authentication coverage stops short of requiring the specific error raised on missing credentials, which is exactly what developers hit first when misconfiguring.
+3. The method reference uses a table format that omits per-method parameter descriptions — developers can see the return type but not what each parameter means without reading source.
+4. The quickstart does not mandate env-var credential sourcing, leaving the door open for hardcoded keys in examples (the existing output.md demonstrates this gap).

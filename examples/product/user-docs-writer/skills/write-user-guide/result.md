@@ -1,110 +1,37 @@
-# Write user guide
+# Output: Write user guide
 
-Testing whether the write-user-guide skill requires a research step, numbered steps with expected results, and a troubleshooting section for the feature.
-
-## Prompt
-
-> /user-docs-writer:write-user-guide for our time tracking feature — users can log time against projects and tasks, set estimates, and view utilisation reports.
-
-## Output
-
-**Log time and track progress in Clearpath**
-
-This guide covers how to log time against tasks, set estimates, and view utilisation reports. It's for any team member who needs to track their work or review their team's output.
-
-### Before you start
-
-- **Required role:** All team members can log time. Manager or Admin role required to view utilisation reports. Admin required to enable time tracking for the workspace.
-- **Required plan:** Pro and Enterprise
-- **You'll need:** Time tracking enabled for your workspace (Settings > Time Tracking > Enable)
-- **Time:** About 5 minutes
-
-### Step 1: Log time against a task
-
-1. Open the task you worked on.
-**Expected result:** You'll see the task detail panel on the right.
-2. Click the clock icon in the task toolbar, or select **Log time** from the task menu (···).
-**Expected result:** A "Log time" dialog opens.
-3. Enter the time spent (e.g. `1h 30m` or `1.5h`).
-4. Click **Log time**.
-**Expected result:** Your logged time appears below the task description. The task's total tracked time updates immediately.
-
-### Step 2: Set a time estimate
-
-1. Open the task.
-2. Click **Add estimate** (shown when no estimate is set) or click the existing estimate.
-3. Enter the estimated time (e.g. `2h`) and click **Save**.
-**Expected result:** The estimate appears next to the logged time. If logged time exceeds the estimate, the value turns red.
-
-### Step 3: View utilisation reports
-
-1. Go to **Reports** > **Utilisation** (requires Manager or Admin role).
-2. Use the filters to select your team, date range, and project.
-3. Review the report.
-**Expected result:** The report shows logged time vs estimates per person and per project.
-
-### Troubleshooting
-
-#### Time tracking option not visible on a task
-
-| Field | Value |
-|---|---|
-| Why this happens | Time tracking may be disabled for your workspace, or you may not have permission to log time on this project. |
-| How to fix it | Ask your Admin to check **Settings** > **Time Tracking**. If the workspace setting is enabled, check with your project Admin about permissions. |
-
-
-#### My time isn't showing in the utilisation report
-
-| Field | Value |
-|---|---|
-| Why this happens | Reports refresh every 15 minutes. |
-| How to fix it | Wait and reload. Check you're using the correct date range and team filter. |
-
-
-#### I entered the wrong time
-
-| Field | Value |
-|---|---|
-| Why this happens | Common input error. |
-| How to fix it | Click the entry in the task detail view and select **Edit** or **Delete**. |
-
-
-### Related guides
-
-- **View your team's utilisation** — how to read and filter utilisation reports
-- **Set project budgets** — track logged time against a project budget
-- **Enable time tracking for your workspace (Admin)** — required setup step
-
----
-Last verified: 2026-04-16
-Product area: Time Tracking
-Applies to: Pro and Enterprise
-
-## Evaluation
-
-
-| Field | Value |
-|---|---|
-| Verdict | PASS |
-| Score | 7.5/8 criteria met (94%) |
-| Evaluated | 2026-04-16 |
-
+**Verdict:** PARTIAL
+**Score:** 12.5/17 criteria met (74%)
+**Evaluated:** 2026-04-29
 
 ## Results
 
-- [x] PASS: Research step required — Step 1 "Research the feature" is mandatory before writing. It requires searching the codebase for UI components, routes, and handlers; identifying all feature states; finding required permissions; and checking existing documentation. This is the first step and explicitly precedes writing.
-- [x] PASS: Numbered steps required — Step 3 "Write step-by-step instructions" uses a numbered format template explicitly. The rules state "One action per step" and the format is `1. [action]` throughout. Bullet points are not the required format.
-- [x] PASS: Expected result per step required — the step template explicitly includes `**Expected result:** [What the user should see — e.g., "The new member appears in the team list with a 'Pending' badge."]` as a mandatory field for every step.
-- [x] PASS: Troubleshooting section required — Step 4 "Write troubleshooting" is a mandatory step. The definition requires at minimum the most common error message, the most common user mistake, and environment differences. The Problem/Why/Fix structure is mandated.
-- [x] PASS: Product terminology only — the Rules section explicitly says "Use product language, not developer language" and "match the vocabulary the user sees in the UI." The quality checks in Step 6 include "No jargon: Would a non-technical user understand every term?"
-- [x] PASS: Related content links required — Step 5 "Write related content and metadata" is a required step producing a "Related guides" section with next logical task, alternative approach, and deeper topic links.
-- [~] PARTIAL: Role/permissions context — Step 1 research explicitly requires "Find the permissions or roles required to access the feature." The guide header template in Step 2 includes `**Required role:**` as a mandatory field. Permissions are a required standard documentation element. Maximum score is 0.5 per PARTIAL ceiling — the definition fully meets the intent of this criterion but the ceiling is the test author's constraint.
-- [x] PASS: Valid YAML frontmatter — contains `name: write-user-guide`, `description`, and `argument-hint` fields.
+### Criteria
 
-### Notes
+- [x] PASS: Skill requires a research step — Step 1 explicitly requires searching the codebase for UI components, routes, handlers, permissions, and existing docs before writing.
+- [x] PASS: Skill produces numbered steps for procedural tasks — Step 3 mandates numbered steps; the format template shows numbered sub-steps within each section.
+- [x] PASS: Each step includes what the user should see after completing it — Step 3 rules require "**Expected result:**" for every step.
+- [x] PASS: Skill requires a troubleshooting section covering the most common problems — Step 4 mandates a Troubleshooting section with 3+ entries including common errors, mistakes, and environment differences.
+- [x] PASS: Skill uses only product terminology — Rules section explicitly prohibits developer language and references matching UI vocabulary.
+- [x] PASS: Skill requires related content links at the end — Step 5 mandates a "Related guides" section.
+- [x] PASS: Skill requires role-based or permissions context — Step 1 research explicitly includes finding permissions/roles; the header template has **Required role:** and **Required plan:** as required standard documentation elements.
+- [x] PASS: Skill has a valid YAML frontmatter with name, description, and argument-hint fields — frontmatter includes all three fields.
 
-The role/permissions criterion (7) is fully met by the definition — Step 1 requires finding permissions and Step 2's header template has a dedicated "Required role" field. The PARTIAL ceiling is set by the test author, not a definition gap.
+### Output expectations
 
-The Step 6 quality checklist is thorough: 10 checks covering title, one-action-per-step, expected results, exact UI labels, example inputs, navigation paths, jargon, troubleshooting, prerequisites, and testing. Most skills have quality guidance — this one has it as a structured checklist, which makes it actionable.
+- [ ] FAIL: Output covers the three named time-tracking capabilities as distinct task sections — the skill's structure would likely produce sections, but nothing in the skill definition guarantees three distinct sections for each named capability when given this prompt.
+- [ ] FAIL: Output's "log time" section walks through both timer-based and retrospective logging flows — the skill's research step requires identifying "most common user tasks" but doesn't mandate covering multiple flows for the same action.
+- [ ] FAIL: Output's "set estimates" section explains WHY estimates feed into reports and covers project vs task estimates — the skill says to explain "why, if not obvious" in steps but cannot derive this domain-specific content without product knowledge.
+- [ ] FAIL: Output's "utilisation reports" section explains how to read the report and what utilisation % means — the skill produces steps and expected results but doesn't ensure conceptual explanations are embedded when needed for feature-specific literacy.
+- [x] PASS: Output's steps are numbered with explicit expected results — Step 3 format mandates exactly this, including the "**Expected result:**" field with descriptive content after each step group.
+- [~] PARTIAL: Output's troubleshooting covers common time-tracking problems — Step 4 mandates troubleshooting with 3+ entries covering errors, mistakes, and environment differences. The structure is right but the skill cannot guarantee coverage of these specific scenarios (browser-close data loss, locked entries, month-boundary edge cases). Partially met: structure guaranteed, scenario depth not.
+- [x] PASS: Output uses product terminology consistently without jargon — the skill's rules section enforces this and forbids internal technical terms.
+- [~] PARTIAL: Output addresses role/permissions explicitly at the task level — the skill requires a **Required role:** header and permissions research, but doesn't mandate inline per-action permission notes (e.g., "only project leads can edit another user's entry" within the relevant step). Header-level gating is guaranteed; step-level permissions are not.
+- [ ] FAIL: Output's related-content links cover adjacent features — the skill requires a Related guides section but the specific adjacent features for time tracking are not derivable from the skill definition without domain knowledge.
+- [~] PARTIAL: Output addresses mobile time entry if the product supports it — the skill mentions mobile vs desktop in troubleshooting context only. Mobile as a primary workflow variant is not guaranteed.
 
-The "Never write 'simply,' 'just,' or 'easily'" rule in the Rules section is a good inclusion. It prevents the common writer mistake of minimising difficulty, which makes users feel worse when they struggle with something they were told was easy.
+## Notes
+
+The skill definition is structurally strong. The first eight criteria (structural checks) all pass cleanly. The gaps are entirely in the output expectations section, which tests scenario-specific depth that a generic skill definition cannot encode. The skill's research step is the intended mechanism for surfacing domain knowledge, but whether the output agent would derive timer-based vs retrospective flows, project vs task estimate hierarchies, or utilisation % explanations depends on what the codebase research surfaces — not on the skill definition itself. The output expectations are written as if evaluating a live execution against a real product, not a structural evaluation of a skill definition.
+
+The previous evaluation (2026-04-16) only scored the Criteria section (7.5/8, 94%). This evaluation scores both sections as required: 12.5/17 (74%), yielding a PARTIAL verdict.

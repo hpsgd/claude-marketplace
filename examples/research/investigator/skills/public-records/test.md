@@ -17,3 +17,16 @@ Scenario: A journalist is checking public records for Salim Mehajer in connectio
 - [ ] PASS: Skill distinguishes between "no records found" (searched, nothing returned) and "not checked" (didn't search this source) — source log table documents both
 - [ ] PARTIAL: Follow-on routing to `/investigator:corporate-ownership` is suggested if company records reveal a complex ownership structure
 - [ ] PASS: Jurisdiction is documented for every record found
+
+## Output expectations
+
+- [ ] PASS: Output's gate record at the top references journalism authorisation — public-interest reporting on a public figure / former local government official, professional / civic-record scope
+- [ ] PASS: Output's court records search uses AustLII (austlii.edu.au) for published decisions — returns specific case names, court (NSW Supreme Court / Federal Court / etc.), dates, and the role of the subject in each (plaintiff / defendant / appellant)
+- [ ] PASS: Output's ASIC Connect search returns directorships — current and historical, with appointment dates and the entities involved — and any insolvency / external administration notices
+- [ ] PASS: Output's ABN Lookup returns business name registrations — with the ABN, registered status, and any historical name changes
+- [ ] PASS: Output addresses property records explicitly — flagging that AU Land Registry searches (NSW Land Registry Services) require paid / in-person access; the skill does NOT attempt unauthorised access to those records and clearly notes this as a manual follow-up step
+- [ ] PASS: Output addresses AU electoral rolls — the AEC publishes the electoral roll only at libraries / for permitted users; not searchable online by the public; this is stated explicitly rather than silently skipped
+- [ ] PASS: Output's source log distinguishes "no records found" (the search ran, returned nothing) from "not checked" (didn't search this source) — never collapsing absence-of-evidence with absence-of-search
+- [ ] PASS: Output documents jurisdiction per finding — NSW vs Federal vs Commonwealth — for every court case and registration
+- [ ] PASS: Output handles that Salim Mehajer is a public figure with extensive media coverage — the public-records search complements but doesn't replace media archive search; output notes the major media-reported cases but does NOT replace them with primary-record retrieval beyond AustLII
+- [ ] PARTIAL: Output recommends follow-on routing — `/investigator:corporate-ownership` for any complex group structure surfaced through ASIC findings, `/analyst:source-credibility` if the user is citing media reports of cases that aren't in AustLII

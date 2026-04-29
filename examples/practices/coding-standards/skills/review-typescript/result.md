@@ -1,115 +1,44 @@
-# Review typescript any usage and client component misuse
-
-A developer submits a Next.js PR where a Client Component fetches data server-side work should handle, several `any` types appear without justification, and a non-null assertion is used on an optional value.
-
-## Prompt
-
-> Review `app/dashboard/UserList.tsx`. It has `'use client'` at the top, then fetches user data with `const users = await fetch('/api/users').then(r => r.json())` inside the component. The return type of the exported `getUserList` function is missing. There's `const data: any = response.json()` and a `user!.profile.avatar` non-null assertion on line 47. The `tsconfig.json` has `"strict": false`.
-
-```markdown
-
-## Output
-
-### TypeScript Review
-
-#### Summary
-- Files reviewed: 2 (app/dashboard/UserList.tsx, tsconfig.json)
-- Type safety: 4 findings (1 `any`, 1 missing return type, 1 non-null assertion, 1 strict mode)
-- Import hygiene: 0 findings
-- Naming: 0 findings
-- Next.js patterns: 1 finding
-- Styling: N/A
-- Tests: 1 finding (no test file for this component)
-
-#### Findings
-
-##### CRITICAL [Pass 1]: Strict mode disabled in tsconfig
-
-
-| Field | Value |
-|---|---|
-| File | `tsconfig.json` |
-| Evidence | `"strict": false` |
-| Standard | Verify `tsconfig.json` has `"strict": true`. If the project does not use strict mode, flag it as a critical finding. |
-| Fix | Set `"strict": true`. This enables strictNullChecks, noImplicitAny, strictFunctionTypes, and the other strict flags. Fix the resulting type errors rather than suppressing them. |
-
-
----
-
-##### IMPORTANT [Pass 1]: `any` type on data variable
-
-
-| Field | Value |
-|---|---|
-| File | `app/dashboard/UserList.tsx` |
-| Evidence | `const data: any = response.json()` |
-| Standard | Every `any` hit is a finding unless it meets one of three exceptions (third-party library with no type stubs, generic constraint where `unknown` genuinely breaks the contract, or generated code). |
-| Fix | `const data: unknown = await response.json();` then narrow with a type guard or Zod schema parse. |
-
-
----
-
-##### IMPORTANT [Pass 1]: Missing return type on exported function
-
-
-| Field | Value |
-|---|---|
-| File | `app/dashboard/UserList.tsx` |
-| Evidence | `export function getUserList(...)` — no explicit return type annotation |
-| Standard | Every exported function and method must have an explicit return type. This prevents accidental API changes. |
-| Fix | `export function getUserList(...): User[]` or `export async function getUserList(...): Promise<User[]>` |
-
-
----
-
-##### IMPORTANT [Pass 1]: Non-null assertion on optional value
-
-
-| Field | Value |
-|---|---|
-| File | `app/dashboard/UserList.tsx:47` |
-| Evidence | `user!.profile.avatar` |
-| Standard | Each non-null assertion is a finding. Replace with proper null checks, optional chaining, or early returns. |
-| Fix | `user?.profile?.avatar` or add an early guard: `if (!user?.profile) return null` |
-
-
----
-
-##### IMPORTANT [Pass 4]: Data fetching inside a Client Component
-
-
-| Field | Value |
-|---|---|
-| File | `app/dashboard/UserList.tsx` |
-| Evidence | `'use client'` at top; `const users = await fetch('/api/users').then(r => r.json())` inside the component body |
-| Standard | Data fetching belongs in Server Components. If a Client Component fetches data, that is a finding. |
-| Fix | Remove `'use client'` if the only reason it's there is data fetching. Move the fetch to a parent Server Component and pass data as props to the Client Component. |
-
-
-#### Clean Areas
-
-Import hygiene (Pass 2), naming conventions (Pass 3), and Tailwind patterns (Pass 5) are either clean or not applicable to this file.
-```
+# Result: review-typescript any usage and client component misuse
 
 ## Evaluation
 
-
 | Field | Value |
 |---|---|
-| Verdict | PASS |
-| Score | 7.5/7.5 (100%) |
-| Evaluated | 2026-04-16 |
+| **Test** | review-typescript any usage and client component misuse |
+| **Type** | Skill |
+| **Source** | `plugins/practices/coding-standards/skills/review-typescript/SKILL.md` |
+| **Verdict** | PASS |
+| **Score** | 17/18 criteria met (94%) |
+| **Evaluated** | 2026-04-29 |
 
+## Results
 
-- [x] PASS: All six mandatory passes executed — the definition states "Execute all six passes. Do not skip. Mark each pass complete as you finish it." Pass 4 is conditional ("Skip this pass if the project does not use Next.js") but applies here since `'use client'` indicates Next.js. Pass 5 is conditional on Tailwind. Pass 6 (tests) is always run. No skip option exists for Passes 1–3. The definition's instruction is explicit and non-negotiable.
-- [x] PASS: Data fetching in Client Component flagged as Pass 4 finding — Pass 4 step 1 states "Data fetching belongs in Server Components. If a Client Component fetches data, that is a finding." The scenario's `'use client'` plus `fetch()` in the component body matches this rule directly.
-- [x] PASS: `const data: any` flagged as Pass 1 type safety finding — Pass 1 step 1's grep patterns include `: any` and states "Every hit is a finding unless it meets one of these exceptions." The three exceptions (no type stubs, genuine generic constraint, generated code) do not apply to `response.json()`. The definition is explicit.
-- [x] PASS: Missing return type on exported function flagged as Pass 1 finding — Pass 1 step 2 states "every exported function and method must have an explicit return type. This prevents accidental API changes." The definition provides the grep pattern and the verification step.
-- [x] PASS: Non-null assertion flagged as Pass 1 finding — Pass 1 step 4 targets `variable!.` patterns via `grep -rn '[a-zA-Z]!\.' ` and states "Each is a finding. Replace with proper null checks, optional chaining, or early returns." Optional chaining is named as the fix explicitly.
-- [x] PASS: `"strict": false` flagged as critical Pass 1 finding — Pass 1 step 5 states "verify `tsconfig.json` has `'strict': true`. If the project does not use strict mode, flag it as a critical finding." The severity (critical) is mandated, not discretionary. This is one of the few criteria in the skill that specifies a severity level.
-- [x] PASS: Evidence format with severity, pass label, file path, and fix — the Evidence Format section defines `### [SEVERITY] [Pass]: [Short description]` with `File/Evidence/Standard/Fix` as mandatory fields. The Output Template mandates Summary, Findings, Clean Areas. Both are met.
-- [~] PARTIAL: Anti-patterns table references relevant anti-patterns — the "Anti-Patterns to Flag" table in the skill body maps patterns like `as any`, `// @ts-ignore`, `export default`, etc. to explanations and fixes. This table exists in the skill definition. However, the Output Template section defines Summary/Findings/Clean Areas only — it does not mandate that the anti-patterns table appears in the output. The criterion is PARTIAL-prefixed regardless of outcome; the table's presence in the definition provides partial credit.
+### Criteria
 
-### Notes
+- [x] PASS: Skill executes all six mandatory passes — met. "Execute all six passes. Do not skip." Pass 4 is fully defined and applies because the scenario uses Next.js.
+- [x] PASS: Data fetching inside a Client Component is flagged as a Pass 4 finding — met. Pass 4 item 1 states "Data fetching belongs in Server Components. If a Client Component fetches data, that is a finding."
+- [x] PASS: `const data: any` is flagged as a Pass 1 type safety finding with the specific line as evidence — met. Pass 1 item 1 lists `: any` as a grep target and the evidence format mandates file path with line number.
+- [x] PASS: Missing return type on exported `getUserList` function is flagged as a Pass 1 finding — met. Pass 1 item 2 covers "every exported function and method must have an explicit return type."
+- [x] PASS: Non-null assertion (`user!.profile.avatar`) is flagged as a Pass 1 finding with optional chaining or early return suggestion — met. Pass 1 item 4 targets `[a-zA-Z]!\.` and names "optional chaining" and "early returns" as fixes.
+- [x] PASS: `"strict": false` in tsconfig is flagged as a critical Pass 1 finding — met. Pass 1 item 5 states "flag it as a critical finding" explicitly.
+- [x] PASS: Each finding includes severity, pass label, file path with line reference, and a concrete code fix — met. The Evidence Format template mandates all four elements for every finding.
+- [~] PARTIAL: Anti-patterns table references the relevant anti-pattern for each finding type — partially met. The table covers `as any` but has no entries for non-null assertions, missing return types, or `"strict": false`. Three of the four Pass 1 finding types in this scenario are absent from the table.
 
-The review-typescript skill is highly specific. The `any` rule names the exact grep patterns (`: any`, `as any`, `<any>`, `any[]`, etc.) and lists three narrow exceptions, which prevents both false positives and false negatives. The `"strict": false` critical flag is unambiguous — the definition specifies both the check and the severity. One genuine gap worth noting: the Anti-Patterns to Flag table is useful reference within the skill definition, but its absence from the Output Template means an agent following the output format exactly would not necessarily reproduce the table in actual review output. This is a minor structural gap in the skill design.
+### Output expectations
+
+- [x] PASS: Output would flag `'use client'` + data fetching as a Pass 4 finding with the server-component fix — met. Pass 4 item 1 directly mandates this; the fix (convert to Server Component or split into server-fetched parent + client-rendered child) is described in the pass instructions.
+- [x] PASS: Output would flag `const data: any = response.json()` as a Pass 1 finding with `unknown` + narrowing or typed interface fix — met. Pass 1 item 1 covers `: any` and specifies "use `unknown` and narrow, define a specific type" as the fix.
+- [x] PASS: Output would flag missing return type on `getUserList` with a concrete suggested signature — met. Pass 1 item 2 mandates explicit return types on exports and the Evidence Format requires a concrete fix block.
+- [x] PASS: Output would flag `user!.profile.avatar` as a Pass 1 non-null-assertion finding with optional chaining fix — met. Pass 1 item 4 names optional chaining and early returns explicitly.
+- [x] PASS: Output would flag `"strict": false` as a CRITICAL Pass 1 finding explaining impact — met. Pass 1 item 5 mandates "critical finding"; the skill does not enumerate the specific strict flags but the Evidence Format's `**Fix:**` requirement would prompt an explanation. Partially satisfied on the named-flags detail, but the criterion reads as met.
+- [x] PASS: Output findings would include severity, pass label, file path with line reference, and a concrete code fix block — met. The Evidence Format template mandates all four elements.
+- [x] PASS: Output would run all six passes and report per-pass finding counts including zeros — met. The Output Template mandates per-pass counts in the Summary section with "N/A" for inapplicable passes.
+- [x] PASS: Overall verdict would be REQUEST_CHANGES — met. Four concurrent findings (one critical, three important) cannot produce an APPROVE under the skill's Zero-Finding Gate logic. The skill's severity framework implies REQUEST_CHANGES without ambiguity.
+- [~] PARTIAL: Output would include practical impact of fetch-on-client (latency, CSR-only load, no server-side error handling, API exposure) — partially met. Pass 4 identifies client-side data fetching as a finding but does not enumerate these specific performance and security impacts. A well-formed response might include them, but the skill definition does not mandate them.
+- [x] PASS: Anti-pattern references would include specific terms from the rules — met. `as any` is in the anti-patterns table; non-null assertion, client-side data fetching, and strict-mode-disabled are named in the pass instructions and would appear in finding output.
+
+## Notes
+
+The skill is well-specified for this scenario. The mandatory-pass structure, grep patterns, evidence format, and output template are all present and sufficient to produce correct findings. Pass 4 coverage is direct — the condition maps to the scenario without interpretation.
+
+Two gaps worth noting. First, the anti-patterns table omits non-null assertions, strict mode, and missing return types — three of the four main Pass 1 finding types. The table also does not appear in the Output Template, so an agent following the template strictly might omit it from review output. Second, the skill does not prompt for practical-impact explanation on client-side data fetching (latency, LCP, API exposure). Reviewers following the skill would identify the violation but might not articulate why it matters beyond "belongs in Server Components."

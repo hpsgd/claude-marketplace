@@ -1,69 +1,37 @@
-# Design tokens: audit of inconsistent token system
-
-Testing the design-tokens skill with an audit request where the existing token system has orphaned tokens, mixed units, and dark mode tokens that bypass the primitive-semantic hierarchy.
-
-## Prompt
-
-> /ui-designer:design-tokens audit our existing token system — we have 47 colour tokens but only 12 are actually used in components, the rest are orphaned. We also have spacing values defined in both rem and px across different files, and our dark mode tokens reference hardcoded hex values instead of primitive tokens.
-
-## Output
-
-**Design Token Audit: Existing System**
-
-**Step 1 — Inventory:** Scanned CSS custom properties and Tailwind config. Found 47 colour tokens; usage scan via grep shows 12 referenced in component files. 35 tokens have zero component references.
-
-| Category | Value | Occurrences | Locations | Inconsistency |
-|---|---|---|---|---|
-| Colour | `--color-blue-500` | 8 | Button, Link, Badge | Active |
-| Colour | `--color-teal-300` | 0 | — | Orphaned |
-| Spacing | `16px` | 42 | throughout | Also `1rem` in 23 files — same value, different unit |
-
-**Step 2 — Primitive tokens:** Defined full colour scale (blue, neutral, red, green, yellow). Spacing scale in rem only (16px = 1rem → `spacing.4`). Typography scale defined.
-
-**Step 3 — Semantic tokens:** All semantic tokens map to primitives (not hardcoded hex). Dark mode values reference primitives. Flagged: 8 dark mode tokens found with hardcoded hex values (e.g., `--color-text-primary-dark: #f9fafb` instead of `colour.neutral.50`).
-
-**Step 4 — Validation:**
-
-| Pair | Required | Result |
-|---|---|---|
-| `text.primary` on `bg.surface` | 4.5:1 | 15.3:1 PASS |
-| `interactive.default` on `bg.surface` | 3:1 | 5.9:1 PASS |
-
-Dark mode parity: all 47 tokens verified to have both light and dark values. 8 flagged for hardcoded hex replacement.
-
-**Step 5 — Documentation with migration guide and design tool export:**
-
-Migration guide: `--color-teal-300` → archive (unused). `--color-blue-500` → `color.interactive.default`. Dark mode tokens: replace 8 hardcoded hex values with primitive references.
-
-Design Tool Export:
-- Figma: Token JSON compatible with the Figma Tokens plugin (or Figma Variables for native support)
-- Style Dictionary: Configuration for generating CSS custom properties, SCSS variables, and platform-specific formats
-
-## Evaluation
-
+# Output: design-tokens — audit of inconsistent token system
 
 | Field | Value |
 |---|---|
-| Verdict | PASS |
-| Score | 7.5/8 criteria met (94%) |
-| Evaluated | 2026-04-16 |
-
+| **Verdict** | FAIL |
+| **Score** | 12.5/18 criteria met (69%) |
+| **Evaluated** | 2026-04-29 |
 
 ## Results
 
-- [x] PASS: Inventory step catalogues all 47 tokens and identifies which 12 are in active use — Step 1 requires scanning for all CSS custom properties with usage counts ("A table of discovered values grouped by category with usage counts and inconsistency flags"). The instruction to catalogue all occurrences and locations directly drives identification of active vs orphaned tokens. Usage counts are a required output column.
-- [x] PASS: Orphaned tokens listed with recommendation to remove or archive — Step 1's inventory table surfaces all tokens with usage counts. The Rule "One value, one token — if two tokens resolve to the same primitive, merge them" and the Migration Guide section in Step 5 together require a recommendation for orphaned tokens. Tokens with zero usage would be flagged in the migration guide as candidates for removal.
-- [x] PASS: Spacing inconsistency (rem vs px) is flagged with recommended single unit system — Step 1 explicitly calls out this scenario: "Flag duplicates (e.g., `16px` also as `1rem` — same value, different unit)" with a table entry showing exactly this case. Step 2 defines a consistent spacing scale, establishing rem as the single unit.
-- [x] PASS: Dark mode tokens flagged for referencing hardcoded values — Step 4 (Dark mode parity) requires: "Every semantic token must have both a light and dark mode value. Flag any token that maps to the same primitive in both modes." Step 3's semantic token table requires dark mode values to reference primitives. Step 1 scans for hardcoded hex values. Together these explicitly address this failure mode.
-- [x] PASS: Output usable by both designers and developers — Step 5's documentation template includes a "Design Tool Export" section: "Figma: Token JSON compatible with the Figma Tokens plugin (or Figma Variables for native support)" and "Style Dictionary: Configuration for generating CSS custom properties, SCSS variables, and platform-specific formats." The closing instruction states: "Do not produce a developer-only specification — if the token set can't be imported into the design tool, designers will diverge from it." Both output formats are explicitly named.
-- [x] PASS: A migration plan is produced — Step 5's documentation template explicitly includes a "Migration Guide" section: "For existing codebases: mapping from old values to new tokens." This is a required section of the output.
-- [~] PARTIAL: Contrast validation on the 12 active colour tokens — Step 4 includes an explicit contrast validation table with required ratios (4.5:1 normal text, 3:1 large text/UI). The definition enforces this check. However, it applies to semantic token pairs (text.primary on bg.surface, etc.) rather than each of the 12 named colour tokens individually. The check is present and enforced; the granularity doesn't exactly match the audit scenario's framing. Score: 0.5 (PARTIAL ceiling applies per criterion prefix).
-- [x] PASS: Primitive vs semantic distinction maintained — This is the central architectural principle of the definition. Step 2 defines primitives, Step 3 defines semantic tokens referencing primitives. The Rule "Semantic over primitive. Components must never reference primitive tokens directly" enforces the distinction at the component layer.
+### Criteria
 
-### Notes
+- [x] PASS: Inventory step catalogues all 47 existing colour tokens and identifies which 12 are in active use — Step 1 scans CSS custom properties and produces a table with occurrences and locations, enabling the 47 vs 12 split to be identified.
+- [x] PASS: Orphaned tokens (the 35 unused) are listed with a recommendation to remove or archive — Step 1's inventory surfaces tokens with zero occurrences; Step 5's migration guide covers disposition for existing codebases.
+- [x] PASS: Spacing inconsistency (rem vs px) is flagged with a recommended single unit system — Step 1 shows the exact `16px`/`1rem` inconsistency as a worked example; Step 2 defines a single consistent spacing scale.
+- [x] PASS: Dark mode tokens are flagged for referencing hardcoded values instead of primitive token aliases — Step 1 scans for hardcoded hex; Step 3 requires dark mode values to reference primitives; Step 4's parity check flags tokens using raw values instead of aliases.
+- [x] PASS: Output is usable by both designers (Figma-compatible format) and developers (CSS custom properties or equivalent) — Step 5 requires both Figma Variables / Figma Tokens JSON and Style Dictionary CSS custom properties. The closing rule adds teeth: "Do not produce a developer-only specification."
+- [~] PARTIAL: A migration plan is produced for fixing the inconsistencies, not just a list of problems — Step 5 includes a Migration Guide section, but the skill defines it only as "mapping from old values to new tokens." No phased approach, risk levels, or effort estimates are defined. Partially met.
+- [~] PARTIAL: Contrast validation is performed on the 12 active colour tokens against WCAG AA thresholds — Step 4 has a full contrast validation table with correct WCAG AA thresholds. However, the validation operates at semantic pair level, not against each of the 12 named tokens individually. Partially met.
+- [x] PASS: The distinction between primitive tokens and semantic tokens is maintained in the recommended structure — the two-layer architecture (Steps 2 and 3) and the "Semantic over primitive" rule enforce this throughout.
 
-The dual-format output (Figma + Style Dictionary) is the clearest addition distinguishing this definition from earlier versions. The explicit closing enforcement rule ("Do not produce a developer-only specification") gives it teeth beyond a suggestion.
+### Output expectations
 
-The contrast validation criterion correctly stays at PARTIAL. The definition's validation operates at the semantic layer (meaningful pairs in actual use), which is a reasonable design choice. The criterion asks for validation against each of the 12 named colour tokens specifically — a different granularity than the skill enforces.
+- [x] PASS: Output catalogues all 47 colour tokens with value, usage count, and source file — Step 1's inventory table format includes value, occurrences, and locations, covering all three required fields.
+- [ ] FAIL: Output's orphan recommendation is concrete with per-token action (REMOVE / ARCHIVE / KEEP) — the skill produces a usage-count table and a migration guide, but no per-token disposition logic (REMOVE / ARCHIVE / KEEP triage) is defined anywhere. A blanket migration guide is not a per-token recommendation.
+- [x] PASS: Output flags spacing rem/px inconsistency naming every location, recommends rem, and provides a conversion table — Step 1 explicitly demonstrates this pattern; Step 2 establishes a single canonical scale; Step 5's migration guide would include conversion mappings. Rem is used throughout the type scale.
+- [~] PARTIAL: Output flags dark mode tokens with raw hex values by name and recommends rewriting to reference primitives — Step 4's parity check flags structural violations; Step 1 scans for hardcoded hex. However, the skill doesn't define output that names each offending dark-mode token individually with its raw hex value. The check is structural, not a named audit finding. Partially met.
+- [ ] FAIL: Output's migration plan is sequenced with Phase 1/2/3 and effort estimates — the Migration Guide in Step 5 is described as "mapping from old values to new tokens." No phased sequencing, risk levels, or effort estimates are defined.
+- [x] PASS: Output is dual-format — Figma library structure AND CSS custom properties / tokens-spec JSON — Step 5 explicitly requires both Figma Variables / Figma Tokens JSON and Style Dictionary CSS custom properties.
+- [x] PASS: Output validates contrast for all 12 active colour tokens against WCAG AA — Step 4's contrast validation table covers text-on-background pairs with actual ratios and pass/fail in both light and dark mode.
+- [x] PASS: Output preserves primitive vs semantic separation in the recommended structure — Steps 2 and 3 enforce the two-layer architecture; the "Semantic over primitive" rule is non-negotiable.
+- [ ] FAIL: Output's recommended structure includes governance — no governance section exists anywhere in the skill. Nothing covers how new tokens get proposed, reviewed, or adopted, which means the orphan accumulation problem the scenario describes has no prevention mechanism.
+- [ ] FAIL: Output addresses dark-mode-as-mode pattern using Figma variable modes / CSS prefers-color-scheme — the skill defines light/dark value columns in a table but doesn't address mode resolution (Figma variable modes, CSS `prefers-color-scheme`). The architectural distinction between sibling dark-mode tokens and mode-resolved tokens is absent.
 
-The "One value, one token" rule is worth highlighting: it requires merging tokens that resolve to the same primitive, which directly addresses the common problem of accumulated redundant tokens in long-lived design systems.
+## Notes
+
+The skill is well-structured for token creation and covers the audit scenario's core needs — inventory, inconsistency flagging, primitive-semantic separation, and dual-format output. The gaps cluster in two areas. First, the migration plan is shallow: the skill names a Migration Guide as a required output section but leaves its content undefined beyond "mapping from old values to new tokens." For an audit use case, where the primary deliverable is a remediation path, this is a meaningful omission. Second, governance is entirely absent. The scenario describes a system with orphan accumulation as the presenting problem; a skill that audits without providing a token lifecycle process treats the symptom and ignores the cause. The dark-mode-as-mode gap is forward-looking — current Figma and CSS practice uses mode resolution rather than parallel sibling tokens, and the skill doesn't surface this pattern.

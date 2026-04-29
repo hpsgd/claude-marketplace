@@ -17,3 +17,16 @@ Plan release v3.1.0. It includes: (1) a breaking change to `GET /api/v2/reports`
 - [ ] PASS: Rollback criteria are defined with specific thresholds and a named rollback owner for each signal
 - [ ] PARTIAL: Skill includes a communication plan showing which audiences receive what information and when
 - [ ] PASS: Output produces the full release plan format: Scope table, Readiness gates, Strategy, Rollback Criteria, Communication plan, and a GO/NO-GO Decision with reasoning
+
+## Output expectations
+
+- [ ] PASS: Output uses `git log` (with the previous tag → HEAD range) to enumerate every commit in the release and categorises each as feature / enhancement / fix / infra / migration / breaking
+- [ ] PASS: Output classifies the breaking API change as HIGH risk and requires advance partner notification with a concrete lead time (e.g. ≥1 week, deprecation header sent in current responses, migration guide provided)
+- [ ] PASS: Output proposes a versioning approach for the breaking change — either a new `/api/v3/reports` route running in parallel, or `/api/v2/reports` carrying the new shape with a coordinated cutover, with reasoning for the chosen path
+- [ ] PASS: Output's report scheduling rollout uses the `report-scheduling` feature flag, kept off at deploy and rolled out in stages (internal → beta → general), not big-bang on top of the breaking change
+- [ ] PASS: Output's migration verification confirms staging applied both `scheduled_reports` and `schedule_executions` tables, plus a rollback rehearsal showing the down-migration ran cleanly without losing other data
+- [ ] PASS: Output's engineering gates table marks each as PASS / FAIL / N/A with linked evidence (CI build URL, staging screenshot, migration log) — not assumed-passed
+- [ ] PASS: Output records baseline metrics (error rate, p95 latency on `/api/v2/reports`) BEFORE the deploy, with the threshold values written into the rollback criteria — e.g. "rollback if 5xx rate > 2x baseline of 0.3% for >5 min"
+- [ ] PASS: Output names a rollback owner per signal (API errors → on-call backend, migration corruption → DBA on-call) — not a generic "team" owner
+- [ ] PASS: Output's communication plan has separate audiences and timing — external partners receive the breaking change notice ≥1 week ahead, internal teams get the release notes day-of, support gets the script before deploy window
+- [ ] PARTIAL: Output's GO/NO-GO decision states explicit conditions — "GO conditional on partner sign-off received by Monday EOD; otherwise NO-GO and reschedule" — not a bare GO/NO-GO label

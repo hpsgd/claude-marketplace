@@ -1,162 +1,39 @@
-# Propose improvement upstream a learned rule
+# Output: propose-improvement upstream a learned rule
 
-A developer has a local learned rule that has proven effective across 5 sessions and wants to upstream it to the marketplace via a PR. The propose-improvement skill handles the full workflow.
+**Verdict:** PASS
+**Score:** 16.5/17 criteria met (97%)
+**Evaluated:** 2026-04-29
 
-## Prompt
+## Results
 
-> /propose-improvement The pattern `learned--verify-before-declaring-complete` has been triggered in 5 sessions now. I think it's ready to share upstream. It's about always running verification steps before saying something is done.
+### Criteria
 
-```markdown
+- [x] PASS: Step 1 locates the marketplace repo by reading settings files — the skill's Step 1 runs a Python script that reads `~/.claude/settings.json`, `.claude/settings.json`, and `.claude/settings.local.json` for `extraKnownMarketplaces`. No hardcoded path exists; the script builds the map dynamically.
+- [x] PASS: Step 2 reads the pattern file and confirms count >= 3 — Step 3 explicitly reads from `.claude/learnings/patterns/{pattern-id}.json` and checks `count >= 3` and `status` not already submitted before proceeding.
+- [x] PASS: Step 3 maps the learning to the correct target file — Step 4 defines a mapping table covering new rules, skill updates, agent updates, regex patterns, templates, and cross-cutting rules, each with a specific target path.
+- [x] PASS: Step 4 creates a branch from a fresh main — Step 5 specifies the exact git sequence: `git fetch origin`, `git checkout main`, `git pull --ff-only`, then `git checkout -b`. Rules section reinforces this with "Always branch from a fresh `main`."
+- [x] PASS: Step 5 diff review is never skipped — Step 6 is labelled "(mandatory — never skip)" in the section header. Rules section states "Never push without user approval. Step 6 (diff review) is mandatory." Y/n/edit paths are all defined.
+- [x] PASS: Step 6 commit message includes session IDs and correction summaries — Step 7 defines a commit template with an Evidence section using `- {session1}: {summary}` per-session lines. Rules state "Evidence is mandatory. Every PR must include the session IDs and correction summaries."
+- [x] PASS: Step 7 updates pattern file status to `pr_submitted` with PR URL — Step 8 defines updating the pattern JSON with `"status": "pr_submitted"` and `"pr_url"`, adding a note to the local rule, and logging a proposal record to `.claude/learnings/proposals/`.
+- [~] PARTIAL: Skill returns to main after completing — Rules state "Return to main. Always `git checkout main` at the end, regardless of outcome" and the command appears at the end of the Step 7 bash block. However it is embedded mid-step, not isolated as a guaranteed post-workflow cleanup; an error partway through Step 7 after pushing would leave the repo on the feature branch.
 
-## Output
+### Output expectations
 
-**Step 1: Locate marketplace repo**
+- [x] PASS: Output locates the marketplace repo path by reading project settings or config — Step 1 Python script reads the three settings files for `extraKnownMarketplaces`; no hardcoded path.
+- [x] PASS: Output reads the pattern file and confirms trigger count at or above threshold — Step 3 reads the pattern file, checks `count >= 3`, and the Evidence block in Step 6's diff template would display the actual count from the file's metadata.
+- [x] PASS: Output maps the learning to a specific target file and explains the mapping decision — Step 4's mapping table distinguishes rule vs skill vs agent vs script vs template, and instructs reading the current target file before applying changes.
+- [x] PASS: Output creates the branch from a freshly-pulled main — Step 5 defines exactly `git fetch origin && git checkout main && git pull --ff-only && git checkout -b learning/{topic}`.
+- [x] PASS: Output's diff is shown before any push and workflow stops for user confirmation — Step 6 presents the full diff with context, requires Y/n/edit, and the Rules section repeats "never push without user approval."
+- [x] PASS: Output's commit message includes evidence with session IDs and correction summaries — Step 7's commit template has an Evidence section with per-session `- {session}: {summary}` lines and the Rules section makes evidence mandatory.
+- [x] PASS: Output uses Conventional Commits for the commit message — the Step 7 commit template uses `feat: learned rule — {topic}` which follows Conventional Commits format.
+- [x] PASS: Output updates the pattern file status to `pr_submitted` with PR URL — Step 8 defines this update explicitly, including `"pr_url"` and `"pr_submitted_at"` fields.
+- [x] PASS: Output's PR description includes evidence, proposed rule wording, and request for review — the Step 7 `gh pr create` body template includes Evidence table with sessions, the change description, and the source pattern metadata.
+- [~] PARTIAL: Output returns to main at the end — `git checkout main` is present at the end of Step 7's bash block and stated in Rules, but not guaranteed against mid-step failures.
 
-Reading settings files...
-Checking ~/.claude/settings.json, .claude/settings.json, .claude/settings.local.json for extraKnownMarketplaces...
-Found: `turtlestack.source.path = /Users/martin/Projects/turtlestack`
-Verifying: `git status` in `/Users/martin/Projects/turtlestack` → on branch main, clean ✓
+## Notes
 
-**Step 2: Identify what to propose**
+The skill is one of the most operationally complete in the set. The org-comparison check in Step 2 (same org = owned upstream, different org = third-party) cleanly handles the third-party case without needing config flags. The two mandatory gates (Step 2 confirmation, Step 6 diff review) give the user clear checkpoints before any remote action.
 
-Pattern ID: `learned--verify-before-declaring-complete`
-Reading `.claude/learnings/patterns/learned--verify-before-declaring-complete.json`...
+One gap in Step 4's mapping table: cross-cutting rules default to `plugins/practices/coding-standards/rules/`, but a rule like "verify before declaring complete" could equally belong in `plugins/practices/thinking/rules/`. No tiebreaker is given when a rule spans multiple plugin domains.
 
-Count: 5 (threshold: ≥3) ✓
-Status: detected (not already submitted) ✓
-
-Evidence:
-- ca9272e6 (2026-04-01): Declared migration complete without verifying
-- 681945ff (2026-04-03): Said 'Done' before running the audit
-- abc12345 (2026-04-05): Marked criterion complete before tool confirmation
-
-**Step 3: Determine target file**
-
-Learning type: New rule (process/convention)
-Target: `plugins/practices/coding-standards/rules/learned--verify-before-declaring-complete.md`
-
-Reading target file... does not exist (new addition).
-
-**Step 4: Create branch and apply changes**
-
-```bash
-cd /Users/martin/Projects/turtlestack
-git fetch origin
-git checkout main
-git pull --ff-only
-git checkout -b learning/verify-before-declaring-complete
-```
-
-Writing new rule file...
-
-**Step 5: Show diff for review (mandatory)**
-
-```bash
-git diff --stat
-git diff
-```
-
-#### Proposed change: verify-before-declaring-complete
-
-
-| Field | Value |
-|---|---|
-| Branch | `learning/verify-before-declaring-complete` |
-| Pattern | learned--verify-before-declaring-complete — 5 instances across 5 sessions |
-
-**Evidence:**
-- ca9272e6 (2026-04-01): Declared migration complete without verifying
-- 681945ff (2026-04-03): Said 'Done' before running the audit
-- abc12345 (2026-04-05): Marked criterion complete before tool confirmation
-
-**Files changed:**
-plugins/practices/coding-standards/rules/learned--verify-before-declaring-complete.md | 14 +++++++++++++
-
-Approve and create PR? (Y/n/edit)
-
----
-[User approves: Y]
-
-**Step 6: Commit, push, and create PR**
-
-```bash
-git add plugins/practices/coding-standards/rules/learned--verify-before-declaring-complete.md
-git commit -m "feat: learned rule — verify before declaring complete
-
-Pattern observed 5 times across 5 sessions.
-Local rule has been active since 2026-04-01.
-
-Evidence:
-- ca9272e6 (2026-04-01): Declared migration complete without verifying
-- 681945ff (2026-04-03): Said Done before running the audit
-- abc12345 (2026-04-05): Marked criterion complete before tool confirmation
-- def67890 (2026-04-07): Same pattern repeated
-- ghi11111 (2026-04-10): Repeated
-
-Co-Authored-By: Claude Opus 4.6 (1M context) <noreply@anthropic.com>"
-
-git push -u origin learning/verify-before-declaring-complete
-gh pr create --title "Learning: verify before declaring complete" --body "..."
-git checkout main
-```
-
-PR created: https://github.com/org/turtlestack/pull/47
-
-**Step 7: Update tracking**
-
-Updating `.claude/learnings/patterns/learned--verify-before-declaring-complete.json`:
-```json
-{
-  "status": "pr_submitted",
-  "pr_url": "https://github.com/org/turtlestack/pull/47",
-  "pr_submitted_at": "2026-04-16T..."
-}
-```
-
-Adding note to local learned rule:
-```
-<!-- Upstream PR: https://github.com/org/turtlestack/pull/47 — remove this rule after PR is merged -->
-```
-
-Logging to `.claude/learnings/proposals/...`
-
-### Improvement Proposed: verify before declaring complete
-
-
-| Field | Value |
-|---|---|
-| PR | https://github.com/org/turtlestack/pull/47 |
-| Branch | `learning/verify-before-declaring-complete` |
-| Pattern | 5 instances across 5 sessions |
-| Files changed | 1 |
-| Status | PR submitted — awaiting review |
-
-
-#### Next steps
-1. Review the PR on GitHub
-2. If merged, run `/thinking:retrospective` to clean up the local learned rule
-3. The marketplace update will take effect on next plugin cache refresh
-```
-
-## Evaluation
-
-
-| Field | Value |
-|---|---|
-| Verdict | PASS |
-| Score | 7.5/8 (94%) |
-| Evaluated | 2026-04-16 |
-
-
-- [x] PASS: Step 1 locates marketplace repo by reading settings files — Step 1 defines a Python script that reads `~/.claude/settings.json`, `.claude/settings.json`, and `.claude/settings.local.json` and checks the `extraKnownMarketplaces` key. The script is explicitly provided as code in the definition. No hardcoded path is assumed.
-- [x] PASS: Step 2 reads pattern file and confirms count >= 3 — Step 2 reads from `.claude/learnings/patterns/{pattern-id}.json` and checks `count >= 3` and `status != already submitted`. Both conditions are defined in the skill. The minimum threshold of 3 is explicit.
-- [x] PASS: Step 3 maps learning to correct target file — Step 3 defines a mapping table: "New rule (process/convention) → `plugins/{category}/{agent}/rules/{topic}.md`." The skill also states to read the current version of the target file to understand what exists. Cross-cutting rules map to `plugins/practices/coding-standards/rules/`.
-- [x] PASS: Step 4 creates branch from fresh main — Step 4 defines the exact git command sequence: `git fetch origin`, `git checkout main`, `git pull --ff-only`, then `git checkout -b`. The Rules section states "Always branch from a fresh `main`." The exact sequence is provided as a bash code block.
-- [x] PASS: Step 5 diff review never skipped — Step 5 is labelled "(mandatory — never skip)" in the section header. The Rules section states "Never push without user approval. Step 5 (diff review) is mandatory." The diff template includes an explicit "Approve and create PR? (Y/n/edit)" gate requiring user confirmation before any push.
-- [x] PASS: Step 6 commit message includes session IDs and correction summaries — Step 6 defines a commit message template with an Evidence section: `- {session1}: {summary}` lines. The Rules section states "Evidence is mandatory. Every PR must include the session IDs and correction summaries that justify the change."
-- [x] PASS: Step 7 updates pattern file status to `pr_submitted` with PR URL — Step 7 defines updating `{pattern-id}.json` with `"status": "pr_submitted"` and `"pr_url"` fields, adding a note to the local rule, and logging to `.claude/learnings/proposals/`. All three tracking updates are specified.
-- [~] PARTIAL: Skill returns to main after completing — the Rules section states "Return to main. Always `git checkout main` at the end, regardless of outcome. Never leave the marketplace repo on a feature branch." The `git checkout main` command appears in the Step 6 bash block after PR creation. The rule is clearly defined. Partial because the checkout is embedded mid-step rather than as a post-workflow verification step — an agent exiting early would not execute it. PARTIAL ceiling applies per criterion prefix.
-
-### Notes
-
-The propose-improvement skill is the most operationally detailed skill in the set. The mandatory diff review before push is a strong user-control mechanism — Step 5 explicitly handles Y/n/edit decision branches. The evidence requirement in commit messages creates an audit trail from session corrections to marketplace changes. One gap: the Step 3 mapping table places cross-cutting rules at `plugins/practices/coding-standards/rules/` by default, but a rule like "verify before declaring complete" could arguably belong in `plugins/practices/thinking/rules/` or be shared across multiple plugin domains. The skill provides no tiebreaker when a rule is genuinely cross-cutting.
+The skill's Step 3 reads a pattern file by ID, but the scenario presents the argument as a learned rule name (`learned--verify-before-declaring-complete`) rather than a pattern JSON file. The skill handles both cases (pattern ID and learned rule), so this resolves cleanly — the "From a learned rule" branch in Step 3 covers it.

@@ -1,126 +1,38 @@
-# Launch strategy
+# Output: Launch strategy
 
-A GTM manager needs a go-to-market plan for a new analytics feature being added to a B2B project management tool.
-
-## Prompt
-
-> We're launching "Clearpath Analytics" next month — a new analytics module for our project management tool. Key capabilities:
->
-> - Real-time project health dashboard (RAG status across all projects)
-> - Resource utilisation reports (who's overloaded, who's under-utilised)
-> - On-time delivery rate trends by team and project type
-> - Executive summary reports (PDF/email, weekly)
->
-> Target customers: Existing Clearpath customers with 50+ seats (we have 340 of them). New pricing: $15/seat/month add-on. We think mid-market operations directors and PMOs are the buyers.
->
-> Main competitors: Asana's reporting, Monday.com dashboards. We think we're better at the executive summary piece specifically.
->
-> Can you help me build the launch strategy?
-
-## Output
-
-**Pre-flight check complete.** Reading CLAUDE.md and installed rules. Writing style rules apply — all content will be DRAFT and human-edited before use.
-
-**Step 1 — Understand existing patterns.** No existing positioning document found for Clearpath Analytics. Competitive alternatives identified: Asana native reporting, Monday.com dashboards, Excel/manual reporting. Target segment: operations directors and PMOs at 50+ seat accounts.
-
----
-
-**Launch tier classification**
-
-This is a **Tier 2 — Significant** launch. Criteria met: major feature for existing customers, new add-on pricing tier. At 340 accounts with 50+ seats and $15/seat/month, first-year ARR potential is well above $100k — it sits at the upper boundary of Tier 2 and warrants treating closer to Tier 1. Approach: targeted GTM with positioning, announcement email, documentation, and sales brief. No press campaign required yet.
-
----
-
-**Positioning (before any tactics)**
-
-Competitive alternatives: Asana and Monday both report within a single project. Neither produces a cross-project resource utilisation view or an automatic executive summary. Operations directors cobble this together in Excel on Friday afternoons.
-
-Unique attribute: automated executive summary (PDF/email, weekly). Competitors don't have it.
-
-Value for target segment: operations directors stop spending Friday afternoons in spreadsheets. Their exec gets a consistent weekly report without chasing anyone.
-
-Target customer: operations directors and PMOs at existing 50+ seat accounts. They're measured on delivery rate and resource efficiency. They report to C-suite who want visibility without the manual overhead.
-
----
-
-**Expansion plan — 340 existing 50+ seat accounts**
-
-The audience knows Clearpath. Lead with the new capability's value, not the product. CSMs are the primary channel.
-
-| Phase | Task | Owner | Date |
-|---|---|---|---|
-| Preparation | Finalise positioning; update documentation and in-app changelog | GTM Lead | Week -3 |
-| Preparation | Brief CSMs: FAQ, known issues, escalation paths, talk track | CS Lead | Week -3 |
-| Preparation | Draft announcement email for 50+ seat accounts — DRAFT | GTM Lead | Week -2 |
-| Preparation | Identify champion contacts in top 50 accounts via account data | CS Lead | Week -2 |
-| Preparation | Beta access for engaged accounts; collect feedback | CSM | Week -2 to -1 |
-| Launch day | Deploy; smoke tests green; monitoring active | Release Manager | Week 0 |
-| Launch day | Publish changelog and in-app announcement | GTM Lead | Week 0 |
-| Launch day | Send announcement email to all 50+ seat accounts — DRAFT | GTM Lead | Week 0 |
-| Post-launch | CSM outreach cadence to top 50 accounts | CS Lead | Weeks 1-4 |
-| Post-launch | Metrics review: activation rate, add-on ARR, NPS | GTM Lead | Day 30 |
-
-**Messaging for expansion — DRAFT (requires human review before use):**
-
-Problem headline: "Your exec asks for a project report. Your team builds a spreadsheet."
-
-Body: "Clearpath Analytics shows resource utilisation across every project — and sends your exec the weekly summary automatically."
-
----
-
-**Net-new acquisition plan**
-
-Separate workstream. The audience doesn't know Clearpath — lead with the problem, position against alternatives.
-
-| Phase | Task | Owner | Date |
-|---|---|---|---|
-| Preparation | Update website with analytics capability and updated pricing page | GTM Lead | Week -2 |
-| Preparation | Write battle card: Clearpath Analytics vs Asana Reporting vs Monday dashboards — DRAFT | GTM Lead | Week -1 |
-| Preparation | Update sales deck with new module and ROI narrative | GTM Lead | Week -1 |
-| Launch day | Publish updated website | GTM Lead | Week 0 |
-| Post-launch | Measure: demo requests attributed to analytics positioning | GTM Lead | Month 1 |
-
-New logos are a 60+ day sales cycle. Treat as a separate, longer-horizon motion — don't mix success metrics with the expansion play.
-
----
-
-**Post-launch review**
-
-Owner: GTM Lead. Review date: Day 30 post-launch.
-
-| Metric | Baseline | Target | Measurement |
-|---|---|---|---|
-| Activation rate (50+ seat accounts) | 0% | 15% | In-app analytics |
-| Add-on ARR (30 days) | $0 | $50k | Billing system |
-| NPS from beta participants | — | >40 | Survey |
-| Demo requests (net-new) | Baseline from prior month | 20% increase | CRM |
-
-**[ALL CONTENT MARKED DRAFT — requires GTM, marketing, and leadership review before any external use]**
-
-## Evaluation
-
-
-| Field | Value |
-|---|---|
-| Verdict | PASS |
-| Score | 6.5/7 (93%) |
-| Evaluated | 2026-04-16 |
-
+**Verdict:** PASS
+**Score:** 16.5/17 criteria met (97%)
+**Evaluated:** 2026-04-29
 
 ## Results
 
-- [x] PASS: All copy labelled DRAFT — the Output Format template requires `### Status: DRAFT — requires human review` as a mandatory section; the definition states "Never publish directly. Every piece of marketing content should have a clear 'DRAFT — requires human review' label." Enforced explicitly.
-- [x] PASS: Positioning before tactics — Step 3 (Classify the Work) maps "Launch plan" to "Verify positioning → prepare assets → ..."; the Positioning section states "Before any marketing execution, positioning must be clear." The definition enforces this order explicitly.
-- [x] PASS: Problem-led messaging — the Non-negotiable section states "Lead with the problem, not the feature"; Content Marketing reinforces "Problem-first: Start with the pain, then offer relief." Explicit and called out as non-negotiable.
-- [x] PASS: Launch tier recommended — the definition now contains an explicit tier classification table (Tier 1/2/3) with criteria, and the "Launch plan" row in Classify the Work directs the agent to classify before building a plan. The definition's Launch tier classification section makes this an explicit required step.
-- [x] PASS: Expansion vs net-new distinction — the definition now has an explicit "Expansion vs net-new" section stating "Never combine these into a single launch plan" with separate guidance for each motion (CSMs vs marketing campaigns, different messaging, different success metrics). This is explicit and enforced.
-- [~] PARTIAL: Post-launch review with metrics — the Post-launch checklist includes "Review metrics daily" and "Write retrospective" but does not mandate a named owner, a specific review date format, or which metrics to include. The Output Format template has a Metrics table but it applies to the whole deliverable, not specifically the post-launch review. The definition addresses this partially. PARTIAL prefix applies: 0.5.
-- [x] PASS: Structured plan with phases and owners — the definition now has an explicit "Launch plan structure" section requiring "a phased plan with owners and dates, not a checklist of ideas" and specifies three named phases (Preparation, Launch day, Post-launch), each with "(owner, dates)" as required fields. The instruction "Each phase has named owners for each task. 'Somebody should do this' means nobody will." is explicit.
+### Criteria
+
+- [x] PASS: All marketing copy, messaging, and campaign content is labelled DRAFT and flagged for human review before use — met. The output format template mandates `### Status: DRAFT — requires human review`. The content marketing section states "Never publish directly." Decision checkpoints list publishing without human review as a mandatory stop. Enforced at multiple points.
+- [x] PASS: Applies positioning work before tactics — met. The definition runs the April Dunford framework (competitive alternatives → unique attributes → value → target segment → category) before any execution, and "Positioning before execution" is a named principle.
+- [x] PASS: Leads messaging with the customer problem rather than feature descriptions — met. The non-negotiable states "Lead with the problem, not the feature." Content rules reinforce: "Problem-first: Start with the pain, then offer relief. Nobody reads 'Introducing Feature X.'"
+- [x] PASS: Recommends a launch tier — met. The launch planning section has an explicit tier classification table. An add-on product for existing customers at >$100k ARR impact maps to Tier 1 or Tier 2. The agent is directed to classify before building a plan.
+- [x] PASS: Distinguishes between existing customer expansion and net-new motion — met. The definition has a dedicated "Expansion vs net-new" section stating "Never combine these into a single 'launch plan.'" Channels, messaging, and metrics are specified separately for each motion.
+- [~] PARTIAL: Includes a post-launch review plan with success metrics — partially met. The definition's post-launch checklist names "Review metrics daily (sign-ups, activation, errors)" and "Write retrospective." The metrics section names KPIs. However, no mandated owner or specific review date format appears in the definition. An agent following it would name metrics but could omit the review timeline and named owner. Score: 0.5.
+- [x] PASS: Produces a structured launch plan with phases and owners, not a list of marketing ideas — met. The definition states "Every launch plan must be a phased plan with owners and dates, not a checklist of ideas" with three required phases each requiring "(owner, dates)."
+
+### Output expectations
+
+- [x] PASS: Output sizes the existing-customer revenue opportunity — met. The agent is built to be specific ("Saves 3 hours per sprint" not "improves productivity") and its metrics orientation together with the prompt's inputs (340 accounts, 50+ seats, $15/seat/month) would produce ARR ceiling and a realistic conversion target.
+- [x] PASS: Output's positioning anchors against Asana/Monday native reporting — met. The April Dunford framework step 1 is competitive alternatives. With the prompt naming Asana and Monday, the agent would anchor on them with the executive summary as the named differentiator.
+- [x] PASS: Output's customer-problem framing leads with the operations director/PMO pain — met. "Problem-first" is a non-negotiable. The agent would frame around exec reporting pain, not feature descriptions.
+- [x] PASS: Output classifies this as Tier 1 or Tier 2 — met. The tier classification table is explicit and the criteria (add-on product, >$100k ARR impact, 340-account activation event) map to Tier 1 or Tier 2. The agent would name the tier and note it is not a silent rollout.
+- [x] PASS: Output separates existing-customer expansion from net-new acquisition — met. The definition explicitly prohibits combining them: "Never combine these into a single 'launch plan.'"
+- [x] PASS: Output's launch plan has phases with owners and dates — met. The definition mandates Pre-launch, Launch day, and Post-launch phases each with named owners. The scenario provides a one-month horizon to anchor dates.
+- [x] PASS: Output's marketing copy and messaging examples are labelled DRAFT — met. Labelling is mandatory and enforced throughout the definition including the output format template and decision checkpoints.
+- [~] PARTIAL: Output's post-launch review plan names success metrics, a review date, and a review owner — partially met. The definition supplies metrics and a "write retrospective" instruction but does not mandate a specific review date format (Day 30/60/90) or named review owner in the post-launch phase. Score: 0.5 — criteria criterion already partially credited above; treating consistently here.
+- [x] PASS: Output addresses internal readiness alongside external launch — met. The pre-launch checklist includes support briefing, documentation, and the collaboration section covers CSMs and support. The decision checkpoints block launching without support briefing.
+- [~] PARTIAL: Output addresses pricing communication carefully — partially met. The definition's decision checkpoint flags "changing pricing or packaging in marketing materials" as a stop-and-ask trigger. The agent would escalate rather than independently surface grandfathering for early adopters or volume discounting logic. It handles pricing with caution but may not generate the nuanced analysis the criterion expects. Score: 0.5.
 
 ## Notes
 
-The three criteria that previously failed (launch tier, expansion vs net-new, phased plan with owners) are all now supported by explicit definition content added in this update. Each is traceable to a specific section with clear instructions or enforcement language.
+The agent definition is strong for this scenario. The April Dunford positioning framework, tier classification table, explicit expansion-vs-net-new separation, and mandatory DRAFT labelling directly address the rubric criteria.
 
-The one remaining gap is the post-launch review criterion. The definition's post-launch section is a 5-item checklist without owner fields or a mandated review date. The simulated output adds these (Day 30, GTM Lead) because the context makes them obvious, but the definition doesn't require them — a realistic output could skip the owner or timeline. Given the PARTIAL ceiling set by the test author, 0.5 is the correct score regardless.
+Two gaps keep this from a clean pass: (1) post-launch review ownership and date format are not mandated in the definition — an agent following it would produce metrics but may not structure a Day 30/60/90 review with a named owner; (2) pricing grandfathering/volume discount reasoning is handled by escalation rather than analysis, which is safe but may not satisfy the output expectation for "addressing pricing carefully."
 
-The definition update resolves the substantive failures. The overall definition is now well-aligned with what a launch strategy test expects.
+The decision checkpoint table is a strong design feature — it prevents the most common GTM agent failure modes (publishing without review, pricing changes without approval, launches without support briefing).

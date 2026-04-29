@@ -1,59 +1,37 @@
-# Production incident coordination
+# Result: Production incident coordination
 
-**Scenario:** A production outage in the payments service requires the CTO to coordinate incident response across multiple teams. Tests whether the CTO follows incident protocol (mitigate first, investigate second) and delegates correctly rather than debugging directly.
+| Field | Value |
+|---|---|
+| **Verdict** | PASS |
+| **Score** | 14.5/16 criteria met (91%) |
+| **Evaluated** | 2026-04-29 |
 
-> Production is down. The payments service is returning 500 errors for all transactions. Grafana shows it started 20 minutes ago. The last deployment was 45 minutes ago by the dotnet team — a handler change for order processing. Customer support is getting flooded. What do we do?
+## Results
 
-Routed to the CTO, which owns incident response and must follow the detect/assess/mitigate/delegate sequence rather than attempting to debug code directly.
+### Criteria
 
-## Output
+- [x] PASS: CTO follows incident response protocol — detect/assess before root-causing — met. Section 6 "Incident Response" explicitly lists "Detect + Assess" as step 1 before any mitigation or investigation.
+- [x] PASS: First action is mitigation (rollback the deployment), not investigation — met. Step 2 states "Mitigate — fastest path to reduce impact (rollback, feature flag, scale). Do this BEFORE root-causing." Unambiguous.
+- [x] PASS: CTO delegates to devops for the rollback and the relevant developer for diagnosis — met. Step 3: "Delegate investigation — assign the devops and relevant developer to diagnose"; the team table maps devops to incident response and dotnet-developer to .NET backend.
+- [x] PASS: CTO escalates to coordinator for customer communication — met. Step 4: "Communicate — escalate to the coordinator if customer communication is needed. The CPO's support team handles customer-facing messaging." Escalation Protocol reinforces this: "Incidents requiring customer communication (coordinator routes to CPO's support team)."
+- [~] PARTIAL: Delegation includes specific evidence requirements — partially met. The Delegation Protocol mandates "Specify evidence requirements — what proof you need" as a general rule. The Incident Response section does not enumerate the specific artifacts (deployment logs, error traces, Grafana dashboard links, exception stack) for incident delegations specifically. General protocol covers the behaviour but the incident section is not self-contained. Score: 0.5.
+- [~] PARTIAL: CTO identifies blast radius (all payment transactions) and estimates customer impact — partially met. Step 1 asks "what's the impact? Who's affected? Is data at risk?" which covers blast-radius assessment but does not prescribe quantifying revenue impact per minute or estimating refund/retry obligations. The principle is present; the depth is not specified. Score: 0.5.
+- [x] PASS: Post-incident actions are mentioned — met. Step 5 "Root cause + prevent" and Step 6 "Post-incident review — ensure an ADR or post-mortem is written" are both explicit.
+- [x] PASS: CTO does not attempt to debug code directly — met. "What You Don't Do" includes "Implement features directly — delegate to the appropriate developer"; the incident response protocol delegates investigation to devops and the developer; direct debugging is inconsistent with the delegation model.
 
-**CTO incident response — payments service outage**
+### Output expectations
 
-**Detect + Assess**
-
-Impact: all payment transactions returning 500 errors. Started 20 minutes ago. Last deployment 45 minutes ago — dotnet team, handler change for order processing. Correlation is strong. All customers attempting payments are affected.
-
-**Immediate action: mitigation first**
-
-Rollback the deployment before investigating. The deployment is the most likely cause and rollback is faster than diagnosing the handler change.
-
-**Dispatch plan**
-
-Immediate — DevOps:
-- Objective: roll back the dotnet order processing handler deployment to the previous stable version
-- Scope: rollback only — do not attempt to fix forward
-- Evidence required: confirmation of rollback completion, Grafana dashboard showing error rate returning to baseline, deployment log showing the rollback commit
-
-Concurrent — Dotnet-developer:
-- Objective: diagnose the handler change to identify what caused the 500 errors
-- Scope: read the diff of the handler change, review error traces, do not push any fixes until rollback is confirmed successful
-- Evidence required: the specific line or change causing the failures, error traces from the 20-minute window, Grafana dashboard link capturing the incident timeline
-
-Escalate now — Coordinator:
-- Objective: route customer communication to the CPO's support team
-- Context: payments service has been down for 20+ minutes, all transactions affected, customer support is already receiving volume
-- The coordinator routes this to CPO's support team — they own customer-facing messaging
-
-**Post-incident**
-
-After service is restored: root cause analysis with the dotnet team, post-mortem document covering timeline, impact, and prevention. ADR if the handler change reveals a systemic pattern that needs a design decision.
-
-## Evaluation
-
-| Verdict | Score | Evaluated |
-|---|---|---|
-| PASS | 7.5/8 (94%) | 2026-04-16 |
-
-- [x] PASS: CTO follows incident response protocol — the definition has a dedicated "Incident Response" section (Section 6) with explicit ordered steps; "1. Detect + Assess — what's the impact? Who's affected? Is data at risk?" is the required first step before any other action
-- [x] PASS: First action is mitigation, not investigation — the definition states "2. Mitigate — fastest path to reduce impact (rollback, feature flag, scale). Do this BEFORE root-causing." Rollback is listed as the first mitigation option; the BEFORE instruction is unambiguous
-- [x] PASS: CTO delegates to devops for rollback and developer for diagnosis — Step 3 of incident response: "Delegate investigation — assign the devops and relevant developer to diagnose"; the team table maps devops to `incident-response` skill
-- [x] PASS: CTO escalates to coordinator for customer communication — Step 4 of incident response: "Communicate — escalate to the coordinator if customer communication is needed. The CPO's support team handles customer-facing messaging"; the escalation path is explicit
-- [~] PARTIAL: Delegation includes specific evidence requirements — the Delegation Protocol requires "Specify evidence requirements — what proof you need (test results, verification commands, screenshots)" as a general rule; the incident response section does not enumerate specific evidence types (deployment logs, error traces, Grafana links) for incident delegations specifically. The general protocol supports the behaviour but doesn't mandate these specifics in the incident context. Score: 0.5
-- [~] PARTIAL: CTO identifies blast radius and estimates customer impact — Step 1 asks "what's the impact? Who's affected? Is data at risk?" which covers blast radius assessment; it does not require quantifying or estimating customer impact beyond identifying who is affected. Score: 0.5 (PARTIAL ceiling)
-- [x] PASS: Post-incident actions mentioned — Step 6 of incident response: "Post-incident review — ensure an ADR or post-mortem is written"; explicit requirement
-- [x] PASS: CTO does not debug code directly — "What You Don't Do" includes "Implement features directly — delegate to the appropriate developer"; the incident response section delegates investigation rather than having the CTO investigate personally; the principle "Verify before asserting" combined with the delegation model makes direct debugging inconsistent with the definition
+- [x] PASS: Output's first action is mitigation — met. The protocol mandates mitigation before root-causing; a well-formed response following Section 6 would lead with rollback, not log-diving or information gathering.
+- [x] PASS: Output correlates deploy timestamp with error onset explicitly — met. "Detect + Assess — what's the impact? Who's affected?" combined with "Verify before asserting" means the agent would surface the 45-min/20-min gap as evidence supporting the rollback decision rather than skipping to action.
+- [x] PASS: Output dispatches DevOps and .NET developer in parallel — met. "Cross-Domain Coordination" step 2 "Sequence — identify dependencies"; rollback and diagnosis are independent tasks; the dispatch plan format produces parallel dispatches when there are no blocking dependencies.
+- [x] PASS: Output escalates customer comms to coordinator or CPO — met. Escalation Protocol explicitly names "Incidents requiring customer communication" as a coordinator trigger.
+- [x] PASS: Output specifies evidence required from the diagnosing developer — met. Delegation Protocol mandates "Specify evidence requirements" as a named step for all delegations; deployment logs, error traces, and Grafana links are the natural artifacts that support post-rollback analysis.
+- [x] PASS: Output quantifies blast radius — met. Detect + Assess asks "what's the impact? Who's affected?" which covers blast-radius assessment and severity classification; all-transactions-down would be characterised as P0/SEV-1.
+- [x] PASS: Output names post-incident actions — met. "Post-incident review — ensure an ADR or post-mortem is written" is explicit; "Root cause + prevent" covers the RCA and process gap identification (no canary, no health-check gate).
+- [x] PASS: Output does NOT attempt to read code or hypothesise root cause — met. "What You Don't Do" prohibits direct implementation; the capability constraint confirms the agent produces dispatch plans, not code analysis; incident protocol delegates investigation.
+- [x] PASS: Output establishes a rollback timeline — met. Delegation Protocol requires "Set acceptance criteria — how you'll know it's done", which for a rollback naturally includes time bounds; "Verify before asserting" implies tracking error rate returning to baseline.
+- [~] PARTIAL: Output addresses incident communication cadence — partially met. The definition covers escalation to the coordinator for comms and the CPO's support team handling customer-facing messaging. Channel routing is covered. Timing intervals (e.g., Slack channel every 15 min, status page on declaration) are not prescribed — those belong in a runbook, not an agent definition, but they are missing against the criterion as stated. Score: 0.5.
 
 ## Notes
 
-The incident response section is one of the more explicit and well-structured parts of the CTO definition. The minor gap is that evidence requirements for incident delegations aren't enumerated in the incident section itself — a reader needs to cross-reference the general Delegation Protocol. Adding incident-specific evidence requirements (logs, traces, dashboards) to Section 6 would make it self-contained and remove the cross-referencing dependency.
+The incident response section is one of the most explicit parts of the CTO definition and maps well onto the test criteria. The three partial marks share the same root: the agent prescribes the right behaviours at a structural level but does not descend to operational specifics — revenue-per-minute blast radius, named evidence artifacts in the incident section, per-channel communication cadence. These gaps are arguably appropriate for an agent definition (runbooks carry operational detail), but they are real gaps against the rubric. The definition would produce a strong, well-structured incident response for this scenario.

@@ -18,3 +18,16 @@ Scenario: Testing whether the write-kb-article skill requires a question-format 
 - [ ] PASS: Skill uses only product terminology — no technical jargon without plain-language explanation
 - [ ] PARTIAL: Skill requires metadata (category, tags, related articles) — partial credit if related articles are required but category/tag metadata is not
 - [ ] PASS: Skill has a valid YAML frontmatter with name, description, and argument-hint fields
+
+## Output expectations
+
+- [ ] PASS: Output's title is phrased as a user question — "How do I use my own domain instead of clearpath.app?" or "Can I connect a custom domain to my workspace?" — not "Custom Domain Configuration" or "Domain Mapping"
+- [ ] PASS: Output's short answer at the top resolves the high-level question in 1-3 sentences — "Yes, you can connect a custom domain. You'll need to add a CNAME record at your DNS provider and verify ownership in Clearpath. Setup takes 5-30 minutes depending on DNS propagation."
+- [ ] PASS: Output's prerequisites section names what's needed — admin access to Clearpath, admin access to the customer's DNS provider, the custom domain registered, awareness that DNS changes can take up to 24 hours
+- [ ] PASS: Output's steps cover both sides — Clearpath side (enable custom domain in workspace settings, copy verification token) AND DNS provider side (add CNAME record pointing to clearpath app) — clearly labelled with provider-agnostic instructions
+- [ ] PASS: Output's steps include expected results after each — e.g. "Step 4: Add the CNAME record. After saving, your DNS provider should show the record as 'pending' or 'active'" — not just the action
+- [ ] PASS: Output's troubleshooting section covers — verification fails (DNS propagation delay, CNAME pointing wrong, conflicting record), HTTPS / SSL not working (certificate provisioning takes 5-10 minutes after verification), domain mismatch error
+- [ ] PASS: Output uses product terminology only — "custom domain", "subdomain", "DNS record" — and explains "CNAME" briefly the first time as "a type of DNS record that points your domain to another domain"
+- [ ] PASS: Output addresses the post-setup verification — how the user confirms their domain is now working, including testing in incognito to bypass cache, and what to do if some users still see the old URL (browser cache)
+- [ ] PASS: Output's related articles link to adjacent topics — "Setting up SSO with a custom domain", "Email and notification settings under your domain", "Removing or changing your custom domain" — anticipating next steps
+- [ ] PARTIAL: Output addresses metadata — category (e.g. "Workspace settings"), tags (e.g. "custom-domain", "DNS", "SSL"), and related articles in a structured frontmatter or footer block

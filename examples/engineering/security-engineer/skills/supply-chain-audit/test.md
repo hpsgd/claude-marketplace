@@ -16,3 +16,16 @@ Review the supply-chain-audit skill definition and verify it produces a SLSA-ali
 - [ ] PASS: Skill provides specific bash commands to collect evidence — not just a description of what to look for
 - [ ] PASS: Skill requires lockfiles to be present and committed — assigns automatic CRITICAL finding if absent
 - [ ] PASS: Skill requires CI/CD actions to be pinned to full SHAs not tags, citing the GitHub Actions security hardening guide
+
+## Output expectations
+
+- [ ] PASS: Output is structured as a verification of the skill (verdict per requirement) rather than running an actual supply-chain audit
+- [ ] PASS: Output verifies all four supply chain layers are covered — source, build, dependency, artifact — and that none can be skipped
+- [ ] PASS: Output confirms source-integrity controls — signed commits, branch protection, code review requirements, CODEOWNERS, and force-push prevention — are checked with concrete bash commands (e.g. `gh api repos/X/branches/main/protection`)
+- [ ] PASS: Output confirms build-integrity coverage — hosted vs self-hosted runners, build-as-code, build provenance generation (SLSA attestations), and log retention
+- [ ] PASS: Output verifies dependency-integrity coverage — lockfiles committed, no floating ranges (^, ~, *), Dependabot or equivalent dependency review on PRs, and CI vulnerability scanning
+- [ ] PASS: Output confirms artifact-integrity coverage — container image signing (cosign / sigstore), SBOM generation (Syft / cyclonedx), and immutable image tags (no `:latest`)
+- [ ] PASS: Output verifies SLSA level mapping — finds level 0 through 4 explicitly defined and the rule that the assessed level is the highest where ALL requirements are met (not the average)
+- [ ] PASS: Output confirms specific bash commands are provided for evidence collection at each layer — not just descriptive text of what to look for
+- [ ] PASS: Output confirms missing lockfiles trigger an automatic CRITICAL finding, and CI/CD action pinning to full 40-char SHAs (not tags) is required
+- [ ] PARTIAL: Output identifies any genuine gaps — e.g. no rule on package registry mirror / proxy hardening, no guidance on assessing third-party GitHub Apps as supply-chain entry points

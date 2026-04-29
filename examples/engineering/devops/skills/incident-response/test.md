@@ -16,3 +16,18 @@ Review the incident-response skill definition and verify it provides a structure
 - [ ] PASS: Skill's root cause section requires forming a specific, falsifiable hypothesis before testing — distinguishes bad ("database is slow") from good ("query X has sequential scan because index dropped in migration Z")
 - [ ] PASS: Skill mandates a post-mortem for SEV-1 and SEV-2 incidents using the provided template
 - [ ] PASS: Skill lists anti-patterns including root-cause before mitigate, multiple simultaneous changes, blame individuals, and "be more careful" as prevention
+
+## Output expectations
+
+- [ ] PASS: Output confirms the skill enforces "mitigate before root-cause" as a cardinal rule, citing the specific guidance that users should not be left suffering while investigation proceeds
+- [ ] PASS: Output names all five phases in order (Detect and Classify, Assess Impact, Mitigate, Root Cause Analysis, Prevent Recurrence) and confirms they are sequential
+- [ ] PASS: Output verifies the severity table includes all four levels (SEV-1 through SEV-4) with response times and communication cadences, and notes the "classify up when in doubt" rule
+- [ ] PASS: Output confirms the timeline requirement uses HH:MM UTC format with event and source columns, and is described as the single most important artifact
+- [ ] PASS: Output verifies mitigation options are ranked by speed/risk (feature flag fastest at seconds, hotfix slowest at 10-30 min) and includes the rule that mitigation buys time but is not the fix
+- [ ] PASS: Output confirms the root cause section requires falsifiable hypotheses with the contrasting bad/good examples (vague "database is slow" vs specific "query X sequential scan because index dropped in migration Z")
+- [ ] PASS: Output confirms post-mortem is mandatory for SEV-1 and SEV-2 and references the template's required sections (timeline, impact, root cause, contributing factors, action items, lessons learned)
+- [ ] PASS: Output identifies the prevention taxonomy (immediate / short-term / long-term) with required owner and deadline for each action item
+- [ ] PASS: Output assesses whether the skill prevents the three failure modes named in the prompt — root-causing before mitigating, simultaneous changes, and missing timeline — and points to the specific skill content addressing each
+- [ ] PARTIAL: Output mentions the communication protocol (status update template, distinguishing "mitigated" from "resolved", "still investigating" being a valid update)
+- [ ] PARTIAL: Output notes the blameless framing of post-mortems ("what system allowed this?" not "who did this?")
+- [ ] PARTIAL: Output flags the runbook template reference for in-incident use

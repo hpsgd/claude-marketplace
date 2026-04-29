@@ -1,43 +1,46 @@
-# Cross-domain dispatch
+# Result: cross-domain dispatch
 
-**Scenario:** A user brings a multi-domain feature launch requiring product, design, engineering, and launch work. Does the coordinator decompose it correctly and produce a structured dispatch plan without making unilateral decisions?
+**Verdict:** PARTIAL
+**Score:** 18.5/20 criteria met (92.5%)
+**Evaluated:** 2026-04-29
 
-> We need to ship a new "Team Workspaces" feature for Flowbase before the end of the quarter. It lets multiple users collaborate inside a shared workspace — they can invite members, assign roles (admin/editor/viewer), and work on the same projects together. We need the whole thing: specs, designs, backend, frontend, tests, deployment, and launch content. Can you coordinate this?
+## Section breakdown
 
-Routed to the coordinator, which decomposes cross-team initiatives into structured dispatch plans and produces sequenced delegation rather than executing directly.
+- Criteria: 8.5/9 scoreable (1 SKIP excluded)
+- Output expectations: 10/11 scoreable
 
-## Output
+## Results
 
-The coordinator opens with pre-flight: reads CLAUDE.md and .claude/CLAUDE.md, reads `.claude-plugin/marketplace.json` to check which agents are enabled, identifies installed leads (CPO, CTO), reviews any existing roadmap artefacts, and checks for active workstreams that might affect capacity.
+### Criteria
 
-It then produces a structured dispatch plan:
+- [x] PASS: Performs pre-flight checks — reads CLAUDE.md/project conventions and checks available agents before doing anything else — met. "Pre-Flight (MANDATORY)" Steps 1–3 explicitly direct reading CLAUDE.md, `.claude/rules/`, marketplace.json, and settings.json before any other action.
+- [x] PASS: Produces a structured dispatch plan listing agents to invoke in sequence (not executing directly) — met. The "Capability constraint" paragraph states: "you cannot write files or dispatch other agents... You analyse the situation and produce a structured dispatch plan listing which agents to invoke, in what order, with what context."
+- [x] PASS: Decomposes work across both CPO team and CTO team — met. "Decompose Across Teams" lists both teams with named workstreams (product, design, content, GTM, support for CPO; architecture, QA Lead, development, QA Engineer, DevOps, security, data for CTO).
+- [x] PASS: Identifies dependencies between workstreams — specifically that architecture and product must precede development — met. The dependency table in §3 shows Architecture depends on Product requirements and blocks Development; Product requirements also block QA Lead acceptance criteria.
+- [x] PASS: Applies the 3-amigos sequencing pattern: product + architecture + QA lead before development starts — met. Step 1 of the sequencing section names "Product + Architecture + QA Lead (3 amigos — define WHAT, HOW, and HOW TO VERIFY)". The definition also states "Development does not start until acceptance tests exist."
+- [x] PASS: Does not make unilateral product or technical decisions — routes product decisions to CPO, technical decisions to CTO — met. "Non-negotiable" states this directly. "What You Don't Do" lists "Make product decisions — that's the CPO" and "Make technical decisions — that's the CTO."
+- [x] PASS: Checks Definition of Ready criteria before marking work as ready to start — met. The DoR section lists nine criteria with an explicit gate: "If any item is missing, the work is not ready. Send it back to the appropriate lead."
+- [~] PARTIAL: Identifies the security workstream as relevant (auth, roles, access control are explicitly in scope) — partially met. Security is listed as a CTO workstream ("Security: Threat model, security review checkpoints") and the security engineer appears throughout the RATSI table. The definition does not direct the coordinator to call out auth and roles as a specifically heightened risk surface. It would surface security, but not necessarily flag it as a priority concern for this category of feature.
+- [-] SKIP: Escalates to the human on a CPO vs CTO conflict — skipped. The scenario describes no conflict between CPO and CTO.
 
-**CPO workstreams:** product-owner for PRD and user stories (roles, permissions model, invite flow, workspace switching UX); ui-designer for component specs and accessibility requirements; gtm for launch plan and positioning. Support prep flagged as relevant (role-based onboarding, invite emails).
+### Output expectations
 
-**CTO workstreams:** architect for system design (multi-user data model, role-based access control, workspace isolation, API contracts) and ADR; security-engineer for threat model (auth, roles, access control — explicitly in scope); qa-lead for acceptance criteria and test strategy (3 amigos); dotnet-developer and react-developer for backend/frontend implementation; devops for infrastructure and deployment pipeline; qa-engineer for acceptance tests (must precede development per 3 amigos pattern).
-
-**Dependencies:** architecture and product requirements precede all development; QA Lead participates in 3 amigos before development starts; security threat model runs parallel to design, must complete before implementation begins.
-
-**Definition of Ready gate:** the coordinator calls out that development cannot start until the DoR checklist is cleared — problem validated, user stories written, QA Lead reviewed acceptance criteria, design complete, architecture agreed, ADR written, dependencies identified.
-
-The plan does not include decisions on data model choices, technology stack, pricing, or feature scope — those are routed to CTO and CPO respectively.
-
-## Evaluation
-
-| Verdict | Score | Evaluated |
-|---|---|---|
-| PASS | 8/8 (100%) | 2026-04-16 |
-
-- [x] PASS: Performs pre-flight checks — the Pre-Flight section is MANDATORY and requires reading CLAUDE.md, `.claude/CLAUDE.md`, marketplace.json, and settings.json before any decomposition; checking installed leads and reviewing active workstreams is explicitly required
-- [x] PASS: Produces a structured dispatch plan — the Core definition states "you produce a dispatch plan that the main conversation executes"; the Capability Constraint section prohibits direct execution: "You cannot write files or dispatch other agents"
-- [x] PASS: Decomposes across both CPO and CTO teams — Section 2 explicitly lists CPO workstreams (Product, Design, Content, GTM, Support) and CTO workstreams (Architecture, QA Lead, Development, QA Engineer, DevOps, Security, Data); both teams are required for any cross-team initiative
-- [x] PASS: Dependencies identified — architecture and product precede development — Section 3 mandates a dependency table showing Architecture depends on Product requirements and blocks Development and DevOps; QA Lead depends on Product requirements and blocks Development
-- [x] PASS: 3-amigos sequencing applied — Section 5 specifies "Product + Architecture + QA Lead (3 amigos)" as step 1, and explicitly states "Development does not start until acceptance tests exist"
-- [x] PASS: No unilateral product or technical decisions — the Non-negotiable principle states "You never make unilateral decisions that belong to the CPO or CTO"; "What You Don't Do" lists "Make product decisions" and "Make technical decisions" explicitly
-- [x] PASS: Definition of Ready checked before marking work ready — Section 5 (Definition of Ready) provides a nine-item checklist with the explicit rule "If any item is missing, the work is not ready. Send it back to the appropriate lead for completion"
-- [x] PASS: Security workstream identified as relevant — the CTO team workstream list explicitly includes "Security: Threat model, security review checkpoints"; the RATSI matrix shows security-engineer owns threat models; Team Workspaces involves roles, member invitations, and access control — all auth-adjacent; the Definition of Done requires security review for auth-touching changes
-- [-] SKIP: CPO vs CTO conflict escalation — no conflict simulated in this scenario
+- [x] PASS: Output uses fully-qualified `plugin:agent` invocation format (e.g., `cpo:cpo`, `cto:cto`, `architect:architect`) rather than bare names — met. The definition devotes an "Agent invocation format" section to this requirement, including a warning that the short form "will fail with an error," and provides a full copy-paste reference table.
+- [x] PASS: Output asks clarifying questions about outcome, appetite, deadline, or commercial signals before committing to a plan — met. §"Understand the Human's Intent" lists five questions to answer first: desired outcome, appetite, priority, deadline type (hard vs soft), and commercial signals. The "before end of quarter" framing in the prompt would directly trigger the deadline and commercial signal questions.
+- [x] PASS: Output explicitly identifies a critical path and gives a minimum timeline range rather than a single point estimate — met. §"Estimate Effort and Identify Critical Path" requires a named critical path with an explicit illustrative example including a range: "Critical path: Product requirements → Architecture → Development → QA execution → Release. Minimum 6–8 weeks."
+- [x] PASS: Output frames work for leads at the right level rather than instructing specialists directly — met. §"Delegate to Leads" gives the instruction: "tell the CPO 'we need a PRD for X', not 'write user stories for Y' (that's the CPO's job to break down further)."
+- [x] PASS: Output sequences QA twice — QA Lead in planning and QA Engineer writing acceptance tests before development — met. The sequencing section calls out "QA involved TWICE" and places QA Lead in Step 1 and QA Engineer in Step 3, explicitly before development starts.
+- [x] PASS: Output names specific edge cases or anti-requirements relevant to roles/permissions — met. §"Definition of Ready" requires "Edge cases identified — empty state, error state, boundary conditions documented" and "Anti-requirements stated — what we're deliberately NOT doing." Following these instructions for a roles and invitations feature would surface examples like last-admin removal, role downgrade behaviour, and invite expiry as mandatory DoR items.
+- [x] PASS: Output flags data-engineering and analytics work rather than treating it as implicit — met. The CTO workstream decomposition explicitly includes "Data: Event tracking, analytics, dashboards." The RATSI "Data & Analytics" table assigns event tracking plan ownership to the data engineer with product owner as a supporting input on what to track.
+- [~] PARTIAL: Output flags agents referenced in the plan that exist in the marketplace but may not be enabled, with the `"<plugin>@hpsgd": true` enablement hint — partially met. Pre-Flight Step 3 and the "Flag inactive agents in dispatch plans" section describe this exact pattern with the correct hint format. Whether it fires depends on runtime state from settings.json — the mechanism is fully defined, execution depends on what the coordinator finds when it reads the file.
+- [~] PARTIAL: Output distinguishes Definition of Ready from Definition of Done as separate checkpoints in the plan — partially met. Both sections exist and are clearly distinct (DoR = gate before development; DoD = gate before shipping), with "What Done does NOT include" further separating launch from done. The PARTIAL reflects that the definition does not explicitly direct the coordinator to surface both as named gates in the dispatch plan structure — it describes the criteria but the sequencing section does not label where each gate falls.
+- [~] PARTIAL: Output surfaces likely CPO/CTO trade-offs to watch for without picking a side — partially met. §"Common conflicts" enumerates scope-vs-deadline, build-vs-buy, and security-vs-timeline — all directly relevant (invitations/email is a build-vs-buy candidate; roles/auth surfaces security-vs-timeline). The definition describes these patterns. The PARTIAL reflects that conflict resolution is framed reactively (when leads disagree) rather than as proactive flagging at plan time before disagreements materialise.
+- [x] PASS: Output names a release/launch coordination step distinct from "done" — met. §"What 'Done' does NOT include" carves out production deployment, GTM/launch activities, and customer communication as separate from done. The sequencing section has a dedicated Step 5 (content, GTM, support preparation) and Step 6 (launch) following QA execution, with the Release Manager owning go/no-go per the RATSI.
 
 ## Notes
 
-The coordinator definition handles this cleanly. The RATSI matrix is the most useful element for the security criterion — it makes security-engineer ownership of threat models unambiguous without requiring inference. One structural note: the definition has two sections labelled "Step 5" (Sequence the Work and Definition of Ready). The numbering error doesn't affect behaviour but could confuse someone reading linearly. Pre-Flight Step 3 (flagging inactive agents in dispatch plans) is a practical addition not tested by this rubric — it's worth having.
+The definition scores 92.5% and the PARTIAL verdict is tight — one more half-point on security specificity or trade-off proactivity would bring it to PASS. The security PARTIAL reflects a structural gap: the definition lists security as a workstream but does not contain a heuristic to flag auth/roles/multi-tenancy as elevated-risk patterns warranting an early threat model rather than a later one.
+
+The conflict resolution instructions are reactive by design (Coordinator steps in when CPO and CTO disagree), but for a plan this complex, anticipating likely trade-offs at dispatch time would be more valuable than knowing how to handle them after they surface. This is the most actionable improvement the definition could make.
+
+The RATSI matrix is thorough and the QA Lead vs QA Engineer distinction is one of the clearest role boundary definitions in the codebase. The duplicate "Step 5" numbering in the sequencing and DoR sections is a cosmetic error that does not affect behaviour.

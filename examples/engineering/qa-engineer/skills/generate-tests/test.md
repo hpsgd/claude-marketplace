@@ -17,3 +17,16 @@ Generate tests for `src/billing/discount.py::validate_discount_code`. The functi
 - [ ] PASS: Skill uses factories for test data (discount objects, customer IDs) — no inline magic strings
 - [ ] PASS: Evidence table is produced with test name, exact command, exit code, and PASS/FAIL result
 - [ ] PARTIAL: Skill uses Hypothesis for property-based testing of the discount amount calculation
+
+## Output expectations
+
+- [ ] PASS: Output produces tests for every named exception in the prompt — `DiscountNotFoundError`, `DiscountExpiredError`, `DiscountAlreadyUsedError`, `DiscountMinimumNotMetError` — each with a focused test that asserts the specific exception type via `pytest.raises`
+- [ ] PASS: Output's happy-path tests cover both percentage discount (e.g. 10% off $200 = $20 amount) and fixed discount (e.g. $15 off any qualifying order) — two distinct tests with the resulting `DiscountResult.amount` asserted exactly
+- [ ] PASS: Output's edge cases include order_total exactly equal to the minimum (passes) and one cent below the minimum (fails with `DiscountMinimumNotMetError`), and an expiry test at the boundary (one second before expiry passes, at expiry fails)
+- [ ] PASS: Output's tests use `Decimal` for `order_total` and amount values — never floats — matching the function's `Decimal` parameter type
+- [ ] PASS: Output writes RED first — `pytest tests/billing/test_discount.py -v` shown with exit code 1 and a meaningful failure message before implementation, then GREEN with exit code 0
+- [ ] PASS: Output mocks only the database lookup boundary (e.g. `discount_repository.find_by_code`) — never mocks `validate_discount_code` itself or its return value
+- [ ] PASS: Output uses factories or fixtures for Discount, Customer, and DiscountUsage entities — no repeated inline construction with magic UUIDs and dates
+- [ ] PASS: Output's tests follow one-assertion-per-test — a test that checks both "no exception raised" AND "amount equals X" should split into two if those are unrelated assertions, or use a single combined assertion on `DiscountResult` equality
+- [ ] PASS: Output's evidence table lists every test with name, exact command, exit code, and PASS/FAIL result
+- [ ] PARTIAL: Output includes Hypothesis property-based tests for the discount amount calculation — properties like "amount is always between 0 and order_total", "percentage discount of 0% returns amount = 0"

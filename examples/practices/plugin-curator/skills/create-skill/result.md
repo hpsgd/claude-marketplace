@@ -1,99 +1,42 @@
-# Create skill new skill for existing agent
-
-A contributor asks the create-skill skill to add a `review-go` skill to the coding-standards agent, covering Go-specific conventions for type safety, error handling, and testing patterns.
-
-## Prompt
-
-> /create-skill review-go for coding-standards — Go code review skill covering error handling patterns, interface usage, goroutine safety, and table-driven tests.
-
-```markdown
-[Step 1: Reading template and conventions]
-Read(file_path="${CLAUDE_PLUGIN_ROOT}/templates/skill-template.md") ✓
-Read(file_path="CLAUDE.md") ✓
-
-[Step 2: Identifying parent agent]
-find plugins -path "*/coding-standards/agents/*.md" → plugins/practices/coding-standards/agents/coding-standards.md ✓
-Reading parent agent...
-find plugins -path "*/coding-standards/skills/*/SKILL.md" → existing skills:
-
-## Output
-
-- review-dotnet/SKILL.md
-- review-git/SKILL.md
-- review-python/SKILL.md
-- review-standards/SKILL.md
-- review-typescript/SKILL.md
-
-No review-go skill exists. Go-specific checks are not covered by review-standards (language-agnostic) or any sibling.
-
-[Step 3: Domain research]
-Go error handling: errors.Is/As, fmt.Errorf %w wrapping
-Interface patterns: small interfaces, accept interfaces return structs
-Goroutine safety: race detector, sync.Mutex/RWMutex, channel patterns
-Testing: table-driven tests, testify, go test -race
-
-[Step 4: Creating directory]
-mkdir -p plugins/practices/coding-standards/skills/review-go ✓
-
-[Step 5: Writing SKILL.md]
-Writing plugins/practices/coding-standards/skills/review-go/SKILL.md ✓ (158 lines)
-
-Frontmatter:
----
-name: review-go
-description: "Review Go code against team conventions — error handling, interface design, goroutine safety,
-and table-driven tests. Auto-invoked when reviewing .go files."
-argument-hint: "[files, PR, or git range to review]"
-user-invocable: true
-allowed-tools: Read, Grep, Glob, Bash
-paths:
-  - "**/*.go"
----
-
-[Step 6: Self-containment check]
-Reading skill as a first-time reader...
-- Methodology defined within the skill
-- Each step has concrete grep commands
-- Output template is self-explanatory
-Self-contained: ✅
-
-[Step 7: README update]
-Added review-go to coding-standards agent's skill list in README.md ✓
-
-[Step 8: Verify]
-12/12 quality criteria met ✓
-
-### Created: review-go (coding-standards)
-
-- **Path:** `plugins/practices/coding-standards/skills/review-go/SKILL.md`
-- **Lines:** 158
-- **Description:** "Review Go code against team conventions — error handling, interface design, goroutine safety, and table-driven tests. Auto-invoked when reviewing .go files."
-- **Self-contained:** Yes
-- **README updated:** Yes
-- **Quality score:** 12/12 criteria met
-```
-
-## Evaluation
-
+# Output: create-skill new skill for existing agent
 
 | Field | Value |
 |---|---|
-| Verdict | PASS |
-| Score | 7.5/8 criteria met (93.75%) |
-| Evaluated | 2026-04-16 |
-
+| **Verdict** | PARTIAL |
+| **Score** | 16 / 17 criteria met (94.1%) |
+| **Evaluated** | 2026-04-29 |
+| **Source** | `plugins/practices/plugin-curator/skills/create-skill/SKILL.md` |
 
 ## Results
 
-- [x] PASS: Step 1 reads skill template and CLAUDE.md — Step 1 lists both as explicit `Read()` calls: `Read(file_path="${CLAUDE_PLUGIN_ROOT}/templates/skill-template.md")` and `Read(file_path="CLAUDE.md")`. These are the first two operations, before any creation. The step states "The template defines the MANDATORY structure. Every field is required unless explicitly marked optional."
-- [x] PASS: Step 2 reads parent agent AND checks sibling skills — Step 2 includes both find commands: one for the agent definition (`find plugins -path "*/{agent-name}/agents/*.md"`) and one for existing sibling skills (`find plugins -path "*/{agent-name}/skills/*/SKILL.md"`). The Anti-Patterns section calls out "Agent duplication — copying the parent agent's methodology verbatim" as a failure mode, reinforcing the sibling check purpose.
-- [x] PASS: SKILL.md frontmatter includes all required fields — Step 5 "Frontmatter (all fields required)" section explicitly lists: name, description, argument-hint, user-invocable, and allowed-tools. The heading states "all fields required" with no exceptions for these five.
-- [x] PASS: Description specific enough for auto-invocation — Step 5 states "`description` is CRITICAL — Claude may only read this to decide whether to invoke. Must include (1) what it produces, (2) when to use it." The Anti-Patterns section provides a counter-example: "'Helps with testing' matches everything and triggers on nothing. 'Write E2E acceptance tests in Playwright for a user story' matches precisely."
-- [x] PASS: Skill body includes sequential steps, rules, and output format — Step 5 body structure table marks "Sequential steps", "Rules / Anti-patterns", and "Output format" each as Required. The table also marks the Opening paragraph as Required.
-- [x] PASS: Step 6 self-containment check performed — Step 6 "Verify self-containment" defines a four-check table: Understandable, Executable, Complete, Bounded. Each check has a Pass criteria column. The step is numbered and sequential, and is explicitly called out as a required step.
-- [x] PASS: README updated — Step 7 states "Add the skill to the parent agent's row in the agent table in README.md." It is a separate numbered step with a single unambiguous instruction.
-- [~] PARTIAL: Generic examples only — Step 5 quality targets include "Generic examples only (no private references)" and the mental audit in Step 8 includes it as a checklist item. The rule and the check both exist. However there is no structural enforcement mechanism — no grep command or verification step is defined for private references in skills (unlike the agent creation verification in create-agent's Step 10). It is a quality target checked only as a mental audit, not a mechanically enforced constraint. PARTIAL ceiling applies per criterion prefix.
+### Criteria
+
+- [x] PASS: Step 1 reads the skill template and CLAUDE.md before creating anything — met: Lines 15-17 show explicit `Read` calls for `skill-template.md` and `CLAUDE.md` as the first mandatory step, before any directory creation or file writing
+- [x] PASS: Step 2 reads the parent agent (coding-standards) and checks for existing sibling skills to understand boundaries and avoid duplication — met: Step 2 reads the parent agent definition; Step 3 requires checking sibling skills and mapping their scope boundaries before writing
+- [x] PASS: SKILL.md frontmatter includes all required fields: name, description, argument-hint, user-invocable, and allowed-tools — met: Lines 57-65 show a complete frontmatter template with all five fields under a heading stating "all fields required"
+- [x] PASS: Description is specific enough for auto-invocation — includes what it produces and when to use it, not just "helps review Go code" — met: Line 68 marks description "CRITICAL" and requires both what it produces and when to use it; Line 127 provides a concrete bad/good contrast
+- [x] PASS: Skill body includes sequential mandatory steps, rules with anti-patterns, and a structured output format template — met: Lines 75-81 body structure table marks all three as Required; Anti-Patterns section at lines 122-129; Output Format at lines 131-150
+- [x] PASS: Step 6 self-containment check is performed — met: Lines 94-99 define an explicit self-containment step with a four-row pass-criteria table (understandable, executable, complete, bounded)
+- [x] PASS: README is updated to add review-go to the coding-standards skill list — met: Step 7 (lines 101-103) instructs adding the skill to the parent agent's row in `README.md` as a numbered mandatory step
+- [~] PARTIAL: Examples in the skill use generic identifiers (e.g., `myservice`, `@org/shared`) — no private company names or internal package references — partially met: Line 87 lists "Generic examples only (no private references)" as a quality target and Step 8 includes it in the mental audit checklist, but only as a mental check with no mechanical verification (no grep or pattern scan)
+
+### Output expectations
+
+- [x] PASS: Output creates `plugins/practices/coding-standards/skills/review-go/SKILL.md` — met: Step 4 uses `plugins/{category}/{agent}/skills/{skill-name}` which maps correctly; the skill does not create a new top-level plugin
+- [x] PASS: Output's frontmatter contains all required fields — met: Step 5 frontmatter template shows all five fields with "all fields required" instruction
+- [x] PASS: Output's description is auto-invocation-friendly — met: Line 68 CRITICAL framing requires what the skill produces and when to use it; the bad/good contrast at line 127 reinforces this
+- [x] PASS: Output's body covers the four areas from the prompt — met: Step 3 directs explicit domain research, the arguments enumerate all four areas (error handling, interface usage, goroutine safety, table-driven tests), and a well-formed execution following Steps 3-5 would incorporate them
+- [x] PASS: Output includes mandatory sequential steps and a structured output format template with findings table — met: Body structure table at lines 75-81 marks both as Required
+- [~] PARTIAL: Output includes a Rules / Anti-patterns section with named anti-patterns specific to Go — partially met: The skill requires a Rules/Anti-patterns section (body structure table) but does not drive Go-specific content; a well-formed execution would include Go-specific anti-patterns based on domain research, but the skill provides no guard against generic anti-patterns that happen not to be Go-specific
+- [x] PASS: Output's self-containment is verified — met: Step 6 four-point check table is a mandatory step
+- [x] PASS: Output updates README.md — met: Step 7 is a numbered mandatory step covering exactly this
+- [x] PASS: Output's examples use generic identifiers — met: Line 87 and Step 8 checklist both state this requirement explicitly
+- [~] PARTIAL: Output addresses Go-specific concurrency review patterns — partially met: Step 3 domain research would surface concurrency patterns, but the skill provides no prompt or checklist that specifically calls out mutex choice, channel direction, or context propagation as areas to cover; coverage depends entirely on agent judgment from the arguments
 
 ## Notes
 
-No changes to this skill since previous evaluation. Verdict unchanged at PASS (93.75%). The mental audit in Step 8 references 12 criteria, matching the Output Format's `Quality score: X/12` — these align correctly. The one minor gap noted previously remains: `paths` is marked optional in the frontmatter section, but for a file-type-specific skill like review-go the `paths` trigger is near-essential for auto-invocation. Optional labelling may lead contributors to skip it.
+The skill is structurally solid — every lifecycle stage from template reading through README update is covered. The description-specificity guidance is strong, with CRITICAL framing and a concrete bad/good contrast in Anti-Patterns.
+
+The two partial gaps are related: the skill enforces the presence of sections (anti-patterns, examples) but not the specificity or domain-accuracy of their content. For a general-purpose create-skill, this is a reasonable boundary. A skill that writes other skills can't know in advance what domain-specific content to mandate. The gaps are minor quality ceilings, not structural failures.
+
+One implementation note from the previous evaluation remains valid: Step 2's bash commands use literal placeholder syntax (`{agent-name}`) without explaining substitution from `$ARGUMENTS`. A contributor following the step literally would need to infer this.

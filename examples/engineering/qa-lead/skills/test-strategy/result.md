@@ -1,72 +1,36 @@
-# Define test strategy for a document signing feature
+# Output: Define test strategy for a document signing feature
 
-Developer invokes the test-strategy skill for a new document signing feature. Users can upload a PDF, place signature fields, send to signatories, and track completion. This is a legally significant feature with data integrity requirements.
+**Verdict:** PARTIAL
+**Score:** 14.5/19 criteria met (76%)
+**Evaluated:** 2026-04-29
 
-## Prompt
+## Results
 
-> Define a test strategy for our new document signing feature. Users can: upload a PDF, drag and drop signature fields onto pages, add signatories by email, send for signing, track who has signed, and download the completed document. Legally, the signed document must be tamper-evident and the audit trail must be accurate. We use TypeScript/Vitest for unit tests and Playwright for E2E. Data integrity is critical.
+### Criteria
 
-## Output
+- [x] PASS: Skill starts by understanding what is being tested — Step 1 explicitly covers feature description, critical user flows, failure modes, external dependencies, and risk profile
+- [x] PASS: Risk profile explicitly identifies legal/data integrity as high risk — Step 1 lists "data integrity" as a named risk category; the payment flow example shows all six levels apply to high-risk scenarios, establishing that legal/data integrity triggers elevated testing
+- [x] PASS: Skill defines test levels with tools, coverage targets, and estimated test counts — the Test Levels table includes Level, What it tests, Tools, Coverage target, and the output format adds Est. Tests column
+- [x] PASS: E2E tests are limited to the top critical flows — pyramid notes "Few, slow, expensive — critical flows only" and the table says "Top 5-10 flows"
+- [x] PASS: Skill identifies specific gaps — Step 5 lists five gap categories with concrete examples
+- [~] PARTIAL: Quality gates are specific and measurable — pre-merge and pre-release checklists exist but thresholds are generic ("Coverage above threshold on changed files", "Performance benchmarks met") rather than feature-specific measurable numbers — 0.5
+- [x] PASS: Security testing is called out separately — the Test Levels table has a dedicated Security row with OWASP, auth/authz, input validation
+- [~] PARTIAL: Skill addresses the testing pyramid allocation for this risk profile — default 70/20/10 is stated with "Adjust based on risk" but no prescription for how much to adjust for legal/data-integrity risk profiles — 0.5
+- [x] PASS: Output follows the format: Risk Assessment, Test Levels table, Quality Gates (pre-merge + pre-release), Gaps, and Recommendations — the Output Format section matches exactly
 
-**Step 1 — Feature understanding:**
+### Output expectations
 
-Document signing flow: upload PDF → drag/drop signature field placement → add signatories by email → send for signing → track completion → download completed document.
+- [~] PARTIAL: Output's risk assessment classifies legal admissibility and tamper-evidence as HIGH risk naming specific failure modes — the skill's Step 1 includes "data integrity" as a risk category but does not name specific legal failure modes (forged signature, post-signing modification, audit trail gap); a well-formed response following this skill would produce a generic risk list rather than legally-specific failure modes — 0.5
+- [ ] FAIL: Output's test levels table names Vitest (unit), Vitest + integration (component + integration), and Playwright (E2E) with explicit coverage targets per level including a 90%+ Vitest unit threshold and Playwright scenario count — the skill's table uses generic tool options ("Vitest / xUnit / pytest", "Playwright / Cypress") and a generic "80%+ changed code" threshold; it would not elevate the unit threshold to 90%+ for high-risk features or produce a named Playwright scenario count
+- [x] PASS: Output's E2E set is limited to highest-value flows — the skill constrains E2E to "Top 5-10 flows" with "critical flows only"; the output format would produce a focused E2E set with explicit exclusions
+- [ ] FAIL: Output's tamper-detection testing is called out as a security concern with adversarial scenarios — the skill's Security row lists "OWASP, auth/authz, input validation" but mentions nothing about tamper-detection, byte-modification, page-swapping, or identity-swapping adversarial scenarios; these would not appear in output
+- [ ] FAIL: Output's audit trail testing asserts every action is captured with actor, timestamp, and document hash — the skill has no guidance on audit trail testing; nothing in the skill would produce assertions about upload, field placement, send, view, sign, and download events each captured with actor, timestamp, and document hash
+- [ ] FAIL: Output's quality gates are specific and measurable with feature-specific thresholds — the skill produces generic checklists ("Coverage above threshold", "Performance benchmarks met") not thresholds like "100% coverage on the signing module" or "0 audit trail gaps in 500 simulated signing flows"
+- [x] PASS: Output's pyramid allocation justifies a non-default mix — "Adjust based on risk" is explicit and the payment flow example establishes that high-risk features deviate; the skill would produce a reallocation with some reasoning
+- [x] PASS: Output identifies at least one specific testing gap — Step 5 covers "Missing edge cases — concurrent" and "Missing levels"; applied to the signing feature this would surface at least one concrete gap
+- [x] PASS: Output addresses external dependency testing — the Test Levels table includes Contract tests for API compatibility and the skill's anti-patterns section says "mock only external boundaries"; PDF library, signature library, and email delivery would be covered
+- [-] PARTIAL: Output addresses long-term legal evidence requirements as a regression concern with a recommendation to retain signing artefacts for replay verification — the skill has no guidance on long-term artefact retention or replay verification; this would not appear in output — 0
 
-Critical user flows: (1) full signing flow from upload to completed document download, (2) tamper-evident hash verification — signed document hash must match on download, (3) audit trail accuracy — every signatory action is timestamped and attributable.
+## Notes
 
-Failure modes: corrupted signature (document is technically valid but signature field is wrong), incorrect audit timestamp (signatory could repudiate), unauthorised signatory access (wrong person can sign), tampered document accepted as valid (hash collision or bypass).
-
-External dependencies: PDF storage service (upload/download), email delivery (signing invites), PDF rendering (for field placement UI).
-
-Risk profile: HIGH — legal obligations. Tamper-evident requirement is a legal contract condition. Audit trail inaccuracy could void a document's legal standing. Data integrity failures are not cosmetic.
-
-**Test levels (TypeScript/Vitest + Playwright):**
-
-| Level | Scope | Tools | Coverage | Est. Tests |
-|---|---|---|---|---|
-| Unit | PDF processing, field coordinate calculation, audit event generation, hash computation, signatory validation | Vitest | 85%+ changed code | ~40 |
-| Integration | Signature placement persistence, audit trail writes, email invite delivery, auth/authz boundary (only invited signatory can sign) | Vitest + Supertest | Critical paths | ~20 |
-| E2E | Full signing flow (upload → sign → download), tamper detection (modify PDF → verify rejection), audit trail verification | Playwright | Top 3 flows only | ~8 |
-| Security | Auth/authz checks, signed document integrity, audit trail timestamp source (server not client), access control between signatories | security-review skill | Public-facing code | Separate |
-
-E2E limited to top 3 flows. Not every UI interaction or field placement edge case.
-
-**Quality gates:**
-
-Pre-merge: unit + integration tests pass (exit 0), 85% branch coverage on changed files, no new TypeScript type errors, audit event generation covered by unit tests.
-
-Pre-release: E2E passes on staging with a real PDF, audit trail output verified against expected event sequence (not just "events exist"), tamper detection test passes (modify a signed PDF → verify rejection), no open HIGH/CRITICAL security findings.
-
-**Security called out separately:** auth/authz checks (only invited signatory can access signing URL), signed document integrity (server-side hash verification, not client-supplied), audit trail timestamps sourced from server time not user-supplied timestamps.
-
-**Testing pyramid for this risk profile:** the legal obligation for data integrity means integration tests (boundary verification) deserve a higher share than the default 70/20/10. Suggested allocation: 60% unit / 30% integration / 10% E2E. The integration ratio is elevated because tamper-evidence and audit accuracy must be verified at the database/API boundary, not just in unit logic.
-
-**Gaps:**
-
-1. No load test for concurrent signing sessions (multiple signatories clicking simultaneously).
-2. No accessibility testing for drag-and-drop field placement (keyboard or screen reader users).
-3. No cross-browser verification for Playwright PDF rendering behaviour.
-
-## Evaluation
-
-
-| Field | Value |
-|---|---|
-| Verdict | PASS |
-| Score | 8.5/9 criteria met (94%) |
-| Evaluated | 2026-04-16 |
-
-
-- [x] PASS: Skill starts with feature understanding — test-strategy SKILL.md Step 1 "Understand What's Being Tested" requires: (1) what it does, (2) critical user flows, (3) failure modes, (4) external dependencies, (5) risk profile. All five elements are mandated as the first step before writing any strategy.
-- [x] PASS: Risk profile identifies legal/data integrity as high risk — test-strategy SKILL.md Step 1 item 5 requires "What's the risk profile? Financial, safety, data integrity, reputation, convenience." The output format Risk Assessment section explicitly requires this. Data integrity for a legally-binding document maps directly to the "data integrity" and "reputation" risk categories.
-- [x] PASS: Skill defines test levels with tools, coverage targets, and estimated test counts — test-strategy SKILL.md Step 2 test levels table has columns: Level / What it tests / Tools / Coverage target. The output format Test Levels table includes Level / Scope / Tools / Coverage / Est. Tests — all three required elements are present.
-- [x] PASS: E2E limited to top critical flows — test-strategy SKILL.md Step 2 states "E2E: Complete user flows through UI / Playwright/Cypress / Top 5-10 flows." The "top 5-10 flows" constraint is explicit.
-- [x] PASS: Skill identifies specific gaps — test-strategy SKILL.md Step 5 (Identify Gaps) is a mandatory step listing: untested paths, missing edge cases, over-tested code, flaky tests, missing levels. The output format includes a Gaps section.
-- [x] PASS: Quality gates are specific and measurable — test-strategy SKILL.md Step 4 provides pre-merge and pre-release checklists with specific pass/fail criteria. "85% branch coverage on changed files" and "E2E passes on staging with a real PDF" are measurable, not generic.
-- [x] PASS: Security testing called out separately — test-strategy SKILL.md Step 2 test levels table includes Security as a distinct row: "OWASP, auth/authz, input validation / SAST / security-review skill / Public-facing code." It is a separate level, not folded into integration.
-- [~] PARTIAL: Skill addresses testing pyramid allocation for this risk profile — test-strategy SKILL.md Step 2 states "Default allocation: 70% unit, 20% integration, 10% E2E. Adjust based on risk." The instruction to adjust is explicit, but the definition gives no formula or threshold for what "high risk" means in allocation terms. The concept of reallocation is present but not prescribed.
-- [x] PASS: Output follows the required format — test-strategy SKILL.md output format template requires: Risk Assessment, Test Levels table (scope/tools/coverage/est. tests), Quality Gates (pre-merge + pre-release), Gaps, and Recommendations. All five sections are specified.
-
-### Notes
-
-The security testing criterion (7) passes cleanly — security is an explicit separate row in the Step 2 table, not a note in anti-patterns. The pyramid reallocation criterion (8) has a PARTIAL ceiling by design; the definition supports the concept but leaves quantification to the evaluator's judgment. The audit trail accuracy criterion is a particularly strong test case for this skill — it requires verifying the audit trail output against expected event sequences, not just asserting events exist. The definition's quality gates section supports this specificity.
+The skill is structurally solid for general test strategy work. Its main weakness for legally-significant features is the absence of domain-specific escalation paths: the risk profile step names "data integrity" but does not wire elevated risk into tighter, named quality gates or adversarial security scenarios. A practitioner following this skill for a document signing feature would produce a competent general strategy but miss the adversarial tamper-detection scenarios, the per-action audit trail assertions, and the long-term artefact retention concern that a legal feature demands. The generic quality gate thresholds ("coverage above threshold") are the single biggest gap — the skill gives no mechanism to elevate them when risk is HIGH.

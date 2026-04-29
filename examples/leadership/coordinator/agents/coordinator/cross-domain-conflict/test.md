@@ -15,3 +15,15 @@ The CPO wants to ship a new onboarding flow by end of month to hit activation ta
 - [ ] PASS: The resolution preserves accountability — CPO still owns the onboarding OKR, CTO still owns the security fix
 - [ ] PARTIAL: Coordinator identifies whether the OKR deadline can be adjusted given the security constraint, with specific options
 - [ ] PASS: Escalation framing is clear — the coordinator explains WHY this needed escalation (cross-domain, security vs delivery trade-off)
+
+## Output expectations
+
+- [ ] PASS: Output explicitly acknowledges both concerns are legitimate — does not start by ranking them, does not dismiss either as overblown
+- [ ] PASS: Output treats the CVSS 7.8 vulnerability as a non-negotiable constraint (HIGH severity, must be fixed before exposing more attack surface to it via the new onboarding flow), not as a tradable priority
+- [ ] PASS: Output assesses sequencing options — auth fix first then onboarding, parallel work with onboarding behind a feature flag until auth is patched, or partial onboarding flow scoped to avoid touching auth — with reasoning for the recommended path
+- [ ] PASS: Output's recommendation is concrete — a specific sequencing or parallel plan with handoffs and dates — not "have a meeting" or "you two work it out"
+- [ ] PASS: Output preserves accountability — the CPO retains ownership of the onboarding OKR and the CTO retains ownership of the security fix; the coordinator coordinates, doesn't take over
+- [ ] PASS: Output identifies whether the OKR deadline can shift — proposing a specific revised date or a scoped-down onboarding flow that meets the activation target without touching auth — rather than just declaring "the OKR slips"
+- [ ] PASS: Output frames the escalation rationale — why this needed cross-domain coordination (security trumps feature delivery, but the OKR is also a board commitment) — so the parties understand the call wasn't arbitrary
+- [ ] PASS: Output identifies one or two questions for the executive level (CEO / board) if the trade-off is too large for the coordinator to settle — e.g. "are we willing to communicate an OKR slip to the board to ship securely?"
+- [ ] PARTIAL: Output addresses the activation-target risk if onboarding slips — quantifying the OKR shortfall and proposing a partial mitigation (e.g. landing-page tweaks that improve activation without touching auth in the meantime)

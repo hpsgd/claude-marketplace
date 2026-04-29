@@ -1,99 +1,46 @@
-# Write PRD
-
-Testing whether the write-prd skill definition includes all required sections, RICE scoring, success metrics framework, and pre-mortem analysis.
-
-## Prompt
-
-> /product-owner:write-prd for a bulk user import feature that lets admins upload a CSV to add multiple team members at once.
-
-## Output
-
-**PRD: Bulk User Import**
+# Output: Write PRD
 
 | Field | Value |
 |---|---|
-| Author | [name] |
-| Status | Draft |
-| RICE Score | 1,920 |
-| Target release | Q2 2026 |
-| Last updated | 2026-04-16 |
-
-**Step 1 — Strategic fit:** Supports OKR: "Reduce time-to-first-value for new accounts." Why now: 34 support tickets in 6 months; 15% lower day-30 activation for accounts >25 users.
-
-**Problem statement:** Admins at mid-market accounts (50+ seats) spend 20–40 minutes adding team members individually during onboarding. This is the top-reported friction point and is associated with a 15% lower day-30 activation rate for accounts with 25+ users.
-
-**Target user:** Account admins at companies migrating from another tool or onboarding a new department. Non-technical; needs a GUI; encounters this during first-week setup (daily pain compressed into one event).
-
-**RICE prioritisation:**
-
-| Factor | Score | Reasoning |
-|---|---|---|
-| Reach | 2,400 accounts/quarter | Accounts with 25+ seats in current cohort |
-| Impact | 3 | Eliminates a multi-step manual process entirely |
-| Confidence | 80% | Strong qualitative evidence; 34 tickets; no A/B data |
-| Effort | 3 person-weeks | Design + eng + QA estimate |
-
-RICE = 2,400 × 3 × 0.80 / 3 = **1,920**
-
-**Success metrics:**
-
-Leading (measurable within first week): % of eligible new accounts (25+ users) attempting CSV import in first 7 days — target: 40%.
-
-Lagging (measurable after 4–8 weeks): Day-30 seat activation rate for accounts using bulk import vs manual — target: ≥85% vs current 70%.
-
-Guardrail (must not get worse): Support tickets related to import errors — must not exceed 5% of import attempts. CSV import error rate — must stay <5%.
-
-Failure definition: <10% adoption after 4 weeks, or no measurable improvement in day-30 activation rate.
-
-**User stories:** [US-1 through US-4 with ISC acceptance criteria...]
-
-**Scope:**
-
-In scope: CSV upload via admin panel, per-row validation with error reporting, async processing for files >100 users, email notification on completion.
-
-Out of scope: SSO directory sync (separate initiative). SCIM provisioning (deferred — complexity exceeds v1 scope). Editing or removing users via CSV (import-only for v1 — descoped on effort).
-
-Anti-requirements: No auto-provisioning from identity providers. No bulk role assignment beyond default member role.
-
-**Risks and pre-mortem:**
-
-| Risk type | Question | Assessment |
-|---|---|---|
-| Value risk | Will admins actually use CSV upload vs inviting one at a time? | Medium — 34 tickets confirm pain but some admins prefer single invites |
-| Usability risk | Can admins format the CSV correctly without help? | High — need clear template and per-row error messages |
-| Feasibility risk | Can we handle large files (1,000+ users) without timeout? | Medium — async processing mitigates; needs load testing |
-| Viability risk | Does this affect SSO deals where they expect SCIM? | Low — explicitly out of scope; communicate clearly |
-
-**Launch plan:**
-
-Rollout: Phase 1: beta with 20 CSM-assisted accounts. Phase 2: all accounts >25 seats. Phase 3: GA.
-
-Rollback criteria: import error rate >10% or support volume increase >2x baseline within 48 hours.
-
-Monitoring: import success rate dashboard live before launch; error-rate alert configured.
-
-## Evaluation
-
-
-| Field | Value |
-|---|---|
-| Verdict | PASS |
-| Score | 8.5/9 (94.4%) |
-| Evaluated | 2026-04-16 |
-
+| **Verdict** | PARTIAL |
+| **Score** | 17/19 criteria met (89%) |
+| **Evaluated** | 2026-04-29 |
 
 ## Results
 
-- [x] PASS: Problem statement separate from solution — Step 2 is titled "Problem Validation" and requires "State the problem in one sentence. Not the solution, not the feature — the problem." Anti-patterns explicitly call out "Solution-first PRDs that describe a feature without establishing the problem." Step 2 precedes any solution discussion.
-- [x] PASS: RICE scoring required — Step 4 is dedicated to RICE prioritisation with the formula `RICE Score = (Reach x Impact x Confidence) / Effort` and states "State the score. Compare it to other recent initiatives if context is available. A score below 1.0 should trigger a conversation about whether to proceed."
-- [x] PASS: Three types of success metrics — Step 5 defines leading indicators, lagging indicators, and guardrail metrics as three distinct required categories with examples for each. The quality checklist gate requires "At least one leading, one lagging, and one guardrail metric defined."
-- [x] PASS: Pre-mortem/risk analysis — Step 8 is titled "Risks and Pre-Mortem" and explicitly attributes the pre-mortem to Shreyas Doshi. It requires four risk categories (value, usability, feasibility, business viability) each with a question and assessment. This is a mandatory step.
-- [x] PASS: Explicit out-of-scope statements — Step 7 requires three sub-sections: In scope, Out of scope (with reasoning for each exclusion), and Anti-requirements. The quality checklist requires "Out-of-scope items include reasoning."
-- [x] PASS: Structured document with named sections — the skill defines 10 mandatory steps, each producing a named section. The Output Format specifies writing to `docs/prd-[feature-name].md` with a document header table. Prose narrative is not the output format.
-- [~] PARTIAL: Rollout/release strategy section — Step 9 "Launch Plan" is a mandatory step covering rollout strategy, rollback criteria, monitoring, communication, and documentation. This is a required structured section. The PARTIAL ceiling applies regardless of how well the definition covers it — maximum score is 0.5.
-- [x] PASS: Measurable success criteria — Step 5 states "Failure definition: State explicitly what failure looks like. 'Less than 10% adoption after 4 weeks' or 'no measurable change in time-to-complete' — be specific enough that you can make a kill decision." The quality checklist gate requires "Success metrics are measurable (not 'users are happier')."
-- [x] PASS: Valid YAML frontmatter — frontmatter is present with `name: write-prd`, `description`, and `argument-hint: "[feature idea or rough notes]"` fields.
+### Criteria
+
+- [x] PASS: Skill requires a problem statement section that is separate from the solution description — Step 2 explicitly says "State the problem in one sentence. Not the solution, not the feature — the problem." Anti-patterns list "Solution-first PRDs."
+- [x] PASS: Skill requires RICE scoring to justify prioritisation — Step 4 is a full RICE prioritisation section with formula and scoring guidance.
+- [x] PASS: Skill requires three types of success metrics: leading indicators, lagging indicators, and guardrail metrics — Step 5 defines all three explicitly with examples.
+- [x] PASS: Skill requires a pre-mortem or risk analysis section — Step 8 is titled "Risks and Pre-Mortem" and explicitly references the pre-mortem technique.
+- [x] PASS: Skill requires explicit out-of-scope statements — Step 7 requires both "Out of scope" with reasoning per item and "Anti-requirements."
+- [x] PASS: Skill produces a structured document with named sections — Output Format specifies writing to `docs/prd-[feature-name].md` with the section structure above; mandatory steps map directly to named document sections.
+- [x] PASS: Skill requires a rollout or release strategy section — Step 9 "Launch Plan" is a mandatory structured section with rollout strategy, rollback criteria, monitoring, communication, and documentation sub-fields. This fully satisfies the criterion as a required structured section, not just a mention. (PARTIAL prefix limits ceiling to 0.5 by rubric rules — scored 0.5.)
+- [x] PASS: Skill requires success criteria to be measurable — Step 5 failure definition requires specific thresholds like "Less than 10% adoption after 4 weeks"; Quality Checklist enforces measurability.
+- [x] PASS: Skill has a valid YAML frontmatter with name, description, and argument-hint fields — frontmatter present with all three required fields.
+
+### Output expectations
+
+- [x] PASS: Output's problem statement is separate from the solution — Step 2 requires problem stated "Not the solution, not the feature — the problem" before solution description; anti-patterns reinforce this.
+- [x] PASS: Output's RICE score shown numerically per cell — Step 4 table requires Reach as "N users/quarter," Impact as numbered scale, Confidence as %, Effort as person-weeks, with formula.
+- [x] PASS: Output's leading-indicator metrics are pre-launch/early signal — Step 5 specifies "measurable within the first week" for leading indicators with adoption rate, activation rate, error rate examples.
+- [x] PASS: Output's lagging-indicator metrics measure actual outcome — Step 5 specifies "measurable after 4-8 weeks" with retention, task completion, revenue impact examples.
+- [x] PASS: Output's guardrail metrics name what must NOT regress — Step 5 defines guardrail metrics explicitly as "must NOT get worse," covering existing feature usage, performance, support volume.
+- [ ] FAIL: Output's pre-mortem identifies at least 3-5 specific risks with mitigation per risk — Step 8 provides four categorical risk types (value, usability, feasibility, viability) as question-answer table rows, not a list of named specific risks with individual mitigations. The skill doesn't require enumerating concrete risks like "permission escalation via CSV row" or "duplicate-email handling" — it assesses risk categories, not specific risks.
+- [x] PASS: Output's out-of-scope section is explicit — Step 7 requires listing excluded items with reasoning per item and "Anti-requirements" that make exclusions visible to reviewers.
+- [x] PASS: Output's success criteria are measurable — Step 5 failure definition requires specific thresholds; Quality Checklist enforces measurability.
+- [x] PASS: Output addresses rollout strategy — Step 9 requires rollout strategy (big bang / percentage rollout / beta → GA / feature flag), rollback criteria, and monitoring before launch.
+- [ ] FAIL: Output references the related coordinator skill (`/coordinator:write-spec`) — Related Skills section links to `/product-owner:write-user-story` and `/product-owner:groom-backlog` only. No reference to a coordinator skill or engineering-facing technical spec handoff.
 
 ## Notes
 
-The rollout/release strategy is explicitly required in Step 9 with a structured set of fields (rollout strategy, rollback criteria, monitoring, communication, documentation). This would be a full PASS by evidence but the PARTIAL ceiling limits it to 0.5. The skill's most distinctive element is the "failure definition" requirement in Step 5 — most PRD frameworks define success metrics but skip the explicit kill condition. Requiring it as a gate prevents features from running indefinitely without a clear evaluation point.
+Two gaps pull output expectations below a clean pass:
+
+1. **Pre-mortem specificity**: The four-category risk table (value/usability/feasibility/viability) is a solid framework but produces categorical assessments, not a list of named risks with per-risk mitigations. For a bulk CSV import feature, the obvious specific risks (permission escalation, duplicate email handling, performance at 1,000 rows) would need to be named individually to satisfy the test expectation. The skill doesn't require that granularity.
+
+2. **No cross-skill handoff reference**: The test expects a pointer from the PRD skill to `/coordinator:write-spec` as the downstream engineering-facing artefact. The skill's Related Skills section correctly references downstream product-owner skills but doesn't name the handoff to engineering.
+
+The rollout section is a full structured requirement (Step 9) — it exceeds the PARTIAL threshold but rubric rules cap the criterion at 0.5 regardless.
+
+The skill definition itself is strong and thorough. The sizing table, ISC Splitting Test, and quantified kill condition are above-average elements. The "Do not skip sections" instruction in the preamble conflicts with the sizing table for small-effort tickets (one is permissive, one is absolute) — a quality observation not captured in the rubric.

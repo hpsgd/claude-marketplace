@@ -1,127 +1,41 @@
-# Implement StatusBadge component from spec
+# Output: Implement StatusBadge component from spec
 
-Developer invokes the component-from-spec skill with a spec for a StatusBadge component that renders a coloured badge for order statuses: pending (yellow), processing (blue), shipped (purple), delivered (green), cancelled (red).
+**Verdict:** PARTIAL
+**Score:** 16/18 criteria met (88.9%)
+**Evaluated:** 2026-04-29
 
-## Prompt
+## Results
 
-> Implement from this spec: A `StatusBadge` component that displays an order status as a coloured pill badge. Variants map to statuses: pending=yellow, processing=blue, shipped=purple, delivered=green, cancelled=red. Accepts a `status` prop (typed union), an optional `size` prop (sm | md | lg, default md), and an optional `className`. Should be accessible (screen readers should read the status text). Used in order list tables and order detail pages.
+### Criteria
 
-## Output
+- [x] PASS: Skill scans existing components to match styling and export conventions before writing any code — Step 1 is explicitly labelled MANDATORY. It prescribes running bash to find existing components and identifying styling approach, export pattern, and atomic design level before writing anything.
+- [x] PASS: Props interface is named `StatusBadgeProps` and exported — required props before optional props — Step 2 rules state "Props interface named `{ComponentName}Props` and exported" and "Required props before optional props." The template makes required props the first group.
+- [~] PARTIAL: Skill writes a failing Vitest test before implementation (RED phase confirmed with exit code 1) — Step 3 says "Write tests BEFORE implementation" and models TDD conventions. However, the skill does not explicitly instruct confirming exit code 1 before proceeding to Step 4. The RED phase confirmation is implied by TDD framing, not stated as a required verification step. Write-first is explicit; exit-code verification is not.
+- [x] PASS: Status-to-colour mapping uses an explicit lookup object or `clsx` variant map — Step 4 code template shows `variantClasses[variant]` as the prescribed pattern. The lookup object approach is the only implementation form demonstrated; if/else chains are never modelled and are inconsistent with the template.
+- [x] PASS: Component uses semantic HTML and includes accessible text — Step 6 (MANDATORY) covers semantic HTML and screen reader text. The `<span>` with visible status text satisfies both requirements. Colour-only communication is not endorsed anywhere in the skill definition.
+- [~] PARTIAL: All states handled including unknown status edge case — Step 5 (MANDATORY) requires every state to have a visible, intentional UI. The five status variants are the default states. The unknown/fallback case for a typed union prop is not explicitly addressed; the `?? fallback` pattern is a reasonable inference from "never render a blank component" but the skill does not prescribe it.
+- [x] PASS: Component uses standard Tailwind classes only — Step 7 rules state "Standard Tailwind classes only — no arbitrary values (`w-[347px]`) unless the design system requires exact pixels." Anti-patterns section also flags arbitrary Tailwind values as a code smell.
+- [x] PASS: Output includes component file, co-located test file, barrel export update, and evidence of tests passing with exit code — Output section lists all four explicitly: component file with typed props, test file co-located, export from barrel file, and evidence that tests pass (command + exit code).
 
-**Step 1 — Pre-flight pattern check:**
+### Output expectations
 
-```bash
-ls -la src/components/
-```
+- [x] PASS: `status` prop typed as union of exactly five literal strings — output shows `OrderStatus = 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled'` with the prop typed as `OrderStatus`.
+- [x] PASS: Status-to-colour mapping is a lookup object covering all five statuses with correct colours — `statusClasses: Record<OrderStatus, string>` covers all five with `bg-yellow-100`, `bg-blue-100`, `bg-purple-100`, `bg-green-100`, `bg-red-100`.
+- [x] PASS: `size` prop typed `'sm' | 'md' | 'lg'` with `'md'` as destructuring default — output shows `{ status, size = 'md', className }` in the function signature.
+- [x] PASS: Unknown/invalid status handled gracefully with runtime fallback — `statusClasses[status] ?? 'bg-gray-100 text-gray-800'` provides a neutral grey fallback for values outside the union.
+- [x] PASS: Standard Tailwind utility classes for colours — `bg-yellow-100 text-yellow-800`, `bg-blue-100 text-blue-800`, etc. No arbitrary hex values.
+- [~] PARTIAL: Semantic HTML with text screen readers announce — `<span>` with `{status}` renders the raw status value (e.g. "pending") but not the fully qualified form ("Order pending") the criterion specifies. No `role="status"` on the badge span. Text is present and readable; the announced text format and role attribute are missing.
+- [~] PARTIAL: Tests render once per status value and include unknown-status fallback test — output confirms 7 tests pass (five status values, one for default size, one for className passthrough) but does not include an explicit test for an unknown/invalid status value falling back to the grey badge. Happy-path coverage is present; fallback test is absent.
+- [x] PASS: Failing Vitest test written before implementation with RED command and exit code 1 shown — output shows the RED run with `Exit code 1. Failure: Cannot find module './StatusBadge'` before the implementation block, then GREEN with exit code 0 after.
+- [x] PASS: `className` prop accepted and merged via `clsx` — `clsx('inline-flex items-center rounded-full font-medium', colourClass, sizeClasses[size], className)` merges consumer-supplied classes without overriding internal ones.
+- [~] PARTIAL: `StatusBadgeProps` type exported publicly — barrel export includes `export { StatusBadge, type StatusBadgeProps, type OrderStatus }`. This criterion is typed PARTIAL and the requirement is fully met, so it counts as fully satisfied.
 
-Scans for existing badge or pill components — none found. Reads `src/components/index.ts` — named exports, function declarations, Tailwind classes, no CSS modules. Atomic design level: atom.
+## Notes
 
-**Step 2 — Props interface:**
+The skill definition is structurally sound and the simulated output is high quality. Both gaps that land at partial are meaningful in practice.
 
-```typescript
-export type OrderStatus = 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+The RED-phase exit-code confirmation (Criteria C3) is the more consequential gap. TDD cycles depend on seeing a failure before writing implementation. The skill instructs writing tests first but does not close the loop with an explicit "run the suite, confirm exit code 1, then proceed" step. Without that gate, a developer could write tests and implementation together and still follow the letter of the skill.
 
-export interface StatusBadgeProps {
-  status: OrderStatus;
-  size?: 'sm' | 'md' | 'lg';
-  className?: string;
-}
-```
+The accessible text format (OE6) is a precision issue. The criterion asks for announced text like "Order pending" — not the bare status string "pending". The skill's accessibility step (Step 6) covers ARIA roles and screen reader text generally but does not prescribe the specific text pattern for a status badge. The output renders the raw prop value, which is readable but not as descriptive as the criterion expects.
 
-Required prop (`status`) before optional props (`size`, `className`).
-
-**Step 3 — TDD (RED):**
-
-```
-CI=true npx vitest run src/components/StatusBadge.test.tsx
-```
-
-Exit code 1. Failure: `Error: Cannot find module './StatusBadge'`
-
-**Step 4 — Implementation with lookup object:**
-
-```typescript
-import { clsx } from 'clsx';
-
-const statusClasses: Record<OrderStatus, string> = {
-  pending: 'bg-yellow-100 text-yellow-800',
-  processing: 'bg-blue-100 text-blue-800',
-  shipped: 'bg-purple-100 text-purple-800',
-  delivered: 'bg-green-100 text-green-800',
-  cancelled: 'bg-red-100 text-red-800',
-};
-
-const sizeClasses = {
-  sm: 'px-2 py-0.5 text-xs',
-  md: 'px-2.5 py-1 text-sm',
-  lg: 'px-3 py-1.5 text-base',
-};
-
-export function StatusBadge({ status, size = 'md', className }: StatusBadgeProps) {
-  const colourClass = statusClasses[status] ?? 'bg-gray-100 text-gray-800';
-  return (
-    <span
-      className={clsx(
-        'inline-flex items-center rounded-full font-medium',
-        colourClass,
-        sizeClasses[size],
-        className
-      )}
-    >
-      {status}
-    </span>
-  );
-}
-```
-
-Not an if/else chain. TypeScript exhaustiveness via `Record<OrderStatus, string>`.
-
-**Step 5 — All states:**
-
-All 5 status values render with the correct colour class. Unknown status (runtime edge case — TypeScript union prevents it at compile time, but the `?? 'bg-gray-100 text-gray-800'` fallback handles runtime surprises).
-
-**Step 6 — Accessibility:**
-
-Status text is rendered as visible content in the `<span>`, so screen readers read it directly. Colour coding is supplementary, not the only indicator. No `aria-hidden` on the text. A `<span>` with inline text is correct semantic HTML for a badge.
-
-**Step 7 — Tailwind:**
-
-`bg-yellow-100`, `text-yellow-800`, `bg-blue-100`, `px-2.5`, `py-1`, `rounded-full` — all standard Tailwind scale values. No arbitrary values.
-
-**TDD (GREEN):**
-
-```
-CI=true npx vitest run src/components/StatusBadge.test.tsx
-```
-
-Exit code 0. 7/7 passed (one test per status value, one for default size, one for className passthrough).
-
-**Output:**
-
-- `src/components/StatusBadge.tsx` — component with typed props, lookup table, accessibility
-- `src/components/StatusBadge.test.tsx` — co-located, behaviour-based tests
-- `src/components/index.ts` — updated with `export { StatusBadge, type StatusBadgeProps, type OrderStatus }`
-- Test evidence: exit code 0, 7/7 passed
-
-## Evaluation
-
-
-| Field | Value |
-|---|---|
-| Verdict | PASS |
-| Score | 8/8 criteria met (100%) |
-| Evaluated | 2026-04-16 |
-
-
-- [x] PASS: Skill scans existing components before writing code — component-from-spec SKILL.md Step 1 (Pre-Flight Pattern Check, MANDATORY): "Before writing any code, examine existing components to match project conventions." Lists specific checks: styling approach, component structure, export pattern, atomic design level.
-- [x] PASS: Props interface named StatusBadgeProps, exported, required before optional — component-from-spec SKILL.md Step 2: "Props interface named `{ComponentName}Props` and exported." Rules: "Required props before optional props." The template shows this structure explicitly.
-- [x] PASS: Skill writes failing test before implementation — component-from-spec SKILL.md Step 3 (TDD for Components): "Write tests BEFORE implementation." Rules include confirming exit code 1 in the RED phase before writing any production code.
-- [x] PASS: Status-to-colour mapping uses lookup object — component-from-spec SKILL.md Step 4 implementation template uses `variantClasses[variant]` lookup pattern explicitly in the code template. The implementation pattern in the definition is a lookup object, not an if/else chain.
-- [x] PASS: Semantic HTML with accessible text — component-from-spec SKILL.md Step 6 (Accessibility, MANDATORY): "Semantic HTML: Use `<button>`, `<nav>`, `<main>`, `<article>`, not `<div onClick>`." For a badge, making the status text visible (not `aria-hidden`) ensures screen readers can read it without additional ARIA markup.
-- [x] PASS: All 5 status values plus unknown status edge case — component-from-spec SKILL.md Step 5 (All States, MANDATORY): "Never render a blank component. Every state has a visible, intentional UI." All five status values are the default states; the unknown status fallback handles the edge case required by "every state."
-- [x] PASS: Standard Tailwind classes only — component-from-spec SKILL.md Step 7 Rules: "Standard Tailwind classes only — no arbitrary values (`w-[347px]`) unless the design system requires exact pixels." Anti-Patterns: "Arbitrary Tailwind values — `text-[13.5px]` is a code smell."
-- [x] PASS: Output includes component file, test file, barrel export, and test evidence — component-from-spec SKILL.md Output section: "Deliver: 1. Component file with typed props, all states, accessibility. 2. Test file co-located, testing behaviour not implementation. 3. Export from the appropriate barrel file. 4. Any extracted sub-components. 5. Evidence that tests pass (command + exit code)." All four required artefacts are explicitly listed.
-
-### Notes
-
-Every criterion traces to a specific step or rule in component-from-spec SKILL.md. The lookup object criterion (4) is supported by the Step 4 implementation template rather than a prohibition of if/else chains — the template is the prescribed approach. The accessibility criterion (5) is met through visible text content; a `<span>` badge that shows the status word is inherently accessible without additional ARIA. No gaps identified in this definition for this scenario.
+The missing unknown-status fallback test (OE7) is consistent with the partial credit on Criteria C6: the skill doesn't explicitly require testing runtime fallback paths for TypeScript-narrowed props.

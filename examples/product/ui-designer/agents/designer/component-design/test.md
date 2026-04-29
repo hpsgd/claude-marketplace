@@ -24,3 +24,16 @@ We have a design system with existing Input, Button, Avatar, and Card components
 - [ ] PASS: Documents the error state for each step (e.g. invalid email format in team invite, workspace name taken)
 - [ ] PARTIAL: Specifies loading states for async operations — partial credit if loading state is mentioned but not fully specified for each async step (integration connection, form submission)
 - [ ] PASS: Produces output in a structured component specification format with named sections, not a prose description
+
+## Output expectations
+
+- [ ] PASS: Output addresses each of the 4 wizard steps from the prompt explicitly — workspace setup, team invite, integration connection, project from template — with the relevant inputs / interactions per step
+- [ ] PASS: Output's design-system reuse decisions are explicit per primitive — Input (reuse for workspace name, email fields), Button (reuse for navigation), Avatar (reuse for team-member preview), Card (reuse for template selection) — and identifies what NEEDS to be created (step indicator / progress component)
+- [ ] PASS: Output's progress / step-indicator component is decided explicitly as Reuse / Extend / Create with reasoning — likely Create with justification that no existing primitive serves this layout
+- [ ] PASS: Output documents all 8 component states for the wizard shell — Default, Hover (on next/back), Focus (keyboard focus on inputs), Active (during click), Disabled (next button before required fields filled), Loading (during async like integration auth), Error (validation failures), Empty (initial state of integration step before selection)
+- [ ] PASS: Output's accessibility specification covers ARIA roles (e.g. `role="region"` on each step, `aria-current="step"` on the active indicator), labels, and keyboard navigation (Tab through fields, Enter to advance, Esc to abandon)
+- [ ] PASS: Output addresses the team-invite step's email validation — what counts as valid format, max 5 emails, duplicate email handling, malformed entry handling — with error states designed
+- [ ] PASS: Output addresses the integration step's "or skip" branch explicitly — designed as a primary "Connect" path AND a secondary "Skip for now" link, with deferred re-engagement (e.g. nudge in onboarding email Day 7)
+- [ ] PASS: Output specifies responsive behaviour for desktop AND tablet — including how the wizard layout reflows (single-column on tablet vs two-column on desktop) and where the step indicator sits at each breakpoint
+- [ ] PASS: Output addresses can-skip vs cannot-skip per step — workspace setup is required, team invite can be skipped (don't trap a solo user), integration is optional, first project from template is required (so they end the wizard with something usable)
+- [ ] PARTIAL: Output addresses the loading state for the integration step specifically — OAuth roundtrip can take 5-15 seconds, requires a clear "Connecting to GitHub..." indicator with a fallback message if it stalls

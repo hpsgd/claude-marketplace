@@ -1,137 +1,40 @@
-# Data table component implementation
+# Output: Data table component implementation
 
-User asks the React developer to build a reusable data table component with server-side sorting, filtering, and pagination. The app uses Next.js App Router with TypeScript and Tailwind CSS.
+**Verdict:** PASS
+**Score:** 17.5/19 criteria met (92%)
+**Evaluated:** 2026-04-29
 
-## Prompt
+## Results
 
-> I need a `DataTable` component for our Next.js app. It should support:
-> - Columns defined via a config prop (label, key, sortable flag)
-> - Server-side sorting (clicking a column header updates URL params and triggers a server refetch)
-> - A text filter input that debounces and updates a `?q=` URL param
-> - Pagination controls (previous/next, page number display) using `?page=` URL param
-> - Loading skeleton that matches the table layout
-> - Empty state when there are no rows
->
-> The table will be used on the `/admin/orders` and `/admin/users` pages, so it needs to be in the shared components. We use Tailwind for styling.
+### Criteria
 
-## Output
+- [x] PASS: Agent reads CLAUDE.md and scans existing components before writing any code — Pre-Flight is labelled MANDATORY. Step 1 reads `CLAUDE.md` and `.claude/CLAUDE.md`. Step 2 mandates `Glob(pattern="src/components/**/*.tsx")`, barrel export check, and UI library check. All required before writing code.
+- [x] PASS: Agent identifies that sorting, filtering, and pagination state must live in URL search params (not useState) — met in two explicit locations: Data Patterns ("URL search params for pagination/filter state (not useState) — survives refresh and back/forward") and Principles ("URL state over component state. Pagination, filters, and search terms belong in URL search params, not useState").
+- [x] PASS: Agent writes a failing Vitest test first (RED) before implementing the component — TDD Iron Law is MANDATORY: "No production code without a failing test first." RED step requires exit code 1 and a meaningful failure message.
+- [x] PASS: Agent defines a typed `DataTableProps` interface with exported type — Component Conventions require "TypeScript interface named `ComponentNameProps`"; barrel export via `src/components/index.ts` makes exporting the interface the required convention.
+- [x] PASS: Agent handles all required states: loading (skeleton), empty, and populated — Pre-Implementation Checklist: "States: Loading, error, empty, success all handled?" Output Format Checklist confirms this is a required output section.
+- [x] PASS: Agent uses `clsx` for conditional class composition, not string concatenation — Component Conventions: "Conditional classes: clsx — never string concatenation." Direct and unambiguous.
+- [x] PASS: Agent flags the decision checkpoint for adding a new shared component — Decision Checkpoints: "Creating a new component that might already exist → STOP and ask. Check UI library and existing components first." Explicit mandatory stop trigger.
+- [~] PARTIAL: Agent covers accessibility requirements — keyboard navigation for sortable headers, appropriate ARIA attributes — Pre-Implementation Checklist covers "Keyboard navigation, ARIA attributes, colour contrast, focus management" broadly. General ARIA guidance is present but table-specific semantics (`aria-sort` values, button-in-th for sortable columns) are not prescribed. Framework is there; table-specific detail is not.
+- [x] PASS: Output includes TDD Evidence (RED/GREEN commands with exit codes) and a Checklist section — Output Format template explicitly requires both, with exact field names and exit code notation.
 
-**Pre-Flight:**
+### Output expectations
 
-`Read(file_path="CLAUDE.md")` — reads project conventions and checks `.claude/rules/`.
-`Read(file_path=".claude/CLAUDE.md")` — reads additional project-level rules.
-`Glob(pattern="src/components/**/*.tsx")` — scans existing components. No existing table or data grid component found.
-`Read(file_path="src/components/index.ts")` — checks barrel export for naming and export conventions.
-Check `@org/ui` package for existing table primitives — none found.
+- [x] PASS: Output places `DataTable` in the shared components folder — Pre-Flight Step 2 classifies components by atomic level and shared vs. app-specific; the prompt states the table is used on two separate pages, so the agent classifies it as shared.
+- [x] PASS: Output's `DataTableProps` is a typed and exported interface with generic `<T>` type parameter — TypeScript strict mode and Component Conventions drive typed interfaces; generic `<T>` for row data follows from strict mode and `noUncheckedIndexedAccess`.
+- [x] PASS: Output stores sort, filter, and page state in URL search params using `useSearchParams` / `usePathname` from `next/navigation` — Data Patterns section mandates this; Next.js App Router section covers the navigation imports.
+- [x] PASS: Output's text filter uses a debounce before updating `?q=` param — Data Patterns explicitly mentions "`DebouncedSearch` for text filters (URL param → server refetch)."
+- [x] PASS: Output's column header click handler toggles sort direction and updates URL params — "No client-side filtering, sorting, or pagination — server does the work" combined with URL state principle drives correct implementation.
+- [x] PASS: Output renders three distinct UI states — loading skeleton, empty state, populated table — Pre-Implementation Checklist and Output Format Checklist both mandate this.
+- [x] PASS: Output uses `clsx` for conditional classNames — explicitly mandated in Component Conventions.
+- [x] PASS: Output writes the failing Vitest test first with RED/GREEN evidence and exit codes — Iron Law is non-negotiable; Output Format mandates commands with exit codes.
+- [~] PARTIAL: Output addresses accessibility — `aria-sort` on sortable headers, keyboard-activatable — Pre-Implementation Checklist covers ARIA and keyboard navigation generally. `aria-sort` attribute with ascending/descending/none values and button-inside-th are derivable but not explicitly prescribed by the definition. A well-aligned agent would likely get there; the definition doesn't guarantee the exact pattern.
+- [~] PARTIAL: Output checks the project's existing UI library for an existing Table primitive — Decision Checkpoints and Pre-Flight Step 2 both require checking the UI library. However, the definition doesn't require this to surface explicitly as a named decision in the output's Decisions section — it may happen silently during Pre-Flight.
 
-**Decision checkpoint triggered:** creating a new shared component that might already exist → checked UI library and existing components first. No duplicate found. Proceeding.
+## Notes
 
-**URL search params decision:**
+The definition is strong. URL state is the most forcefully stated convention in the file, appearing in both Principles and Data Patterns with identical intent. TDD is unusually explicit for an agent definition — the Iron Law with exit codes and failure caps gives high confidence the RED phase actually fires before any production code.
 
-Sort state (`?sort=column&dir=asc`), filter state (`?q=query`), and pagination state (`?page=2`) all live in URL search params via `useSearchParams()` and `useRouter()`. None of these use `useState` — URL state survives refresh, supports back/forward navigation, and allows sharing filtered views. Changing any URL param triggers a server refetch via Next.js App Router.
+The main ceiling is accessibility specificity. The definition covers ARIA and keyboard navigation as checklist items but doesn't prescribe table-specific patterns. An agent following this definition would likely produce correct `aria-sort` usage, but the definition doesn't guarantee it.
 
-**TDD — RED phase:**
-
-```
-CI=true npx vitest run src/components/DataTable.test.tsx
-```
-Exit code 1. Failure: `Error: Cannot find module './DataTable'`
-
-**Props interface:**
-
-```typescript
-export interface ColumnConfig {
-  label: string;
-  key: string;
-  sortable?: boolean;
-}
-
-export interface DataTableProps {
-  columns: ColumnConfig[];
-  rows: Record<string, unknown>[];
-  isLoading?: boolean;
-  className?: string;
-}
-```
-
-Required props (`columns`, `rows`) before optional props.
-
-**TDD — GREEN phase:**
-
-```
-CI=true npx vitest run src/components/DataTable.test.tsx
-```
-Exit code 0. 4/4 passed.
-
-**States handled:**
-
-Loading: skeleton rows using `role="status"` and `aria-label="Loading data"`, matching the column count and approximate width of a real row.
-
-Empty: `<p>No results found.</p>` — not a blank component.
-
-Populated: data rows with sort indicators on sortable column headers.
-
-**clsx for conditional classes:**
-
-```typescript
-className={clsx(
-  'px-4 py-2 text-left text-sm font-medium',
-  { 'cursor-pointer hover:bg-gray-50 select-none': col.sortable }
-)}
-```
-
-Not string concatenation.
-
-**Accessibility:**
-
-Sortable column headers use `<button>` inside `<th>` (keyboard navigable). `aria-sort="ascending"` / `"descending"` / `"none"` applied to sortable `<th>` elements. Loading skeleton has `role="status"`. Empty state is visible text content, not blank.
-
-**Implemented: DataTable**
-
-#### Pre-Flight
-- Project conventions: read from CLAUDE.md
-- Existing patterns found: named exports, Tailwind styling, function declarations
-- Classification: new shared component (atom level)
-
-#### TDD Evidence
-
-| Field | Value |
-|---|---|
-| RED | `CI=true npx vitest run src/components/DataTable.test.tsx` → exit 1: `Cannot find module './DataTable'` |
-| GREEN | `CI=true npx vitest run src/components/DataTable.test.tsx` → exit 0: `4/4 passed` |
-
-
-#### Changes
-- Files created: `src/components/DataTable.tsx`, `src/components/DataTable.test.tsx`
-- Files modified: `src/components/index.ts` (added named export)
-- Tests added: `src/components/DataTable.test.tsx`
-
-#### Checklist
-- [x] States handled (loading skeleton, empty, populated)
-- [x] Accessible (keyboard navigation via button in th, aria-sort, role=status on skeleton)
-- [x] Responsive (mobile-first Tailwind, overflow-x-auto wrapper)
-- [x] Tests pass with exit 0
-
-## Evaluation
-
-
-| Field | Value |
-|---|---|
-| Verdict | PASS |
-| Score | 8.5/9 criteria met (94%) |
-| Evaluated | 2026-04-16 |
-
-
-- [x] PASS: Agent reads CLAUDE.md and scans existing components — react-developer.md Pre-Flight Step 1 mandates `Read(file_path="CLAUDE.md")` and `Read(file_path=".claude/CLAUDE.md")`. Step 2 mandates `Glob(pattern="src/components/**/*.tsx")`, checking barrel export, and checking the UI library. Both are MANDATORY.
-- [x] PASS: Agent identifies URL search params for state — react-developer.md Principles: "URL state over component state. Pagination, filters, and search terms belong in URL search params, not useState." Data Patterns section: "URL search params for pagination/filter state (not useState) — survives refresh and back/forward." This is explicit and appears in both the Principles and Data Patterns sections.
-- [x] PASS: Agent writes failing Vitest test first — react-developer.md TDD Process "The Iron Law: No production code without a failing test first." Step 1 RED: "Run it: `CI=true npx vitest run [test-file]`. Confirm exit code 1." MANDATORY for all implementation.
-- [x] PASS: Agent defines typed DataTableProps with exported type — react-developer.md Component Conventions: "Props: TypeScript interface named ComponentNameProps." component-from-spec SKILL.md Step 2 specifies `export interface ComponentNameProps` with required props before optional. Both definitions require this pattern.
-- [x] PASS: Agent handles all three states — react-developer.md Pre-Implementation Checklist: "States: Loading, error, empty, success all handled?" component-from-spec SKILL.md Step 5 (All States, MANDATORY) requires loading (skeleton matching layout), empty (meaningful state, not blank), and populated. "Never render a blank component."
-- [x] PASS: Agent uses clsx for conditional classes — react-developer.md Component Conventions: "Conditional classes: clsx — never string concatenation." component-from-spec SKILL.md Step 4 implementation template uses `clsx` in the code example.
-- [x] PASS: Agent flags decision checkpoint for new shared component — react-developer.md Decision Checkpoints: "Creating a new component that might already exist → Check UI library and existing components first." This is a mandatory STOP trigger.
-- [~] PARTIAL: Agent covers accessibility requirements — react-developer.md Pre-Implementation Checklist includes "Accessibility: Keyboard navigation, ARIA attributes, colour contrast, focus management?" component-from-spec SKILL.md Step 6 (Accessibility, MANDATORY) covers semantic HTML, ARIA roles, keyboard navigation, and screen reader text. The `aria-sort` attribute for sortable table columns falls under the general "ARIA attributes for interactive elements" guidance, but is not called out explicitly for tables.
-- [x] PASS: Output includes TDD Evidence and Checklist — react-developer.md Output Format template explicitly requires "TDD Evidence: RED [command] → exit 1 / GREEN [command] → exit 0" and a "Checklist" section with states, accessibility, responsive, and tests items.
-
-### Notes
-
-The URL search params criterion (2) is the strongest in this set — it appears in both the Principles section and the Data Patterns section of the agent definition, making it one of the most explicitly enforced conventions. The accessibility criterion (8) has a PARTIAL ceiling by design. The definition's accessibility step covers the general requirement; the specific `aria-sort` attribute for sortable table columns is an application of the general ARIA attributes guidance, not a gap in the definition.
+The `DataTableProps` generic criterion warrants a note: the definition requires `ComponentNameProps` naming and strict TypeScript, but doesn't explicitly require a generic `<T>` parameter on the table. The agent would produce it as a natural consequence of strict typing, but it's not mandated.

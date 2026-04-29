@@ -18,3 +18,16 @@ Scenario: A user invokes the skill to review an AI feature before deployment. Do
 - [ ] PASS: Remediation plan includes severity levels and target dates — not a generic list of "recommendations"
 - [ ] PARTIAL: References the EU AI Act or NIST AI RMF as a framework for classification reasoning
 - [ ] PASS: Does not approve deployment with open High or Critical gaps unresolved
+
+## Output expectations
+
+- [ ] PASS: Output classifies the Candidate Screener as HIGH risk — hiring decision is a regulated context (anti-discrimination laws, EU AI Act high-risk category for employment) with wide blast radius even with a human in the loop
+- [ ] PASS: Output rates bias risk as HIGH or CRITICAL — using age, location, and CV text in a candidate ranking is a known bias vector with case law against analogous tools (e.g. Amazon's scrapped resume tool, HireVue scrutiny)
+- [ ] PASS: Output evaluates all seven AI risk categories — bias, hallucination, privacy, transparency, dependency, cost, security — with a verdict per category, not just naming them
+- [ ] PASS: Output identifies that age and location are quasi-protected attributes that should NOT be in the prompt at all — recommending data minimisation (remove age, replace location with role-relevance proxy) before deploying
+- [ ] PASS: Output runs grep checks for technical guardrails — input validation (sanitise CV text for injection), output validation (rank within 1-5 range, reject malformed responses), rate limiting on API calls, PII filtering in logs, fallback for GPT-4o unavailability
+- [ ] PASS: Output's model governance check covers documented owner, evaluation suite (especially bias evaluation across demographic groups), cost budget, prompt version control, and a change process for prompt edits — with grep evidence per
+- [ ] PASS: Output flags GDPR / Privacy Act implications — Article 22 automated decisioning even with human review, candidate data processing requiring lawful basis, transparency obligations to candidates
+- [ ] PASS: Output's remediation plan has severity per gap (Critical / High / Medium / Low) and target dates per remediation — not a generic recommendations list
+- [ ] PASS: Output explicitly does NOT approve deployment with HIGH or CRITICAL gaps open — including the bias-evaluation gap if no demographic-group fairness testing exists
+- [ ] PARTIAL: Output references EU AI Act employment-as-high-risk classification (Annex III) and NIST AI RMF as the framework grounding the classification reasoning

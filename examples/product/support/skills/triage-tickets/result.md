@@ -1,77 +1,39 @@
-# Triage tickets
+# Output: Triage tickets
 
-Testing whether the triage-tickets skill classifies tickets across all required dimensions, includes pattern detection, and produces a structured triage table.
-
-## Prompt
-
-> /support:triage-tickets for this batch of 18 new support tickets received overnight, ranging from billing questions to feature requests to what appear to be related login errors from multiple customers.
-
-## Output
-
-**Triage: 18 tickets (overnight batch)**
-
-**Step 1 — Ingest complete.** All 18 tickets read before classification begins.
-
-**Pattern detected:** 5 tickets describe login failure after password reset, sharing the same "Token expired" error message across different customer accounts. Escalation threshold met (≥3).
-
-**Pattern escalation:**
-
-```
-PATTERN ESCALATION
-Issue: Login token expiry after password reset
-Ticket count: 5
-Affected users: Bradwick, Fenwick, Harlow, Thornton, Meridian
-Severity: Critical
-Sample ticket IDs: T-001, T-002, T-003, T-004, T-005
-First reported: 2026-04-14 23:14 UTC
-Workaround available: No
-Recommended action: Investigate token generation service; check for deploy at ~23:00 UTC
-```
-
-**Triage table:**
-
-| Ticket ID | Summary | Category | Severity | Route to | Workaround | Pattern cluster |
-|---|---|---|---|---|---|---|
-| T-001 | Cannot log in after password reset — "Token expired" | Bug | Critical | Engineering — bugs | None | Login-token-001 |
-| T-002 | Password reset completed but login fails immediately | Bug | Critical | Engineering — bugs | None | Login-token-001 |
-| T-003 | Token expired error after resetting password | Bug | Critical | Engineering — bugs | None | Login-token-001 |
-| T-004 | Can't log in, reset my password twice | Bug | Critical | Engineering — bugs | None | Login-token-001 |
-| T-005 | Still getting token error after third reset attempt | Bug | Critical | Engineering — bugs | None | Login-token-001 |
-| T-006 | Invoice shows wrong amount for March | Account/billing | Low | Support | None needed | — |
-| T-007 | Feature request: bulk export for all projects | Feature request | Low | Product | Manual export | — |
-| ... | ... | ... | ... | ... | ... | — |
-
-**Pattern summary**
-
-- Escalations triggered: 1 (Login token expiry — 5 tickets, Critical)
-- Regression candidates: Login-token-001 — check for deploy at ~23:00 UTC on 2026-04-14
-- Workaround gaps: T-001 through T-005 (Critical, no workaround)
-
-**Metrics:** Critical: 5 | Low: 13. Routing: Engineering: 5, Product: 2, Support: 8, Docs: 3. Patterns: 1 cluster covering 5 tickets.
-
-## Evaluation
-
-
-| Field | Value |
-|---|---|
-| Verdict | PASS |
-| Score | 7.5/8 criteria met (94%) |
-| Evaluated | 2026-04-16 |
-
+**Verdict:** PARTIAL
+**Score:** 15.5/18 criteria met (86%)
+**Evaluated:** 2026-04-29
 
 ## Results
 
-- [x] PASS: Multi-dimension classification — Step 2 requires classifying every ticket across Category (8 options listed), Severity (4 levels with definitions), and Routing (6 destinations). All three dimensions are mandatory and applied to every ticket.
-- [x] PASS: Pattern detection at 3+ tickets — Step 3 defines "Escalation trigger: 3+ tickets on the same issue → flag for immediate escalation to product/engineering." The threshold is explicit and the escalation template is provided.
-- [x] PASS: Bug report / incident escalation generated — Step 4 requires a structured bug report for every ticket routed to engineering, with 8 mandatory fields. A pattern escalation does not replace this — individual engineering tickets also get bug reports.
-- [x] PASS: Structured triage table — Step 5 Output specifies "Present ALL tickets in a single table, sorted by severity (Critical first), then by category" with 7 required columns. Prose summaries are not accepted.
-- [x] PASS: Ingest before classifying — Step 1 is titled "Ingest and normalise" and states "Read every ticket" before any classification step. This ordering is structural, not optional.
-- [~] PARTIAL: Response SLA per ticket — the Severity table (Step 2) includes explicit response targets: Critical = "Acknowledge within 1 hour, update every 2 hours," High = "Acknowledge within 4 hours," Medium = "Acknowledge within 1 business day," Low = "Acknowledge within 2 business days." SLA targets are defined but attached to severity levels rather than assigned to individual tickets as a column in the triage table. Criterion prefix is PARTIAL — maximum 0.5 points.
-- [x] PASS: Routing to specific teams — Step 2 Routing table provides 6 named destinations (Engineering bugs, Engineering infrastructure, Product, Documentation, Support, Security). The triage table output requires a "Route to" column. Unrouted tickets are not permitted.
-- [x] PASS: Valid YAML frontmatter — the skill has `name: triage-tickets`, `description`, and `argument-hint` fields.
+### Criteria
 
-### Notes
+- [x] PASS: Skill classifies each ticket across multiple dimensions — category (bug/question/feature/billing), severity, and routing destination — met: Step 2 covers category (8 types), severity (4 levels), and routing (6 destinations)
+- [x] PASS: Skill includes pattern detection — when 3 or more tickets match the same root issue, they should be grouped and escalated — met: Step 3 explicitly defines "Escalation trigger: 3+ tickets on the same issue"
+- [x] PASS: Skill generates a bug report or incident escalation for patterns that suggest a systemic issue — met: Step 3 includes a PATTERN ESCALATION template; Step 4 produces structured bug reports for engineering
+- [x] PASS: Skill produces a structured triage table as output — met: Step 5 specifies a table with defined columns
+- [x] PASS: Skill requires an ingest step — reading all tickets before classifying any — met: Step 1 reads every ticket; classification is Step 2, sequenced after ingest
+- [~] PARTIAL: Skill assigns a response SLA or priority to each ticket — partially met: severity table in Step 2 includes explicit response targets (Critical: 1h ack, High: 4h ack, Medium: 1BD, Low: 2BD) but the triage table output does not include a Priority or SLA column — severity does this work implicitly rather than surfacing it per row
+- [x] PASS: Skill routes tickets to appropriate teams or owners, not just classifies them — met: routing table maps issue types to six named destinations; Step 2 requires routing as a classification dimension on every ticket
+- [x] PASS: Skill has a valid YAML frontmatter with name, description, and argument-hint fields — met: frontmatter at lines 1-7 contains all three required fields plus user-invocable and allowed-tools
 
-The SLA criterion scores PARTIAL per its prefix. The definition does contain explicit SLA targets (e.g., "Acknowledge within 1 hour" for Critical) in the severity table — these are substantive, not vague. However, the SLA is attached to the severity level rather than surfaced as a per-ticket column in the triage table output format. Adding a "Response by" column to the output table would make this a clean PASS under a PASS-prefixed criterion.
+### Output expectations
 
-The Rules section adds meaningful constraints beyond the step structure: "Never downplay a user's reported severity without evidence," "Always preserve the user's original language," and "Every Critical and High ticket MUST have a recommended next action." These are enforcement mechanisms not captured in the criteria.
+- [x] PASS: Output's ingest step reads ALL tickets BEFORE classifying any — met: Step 1 (Ingest and normalise) is a discrete step preceding Step 2 (Classify); instructions say "Read every ticket" before classification begins
+- [x] PASS: Output's triage table classifies each ticket across the dimensions — category, severity, and routing destination — met: triage table in Step 5 includes Category, Severity, and Route to columns
+- [x] PASS: Output detects the login-error pattern — multiple tickets sharing the same root cause are GROUPED — met: Step 3 defines duplicate clusters (2+) and escalation trigger (3+) for grouping
+- [x] PASS: Output generates an incident escalation for the login pattern — met: PATTERN ESCALATION template in Step 3 includes affected user count, first reported date (time window), sample ticket IDs, and recommends escalation to product/engineering
+- [ ] FAIL: Output's structured triage table has the required columns — Ticket ID, Customer, Category, Severity, Routing, Priority, Pattern Group, Suggested Owner — not met: Step 5 table schema has Ticket ID, Summary, Category, Severity, Route to, Workaround, Pattern cluster — missing Customer, Priority, and Suggested Owner columns
+- [ ] FAIL: Output assigns a response SLA per ticket based on severity with explicit values per row — not met: SLA targets exist in the Step 2 severity reference table but are not a column in the output triage table; each ticket does not carry an explicit SLA field in the deliverable
+- [x] PASS: Output routes billing tickets to billing/finance, feature requests to product, bugs to engineering, questions to support agents — met: routing table in Step 2 distinguishes these destinations; "Support (self)" handles account/billing/known-issue
+- [x] PASS: Output identifies tickets answerable from KB articles or self-serve — met: Documentation route exists for how-to questions; workaround column cites KB articles; Step 5 pattern summary flags workaround gaps needing KB articles
+- [x] PASS: Output's pattern detection rule is explicit — 3+ tickets matching the same root cause trigger an incident escalation — met: Step 3 states this threshold explicitly
+- [~] PARTIAL: Output addresses tickets that need follow-up classification — tickets needing more info get a separate state — partially met: Step 4 says to state what is missing and recommend the support agent ask for specifics, but there is no formal "needs more info" state in the triage table schema; incomplete tickets blend into the regular classification flow rather than getting a distinct output state
+
+## Notes
+
+The skill's five-step pipeline is logically sequenced and structurally sound. The main scoring gaps are in the triage table's column schema: Suggested Owner and Priority are absent, and per-row SLA is not surfaced in the output table (it exists only in the Step 2 reference table). For a handoff artifact, missing the assigned owner and the explicit SLA per ticket pushes decisions downstream to whoever reads the table.
+
+The "needs more info" handling is procedural (Step 4 asks support agents to seek more data) but doesn't formalise this as a ticket state in the output. A triage table used in practice needs a clear column state so unclassified tickets don't get misrouted or silently dropped.
+
+The skill is otherwise well-constructed: escalation rules are explicit (3+ threshold), severity auto-escalation for enterprise customers and data-loss signals is present, and the Related Skills links close the loop to KB creation and feedback synthesis.

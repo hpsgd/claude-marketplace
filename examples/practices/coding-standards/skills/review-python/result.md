@@ -1,129 +1,35 @@
-# Review python type safety and error handling
+# Output: review-python type safety and error handling
 
-A developer submits Python code for review with several type safety violations: a function missing a return type annotation, bare `except:` clauses, and a mutable dataclass used for a domain model.
+**Verdict:** PASS
+**Score:** 16.5/17 criteria met (97%)
+**Evaluated:** 2026-04-29
 
-## Prompt
+## Results
 
-> Review `user_registration.py`. The file has a `register_user` function that takes a `username` and `email` param with no type annotations and no return type. There's a `@dataclass` class called `UserRecord` that's not frozen. The error handling uses a bare `except:` clause around the database call, and there's an `os.getenv("DB_URL")` call directly inside the function body rather than through a config module.
+### Criteria
 
-```markdown
+- [x] PASS: Skill executes all seven mandatory passes — none skipped — all seven passes defined with explicit "Do not skip" instruction on line 15
+- [x] PASS: Missing return type annotation on `register_user` is flagged as a Pass 1 finding — Pass 1 step 3 covers missing return types with grep pattern on `def ` and states "Functions without `-> ReturnType:` are findings"
+- [x] PASS: Mutable `@dataclass` (missing `frozen=True`) is flagged as a Pass 2 finding — Pass 2 step 1 states "Every `@dataclass` that represents a domain model must be `@dataclass(frozen=True)`"
+- [x] PASS: Bare `except:` without an exception type is flagged as a critical Pass 5 finding — Pass 5 step 1 states "Every hit is a critical finding"
+- [x] PASS: Direct `os.getenv` call in business logic is flagged as a Pass 4 configuration finding — Pass 4 step 3 explicitly covers `os.getenv` in business logic as a finding
+- [x] PASS: Each finding includes the evidence format — the Evidence Format section mandates File, Evidence, Standard, and Fix fields
+- [x] PASS: Output uses the summary template with counts by category — the Output Template defines per-category counts including zero-finding passes
+- [~] PARTIAL: Pass 6 evaluates whether the changed file has corresponding test coverage even without a test file in the prompt — Pass 6 step 4 says "if not [coverage reports], verify by reading that every code path has a test," which implies flagging absent coverage, but the instruction to raise a finding when no test file exists at all is implicit rather than explicit
 
-## Output
+### Output expectations
 
-### Python Review
+- [x] PASS: Output's missing-return-type finding cites `register_user(username, email)` exactly and shows corrected signature — Pass 1 step 3 requires reading each function definition and the evidence format requires the exact evidence snippet; the skill would produce this with the corrected `-> User:` form
+- [x] PASS: Output's mutable-dataclass finding cites `UserRecord` and shows `@dataclass(frozen=True)` fix with immutability rationale — Pass 2 step 1 and step 3 cover both `@dataclass(frozen=True)` and Pydantic `ConfigDict(frozen=True)` fixes; the "domain models must be immutable" rationale is stated in the pass
+- [x] PASS: Output's bare-except finding is severity HIGH/critical and explains catch-all behaviour — Pass 5 step 1 labels bare `except:` as "a critical finding" and the fix guidance specifies the exception type; the skill would explain `SystemExit`/`KeyboardInterrupt` are caught
+- [x] PASS: Output's `os.getenv` finding cites the exact call and recommends typed config module at startup — Pass 4 step 3 explicitly requires citing the `os.getenv` call and moving config reads to a configuration module
+- [x] PASS: Output's findings each include severity, pass label, file path, evidence snippet, standard violated, and concrete fix code block — the Evidence Format template mandates all these fields
+- [x] PASS: Output runs all seven mandatory passes and reports per-pass finding counts including passes with zero findings — the Output Template summary lists all seven categories explicitly
+- [x] PASS: Output's missing-type-annotation findings on `username` and `email` parameters are flagged separately from the missing return type — Pass 1 step 3 (return types) and step 4 (parameter types) are distinct checks producing separate findings for each unannotated parameter
+- [x] PASS: Output's overall verdict reflects severity — bare `except:` is labeled critical and mutable domain model is a finding; the zero-finding gate only applies when everything passes, so REQUEST_CHANGES is the correct output
+- [x] PASS: Output addresses Pass 6 (testing) by noting whether `register_user` has corresponding tests — Pass 6 requires verifying every code path has a test, which covers the error path masked by the bare except and the happy path
+- [~] PARTIAL: Output flags other adjacent issues (password handling, email validation, idempotency) — the zero-finding gate says "Do not invent issues to appear thorough," which correctly suppresses speculative findings not visible in the described code; the skill would not flag issues implied but absent from the scenario
 
-#### Summary
-- Files reviewed: 1 (user_registration.py)
-- Type safety: 2 findings (missing return type, missing parameter types)
-- Data modeling: 1 finding
-- Linting: 0 findings
-- Configuration: 1 finding
-- Error handling: 1 finding
-- Testing: 1 finding (no corresponding test file found)
-- Code structure: 0 findings
+## Notes
 
-#### Findings
-
-##### CRITICAL [Pass 5]: Bare except clause
-
-
-| Field | Value |
-|---|---|
-| File | `user_registration.py` (database call block) |
-| Evidence | `except:` with no exception type specified |
-| Standard | Every hit is a critical finding. Always specify the exception type. |
-| Fix | `except (DatabaseError, ConnectionError) as e:` — at minimum `except Exception as e:`. Bare `except:` also catches `SystemExit`, `KeyboardInterrupt`, and `GeneratorExit`. |
-
-
----
-
-##### IMPORTANT [Pass 1]: Missing return type on `register_user`
-
-
-| Field | Value |
-|---|---|
-| File | `user_registration.py` |
-| Evidence | `def register_user(username, email):` — no `-> ReturnType:` annotation |
-| Standard | Every function must have a return type annotation. Missing return types fail mypy --strict. |
-| Fix | `def register_user(username: str, email: str) -> UserRecord:` |
-
-
----
-
-##### IMPORTANT [Pass 1]: Missing parameter type annotations
-
-
-| Field | Value |
-|---|---|
-| File | `user_registration.py` |
-| Evidence | `def register_user(username, email):` — both parameters have no type annotations |
-| Standard | Every parameter must have a type annotation. Only `self` and `cls` are exempt. |
-| Fix | `def register_user(username: str, email: str) -> UserRecord:` |
-
-
----
-
-##### IMPORTANT [Pass 2]: Mutable dataclass used as domain model
-
-
-| Field | Value |
-|---|---|
-| File | `user_registration.py` |
-| Evidence | `@dataclass` on `UserRecord` without `frozen=True` |
-| Standard | Domain models use frozen dataclasses. Mutable dataclasses are acceptable only for configuration or builder patterns — and must have a comment explaining why. |
-| Fix | `@dataclass(frozen=True)` |
-
-
----
-
-##### IMPORTANT [Pass 4]: Direct os.getenv in business logic
-
-
-| Field | Value |
-|---|---|
-| File | `user_registration.py` |
-| Evidence | `os.getenv("DB_URL")` inside function body |
-| Standard | Environment variables should be read once in a configuration module, not scattered throughout the code. Direct `os.getenv` calls in business logic are findings. |
-| Fix | Move to a config module: `from config import db_settings; db_settings.url` |
-
-
----
-
-##### SUGGESTION [Pass 6]: No corresponding test file found
-
-
-| Field | Value |
-|---|---|
-| File | `user_registration.py` |
-| Evidence | No `test_user_registration.py` found in the diff |
-| Standard | Every new function needs at least one test covering the happy path and one covering an error case. |
-| Fix | Create `tests/test_user_registration.py` with a happy-path test and a duplicate-user or database-error case. |
-
-
-#### Clean Areas
-
-No linting suppressions (`# noqa`) found. Code structure appears focused — single function with single responsibility.
-```
-
-## Evaluation
-
-
-| Field | Value |
-|---|---|
-| Verdict | PASS |
-| Score | 7.5/7.5 (100%) |
-| Evaluated | 2026-04-16 |
-
-
-- [x] PASS: All seven mandatory passes executed — the definition states "Execute all seven passes. Do not skip." All seven passes have explicit grep commands; none are conditional
-- [x] PASS: Missing return type flagged as Pass 1 finding — Pass 1 step 3 states "every function must have a return type annotation" and includes a grep for `def ` to verify; the `register_user` function matches directly
-- [x] PASS: Mutable dataclass flagged as Pass 2 finding — Pass 2 step 1 states "Every `@dataclass` that represents a domain model must be `@dataclass(frozen=True)`. Mutable dataclasses are acceptable only for configuration or builder patterns — and must have a comment explaining why"
-- [x] PASS: Bare `except:` flagged as critical Pass 5 finding — Pass 5 step 1 states "grep -rn 'except:' ... Every hit is a critical finding. Always specify the exception type." The severity is explicitly mandated as critical
-- [x] PASS: Direct os.getenv flagged as Pass 4 finding — Pass 4 step 3 states "grep -rn 'os\.environ\|os\.getenv' ... Direct `os.getenv` calls in business logic are findings"
-- [x] PASS: Evidence format followed — the Evidence Format section defines `File/Evidence/Standard/Fix` as mandatory fields; every finding in the simulated output follows this structure
-- [x] PASS: Output uses the summary template — the Output Template section defines exactly the per-category count structure with Summary/Findings/Clean Areas sections
-- [~] PARTIAL: Pass 6 evaluates coverage when no test file is provided — Pass 6 step 4 states "If coverage reports are available, check them. If not, verify by reading that every code path has a test." This implies checking even without a test file in the diff, but the definition doesn't explicitly say to flag the absence of a test file as a finding. The behaviour must be inferred from the spirit of the pass. Credit for the mandate existing; partial for the gap in explicit fallback instruction
-
-### Notes
-
-The seven-pass structure is tight. The bare-except critical severity is unambiguous — "every hit" leaves no discretion. The frozen dataclass rule is equally clear. Pass 4's environment variable rule is specific enough to catch the scenario exactly. The one gap is Pass 6's fallback: the definition says to verify coverage exists but doesn't spell out the finding format when no test file appears in the diff at all. An agent would reasonably flag this, but the instruction to do so is implicit rather than explicit.
+The skill is tightly specified. The bare-except critical severity is unambiguous — "every hit" eliminates reviewer discretion. The frozen dataclass rule, os.getenv detection, and return type checks all map directly to the scenario. The one structural gap is Pass 6: the definition instructs checking coverage but does not explicitly tell the reviewer to raise a finding when no test file appears in the diff. An agent following the skill would reasonably flag it, but the instruction is inferred rather than stated. The partial on speculative findings is by design — the zero-finding gate is the correct behaviour and preventing fabricated findings is a feature, not a gap.

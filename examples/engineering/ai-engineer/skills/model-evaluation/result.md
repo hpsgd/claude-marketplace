@@ -1,187 +1,39 @@
-# Model evaluation for support ticket classification
+# Output: Model evaluation for support ticket classification
 
-Developer invokes the model-evaluation skill to select a model for classifying incoming support tickets into categories (billing, technical, account, feature request) with a target accuracy of 90%+ and a cost budget of $0.005 per request.
-
-## Prompt
-
-> Evaluate models for support ticket classification. We receive ~1,500 tickets/day. Each ticket is 50-500 words. We need to classify into: billing, technical, account, feature-request. Requirements: >= 90% accuracy, p95 latency < 2s, cost < $0.005/request (~$225/month at volume), context window of at least 1K tokens is fine.
-
-The model-evaluation skill would produce the following output for this prompt.
-
----
-
-## Output
-
-# Model Evaluation: Support Ticket Classification
-
-### Requirements
-
-| Requirement | Threshold |
-|---|---|
-| Quality threshold | >= 90% accuracy on classification eval set |
-| Latency budget | p95 < 2,000ms total generation time |
-| Cost budget | < $0.005 per request; < $225/month at 1,500 tickets/day |
-| Context window | >= 1,024 tokens (tickets are 50–500 words, ~65–650 tokens) |
-| Reliability | < 0.5% error rate, < 1% timeout rate |
-| Safety | < 2% false refusal rate on legitimate support tickets |
-
-All six requirements defined before any model is evaluated.
-
----
-
-### Candidates
-
-This is a mechanical classification task (four fixed categories). Standard-tier is unnecessarily expensive. Fast-tier is the correct starting point. Capable-tier is excluded.
-
-| # | Model | Tier | Provider | Rationale |
-|---|---|---|---|---|
-| C1 | claude-3-haiku-20240307 | Fast | Anthropic | Fastest Anthropic model; classification is mechanical — Haiku is the right default |
-| C2 | gpt-4o-mini | Fast | OpenAI | Comparable Fast-tier competitor; well-established on classification |
-| C3 | claude-3-5-sonnet-20241022 | Standard | Anthropic | Quality ceiling reference only — accept if Fast-tier fails the 90% threshold |
-
----
-
-### Evaluation Dataset
-
-Built from real support ticket data:
-
-- **Total examples:** 60
-- **Happy path:** 36 (60%) — well-formed tickets with clear category signals
-- **Edge cases:** 15 (25%) — ambiguous phrasing, multi-category tickets, very short tickets
-- **Adversarial:** 9 (15%) — injection attempts, misleading keywords, intentionally confusing framing
-- **Location:** `eval/ticket-classification/eval-set-v1.json`
-
-Each example: raw ticket text, expected category label, scoring criteria (exact match).
-
----
-
-### Results
-
-#### claude-3-haiku-20240307
-
-| Dimension | Result | Meets requirement? |
-|---|---|---|
-| Quality | 93.3% (56/60, avg 3 runs) | YES |
-| Latency (p95) | 420ms total | YES |
-| Cost | $0.00031/request, ~$14/month | YES |
-| Reliability | 0.1% error rate | YES |
-| Context window | Tested at 700 tokens | YES |
-| Safety | 0% refusal on valid inputs | YES |
-
-Failure analysis: 4 failures on billing/account boundary cases. No adversarial failures.
-
-#### gpt-4o-mini
-
-| Dimension | Result | Meets requirement? |
-|---|---|---|
-| Quality | 91.7% (55/60, avg 3 runs) | YES |
-| Latency (p95) | 490ms total | YES |
-| Cost | $0.00018/request, ~$8/month | YES |
-| Reliability | 0.2% error rate | YES |
-| Context window | Tested at 700 tokens | YES |
-| Safety | 0% refusal on valid inputs | YES |
-
-Failure analysis: 5 failures; 1 adversarial inconsistency across 3 runs flagged.
-
-#### claude-3-5-sonnet-20241022
-
-| Dimension | Result | Meets requirement? |
-|---|---|---|
-| Quality | 98.3% (59/60, avg 3 runs) | YES |
-| Latency (p95) | 850ms total | YES |
-| Cost | $0.0031/request, ~$140/month | YES |
-| Reliability | 0.0% error rate | YES |
-| Context window | Tested at 700 tokens | YES |
-| Safety | 0% refusal on valid inputs | YES |
-
-All requirements met but at 10x the cost of C1. Quality gain of 5pp does not justify cost difference for this use case.
-
----
-
-### Comparison
-
-| Dimension | Requirement | C1: claude-3-haiku | C2: gpt-4o-mini | C3: claude-3-5-sonnet |
-|---|---|---|---|---|
-| Quality | >= 90% | 93.3% ✓ | 91.7% ✓ | 98.3% ✓ |
-| Latency (p95) | < 2,000ms | 420ms ✓ | 490ms ✓ | 850ms ✓ |
-| Cost/request | < $0.005 | $0.00031 ✓ | $0.00018 ✓ | $0.0031 ✓ |
-| Reliability | < 0.5% errors | 0.1% ✓ | 0.2% ✓ | 0.0% ✓ |
-| Context window | >= 1K tokens | Pass ✓ | Pass ✓ | Pass ✓ |
-| Safety | < 2% refusals | 0% ✓ | 0% ✓ | 0% ✓ |
-| All requirements met? | | YES | YES | YES |
-
-Multiple candidates meet all requirements. Per the skill: select the cheapest that meets all requirements. C2 is cheapest but C1 showed better adversarial consistency.
-
----
-
-### Decision
-
-**Selected:** claude-3-haiku-20240307
-
-**Rationale:**
-- Meets all 6 requirements
-- 93.3% accuracy (3.3pp above threshold)
-- 420ms p95 (well within 2s budget)
-- $0.00031/request, ~$14/month (94% below budget)
-- Better adversarial consistency than C2
-
-**Trade-offs accepted:**
-- 4.7pp quality gap vs. C3 (93.3% vs 98.3%) — acceptable for a 4-category classification task above the 90% threshold
-- All 4 failures are billing/account boundary cases — improvable via prompt refinement without model upgrade
-- If ticket taxonomy expands or threshold raises to 95%, C3 is the upgrade path
-
----
-
-### Fallback Plan
-
-| Scenario | Action |
-|---|---|
-| Primary model unavailable | Route to gpt-4o-mini (C2) — tested, meets all requirements, 91.7% quality |
-| Sustained latency > 1,500ms p95 | Switch to gpt-4o-mini; investigate Haiku provider status |
-| Cost spike (> $0.001/request, 3x normal) | Alert engineering; rate limit to 500 req/minute; investigate token usage |
-| Quality degradation (accuracy drops below 88% on weekly sample) | Roll back to previous prompt version; trigger re-evaluation |
-
----
-
-### Re-evaluation Schedule
-
-- **Next evaluation:** 2026-07-16 (quarterly)
-- **Trigger conditions:**
-  - Accuracy drops below 88% on weekly monitoring sample
-  - Provider announces model deprecation
-  - Ticket taxonomy changes
-  - Monthly cost exceeds $50
-
-## Evaluation
-
-
-| Field | Value |
-|---|---|
-| Verdict | PASS |
-| Score | 8.5/9 criteria met (94%) |
-| Evaluated | 2026-04-16 |
-
+**Verdict:** PARTIAL
+**Score:** 15.5/18 criteria met (86%)
+**Evaluated:** 2026-04-29
 
 ## Results
 
-- [x] PASS: Skill defines hard pass/fail requirements before evaluating any model — Step 1 (Requirements Definition) opens: "Define pass/fail criteria before evaluating any model. These are hard requirements, not nice-to-haves." The table covers all six required dimensions: quality threshold, latency budget, cost budget, context window, reliability, and safety refusal rate. "If any requirement is undefined, stop and clarify."
+### Criteria
 
-- [x] PASS: Skill recommends an eval set of at least 50 examples with 60/25/15 distribution — Step 3 states "Minimum requirements: 50 examples total, Happy path: 60%, Edge cases: 25%, Adversarial: 15%." The output uses 60 examples with the exact prescribed split. Store in version control alongside prompts.
+- [x] PASS: Skill defines hard pass/fail requirements before evaluating any model — Step 1 defines all six dimensions (quality threshold, latency budget, cost budget, context window, reliability, safety) as hard requirements with an explicit stop-and-clarify instruction if any is undefined. Met.
+- [x] PASS: Skill recommends an eval set of at least 50 examples covering 60/25/15 split — Step 3 specifies exactly this. Met.
+- [x] PASS: Skill identifies Fast-tier (Haiku-class) models as candidates for mechanical classification — Step 2's tier table lists classification and routing as Fast-tier use cases. The skill defaults to Standard but correctly flags Fast as the right tier for mechanical tasks. Met.
+- [x] PASS: Skill specifies temperature 0 and at least 3 passes — Step 5 states both explicitly. Met.
+- [x] PASS: Skill produces a side-by-side comparison table with all six dimensions — Step 6 comparison table includes quality, latency, cost, reliability, context window, and safety. Met.
+- [x] PASS: Skill includes a mandatory fallback plan covering model unavailability, cost spike, and quality degradation — Step 7 fallback table covers four scenarios including latency degradation. Met.
+- [x] PASS: Skill documents trade-offs accepted — Step 7 decision template includes an explicit "Trade-offs accepted" block. Met.
+- [~] PARTIAL: Skill recommends re-evaluation schedule — present in the anti-patterns section ("Schedule re-evaluation quarterly") and the output format template includes a "Re-evaluation Schedule" section, but it is not a numbered process step. Partially met (0.5).
+- [x] PASS: Output follows the full model evaluation format — the Output Format section covers requirements, candidates, eval dataset, per-model results, comparison, decision, fallback plan, and re-evaluation schedule. Met.
 
-- [x] PASS: Skill identifies Fast-tier models as primary candidates — Step 2 tier table maps "Classification, extraction, formatting, routing, mechanical tasks" to the Fast tier. The rule "Only include Capable-tier candidates when Standard demonstrably fails" and "Only include Fast-tier when the task is mechanical" directly applies here. The output excludes Capable-tier and explains the rationale.
+### Output expectations
 
-- [x] PASS: Skill specifies temperature 0 and at least 3 passes — Step 5: "Temperature 0 for deterministic tasks" and "Run at least 3 passes to measure consistency." Results are averaged over 3 runs; the adversarial inconsistency in C2 was detected precisely because of multi-run testing.
+- [x] PASS: Output's requirements table reproduces all four numeric thresholds from the prompt — Step 1 instructs capturing exact thresholds from the user's requirements; the output format template has a Requirements table. The skill's process would reproduce the exact numbers provided. Met.
+- [ ] FAIL: Output names at least 2 specific Fast-tier candidate models by name — the skill uses "Haiku-class" as a tier label but never names concrete models such as Claude Haiku, GPT-4o-mini, or Gemini Flash. The candidate table template leaves model names blank. Not met.
+- [~] PARTIAL: Output's eval dataset section specifies 50+ examples with 60/25/15 split and describes ticket-specific edge cases — the split is specified, but the skill gives no domain-specific guidance on what edge cases look like for ticket classification (multi-category tickets, very short tickets, non-English content, mislabelled categories). Edge case content relies entirely on the agent's judgment. Partially met (0.5).
+- [x] PASS: Output's per-model results table reports numbers across all six dimensions — Step 5's result template includes all six dimensions with explicit pass/fail columns. Met.
+- [x] PASS: Output's cost calculation shows the math — Step 4 cost metric states "(input tokens x input price) + (output tokens x output price) x projected volume". Met.
+- [x] PASS: Output's comparison table includes an "All requirements met?" YES/NO row and selects the cheapest passing candidate — Step 6 explicitly includes this row and states the selection criterion. Met.
+- [x] PASS: Output's fallback plan covers all four mandated scenarios with a named fallback model — Step 7 covers primary unavailability, latency degradation, cost spike, and quality degradation; the template shows named fallback models and described trade-offs. Met.
+- [x] PASS: Output specifies a re-evaluation schedule and trigger conditions — the output format template includes "Next evaluation: [date]" and "Trigger conditions: [what forces an early re-evaluation]". Met.
+- [ ] PARTIAL: Output addresses class imbalance — the skill contains no mention of class imbalance, per-class precision/recall, or F1. Accuracy alone can hide poor performance on minority ticket classes. Not met (0).
 
-- [x] PASS: Skill produces comparison table with all six dimensions — Step 6 comparison table covers Quality, Latency (p95), Cost/request, Cost/month, Reliability, Context window, Safety — all six required dimensions with pass/fail per requirement.
+## Notes
 
-- [x] PASS: Skill includes mandatory fallback plan covering all three scenarios — Step 7 fallback plan table (marked MANDATORY) covers: Primary model unavailable, Sustained latency degradation, Cost spike, Quality degradation. All three required scenarios are present.
+The skill is structurally strong. The six-dimension framework, the 50-example eval set with the 60/25/15 split, temperature 0, three-pass consistency testing, mandatory fallback, and the "cheapest passing candidate" selection criterion are all well-defined. The output format template is complete.
 
-- [x] PASS: Skill documents trade-offs accepted — Step 7 decision template explicitly requires a "Trade-offs accepted" field. The output names what is sacrificed vs. alternatives, including the quality margin and the upgrade path.
+Two gaps stand out. First, the skill never names specific model candidates — it uses tier labels ("Haiku-class", "Sonnet-class") but leaves the candidate table blank. For a practitioner following the skill, knowing the tier is useful, but knowing the actual model names (and their current pricing) is what makes the evaluation executable. A reference list of representative models per tier would fix this. Second, the skill has no awareness of class imbalance, which is a real risk for multi-class ticket classification where one category might dominate. A model that always predicts the majority class can hit 80%+ accuracy without learning anything. Per-class F1 or a confusion matrix requirement would catch this.
 
-- [~] PARTIAL: Skill recommends scheduling a re-evaluation — the Output Format template includes "Re-evaluation Schedule: Next evaluation: [date], Trigger conditions: [...]" as a required section. The Anti-Patterns section states "Schedule re-evaluation quarterly." Present in the output format template and anti-patterns, but not as a numbered process gate. PARTIAL ceiling per test author.
-
-- [x] PASS: Output follows full model evaluation format — the output includes: Requirements, Candidates, Evaluation Dataset, Results per model (with failure analysis), Comparison, Decision (with trade-offs), Fallback Plan, and Re-evaluation Schedule. All required sections present.
-
-### Notes
-
-The re-evaluation criterion is substantively met — the output includes a dated schedule and four trigger conditions. The PARTIAL ceiling reflects the criterion being in the output format and anti-patterns sections rather than as a numbered process step. The multi-run adversarial inconsistency in C2 is a concrete example of the skill's 3-pass consistency requirement adding real value.
+The re-evaluation criterion is borderline: the concept appears in both the anti-patterns section and the output format, but it sits outside the numbered process steps, which means it could be skipped in a hurried run. Elevating it to a numbered step would close that gap.

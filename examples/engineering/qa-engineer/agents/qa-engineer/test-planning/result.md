@@ -1,57 +1,38 @@
-# Payment processing module test suite
+# Output: Payment processing module test suite
 
-User asks the QA engineer to write tests for a payment processing module that handles charge creation, refunds, and webhook verification. The module has no existing tests.
+**Verdict:** PASS
+**Score:** 18.5/19 criteria met (97%)
+**Evaluated:** 2026-04-29
 
-## Prompt
+## Results
 
-> We've just finished the payment processing module for our SaaS app. It handles three things: creating Stripe charges (with idempotency keys), processing refunds (full and partial), and verifying incoming Stripe webhooks using signature validation. There are currently zero tests. The module is in `src/payments/` and uses our Django Ninja API. Can you write a comprehensive test suite for it? We use pytest.
+### Criteria
 
-## Output
+- [x] PASS: Agent reads existing code before writing any tests — Pre-Flight Step 2 mandates reading existing test files, naming conventions, and fixture patterns before any implementation. Step 1 reads CLAUDE.md and installed rules first.
+- [x] PASS: Agent follows TDD Iron Law — a dedicated "TDD Methodology" section titles itself "The Iron Law" and mandates RED (write failing test, confirm exit code 1) → GREEN (minimum code, confirm exit code 0) → REFACTOR per slice, with Vertical Slicing prohibiting all-RED-then-all-GREEN.
+- [x] PASS: Agent identifies test cases across all required categories — Testing Philosophy covers "test behaviour," edge cases, and error paths; the work classification table separates happy path, edge cases, and error cases as distinct required outputs.
+- [x] PASS: Agent runs tests in run mode and reports exact command and exit code — Test Runner Rules explicitly state "Always use run mode — never watch mode" with `pytest` named, and Evidence Requirements mandate exact command, exit code, and count. "Tests pass without an exit code is not evidence" stated verbatim.
+- [x] PASS: Agent mocks only at external boundaries — Testing Philosophy states "Mock only at external boundaries (HTTP APIs, third-party services). In-memory fakes of your own database are lies." Principles repeat this identically.
+- [x] PASS: Agent identifies security-relevant test cases — Pass 3 of the four mandatory review passes is a dedicated Security pass covering input validation, injection risks, and auth/authz. Security is a HARD signal (zero blocks approval).
+- [x] PASS: Agent produces an evidence table with test name, command, exit code, and result — the Evidence Output Format section specifies exactly this table structure and labels it mandatory.
+- [~] PARTIAL: Agent covers both unit tests and integration-style tests for the webhook endpoint — the definition covers unit tests and E2E browser tests (Playwright/Cypress) but does not explicitly model HTTP-level integration tests (posting a signed body to the Django Ninja route via test client) as a mandatory distinct tier within a single task. Scored 0.5.
+- [x] PASS: Agent applies one assertion per test — "One assertion per test. When a test fails, you should know exactly what broke without reading the test body" stated in both the Principles and Testing Philosophy sections.
 
-**Simulated agent response for this prompt:**
+### Output expectations
 
-Pre-flight: reads CLAUDE.md and existing test files for conventions (test runner: pytest, file location, assertion style). Then reads `src/payments/` completely — inspects `charges.py`, `refunds.py`, `webhooks.py` public API surface, inputs, outputs, error paths, and exception types before writing any tests.
-
-TDD Iron Law: writes RED tests first. `pytest tests/payments/ -v` → exit code 1. Confirms failure message is meaningful. Then implements minimum code. GREEN → exit code 0.
-
-Test cases identified:
-- Happy path: successful charge creation, full refund, partial refund, valid webhook
-- Edge cases: zero amount charge (should raise), duplicate idempotency key (idempotent behaviour), expired card response
-- Error cases: Stripe network failure (mock `stripe.Charge.create`), invalid webhook signature
-- Idempotency: calling `create_charge` twice with same key returns same result
-
-Run mode: `pytest tests/payments/ -v` — not `pytest --watch`. Reports exact command and exit code.
-
-Mocking: only `stripe.Charge.create`, `stripe.Refund.create`, `stripe.Webhook.construct_event` at the library boundary. Not mocking internal `PaymentService` classes.
-
-Evidence table: test name | command | exit code | PASS/FAIL.
-
-Unit tests: pure logic (refund amount validation). Integration-style: webhook endpoint via Django test client.
-
-One assertion per test: each test has a single `assert` or `pytest.raises` block.
-
-Note: the agent does not have an explicit instruction to identify security-specific test cases (signature bypass, negative amounts, over-refund) during test generation. It would identify error cases and boundary values per Step 2, which would likely surface these, but there is no dedicated security test step in the generate-tests skill.
-
-## Evaluation
-
-- [x] PASS: Agent reads existing code before writing tests — qa-engineer agent Pre-Flight Step 2 and generate-tests SKILL.md Step 1 (Reconnaissance) both mandate reading the code under test completely before writing any test.
-- [x] PASS: Agent follows TDD Iron Law — qa-engineer agent definition has a full "TDD Methodology" section with the Iron Law; generate-tests SKILL.md opens with the Iron Law as a non-negotiable.
-- [x] PASS: Agent identifies test cases across all required categories — generate-tests SKILL.md Step 2 mandates happy path, edge cases (empty, boundary, single-element), and error cases (invalid inputs, network/IO failures, timeouts) as MUST-have categories.
-- [x] PASS: Agent runs tests in run mode with exact command and exit code — generate-tests SKILL.md Step 4 specifies `pytest tests/path/to/test_file.py -v` in run mode; the Evidence Requirements section mandates exact command and exit code.
-- [x] PASS: Agent mocks only at external boundaries — generate-tests SKILL.md Anti-Patterns explicitly prohibits "Mocking what you own — mock at external boundaries only (HTTP, database, file system)"; qa-engineer agent Principles states "Mock only at external boundaries."
-- [~] PARTIAL: Agent identifies security-relevant test cases — generate-tests SKILL.md Step 2 covers error cases and state transitions (including idempotency), which would surface duplicate-key and refund-boundary cases. But there is no explicit instruction to identify security-specific test cases (bypass attempts, negative amounts). The criterion is partially met through the error/edge case framework, not through a dedicated security step.
-- [x] PASS: Agent produces evidence table — generate-tests SKILL.md Evidence Requirements section mandates an Evidence table with test name, command, exit code, and PASS/FAIL result. The format is specified explicitly.
-- [~] PARTIAL: Agent covers both unit and integration-style tests — the generate-tests SKILL.md covers test categories (happy/edge/error) and mentions Playwright/Cypress for E2E in the qa-engineer context, but does not explicitly require a split between unit tests and integration-style endpoint tests as a structured requirement. The qa-engineer agent mentions both unit test coverage and E2E acceptance testing, but as separate work types, not as a mandatory pairing within a single test generation task. Maximum score is 0.5 per criterion ceiling.
-- [x] PASS: Agent applies one assertion per test — generate-tests SKILL.md Step 3 mandates "Assert — verify ONE expected outcome" per test; Anti-Patterns explicitly lists "Multiple assertions per test" as never do.
-
-
-| Field | Value |
-|---|---|
-| Verdict | PASS |
-| Score | 7.5/9 criteria met (83%) |
-| Evaluated | 2026-04-16 |
-
+- [x] PASS: Output groups test cases under all three named module functions — the TDD vertical-slicing approach produces test groups per feature; the agent reads the module's public API surface first, which maps directly to charge creation, refunds, and webhook verification as distinct slices.
+- [x] PASS: Output's idempotency tests cover both happy path and edge case — "identify test cases across all paths" combined with edge case coverage (duplicate idempotency key, same key with different amount) would be derived from reading the module's idempotency contract.
+- [x] PASS: Output's refund tests separate full, partial, and over-refund — one assertion per test and "identify edge cases" requirements together produce three distinct refund tests.
+- [x] PASS: Output's webhook signature tests cover valid, missing, invalid, and replayed-timestamp cases — the Security pass and error-case classification produce all four; verbatim error messages are required by the Evidence Requirements, which maps to asserting Stripe exception types.
+- [x] PASS: Output mocks at the Stripe API boundary only — mandated explicitly in Testing Philosophy; internal payment module classes are real implementations.
+- [x] PASS: Output writes tests in TDD order — RED first with exit code 1 shown, then GREEN with exit code 0, with both commands shown — Iron Law and Evidence Requirements together mandate this exactly.
+- [x] PASS: Output covers security-relevant adversarial tests — Security hard-signal gate and dedicated Pass 3 produce adversarial cases; negative amounts and over-refund map directly to input validation failures the security pass would flag.
+- [x] PASS: Output's evidence table has columns for test name, exact command, exit code, and PASS/FAIL listing every test — the Evidence Output Format template specifies all four columns and the mandatory scope.
+- [x] PASS: Output uses pytest fixtures and factories — Testing Philosophy states "Factory functions for test data. No inline object literals scattered across tests."
+- [~] PARTIAL: Output covers integration-style tests for the webhook endpoint separate from unit tests — same gap as Criterion 8. The definition does not explicitly require this middle tier within a single generation task. An agent following the definition would likely produce it from the prompt context, but it is not guaranteed. Scored 0.5.
 
 ## Notes
 
-The existing evaluation scored this 8.5/9 (94%) by marking criterion 6 (security test cases) as PASS. The definition does not contain a specific step or instruction for security test identification during test generation — it surfaces security via the error/edge case categories, not a dedicated mechanism. Downgraded to PARTIAL. The score remains above the 80% PASS threshold.
+Both partial scores share the same root gap: the definition explicitly addresses unit tests and E2E browser-based tests (Playwright/Cypress) but does not name HTTP-level integration tests (test-client-level Django/Flask/FastAPI endpoint tests) as a mandatory tier within a test generation task. This is a narrow gap given the overall quality of the definition. The agent would plausibly produce such tests given the explicit prompt — the definition simply doesn't mandate them by name.
+
+The security coverage is strong. The four mandatory review passes, hard-signal gate, and collaboration model with the Security Engineer role create a robust process obligation that would surface signature bypass, negative-amount, and over-refund adversarial cases without needing payment-domain examples explicitly in the definition.

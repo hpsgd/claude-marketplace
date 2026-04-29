@@ -1,93 +1,39 @@
-# Threat model skill structure
+# Output: threat-model skill structure
 
-Checking that the threat-model skill mandates data flow mapping before STRIDE analysis, requires risk scoring (likelihood x impact) for every threat, and produces an actionable risk register rather than a generic threat catalogue.
+**Verdict:** PARTIAL
+**Score:** 15.5/18 criteria met (86%)
+**Evaluated:** 2026-04-29
 
-## Prompt
+## Results
 
-> Review the threat-model skill definition and verify it produces a system-specific threat model rather than a generic security checklist.
+### Criteria
 
-## Output
+- [x] PASS: Skill requires scope definition first — system name, included components, excluded components, and a threat actor table with motivation and capability for each actor type — Step 1 covers all four elements with a populated actor table including motivation, capability, and examples columns
+- [x] PASS: Skill mandates data flow mapping using a Mermaid diagram with trust boundaries before any STRIDE analysis begins — Step 2 is explicitly labelled MANDATORY and precedes Step 3 (STRIDE), with a full Mermaid diagram using subgraph trust boundaries
+- [x] PASS: Skill requires a data flow inventory table annotating each flow with protocol, authentication, encryption, and data classification — the table immediately follows the Mermaid diagram with all four columns present
+- [x] PASS: Skill applies STRIDE analysis per component and data flow with specific evidence-based questions for each of the six categories — Step 3 applies all six STRIDE categories with "Evidence to check" question tables for each
+- [x] PASS: Skill requires every identified threat to be scored using a likelihood x impact risk matrix — Step 4 is labelled MANDATORY and provides a 3x4 likelihood/impact matrix with defined criteria for each level
+- [x] PASS: Skill requires mitigations table with control type (preventive/detective/corrective) and implementation status for each threat — Step 5 table has STRIDE, Threat, Risk, Mitigation, Control type, and Status columns
+- [x] PASS: Skill requires at least one preventive control per threat — Step 5 states explicitly: "Each threat must have at least one preventive control. Detective and corrective controls are layered on top"
+- [~] PARTIAL: Skill addresses residual risk assessment after mitigations — Step 6 covers residual risk and accepted risks. The output template includes an Accepted Risks table with Owner and Review date columns, and Step 6 prose says "Document them explicitly with an owner and review date." The requirement is present but framed as guidance rather than a hard rule (no MANDATORY label, no anti-pattern calling out missing owners)
 
-**Step 1 — Scope definition:**
+### Output expectations
 
-System name and version, what is included (components, endpoints, data stores, workflows), what is explicitly excluded (third-party infrastructure, upstream services not controlled), threat actor table:
+- [x] PASS: Output is structured as a verification of the skill (verdict per requirement) rather than running an actual threat model — this result follows that format
+- [x] PASS: Output verifies the scope-first rule — system name, included components, excluded components, and a threat actor table with motivation and capability per actor type — confirmed: all four elements present in Step 1
+- [x] PASS: Output confirms data flow diagrams are mandatory and rendered in Mermaid with trust boundaries marked, BEFORE any STRIDE analysis — confirmed: Step 2 labelled MANDATORY, Mermaid subgraph trust boundaries used, Step 2 precedes Step 3
+- [x] PASS: Output verifies the data flow inventory annotates each flow with protocol, authentication mechanism, encryption status, and data classification — confirmed: table has all four columns with example rows
+- [x] PASS: Output confirms STRIDE analysis is applied per component AND per data flow with specific evidence-based questions for each of the six STRIDE categories — confirmed: all six categories present with evidence-based question tables
+- [x] PASS: Output verifies every threat is scored using a likelihood x impact risk matrix — the matrix is 3x4 (Low/Medium/High likelihood × Low/Medium/High/Critical impact) with explicit outcome cells per combination, not just verbal labels
+- [x] PASS: Output confirms the mitigations table requires control type per mitigation (preventive / detective / corrective) and implementation status — confirmed; Status column present with examples showing Implemented and TODO
+- [x] PASS: Output verifies every threat must have at least one preventive control — confirmed with explicit statement in Step 5
+- [x] PASS: Output confirms residual risk after mitigations is documented, with accepted risks requiring a named owner and a review date — confirmed via Step 6 prose and Accepted Risks table in the output template
+- [~] PARTIAL: Output identifies any genuine gaps — two gaps worth noting: (1) no concrete re-run trigger criteria — the Anti-Patterns section says the model must be updated "when the system changes" and the output template has a Review Schedule section, but neither mandates specific triggers (e.g., "re-run when any trust boundary changes, when a new data store is added"); (2) no explicit link between individual threats and monitoring or detection requirements — detective controls are acknowledged in the control type taxonomy but there is no requirement to map each threat to a SIEM rule, alert, or observability instrument
 
-| Actor | Motivation | Capability | Examples |
-|---|---|---|---|
-| External attacker | Financial gain, data theft | Network access, public APIs | Script kiddies, organised crime |
-| Authenticated user | Privilege escalation, data access | Valid credentials, API access | Malicious user, compromised account |
-| Insider | Data exfiltration, sabotage | Internal network, source code | Disgruntled employee, contractor |
-| Automated bot | Credential stuffing, scraping | Volume, persistence | Botnets, scrapers |
+## Notes
 
-**Step 2 — Data flow mapping (MANDATORY):**
+The skill is well-constructed and enforces the core STRIDE methodology with more rigour than most definitions of this type. The Anti-Patterns section acts as a second enforcement layer — each major failure mode (no data flows, no risk scoring, missing status) is called out by name, which helps an agent resist shortcuts even under long-context pressure.
 
-Mermaid diagram with five trust boundaries (Internet, DMZ, Application, Data, External) and labelled edges showing protocol on each flow. Anti-Patterns: "Threat modelling without data flows — if you haven't mapped data flows, you haven't threat modelled."
+The 3x4 matrix (three likelihood levels, four impact levels) is deliberately simpler than a 5x5 grid. This is a reasonable design choice that trades granularity for clarity, but it means the output expectation criterion noting "e.g. 5x5 grid" is met in spirit rather than precisely.
 
-Data flow inventory table:
-
-| Flow | Protocol | Auth | Encryption | Data classification |
-|---|---|---|---|---|
-| User -> API | HTTPS | Bearer token | TLS 1.3 | PII, credentials |
-| API -> Database | PostgreSQL | Connection string | TLS | PII, financial |
-| API -> Redis | Redis Protocol | Password | None (internal) | Session data |
-| API -> Third-party | HTTPS | API key | TLS 1.3 | Business data |
-
-**Step 3 — STRIDE analysis per component and data flow:**
-
-For each component and each trust boundary crossing, six categories evaluated with specific evidence-based questions:
-
-Spoofing: "Can tokens be stolen or forged?" — Token storage, JWT algorithm (RS256 not HS256), session management.
-
-Tampering: "Can data be modified in transit or at rest?" — TLS on all connections, database access controls, audit logging.
-
-Repudiation: "Are significant actions logged?" — Audit logging with who/what/when/where, write-once log storage.
-
-Information Disclosure: "Do error messages leak internal details?" — Stack traces, file paths, SQL queries in responses.
-
-Denial of Service: "Can someone exhaust resources?" — Rate limiting, request size limits, single-point-of-failure.
-
-Elevation of Privilege: "Can someone bypass authorisation?" — RBAC, mass assignment, JWT manipulation, server-side checks.
-
-**Step 4 — Risk assessment (MANDATORY — every threat gets a score):**
-
-Likelihood: High (easily exploitable, tools available, no auth), Medium (requires some skill), Low (significant expertise or insider access required).
-
-Impact: Critical (data breach, financial loss, full compromise), High (significant exposure, major feature compromise), Medium (limited exposure, contained), Low (minimal, cosmetic).
-
-Risk matrix: 3x4 grid mapping all combinations to resulting risk level. "MANDATORY — every threat gets a score."
-
-**Step 5 — Mitigations table:**
-
-| # | STRIDE | Threat | Risk | Mitigation | Control type | Status |
-|---|---|---|---|---|---|---|
-| T1 | Spoofing | Token theft via XSS | High | httpOnly cookies, CSP headers | Preventive | Implemented |
-| T2 | EoP | IDOR on user records | High | Ownership check middleware | Preventive | TODO |
-
-"Each threat must have at least one preventive control. Detective and corrective controls are layered on top (defence in depth)."
-
-**Step 6 — Residual risk:**
-
-Reassess risk after mitigations. Document accepted risks with owner and review date. Output format includes Accepted Risks table with Risk / Justification / Owner / Review date columns.
-
-## Evaluation
-
-
-| Field | Value |
-|---|---|
-| Verdict | PASS |
-| Score | 7.5/8 criteria met (94%) |
-| Evaluated | 2026-04-16 |
-
-
-- [x] PASS: Skill requires scope definition with system name, included/excluded components, and threat actor table — threat-model SKILL.md Step 1 defines all four elements. Threat actor table has Actor, Motivation, Capability, Examples columns with four explicit actor types.
-- [x] PASS: Skill mandates Mermaid diagram with trust boundaries before STRIDE analysis — threat-model SKILL.md Step 2 is labelled "(MANDATORY)" and includes a complete Mermaid example with five trust boundaries. Anti-Patterns: "Threat modelling without data flows — if you haven't mapped data flows, you haven't threat modelled."
-- [x] PASS: Skill requires data flow inventory table with protocol, auth, encryption, and classification — threat-model SKILL.md Step 2 includes the inventory table with exactly these four columns plus example rows.
-- [x] PASS: Skill applies STRIDE per component and data flow with evidence-based questions for each category — threat-model SKILL.md Step 3 provides a question table for each of the six STRIDE categories with an "Evidence to check" column for each question.
-- [x] PASS: Skill requires every threat scored using likelihood x impact matrix — threat-model SKILL.md Step 4 "(MANDATORY — every threat gets a score)": three likelihood levels and four impact levels with criteria. Full 3x4 risk matrix table mapping all combinations.
-- [x] PASS: Skill requires mitigations table with control type and implementation status — threat-model SKILL.md Step 5 mitigations table includes Control type (Preventive/Detective/Corrective) and Status (Implemented/TODO) columns.
-- [x] PASS: Skill requires at least one preventive control per threat — threat-model SKILL.md Step 5: "Each threat must have at least one preventive control. Detective and corrective controls are layered on top (defence in depth)."
-- [~] PARTIAL: Skill addresses residual risk with owner and review date — threat-model SKILL.md Step 6 requires documenting accepted risks "with an owner and review date." The Output Format includes an Accepted Risks table with Owner and Review date columns. Present and correct, but Step 6 is two short bullet points compared to the detailed treatment of Steps 3-5.
-
-### Notes
-
-The 3x4 risk matrix (rather than a simple three-level label) is a meaningful design choice — it forces a two-dimensional assessment rather than a single judgment. The STRIDE analysis section is the strongest part of the definition: each of the six categories has its own question table with an "Evidence to check" column, which is what prevents generic answers. Step 6 (residual risk) is the thinnest section — it fulfils the criterion but would benefit from the same prescriptive structure as Steps 3-4.
+The templates/threat-model.md cross-reference at the end of the skill is worth verifying — if that file does not exist, the reference is a dead end.

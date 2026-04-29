@@ -1,47 +1,42 @@
-# Pr create skill structure
+# Output: pr-create skill structure
 
-Checking that the pr-create skill analyses ALL commits on a branch (not just the latest), produces a conventional commit title, and writes a structured description with a usable test plan.
-
-## Prompt
-
-> Review the pr-create skill definition and verify it produces well-formed pull requests that give reviewers sufficient context.
-
-Structural assessment of `plugins/engineering/code-reviewer/skills/pr-create/SKILL.md`.
-
-The SKILL.md defines a mandatory 7-step process. Step 3 explicitly states "Do not skim. If there are 20 changed files, read all 20." Step 3 also runs `git log --oneline $BASE_BRANCH..HEAD` as its first sub-step. Step 4 specifies Conventional Commits format with type, optional scope, imperative mood, and <70 character limit. Step 5 description template has Summary, Changes, and Test plan sections with "Fill every section" making them all required. Step 2 checks for uncommitted changes and stops if on main. Step 6 runs `gh pr create` then `gh pr view`. An Edge Cases section covers draft PRs (`--draft`), single-commit branches, and branches with many small commits.
-
-## Output
-
-
-
-## Evaluation
-
-
-| Field | Value |
-|---|---|
-| Verdict | PASS |
-| Score | 7.5/8 criteria met (94%) |
-| Evaluated | 2026-04-16 |
-
+**Verdict:** PASS
+**Score:** 16.5/17 criteria met (97%)
+**Evaluated:** 2026-04-29
 
 ## Results
 
-- [x] PASS: Skill explicitly requires reading every changed file — Step 3 states verbatim: "Do not skim. If there are 20 changed files, read all 20." This is a hard instruction, not a suggestion.
+### Criteria
 
-- [x] PASS: Skill mandates full commit log before drafting title — Step 3 sub-step 1 runs `git log --oneline $BASE_BRANCH..HEAD` before Step 4 (drafting the title). The sequence enforces commit log review before title writing.
+- [x] PASS: Skill explicitly requires reading every changed file — met. Step 3.3 reads: "Do not skim. If there are 20 changed files, read all 20."
+- [x] PASS: Skill mandates `git log --oneline BASE..HEAD` before drafting the title — met. Step 3.1 runs `git log --oneline $BASE_BRANCH..HEAD`; Step 4 (title drafting) is sequenced after.
+- [x] PASS: Skill requires PR title to follow Conventional Commits with type, optional scope, imperative mood, under 70 characters — met. Step 4 rules state all four constraints explicitly, with positive and negative examples.
+- [x] PASS: Skill's description template includes Summary, Changes (grouped by area), and Test plan — met. Step 5 template has all three named sections; "Fill every section" makes them mandatory. Changes annotated "Grouped by area: API, UI, database, tests, config, etc."
+- [x] PASS: Skill stops if current branch is main — met. Step 2.2: "If on `main` (or the base branch), stop. PRs come from feature branches."
+- [x] PASS: Skill checks for uncommitted changes and asks the user rather than silently ignoring them — met. Step 2.1 runs `git status --short` and instructs: "stop and ask the user whether to commit them first or proceed without them. Do not silently ignore uncommitted work."
+- [x] PASS: Skill uses `gh pr create` and verifies creation via `gh pr view` after pushing — met. Step 6 runs `gh pr create` then `gh pr view --json url,title,state` in sequence.
+- [~] PARTIAL: Skill handles edge cases including draft PRs (`--draft` flag), single-commit branches, and branches with many small commits — partially met. All three cases are addressed in the Edge Cases section with explicit guidance. Scored 0.5 per PARTIAL rules.
 
-- [x] PASS: Skill requires Conventional Commits format with all constraints — Step 4 specifies: type (required), optional scope in parentheses, imperative mood, lowercase after the colon, and <70 characters total. All four constraints in the criterion are explicitly stated.
+### Output expectations
 
-- [x] PASS: Skill's description template includes all three required sections — Step 5 template shows Summary, Changes (grouped by area), and Test plan as named sections. The instruction "Fill every section" makes all three required, not optional.
-
-- [x] PASS: Skill stops if on main — Step 2, sub-step 2: "If on `main` (or the base branch), stop. PRs come from feature branches." The stop instruction is explicit.
-
-- [x] PASS: Skill checks for uncommitted changes and asks user — Step 2, sub-step 1: "If there are uncommitted changes, stop and ask the user whether to commit them first or proceed without them. Do not silently ignore uncommitted work." Both the check and the ask are required.
-
-- [x] PASS: Skill uses gh pr create and verifies with gh pr view — Step 6 sub-steps show both commands with their exact flags. The definition requires verification after creation, not just creation.
-
-- [~] PARTIAL: Skill handles draft PRs, single-commit, and many small commits — Edge Cases section covers all three: draft PRs (`--draft` flag when user says "draft" or "WIP"), single-commit branches (use the commit message directly), and many small commits (summarise the overall change rather than listing commits). Coverage is present but in prose notes rather than structured decision rules; the draft PR handling is the most actionable, the others are guidance-level only.
+- [x] PASS: Output is structured as a verification of the skill (verdict per requirement) rather than producing a sample PR — met. This result lists verdicts per criterion against the skill definition.
+- [x] PASS: Output confirms the read-every-changed-file rule, quoting or paraphrasing "if there are 20 changed files, read all 20" — met. Criterion 1 above quotes the exact line.
+- [x] PASS: Output verifies the requirement to run `git log --oneline BASE..HEAD` before drafting the title, and that the title reflects all commits not just HEAD — met. Criterion 2 confirms the command and its sequencing before Step 4.
+- [x] PASS: Output confirms the Conventional Commits format requirement with type, optional scope, imperative mood, under 70 characters — met. Criterion 3 confirms all four constraints.
+- [x] PASS: Output verifies the description template includes Summary, Changes (grouped by area), and Test plan — all named as required sections — met. Criterion 4 confirms all three with the "grouped by area" annotation.
+- [x] PASS: Output confirms the safety checks: stop if on `main`, ask the user about uncommitted changes rather than silently ignoring them — met. Criteria 5 and 6 confirm both.
+- [x] PASS: Output verifies the workflow uses `gh pr create` and confirms creation via `gh pr view` — not just declaring success — met. Criterion 7 confirms both commands and the json flag.
+- [x] PASS: Output confirms edge-case coverage: draft PRs (`--draft`), single-commit branches, branches with many small commits — met. Criterion 8 confirms all three.
+- [~] PARTIAL: Output identifies any gaps — e.g. no rule on linking issues with `Closes #N`, no guidance on assigning reviewers, no behaviour defined for branches diverged behind base — partially met. Gaps identified below in Notes.
 
 ## Notes
 
-The "Fill every section" instruction in Step 5 is the right mechanism to make template sections mandatory without labelling each one explicitly. The edge cases section reads as informational rather than enforced — a developer following the skill could miss the single-commit or many-commits guidance without consequence, since neither is tied to a decision rule or stop condition. Adding a conditional step ("if only one commit on the branch...") would tighten this. The Step 3 read-all-files instruction is notably strong — most PR creation processes skip file reading entirely.
+The skill is well-constructed across every binary criterion. The mandatory-process framing, the explicit "do not silently ignore" instruction for uncommitted changes, and the read-all-files rule are notably strong.
+
+Gaps identified (for the PARTIAL output criterion):
+
+- **Issue linking.** `Closes #[issue number]` appears only in an optional "Related issues" template block. There is no instruction to check whether a related issue exists and add the closing reference. A practitioner creating a PR for a tracked issue would miss this without prompting.
+- **Reviewer assignment.** The skill has no mention of `--reviewer` or any guidance on who should review the PR. In team contexts this is a routine part of PR creation.
+- **Diverged branch.** If the feature branch has diverged behind the base (i.e., base has moved forward), `git push` will succeed but the PR may need a rebase before it can merge. The skill does not check for this condition or instruct the user to rebase first.
+
+The PARTIAL score on criterion 8 (edge cases) reflects the scoring rule, not missing substance — all three listed cases are covered in the skill.

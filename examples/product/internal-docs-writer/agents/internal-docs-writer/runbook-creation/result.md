@@ -1,146 +1,61 @@
-# Runbook creation
+# Output: Runbook creation
 
-An engineering team needs a runbook for handling payment processing failures so on-call engineers can resolve incidents without tribal knowledge.
-
-## Prompt
-
-> Write a runbook for payment processing failures. Context:
->
-> - We use Stripe for payment processing
-> - Common failure modes: Stripe API timeouts, card declines (various codes), idempotency key conflicts, webhook delivery failures
-> - Our stack: Node.js API, PostgreSQL, Redis for job queues (Bull), Datadog for monitoring
-> - Alert fires when: payment success rate drops below 95% over 5 minutes, or any Stripe API error rate exceeds 2%
-> - Business impact: each minute of payment failure = ~$3,400 in lost transactions during peak hours
->
-> On-call engineers are expected to handle this without waking anyone up for most scenarios. We've had 4 incidents this quarter and each one took 45+ minutes to resolve because engineers didn't know where to look.
-
-## Output
-
-**Runbook: Payment Processing Failures**
-
-| Field | Value |
-|---|---|
-| **What this covers** | Payment processing failure diagnosis and recovery |
-| **When to use** | Payment success rate <95% over 5 min, OR Stripe API error rate >2% |
-| **Risk level** | High |
-| **Estimated duration** | 10–30 minutes |
-| **Last tested** | [UNTESTED — verify in staging first] |
-| **Owner** | Payments team |
-
-Business impact: ~$3,400/minute in lost transactions at peak hours. This is a revenue-affecting incident — urgency is immediate.
-
-**Prerequisites:**
-- [ ] Datadog access with payments dashboard open
-- [ ] `STRIPE_SECRET_KEY` environment variable — get from 1Password vault: Payments/Production
-- [ ] Redis CLI access: `redis-cli -h $REDIS_HOST` — host from SSM: `/prod/redis/host`
-- [ ] PostgreSQL access: connection string from SSM: `/prod/db/primary-url`
-
----
-
-**Step 1: Identify the failure mode**
-
-```bash
-# Query Datadog for error breakdown in the last 15 minutes
-datadog-cli query 'avg:stripe.errors{*} by {error_type}' --last 15m --format table
-```
-
-Expected output: table of error types with counts. Highest count determines your path.
-
-Decision:
-- `timeout` / `request_failed` → Section A
-- `card_declined` / `do_not_honor` / `insufficient_funds` → Section B
-- `idempotency_key` → Section C
-- `webhook` errors → Section D
-
----
-
-**Section A: Stripe API Timeouts**
-
-```bash
-curl -s https://status.stripe.com/api/v2/status.json | jq '.status.indicator'
-```
-Expected: `"none"`. If `"major"` or `"partial"`: Stripe outage in progress — post in #incidents, no code action needed, monitor status page.
-
-If Stripe operational:
-```bash
-redis-cli -h $REDIS_HOST llen bull:payments:wait
-```
-Expected: <100. If >500: queue backlog detected. Scale Bull workers:
-```bash
-heroku ps:scale worker=2
-```
-**Rollback:** `heroku ps:scale worker=1` (safe, idempotent).
-
----
-
-**Section B: Card Declines**
-
-```sql
-SELECT stripe_decline_code, COUNT(*) as count
-FROM payment_attempts
-WHERE created_at > NOW() - INTERVAL '15 minutes'
-AND status = 'failed'
-GROUP BY stripe_decline_code
-ORDER BY count DESC;
-```
-Expected: varied decline codes at low volume. If >80% is `do_not_honor`: possible BIN attack. Escalate to Head of Payments immediately. This is not an on-call fix.
-
----
-
-**Section C: Idempotency Key Conflicts**
-
-```bash
-grep "IdempotencyError\|idempotency_key" /var/log/api/payments.log | tail -50
-```
-Expected: zero or rare entries. If >10/minute: duplicate job processing. Do not delete Redis keys — escalate to backend on-call.
-
----
-
-**Section D: Webhook Delivery Failures**
-
-```bash
-stripe webhook_endpoints list --api-key $STRIPE_SECRET_KEY | jq '.[].status'
-```
-Expected: `"enabled"`. Check endpoint health:
-```bash
-curl -s https://api.yourapp.com/health/stripe
-```
-Expected: `{"status":"ok"}`. If failing: restart API workers. **Rollback:** `heroku rollback` to previous deploy.
-
----
-
-**Verification:** Incident resolved when Datadog shows `stripe.payments.success_rate` ≥ 97% for 5 consecutive minutes.
-
-**Escalation:**
-
-| Condition | Contact | Method | When |
-|---|---|---|---|
-| Stripe platform outage | Head of Payments | PagerDuty: payments-lead | >5 min |
-| Queue depth >1000 | Backend on-call | PagerDuty: backend | Immediately |
-| BIN attack suspected | Head of Payments + Fraud | PagerDuty: fraud | Immediately |
-| >15 min unresolved | Engineering Manager | PagerDuty: eng-manager | After 15 min |
-
-## Evaluation
-
-
-| Field | Value |
-|---|---|
-| Verdict | PASS |
-| Score | 8/8 (100%) |
-| Evaluated | 2026-04-16 |
-
+**Verdict:** PARTIAL
+**Score:** 14/18 criteria met (78%)
+**Evaluated:** 2026-04-29
 
 ## Results
 
-- [x] PASS: Written for a first-timer at 2am — the agent definition's core principle explicitly states "Every runbook is written for someone handling it at 2am for the first time" and its Runbook section rules require copy-pasteable commands and expected output per step
-- [x] PASS: Decision tree with branching for four failure modes — the agent's runbook structure requires numbered steps with decision logic; the prompt lists four named failure modes, and the "Written for 2am" principle forces routing logic so the operator knows where to go
-- [x] PASS: Exact commands per diagnostic step — the agent's runbook rules explicitly state "Every command is copy-pasteable" and "Every step has a verification. After running this, you should see: [expected output]" — vague "check the logs" instructions are prohibited by these rules
-- [x] PASS: Rollback for destructive actions — the agent definition's runbook rules explicitly require "Rollback for every destructive step. If step 3 can break things, there's a rollback before step 4"
-- [x] PASS: Escalation with named roles and contact methods — the agent's Runbook structure lists "Escalation — who to contact if the runbook doesn't resolve it" as a required section; the agent's principles do not specify that contacts must be named individuals, but the structure requires real escalation targets
-- [x] PASS: Verification step — the agent's runbook structure requires a "Verification — how to confirm the procedure succeeded" section as mandatory
-- [~] PARTIAL: Covers all four failure modes — the agent definition does not prescribe how many failure modes to cover; it would produce content based on what the user provides in context. All four were named in the prompt so the agent would address all four. However, this is context-driven, not definition-enforced — the definition does not require exhaustive failure mode coverage independent of input. Scoring as PARTIAL per ceiling rule.
-- [x] PASS: Severity classification with business impact — the agent's runbook structure requires an "Overview" section with fields including "Risk level" and the principles state the documentation must convey urgency; the $3,400/minute context provided in the prompt would be surfaced in the overview
+### Criteria
+
+- [x] PASS: Written for a first-timer at 2am — met. The definition states "Every runbook is written for someone handling it at 2am for the first time" as a non-negotiable in the Core section, and restates it verbatim in the Principles section. The runbook rules require copy-pasteable commands and expected output per step. This is a structural constraint, not aspirational language.
+
+- [x] PASS: Includes a decision tree or clear branching logic for different failure modes — met. The Troubleshooting section ("common issues and their fixes") combined with the numbered Steps structure and the 2am principle would drive the agent to produce per-mode routing logic for the four failure modes named in the prompt. The definition does not use the phrase "decision tree" but the combination of per-mode troubleshooting and explicit work classification before writing means branching logic would be produced. Inferred from principles rather than named as a template section.
+
+- [x] PASS: Every diagnostic step includes the exact command or query to run — met. The runbook rules are unambiguous: "Every command is copy-pasteable. No placeholders without explanation." The Verification Protocol also includes "Run every command — in a clean environment if possible." The definition structurally prohibits "check the logs" as a step.
+
+- [x] PASS: Includes a rollback or safe revert step for any action that could make the situation worse — met. The runbook structure has an explicit Rollback section, and the rules add: "Rollback for every destructive step. If step 3 can break things, there's a rollback before step 4." Structural, not optional.
+
+- [x] PASS: Specifies an escalation path with roles and contact method — met. "Escalation — who to contact if the runbook doesn't resolve it" is a required section in the runbook structure. The framing ("who to contact") would produce role-and-contact-method content rather than a vague "escalate if needed."
+
+- [x] PASS: Documents how to verify the incident is resolved — met. "Verification — how to confirm the procedure succeeded" is a mandatory runbook section. Given the prompt context (Datadog monitoring, specific alert thresholds of 95% success rate and 2% error rate), the agent would produce metric-and-threshold verification steps.
+
+- [~] PARTIAL: Covers all four failure modes — 0.5. The agent reads and uses prompt context. All four failure modes (API timeouts, card declines, idempotency conflicts, webhook failures) are named in the prompt and the agent would address all four via the Troubleshooting and Steps sections. The definition does not independently enforce exhaustive failure mode coverage — coverage depends on what the user provides.
+
+- [x] PASS: Includes severity classification or impact assessment — met. The runbook Overview section requires "when to use this runbook, what it accomplishes," and the definition emphasises honesty about sharp edges and writing for an audience under pressure who need to act. Given the explicit $3,400/minute business impact in the prompt, the agent would surface this in the Overview as urgency context. The runbook template has no explicit "severity" section, but the Overview requirement and audience-first principles are strong enough to drive impact quantification.
+
+### Output expectations
+
+- [x] PASS: Output's runbook header states the alert trigger conditions verbatim — met. The Overview section requires "when to use this runbook, what it accomplishes." With trigger conditions explicitly supplied in the prompt (payment success rate < 95% over 5 min, Stripe API error rate > 2%), and the definition's 2am framing demanding immediate actionability, the agent would reproduce these conditions in the header. The $3,400/minute figure would appear as the business impact.
+
+- [x] PASS: Output's decision tree branches on the first observable signal — met. The Troubleshooting section plus the 2am-first-timer constraint would drive the agent to route on the first observable signal. With four distinct failure modes supplied in the prompt, a branching entry point is the natural output of the per-mode troubleshooting structure.
+
+- [x] PASS: Output's diagnostic commands are exact and copy-pasteable — met. "Every command is copy-pasteable. No placeholders without explanation." is a hard rule. The agent would produce specific commands against the stack named in the prompt (Node.js, PostgreSQL, Redis/Bull, Datadog) rather than generic descriptions.
+
+- [x] PASS: Output's commands each show the expected output/threshold — met. "Every step has a verification. After running this, you should see: [expected output]" is an explicit runbook rule. The agent would show thresholds (e.g. healthy vs failure counts) alongside every diagnostic command.
+
+- [x] PASS: Output handles each of the four failure modes with branch-specific diagnostics — met. All four modes are named in the prompt. The agent reads the prompt context and the Troubleshooting section would yield branch-specific steps for each. The specific remediation paths described in the criterion (fail-over to retry queue, Redis key commands, Bull queue depth) are consistent with what the agent would produce given the stack context.
+
+- [x] PASS: Output's rollback steps are explicit for any destructive action — met. "Rollback for every destructive step" is a hard rule in the definition. The Rollback section is mandatory structure. The agent would produce explicit undo commands rather than "reverse the action."
+
+- [ ] FAIL: Output's escalation table names roles AND contacts with specific contact details — not met. The definition's Escalation section requires only "who to contact if the runbook doesn't resolve it." Without knowing the organisation's actual contact details (Stripe enterprise email, PagerDuty service names, on-call backup contacts), the agent would produce a role-level escalation path but not specific contact information like "enterprise@stripe.com" or "PagerDuty service payments-backup." The definition provides no mechanism to supply or require specific contact details.
+
+- [ ] FAIL: Output's escalation thresholds are defined — not met. The definition specifies who to escalate to but says nothing about when — no time-based triggers, no "if no resolution after X minutes" rule. The escalation section requirement is structural ("who to contact") with no time-threshold component. The agent would not reliably produce "if no resolution after 30 min, page the engineering manager" without a definition-level rule requiring it.
+
+- [ ] FAIL: Output's verification step shows what success looks like with the specific Datadog query — partial met, scoring as FAIL. The Verification section is mandatory and the prompt supplies Datadog as the monitoring tool and specific thresholds. The agent would produce a verification step referencing those thresholds. However, the definition does not require a specific Datadog query syntax (e.g. `payment.errors{service:payment-api} | sum:1m`), and the agent has no access to the organisation's actual Datadog metric names. A threshold-based description is likely; a runnable Datadog query is not reliably produced.
+
+- [x] PASS: Output is written for a first-timer at 2am — met. This is stated three times in the definition (Core non-negotiables, Runbook rules, Principles) and drives every structural choice. Single-action steps, no assumed knowledge, and explicit paths are required by the definition's constraints.
 
 ## Notes
 
-The agent definition is strong for runbooks. "Written for 2am" is stated as a non-negotiable principle, and the structural requirements (copy-pasteable commands, expected output, rollback per destructive step, escalation section, verification section) are all explicitly required. The one gap: the definition does not enforce coverage of all stated failure modes independently of the input — the agent relies on the user having provided them in the prompt. For a PARTIAL-ceiling criterion that is context-dependent, PARTIAL is the correct score.
+The Criteria section (original 8 items) scores 7.5/8 — the definition is strong on runbook structure fundamentals.
+
+The Output expectations section (10 items) scores 6.5/10 — three specific gaps emerge:
+
+1. **Escalation contacts.** The definition drives "who to escalate to" but cannot supply organisation-specific contact details it doesn't have access to. Specific contact details (email addresses, PagerDuty service names) require either a template slot in the definition or a pre-flight step that reads contact information from a team file.
+
+2. **Escalation thresholds.** No time-based or condition-based escalation trigger is defined anywhere in the runbook structure or rules. Adding "Escalation triggers — conditions (time elapsed, scope, Stripe status page incident) that require waking someone up" to the Escalation section definition would fix this.
+
+3. **Monitoring query specificity.** The definition correctly drives verification steps, but cannot produce runnable Datadog queries without knowing the organisation's metric naming conventions. A pre-flight step reading a monitoring reference file, or a definition rule requiring the agent to ask for metric names before writing verification steps, would close this gap.
+
+The Decision Checkpoints table correctly flags untested runbooks — for an agent without access to a Stripe sandbox, the produced runbook would be marked [UNTESTED]. Honest, but worth noting for practical output quality.

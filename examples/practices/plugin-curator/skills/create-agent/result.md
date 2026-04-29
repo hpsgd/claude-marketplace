@@ -1,99 +1,44 @@
-# Create agent new specialist agent
-
-A contributor asks the create-agent skill to create a new `data-engineer` agent for the engineering category, covering pipeline design, data modelling, and dbt workflows.
-
-## Prompt
-
-> /create-agent data-engineer — responsible for data pipeline design, data modelling, dbt workflow orchestration, and data quality monitoring. Engineering category.
-
-```markdown
-[Step 1: Reading templates and conventions]
-Read(file_path="${CLAUDE_PLUGIN_ROOT}/templates/agent-template.md") ✓
-Read(file_path="CLAUDE.md") ✓
-Read(file_path=".claude-plugin/marketplace.json") ✓
-
-[Step 2: Domain research]
-Researching data engineering standards:
-
-## Output
-
-- Medallion architecture (Bronze/Silver/Gold) — Databricks standard for lakehouse design
-- dbt — industry standard for SQL-based transformation, testing, and lineage
-- Apache Airflow / Prefect — pipeline orchestration
-- Great Expectations / dbt tests — data quality frameworks
-- Kimball vs Inmon modelling methodologies
-
-Adopting: Medallion architecture for storage design, dbt for transformation methodology.
-
-[Step 3: Creating directory structure]
-mkdir -p plugins/engineering/data-engineer/.claude-plugin
-mkdir -p plugins/engineering/data-engineer/agents
-mkdir -p plugins/engineering/data-engineer/skills
-mkdir -p plugins/engineering/data-engineer/templates
-
-[Step 4: Writing plugin.json] ✓
-
-[Step 5: Writing agent definition]
-plugins/engineering/data-engineer/agents/data-engineer.md ✓ (218 lines)
-Sections: Core statement, Non-negotiable, Pre-Flight, Domain methodology, Output format, Failure caps, Decision checkpoints, Collaboration, Principles, What You Don't Do
-
-[Steps 6–9: Registry updates]
-marketplace.json: added data-engineer entry ✓
-Coordinator RATSI: added to "data pipeline" and "analytics" rows ✓
-CTO agent team listing: added data-engineer ✓
-README: category install block ✓, everything block ✓, agent table ✓
-
-[Step 10: Verification]
-JSON valid: plugin.json ✓, marketplace.json ✓
-Dirs: 24 | Registry: 24 → match ✓
-grep private refs: 0 matches ✓
-
-### Created: data-engineer
-
-#### Files Created
-- `plugins/engineering/data-engineer/.claude-plugin/plugin.json`
-- `plugins/engineering/data-engineer/agents/data-engineer.md`
-- `plugins/engineering/data-engineer/skills/`
-- `plugins/engineering/data-engineer/templates/`
-
-#### Registry Updates
-- marketplace.json: ✅ added
-- README: ✅ install commands + agent table
-- Coordinator RATSI: ✅ data-pipeline and analytics rows
-- Lead (cto): ✅ team listing updated
-
-#### Quality Score
-- **Lines:** 218
-- **Agent audit score:** 14/15
-- **Model:** sonnet
-
-#### Verification
-- JSON valid: ✅
-- Plugin count matches: ✅
-- No private refs: ✅
-```
-
-## Evaluation
-
+# Output: create-agent new specialist agent
 
 | Field | Value |
 |---|---|
-| Verdict | PASS |
-| Score | 7.5/8 criteria met (93.75%) |
-| Evaluated | 2026-04-16 |
-
+| **Verdict** | PARTIAL |
+| **Score** | 16.5/17.5 criteria met (94%) |
+| **Evaluated** | 2026-04-29 |
+| **Source** | `plugins/practices/plugin-curator/skills/create-agent/SKILL.md` |
 
 ## Results
 
-- [x] PASS: Step 1 reads agent template, CLAUDE.md, and marketplace.json — Step 1 provides three explicit `Read()` calls in sequence: `agent-template.md`, `CLAUDE.md`, and `.claude-plugin/marketplace.json`. The step is labelled "sequential — do not skip steps" and is the first action before any writing.
-- [x] PASS: Step 2 performs domain research before writing — Step 2 "Research best practices" states "Before writing anything, research the established standards and frameworks for this agent's domain." It enumerates three sub-steps: identify authoritative sources, document which standards are being adopted and why, and plan domain-specific templates. The Anti-Patterns section names "Creating without researching" as a failure mode.
-- [x] PASS: All required directory structure created — Step 3 includes four explicit `mkdir -p` commands: `.claude-plugin`, `agents`, `skills`, and `templates` (with the note "if agent produces artefacts"). All four are present.
-- [x] PASS: Agent definition follows all mandatory sections — Step 5's body sections table lists all 10 sections as mandatory: Core statement, Non-negotiable, Pre-Flight, Domain methodology, Output format, Failure caps, Decision checkpoints, Collaboration, Principles, What You Don't Do. Each row includes a "Key requirements" column. The skill states "Follow the agent template EXACTLY. Every section is mandatory."
-- [x] PASS: Agent uses sonnet — Step 5 frontmatter section shows `model: {sonnet for specialists, opus for leadership}`. The Anti-Patterns section explicitly calls out "Forgetting model assignment" as a failure mode. data-engineer is a specialist; sonnet is the correct assignment.
-- [x] PASS: marketplace.json updated with required fields — Step 6 defines the JSON entry format with all required fields explicit: name, source, description, version, category, and tags.
-- [x] PASS: All registry updates completed — Steps 6–9 cover exactly the four targets in the criterion: marketplace.json (Step 6), coordinator RATSI (Step 7), relevant lead team listing (Step 8), README at 3 places (Step 9 — "Category install block", "Everything install block", "Agent table"). All targets accounted for.
-- [~] PARTIAL: Verification confirms JSON valid, count match, no private refs — Step 10 provides bash commands for all three checks. The private-references grep uses `--include="*.md"` and would not catch a private reference introduced into a `.json` file. The plugin.json template in Step 4 uses `[author or organisation name]` as a generic placeholder, so the risk is lower than it was previously, but the grep scope remains narrower than ideal. PARTIAL ceiling applies per criterion prefix.
+### Criteria
+
+- [x] PASS: Step 1 reads the agent template, CLAUDE.md, and marketplace.json before creating anything — Step 1 explicitly calls `Read` on all three in that order before any writes
+- [x] PASS: Step 2 performs domain research before writing — Step 2 mandates identifying authoritative sources and documenting which standards are adopted; anti-pattern "Creating without researching" explicitly prohibits invented methodologies
+- [x] PASS: All required directory structure is created: `.claude-plugin/`, `agents/`, `skills/`, and `templates/` if applicable — Step 3 creates all four via `mkdir -p`
+- [x] PASS: Agent definition follows all mandatory sections: Core statement, Non-negotiable, Pre-Flight, Domain methodology, Output format, Failure caps, Decision checkpoints, Collaboration, Principles, What You Don't Do — Step 5 body-sections table lists all ten as mandatory with "Follow the agent template EXACTLY. Every section is mandatory."
+- [x] PASS: Agent uses `sonnet` model — data-engineer is a specialist, not leadership — Step 5 frontmatter spec states "sonnet for specialists, opus for leadership"; anti-patterns section reinforces this explicitly
+- [x] PASS: marketplace.json is updated with the new plugin entry including source path, description, version, category, and tags — Step 6 JSON template includes all five fields
+- [x] PASS: All registry updates are completed — marketplace.json, README (3 places), coordinator RATSI, and relevant lead team listing — Steps 6–9 cover all four targets
+- [~] PARTIAL: Verification step confirms JSON is valid, plugin count matches registry count, and no private references exist — Step 10 covers all three checks (Python JSON validation, find/python3 plugin count, grep for private refs); awarded 0.5 per PARTIAL type
+
+### Output expectations
+
+- [x] PASS: Output creates the directory structure under `plugins/engineering/data-engineer/` with `.claude-plugin/plugin.json`, `agents/data-engineer.md`, `skills/`, and `templates/` — Step 3 category table routes engineering agents correctly; `mkdir -p` pattern matches the expected paths
+- [x] PASS: Output's `plugin.json` contains required metadata — name, description, version, source — and is valid JSON — Step 4 template includes all fields; Step 10 validates JSON
+- [x] PASS: Output's `agents/data-engineer.md` contains all mandatory sections: Core statement through What You Don't Do — Step 5 mandates all ten sections
+- [x] PASS: Output sets the model to `sonnet` in agent frontmatter — frontmatter spec and anti-patterns section both enforce this for specialists
+- [x] PASS: Output's domain methodology references established frameworks — Step 2 requires identifying authoritative sources and existing standards, not invented terminology; "adopt existing standards, don't invent" is the stated principle
+- [x] PASS: Output updates `marketplace.json` with the new plugin entry — Step 6 template covers name, source, description, version, category, tags
+- [x] PASS: Output updates README.md in three places — Step 9 names all three explicitly: category install block, everything install block, agent table
+- [x] PASS: Output updates the coordinator's RATSI table — Step 7 explicitly covers RATSI matrix updates with R/A/T/S/I role determination
+- [x] PASS: Output's verification step shows command output confirming JSON validity, plugin count match, and no private references — Step 10 covers all three checks
+- [~] PARTIAL: Output's data-engineer agent definition includes specific data engineering decision checkpoints — the skill mandates decision checkpoints (Step 5, audit checklist) and domain-specificity as a quality target, but does not require domain-specific checkpoint examples in the template or enforce it in the audit criteria; a contributor following the skill could produce generic checkpoints without violating any stated rule
 
 ## Notes
 
-No changes to this skill since previous evaluation. Verdict unchanged at PASS (93.75%). The one persistent gap is the private-refs grep covering only `.md` files: a contributor who manually introduces a private reference into `plugin.json` would pass verification. This is noted but does not affect the verdict given the PARTIAL ceiling.
+The skill is structurally strong. The ten-step sequential process, mandatory section enforcement, model assignment rules, and registry chain are all clearly specified.
+
+Two gaps worth flagging beyond the rubric:
+
+The `source` field example in Step 6 (`{category}/{agent-name}`) omits the `./plugins/` prefix shown in `CLAUDE.md` and the actual marketplace.json entries. A contributor following the template literally would produce a broken source path.
+
+The private-refs grep in Step 10 uses `--include="*.md"`, so a private reference introduced into `plugin.json` would go undetected. Low risk given the template uses placeholders, but the scope could be widened to `--include="*.{md,json}"`.

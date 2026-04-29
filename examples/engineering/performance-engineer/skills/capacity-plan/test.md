@@ -17,3 +17,16 @@ Create a capacity plan for our document processing API. Current load: ~200 reque
 - [ ] PASS: Skill evaluates multiple scaling options (vertical, horizontal, caching, async processing) with cost, capacity gain, and lead time for each
 - [ ] PARTIAL: Skill references the Universal Scalability Law to explain why doubling servers doesn't double throughput
 - [ ] PASS: Output includes a decision timeline with immediate actions, 30-day decisions, and 90-day planned activities
+
+## Output expectations
+
+- [ ] PASS: Output's current load profile reproduces the prompt facts — 200 req/day, ~20 concurrent peak, 2-8s response time, t3.large at 30% CPU / 45% mem at peak — verbatim or close paraphrase
+- [ ] PASS: Output applies Little's Law explicitly (e.g. "concurrency = throughput × avg response time"), showing the math from current 20 concurrent to projected concurrency at 50x growth, not just naming the law
+- [ ] PASS: Output projects 3, 6, and 12 months forward with both request volume and concurrent capacity needs, plus storage if the LLM/Postgres footprint grows with usage
+- [ ] PASS: Output identifies when the 2x headroom rule will be breached given 50x growth in 6 months — a specific date or month, not just "soon"
+- [ ] PASS: Output evaluates at least 3 scaling options — vertical (larger instance), horizontal (multiple instances + load balancer), and async (queue + workers, given LLM 2-8s latency) — with cost, capacity gain, and lead-time per option
+- [ ] PASS: Output addresses the LLM dependency as a likely bottleneck — it's the source of the 2-8s response time and is not solved by scaling the t3.large; capacity planning has to include LLM provider rate limits and concurrent request quotas
+- [ ] PASS: Output stops and asks before committing to an infrastructure direction, framing the cost trade-off between vertical (simpler, hits a ceiling) and horizontal (more complex, requires statelessness)
+- [ ] PASS: Output references the Universal Scalability Law to explain that doubling capacity won't double throughput (contention and coherency), grounding the recommendation rather than assuming linear scaling
+- [ ] PASS: Output's decision timeline separates immediate (this sprint), 30-day, and 90-day actions, with the 50x launch date (3 months out) anchoring the 90-day deadline
+- [ ] PARTIAL: Output addresses async processing as a structural shift (job queue + worker pool) for the 2-8s LLM call, since synchronous request-response will tie up server resources at scale

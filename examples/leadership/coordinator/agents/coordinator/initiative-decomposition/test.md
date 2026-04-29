@@ -16,3 +16,16 @@ We want to add multi-tenancy to the platform. Enterprise customers have been ask
 - [ ] PARTIAL: Revenue context ($400k ARR) is used to inform priority and timeline, not just mentioned
 - [ ] PASS: Security implications of multi-tenancy are called out as a specific workstream or constraint
 - [ ] PASS: The output is a dispatch plan, not implementation — the coordinator doesn't write code or specs
+
+## Output expectations
+
+- [ ] PASS: Output's workstreams cover at minimum: data isolation (architect / data engineer), auth and permissions (architect / security), billing changes (CPO + finance), UI workspace switching (UX + UI designer + developer), documentation (technical writer), pricing model (CPO + GTM)
+- [ ] PASS: Output's dependency map shows that data isolation design must complete before implementation, that pricing decisions must inform billing implementation, and that auth/permissions design feeds the UI workspace switching
+- [ ] PASS: Output identifies the critical path — likely data isolation design → auth/permissions design → implementation → migration of existing customers — and names what blocks what
+- [ ] PASS: Output uses the $400k ARR context to inform priority — connecting the dollar value to a target delivery date or quarter, not just citing the figure once
+- [ ] PASS: Output flags multi-tenancy security as a distinct workstream — covering tenant isolation, blast-radius if one tenant is compromised, and customer-level encryption keys / data sovereignty options
+- [ ] PASS: Output includes effort estimates per workstream as ranges (e.g. "data isolation design: 2-3 weeks", "billing changes: 4-6 weeks") — not single-point estimates that imply false precision
+- [ ] PASS: Output is a dispatch plan — names the agent or role per workstream, the deliverable per workstream, and the entry/exit criteria — does NOT contain code, schema definitions, or implementation specs
+- [ ] PASS: Output covers BOTH CPO (pricing model, packaging tiers, GTM messaging, customer comms for existing customers) AND CTO (data, auth, infra) workstreams — multi-tenancy is not purely technical
+- [ ] PASS: Output addresses migration of existing single-tenant customers as a workstream — they need to be moved into the new model without disruption, and this typically blocks final cutover
+- [ ] PARTIAL: Output identifies parallel opportunities — e.g. UX research on workspace switching can run while data isolation is being designed, technical-writer documentation drafting can run alongside implementation

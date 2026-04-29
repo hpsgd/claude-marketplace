@@ -17,3 +17,16 @@ We're building a new notifications microservice. It receives requests from other
 - [ ] PASS: Agent flags testability concerns — e.g. external providers must be fakeable in integration tests, not called live
 - [ ] PARTIAL: Agent assigns test levels to specific criteria with rationale (unit vs integration vs E2E reasoning)
 - [ ] PASS: Output includes Risk Assessment, Test Levels table, Quality Gates, and at minimum one identified gap
+
+## Output expectations
+
+- [ ] PASS: Output's risk assessment names duplicate-send (financial/reputational), opt-out violations (legal/regulatory — TCPA / GDPR / spam laws), and provider outage as the top risks for a notifications service — not generic "data quality"
+- [ ] PASS: Output's test levels table covers unit (logic, preference resolution), integration (internal REST API contract + external Sendgrid/Twilio/Firebase boundaries), and E2E (full request → queue → delivery → callback), with tools/coverage targets per level
+- [ ] PASS: Output identifies the integration test pattern — fakes/contract tests at the Sendgrid/Twilio/Firebase boundaries, never live calls in CI — and names this as a testability requirement
+- [ ] PASS: Output's edge case checklist covers concurrency (same notification dispatched twice in parallel), opt-out timing (preference change between queue-up and delivery), and channel fallback (one provider down — does the service queue, fail, or skip?)
+- [ ] PASS: Output applies the 3 amigos lens — names specific questions for the product owner (what does delivery confirmation mean? what's the SLA on opt-out?) and architect (queue technology, retry strategy)
+- [ ] PASS: Output sets specific quality gates pre-merge (coverage threshold, contract tests pass, lint/type clean) and pre-release (load test at 50K/day, opt-out audit query returns zero violations, provider failure simulation)
+- [ ] PASS: Output addresses scaling from 50K to 500K notifications/day in the test strategy — load tests must validate the 10x growth path, not just the launch volume
+- [ ] PASS: Output stays at strategy level — does NOT include implementation test code or specific test method names, leaving that to the QA Engineer
+- [ ] PASS: Output identifies at least one specific gap — e.g. no fake Twilio/Sendgrid available yet, no preference-change-during-flight test scenario in scope, or no contract tests with the calling internal services
+- [ ] PARTIAL: Output addresses observability requirements as a testability concern — tests need to assert delivery state, not just request acceptance, which requires hooks into the queue and provider callbacks

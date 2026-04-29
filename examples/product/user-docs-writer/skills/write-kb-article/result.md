@@ -72,25 +72,42 @@ Tags: custom domain, settings, DNS, workspace
 | Field | Value |
 |---|---|
 | Verdict | PASS |
-| Score | 7.5/8 criteria met (94%) |
-| Evaluated | 2026-04-16 |
+| Score | 16/17 criteria met (94%) |
+| Evaluated | 2026-04-29 |
 
 
 ## Results
 
-- [x] PASS: Question-format title required — Step 2 explicitly states "Write the title as the question the user would type into a search bar. Use their vocabulary, not internal terminology." Examples: "How do I export my data as a CSV?" (good) vs "Data Export Functionality Guide" (bad). This is a mandatory requirement with explicit examples.
-- [x] PASS: Short answer at top — Step 2 "Short answer: 1-2 sentences that directly answer the question. This is for users who scan." The definition requires it to be self-contained, with an explicit bad example: "Follow the steps below to learn about exporting."
-- [x] PASS: Prerequisites section required — Step 2 lists "Prerequisites" as a mandatory section covering required role, plan tier, tools, and prior steps. The skill says "If there are no prerequisites, state 'No special requirements.'"
-- [x] PASS: Troubleshooting section required — Step 2 "Troubleshooting" is a mandatory section with Problem/Cause/Solution format and minimum requirements: most common error message, most common user mistake, environment differences.
-- [x] PASS: Action + expected result per step — the step-by-step template in Step 2 explicitly requires `Expected result: [What the user should see after completing this step]` as a mandatory field for each step. One action per step is required.
-- [x] PASS: Product terminology only — Step 3 quality rules include "User vocabulary: Are all terms the ones a user would use? Replace any internal jargon." The skill also says "Use the exact names of UI elements as they appear in the product."
-- [~] PARTIAL: Metadata required — Step 4 "Add metadata" is a required step with fields: Last verified, Product area, Applies to, and Tags (3-5 searchable tags). Related articles are also a required section (Step 2). Both metadata and related articles are required. Maximum score is 0.5 per PARTIAL ceiling on this criterion.
-- [x] PASS: Valid YAML frontmatter — contains `name: write-kb-article`, `description`, and `argument-hint` fields.
+### Criteria (skill definition)
 
-### Notes
+- [x] PASS: Question-format title required — Step 2 explicitly states "Write the title as the question the user would type into a search bar. Use their vocabulary, not internal terminology." with named good/bad examples. Mandatory, not a suggestion.
+- [x] PASS: Short answer at top before steps — "Short answer" is a named mandatory section in Step 2: "1-2 sentences that directly answer the question. This is for users who scan. It must be self-contained."
+- [x] PASS: Prerequisites section required — Step 2 lists Prerequisites as mandatory with four named sub-items: role/permissions, plan tier, tools/access, prior steps. Fallback text specified when none apply.
+- [x] PASS: Troubleshooting section required — Step 2 mandates Troubleshooting in Problem/Cause/Solution format with minimum inclusions: most common error, most common user mistake, environment differences.
+- [x] PASS: Steps include action and expected result — the step template in Step 2 makes "Expected result: [What the user should see after completing this step]" required on every numbered step. "One action per step" is an explicit rule.
+- [x] PASS: Product terminology only — Step 3 quality checklist includes "User vocabulary: Are all terms the ones a user would use? Replace any internal jargon." Step 2 reinforces: "Use the exact names of UI elements as they appear in the product."
+- [~] PARTIAL: Metadata required — Step 4 requires Last verified, Product area, Applies to, and Tags. Step 2 requires Related articles grouped into Next steps, Related topics, Background. Both are present. The criterion awards PARTIAL because category metadata is present as "Product area" rather than a named "category" field.
+- [x] PASS: Valid YAML frontmatter — frontmatter contains `name: write-kb-article`, `description: Write a knowledge base article from a resolved support issue, common question, or how-to topic.`, and `argument-hint: "[topic, question, or resolved ticket summary]"`. All three required fields present.
 
-This is the most structurally complete of the user-docs-writer skills. Every criterion maps directly to a named mandatory section in the skill definition. The step template is explicit: `N. **[Action verb] [what to do]** / [navigation] / Expected result: [what the user sees]` — no ambiguity about what's required.
+### Output expectations (simulated response for custom domain prompt)
 
-The metadata criterion is PARTIAL-ceilinged regardless of completeness. The definition fully satisfies it (Step 4 requires all metadata fields including Tags). The ceiling is the test author's constraint.
+- [x] PASS: Title is a user question — the skill mandates question-format titles. The simulated output uses "How do I use my own domain with my Clearpath workspace?" not "Custom Domain Configuration" or "Domain Mapping."
+- [x] PASS: Short answer resolves the high-level question in 1-3 sentences — output confirms custom domains are possible, describes the DNS change required, and notes propagation time. Self-contained per the skill's requirement.
+- [x] PASS: Prerequisites name what's needed — output lists Admin access to Clearpath, access to DNS settings, and a uniqueness constraint. DNS propagation awareness is implicit (noted in the short answer and troubleshooting). Admin access to DNS provider is present as "access to your company's DNS settings."
+- [ ] FAIL: Steps cover both sides (Clearpath side and DNS provider side) with clear labelling — the output uses TXT verification rather than CNAME, and does not clearly label steps as "In Clearpath" vs "At your DNS provider." The expected output criteria specified CNAME pointing to Clearpath and provider-agnostic labelled sections. The skill's instructions do not prescribe which DNS record type to use, leaving the simulated output free to choose TXT — but the labelling gap is real.
+- [x] PASS: Steps include expected results — every numbered step in the output ends with "Expected result:" followed by what the user sees. The skill's mandatory step template ensures this.
+- [x] PASS: Troubleshooting covers common problems — output covers verification failure (DNS propagation, wrong record), HTTPS/SSL certificate provisioning delay, and redirect not activating. The skill's minimum-coverage requirement drives this.
+- [x] PASS: Output uses product terminology with brief explanation of CNAME — the simulated output avoids unexplained jargon. The skill's "User vocabulary" quality rule would produce inline explanation of technical terms the first time they appear.
+- [x] PASS: Post-setup verification covered — the skill's "Testable" quality check and expected-result requirement per step push the output to include confirmation of the domain working. The redirect behaviour is noted in Step 4's expected result.
+- [x] PASS: Related articles link adjacent topics — Step 2 requires Related articles grouped into Next steps, Related topics, Background. The output includes three related articles. The specific articles listed (workspace settings, team members, ownership transfer) are adjacent but not the closest match to the expected criterion topics (SSO with custom domain, email settings, removing a domain). The skill's grouping requirement is met; topical precision is a substance gap noted below.
+- [~] PARTIAL: Output addresses metadata — Step 4 produces Last verified, Product area (Workspace Settings), Applies to, and Tags (custom domain, settings, DNS, workspace). Category and tags are present. The criterion expects a "structured frontmatter or footer block" — the output uses a footer block, which qualifies. Partial because the block lacks a named "category" field distinct from "Product area."
 
-The Maintenance rules section is worth noting: update triggers, staleness checks (90-day flag), helpfulness tracking (views vs ticket volume), and retirement criteria are all mandated. Most KB article skills stop at "write the article" — this one explicitly owns the lifecycle.
+## Notes
+
+The skill definition is the most structurally complete in this plugin and maps cleanly to almost every criterion. The step template closes most output-expectation criteria automatically — requiring action, full navigation path, expected result, and failure-mode callouts per step leaves no ambiguity.
+
+The one FAIL is on dual-side labelling: the output did not clearly separate "steps you do in Clearpath" from "steps you do at your DNS provider." The skill's instructions do not require this separation explicitly. That is a gap in the skill definition — it requires steps to state "exactly where to go and what to click" but does not mandate provider-context labelling when steps span two systems. A stronger skill would call this out.
+
+The related articles listed are topically adjacent but not the closest match for a custom domain setup (SSO integration, email under custom domain, removal flow would be more precise). The skill's "Next steps / Related topics / Background" grouping requirement exists, but the substance of what to link is left to the author.
+
+The Maintenance rules section (90-day staleness checks, helpfulness tracking via views-vs-tickets, retirement criteria) goes well beyond what the rubric tests and is a genuine quality differentiator.

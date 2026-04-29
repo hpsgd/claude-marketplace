@@ -1,78 +1,42 @@
-# Competitive analysis skill
+# Output: competitive-analysis skill
 
-**Scenario:** A product team wants a competitive analysis of Australian HR software vendors to inform their positioning before a funding pitch.
+**Verdict:** PARTIAL
+**Score:** 16.5/19 criteria met (87%)
+**Evaluated:** 2026-04-29
 
-> /analyst:competitive-analysis Australian HR software for SMBs — specifically payroll and leave management. We're targeting businesses with 10-200 employees in AU.
+## Results
 
-Routed to `plugins/research/analyst/skills/competitive-analysis/SKILL.md` — skill test, structural evaluation only.
+### Criteria
 
-## Output
+- [x] PASS: Skill defines the market before listing competitors — states buyer type (SMB), purchase unit, geography (AU), and any timing assumptions — met: Step 1 explicitly requires buyer, purchase unit, geography, and instructs making assumptions explicit when not in arguments
+- [x] PASS: Competitors are classified into direct, indirect, and substitute categories — met: Step 2 defines all three categories with clear descriptions
+- [x] PASS: Skill uses AU-specific sources (IBISWorld AU, Seek job postings, G2 AU category) alongside global sources — not US-only competitive intelligence — met: Step 2 explicitly calls out IBISWorld AU, Seek job postings, local industry press; Step 4 references seek.com.au/seek.co.nz alongside LinkedIn
+- [x] PASS: Comparison matrix is present with positioning, pricing tier, strengths, and weaknesses per competitor — met: Step 3 table defines all four attributes plus market share; output format template confirms layout
+- [x] PASS: Market share figures are labelled as estimates with source and date — not presented as facts — met: Rules section states "Label market share estimates as estimates with source and date"
+- [x] PASS: Job posting analysis is included as a leading indicator of product direction, and labelled as signal not confirmation — met: Step 4 is dedicated to this; Rules section states "Job posting data is a leading indicator, not a fact. Label it as signal, not confirmation"
+- [x] PASS: Sources older than 18 months are flagged — met: Rules section states "Flag sources older than 18 months on competitive analysis"
+- [~] PARTIAL: Differentiation analysis takes a position on who is winning on each dimension — not just a neutral description of differences — partially met: Step 6 says "Take a position — don't just describe, conclude" but the instruction is stated rather than structurally enforced; no worked example distinguishes a positioned conclusion from a neutral description
+- [x] PASS: Output includes a sources section with URLs and what each source contributed — met: output format template shows numbered entries as `[Title](URL) — [what it contributed]`
 
-#### Competitive analysis: AU HR software for SMBs (payroll and leave management)
+### Output expectations
 
-| Field | Value |
-|---|---|
-| As of | 2026-04-16 |
-| Market definition | AU SMBs, 10-200 employees; SaaS subscription; payroll and leave management |
-| Competitors identified | 5 direct, 2 indirect |
-
-##### Competitor comparison
-
-| Company | Positioning | Pricing tier | Strengths | Weaknesses |
-|---|---|---|---|---|
-| Employment Hero | "All-in-one HR, payroll, benefits" — targets AU/NZ SMBs | SMB ($8–$15/emp/mo) | Strong AU payroll compliance, rapid growth, bundled benefits | Support quality complaints in G2 reviews; complex onboarding |
-| KeyPay | "Payroll and workforce management" — AU-first, API-first | SMB–mid-market | Compliance depth, integrations, white-label partner channel | Less HR breadth; no full HRIS |
-| Xero Payroll | Bundled into Xero accounting; targets micro and small businesses | Micro–SMB (Xero subscriber) | Deep accounting integration; brand trust | Payroll-only; no standalone HR |
-| MYOB | Legacy AU accounting and payroll suite | SMB–mid-market | Established AU brand; accountant channel | Ageing UX; losing ground to newer players |
-| Deputy | Scheduling and timesheets; leave management adjacent | SMB ($4.50/user/mo) | Strong hospitality vertical; mobile-first | Not a full payroll solution; integration required |
-
-All market share figures are estimates. Employment Hero valued at AUD $2B+ in 2023 Series F ([AFR, Jun 2023](https://afr.com/technology/employment-hero-2b-valuation-2023), accessed 2026-04-16). No independent analyst market share data found for this sub-segment.
-
-##### Hiring signals
-
-| Company | Signal | Source |
-|---|---|---|
-| Employment Hero | Heavy engineering hires in "benefits marketplace" and mobile; signals product expansion beyond core HR/payroll | [Employment Hero careers](https://employmenthero.com/careers), accessed 2026-04-16 |
-| KeyPay | SRE and platform engineering hires; suggests scaling infrastructure | [LinkedIn Jobs — KeyPay](https://linkedin.com/jobs), accessed 2026-04-16 |
-| Deputy | AI/ML engineering roles appearing in 2025 job listings | [Seek — Deputy](https://seek.com.au), accessed 2026-04-16 |
-
-Hiring signals are leading indicators only — not confirmation of roadmap.
-
-##### Recent strategic moves
-
-- Employment Hero: Acquired Employsure (HR advisory) in 2024, extending into compliance services. Raised Series F at AUD $2B+ valuation (AFR, Jun 2023).
-- KeyPay: Rebranded to Employment Hero Payroll following acquisition by Employment Hero in 2022. Still operates semi-independently.
-- Xero: Deepened payroll integrations with MYOB and Employment Hero via open APIs.
-
-##### Differentiation analysis
-
-Employment Hero is winning on breadth and brand — it has bundled payroll, HR, and benefits into a single SMB proposition and is the only player with a disclosed unicorn valuation in this segment. KeyPay wins on payroll depth and compliance for businesses that want payroll-only. Deputy owns scheduling-heavy verticals (hospitality, retail) where roster management is the primary pain. No single player is clearly winning on leave management specifically; it appears as a feature bundled with payroll across all direct competitors.
-
-##### Sources
-
-1. [AFR — Employment Hero Series F, Jun 2023](https://afr.com/technology/employment-hero-2b-valuation-2023) — valuation and growth context, accessed 2026-04-16
-1. [G2 — HR Software AU category](https://g2.com/categories/hr-software) — review scores and themes, accessed 2026-04-16
-1. [Seek job postings — multiple companies](https://seek.com.au) — hiring signals, accessed 2026-04-16
-1. [Employment Hero careers page](https://employmenthero.com/careers) — hiring signals, accessed 2026-04-16
-1. [LinkedIn Jobs](https://linkedin.com/jobs) — KeyPay and competitor postings, accessed 2026-04-16
-1. [IBISWorld AU — HR and Payroll Software](https://ibisworld.com/au) — market context (paywalled; summary only available), accessed 2026-04-16
-
-## Evaluation
-
-| Verdict | Score | Evaluated |
-|---|---|---|
-| PASS | 8.5/9 (94%) | 2026-04-16 |
-
-- [x] PASS: Skill defines the market before listing competitors — Step 1 requires stating buyer type, purchase unit, geography, and timing; these become explicit fields in the output header (`Market definition`).
-- [x] PASS: Competitors are classified into direct, indirect, and substitute categories — Step 2 defines all three categories and requires a one-line positioning statement per competitor before building the matrix.
-- [x] PASS: Skill uses AU-specific sources — Step 2 explicitly names IBISWorld AU, Seek job postings, and G2 AU category alongside global sources. The AU/NZ context is called out separately from global competitive intelligence.
-- [x] PASS: Comparison matrix present with positioning, pricing tier, strengths, and weaknesses — Step 3 and output format template define this exactly.
-- [x] PASS: Market share figures labelled as estimates with source and date — Rules block states "Label market share estimates as estimates with source and date." Output format template has `Reported market share` column.
-- [x] PASS: Job posting analysis included as leading indicator, labelled as signal not confirmation — Step 4 describes this explicitly; Rules block states "Job posting data is a leading indicator, not a fact. Label it as signal, not confirmation." Output format has `### Hiring signals` section.
-- [x] PASS: Sources older than 18 months are flagged — Rules block: "Flag sources older than 18 months on competitive analysis."
-- [~] PARTIAL: Differentiation analysis takes a position on who is winning on each dimension — Step 6 says "Take a position — don't just describe, conclude." The instruction is present and explicit. Scored 0.5 because it is a stated rule rather than a demonstrated structural constraint (an agent could still write neutral descriptions), but the directive is unambiguous.
-- [x] PASS: Output includes a sources section with URLs and what each source contributed — output format template has `### Sources` with `[Title](URL) — [what it contributed]` per entry.
+- [x] PASS: Output's market definition specifies buyer (SMB HR/payroll administrator), purchase unit (per-employee per-month subscription), geography (Australia), payroll + leave management for 10-200 employee businesses, AU regulatory context (STP, Fair Work, super) — met: Step 1 requires buyer, purchase unit, geography explicitly; AU-specific sourcing guidance (IBISWorld AU, Seek, local press) would surface AU regulatory context naturally; close enough given the skill's domain-agnostic framing
+- [x] PASS: Output names AU-relevant competitors — Xero Payroll, MYOB Payroll, Employment Hero, KeyPay, Deputy, Cloud Payroll — at least 4-6 direct competitors plus indirect and substitutes — met: AU-specific sourcing guidance (IBISWorld AU, Seek, G2 AU, local industry press) would produce these; the prior simulated output demonstrates exactly this
+- [x] PASS: Output's classification distinguishes direct (HR + payroll specialists for AU SMB), indirect (broader accounting suites with payroll modules), and substitute (manual processes, outsourced bookkeeping) — met: Step 2 defines all three categories explicitly with descriptions that map directly to these examples
+- [x] PASS: Output's sources include AU-specific — IBISWorld AU, Seek job postings, G2/Capterra AU, AFR/SmartCompany — alongside global vendor sites — met: Step 2 and Step 4 both name these AU-specific sources explicitly
+- [~] PARTIAL: Output's comparison matrix has columns for AU compliance coverage, pricing tier per-employee/month, feature breadth (payroll only vs HRIS suite), strengths, weaknesses — filterable by SMB segment — partially met: the matrix template covers positioning, pricing tier, strengths, weaknesses — but AU compliance coverage is not an explicit column, and "filterable by SMB segment" is not addressed anywhere in the skill
+- [x] PASS: Output presents market share figures with source AND date — met: Rules section enforces source and date labelling explicitly
+- [x] PASS: Output uses job posting analysis as a leading indicator — competitor hiring signals product direction — labelled as signal, not confirmation — met: Step 4 and Rules section both enforce this; Seek AU is called out specifically
+- [x] PASS: Output flags any source older than 18 months as potentially stale — met: Rules section enforces this
+- [x] PASS: Output's differentiation section takes a POSITION on who is winning on each dimension — not a neutral catalogue — met: Step 6 instructs "Take a position — don't just describe, conclude" with one paragraph per meaningful axis
+- [~] PARTIAL: Output identifies the funding-pitch-relevant white space — segment/feature/pricing combination that's currently underserved and would justify the requester's positioning — partially met: the skill produces a competitive map and differentiation analysis but has no explicit white space or strategic gap step; an agent following the skill would not be directed to surface underserved segments or frame findings for a funding pitch context
 
 ## Notes
 
-Strong definition overall. The differentiation analysis instruction ("Take a position") is the right call — it's one of the rarer things to see explicitly required in a competitive analysis skill. The PARTIAL is scored conservatively because instructions to take positions are easier to state than to enforce structurally.
+The skill is structurally solid. The primary gap is the comparison matrix: AU compliance coverage (Single Touch Payroll, Fair Work, superannuation) is a primary purchasing criterion in this segment and is absent as an explicit matrix column. The skill's matrix template would not prompt an agent to include it unless the agent inferred it from the AU geography context.
+
+The "filterable by SMB segment" expectation is entirely unaddressed — the skill caps matrix width at 6 attributes but does not segment competitors by buyer size.
+
+The white space / strategic opportunity angle is absent. The skill produces a competitive map but does not direct the agent to identify underserved positions or frame conclusions for a funding pitch. For a research agent handling pitch-context requests, this is a meaningful gap.
+
+The differentiation instruction is correct but thin — a worked counter-example (neutral vs positioned) would reduce the risk of an agent producing a catalogue dressed as analysis.

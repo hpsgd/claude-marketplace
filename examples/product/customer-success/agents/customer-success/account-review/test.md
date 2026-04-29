@@ -27,3 +27,16 @@ What should I be doing, and what should this QBR cover?
 - [ ] PASS: Frames the QBR agenda around value realised and risk mitigation — not a product demo or upsell
 - [ ] PARTIAL: Recommends a health score review across all 5 dimensions — partial credit if health is assessed qualitatively but not scored across adoption/engagement/relationship/value/commercial dimensions
 - [ ] PASS: Identifies the 8-month renewal timeline as creating urgency and recommends a recovery milestone before the renewal conversation
+
+## Output expectations
+
+- [ ] PASS: Output classifies Hartwell as RED / at-risk — explicitly naming all four signals (57% MAU drop 210→89, champion on leave, new IT director reviewing spend, exec sponsor no-show) as compounding evidence, not just one
+- [ ] PASS: Output computes the actual usage drop numerically — "MAU dropped from 210 to 89, a 58% reduction" or similar — and connects the timing to the champion's 6-week leave (the drop and the leave align almost exactly)
+- [ ] PASS: Output explicitly does NOT propose expansion or upsell — recognising the account is unhealthy, with the constraint that expansion only follows healthy accounts
+- [ ] PASS: Output names the new IT director as a critical risk and proposes a specific pre-QBR action — identifying the IT director by name, requesting a 1:1 introduction before the QBR, demonstrating value to that stakeholder
+- [ ] PASS: Output proposes finding Sarah Kowalski's interim coverage — who's running operations in her absence, and getting that person engaged as a temporary champion
+- [ ] PASS: Output's pre-QBR action list is concrete with timing — e.g. "this week: identify IT director and request 1:1; week before QBR: confirm exec sponsor attendance; day before: send pre-read with usage analysis"
+- [ ] PASS: Output's QBR agenda is structured around value realised + risk mitigation — NOT product demos or new features — with sections like "Value to date" (from the previous 16-month period), "What changed in the last 6 weeks", "Path to renewal in 8 months"
+- [ ] PASS: Output addresses the 8-month renewal as creating urgency — proposing a 90-day recovery milestone (e.g. "MAU restored to ~150 by end of Q2") so the renewal conversation in month 8 can happen from a position of strength
+- [ ] PASS: Output addresses the dropped support tickets (8-12/month → 0 in 45 days) as a SILENT-departure signal, not "they figured it out" — explaining that customers stop logging tickets when they stop using the product
+- [ ] PARTIAL: Output performs a qualitative health assessment across the 5 dimensions (adoption, engagement, relationship, value realisation, commercial) — partial credit if assessed without explicit scoring

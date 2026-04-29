@@ -1,136 +1,39 @@
-# Performance audit of the reports dashboard page
+# Output: Performance audit of the reports dashboard page
 
-Developer invokes the performance-audit skill against the `/app/reports/` directory, which contains a dashboard page component with several data visualisations and a large dependency bundle.
+**Verdict:** PASS
+**Score:** 14.5/15 criteria met (97%)
+**Evaluated:** 2026-04-29
 
-## Prompt
+## Results
 
-> Audit `src/app/reports/` for performance issues. The reports dashboard has been flagged as slow — Lighthouse shows LCP of 4.2s and the JS bundle on this page is unusually large. Users also report it feels sluggish when switching between report tabs.
+### Criteria
 
-## Output
+- [x] PASS: Skill performs all seven audit steps in order — bundle analysis, server vs client component analysis, re-render analysis, data fetching patterns, image optimisation, code splitting, and Tailwind/CSS — met: all seven steps present in sequence, each marked MANDATORY
+- [x] PASS: Skill uses actual investigation commands (grep for `'use client'` directives, ls for chunk sizes) — does not guess at findings — met: every step has concrete bash commands including `grep -rn "'use client'"` and `ls -la .next/static/chunks/`
+- [x] PASS: Skill identifies the LCP image and checks whether it has the `priority` prop — met: Step 5 image checklist explicitly covers "Priority for LCP image" with the `priority` prop check and failure mode defined
+- [x] PASS: Skill flags any data fetching in `useEffect` on a Next.js App Router page as a HIGH finding — met: Step 4 rules state "Never fetch in `useEffect` for data that's known at request time" and the Impact Scoring maps client-side fetches to HIGH
+- [x] PASS: Every finding is ranked HIGH/MEDIUM/LOW with rationale — met: Impact Scoring section defines criteria and examples for each level
+- [x] PASS: Skill does not recommend `useMemo`/`useCallback` prophylactically — met: Step 3 rules explicitly state "Do NOT add `useMemo`/`useCallback`/`React.memo` everywhere prophylactically. Only where measured re-renders cause visible jank"
+- [~] PARTIAL: Skill identifies whether `'use client'` boundaries are pushed as far down the component tree as possible — partially met: the rule is stated clearly and the decision matrix is present, but the investigation commands only surface all `'use client'` occurrences; no automated heuristic distinguishes components that could be split further
+- [x] PASS: Output includes a findings table with impact, category, location, and recommendation, plus a prioritised Quick Wins list — met: output format template defines exactly this table structure and a Quick Wins section
 
-**Step 1 — Bundle analysis:**
+### Output expectations
 
-```bash
-ls -la .next/static/chunks/ 2>/dev/null | sort -k5 -rn | head -20
-grep -rn "from '" src/app/reports/ --include="*.tsx" --include="*.ts" | grep -v "node_modules\|test\|spec" | sed "s/.*from '//;s/'.*//" | sort | uniq -c | sort -rn | head -20
-```
+- [x] PASS: Output's findings reference specific files in `src/app/reports/` with file:line citations — met: output format template shows file:line citations (e.g. `src/app/page.tsx:15-25`)
+- [x] PASS: Output's bundle analysis names the actual heavy dependencies with import-replacement recommendations — met: Step 1 checklist names moment, lodash (full), d3 with specific replacements (date-fns, lodash-es, lighter alternatives)
+- [x] PASS: Output investigates `'use client'` directive placement and identifies components that could be split or pushed deeper — met: Step 2 covers this with a decision matrix and common misplacements table with file path examples
+- [x] PASS: Output flags `useEffect`-based data fetching at page level as HIGH priority with server component recommendation — met: Step 4 rules and the Impact Scoring criteria classify this as HIGH; the recommendation to use async server components is explicit
+- [x] PASS: Output identifies the LCP image and verifies `priority` prop, with HIGH finding if missing — met: Step 5 checklist row marks absence as a fail; HIGH classification follows from the Impact Scoring criteria covering Core Web Vitals
+- [x] PASS: Output addresses the tab-switching sluggishness by investigating re-render patterns — met: Step 3 covers context updates re-rendering all consumers and state stored too high, which maps directly to a tab-state scenario
+- [x] PASS: Output's findings each have an impact ranking with a one-sentence rationale, not bare severity labels — met: Impact Scoring section requires rationale; the output format example shows rationale embedded in the findings table
+- [x] PASS: Output does NOT recommend `useMemo` or `useCallback` prophylactically — met: prohibition stated in Step 3 rules with explicit qualifier
+- [x] PASS: Output uses real investigation commands shown — met: all steps include concrete bash commands that would be executed, not guessed results
+- [~] PARTIAL: Output identifies code-splitting opportunities specific to the reports tree with expected bundle size reduction — partially met: Step 6 names chart libraries as dynamic import candidates and provides the `dynamic()` pattern; the output format does not require a quantified bundle size reduction estimate in findings
 
-Finding: `recharts` (350KB) imported directly in a `'use client'` component with no dynamic import. Full library loaded on page load.
-Finding: `lodash` imported as `import _ from 'lodash'` (full build, 71KB) rather than `import { groupBy } from 'lodash-es'`.
+## Notes
 
-Impact: HIGH — large client bundle directly contributes to 4.2s LCP by delaying JavaScript parse time.
+The skill is well-structured. Sequential mandatory steps with concrete commands prevent the common failure mode of producing speculative findings. The explicit prohibition on prophylactic `useMemo`/`useCallback` is a genuine quality signal — it requires the developer to measure before acting rather than applying memoisation as a reflex.
 
-**Step 2 — Server vs client component analysis:**
+The partial on `'use client'` boundary detection is minor. The decision matrix in Step 2 gives a clear framework for manual assessment, but there's no grep pattern that automatically identifies client components lacking the hooks that require client rendering.
 
-```bash
-grep -rn "'use client'" src/app/reports/ --include="*.tsx" --include="*.ts"
-```
-
-Finding: `src/app/reports/page.tsx` is marked `'use client'` at the top level. This ships the entire page (including static content, layout, and data) to the client.
-
-The `'use client'` boundary should be pushed DOWN the component tree — only the interactive tab switcher and chart components need client-side rendering. The page component, data loading, and static content should remain server components.
-
-Impact: HIGH — entire page client-rendered when only ~20% of it requires interactivity.
-
-**Step 3 — Re-render analysis:**
-
-```bash
-grep -rn "useMemo\|useCallback\|React.memo\|useContext" src/app/reports/ --include="*.tsx"
-```
-
-Finding: `ReportTabContext` updates on every tab switch, re-rendering all chart consumers simultaneously. This matches the "sluggish tab switching" symptom.
-
-NOT recommending `useMemo`/`useCallback` prophylactically. The context re-render issue has a measured symptom (visible jank on tab switch) and a structural fix: split the context into tab state (updates frequently) and report data (updates rarely).
-
-Impact: MEDIUM — affects perceived performance on tab switching.
-
-**Step 4 — Data fetching:**
-
-```bash
-grep -rn "useEffect.*fetch\|useQuery\|useSWR" src/app/reports/ --include="*.tsx" --include="*.ts"
-```
-
-Finding: `src/app/reports/page.tsx:42` — `useEffect(() => { fetch('/api/reports') }, [])`. This is a client-side fetch for data that is known at request time. In Next.js App Router, this should be a server component fetch with `async/await`.
-
-Impact: HIGH — client-side fetch means: (1) empty shell rendered first, (2) JS bundle loaded, (3) effect fires, (4) data arrives, (5) re-render. Server fetch eliminates steps 1-4 for initial load.
-
-**Step 5 — Image optimisation:**
-
-```bash
-grep -rn "<img\|<Image\|background-image" src/app/reports/ --include="*.tsx" --include="*.css"
-```
-
-Finding: `src/app/reports/_header.tsx:8` — `<Image src="/reports-hero.png" width={800} height={300} />` missing `priority` prop. Given LCP = 4.2s, this above-the-fold image is the likely LCP element.
-
-Impact: HIGH — LCP image lazy-loaded by default. Adding `priority` instructs Next.js to preload it.
-
-**Step 6 — Code splitting:**
-
-```bash
-grep -rn "dynamic(\|lazy(\|import(" src/app/reports/ --include="*.tsx" --include="*.ts"
-```
-
-Finding: no dynamic imports anywhere in `src/app/reports/`. Recharts and all chart components load synchronously on page load.
-
-Recommendation: `const ReportsChart = dynamic(() => import('./reports-chart'), { ssr: false, loading: () => <ChartSkeleton /> })`
-
-Impact: HIGH — defers chart library load until chart is visible.
-
-**Step 7 — Tailwind/CSS audit:**
-
-```bash
-grep -rn "\[.*px\]\|\[.*rem\]" src/app/reports/ --include="*.tsx" | grep "className"
-```
-
-Finding: 3 instances of arbitrary values (`w-[347px]`, `h-[210px]`, `mt-[13px]`). Design system inconsistency.
-
-Impact: LOW — cosmetic/maintainability issue.
-
----
-
-### Performance Audit: src/app/reports/
-
-#### Summary
-- Critical issues: 0
-- High impact: 4 (bundle size, full-page client, useEffect fetch, LCP image priority)
-- Medium impact: 1 (context re-renders)
-- Low impact: 1 (arbitrary Tailwind values)
-
-#### Findings
-
-| # | Impact | Category | Finding | Location | Recommendation |
-|---|---|---|---|---|---|
-| 1 | HIGH | Bundle | recharts (350KB) in client bundle, no dynamic import | `_chart.tsx:3` | `dynamic(() => import('./chart'), { ssr: false })` |
-| 2 | HIGH | Server/Client | Entire page marked `'use client'` — ships page to client | `page.tsx:1` | Remove `'use client'` from page, move to tab switcher component |
-| 3 | HIGH | Data fetching | `useEffect` + `fetch` for initial data on App Router page | `page.tsx:42` | Move to server component `async function Page()` |
-| 4 | HIGH | Images | LCP image missing `priority` prop | `_header.tsx:8` | Add `priority` to `<Image>` |
-| 5 | MEDIUM | Re-renders | TabContext updates re-render all chart consumers | `_tab-context.tsx` | Split context by update frequency |
-| 6 | LOW | Tailwind | 3 arbitrary values (`w-[347px]` etc.) | Various | Use standard scale values |
-
-#### Quick Wins
-1. Add `priority` to LCP image — 2 minutes, HIGH impact on LCP
-2. Move `useEffect` fetch to server component — 30 minutes, HIGH impact on TTFB
-3. Add `dynamic()` import for recharts — 20 minutes, HIGH impact on bundle
-
-## Evaluation
-
-
-| Field | Value |
-|---|---|
-| Verdict | PASS |
-| Score | 7.5/8 criteria met (94%) |
-| Evaluated | 2026-04-16 |
-
-
-- [x] PASS: Skill performs all seven audit steps in order — performance-audit SKILL.md "Process (sequential — every check is MANDATORY)" and all seven steps listed with investigation commands and checklists. Mandatory ordering is explicit.
-- [x] PASS: Skill uses actual investigation commands — SKILL.md provides specific bash commands in every step (ls, grep with flags and include patterns). Investigation before findings is required in each step.
-- [x] PASS: Skill identifies LCP image and checks priority prop — SKILL.md Step 5 checklist row: "Priority for LCP image — `priority` prop on the largest above-the-fold image / LCP image lazy-loaded." Rule: "The LCP (Largest Contentful Paint) image gets `priority` — never lazy-loaded."
-- [x] PASS: Skill flags useEffect data fetching as HIGH — SKILL.md Step 4 rules: "Never fetch in `useEffect` for data that's known at request time." Impact Scoring classifies "waterfall data fetching, client-side fetch that could be server-side" as HIGH.
-- [x] PASS: Every finding ranked HIGH/MEDIUM/LOW — SKILL.md Impact Scoring section defines all three levels with criteria and examples.
-- [x] PASS: Skill does not recommend useMemo/useCallback prophylactically — SKILL.md Step 3 rules: "Do NOT add `useMemo`/`useCallback`/`React.memo` everywhere prophylactically. Only where measured re-renders cause visible jank."
-- [~] PARTIAL: Skill identifies 'use client' boundaries pushed as far down as possible — SKILL.md Step 2 rules: "The `'use client'` boundary should be pushed as far DOWN the component tree as possible." The decision matrix covers this analysis explicitly. Maximum score is 0.5 per PARTIAL-prefixed criterion ceiling.
-- [x] PASS: Output includes findings table with impact/category/location/recommendation plus Quick Wins — SKILL.md Output Format defines findings table with exactly these columns and a separate Quick Wins section.
-
-### Notes
-
-The 'use client' boundary analysis (criterion 7) is well-supported in the definition — Step 2 has an explicit rule and a decision matrix for this. The PARTIAL ceiling is the test author's design choice. The context re-render finding (criterion 6) correctly avoids recommending `useMemo`/`useCallback` and instead recommends a structural fix (context splitting), which is what the definition's Step 3 guidance prescribes.
+The partial on bundle size reduction in code-splitting is also minor. The skill identifies what to split and why, but the output template does not require "expected bundle size reduction" as a column — findings are qualitative rather than quantified.

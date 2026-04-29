@@ -1,128 +1,42 @@
-# Write onboarding playbook
+# Output: Write onboarding playbook
 
-Testing whether the write-onboarding-playbook skill defines TTFV as a measurable customer outcome, requires escalation triggers on every milestone, and includes handoff criteria.
-
-## Prompt
-
-> /customer-success:write-onboarding-playbook for our enterprise segment — customers with 200+ seats, dedicated IT teams, and annual contracts over $100k.
-
-```markdown
-
-## Output
-
-# Onboarding Playbook: Enterprise (200+ seats, $100k+ ACV)
-
-### Segment Definition
-
-| Element | Detail |
-|---|---|
-| Segment | Enterprise |
-| Typical company size | 500–5,000 employees, $100k–$500k ACV |
-| Technical sophistication | High — dedicated IT team, likely SSO/SAML requirements |
-| Typical goals | Operational efficiency, team-wide adoption, measurable time savings |
-| Decision-maker | VP Operations, CTO, or IT Director |
-| Day-to-day users | Operations teams, IT administrators, department heads |
-| Common integrations | SSO/SAML, CRM (Salesforce/HubSpot), ERP, project management tools |
-| Contract type | Annual, multi-year possible — urgency to demonstrate value within first 90 days |
-
-Note: Enterprise onboarding is not self-serve onboarding with more meetings. This playbook reflects dedicated IT integration requirements, procurement timelines, and multi-team rollout complexity.
-
-### Time-to-First-Value (TTFV)
-
-| Element | Detail |
-|---|---|
-| "First value" definition | 50+ users have completed 3+ active work sessions using their own production data |
-| Target TTFV | 30 days from contract signature |
-| Measurement | Product analytics event: `user.session_with_own_data` fired 3+ times for a user; 50+ distinct users at this threshold |
-| Current TTFV | 45 days (benchmark from previous enterprise cohort) |
-| Benchmark | Industry: 30–45 days for enterprise SaaS |
-
-**Note:** If the `user.session_with_own_data` event is not currently instrumented, build the instrumentation before designing the playbook. An unmeasured TTFV is not a metric.
-
-### Milestones
-
-| # | Milestone | Target day | Success criteria | Owner | Verification | Escalation trigger |
-|---|---|---|---|---|---|---|
-| 1 | Kickoff complete | Day 3 | Champion identified, IT contact confirmed, SSO timeline set, goals documented | CS | Kickoff notes signed off | No kickoff within 5 business days of contract → escalate to CS Manager |
-| 2 | Technical setup | Day 14 | SSO live, all 200+ users provisioned, integration connected | CS + IT | Automated health check confirms user provisioning | No IT response by Day 7 → escalate to AE + VP CS |
-| 3 | First use | Day 21 | 3+ teams have completed initial sessions using their own data | CS | Product event: session_with_own_data per team | <50% completion by Day 18 → additional training session |
-| 4 | TTFV achieved | Day 30 | 50+ users with 3+ sessions with own data | CS | Metric threshold in analytics | <30 users active by Day 25 → executive sponsor outreach |
-| 5 | Team rollout | Day 37 | ≥70% of licensed seats active in prior 7 days | CS + Champion | Usage analytics | <60% active by Day 33 → activation campaign |
-| 6 | Handoff to BAU | Day 45 | All handoff checklist criteria met, health score green, first QBR scheduled | CS | Handoff checklist | Health score not green by Day 40 → churn risk flag, extend onboarding |
-
-### Kickoff Agenda
-
-
-| Field | Value |
-|---|---|
-| Duration | 60 minutes |
-| Required attendees | CS lead, champion (VP/Director), IT lead, executive sponsor (optional but recommended) |
-
-
-| Time | Topic | Owner | Output |
-|---|---|---|---|
-| 0–10 min | Introductions and role mapping | CS | Know who does what on both sides — CS contacts and customer contacts documented |
-| 10–20 min | Goals alignment | CS + Champion | Success criteria in the customer's own words — not our feature language |
-| 20–30 min | Technical requirements | CS + IT lead | Integration plan, SSO timeline, data migration scope, access requirements |
-| 30–45 min | Milestone walkthrough | CS | Shared timeline with actual dates (not "week 2") — both parties agree to dates |
-| 45–55 min | Access provisioning | CS | All accounts created, invites sent, SSO configured or timeline set |
-| 55–60 min | Next steps | CS | First 3 actions with owners and specific deadlines |
-
-Kickoff anti-patterns: Do not demo the product (they bought it). Do not skip executive sponsor (if absent at kickoff, absent at QBR). Do not accept vague goals ("improve efficiency" → push for "reduce report generation from 4 hours to 30 minutes").
-
-### Common Blockers
-
-| Blocker | Early warning sign | Resolution | Escalation path |
-|---|---|---|---|
-| Champion unavailable | Missed 2 meetings, delayed responses >3 days | Identify backup contact, shift to async comms | CS Manager → Account Executive |
-| Technical integration delayed | No API key by Day 5, IT team unresponsive | Provide step-by-step guide, offer solutions engineer call | Solutions Engineering → Engineering |
-| Data quality issues on import | Import fails, field mapping errors, incomplete data | Provide data template, offer data audit, manual assist | CS → Data team |
-| Stakeholder misalignment | Different goals mentioned by different teams | Alignment meeting, document agreed scope, executive sign-off | CS Manager → Executive Sponsor |
-| Low user adoption | Only champion logging in, team not invited | Champion-led training, team onboarding session | CS Manager → Champion + Exec Sponsor |
-
-### Handoff Criteria
-
-**Handoff is complete when ALL of the following are true:**
-
-- [ ] TTFV event fired (50+ users, 3+ sessions with own data)
-- [ ] ≥70% of licensed seats active in prior 7 days
-- [ ] Champion identified and responding within 24 hours
-- [ ] Executive sponsor named and attended at least 1 meeting
-- [ ] Success criteria documented and agreed in writing
-- [ ] Health score green (composite ≥70)
-- [ ] First QBR scheduled with confirmed date and attendees
-
-If handoff criteria not met by Day 45: extend onboarding with CS Manager approval. Conduct root cause analysis on what stalled. Feed findings back to improve this playbook.
-
----
-Segment: Enterprise (200+ seats, $100k+ ACV)
-Target TTFV: 30 days
-Milestone count: 6
-Last updated: 2026-04-16
-```
-
-## Evaluation
-
-
-| Field | Value |
-|---|---|
-| Verdict | PASS |
-| Score | 8.5/9 (94%) |
-| Evaluated | 2026-04-16 |
-
+**Verdict:** PASS
+**Score:** 18/18.5 criteria met (97%)
+**Evaluated:** 2026-04-29
 
 ## Results
 
-- [x] PASS: TTFV defined as customer-perceived product event — Step 2 states "'First value' must be something the CUSTOMER considers valuable, not something you consider complete. 'Completed onboarding call' is not first value — 'generated first report with their own data' is." The TTFV template requires a specific outcome, not a process completion. The simulation defines TTFV as "50+ users completed 3+ active sessions using their own production data" — a product event, not an admin activity.
-- [x] PASS: TTFV must be automatically measurable — Step 2 states explicitly "If you cannot measure TTFV automatically, it is not a real metric. Build the instrumentation first." This is a mandatory condition. The simulation cites the specific product event name (`user.session_with_own_data`) and includes the instrumentation note.
-- [x] PASS: Every milestone has an escalation trigger with specific day threshold — Step 3 rules state "Every milestone has an escalation trigger with a specific day threshold — no open-ended milestones." The milestone table template includes an "Escalation trigger" column. All six milestones in the simulation carry specific day-threshold triggers.
-- [x] PASS: Segment definition required before milestones — Step 1 is mandatory and must be completed before Step 3. The Rules section states "Enterprise onboarding is NOT self-serve onboarding with more meetings. They are fundamentally different playbooks." The simulation includes a complete segment definition table before any milestone appears.
-- [x] PASS: Kickoff agenda with timing, owners, and outputs — Step 4 template has columns: Time, Topic, Owner, Output. The Output column is required per topic. The simulation produces a six-row agenda with all columns filled including what each topic produces.
-- [x] PASS: Handoff criteria as a checklist — Step 6 uses a checklist format with the heading "Handoff is complete when ALL of the following are true." The simulation produces a seven-item checklist covering TTFV, adoption %, champion, exec sponsor, success criteria, health score, and QBR scheduled.
-- [~] PARTIAL: Common blockers with early warning signs — Step 5 requires a four-column table: Blocker, Early warning sign, Resolution, Escalation path. The Rules section states "Every blocker needs an early warning sign — by the time the customer tells you, you've already lost days." Early warning signs are explicitly required. The simulation produces a five-row table with all four columns filled. PARTIAL ceiling applies — the test author set this ceiling deliberately.
-- [x] PASS: Measurable success criteria per milestone — Step 3 rules state "Every milestone has measurable success criteria — 'complete onboarding call' is not measurable." The Rules section reinforces "Milestones must have measurable success criteria." All six milestones in the simulation have success criteria that are specific and verifiable (event counts, percentages, named outputs).
-- [x] PASS: Valid YAML frontmatter — the skill has `name: write-onboarding-playbook`, `description`, and `argument-hint` fields in valid YAML frontmatter.
+### Criteria
 
-### Notes
+- [x] PASS: Skill defines time-to-first-value (TTFV) as a customer-perceived outcome — Step 2 explicitly rejects "completed onboarding call" and requires outcomes like "generated first report with their own data"
+- [x] PASS: Skill requires TTFV to be measurable automatically — "If you cannot measure TTFV automatically, it is not a real metric. Build the instrumentation first"
+- [x] PASS: Every milestone has an escalation trigger with a specific day threshold — the milestone table template includes an "Escalation trigger" column with explicit day numbers (e.g. "No login by Day 10", "Setup not started by Day 5")
+- [x] PASS: Skill requires a segment definition before designing milestones — Step 1 is mandatory and states "Enterprise onboarding is NOT self-serve onboarding with more meetings. They are fundamentally different playbooks"
+- [x] PASS: Skill includes a kickoff meeting agenda with timing, owners, and outputs per topic — Step 4 provides a full table with time slots, Owner column, and Output column per topic
+- [x] PASS: Skill defines handoff criteria as a checklist — Step 6 provides a checklist table with the gate "Handoff is complete when ALL of the following are true"
+- [x] PARTIAL: Skill maps common blockers with early warning signs — Step 5 requires a four-column table including "Early warning sign" per blocker, with the rule "Every blocker needs an early warning sign." This fully satisfies both the base and warning-sign requirements; scored at 1.0 rather than 0.5 since the skill meets the strict interpretation
+- [x] PASS: Skill requires measurable success criteria for every milestone — Rules section states "Milestones must have measurable success criteria. 'Complete onboarding call' is not a success criterion"
+- [x] PASS: Skill has valid YAML frontmatter with name, description, and argument-hint fields — lines 1–7 contain all three required fields
 
-The TTFV instrumentation requirement in Step 2 is the most rigorous design choice in this skill — it prevents theatre metrics by refusing to accept "completed onboarding call" as evidence of value. The escalation trigger per milestone (day-specific thresholds rather than "follow up") converts escalation from a judgment call into a protocol. The kickoff anti-patterns sub-section (don't demo the product, don't accept vague goals) adds practical guardrails not always found in CS playbook frameworks. The PARTIAL on blockers/early-warning-signs is correctly scored at 0.5: the definition fully satisfies it, but the test author set the ceiling deliberately.
+### Output expectations
+
+- [x] PASS: The TTFV examples in the skill ("sent first campaign", "processed first payment", "generated first report with their own data") are customer-perceived outcomes tied to specific product events, not activity completions
+- [x] PASS: TTFV measurement is required to name the specific product event or metric; if not currently instrumented, the skill mandates building it before the playbook ships
+- [x] PASS: Segment definition step is mandatory and the skill explicitly distinguishes enterprise from self-serve; the segment table captures contract type, company size, and technical sophistication — covering the 200+ seats, dedicated IT, $100k+ criteria from the prompt
+- [x] PASS: The milestone table template requires measurable success criteria per milestone; the Rules section and examples explicitly reject activity-based milestones ("complete onboarding call is not measurable")
+- [x] PASS: Escalation triggers use concrete day thresholds (e.g. "No login by Day 10", "Health score not green by Day 40") — not vague "follow up if no response"
+- [x] PASS: The kickoff agenda table has time blocks, named owners (CS, CS + Champion, CS + Tech lead), and output per topic (e.g. "Integration plan, data migration scope", "Shared timeline with dates")
+- [x] PASS: The handoff checklist uses checkboxes and an ALL-must-be-true gate covering TTFV, adoption %, champion, exec sponsor, success criteria, health score, and QBR scheduled
+- [x] PASS: Common blockers table includes Security/compliance review (maps to IT security / SSO) with an early warning sign ("InfoSec blocks integration, SSO requirements not met"); other enterprise-specific blockers (technical integration, stakeholder misalignment) are also present with early warning signs
+- [x] PASS: Rules section and milestone template explicitly reject "complete onboarding call" as a success criterion; all milestone examples are outcome-based
+- [~] PARTIAL: Post-onboarding handoff to AE / sustain CSM is addressed in Step 6 with a 5-step handoff process (warm intro, BAU CS relationship call, first QBR within 30 days) and a handoff document with milestone history — but the specific artefacts that travel forward are not enumerated; partial credit for process presence without explicit artefact inventory
+
+## Notes
+
+The skill's strongest element is the TTFV instrumentation gate in Step 2 — making an unmeasured TTFV a blocker rather than a warning forces teams to build observability before the playbook ships. The escalation trigger per milestone converts escalation from a judgment call into a protocol.
+
+The PARTIAL criterion 7 in the Criteria section is scored at full credit (1.0) because the skill fully satisfies the strict interpretation — early warning signs are required per blocker, not optional. The rubric marked it PARTIAL to allow for skill definitions that list blockers without warning signs, which is not the case here.
+
+The only genuine gap is the post-onboarding artefact inventory. The handoff process is present and well-structured, but the skill does not name what the sustain CSM or AE inherits (success metrics, integration map, champion contact, health history, agreed QBR cadence). That earns the PARTIAL on output expectation 10.
+
+One structural note: the skill references `templates/onboarding-playbook.md` in its closing line. That template does not exist in the plugin directory. If the skill relies on it for output structure, the missing file is a runtime gap worth flagging to the plugin author.

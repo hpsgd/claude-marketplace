@@ -16,3 +16,16 @@ Implement from this spec: A `StatusBadge` component that displays an order statu
 - [ ] PASS: All states are handled — the component renders correctly for all 5 status values plus any edge cases (unknown status)
 - [ ] PASS: Component uses standard Tailwind classes — no arbitrary values like `bg-[#f5a623]`
 - [ ] PASS: Output includes component file, co-located test file, barrel export update, and evidence of tests passing with exit code
+
+## Output expectations
+
+- [ ] PASS: Output's `status` prop is typed as a union of exactly the five literal strings — `'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled'` — not a generic string
+- [ ] PASS: Output's status-to-colour mapping is a lookup object or `clsx`/`cva` variant map covering all five statuses (pending=yellow, processing=blue, shipped=purple, delivered=green, cancelled=red), not an if/else chain
+- [ ] PASS: Output's `size` prop is typed `'sm' | 'md' | 'lg'` with `'md'` as the default value (via destructuring default), not just documented as the default
+- [ ] PASS: Output handles unknown/invalid status values gracefully — either via TypeScript-narrowed exhaustive union (compile-time) plus a runtime fallback (neutral grey badge) — not an uncaught error
+- [ ] PASS: Output uses standard Tailwind utility classes for colours (e.g. `bg-yellow-100 text-yellow-800`), not arbitrary hex values like `bg-[#f5a623]`
+- [ ] PASS: Output uses semantic HTML — a `<span>` with `role="status"` or text content that screen readers announce ("Order pending"), not just a coloured div with no accessible name
+- [ ] PASS: Output's tests render the component once per status value and assert the visible text and the applied class — at minimum 5 tests for happy paths plus an unknown-status fallback test
+- [ ] PASS: Output writes the failing Vitest test before implementation — RED command and exit code 1 shown — then implementation, then GREEN with exit code 0
+- [ ] PASS: Output supports the optional `className` prop and merges it with internal classes via `clsx`/`cn` so consumers can extend without overriding
+- [ ] PARTIAL: Output exports the `StatusBadgeProps` type publicly so order-list-table and order-detail consumers can compose with it (`Pick<StatusBadgeProps, 'status'>` etc.)

@@ -16,3 +16,16 @@ Review the write-pipeline skill definition and verify it produces CI/CD pipeline
 - [ ] PASS: Skill requires security scan stage — dependency audit at HIGH/CRITICAL level and SAST/container image scanning if applicable
 - [ ] PASS: Skill prohibits watch mode in CI and requires CI=true or --run flag for test commands
 - [ ] PARTIAL: Skill addresses monorepo CI with change detection, selective execution, and dependency graph awareness
+
+## Output expectations
+
+- [ ] PASS: Output is structured as a verification of the skill (verdict per requirement) rather than producing a sample workflow
+- [ ] PASS: Output verifies the stage order — lint/format → build → unit tests → integration tests → security scan → deploy — with fail-fast reasoning quoted or explained
+- [ ] PASS: Output confirms the under-10-minute fast-path target (lint + build + unit tests) and that this is enforced, not aspirational
+- [ ] PASS: Output verifies the cache-key-from-lockfile-hash rule and the 80% cache hit rate threshold flag
+- [ ] PASS: Output confirms the security requirement to pin GitHub Actions to full commit SHAs (40-character hex), not tags or branches, with the supply-chain reasoning explicit
+- [ ] PASS: Output verifies deploy-from-main-only after all checks pass, and that deployment from feature branches is rejected
+- [ ] PASS: Output confirms the security scan stage covers dependency audit (HIGH/CRITICAL severity threshold) and SAST/container image scanning where applicable
+- [ ] PASS: Output verifies the watch-mode prohibition — CI=true env var or --run flag for test commands, never default watch mode that hangs the runner
+- [ ] PASS: Output confirms monorepo handling addresses change detection, selective execution, and dependency graph awareness
+- [ ] PARTIAL: Output identifies any genuine gaps — e.g. no concurrency-control guidance (cancel-in-progress on PR push), no artifact retention policy, no required-status-check ruleset for branch protection

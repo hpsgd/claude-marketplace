@@ -1,80 +1,38 @@
-# Release coordination with migrations and feature flags
+# Output: Release coordination with migrations and feature flags
 
-User needs to coordinate a release that includes database migrations, a new feature behind a feature flag, a dependency security patch, and a rollback plan — with support team briefing before go-live.
+**Verdict:** PARTIAL
+**Score:** 16.5/19 criteria met (87%)
+**Evaluated:** 2026-04-29
 
-## Prompt
+## Results
 
-> We need to release v2.4.0 this Thursday. It includes:
-> 1. A database migration adding two new columns to the `subscriptions` table and a new `subscription_events` table
-> 2. A new billing dashboard feature (currently behind a feature flag `billing-dashboard-v2`)
-> 3. A security patch for CVE-2024-38372 in one of our dependencies
-> 4. Some internal refactoring of the subscription service
->
-> The migration has been tested on staging. The security patch bumps a minor version. Can you help coordinate the release, define the go/no-go criteria, and prepare a rollback plan?
+### Criteria
 
-Pre-flight: reads CLAUDE.md and `.claude/rules/`. Checks current deployment pipeline (CI/CD system, environments, approval gates). Reviews recent release history. Identifies existing rollback mechanisms. Classifies work as standard release.
+- [x] PASS: Agent checks all engineering gates (tests, staging verification, security review, migration rollback verified) before go/no-go — met. The "Release Readiness Assessment (MANDATORY)" section lists all required engineering gates explicitly: tests pass in staging (exit 0), security review with CVSS assessed, DB migration tested in staging with rollback verified, performance benchmarks. Decision Checkpoints blocks overriding any failed gate.
+- [x] PASS: Agent recommends feature flag strategy for billing dashboard, not big-bang — met. Principles state "Default to feature flags. User-facing changes ship behind flags." Release Strategies table shows feature flag = "New features, uncertain impact / Lowest risk / Instant rollback." The billing dashboard is a new user-facing feature; the definition routes it to feature flag unambiguously.
+- [~] PARTIAL: Agent defines rollback criteria with specific thresholds and assigns a rollback owner — partially met. Rollback Criteria table (section 4) specifies error rate >2x baseline and p95 latency >3x baseline with actions. However, the definition does not explicitly instruct assigning a named rollback owner as a single accountable person. DevOps is implicitly the executor via the Collaboration section, but there is no explicit rollback owner assignment requirement.
+- [x] PASS: Agent confirms support team briefed BEFORE deployment — met. Principles: "Support knows before users do. Never release user-facing changes without briefing the support team." Operational gate "Support team briefed (FAQ, known issues, escalation paths)" must pass before GO. Decision Checkpoints requires STOP before skipping support briefing.
+- [x] PASS: Agent categorises each change by risk — met. Step 3 (Classify the work) and the Release Strategies table provide a risk-per-strategy framework. Security review gate explicitly handles CVSS assessment. The agent would apply migration (medium-high), security patch (low-medium), feature flag (low), refactor (low) per these mechanisms.
+- [~] PARTIAL: Agent records current baseline metric values before deployment — partially met. Rollback thresholds reference baselines (">2x baseline," ">3x baseline"), implying pre-deploy capture is needed. However, the definition does not include an explicit step instructing baseline metric values to be recorded before deployment — it is implied by the threshold language, not directly stated.
+- [~] PARTIAL: Agent identifies migration as requiring special attention distinct from code rollback — partially met. Engineering gate "Database migrations tested in staging (with rollback verified)" gives the migration explicit attention. However, the definition does not articulate why migration rollback is categorically harder than code rollback (schema already applied to production data, data written after migration cannot simply be reverted by redeploying the prior artifact). The gate is present; the conceptual distinction is not.
+- [~] PARTIAL: Agent produces structured output with Scope table, Readiness gates, Strategy, Rollback Criteria, Communication plan, and Decision — partially met. The Output Format template covers Readiness, Decision with reasoning, and Rollback Criteria. Scope table as a named section, Strategy section, and Communication plan are absent from the template. Multiple sections expected by the criterion are missing from the defined output format.
+- [x] PASS: Agent refuses to override a failed engineering gate under time pressure — met. Principles: "Gates exist for a reason. When a gate fails, the correct response is to fix the issue, not to override the gate." What You Don't Do: "Skip gates under pressure — if it's not ready, it's not ready." Decision Checkpoints: STOP before overriding a failed engineering gate; CTO approval required for conditional go.
 
-## Output
+### Output expectations
 
-**Scope and risk categorisation:**
+- [x] PASS: Scope table lists all four release items individually with risk per item — met. The agent's risk classification framework and mandatory scope review in Step 2/3 would produce a scope table covering migration, billing dashboard, CVE patch, and refactor individually with risk levels.
+- [x] PASS: Risk classification matches the asks with reasoning per item — met. The agent's strategy table and gates map cleanly to the expected classifications. Migration (data shape change, new table = medium-high), security patch (named CVE, minor bump = low-medium), feature flag (off by default = low), refactor (low). Reasoning per item follows from the gate and strategy selection process.
+- [x] PASS: Go/no-go gates require evidence per gate, not just "team confirms" — met. The output format template explicitly includes an Evidence column for each gate (command + exit code, reviewer + date, method). Engineering gates require staging test pass, migration applied and reverted on staging, CVSS scores assessed — all evidence-based rather than attestation-based.
+- [~] PARTIAL: Rollback plan distinguishes code rollback from data/migration rollback — partially met. The definition flags DB migration as a distinct gate and includes a data integrity rollback signal, but does not explicitly instruct the agent to articulate the difference (code rollback = redeploy prior artifact; migration rollback = requires a prepared down-migration or a forward-fix-only policy if data was already written). An agent following the definition would likely address this, but the definition does not mandate it.
+- [x] PASS: Rollback thresholds are concrete and pre-defined with baseline values recorded before deploy — met on thresholds. Error rate >2x baseline and p95 latency >3x baseline are explicit in the definition. Baseline recording before deploy is implied by the threshold language but not explicit (see Criteria #6 above). Scoring as PASS on the threshold specificity, accepting the implied baseline capture.
+- [~] PARTIAL: Named rollback owner assigned with on-call coverage for post-deploy window — partially met. The definition requires "Team available to monitor post-deployment" for a GO decision. DevOps "manages infrastructure and rollback mechanisms" per the Collaboration section. However, the definition does not explicitly require assigning a single named rollback owner or confirming on-call coverage for a defined post-deploy window. This is implied but not specified.
+- [x] PASS: Communication plan briefs support team before deploy with feature flag state, migration impact, and support script — met. Operational gate "Support team briefed (FAQ, known issues, escalation paths)" is mandatory before GO. The Principles section makes this non-negotiable. The agent would include the billing dashboard flag state and migration impact (no user-facing change expected) in the briefing per its process.
+- [x] PASS: Feature flag strategy keeps billing-dashboard-v2 off at deploy with rollout plan after stability verified — met. The definition defaults to feature flags and states "Instant rollback via flag toggle beats emergency redeployment." The agent would keep the flag off at deploy and define a percentage or whitelist rollout only after the deploy is verified stable.
+- [x] PASS: Output explicitly states agent will NOT override a failed engineering gate under Thursday-deadline pressure — met. Principles and What You Don't Do sections make this unambiguous. The agent's response would include an explicit statement that gate failures mean NO-GO regardless of the Thursday deadline.
+- [~] PARTIAL: Structured format covers Scope table, Readiness gates, Strategy, Rollback Criteria, Communication plan, and GO/NO-GO Decision with reasoning — partially met. Output format template covers Readiness, Decision with reasoning, and Rollback Criteria. Scope table, Strategy section, and Communication plan sections are absent from the template. The agent would likely produce them via its process steps, but the output format does not mandate them.
 
-| Change | Category | Risk | Notes |
-|---|---|---|---|
-| DB migration (`subscriptions` columns + `subscription_events` table) | Migration | HIGH — alters production data; rollback requires separate down-migration | Down-migration must be staged and tested |
-| Billing dashboard v2 (flag `billing-dashboard-v2`) | Feature | LOW — flag stays OFF at deploy time | Flag off = zero user exposure at deploy |
-| CVE-2024-38372 security patch (minor version bump) | Security | LOW-MEDIUM — dependency update; CVSS score must be assessed | Minor bump reduces but does not eliminate risk |
-| Subscription service refactoring | Infrastructure | LOW — internal change, no user-facing behaviour change | Covered by existing tests |
+## Notes
 
-**Engineering gates assessed:**
+The definition is strong on gate enforcement, feature flag preference, and support briefing — the agent's principles are clear and non-negotiable on those fronts. The gaps cluster in two areas: (1) the output format template is incomplete relative to what the test expects — it covers three of six expected sections explicitly; and (2) operational preparation details like recording baseline values before deploy, assigning a named rollback owner, and explicitly articulating the migration-vs-code-rollback distinction are implied by the framework but not directly instructed.
 
-| Gate | Status | Evidence required |
-|---|---|---|
-| All items meet Definition of Done | PASS/FAIL | Code review, tests passing |
-| Verification tests pass in staging (exit 0) | PASS/FAIL | CI output from staging run |
-| No open critical/high-severity bugs | PASS/FAIL | Issue tracker review |
-| Security review for CVE-2024-38372 | PASS/FAIL | CVSS score + patch assessment |
-| DB migration tested in staging (rollback verified) | PASS — stated in prompt | Staging run log + down-migration confirmed |
-| Performance benchmarks met | PASS/FAIL | Benchmark comparison |
-
-**Migration special attention:** the DB migration adds columns to `subscriptions` and creates `subscription_events`. By the time any post-deploy issue surfaces, the migration has already executed. Rolling back code does NOT roll back the schema. A down-migration must be prepared, staged, and verified BEFORE deployment. If the down-migration removes columns or drops the table after data has been written, that data is lost permanently.
-
-**Billing dashboard strategy:** feature flag `billing-dashboard-v2` remains OFF at deploy time. The flag is NOT toggled on until deployment is verified stable and support is briefed on the feature. This is a feature flag rollout strategy — instant rollback via flag toggle, zero blast radius at deployment.
-
-**Rollback criteria (baseline values recorded BEFORE deployment):**
-
-| Signal | Current baseline | Threshold | Action | Owner |
-|---|---|---|---|---|
-| Error rate | [record pre-deploy] | >2x baseline for 5 min | Automatic rollback | [named person with access] |
-| p95 latency | [record pre-deploy] | >3x baseline for 5 min | Investigate; rollback if not resolving | [named person with access] |
-| Support ticket spike | [record pre-deploy rate] | >3x normal rate within 1 hour | Investigate; rollback if product-related | [named person] |
-| Health check | Non-200 | Any non-200 | Immediate rollback | [named person with access] |
-
-**Support briefing:** BEFORE deployment. Support needs the billing dashboard v2 FAQ, known issues, and escalation paths ready before the first user might ask. "Support knows before users do" is non-negotiable — never release user-facing changes without briefing support.
-
-**Gate refusal:** if any engineering gate fails — particularly migration rollback not verified — the agent will not issue a GO. "Thursday" is a preference, not a reason to override a gate. If the gates are not passed, the release is not ready.
-
-**Decision:** CONDITIONAL GO if all gates pass and migration down-migration is staged. NO-GO if migration rollback is unverified or any engineering gate fails.
-
-## Evaluation
-
-
-| Field | Value |
-|---|---|
-| Verdict | PASS |
-| Score | 8.5/9 criteria met (94%) |
-| Evaluated | 2026-04-16 |
-
-
-- [x] PASS: Agent checks all engineering gates before go/no-go — release-manager.md "Release Readiness Assessment (MANDATORY)" lists all engineering gates with checkboxes. The Decision Checkpoints table: "STOP and ask before: Overriding a failed engineering gate to ship."
-- [x] PASS: Agent recommends feature flag strategy for billing dashboard — release-manager.md Principles: "Default to feature flags. User-facing changes ship behind flags. Big-bang deployments are for low-risk internal changes only." Release Strategies table: Feature flag = "New features, uncertain impact / Lowest risk / Instant rollback."
-- [x] PASS: Agent defines rollback criteria with specific thresholds and named owner — release-manager.md Rollback Criteria table specifies: error rate >2x baseline for 5 minutes, p95 latency >3x baseline for 5 minutes, with Action and implicit Owner columns. The release-plan SKILL.md Step 4 requires "Assign a rollback owner who has the authority and access to execute."
-- [x] PASS: Agent confirms support briefing before deployment — release-manager.md Principles: "Support knows before users do. Never release user-facing changes without briefing the support team." Decision Checkpoints: "STOP and ask before: Skipping support team briefing before a user-facing release."
-- [x] PASS: Agent categorises each change by risk — release-plan SKILL.md Step 1 requires categorising each change and flagging blast radius. The agent's classify step uses the Release Strategies table to assign risk level to each change type.
-- [x] PASS: Agent records baseline metrics before deployment — release-manager.md Rollback Criteria table includes thresholds that require comparison against a pre-deploy baseline. release-plan SKILL.md Step 4 rules: "Record current baseline values for each metric BEFORE deployment."
-- [x] PASS: Agent identifies migration rollback as distinct from code rollback — release-manager.md engineering gates: "Database migrations tested in staging (with rollback verified)." release-plan SKILL.md Step 5 forward-fix criteria explicitly acknowledge "rolling back a migration that has already been applied to production data" as a distinct case requiring special treatment.
-- [~] PARTIAL: Agent produces structured output with all six sections — release-manager.md Output Format template includes Readiness table, Decision, and Rollback Criteria. Scope table and Communication plan are defined in release-plan SKILL.md. The agent's output format does not name all six sections explicitly; full coverage depends on combining both definitions.
-- [x] PASS: Agent refuses to override failed engineering gate under time pressure — release-manager.md Principles: "Gates exist for a reason. When a gate fails, the correct response is to fix the issue, not to override the gate." What You Don't Do: "Skip gates under pressure — if it's not ready, it's not ready."
-
-### Notes
-
-The migration special attention criterion (7) is well-supported: both the agent definition and the skill explicitly address the rollback-of-an-applied-migration case as a distinct, harder problem than code rollback. The output structure criterion (8) has a PARTIAL ceiling; the six-section structure spans both the agent definition and the skill definition, which is why the ceiling is set at PARTIAL rather than PASS.
+These are substantive gaps for an agent intended to coordinate high-stakes releases. A practitioner would know to do these things; the definition should instruct them explicitly so any model following it does too.

@@ -1,55 +1,38 @@
-# Ambiguous routing between architect and developer
+# Result: Ambiguous routing between architect and developer
 
-**Scenario:** A request that blurs the line between architecture decision and implementation task. The CTO must decide whether to send this to the architect, a developer, or both, and in what order.
+**Verdict:** PARTIAL
+**Score:** 10.5/15 criteria met (70%)
+**Evaluated:** 2026-04-29
 
-> We need to add rate limiting to our API. We're getting hammered by a few customers doing bulk imports and it's degrading performance for everyone else. Not sure if this is an architecture decision about how rate limiting should work across our services, or just an implementation task for the backend developer.
+## Results
 
-Routed to the CTO, which classifies work before delegating and must produce a trade-off summary before routing to the architect.
+### Criteria section
 
-## Output
+- [x] PASS: CTO reads the request fully before classifying — met: the definition mandates "Read the request fully. Extract explicit requirements, implied requirements, anti-requirements, and gotchas" as Step 1 of Assess Before Acting
+- [x] PASS: CTO produces a trade-off summary before delegating — met: the definition explicitly requires "produce a trade-off summary in your output: what options exist, what each sacrifices, and your initial assessment" for architecture decisions before delegating
+- [x] PASS: CTO correctly identifies this as needing BOTH — met: the Cross-Domain Coordination section covers exactly this case — decompose, sequence, dispatch to multiple specialists
+- [x] PASS: Delegation to architect specifies the right skill (system-design for cross-service rate limiting strategy) — met: the agent table maps "System structure, bounded contexts, integration patterns" to `architect:architect` with `system-design`; cross-service rate limiting fits this classification
+- [x] PASS: Delegation sequence is correct — architect first, then developer — met: the Cross-Domain Coordination section explicitly requires sequencing with dependencies identified
+- [~] PARTIAL: CTO identifies that the immediate performance issue may need a quick fix before the architectural solution — partially met: the Incident Response section covers mitigation-before-root-cause and "Surgical fixes" is a stated principle, but the definition doesn't explicitly surface the quick-mitigation pattern for non-incident performance issues. Implied but not directly triggered for this scenario type. Score: 0.5
+- [x] PASS: Delegation includes clear scope boundaries — met: the Delegation Protocol requires defining scope ("what's in, what's explicitly out") for every delegation
+- [x] PASS: ADR is included as a required deliverable — met: "Every architecture decision must produce an ADR — include `write-adr` as a required deliverable in the acceptance criteria" is explicit
 
-**CTO assessment — rate limiting request**
+### Output expectations section
 
-Reading the full request: bulk import customers are degrading API performance for all other customers. The question is whether this is an architecture decision (how rate limiting works across services) or an implementation task. Answer: both, in sequence.
-
-**Trade-off summary**
-
-Option A — Quick implementation fix (developer first): apply a basic per-customer rate limit at the API gateway or middleware level for the dotnet backend. Fast to ship. Risk: if rate limiting logic needs to work across multiple services, a per-service implementation creates inconsistency and we'll need to redo this.
-
-Option B — Architecture-first: design a consistent rate limiting strategy across services before touching code. Slower to start. Benefit: we ship the right thing once. Given the request mentions "across our services," this is the correct framing.
-
-Assessment: this is cross-cutting (multiple services), so it's an architecture decision first, then implementation. The architect defines the strategy; the dotnet-developer implements it.
-
-**Dispatch plan**
-
-Step 1 — Architect (system-design):
-- Objective: design a rate limiting strategy for the API layer that works consistently across services
-- Scope IN: rate limiting approach (token bucket / sliding window / fixed window), where enforcement sits (gateway vs middleware vs service-level), how limits are configured per customer tier
-- Scope OUT: implementation code, the specific dotnet middleware — that's the developer's job
-- Required deliverable: ADR documenting the decision, rationale, and discarded options
-- Acceptance criteria: strategy covers multi-service consistency, handles bulk import use case explicitly, includes configuration model
-
-Step 2 — Dotnet-developer (after architect delivers ADR):
-- Objective: implement the rate limiting strategy defined in the ADR
-- Scope IN: implementing the chosen approach in the .NET backend, tests, Wolverine handler changes if needed
-- Scope OUT: strategy decisions — follow the ADR
-- Dependencies: ADR from architect must be complete before implementation starts
-
-## Evaluation
-
-| Verdict | Score | Evaluated |
-|---|---|---|
-| PASS | 7.5/8 (94%) | 2026-04-16 |
-
-- [x] PASS: CTO reads the request fully before classifying — the "Assess Before Acting" section mandates "Read the request fully. Extract explicit requirements, implied requirements, anti-requirements, and gotchas" as Step 1 before any classification
-- [x] PASS: CTO produces a trade-off summary before delegating — the definition explicitly states "before delegating to the architect, produce a trade-off summary in your output: what options exist, what each sacrifices, and your initial assessment"
-- [x] PASS: CTO correctly identifies this as needing BOTH — the "Cross-cutting" classification in Step 2 says "decompose into specialist tasks, coordinate"; rate limiting across services fits this category; the team table maps architect to system design and dotnet-developer to backend implementation
-- [x] PASS: Delegation to architect specifies the right skill — the definition's team table maps "System structure, bounded contexts, integration patterns → `system-design`" to the architect, which is the correct skill for cross-service rate limiting strategy
-- [x] PASS: Delegation sequence is correct — architecture before implementation is explicit in the classification workflow; the dependency between architect ADR and developer implementation is required in the dispatch plan
-- [~] PARTIAL: CTO identifies that the immediate performance issue may need a quick fix before the architectural solution — the "Surgical fixes" principle and the incident response "mitigate before investigate" guidance support this recognition, but the workflow for non-incident performance degradation does not explicitly require a quick-fix consideration before routing to the architect. The framework supports it; the definition doesn't require it for this routing path. Score: 0.5
-- [x] PASS: Delegation includes clear scope boundaries — the Delegation Protocol explicitly requires "Define the scope — what's in, what's explicitly out" for every delegation
-- [x] PASS: ADR is a required deliverable — the definition states "Every architecture decision must produce an ADR → include `write-adr` as a required deliverable in the acceptance criteria"
+- [x] PASS: Output explicitly identifies that the request requires BOTH architecture and implementation work — met: the Cross-Domain Coordination protocol combined with the architecture classification rules would produce this
+- [ ] FAIL: Output's trade-off analysis covers per-route vs per-customer vs per-IP rate limiting, and the architectural choice between in-process middleware, API gateway, or sidecar — not met: the definition requires a trade-off summary structurally but provides no domain knowledge about rate limiting dimensions or deployment patterns. The analysis would be structurally present but unlikely to reach this level of specificity from the definition alone
+- [x] PASS: Output dispatches to architect first using `/architect:system-design` (or equivalent), then to developer — met: the sequencing rules and agent table support this dispatch pattern
+- [ ] FAIL: Output identifies the immediate problem as a candidate for quick mitigation (emergency per-customer limit on bulk-import endpoint) while architectural work proceeds — not met: the definition's Incident Response section covers mitigation for active incidents but this scenario is framed as a performance degradation, not a declared incident. The definition has no mechanism to trigger quick-mitigation thinking for performance complaints that aren't incident-classified
+- [x] PASS: Output's delegation includes clear scope boundaries — architect decides where rate limiting lives, what dimensions, response codes/headers; developer decides implementation — met: the delegation protocol enforces this
+- [x] PASS: Output requires ADR as a deliverable from the architect — met: explicit in the architecture decision rules
+- [ ] FAIL: Output frames the bulk-import scenario explicitly as the anchor case — not met: the definition has no guidance on identifying and anchoring to the specific triggering scenario as the primary test case for any solution
+- [ ] FAIL: Output includes communication to affected customers coordinated with CPO/customer success — not met: the escalation protocol covers customer communication for incidents but this scenario isn't framed as a declared incident. The definition would not reliably trigger customer communication coordination for a planned rate-limiting change
+- [~] PARTIAL: Output identifies success criteria for rate-limiting work with measurable p95 latency baseline — partially met: the Delegation Protocol requires "acceptance criteria — how you'll know it's done" and "evidence requirements" in every delegation, which would produce some success criteria. However, there's no prompting toward quantitative performance baselines, so criteria would likely be functional rather than measurable. Score: 0.5
 
 ## Notes
 
-The definition is strong on the architecture-first classification path and the ADR requirement. The one genuine gap is that performance degradation that isn't formally declared an incident doesn't have an explicit "consider a quick fix first" prompt outside the incident response section. In practice, "getting hammered" implies some service impact happening now — the CTO definition would benefit from a note in the classification flow about whether immediate mitigation is warranted before dispatching for architectural resolution.
+The definition is structurally strong for routing and sequencing decisions and scores well on the original Criteria section. The Output expectations section reveals a deeper gap: the definition instructs the CTO to produce a trade-off summary before delegating, but provides no domain scaffolding to reach the specific rate limiting dimensions (per-route/per-customer/per-IP) or deployment topology options (middleware vs gateway vs sidecar) the test expects.
+
+The most significant gap is the quick-mitigation criterion. The definition handles incident mitigation well but doesn't connect "service degradation from a noisy customer" to a mitigation-first instinct unless the situation is formally declared an incident. A request framed as "we're getting hammered" sits ambiguously between incident and technical debt, and the definition doesn't resolve that ambiguity. The bulk-import anchor case and customer communication criteria also fall through — neither the delegation protocol nor the escalation rules would reliably surface them for a non-incident scenario of this type.
+
+The previous result (PASS, 94%) only evaluated the original 8 Criteria items. This re-evaluation scores both Criteria and Output expectations sections as the test.md requires, which changes the verdict to PARTIAL at 70%.

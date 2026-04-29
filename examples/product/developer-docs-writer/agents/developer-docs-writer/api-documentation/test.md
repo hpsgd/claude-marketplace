@@ -29,3 +29,16 @@ Webhook payloads are signed with HMAC-SHA256 using a secret we provide at regist
 - [ ] PASS: Code examples are syntactically correct and copy-pasteable — not pseudocode or placeholder-heavy
 - [ ] PARTIAL: Includes a quick-start or authentication section before the endpoint reference — partial credit if auth is documented inline per endpoint but not as a standalone overview
 - [ ] PASS: Documents what a webhook payload looks like and how to verify the signature, not just that verification should happen
+
+## Output expectations
+
+- [ ] PASS: Output documents all four endpoints — POST `/v1/webhooks`, GET `/v1/webhooks`, DELETE `/v1/webhooks/{id}`, POST `/v1/webhooks/{id}/test` — with request/response examples per endpoint, not a generic CRUD template
+- [ ] PASS: Output's request examples for POST endpoints include the full JSON body — endpoint URL, event types subscribed, custom metadata — not just `{"url": "..."}` placeholder
+- [ ] PASS: Output documents 401 (missing/invalid token), 403 (wrong scope — e.g. `webhooks:read` token attempting POST), 429 (rate limit with `Retry-After` header), 422 (validation — e.g. invalid URL), and 404 (deleting a non-existent webhook)
+- [ ] PASS: Output's HMAC signature verification example shows actual code in at least one language (Python or Node.js typical) — including extracting the signature from the header, computing HMAC-SHA256 using the secret, and constant-time comparison — runnable, not pseudocode
+- [ ] PASS: Output explains the two scopes (`webhooks:read`, `webhooks:write`) and maps each endpoint to its required scope in a table — not just mentioning scopes in prose
+- [ ] PASS: Output's rate-limit documentation includes the algorithm semantics (per-token, 100/minute), the response body shape on 429, the `Retry-After` header value semantics, and a recommended client backoff strategy
+- [ ] PASS: Output documents the webhook payload structure delivered TO the customer's endpoint — not just the API request structure — including the signed body, the signature header name, and example event types
+- [ ] PASS: Output's authentication section appears as an overview before the endpoint reference, explaining Bearer token format and where to obtain tokens — not only inline per endpoint
+- [ ] PASS: Output's code examples are syntactically correct and copy-pasteable — no `<your_token_here>` ambiguity that doesn't match runtime expectations, no missing imports
+- [ ] PARTIAL: Output addresses webhook delivery semantics — retry policy if the customer's endpoint returns non-2xx, timeout handling, and when a webhook is considered "failed" — important for customers building reliable receivers

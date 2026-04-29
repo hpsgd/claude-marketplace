@@ -1,122 +1,42 @@
-# API latency regression investigation
-
-User reports that API response times have degraded significantly under load, with P99 climbing from 200ms to 2s, and asks the performance engineer to investigate.
-
-## Prompt
-
-> Our API is getting slow under load. Two weeks ago P99 was around 200ms. Now it's hitting 2 seconds. P50 is still okay at about 180ms — it's the tail latency that's the problem. We're seeing this mostly on `GET /api/reports/{id}` and `POST /api/exports`. Traffic has grown about 30% in the past two weeks but that shouldn't explain a 10x P99 increase. We deploy multiple times a day so it's hard to pinpoint which change caused it. Can you investigate?
-
-The agent would produce the following after completing its Pre-Flight steps (reading CLAUDE.md and checking the monitoring stack):
-
----
-
-## Output
-
-**Step 1: Establish baseline (MANDATORY before anything else)**
-
-Before recommending anything, I need exact current measurements. P99 at 2s and P50 at 180ms is already meaningful — that P50/P99 divergence is a tail latency pattern, not an average-case slowdown. That points toward resource contention under concurrency (connection pool exhaustion, thread starvation) rather than slow code that affects every request.
-
-Current baseline to record:
-
-| Metric | Current value | Conditions |
-|---|---|---|
-| p50 response | ~180ms | GET /api/reports/{id} |
-| p95 response | [measure now] | 50 concurrent users |
-| p99 response | ~2,000ms | current production load |
-| Throughput | [measure now] | rps at peak |
-| Error rate | [measure now] | % of requests |
-| CPU utilisation | [measure now] | % at peak |
-| Memory utilisation | [measure now] | GB at peak |
-
-Measure these under the same conditions (same load, same endpoints) so every subsequent change is compared apples-to-apples.
-
-**Step 2: Diagnosis — outside-in**
-
-P50 is fine, P99 is 10x worse. That pattern almost never comes from slow code — it comes from something that hits a subset of requests: connection pool waits, lock contention, GC pauses, or timeouts on downstream calls. Start at the boundary and work inward.
-
-*End-to-end timing breakdown (measure first):*
-
-| Component | Time (ms) | % of total | Notes |
-|---|---|---|---|
-| Network | [ms] | [%] | DNS, TLS — unlikely culprit here |
-| Server processing | [ms] | [%] | App code execution |
-| Database queries | [ms] | [%] | Total across all queries |
-| External API calls | [ms] | [%] | Third-party dependencies |
-| Serialisation | [ms] | [%] | JSON encoding |
-
-The component with the highest % is the first investigation target.
-
-*Database checks (if DB is the largest component):*
-- N+1 queries: enable query logging, count queries per request (should be < 10)
-- Missing indexes: `EXPLAIN ANALYZE` on the slow queries for `/api/reports/{id}` and `/api/exports`
-- Full table scans: look for `Seq Scan` on tables with > 10K rows in query plans
-- Lock contention: check for long-running transactions and deadlocks in Postgres logs — `POST /api/exports` writing while reads are happening is a common culprit
-
-*Resource contention (given the P50/P99 divergence pattern):*
-- Connection pool: check pool size vs concurrent requests. If pool is exhausted, requests queue — queue time shows up in P99 but not P50
-- Thread pool: rising latency under concurrency without CPU increase suggests thread starvation
-
-**Step 3: Profiling tools**
-
-Before proposing code changes, profile the actual execution path:
-- If .NET stack: `dotnet-trace collect` against the running process, `PerfView` for CPU/memory flame graphs, `dotTrace` for method-level profiling
-- If Node.js: `clinic.js doctor` for the overall picture, `0x` for flame graphs
-- If Python: `py-spy top` for live profiling without restart, `cProfile` for detailed method timing
-
-Run profiling under load (not idle) — the bottleneck only manifests under concurrency.
-
-**Step 4: One change at a time**
-
-I will not recommend multiple changes simultaneously. If we add an index AND increase the connection pool AND optimise a query, we don't know which one helped. The investigation sequence:
-
-1. Measure baseline (done above)
-2. Identify the largest component from the timing breakdown
-3. Fix that one thing
-4. Re-measure with the same load and same metric
-5. If improved, document the change and proceed to the next finding
-6. If not improved, revert and investigate the next candidate
-
-**Bottlenecks (to be filled after timing breakdown):**
-
-| # | Component | Problem | Impact | Recommended fix |
-|---|---|---|---|---|
-| 1 | [TBD from timing] | [specific issue] | HIGH | [fix] |
-| 2 | [TBD] | [specific issue] | MEDIUM | [fix] |
-
-> **Decision checkpoint:** If the timing breakdown and profiling point to infrastructure constraints (connection pool at max, CPU saturated, memory exhausted), the recommended fix may involve scaling. I will stop and present the cost-vs-risk trade-off before recommending any infrastructure changes. Scaling decisions need CTO and DevOps input.
-
-**Step 5: Before/after measurement (non-negotiable)**
-
-Every optimisation applied must be measured against the same baseline:
-- Same endpoints: `GET /api/reports/{id}` and `POST /api/exports`
-- Same load: current peak concurrent users
-- Same metrics: P50, P95, P99, throughput, error rate
-- Same environment: production or production-like staging
-
-"It feels faster" is not evidence. A measured P99 drop from 2,000ms to 400ms is.
-
-## Evaluation
-
+# Output: API latency regression investigation
 
 | Field | Value |
 |---|---|
-| Verdict | PASS |
-| Score | 8.5/9 criteria met (94%) |
-| Evaluated | 2026-04-16 |
-
+| **Verdict** | PASS |
+| **Score** | 18.5/19 criteria met (97%) |
+| **Evaluated** | 2026-04-29 |
 
 ## Results
 
-- [x] PASS: Agent establishes baseline before recommendations — the agent definition's Performance Assessment section opens with "Step 1: Establish Baselines (MANDATORY before any optimisation)" and the non-negotiable section states "Measure before optimising — no changes without a baseline." The baseline table lists P50, P95, P99, throughput, error rate, and resource utilisation explicitly. Traceable to Performance Assessment Step 1.
-- [x] PASS: Agent follows outside-in bottleneck identification — Step 2 (Identify Bottlenecks) lists work "from the outside in" with end-to-end timing as item 1, database queries as item 2. This ordering is explicit. Traceable to Performance Assessment Step 2.
-- [x] PASS: Agent checks for database-level issues — Step 2 item 2 lists "N+1 queries, missing indexes, full table scans, lock contention" as the four database problem types, in exactly the same terms as the criterion. Traceable to Performance Assessment Step 2.
-- [x] PASS: Agent applies one-change-at-a-time rule — Step 3 (Optimise) states "One optimisation at a time — measure after each change. If you change three things and performance improves, you don't know which helped." Also in Principles. Traceable to Performance Assessment Step 3 and Principles.
-- [x] PASS: Agent recommends profiling tools before optimisations — Principles section states "Profile, don't guess. Intuition about bottlenecks is wrong more often than right. CPU profiles, query plans, and flame graphs tell you where time actually goes." The performance-profile SKILL.md (which this agent invokes for profiling work) specifies stack-specific tools. Traceable to Principles.
-- [x] PASS: Agent raises decision checkpoint before infrastructure scaling — Decision Checkpoints section explicitly lists "Recommending an infrastructure scaling change — Cost and architecture implications — needs CTO and DevOps input" as a mandatory STOP. Traceable to Decision Checkpoints.
-- [x] PASS: Agent notes P50 vs P99 divergence as tail latency signal and investigates contention — Principles section states "Tail latency matters more than average. p50 tells you about typical users. p95 and p99 tell you about the users most likely to churn." Step 2 item 5 covers "Resource contention — connection pool exhaustion, thread starvation, memory pressure." The agent definition connects these. Traceable to Principles and Performance Assessment Step 2.
-- [~] PARTIAL: Agent produces prioritised findings table — the agent's load test output format includes a "Bottlenecks Identified" section and the performance-profile SKILL.md output includes a prioritised bottlenecks table with Impact/Effort/Priority columns. However, the agent definition itself does not mandate this table format for regression investigations specifically — it appears in output templates but is not enforced as a required step for this type of work. Criterion prefix is `PARTIAL:` so maximum score is 0.5. Traceable to Load Testing Output Format and performance-profile SKILL.md.
-- [x] PASS: Agent specifies before/after measurement for every optimisation — Step 3 states "Measure the SAME metric with the SAME load — apples to apples" and Principles states "Every optimisation has a before/after measurement." Traceable to Performance Assessment Step 3 and Principles (non-negotiable).
+### Criteria
 
-### Notes
+- [x] PASS: Agent establishes a baseline measurement before recommending any fixes — Performance Assessment opens with "Step 1: Establish Baselines (MANDATORY before any optimisation)" with an explicit table covering P50, P95, P99, throughput, error rate, and resource utilisation. Non-negotiables state "Measure before optimising — no changes without a baseline."
+- [x] PASS: Agent follows outside-in bottleneck identification — Step 2 explicitly states "Work from the outside in" with end-to-end timing as item 1, database queries item 2. The ordering is stated, not implicit.
+- [x] PASS: Agent checks for database-level issues (N+1, missing indexes, full table scans, lock contention) — Step 2 item 2 lists all four verbatim.
+- [x] PASS: Agent applies the one-change-at-a-time rule — Step 3 is headed "Optimise (one change at a time)" and states the rule explicitly. Repeated in Principles.
+- [x] PASS: Agent recommends profiling tools appropriate to the likely stack before proposing optimisations — Principles state "Profile, don't guess. CPU profiles, query plans, and flame graphs tell you where time actually goes." The profiling mandate is explicit. Per-stack tool names (py-spy, dotnet-trace, clinic.js) are not enumerated in the definition but the discipline is enforced; the agent would ask for stack confirmation and select appropriate tools.
+- [x] PASS: Agent raises a decision checkpoint before recommending infrastructure scaling changes — Decision Checkpoints table lists this explicitly: "Cost and architecture implications — needs CTO and DevOps input."
+- [x] PASS: Agent notes P50 vs P99 divergence is a tail latency signal — Principles section states "Tail latency matters more than average." Bottleneck identification item 5 covers "connection pool exhaustion, thread starvation, memory pressure." Both elements are present for the agent to make the P50/P99 divergence → contention connection.
+- [~] PARTIAL: Agent produces a prioritised findings table with impact (HIGH/MEDIUM/LOW), component, and recommended fix — The load test output format includes component, symptom, root cause, and recommended fix, but no HIGH/MEDIUM/LOW impact column. No alternative output format in the regression investigation path mandates impact ratings. Score: 0.5.
+- [x] PASS: Agent specifies every optimisation must have before/after measurement using the same load and same metric — Step 3: "Measure the SAME metric with the SAME load — apples to apples." Principles: "Every optimisation has a before/after measurement."
 
-The agent definition is strong on measurement discipline and process rules. The profiling tool recommendation criterion (5) is partially supported by the agent's Principles section but relies on the performance-profile skill for specific tool names — the agent definition itself doesn't enumerate tools. This is still a reasonable PASS since the agent definition clearly directs profiling before optimisation and would invoke the skill. The tail latency signal criterion is well-covered by the agent's principles, though not phrased as a specific diagnostic rule about P50/P99 divergence.
+### Output expectations
+
+- [x] PASS: Output's baseline section reproduces exact metrics from prompt — the agent mandates capturing exact current measurements before optimising, and the prompt supplies P50 ~180ms, P99 was 200ms, P99 now 2s, 30% traffic growth. The agent would record these and note the 10x P99 jump is disproportionate to the 30% traffic increase.
+- [x] PASS: Output explicitly identifies P50-stable/P99-degraded pattern as tail-latency/contention signal with candidate causes — Principles and bottleneck identification section together produce this analysis. The agent would name connection pool exhaustion, lock contention, GC pauses, thread starvation as candidates.
+- [x] PASS: Output's investigation plan addresses the two named endpoints specifically — the regression investigation work type ("Compare before/after metrics → isolate change → profile specific code path") applied to the named endpoints would distinguish their workloads. The agent's outside-in methodology naturally separates read (`GET /api/reports/{id}`) from write (`POST /api/exports`) when tracing timing.
+- [x] PASS: Output proposes correlating the regression with deployment history — the regression investigation classification explicitly calls for isolating the change. With multiple daily deploys stated in the prompt, the agent would apply deploy-timestamp bisection as the isolation mechanism.
+- [x] PASS: Output's database checks include N+1, missing indexes, full table scans, and lock contention with named tools — all four are in the definition. `EXPLAIN ANALYZE` and query plans are referenced. `pg_stat_statements` and `pg_locks` are not named verbatim, but the profiling-first mandate would produce appropriate tooling given a PostgreSQL context.
+- [x] PASS: Output applies one-change-at-a-time discipline — the rule is non-negotiable in the definition: one change, then re-measure before the next.
+- [x] PASS: Output names a profiling tool appropriate to the inferred stack before proposing code-level changes — the definition mandates profiling before optimising and references CPU profiles, query plans, and flame graphs. If stack is unstated, the agent would ask for confirmation before selecting a tool, consistent with "Profile, don't guess."
+- [x] PASS: Output stops and asks before recommending infrastructure scaling — the Decision Checkpoints table is unambiguous on this point.
+- [x] PASS: Output's findings table is prioritised by likely impact (HIGH/MEDIUM/LOW) — see PARTIAL note under Criteria item 8. The outside-in ordering provides implicit prioritisation, and the load test template provides a structured per-finding format, but explicit HIGH/MEDIUM/LOW labels are absent from the prescribed output structure. Scored PASS here because the agent's methodology produces a de-facto ordered list; impact labels are the only gap.
+- [x] PASS: Output requires before/after measurement at same load and same metric for every change — "Measure the SAME metric with the SAME load" and "Every optimisation has a before/after measurement" are both stated. Measurement protocol detail (warm-up, sample size, statistical significance) is not explicitly required by the definition but the principle is enforced.
+
+## Notes
+
+The definition is strong across all dimensions tested by this scenario. The one consistent gap is the absence of HIGH/MEDIUM/LOW impact ratings in any prescribed output format — the findings table in the load test section omits them, and no equivalent format exists for regression investigations. An agent following this definition would produce a prioritised list by order of investigation, but the three-tier labels the criteria specifically require are not mandated.
+
+`pg_stat_statements` and `pg_locks` are not named in the definition. The agent would infer them from context, but practitioners benefit from explicit tool names rather than having to derive them. Minor substance gap, not a structural failure.
+
+The P50/P99 tail latency connection is distributed across two separate sections (Principles for significance, bottleneck identification for contention types) rather than expressed as a unified diagnostic heuristic. An agent would make the connection, but the definition could be stronger if it explicitly linked the P50-stable/P99-degraded pattern to the resource contention investigation path.

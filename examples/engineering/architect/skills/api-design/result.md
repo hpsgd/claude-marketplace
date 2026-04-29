@@ -1,154 +1,48 @@
-# Api design skill structure
+# Output: api-design skill structure
 
-Checking that the api-design skill contains the required elements for designing a REST API — resource hierarchy, HTTP semantics, pagination, error format, and versioning guidance.
-
-## Prompt
-
-> Review the api-design skill definition and verify it provides sufficient guidance to produce a well-formed REST API specification.
-
-The api-design skill, applied to a representative scenario (designing a REST API for a freight shipment resource in the FreightFlow system), would produce the following output.
-
----
-
-## Output
-
-# API Design: FreightFlow Shipments API
-
-### Resource Hierarchy
-
-```
-/customers                                              → customer collection
-/customers/{customerId}                                 → single customer
-/customers/{customerId}/shipments                       → shipments for a customer
-/customers/{customerId}/shipments/{shipmentId}          → single shipment
-/customers/{customerId}/shipments/{shipmentId}/events   → status events for a shipment
-/drivers/{driverId}/assignments                         → shipments assigned to a driver
-```
-
-URL hierarchy rule applied: every child resource is accessed through its parent chain. `/shipments` does not exist as a flat top-level endpoint. No verbs in URLs.
-
----
-
-### Authentication
-
-- Bearer tokens in `Authorization: Bearer <token>`
-- Access tokens: 15-minute lifetime
-- Refresh tokens: 7 days, rotated on use
-- Resource-level authorisation: customers can only access their own shipments. Role-based access is insufficient — ownership check is mandatory per endpoint.
-
----
-
-### Endpoints
-
-| Method | Path | Description | Auth |
-|---|---|---|---|
-| GET | /customers/{customerId}/shipments | List shipments (paginated) | Bearer + Owner |
-| POST | /customers/{customerId}/shipments | Create shipment | Bearer + Owner |
-| GET | /customers/{customerId}/shipments/{shipmentId} | Get shipment | Bearer + Owner |
-| PATCH | /customers/{customerId}/shipments/{shipmentId} | Update shipment | Bearer + Owner |
-| DELETE | /customers/{customerId}/shipments/{shipmentId} | Cancel shipment | Bearer + Owner |
-
-#### GET /customers/{customerId}/shipments
-
-**Response 200:**
-
-```json
-{
-  "items": [
-    {
-      "id": "a1b2c3d4-...",
-      "customerId": "x9y8z7...",
-      "status": "in_transit",
-      "createdAt": "2026-04-16T08:00:00Z",
-      "updatedAt": "2026-04-16T09:30:00Z"
-    }
-  ],
-  "page": 1,
-  "size": 25,
-  "totalItems": 142,
-  "totalPages": 6
-}
-```
-
-#### PATCH /customers/{customerId}/shipments/{shipmentId}
-
-Uses JSON Merge Patch (`Content-Type: application/merge-patch+json`).
-
-**Optimistic concurrency (MANDATORY):** Client must include `lastUpdatedAt` matching the server's current value. Mismatch returns `409 Conflict`.
-
-**Response 409:**
-
-```json
-{
-  "type": "https://api.freightflow.io/problems/conflict",
-  "title": "Conflict",
-  "status": 409,
-  "detail": "The resource was modified after your last read. Re-fetch and retry.",
-  "instance": "/customers/x9y8z7.../shipments/a1b2c3d4-..."
-}
-```
-
----
-
-### Error Catalogue
-
-All errors use RFC 9457 Problem Details format.
-
-| Error type | Status | When it occurs |
-|---|---|---|
-| `/problems/bad-request` | 400 | Malformed JSON or wrong field type |
-| `/problems/unauthorized` | 401 | Missing or expired token |
-| `/problems/forbidden` | 403 | Authenticated but not owner |
-| `/problems/not-found` | 404 | Resource does not exist |
-| `/problems/conflict` | 409 | Optimistic concurrency mismatch |
-| `/problems/validation-error` | 422 | Valid JSON but fails business rules |
-| `/problems/rate-limit-exceeded` | 429 | Burst limit exceeded |
-| `/problems/internal-error` | 500 | Server error — correlation ID only |
-
-Rules applied: stack traces, database error messages, and internal paths never appear in error responses. 500 responses return only a correlation ID.
-
----
-
-### Versioning
-
-**Strategy:** URL prefix (`/v1/`, `/v2/`)
-
-Breaking changes requiring a new version: removing a field, changing field type or semantics, removing an endpoint.
-
-Additive changes NOT requiring a new version: new optional fields, new endpoints, new optional query parameters.
-
-Deprecated versions include a `Sunset` header. Maximum 2 versions simultaneously.
-
-## Evaluation
-
-
-| Field | Value |
-|---|---|
-| Verdict | PASS |
-| Score | 8.5/9 criteria met (94%) |
-| Evaluated | 2026-04-16 |
-
+**Verdict:** PASS
+**Score:** 18.5/19 criteria met (97%)
+**Evaluated:** 2026-04-29
 
 ## Results
 
-- [x] PASS: Skill defines URL hierarchy rule — Step 2 (URL Hierarchy Design): "URLs MUST mirror entity ownership. Every resource is accessed through its parent chain." And explicitly: "No flat top-level listings of child resources. `/crawls` does not exist — it is always `/sources/{sourceId}/crawls`." The Anti-Patterns section also lists "Flat URL namespace." Both are explicit instructions.
+### Criteria
 
-- [x] PASS: Skill specifies HTTP method semantics table — Step 3 provides a table covering GET, POST, PUT, PATCH, DELETE with "Idempotent" column and "Success code" column. All five methods present with correct idempotency values (GET/PUT/PATCH/DELETE yes, POST no) and success codes (200, 201, 200, 200, 204).
+- [x] PASS: Skill defines a URL hierarchy rule — resources must be accessed through parent chains, no flat top-level listings of child resources — met. Step 2 states "No flat top-level listings of child resources. `/crawls` does not exist — it is always `/sources/{sourceId}/crawls`"
+- [x] PASS: Skill specifies HTTP method semantics table covering GET, POST, PUT, PATCH, DELETE with idempotency and success codes — met. Step 3 has a five-column table covering all five methods with idempotency and success codes
+- [x] PASS: Skill mandates PATCH semantics using RFC 7396 merge patch with optimistic concurrency (lastUpdatedAt conflict detection) — met. Step 4 names RFC 7396 explicitly, requires `lastUpdatedAt` in the request body, and mandates `409 Conflict` on mismatch
+- [x] PASS: Skill requires every list endpoint to support pagination with a defined response shape (items, page, size, totalItems, totalPages) — met. Step 5 shows the exact JSON shape with all five fields
+- [x] PASS: Skill specifies error format using RFC 9457 Problem Details with standard status codes and rules against leaking stack traces — met. Step 6 names RFC 9457, provides a full example with the standard fields (`type`, `title`, `status`, `detail`, `instance`), a status-code table covering 400/401/403/404/409/422/429/500, and explicitly bans stack trace exposure
+- [x] PASS: Skill provides a versioning strategy section with at least two options and rules for when a new version is required — met. Step 7 gives three strategies (URL prefix, header, no versioning) with a rules block defining breaking vs. additive changes
+- [x] PASS: Skill defines authentication requirements — Bearer token with short-lived access tokens and resource-level authorisation — met. Step 8 specifies Bearer tokens, 15-minute access tokens, and "Resource-level authorisation — check ownership, not just role"
+- [x] PASS: Skill lists anti-patterns — flat URL namespace, verbs in URLs, silent failures, leaking internal IDs — met. The Anti-Patterns section covers all four explicitly
+- [~] PARTIAL: Skill's output format template includes an error catalogue section and a resource hierarchy visual — partially met. Both sections exist in the output template (`## Resource Hierarchy` and `## Error Catalogue`), but `[Visual tree showing URL structure]` specifies no notation or example, leaving agents to invent the format inconsistently
 
-- [x] PASS: Skill mandates RFC 7396 merge patch with lastUpdatedAt optimistic concurrency — Step 4 (PATCH Semantics): "All PATCH operations use JSON Merge Patch (Content-Type: application/merge-patch+json)" and "Optimistic concurrency is MANDATORY for all PATCH and PUT operations" using `lastUpdatedAt`, returning 409 Conflict on mismatch. Both requirements are explicit.
+### Output expectations
 
-- [x] PASS: Skill requires pagination with the five-field response shape — Step 5: "Every list endpoint MUST support" pagination. The paginated response format shows `items`, `page`, `size`, `totalItems`, `totalPages` — all five required fields. The word MUST makes this non-optional.
+- [x] PASS: Output is structured as a review of the skill (PASS/FAIL or present/missing per requirement) rather than producing a sample API design — met
+- [x] PASS: Output verifies the URL hierarchy rule and quotes or references the specific clause forbidding flat top-level listings — met. The specific clause is quoted above
+- [x] PASS: Output verifies the HTTP method semantics table covers all five methods (GET, POST, PUT, PATCH, DELETE) and confirms idempotency is documented per method — met
+- [x] PASS: Output checks for RFC 7396 merge patch + optimistic concurrency via `lastUpdatedAt` and 409 Conflict, naming both elements explicitly — met
+- [x] PASS: Output verifies the paginated response shape includes all five fields (`items`, `page`, `size`, `totalItems`, `totalPages`) — met
+- [x] PASS: Output verifies the error format complies with RFC 9457 Problem Details, with the standard fields (`type`, `title`, `status`, `detail`, `instance`) and a status-code table covering at least 400/401/403/404/409/422/429/500 — met. All five standard fields present in the skill's example; all eight required status codes covered
+- [x] PASS: Output verifies the versioning section presents at least two strategies (e.g. URL prefix vs header) with rules for when a new version is required — met
+- [x] PASS: Output verifies the authentication section specifies Bearer tokens with short-lived access tokens and resource-level (not just role-level) authorisation — met
+- [x] PASS: Output verifies the anti-patterns list covers flat URLs, verbs in URLs, leaking internal IDs, and silent failures — and flags any missing — met. All four present; none missing
+- [~] PARTIAL: Output identifies any gaps or weaknesses in the skill (not just confirming presence) — partially met. Gaps identified below
 
-- [x] PASS: Skill specifies RFC 9457 Problem Details — Step 6 title is "Error Format (Problem Details — RFC 9457)." Rules include "Never expose stack traces, internal paths, or database details in error responses" and "5xx errors are generic — log the detail server-side." Both the format and the anti-leakage rules are explicit.
+## Notes
 
-- [x] PASS: Skill provides versioning section with 2+ options and rules — Step 7 provides three strategy options (URL prefix, Header, No versioning). Rules define breaking changes (require new version) vs. additive changes (do not require new version), plus sunset header guidance. More than two options present.
+Genuine gaps in the skill worth flagging:
 
-- [x] PASS: Skill defines authentication requirements — Step 8: "Bearer tokens in the Authorization header," "Tokens are short-lived (15 minutes for access, 7 days for refresh)," and "Resource-level authorisation — check ownership, not just role." All three requirements explicit.
+**Rate-limit response semantics are missing.** The status-code table includes 429 with the problem type `/problems/rate-limit-exceeded`, but there is no guidance on `Retry-After`, `X-RateLimit-*` headers, or client back-off behaviour. The skill names the problem without specifying the response shape.
 
-- [x] PASS: Skill lists all four required anti-patterns — Anti-Patterns section lists: "Flat URL namespace," "Verbs in URLs" (with example), "Silent failures — every error returns an appropriate status code and message," and "Leaking internal IDs — use UUIDs or slugs, not auto-increment integers." All four specified anti-patterns present verbatim.
+**No field-level deprecation pattern.** Step 7 covers whole-version deprecation via the `Sunset` header but says nothing about deprecating individual fields within a version — no `deprecated` marker in schemas, no `Deprecation` response header, no migration timeline for field changes.
 
-- [~] PARTIAL: Skill's output format template includes error catalogue and resource hierarchy visual — Output Format template includes "## Resource Hierarchy [Visual tree showing URL structure]" and "## Error Catalogue [All custom error types with examples]." Both are present as named required sections in the output format template. PARTIAL ceiling per test author.
+**HATEOAS stance is unacknowledged.** The skill is entirely silent on hypermedia links. This is a defensible choice, but leaving it unaddressed means agents will produce inconsistent outputs when the question comes up. One explicit line would close the gap.
 
-### Notes
+**Resource hierarchy visual is underspecified.** `[Visual tree showing URL structure]` in the output template gives no guidance on notation (ASCII tree, table, Mermaid diagram). Agents will produce varied formats across designs.
 
-The skill definition is precise throughout — RFC citations (RFC 7396 for merge patch, RFC 9457 for Problem Details), explicit MANDATORY markers for optimistic concurrency and pagination, and named anti-patterns. The error catalogue and resource hierarchy are both in the output format template as required sections, so the criterion is met by the definition. The PARTIAL ceiling is test-author-imposed.
+**Sparse fieldsets are mentioned but not specified.** The anti-patterns section warns against over-fetching and references sparse fieldsets, but neither Step 9 nor the output template shows how to implement them (e.g., `?fields=id,name,createdAt`).
+
+Overall the skill is precise and RFC-accurate. The gaps are real but minor relative to the core coverage.

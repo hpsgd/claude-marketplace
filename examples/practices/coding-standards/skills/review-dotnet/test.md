@@ -17,3 +17,16 @@ Review this PR. The main change is in `OrderProcessor.cs` — we added a `Handle
 - [ ] PARTIAL: Pass 6 (analyser compliance) and Pass 7 (testing) are run even when no new test files are in the diff — at minimum the skill confirms the passes were executed
 - [ ] PASS: Missing idempotency guard on creation handler is flagged — `CreateChildWorkItemHandler` creates an aggregate without checking if it already exists, risking duplicate-version conflicts on event replay
 - [ ] PASS: Related skills are referenced at the end of the output (review-standards and review-git)
+
+## Output expectations
+
+- [ ] PASS: Output's loop-in-handler finding cites `OrderProcessor.cs::HandleBatchOrdersCommand` with line-level evidence of the `foreach` and the `_repository.SaveAsync(order)` call — not generic "the handler has a loop"
+- [ ] PASS: Output's loop-in-handler finding explains the violation of "one message, one unit of work" — a failure mid-loop leaves some orders saved and others not, with no compensation, and prescribes the fix (publish one `SaveOrder` message per order and let the bus dispatch each)
+- [ ] PASS: Output's in-memory-filter finding cites `OrderSummaryController.cs::/api/orders` and explains why filtering with `.Where()` after fetching all orders is wrong (memory blow-up at scale, slow under load, breaks pagination semantics) with the fix (translate filter to LINQ-to-Marten / IQueryable in the database)
+- [ ] PASS: Output's idempotency-guard finding cites `CreateChildWorkItemHandler.cs` and shows the missing existence check — explaining that `WorkItemTriggered` events can replay (Wolverine retries, manual replay, recovery), and the fix pattern (try `repository.get(id)` → if found return; on `AggregateNotFound` create) consistent with the project's idempotency guard rule
+- [ ] PASS: Output's findings each include severity, the pass label (Pass 1, 3, etc.), file path, evidence snippet, the standard violated (named or quoted), and a concrete fix — not just a list of issues
+- [ ] PASS: Output runs all seven mandatory passes and reports per-pass finding counts in the summary — even passes with no findings get a "0 findings" line, not silently omitted
+- [ ] PASS: Output respects the zero-finding gate on passes that genuinely have no issues — does NOT fabricate findings to fill quota
+- [ ] PASS: Output runs Pass 6 (analyser compliance) and Pass 7 (testing) even though no test files are in the diff — at minimum confirming the passes ran and noting that the new handlers should be paired with tests in a follow-up
+- [ ] PASS: Output's overall verdict reflects the severity of the findings — at least one HIGH/blocker finding (loop-in-handler is a correctness blocker for atomicity), so the verdict is REQUEST_CHANGES not APPROVE
+- [ ] PASS: Output cross-references related skills at the end — `/coding-standards:review-standards` and `/coding-standards:review-git` — for follow-up reviews

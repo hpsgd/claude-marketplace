@@ -1,130 +1,55 @@
-# Write acceptance criteria for bulk user import
+# Result: Write acceptance criteria for bulk user import
 
-Developer invokes the write-acceptance-criteria skill for a story: "As an admin, I want to import users from a CSV file so that I can onboard multiple users at once." The CSV supports up to 1,000 rows with columns: email, name, role (admin/member/viewer).
+**Verdict:** PARTIAL
+**Score:** 17.5/19 criteria met (92.1%)
+**Evaluated:** 2026-04-29
 
-## Prompt
+## Results
 
-> Write acceptance criteria for: "As an admin, I want to import users from a CSV file so I can onboard multiple users at once." The CSV has columns: email, name, role (must be admin, member, or viewer). Max 1,000 rows per import. Duplicate emails (already in the system) should be skipped, not error. Invalid rows (bad email format, invalid role) should be collected and shown to the admin after import completes — the valid rows should still be processed. Only users with the 'admin' role can access this feature.
->
->
-> Write acceptance criteria for the bulk user CSV import story above.
+### Criteria section
 
-## Output
+- [x] PASS: Skill decomposes the story into business rules before writing scenarios — Step 2 uses Example Mapping and explicitly requires listing all business rules before writing scenarios. Rule sources list includes permissions, validation constraints, and limits/thresholds, covering all four rules needed for this story.
 
-**Step 1 — Story decomposition:**
+- [x] PASS: Each business rule has at least 2 concrete examples — Step 3 states "Every rule needs at least 2 examples. One example is a demo. Two examples define a pattern." The Rules section repeats this as a hard constraint, not a guideline.
 
-Actor: admin user (role = 'admin'). Goal: onboard multiple users without manual entry. Value: reduces onboarding time for organisations adding teams. Out of scope: bulk edit, bulk delete, export, user management after import.
+- [x] PASS: Scenarios use business language — Step 3 rules: "Business language, not technical language." A direct contrast is given: "Then the user sees an error message" (correct) vs "Then the API returns 422" (wrong). The skill explicitly prohibits technical-level assertions.
 
-**Step 2 — Business rules via Example Mapping:**
+- [x] PASS: Every Given establishes state, every When is a single action, every Then verifies one observable outcome — Step 3: "Given sets up state, When triggers action, Then observes outcome. Do not put assertions in Given. Do not put setup in Then." Combined with "One behaviour per scenario," this structure is enforced.
 
-- Rule 1: Only users with the 'admin' role may access the CSV import feature
-- Rule 2: Duplicate emails (already registered in the system) are skipped silently and counted in the post-import summary
-- Rule 3: Rows with invalid email format or invalid role value are collected and displayed to the admin after import; valid rows still process
-- Rule 4: Maximum 1,000 rows per import file; files exceeding this limit are rejected before processing begins
+- [x] PASS: Edge cases are mandatory and covered — Step 3's scenario coverage table marks "Edge case: Boundary values, empty states, maximums — Yes, always." Step 6's edge case audit explicitly requires "empty/null input, maximum/minimum values." These categories cover all four specified edge cases (empty CSV, all-invalid CSV, exactly 1000, 1001 rows).
 
-**Step 3 — Scenarios per rule (each rule has ≥2 examples):**
+- [x] PASS: Error cases are covered — Step 3 coverage table requires "Permission denied" (when rule involves permissions) and "Validation error" (when rule involves input). Step 6 edge case audit includes "error states." Both non-admin access and malformed file fall within these required categories.
 
-**Rule 1: Permission**
+- [x] PASS: Non-functional criteria are included with thresholds — Step 4 provides a non-functional criteria table with Category, Criterion, Threshold, and How to test. Rules section states: "'It works' is not sufficient. 'It works within 500ms for 95% of requests' is an acceptance criterion."
 
-Scenario: admin imports successfully
-- Given I am logged in as a user with the 'admin' role
-- When I upload a valid CSV file
-- Then the import begins and I see a progress indicator
+- [~] PARTIAL: Open questions are flagged explicitly — Step 2 states "If you discover a red card (unanswered question), flag it explicitly. Do not invent an answer." The output format includes a dedicated Open Questions table. However, the skill doesn't proactively prompt for the specific class of privilege-escalation question (what if importing a CSV grants the admin role to another user?). It surfaces questions the practitioner discovers — not questions they might miss.
 
-Scenario: non-admin cannot access import
-- Given I am logged in as a user with the 'member' role
-- When I navigate to the user import page
-- Then I see an access denied message and the import form is not shown
+- [x] PASS: Test level mapping assigns each criterion to unit, integration, or E2E with rationale — Step 5 is dedicated to this, providing a mapping table with Criterion / Level / Rationale and three explicit assignment rules.
 
-**Rule 2: Duplicate handling**
+### Output expectations section
 
-Scenario: CSV with one duplicate
-- Given user 'alice@example.com' already exists in the system
-- And I upload a CSV containing 'alice@example.com' and 9 new users
-- When the import completes
-- Then the summary shows: 9 users imported, 1 skipped (duplicate)
+- [x] PASS: Output identifies the four business rules — Step 2's Example Mapping structure, combined with the rule sources list (permissions, validation constraints, limits/thresholds), would produce separate Rule blocks for admin-only access, max 1,000 rows, duplicate skipping, and invalid row collection. The "at least 2 examples per rule" constraint is enforced.
 
-Scenario: CSV with majority duplicates
-- Given 80 of 100 CSV rows contain emails already registered
-- When the import completes
-- Then the summary shows: 20 users imported, 80 skipped (duplicates)
+- [x] PASS: Permission scenarios cover both happy path and non-admin 403 behaviour — Step 3's coverage table requires "Permission denied" for any rule involving permissions, and the business language rule means this would be expressed as "the user sees a permission denied message," not an HTTP code.
 
-**Rule 3: Invalid row handling**
+- [x] PASS: Boundary scenarios for row limit cover exactly 1,000, 1,001, and 0 rows — Step 3 requires edge cases ("Boundary values, empty states, maximums — Yes, always") and Step 6's audit explicitly requires "empty/null input, maximum/minimum values." All three boundary scenarios fall within these mandatory categories.
 
-Scenario: rows with invalid email
-- Given a CSV containing 97 valid rows and 3 rows with malformed email addresses
-- When the import completes
-- Then the summary shows: 97 users imported, 3 errors — and the 3 invalid rows are listed with the specific validation error
+- [x] PASS: Invalid-row handling scenarios cover bad email format, invalid role, and all-invalid CSV — Step 3 requires validation error scenarios for input-validation rules ("yes if the rule involves input"). Step 6 edge case audit adds "empty/null input" covering the all-invalid case. All three sub-cases are within scope of the skill's mandatory coverage.
 
-Scenario: rows with invalid role value
-- Given a CSV containing a row with role value 'superuser' (not in admin/member/viewer)
-- When the import completes
-- Then that row is listed as an error ("invalid role: superuser") and all other valid rows are imported
+- [~] PARTIAL: Duplicate handling scenarios cover existing-user skip, summary counts, and intra-upload duplicates — existing-user skipping and summary counts are directly addressed by Rule 2 (duplicates already in system) with required 2+ examples. However, the skill does not specifically prompt for the intra-upload duplicate case (two rows in the same CSV upload with the same email). This is a distinct edge case not surfaced by the skill's rule-discovery prompts or edge case audit list.
 
-**Rule 4: Row limit**
+- [x] PASS: Given/Then steps speak in business terms, never HTTP codes or internal paths — Step 3's business language rule is explicit with contrast examples. This governs every scenario the skill produces.
 
-Scenario: exactly 1,000 rows (boundary — accepted)
-- Given a CSV containing exactly 1,000 data rows
-- When I upload it
-- Then the import is accepted and all valid rows are processed
+- [x] PASS: Non-functional criterion sets a specific time budget with UX rationale — Step 4 requires thresholds as specific values and includes a "How to test" column. The skill's Rules section enforces "It works within 500ms for 95% of requests" as the model — a specific budget tied to observable UX expectation.
 
-Scenario: 1,001 rows (over limit — rejected)
-- Given a CSV containing 1,001 data rows
-- When I upload it
-- Then I see an error: "File exceeds maximum of 1,000 rows. No users were imported."
+- [x] PASS: Malformed-file scenario covers corrupt file format with expected behaviour — Step 6's edge case audit lists "special characters" and error states. Step 3 requires "Validation error" scenarios. Malformed/corrupt file format is within scope of these mandatory categories, and the skill's business-language rule ensures the outcome is stated from the user's perspective.
 
-**Edge cases:**
+- [~] PARTIAL: Open-questions section explicitly raises the privilege-escalation concern — the Open Questions output format and Red card mechanism are present. The specific question (admin importing a CSV that grants admin to others) would surface only if the practitioner identifies it as a Red card. The skill doesn't prompt for this category of question systematically (e.g., "for stories involving role assignment, always ask whether the operation can escalate privileges").
 
-Empty CSV (0 rows): upload a CSV with headers but no data rows → "No users to import" message, no changes made.
+- [x] PASS: Test-level mapping assigns each criterion with rationale — Step 5 is entirely dedicated to this, with three explicit assignment rules and a populated example table. The row-limit check (unit), permission denied (integration), and full import flow (E2E) pattern is directly supported by the skill's guidance.
 
-All-invalid CSV: upload a CSV where every row has an invalid role → import completes, 0 users imported, all rows listed as errors.
+## Notes
 
-**Error cases:**
+The skill is substantively strong. The six-step process handles complexity without story-specific prompting, and the business-language and test-level guidance is better than most comparable definitions.
 
-Malformed file: upload a `.csv` file that is not valid CSV (binary, truncated, encoding error) → "File could not be parsed. Please check the file format and try again." Zero rows imported.
-
-**Non-functional:**
-
-Performance: import of 1,000 rows completes and summary is displayed within 30 seconds on standard hardware.
-
-**Open questions flagged:**
-
-| Question | Impact | Owner |
-|---|---|---|
-| What happens if a CSV row assigns the 'admin' role to a new user — does the importing admin need additional permissions to grant admin? | Blocks Rule 3 edge case testing and Rule 1 boundary | Product Owner |
-| Should duplicate email matching be case-sensitive? | Affects Rule 2 behaviour | Product Owner |
-
-**Test level mapping:**
-
-| Criterion | Level | Rationale |
-|---|---|---|
-| Permission check (admin only) | Integration | Requires auth middleware |
-| Duplicate email detection | Integration | Requires database lookup |
-| Invalid row collection | Unit | Pure validation logic, no dependencies |
-| Row limit check | Unit | Count check, no dependencies |
-| Full import flow | E2E | Critical user journey |
-| Performance (30s for 1,000 rows) | Performance | Requires load testing tool |
-
-## Evaluation
-
-
-| Field | Value |
-|---|---|
-| Verdict | PASS |
-| Score | 8.5/9 criteria met (94%) |
-| Evaluated | 2026-04-16 |
-
-
-- [x] PASS: Skill decomposes into business rules before writing scenarios — write-acceptance-criteria SKILL.md Step 2 uses Example Mapping and explicitly requires listing every business rule (permissions, validation, state transitions, limits) before writing scenarios. All four rules (permission, duplicate, invalid row, max limit) map to categories in the skill's rule sources list.
-- [x] PASS: Each business rule has ≥2 concrete examples — write-acceptance-criteria SKILL.md Step 3: "Every rule needs at least 2 examples. One example is a demo. Two examples define a pattern." This is an explicit rule, not a guideline.
-- [x] PASS: Scenarios use business language — write-acceptance-criteria SKILL.md Step 3 rules: "Business language, not technical language. Acceptance criteria are a contract with product, not a test script for QA." The skill explicitly prohibits "Then the API returns 422."
-- [x] PASS: Given=state, When=single action, Then=single outcome — write-acceptance-criteria SKILL.md Step 3: "Given sets up state, When triggers action, Then observes outcome. Do not put assertions in Given. Do not put setup in Then." And: "One behaviour per scenario."
-- [x] PASS: Edge cases mandatory and all four covered — write-acceptance-criteria SKILL.md Step 3 scenario coverage table: "Edge case: Boundary values, empty states, maximums — Yes, always." Step 6 edge case audit requires "empty/null input, maximum/minimum values." The skill mandates these categories, supporting all four specified edge cases.
-- [x] PASS: Error cases covered including malformed CSV file — write-acceptance-criteria SKILL.md Step 3: "Error case: Invalid input is rejected correctly — Yes, if the rule involves input." Step 6 edge case audit requires "error states." A malformed file (not parseable) is an error state requiring explicit coverage.
-- [x] PASS: Non-functional criteria with specific thresholds — write-acceptance-criteria SKILL.md Step 4 provides a non-functional criteria table with Performance as a category requiring a threshold and how to test it. The rule states: "Non-functional criteria are acceptance criteria too. 'It works' is not sufficient."
-- [~] PARTIAL: Open questions flagged explicitly — write-acceptance-criteria SKILL.md Step 2: "If you discover a red card (unanswered question), flag it explicitly. Do not invent an answer. Unresolved questions block development." The output format includes an Open Questions table with Question / Impact / Owner columns. This is explicitly required by the definition.
-- [x] PASS: Test level mapping with rationale — write-acceptance-criteria SKILL.md Step 5 requires a mapping table with Criterion / Test level / Rationale, with the rule: "Default to the lowest sufficient level. Unit over integration over E2E."
-
-### Notes
-
-The open questions criterion (8) has explicit and strong support in the definition — "red cards" are required outputs of the Example Mapping process and the output format has a dedicated Open Questions table. The PARTIAL ceiling is the test author's design choice, not a quality gap in the definition. The test level mapping criterion (9) is particularly well-supported: Step 5 provides an explicit table format and rules about choosing the lowest sufficient level.
+Both gaps — intra-upload duplicate detection and privilege-escalation open questions — stem from the same root: the skill surfaces unknowns the practitioner already sees, but doesn't prompt for blind spots in specific problem classes. The Example Mapping Red card mechanism is designed for group discovery sessions; solo use doesn't get the same coverage. Adding a "common questions for stories involving role assignment / bulk data import" heuristic section would close both gaps without adding structural weight.

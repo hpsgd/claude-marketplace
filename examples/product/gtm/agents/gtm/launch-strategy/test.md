@@ -28,3 +28,16 @@ Can you help me build the launch strategy?
 - [ ] PASS: Distinguishes between the existing customer expansion play (340 accounts) and any net-new motion — these require different approaches
 - [ ] PARTIAL: Includes a post-launch review plan with success metrics — partial credit if metrics are named but no review timeline or owner is specified
 - [ ] PASS: Produces a structured launch plan with phases and owners, not a list of marketing ideas
+
+## Output expectations
+
+- [ ] PASS: Output sizes the existing-customer revenue opportunity — 340 accounts × 50+ seats × $15/seat/month — yielding the upper-bound ARR (~$3M+) and a realistic conversion target (e.g. "30% adoption in year 1 → ~$900K ARR uplift")
+- [ ] PASS: Output's positioning anchors against Asana / Monday native reporting as the competitive alternatives, with the executive summary as the named differentiator — not a generic feature list
+- [ ] PASS: Output's customer-problem framing leads with the operations director / PMO pain — e.g. "execs ask 'how are projects tracking?' and you spend half a day pulling a manual report" — not "we have a new analytics module"
+- [ ] PASS: Output classifies this as Tier 1 or Tier 2 launch given 340 existing customers, $15/seat ARR uplift, and a 3-year-customer-base activation event — explicitly NOT a silent rollout
+- [ ] PASS: Output separates the existing-customer expansion motion (CSM-led, in-product upsell, QBR conversations) from any net-new acquisition motion — different channels, different messaging, different sales process
+- [ ] PASS: Output's launch plan has phases with owners and dates — Pre-launch (weeks -4 to 0): readiness checklist, sales enablement, beta close-out; Launch week: announcements, in-product, customer comms; Post-launch (weeks 1-12): adoption tracking, expansion plays, feedback loops
+- [ ] PASS: Output's marketing copy and messaging examples are labelled DRAFT — explicitly flagged for human review before publication
+- [ ] PASS: Output's post-launch review plan names success metrics (e.g. trial signups, paid conversions, % of 340-base activated, $ ARR uplift), a review date (e.g. "Day 30, Day 60, Day 90 reviews"), and a review owner
+- [ ] PASS: Output addresses internal readiness alongside external launch — sales enablement (battle cards, demo scripts), CSM enablement (expansion playbooks), support training, docs ready before announce
+- [ ] PARTIAL: Output addresses pricing communication carefully — $15/seat add-on for existing customers may need grandfathering for early adopters or volume discounting at the 340 mid-market scale

@@ -1,94 +1,41 @@
-# Content strategy
+# Output: Content strategy
 
-Testing whether the content-strategy skill uses the Diataxis framework, requires a content inventory, and produces a prioritised content roadmap.
-
-## Prompt
-
-> /user-docs-writer:content-strategy for our help centre — we have 140 articles written over 3 years, significant product changes since most were written, and support tickets suggesting users can't find answers to common questions.
-
-## Output
-
-**Content Strategy: Clearpath Help Centre**
-
-**Step 1 — Inventory (140 articles):**
-
-| # | Document | Path | Quadrant | Feature area | Last updated | Status |
-|---|---|---|---|---|---|---|
-| 1 | Getting started with time tracking | /docs/time/start.md | Tutorial | Time tracking | 2023-01-12 | Stale |
-| 2 | How to read utilisation reports | /docs/reports/utilisation.md | How-to | Reporting | 2022-08-04 | Stale |
-| ... | ... | ... | ... | ... | ... | ... |
-
-Summary: 8 Tutorial (6%), 61 How-to (44%), 42 Reference (30%), 29 Explanation (20%). 14 orphaned articles with no clear quadrant.
-
-**Step 2 — Coverage matrix:**
-
-| Feature | Tutorial | How-to | Reference | Explanation |
-|---|---|---|---|---|
-| Time tracking | No | Yes | Stale | No |
-| Reporting | No | Partial | Stale | Yes |
-| Integrations | No | Yes | No | No |
-| Admin settings | No | Yes | Yes | No |
-
-**Step 3 — Gap analysis:**
-
-Missing content: Tutorials are nearly absent (6%). All admin and integration areas lack explanation docs. Reference docs for time tracking and reporting are stale.
-
-Stale content: 14 reference articles flagged as outdated by product changes.
-
-Orphaned: 14 articles with no inbound links or navigation entry.
-
-Common patterns: Tutorial gap (onboarding path has no guided walkthrough), Freshness gap (major feature changes not reflected).
-
-**Step 4 — Prioritised backlog:**
-
-| Priority | Content piece | Quadrant | Feature | Effort | Owner |
-|---|---|---|---|---|---|
-| P0 | Getting started tutorial | Tutorial | Onboarding | M | Docs lead |
-| P0 | Utilisation reports how-to | How-to | Reporting | S | Docs lead |
-| P1 | Integration reference | Reference | Integrations | L | Docs lead |
-
-**Step 5 — Content standards:**
-
-| Quadrant | Structure | Length | Must include |
-|---|---|---|---|
-| Tutorial | Numbered steps with outcomes | 10-30 min | Prerequisites, working example, next steps |
-| How-to | Numbered steps, minimal explanation | 2-5 min | Goal in title, single outcome |
-| Reference | Tables, parameter lists | Complete | Every option, every error code |
-| Explanation | Prose with diagrams | As needed | Why, not how |
-
-**Step 6 — Roadmap:**
-
-Phase 1 (Weeks 1-4): Foundation — onboarding tutorial, top 3 stale how-tos.
-Phase 2 (Weeks 5-8): Completeness — reference docs for integrations and admin.
-Phase 3 (Weeks 9-12): Depth — explanation articles for complex features.
-
-Ongoing maintenance: monthly freshness review, feature-change trigger, quarterly coverage audit, support ticket review.
-
-## Evaluation
-
-
-| Field | Value |
-|---|---|
-| Verdict | PASS |
-| Score | 7.5/8 criteria met (94%) |
-| Evaluated | 2026-04-16 |
-
+**Verdict:** PARTIAL
+**Score:** 14/18 criteria met (78%)
+**Evaluated:** 2026-04-29
 
 ## Results
 
-- [x] PASS: Diataxis framework applied — the skill opens with "Define a documentation content strategy for $ARGUMENTS using the Diataxis framework." All six steps classify content as Tutorial, How-to, Reference, or Explanation throughout. The inventory table, coverage matrix, gap analysis, and content standards all use Diataxis quadrants as the mandatory taxonomy. The quadrant definitions are explicitly stated in Step 1.
-- [x] PASS: Content inventory before recommendations — Step 1 "Inventory Existing Content" is mandatory and uses Glob/Grep to find and classify all existing documentation. The output format requires a complete inventory table before any Step 2-6 content executes.
-- [x] PASS: Gap analysis required — Step 3 "Identify Gaps" is a required step with dedicated table structures for missing content, stale content, and orphaned content, all structured by feature area and quadrant. Common gap patterns (explanation gap, tutorial gap, reference gap, freshness gap) are explicitly required checks.
-- [x] PASS: Prioritised content roadmap — Step 4 "Prioritise Content Creation" produces a ranked backlog (P0/P1/P2) with rationale. The prioritisation criteria table includes weights (High/Medium/Low) and rationale for user traffic, onboarding path, support ticket volume, feature completeness, quadrant balance, and staleness risk. Step 6 synthesises this into a phased roadmap.
-- [x] PASS: Content standards per type — Step 5 "Define Content Standards" is a required step with a per-quadrant standards table covering structure, length, and must-include elements for Tutorial, How-to, Reference, and Explanation.
-- [x] PASS: Coverage matrix required — Step 2 "Map Coverage" explicitly requires a feature-by-quadrant matrix. The output format template shows exactly how it must be structured, including a Coverage Summary table with quadrant counts and percentages.
-- [~] PARTIAL: Content maintenance — Step 6's roadmap includes an "Ongoing: Maintenance" section requiring monthly freshness review, feature-change trigger, quarterly coverage audit, and support ticket review. This is a required component of the roadmap output. Maximum score is 0.5 per PARTIAL ceiling — criterion is PARTIAL-prefixed regardless of how fully the definition meets it.
-- [x] PASS: Valid YAML frontmatter — contains `name: content-strategy`, `description`, and `argument-hint` fields.
+### Criteria
 
-### Notes
+- [x] PASS: Skill uses the Diataxis framework — opens with "Define a documentation content strategy for $ARGUMENTS using the Diataxis framework" and applies Tutorial/How-to/Reference/Explanation across all six steps.
+- [x] PASS: Skill requires a content inventory step before any recommendations — Step 1 "Inventory Existing Content" is mandatory first, scanning all docs before any subsequent step executes.
+- [x] PASS: Skill produces a gap analysis — Step 3 has three structured tables: missing content, stale content, and orphaned content, plus a common gap patterns table.
+- [x] PASS: Skill produces a prioritised content roadmap — Step 4 ranks gaps using P0/P1/P2 with explicit prioritisation criteria (user traffic, onboarding path, support ticket volume, etc.), and Step 6 synthesises into a phased roadmap.
+- [x] PASS: Skill defines content standards — Step 5 has a standards table (style guide, review process, freshness policy, ownership model, templates, testing, versioning) plus a per-quadrant standards table with structure, length, and must-include elements.
+- [x] PASS: Skill requires a coverage matrix — Step 2 requires a feature-by-quadrant matrix showing Yes/No/Stale for every feature-quadrant combination, plus a coverage summary by quadrant.
+- [~] PARTIAL: Skill addresses content maintenance — Step 6 mandates an "Ongoing: Maintenance" section with monthly freshness review, feature-change trigger, quarterly coverage audit, and support ticket review. Substantive coverage, not a passing mention. Criterion is PARTIAL-prefixed, so capped at 0.5.
+- [x] PASS: Skill has valid YAML frontmatter with `name: content-strategy`, `description`, and `argument-hint` fields, all populated.
 
-This skill is well-structured and closely matches the test criteria. The Diataxis framework is applied consistently across all six steps rather than just mentioned in the introduction. Every step produces a required output artifact.
+### Output expectations
 
-The content maintenance criterion is PARTIAL-ceilinged by the test author. The definition actually fully requires a maintenance schedule as part of Step 6's output — monthly reviews, feature-change triggers, and ownership are all mandated. The ceiling is the test author's constraint.
+- [x] PASS: Output's content inventory step processes all existing articles — Step 1 instructs scanning ALL documentation files ("categorise every piece") with quadrant classification and a Status column (Current/Stale/Orphaned), covering the full set not a sample.
+- [x] PASS: Output uses Diataxis taxonomy explicitly — framework is named in the opening sentence, and the four types are defined with purpose/orientation/user-need in a definitions table in Step 1.
+- [x] PASS: Output's gap analysis identifies what's missing per product area concretely — Step 3's "Missing content" table has Feature + Missing quadrant(s) + Impact columns, requiring specific feature-level identification, not generic statements.
+- [ ] FAIL: Output's coverage matrix maps content to user tasks — the matrix in Step 2 uses Feature/Area as rows, not user tasks ("export a report", "invite a teammate"). The test requires task-level rows; the skill uses feature-area rows. The two are not equivalent: a feature area may have docs but still leave specific user tasks uncovered.
+- [~] PARTIAL: Output addresses the support-ticket signal — support ticket volume is a named prioritisation factor in Step 4, and support ticket review appears in the maintenance schedule. However the skill does not explicitly distinguish between "content exists but users can't find it" (findability gap) versus "content genuinely doesn't exist" (coverage gap), which the prompt scenario specifically raises.
+- [x] PASS: Output's roadmap is prioritised with top items being support deflection wins or gaps blocking key user tasks — P0 is explicitly defined as "blocks user onboarding or generates frequent support tickets."
+- [x] PASS: Output's content standards define what GOOD looks like per Diataxis type with actionable specifics — Per-Quadrant Standards table in Step 5 specifies structure, length, and must-include elements for each of the four quadrant types (e.g. "How-to: numbered steps, minimal explanation, 2-5 minutes to read, goal in title, prerequisites, single outcome").
+- [~] PARTIAL: Output's recommendations distinguish between rewrite, retire, and create — the skill uses Stale (implies rewrite), Orphaned (implies retire), and Missing (implies create) as gap categories, but never frames these as explicit action types. A writer working from the skill could infer the right action, but it is not stated.
+- [x] PASS: Output addresses content maintenance as a strategic component — Step 5 mandates a freshness policy and ownership model; Step 6's maintenance section requires monthly review, feature-change trigger, quarterly audit, and support ticket review with a cadence.
+- [ ] FAIL: Output addresses the IA/findability dimension — no mention of search, navigation hierarchy, tagging, or findability anywhere in the skill. The scenario explicitly involves users being unable to find answers, making this a meaningful gap in the strategy definition.
 
-The prioritisation rationale (Step 4) is notably specific: user traffic, onboarding path, support ticket volume, feature completeness, quadrant balance, and staleness risk are listed with relative weights. This is more useful than most content strategy approaches that just say "prioritise by impact."
+## Notes
+
+The skill is well-structured and strong on Diataxis application throughout. The main structural gaps are:
+
+The coverage matrix uses feature areas as rows rather than user tasks. Feature-area coverage and task-level coverage are different things — a feature can have docs in all four quadrants and still leave the specific task "export a report" without a how-to. The test's expectation of task-level rows is deliberate and the skill doesn't meet it.
+
+The findability gap is a real weakness. The prompt scenario describes users who "can't find answers to common questions" — this is explicitly a findability problem, not just a coverage problem. The skill has no step, output section, or rule addressing search, IA, navigation, or tagging. A content strategy for a 140-article help centre with findability complaints should address this.
+
+The rewrite/retire/create framing is implied by the gap categories but not made explicit. Writers working from this skill would need to infer the action from the gap type.

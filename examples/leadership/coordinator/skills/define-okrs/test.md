@@ -17,3 +17,16 @@ Scenario: A user invokes the skill to define OKRs for a product team for a quart
 - [ ] PASS: Each KR documents a measurement method (tool, frequency, owner)
 - [ ] PASS: Output is written to a file at `docs/okrs-[name]-[period].md`
 - [ ] PARTIAL: Objectives are limited to 2-4 and each has 3-5 KRs — not over-specified or under-specified
+
+## Output expectations
+
+- [ ] PASS: Output's objectives are qualitative descriptions of the desired future state — e.g. "New users find their footing fast and reach their first 'aha' moment" — and contain NO numeric targets in the objective text itself
+- [ ] PASS: Output's key results focus on activation outcomes — at least one KR targets the activation rate (current 38% baseline) with a specific target around 70% ambition (e.g. moving to 55% in Q3)
+- [ ] PASS: Output's KRs each include a stated baseline — current value, the data source (analytics tool, internal dashboard), and measurement frequency — not just a target floating without a starting point
+- [ ] PASS: Output's KR target reflects 70% ambition — moving from 38% to 55% (+17pp) is a stretch but achievable; moving to 80% would be unrealistic in one quarter, and moving to 42% would be trivial
+- [ ] PASS: Output includes both leading indicators (e.g. wizard step completion rate, time to first API request) and lagging indicators (e.g. 30-day retention of activated users, paid conversion rate) — not just lagging metrics
+- [ ] PASS: Output includes at least one guardrail KR — something that must NOT regress while pursuing activation, e.g. "support ticket volume per user does not increase by more than 5%" or "payment success rate stays above 98%"
+- [ ] PASS: Output's KRs are spectrum-based (achievable at 30%, 60%, 100%) — none are binary "ship feature X" or "complete project Y"
+- [ ] PASS: Output ties to the parent objective (grow paying customers by 30% this year) — at least one KR connects activation to downstream paid conversion or trial-to-paid rate
+- [ ] PASS: Output is written to `docs/okrs-onboarding-2026-q3.md` (or equivalent path matching the team and quarter) — not only returned as conversation text
+- [ ] PASS: Output documents per-KR measurement method — the tool (e.g. Mixpanel, Amplitude, internal dashboard), the cadence (weekly check-in, end-of-quarter scoring), and the named owner

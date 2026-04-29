@@ -17,3 +17,16 @@ Review this PR. `src/auth/session.ts` has a block of 8 lines commented out with 
 - [ ] PASS: Output uses the defined summary template with counts by severity (critical, important, suggestion)
 - [ ] PASS: Inconsistent naming across bounded contexts is flagged — `failProcess()` vs `recordFailed()` for the same operation violates the naming consistency rule
 - [ ] PARTIAL: Zero-finding gate is applied correctly — skill does not pad findings with acceptable patterns listed in the anti-patterns section
+
+## Output expectations
+
+- [ ] PASS: Output flags the commented-out code block in `src/auth/session.ts` with the line range and the `// old session logic` marker as evidence — recommendation is to delete (git history preserves it), not "consider removing"
+- [ ] PASS: Output flags the `// eslint-disable-next-line @typescript-eslint/no-explicit-any` without justification as a Pass 2 finding — naming the project rule that lint suppressions require an inline justification comment
+- [ ] PASS: Output flags each banned word individually in Pass 6 — `leverages`, `cutting-edge`, `synergies`, `streamline`, `robust`, `comprehensive`, `fosters`, `ecosystem` — with the specific banned-vocab tier each falls under
+- [ ] PASS: Output flags banned phrases — "In today's rapidly evolving landscape", "It's important to note that" — separately from the banned single-words
+- [ ] PASS: Output provides a rewritten README sentence demonstrating the lean, on-voice version — not just listing what's wrong
+- [ ] PASS: Output flags the cross-context naming inconsistency — `failProcess()` vs `recordFailed()` for the same semantic operation — citing both files and recommending which name to standardise on, with reasoning
+- [ ] PASS: Output's findings each include exact file, line evidence, the specific rule violated (named or quoted), and a concrete fix
+- [ ] PASS: Output uses the defined summary template with counts by severity (critical / important / suggestion) at the top — not a flat unranked list
+- [ ] PASS: Output runs all four mandatory passes for the file types in scope and reports per-pass finding counts even where zero findings
+- [ ] PARTIAL: Output addresses the README content beyond just banned words — flags the AI-tells in sentence rhythm (uniform sentence length, abstract claims) per the writing-style rules, not only vocabulary

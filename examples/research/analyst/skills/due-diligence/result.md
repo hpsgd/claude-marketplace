@@ -1,106 +1,45 @@
-# Due diligence skill
-
-**Scenario:** A SaaS company is evaluating a commercial partnership with Culture Amp, the AU-based employee experience platform.
-
-> /analyst:due-diligence Culture Amp Pty Ltd for commercial partnership — we're considering integrating their employee engagement surveys into our HR platform
-
-Routed to `plugins/research/analyst/skills/due-diligence/SKILL.md` — skill test, structural evaluation only.
-
-## Output
-
-#### Due diligence: Culture Amp Pty Ltd
+# Result: due-diligence skill
 
 | Field | Value |
 |---|---|
-| As of | 2026-04-16 |
-| Scope | Commercial partnership |
-| Data type | Public sources only |
+| **Verdict** | PARTIAL |
+| **Score** | 16/18 criteria met (88.9%) |
+| **Evaluated** | 2026-04-29 |
 
-##### Business fundamentals
+## Results
 
-Culture Amp is an AU-founded employee experience SaaS platform headquartered in Melbourne, operating globally with offices in San Francisco, New York, and London.
+### Criteria
 
-| Metric | Value | Source |
-|---|---|---|
-| Funding total | ~USD $370M | [Crunchbase — Culture Amp](https://crunchbase.com/organization/culture-amp), accessed 2026-04-16 |
-| Last round | Series F, USD $100M (Oct 2022) | [Crunchbase — Culture Amp](https://crunchbase.com/organization/culture-amp), accessed 2026-04-16 |
-| Implied valuation (Series F) | ~USD $1.5B (estimate, not disclosed publicly) | [AFR — Culture Amp unicorn valuation](https://afr.com/technology/culture-amp-1-5b-valuation), accessed 2026-04-16 — labelled as estimate |
-| Disclosed revenue | Not publicly disclosed (private company) | — |
-| Headcount | ~1,000+ employees (LinkedIn estimate) | [LinkedIn — Culture Amp](https://linkedin.com/company/culture-amp), accessed 2026-04-16 |
+- [x] PASS: Skill states the scope explicitly at the top — Step 1 requires confirming the decision type (commercial partnership / investment / acquisition) before researching; scope is the first field in the output template.
+- [x] PASS: Business fundamentals section includes a source and date for every revenue or funding figure — Step 2: "Each figure needs a source and date." Rules block repeats: "Every revenue figure needs a source and date."
+- [x] PASS: Product signals section covers review score trend over time — Step 3 explicitly requires "score trend over 6+ months (not just current score)."
+- [x] PASS: Team section notes current key executive tenures and notable recent departures — Step 4 requires both "Current key executives — tenures, any recent departures" and "Notable departures in last 12 months."
+- [x] PASS: Signal summary table is present and precedes the verdict — Step 7 defines the signal taxonomy; Rules block states "The signal summary must precede the verdict." Output template enforces ordering.
+- [x] PASS: Output clearly states this is public-data diligence only and routes legal/financial/technical diligence elsewhere — intro paragraph, Rules block, and output template footer all require the disclaimer explicitly.
+- [~] PARTIAL: When two or more red signals are present, skill routes to appropriate follow-on skills — Step 7 "Red flag escalation" table maps red signal types to `/investigator:public-records`, `/investigator:corporate-ownership`, `/investigator:entity-footprint`, and `/analyst:competitive-analysis`. Mechanism is defined. Scored 0.5 because the test scenario (Culture Amp, stable company) doesn't trigger it, so routing can't be observed in practice.
+- [x] PASS: Revenue and valuation are not conflated — Rules block: "Revenue ≠ valuation. Distinguish them — the confusion causes real decisions to go wrong." Enforced in both rules and Step 2 guidance for private companies.
 
-Revenue figure unavailable — private company with no public disclosures. Valuation figure is a media estimate, not company-confirmed.
+**Criteria subtotal: 7.5/8**
 
-##### Product signals
+### Output expectations
 
-| Source | Score | Trend | Review count |
-|---|---|---|---|
-| G2 | 4.5/5 | Stable (4.4–4.6 over 2022–2025) | 1,200+ | 
-| Capterra | 4.6/5 | Stable | 400+ |
+- [ ] FAIL: Output addresses Culture Amp specifically with entity confirmation (ABN, registered office) at the top — the skill's output format template starts with company name, date, scope, and data type. No ABN or registered office field is defined anywhere in the skill. Step 1 ("Establish scope") doesn't include entity verification. A well-formed output from this definition would not include ABN or registered office confirmation.
+- [x] PASS: Scope statement explicitly limits to commercial-partnership diligence and names what's NOT covered — the output template footer states "Legal, financial, and technical diligence requires direct access to private information." The intro paragraph says the same. The three non-covered areas (legal, financial, technical) are named.
+- [x] PASS: Every revenue/funding figure sourced with URL and date — Step 2 requires source and date for each figure; private-company label requirement is explicit.
+- [x] PASS: Product signals trace review-score trend over time — Step 3 explicitly requires trend over 6+ months; review velocity and negative theme tracking are required elements.
+- [x] PASS: Team section names current executives with tenure and notable departures in last 12 months — Step 4 structure and the output template's Team section both require this.
+- [x] PASS: Signal summary table precedes the verdict with named signals — Step 7 defines the six-signal taxonomy; output template shows the table before the verdict section. Verdict is one sentence following the table.
+- [x] PASS: Verdict follows from the signal table — Rules block and Step 7 structure enforce this; the verdict is a single sentence summarising the 1-2 factors from the signal table.
+- [x] PASS: Output explicitly states public-data-only diligence and that partnership decision requires legal, financial, and technical diligence — hardcoded into output template as the final line of the verdict section.
+- [x] PASS: Output distinguishes revenue from valuation — Rules block enforces this; Step 2 explicitly labels private-company revenue estimates separately from funding/valuation.
+- [~] PARTIAL: Output addresses AU SaaS partnership specifics (SOCI Act, Privacy Act 1988 data-sharing) — SKILL.md includes ASIC Connect as an AU-specific regulatory search source in Step 6, and the scope definition for commercial partnership covers reputational risk. However, the skill contains no instruction to address SOCI Act applicability, Privacy Act 1988 customer-data-sharing obligations, or data-residency considerations for AU-AU partnerships. The AU context is partially acknowledged through ASIC sourcing, but the specific AU data-law obligations for customer-data sharing are not in scope.
 
-Sources: [G2 — Culture Amp](https://g2.com/products/culture-amp), accessed 2026-04-16; [Capterra — Culture Amp](https://capterra.com/p/73165/Culture-Amp), accessed 2026-04-16.
-
-Recurring negative themes in G2 reviews: pricing for smaller teams; customisation limits in survey templates; reporting UI complexity. Positive themes: breadth of benchmark data; action planning features; customer success support.
-
-Notable customers on culture-amp.com customer page (accessed 2026-04-16): Canva, Slack, McDonald's, Etsy.
-
-##### Team
-
-| Name | Role | Tenure |
-|---|---|---|
-| Didier Elzinga | CEO and co-founder | Since founding (2009) |
-| Rod Hamilton | Co-founder | Since founding (2009) |
-| Joanna Moss | CFO | Joined 2022 |
-
-No notable C-suite departures in the last 12 months found in public sources. Co-founder tenure is a positive stability indicator. Source: [Culture Amp leadership page](https://cultureamp.com/company), accessed 2026-04-16; [LinkedIn](https://linkedin.com/company/culture-amp), accessed 2026-04-16.
-
-##### Market position
-
-Culture Amp is consistently ranked in G2's top tier for employee engagement software. Gartner Peer Insights score: 4.4/5 (accessed 2026-04-16). Primary competitors: Qualtrics EmployeeXM, Glint (Microsoft), Lattice. No independent market share data found — IBISWorld AU does not cover this sub-segment at this granularity.
-
-##### Risk factors
-
-No regulatory proceedings found via ASIC Connect (accessed 2026-04-16). No litigation found in public AU or US sources. No data breaches in public reporting. Long gap since last disclosed funding round (2022); no public milestone announcement explaining the gap.
-
-##### Signal summary
-
-| Signal | Status | Evidence |
-|---|---|---|
-| Team stability | Green | Co-founders still in place 15+ years; no C-suite departures found |
-| Funding trajectory | Yellow | Series F in 2022; no subsequent round or revenue milestone announced — 3+ year gap |
-| Customer sentiment trend | Green | G2 stable at 4.4–4.6 over 3 years; review count growing |
-| Hiring velocity | Yellow | LinkedIn headcount not materially growing; no major hiring spikes or freezes publicly reported |
-| Regulatory/legal exposure | Green | No ASIC proceedings, no litigation found in public records |
-| Strategic fit | Green | Deep survey and analytics capability directly relevant to HR platform integration |
-
-**Verdict:** Commercial partnership viable from a public-data diligence perspective. The 3+ year funding gap without a public revenue milestone is the one signal worth watching — not a blocker, but warrants a direct conversation about financial trajectory.
-
-**Note:** This is public-data diligence only. Legal, financial, and technical diligence requires direct access to private information.
-
-##### Sources
-
-1. [Crunchbase — Culture Amp](https://crunchbase.com/organization/culture-amp) — funding history and rounds, accessed 2026-04-16
-1. [AFR — Culture Amp valuation](https://afr.com/technology/culture-amp-1-5b-valuation) — valuation estimate context, accessed 2026-04-16
-1. [G2 — Culture Amp](https://g2.com/products/culture-amp) — review score, trend, themes, accessed 2026-04-16
-1. [Capterra — Culture Amp](https://capterra.com/p/73165/Culture-Amp) — secondary review source, accessed 2026-04-16
-1. [Culture Amp leadership page](https://cultureamp.com/company) — team and tenure, accessed 2026-04-16
-1. [LinkedIn — Culture Amp](https://linkedin.com/company/culture-amp) — employee count, hiring, accessed 2026-04-16
-1. [ASIC Connect](https://connect.asic.gov.au) — no proceedings found, accessed 2026-04-16
-
-## Evaluation
-
-| Verdict | Score | Evaluated |
-|---|---|---|
-| PASS | 7.5/8 (94%) | 2026-04-16 |
-
-- [x] PASS: Skill states scope explicitly at the top — Step 1 requires confirming the decision type before researching; output format template has `Scope` as a header field. The three scope options (commercial partnership, investment, acquisition) are defined with different focus areas.
-- [x] PASS: Business fundamentals section includes source and date for every revenue or funding figure — Rules block: "Every revenue figure needs a source and date." Step 2 requires this for each figure. Output template includes source and date in the financials format.
-- [x] PASS: Product signals section covers review score trend over time, not just current score — Step 3 explicitly states "score trend over 6+ months (not just current score)" and lists review velocity and negative review themes as required elements.
-- [x] PASS: Team section notes current key executive tenures and notable recent departures — Step 4 requires "Current key executives — tenures, any recent departures" and "Notable departures in last 12 months (potential instability flag)."
-- [x] PASS: Signal summary table precedes the verdict — Step 7 defines the signal taxonomy and output format places the signal table before the verdict. Rules block: "The signal summary must precede the verdict."
-- [x] PASS: Output clearly states this is public-data diligence only — Rules block and output format template both include the disclaimer. Hardcoded into the template as the final line of the verdict section.
-- [~] PARTIAL: When two or more red signals present, skill routes to appropriate follow-on skills — Step 7 "Red flag escalation" table maps red signal types to follow-on skills (public-records, corporate-ownership, entity-footprint, competitive-analysis). The routing logic is defined. Scored 0.5 because this scenario has yellow signals rather than hard red signals, so the routing isn't triggered — but the mechanism exists and is correctly defined.
-- [x] PASS: Revenue and valuation not conflated — Rules block: "Revenue ≠ valuation. Distinguish them — the confusion causes real decisions to go wrong." The output template and rules both enforce this distinction.
+**Output expectations subtotal: 8.5/10**
 
 ## Notes
 
-The signal taxonomy (green/yellow/red with specific named criteria for each) is a strong structural feature — it prevents the verdict from being written before the evidence is marshalled. The PARTIAL on red flag routing is borderline; the scenario doesn't trigger it, but the mechanism is clearly defined. In a scenario with actual red signals it would score full marks.
+The top gap is entity verification: the skill has no step for confirming ABN, ASIC registration, or registered office. For AU commercial partnerships this is a meaningful omission — the wrong entity could be the counterparty. A preflight entity confirmation step (ASIC Connect lookup to confirm legal name, ABN, and current registration status) would be a natural addition to Step 1.
+
+The AU data-law gap is real but narrower: the skill correctly routes to ASIC Connect for regulatory findings, but doesn't prompt the analyst to check whether customer-data sharing under the Privacy Act 1988 requires a Data Processing Agreement or whether SOCI Act applies to the partner's sector. For an AU-AU SaaS integration this is a relevant risk that the skill currently leaves to the analyst's judgment rather than surfacing as a required check.
+
+The red-flag routing mechanism (Step 7 escalation table) is the strongest structural feature of the skill — it prevents the analyst from stopping at a surface verdict when compounding signals are present.

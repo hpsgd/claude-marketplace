@@ -18,3 +18,16 @@ Scenario: Testing whether the journey-map skill requires evidence sources, maps 
 - [ ] PASS: Skill produces improvement recommendations linked to specific stages or pain points — not generic UX advice
 - [ ] PARTIAL: Skill includes wait times and gaps as explicit journey stages — partial credit if pain points capture this but wait times are not explicitly required as steps
 - [ ] PASS: Skill has a valid YAML frontmatter with name, description, and argument-hint fields
+
+## Output expectations
+
+- [ ] PASS: Output's scope defines a concrete start trigger ("operations director hears about Clearpath via Google search / peer recommendation / paid ad") and end outcome ("uses Clearpath at least 5 days/week for portfolio reporting") — not abstract beginning / end
+- [ ] PASS: Output names evidence sources for the map — sales call recordings, onboarding survey responses, support tickets, churn-interview notes, product analytics — not invented from assumptions
+- [ ] PASS: Output's stages cover the full journey — Awareness, Consideration, Trial / POC, Purchase, Onboarding, First Value, Habit Formation, Daily Use — at least 6 stages, not collapsed to 3-4
+- [ ] PASS: Output maps all four customer dimensions per stage — Actions (what they DO), Thinking (what they're rationally weighing), Feeling (emotional state), Pain Points (frustrations, blockers) — every stage gets all four
+- [ ] PASS: Output's touchpoints / channels per stage are specific — e.g. Awareness: Google search, LinkedIn ads, peer recommendations; Trial: signup form, in-product onboarding, sales engineering call — named, not generic "marketing channels"
+- [ ] PASS: Output identifies critical moments — stages where emotional intensity is highest or where the journey can fork (e.g. "POC outcome decides purchase" or "first failed integration causes abandonment") — with reasoning
+- [ ] PASS: Output's improvement recommendations are linked to specific stages or pain points — not generic UX advice; e.g. "Onboarding stage: integration failures are the #1 friction; build a connector validator" specifically tied to a mapped pain point
+- [ ] PASS: Output addresses wait times explicitly — e.g. "Trial stage includes 7-14 day evaluation window" or "Onboarding has 2-week IT integration wait" — these are stages of the journey, not just background
+- [ ] PASS: Output addresses cross-functional handoffs — sales → CSM, CSM → support, marketing → product — these are journey moments where the customer experience can break down
+- [ ] PARTIAL: Output addresses moments of doubt or churn risk — points where the customer might leave (e.g. mid-trial without seeing value, post-purchase before first use) so the team knows where to invest in retention

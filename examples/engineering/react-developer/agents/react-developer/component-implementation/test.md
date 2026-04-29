@@ -25,3 +25,16 @@ The table will be used on the `/admin/orders` and `/admin/users` pages, so it ne
 - [ ] PASS: Agent flags the decision checkpoint for adding a new shared component (checks UI library for existing primitives)
 - [ ] PARTIAL: Agent covers accessibility requirements — keyboard navigation for sortable headers, appropriate ARIA attributes
 - [ ] PASS: Output includes TDD Evidence (RED/GREEN commands with exit codes) and a Checklist section
+
+## Output expectations
+
+- [ ] PASS: Output places `DataTable` in the shared components folder (e.g. `components/ui/data-table.tsx` or `components/shared/`), not co-located with `/admin/orders` or `/admin/users`, since the prompt says it's used on both
+- [ ] PASS: Output's `DataTableProps` is a typed and exported interface with at least: `columns: ColumnConfig[]`, `data: T[]`, `loading?: boolean`, `total?: number`, with a generic `<T>` type parameter so consumers get typed row data
+- [ ] PASS: Output stores sort, filter, and page state in URL search params using `useSearchParams` / `usePathname` from `next/navigation` (App Router) and updates them via `router.replace` with `scroll: false` — NOT in component-local `useState`
+- [ ] PASS: Output's text filter uses a debounce (e.g. 300-500ms) before updating the URL `?q=` param, preventing a navigation per keystroke — and the debounce is implemented in the component or via a hook, not via an external library if a hook will do
+- [ ] PASS: Output's column header click handler toggles sort direction (asc → desc → unset, or asc ↔ desc) and updates the URL `?sort=` and `?dir=` params — not in-place sorting of the data array
+- [ ] PASS: Output renders three distinct UI states — loading skeleton (matches column layout, not generic shimmer), empty state (when data.length === 0 and not loading), populated table — with clear conditional rendering
+- [ ] PASS: Output uses `clsx` (or `cn` wrapper) for conditional classNames — never string concatenation like `` `${base} ${active ? 'bg-blue-500' : ''}` ``
+- [ ] PASS: Output writes the failing Vitest test first — RED command with exit code 1 shown — then implements, then GREEN with exit code 0; tests cover at minimum: renders with data, renders empty state, renders skeleton when loading, sort click updates URL
+- [ ] PASS: Output addresses accessibility — sortable headers use `<th aria-sort>` with `ascending`/`descending`/`none` values, are keyboard-activatable (button or proper role), and the table has appropriate ARIA labels
+- [ ] PARTIAL: Output checks the project's existing UI library (shadcn/ui, Material UI, or custom) for an existing Table primitive before building from scratch — flagged as a decision checkpoint

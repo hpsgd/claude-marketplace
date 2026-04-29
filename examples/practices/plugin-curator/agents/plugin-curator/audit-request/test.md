@@ -16,3 +16,16 @@ Can you audit the `qa` agent for me? I want to know if it's structurally consist
 - [ ] PASS: Audit output includes a quality score (X/15 format) and line count
 - [ ] PASS: Audit includes recommended actions prioritised by impact
 - [ ] PARTIAL: Boundary check — agent does not audit itself (plugin-curator is explicitly excluded from "all" audits per the skill's anti-patterns)
+
+## Output expectations
+
+- [ ] PASS: Output's audit table covers all 15 quality criteria from the agent template — not a subset, not a generic checklist
+- [ ] PASS: Output scores each criterion as MET / PARTIALLY MET / MISSING (or equivalent ternary) — never blank, never "assumed met"
+- [ ] PASS: Output's non-passing criteria each include specific evidence — file reference, line number, or exact quote from the qa agent definition — not vague descriptions like "frontmatter could be better"
+- [ ] PASS: Output reports the quality score as `X/15` and the line count of the audited agent — both numeric, not approximate
+- [ ] PASS: Output checks model correctness — qa is a specialist agent that should use `sonnet`, not `opus` — and flags as a finding if mismatched
+- [ ] PASS: Output's recommended actions are prioritised — structural gaps (missing required sections) before content gaps (sparse rules) before style issues (line length, banned words) — with severity per action
+- [ ] PASS: Output reads CLAUDE.md, marketplace.json, and the agent template before evaluating the qa agent — pre-flight is shown explicitly as a step or evidence in the output
+- [ ] PASS: Output checks for private references / company names that shouldn't appear in a public marketplace plugin definition
+- [ ] PASS: Output checks tool-link conventions — third-party tools mentioned in prose have markdown hyperlinks on first mention
+- [ ] PARTIAL: Output's recommendations are concrete — each action specifies what to add or change, not "improve this section"

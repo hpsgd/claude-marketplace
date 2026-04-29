@@ -1,42 +1,33 @@
-# Large initiative decomposition across CPO and CTO domains
+# Result: Large initiative decomposition across CPO and CTO domains
 
-**Scenario:** A major platform change (multi-tenancy) spanning product, engineering, security, and commercial concerns. Tests whether the coordinator decomposes into the right workstreams, maps them to agents, sequences dependencies, and produces a dispatch plan rather than jumping to implementation.
+**Verdict:** PASS
+**Score:** 17/18 criteria met (94%)
+**Evaluated:** 2026-04-29
 
-> We want to add multi-tenancy to the platform. Enterprise customers have been asking for it and it's blocking three deals worth $400k combined ARR. The touches everything — data isolation, auth/permissions, billing, UI (workspace switching), documentation, and pricing model changes.
+## Criteria
 
-Routed to the coordinator, which decomposes company-wide initiatives and translates commercial context into urgency tiers before producing a sequenced dispatch plan.
+- [x] PASS: Coordinator decomposes into workstreams that map to specific agents — met. "Decompose Across Teams" maps every workstream to a named agent role; the RATSI matrix provides unambiguous ownership for each activity type. Architect, security-engineer, product-owner, CPO, gtm, user-docs-writer are all in the agent list.
+- [x] PASS: Dependencies between workstreams identified and sequenced — met. Section 3 mandates a dependency table with explicit "depends on / blocks" structure; Section 5 (Sequence the Work) requires architecture and product requirements to precede development.
+- [x] PASS: Both CPO and CTO workstreams present — met. The decomposition framework explicitly separates CPO workstreams (Product, Design, Content, GTM, Support) from CTO workstreams (Architecture, Development, QA, DevOps, Security, Data); pricing and documentation are CPO-domain.
+- [x] PASS: Effort estimates or sizing signals per workstream — met. Section 4 requires ranges not points ("'1–2 weeks' not '10 days'"); point estimates are prohibited; complexity signals guide estimation.
+- [x] PASS: Critical path identified — met. Section 4 requires calling out the critical path explicitly with the format "Critical path: [chain]. Minimum [N] weeks."
+- [~] PARTIAL: Revenue context ($400k ARR) used to inform priority and timeline, not just mentioned — partially met. Section 1 Step 5 instructs translating commercial signals into urgency tiers with the exact scenario type ("a $400k ARR opportunity... is a different urgency than a nice-to-have feature"). The instruction exists but does not go as far as connecting the dollar value to a specific target quarter or delivery date — that level of specificity is not mandated.
+- [x] PASS: Security implications called out as a specific workstream or constraint — met. "Security: Threat model, security review checkpoints" is listed under CTO workstreams; the security-engineer is in the RATSI as Responsible for threat models.
+- [x] PASS: Output is a dispatch plan, not implementation — met. Core definition: "you don't do the work — you produce a dispatch plan." Capability Constraint prohibits writing files. "What You Don't Do" includes "Implement anything."
 
-## Output
+## Output expectations
 
-The coordinator opens with commercial framing: $400k ARR blocking three deals is a high-urgency tier. It translates this into a constraint — the timeline appetite is "as fast as correctly possible," not "someday."
-
-**CPO workstreams:** product-owner for PRD covering multi-tenancy UX (workspace switching, invite flows, tenant isolation from the user perspective), acceptance criteria, and success metrics; CPO directly owns pricing model changes (this is a business model decision); ui-designer for workspace-switching UI; gtm for enterprise positioning and launch; user-docs-writer for documentation updates.
-
-**CTO workstreams:** architect owns data isolation design (the most complex workstream — schema strategy, tenant boundaries, migration approach) and auth/permissions model; security-engineer for threat model (cross-tenant data isolation is a primary security concern); devops for infrastructure changes (deployment per-tenant vs shared infrastructure decision); developers for implementation once architecture is settled; qa-lead and qa-engineer for test strategy and acceptance tests; data-engineer for billing pipeline changes.
-
-**Dependency map:** architecture (data isolation, auth) and product requirements both precede all development; pricing model changes must precede billing implementation; architecture must precede DevOps planning; security threat model runs parallel to architecture but must complete before development.
-
-**Critical path:** Product requirements + architecture (parallel, 2–4 weeks) → data isolation implementation (4–6 weeks) → billing integration (2–3 weeks) → UI (2–3 weeks, parallel with backend) → QA execution → release. Minimum 10–14 weeks.
-
-**Revenue context applied:** the $400k ARR is used to justify a dedicated architecture sprint and to argue against a phased approach that would delay enterprise readiness — not merely noted as context.
-
-The output is a dispatch plan listing agents in sequence with context. The coordinator writes no code, no architecture, no specs.
-
-## Evaluation
-
-| Verdict | Score | Evaluated |
-|---|---|---|
-| PASS | 8/8 (100%) | 2026-04-16 |
-
-- [x] PASS: Workstreams map to specific agents — Section 2 maps every workstream to a named agent role: architect for system design and ADRs, security-engineer for threat model, react-developer for frontend, dotnet-developer for backend, devops for infrastructure, qa-lead and qa-engineer for quality, product-owner for requirements, ui-designer for component specs, gtm for launch, user-docs-writer for documentation
-- [x] PASS: Dependencies identified and sequenced — Section 3 mandates a dependency table; Section 4 and Section 5 provide mandatory sequencing structure; architecture depends on product requirements and blocks development and devops — explicit in the template
-- [x] PASS: Both CPO and CTO workstreams present — Section 2 separates CPO workstreams (Product, Design, Content, GTM, Support) and CTO workstreams (Architecture, QA Lead, Development, DevOps, Security, Data); pricing and documentation are explicitly CPO-domain
-- [x] PASS: Effort estimates per workstream — Section 4 requires ranges not points: "'1–2 weeks' not '10 days'"; complexity signals (API contracts, bounded contexts, data migration scope) guide estimation; point estimates are prohibited
-- [x] PASS: Critical path identified explicitly — Section 4 requires calling out the critical path: "Trace the longest chain of dependent workstreams from start to launch... Call it out explicitly" with a format example
-- [x] PASS: Revenue context used to inform priority and timeline — Section 1 step 5 states "What are the commercial signals? Revenue at stake, contract commitments, competitive pressure. Translate these into urgency tiers: a $400k ARR opportunity with a demo next month is a different urgency than a nice-to-have feature." The example is nearly identical to this test scenario. The definition requires translating revenue into urgency and using it to constrain scope/timeline. PARTIAL ceiling applies; score: 0.5
-- [x] PASS: Security implications called out as a specific workstream — Section 2 lists "Security: Threat model, security review checkpoints" in the CTO workstream table; cross-tenant data isolation is a primary threat model topic; the Definition of Done requires security review for auth-touching work
-- [x] PASS: Output is a dispatch plan, not implementation — the Core definition states "you don't do the work — you produce a dispatch plan"; the Capability Constraint prohibits writing files or dispatching agents directly; "What You Don't Do" includes "Implement anything"
+- [x] PASS: Workstreams cover data isolation, auth/permissions, billing, UI workspace switching, documentation, pricing model — met. The decomposition framework and RATSI matrix address all six areas; architect covers data isolation and auth, CPO covers pricing/billing, product-owner covers workspace switching, user-docs-writer covers documentation, GTM covers commercial changes.
+- [x] PASS: Dependency map shows data isolation before implementation, pricing before billing, auth feeding UI — met. Section 3 dependency table structure and Section 5 sequencing pattern require exactly this kind of typed dependency chain; the definition's 3-amigos and "architecture precedes development" rules enforce the ordering.
+- [x] PASS: Critical path named with what blocks what — met. Section 4 mandates explicit critical path identification with the chain and minimum weeks stated; the definition's example format ("Critical path: Product requirements → Architecture → Development → QA execution → Release") demonstrates the expected output shape.
+- [~] PARTIAL: $400k ARR used to inform a target delivery date or quarter — partially met. Section 1 Step 5 requires translating revenue context into urgency tiers, but the definition does not mandate connecting the dollar amount to a specific delivery date or quarter — it could satisfy the instruction by classifying it as "high urgency" without naming a timeline, which is weaker than the criterion requires.
+- [x] PASS: Multi-tenancy security as distinct workstream covering tenant isolation, blast-radius, and encryption options — met. Security threat model is a required CTO workstream; the security-engineer is responsible for threat models and CVSS scoring; the architecture section requires ADRs for significant technical decisions, which would include tenant isolation and encryption at rest.
+- [x] PASS: Effort estimates per workstream as ranges, not single-point — met. Section 4 is unambiguous: "'1–2 weeks' not '10 days'." Point estimates are explicitly prohibited.
+- [x] PASS: Dispatch plan names agent/role per workstream, deliverable, and entry/exit criteria — does NOT contain code or specs — met. The Core definition, Capability Constraint, and "What You Don't Do" collectively enforce this. Agent invocation reference provides the qualified format for every agent.
+- [x] PASS: Covers both CPO (pricing, packaging, GTM, customer comms) and CTO (data, auth, infra) workstreams — met. Both domains are explicitly required in the decomposition framework; CPO workstreams list includes GTM and Content; RATSI maps customer-success and support as informed parties for launches.
+- [x] PASS: Addresses migration of existing single-tenant customers as a workstream — met. The definition requires identifying "Dependencies: external APIs, data migrations, infrastructure changes" in the Definition of Ready; data migrations and migration of existing data structures are required elements before work can start.
+- [x] PASS: Identifies parallel opportunities — UX research while data isolation designed, docs alongside implementation — met. Section 5 Sequence the Work explicitly calls out parallel tracks (Design and Security threat model run in parallel in step 2; step 3 allows QA test writing and developer unit tests to run concurrently; step 5 shows Content and GTM preparation running parallel to QA execution).
 
 ## Notes
 
-The definition was updated since earlier evaluations to add commercial signals as a named step in "Understand the Human's Intent," with a $400k ARR example almost verbatim matching this scenario. That closes what was previously a PARTIAL gap and lifts the verdict to PASS. The commercial context step is well-calibrated — it requires translating revenue into an urgency tier, not just surfacing the number. That distinction matters for how the coordinator frames the timeline and scope trade-offs.
+The agent definition is thorough and covers all criteria well. The one consistent gap across both sections is the specificity of how revenue context maps to delivery dates — the definition instructs urgency-tier translation but stops short of mandating a named quarter or milestone date. That's a minor structural gap rather than a missing concept. The RATSI matrix and decomposition framework together give the coordinator enough structure to produce a well-formed dispatch plan for a multi-tenancy initiative of this complexity.

@@ -1,191 +1,42 @@
-# Event tracking plan for report creation and export flow
+# Output: Event tracking plan for report creation and export flow
 
-Developer invokes the event-tracking-plan skill to define tracking for the report creation and export user flow — covering report creation, viewing, sharing, and exporting.
-
-## Prompt
-
-> Define an event tracking plan for the report creation and export flow. We want to understand: how many users who create a report actually export it? What export format is most popular? How long do users spend viewing a report before exporting? Do power users (>5 reports) export more often than casual users? The flow is: user creates a report → views it → optionally shares it → optionally exports it.
-
-The event-tracking-plan skill, applied to this report flow, would produce the following.
-
----
-
-## Output
-
-### Event Tracking Plan: Report Creation and Export Flow
-
-#### Business Questions (must answer before defining events)
-
-1. What percentage of users who create a report export it?
-2. Which export format is most popular (pdf, csv, xlsx)?
-3. How long between `report_viewed` and `report_exported` for users who export?
-4. Do users with >5 reports created export more often than users with 1-5?
-
-#### Standard Properties (auto-attached — do not repeat in event definitions)
-
-The following properties are automatically attached by the tracking SDK to every event. Do not include them in individual event definitions.
-
-| Property | Type | Description |
-|---|---|---|
-| event_id | UUID | Unique event identifier — used for deduplication |
-| event_name | string | Machine-readable event name |
-| timestamp | ISO 8601 | UTC timestamp of event fire |
-| user_id | UUID | Authenticated user identifier (no PII) |
-| anonymous_id | UUID | Pre-login identifier for stitching |
-| session_id | UUID | Browser/app session |
-| page_url | string | Route pattern — `/reports/{id}`, not full URL |
-| user_agent | string | Sanitised client string |
-| app_version | string | Semantic version of the app |
-
-#### Events
-
----
-
-##### `report_created`
-
-**Trigger:** User clicks "Create Report" and the report is successfully saved (API returns 201).
-
-**NOT triggered by:** Report duplication via API, template-generated reports, admin-created reports on behalf of users.
-
-**Purpose:** Answers Q4 (power user segmentation); starting point of the export funnel.
-
-**Properties:**
-
-| Property | Type | Required | Description |
-|---|---|---|---|
-| report_id | UUID | Yes | Unique report identifier |
-| report_type | enum (dashboard\|summary\|detailed) | Yes | Category — not free text |
-| template_used | boolean | Yes | Was a template applied? |
-
-**Deduplication:** Same `report_id` within 10 seconds = duplicate (double-click protection on the save button). Deduplicate on `report_id` in the warehouse.
-
-**Volume estimate:** ~300/day
-
----
-
-##### `report_viewed`
-
-**Trigger:** Report detail page renders with content visible (page load complete, not navigation start).
-
-**NOT triggered by:** Report list page views, thumbnail previews, admin report views.
-
-**Purpose:** Starting point for time-to-export calculation (Q3). Measures engagement before export.
-
-**Properties:**
-
-| Property | Type | Required | Description |
-|---|---|---|---|
-| report_id | UUID | Yes | Which report was viewed |
-| report_type | enum | Yes | Category of report |
-| view_source | enum (direct\|shared_link\|dashboard) | Yes | How the user arrived |
-
-**Deduplication:** Same `user_id` + `report_id` within 30 seconds = duplicate page load. Keep first.
-
-**Volume estimate:** ~1200/day
-
----
-
-##### `report_shared`
-
-**Trigger:** User clicks "Share" and a share link is generated.
-
-**NOT triggered by:** Copying the report URL manually, sharing via API.
-
-**Purpose:** Measures share rate for context on `report_viewed` events sourced from shared links.
-
-**Properties:**
-
-| Property | Type | Required | Description |
-|---|---|---|---|
-| report_id | UUID | Yes | Which report was shared |
-| share_method | enum (link\|email_invite) | Yes | How sharing was initiated |
-
-**Deduplication:** Same `report_id` + `user_id` within 5 seconds = duplicate.
-
-**Volume estimate:** ~150/day
-
----
-
-##### `report_exported`
-
-**Trigger:** User clicks "Export" and the export file is successfully generated and download begins.
-
-**NOT triggered by:** Scheduled exports, API-initiated exports (separate event `report_export_scheduled`), failed export attempts.
-
-**Purpose:** Answers Q1 (export rate), Q2 (format popularity), Q3 (time delta with `report_viewed`).
-
-**Properties:**
-
-| Property | Type | Required | Description |
-|---|---|---|---|
-| report_id | UUID | Yes | Which report was exported |
-| export_format | enum (pdf\|csv\|xlsx) | Yes | Answers Q2 |
-| export_duration_ms | integer | No | Time from click to download start |
-
-**Deduplication:** Same `report_id` + `export_format` within 5 seconds = duplicate (double-click). Keep first.
-
-**Volume estimate:** ~500/day
-
----
-
-#### Funnel Definition
-
-| Step | Event | Condition |
-|---|---|---|
-| 1 | `report_created` | — |
-| 2 | `report_viewed` | Same `user_id`, any `report_id` |
-| 3 | `report_exported` | Same `user_id`, same `report_id` as viewed |
-
-Conversion rate: step 1 → step 3 answers Q1 directly.
-
-#### Volume Estimates
-
-| Event | Est. volume/day |
-|---|---|
-| report_created | ~300 |
-| report_viewed | ~1,200 |
-| report_shared | ~150 |
-| report_exported | ~500 |
-
-#### Privacy
-
-| Field | Value |
-|---|---|
-| PII in events | None — users identified by `user_id` UUID only |
-| Retention | 90 days raw events; aggregated metrics retained indefinitely |
-| Deletion key | `user_id` — delete or anonymise all events with matching `user_id` on erasure request |
-| Consent | All tracking requires active session (implicit consent on login); opt-out suppresses all events |
-
-## Evaluation
-
-
-| Field | Value |
-|---|---|
-| Verdict | PASS |
-| Score | 8.5/9 criteria met (94%) |
-| Evaluated | 2026-04-16 |
-
+**Verdict:** PARTIAL
+**Score:** 17/19 criteria met (89.5%)
+**Evaluated:** 2026-04-29
 
 ## Results
 
-- [x] PASS: Skill defines business questions before events — Step 1 "Purpose Definition" is the first step and requires listing every business question the tracking plan must answer before any events are defined. The instruction "If you can't articulate the question, you don't need the event" enforces this as a gate.
+### Criteria
 
-- [x] PASS: All event names use snake_case object_action past tense — Step 2 naming convention specifies snake_case, object_action structure, and past tense with examples and a naming checklist. All four events in the simulated output (`report_created`, `report_viewed`, `report_shared`, `report_exported`) conform to this format.
+- [x] PASS: Skill defines the business questions this tracking plan must answer BEFORE defining any events — Step 1 "Purpose Definition" is the first step and explicitly requires listing every business question before any event design, with a BAD/GOOD example enforcing it as a gate
+- [x] PASS: All event names use `snake_case` `object_action` past-tense format — Step 2 defines the convention in a table with examples and a checklist that asks "Is the action (verb) in past tense?"
+- [x] PASS: Each event definition includes trigger, NOT triggered by, purpose, properties table with types and required flag, deduplication strategy, and volume estimate — the Step 3 template explicitly requires all six elements
+- [x] PASS: No PII in event properties — Step 5 mandatory rules state "No PII in event properties / User identified by `user_id`, not email/name/phone/IP"; Step 7 repeats this as a compliance requirement; the anti-patterns list reinforces it
+- [x] PASS: No high-cardinality properties — Step 5 states "No high-cardinality strings / Route patterns not full URLs, category not free text"; Step 4 specifies `page_url` uses route patterns; the anti-patterns list explicitly names "High-cardinality properties"
+- [x] PASS: Standard properties are listed as auto-attached and not repeated in individual event definitions — Step 4 lists all required properties and instructs "Do not include them in individual event definitions"
+- [x] PASS: Every event has a documented deduplication strategy — Step 6 is a dedicated step with a rule "Every event has a documented deduplication strategy"; Step 3 template makes deduplication a named field per event
+- [~] PARTIAL: Skill defines a funnel from the four events and notes conversion rate tracking — the output format template includes "Funnel Definition (if applicable)" with an ordered list of events, but the "(if applicable)" qualifier means the skill does not mandate it for linear sequential flows and conversion rate tracking is not explicitly required in the funnel instructions. Structure present; enforcement absent. (0.5)
+- [x] PASS: Output includes volume estimates per event and a privacy section with retention period and deletion key — Step 8 covers volume estimation with a calculation formula; Step 7 covers retention period and names `user_id` as the deletion key; both sections appear in the output format template
 
-- [x] PASS: Each event definition includes all required elements — Step 3 template requires: Trigger, NOT triggered by (exclusions), Purpose, properties table with Type/Required/Description columns, Deduplication, and Volume estimate. All six elements are present in each event definition in the simulated output.
+### Output expectations
 
-- [x] PASS: No PII in event properties — Step 7 Privacy: "No PII in events — User identified by user_id, not email/name/phone." Step 5 property design rules list "No PII in event properties" as a mandatory rule. Users are identified by UUID only throughout.
-
-- [x] PASS: No high-cardinality properties — Step 5 property design rules: "No high-cardinality strings — Explodes storage, breaks GROUP BY — Route patterns not full URLs, category not free text." Report title is absent; `report_type` is an enum. Anti-patterns explicitly name "High-cardinality properties — full URLs, user-generated text."
-
-- [x] PASS: Standard properties listed as auto-attached — Step 4 explicitly states "These properties are automatically attached to every event by the tracking SDK. Do not include them in individual event definitions." Lists all six specified properties plus `anonymous_id` and `user_agent`.
-
-- [x] PASS: Every event has a documented deduplication strategy — Step 6 "Deduplication Strategy" requires a strategy per event; Step 3 template makes deduplication a mandatory field; rule: "Every event has a documented deduplication strategy." All four events have distinct deduplication logic.
-
-- [~] PARTIAL: Skill defines a funnel from the four events — output format template includes "## Funnel Definition (if applicable)" as a named section. Coverage is present but marked "if applicable" rather than required for flows with a clear sequence. PARTIAL ceiling is appropriate: the funnel section exists in the template but is not mandated for linear user flows.
-
-- [x] PASS: Output includes volume estimates and privacy section with retention and deletion key — Step 8 Volume Estimation is a mandatory step; output format template requires a Volume Estimates table and a Privacy section with retention period and deletion key. Both are present in the simulated output.
+- [x] PASS: Output's business questions section reproduces all four questions from the prompt — Step 1 instructs "List every question explicitly"; the four questions in the prompt would be listed verbatim before any event definitions
+- [x] PASS: Output defines at least four events covering the flow in `object_action` past-tense snake_case — Step 2 naming examples include `report_viewed`, `report_exported`, `report_shared`; the prompt's four-step flow would produce `report_created`, `report_viewed`, `report_shared`, `report_exported`
+- [x] PASS: Output's `report_exported` event includes a `format` property with enum values — the Step 3 template already defines `export_format` as a required string enum with values pdf/csv/xlsx on the `report_exported` example event
+- [~] PARTIAL: Output's `report_viewed` event captures view duration — the skill mandates answering business questions and Step 5 rule "Numeric values have units" would guide toward `duration_seconds`, but `report_viewed` is not templated and the skill does not explicitly instruct capturing view duration. A well-guided agent would include it; it is not guaranteed. (0.5)
+- [x] PASS: Output identifies users via `user_id` UUID and never includes PII — Step 5 and Step 7 both mandate this explicitly; the standard properties in Step 4 use `user_id` UUID
+- [x] PASS: Output excludes high-cardinality fields — Step 5 rule "No high-cardinality strings" and the Step 3 template use `report_type` enum instead of free-text title
+- [x] PASS: Output specifies a deduplication strategy per event — Step 6 mandates this for every event; Step 3 template demonstrates time-window deduplication on `report_exported`
+- [x] PASS: Output defines a funnel from `report_created` → `report_viewed` → `report_exported` with conversion-rate calculation — the output format template provides the funnel structure; Step 1 ties data to decisions, and the first business question in the prompt is directly about create-to-export conversion, which would drive funnel inclusion
+- [ ] FAIL: Output's power user definition (>5 reports) is operationalised as a derived user property — the skill contains no guidance on user segmentation, derived user properties, or computed user traits. Step 1 would capture the question as a business requirement but nothing in the skill instructs how to turn ">5 reports" into a daily-computed user property from `report_created` counts
+- [x] PASS: Output addresses volume estimates per event with a retention/deletion policy section keyed on user_id — Step 8 provides a volume estimation formula; Step 7 specifies retention period and `user_id` as the deletion key; both appear as named sections in the output format template (awarding full PARTIAL credit as both elements are substantively present)
 
 ## Notes
 
-The "if applicable" qualifier on the funnel definition is the only soft spot. For a flow explicitly described as a linear sequence (create → view → share → export), the skill should arguably mandate a funnel definition rather than leaving it conditional. The Step 4 auto-attached properties list is notably thorough — including `anonymous_id` for pre-login identity stitching covers a real analytics gap that most tracking templates miss. The NOT triggered by field in each event definition is valuable and often omitted in tracking plans; it prevents double-counting from API exports, template generation, and admin actions.
+The skill is thorough on the core tracking plan concerns. The Step 3 template pre-builds `report_exported` with `export_format` as an enum property, which directly answers the "most popular format" business question before any prompt-specific guidance is needed.
+
+The power-user criterion is a genuine gap. Any tracking plan that involves cohort analysis by activity level (not just plan tier) needs guidance on derived user properties — a `user_segment` or `lifetime_reports_created` trait computed nightly from event counts. The skill covers plan-based segmentation (`plan_tier` in the Step 3 example) but not activity-based segmentation. This would require either a note in Step 1 about computed traits or a dedicated section on user properties.
+
+The `report_viewed` duration gap is smaller — Step 5's "Numeric values have units" rule and the explicit business question about view time would together lead most agents to include `duration_seconds`, but it is inference rather than instruction. Adding a note in Step 3 about view-start/view-end pairs for duration capture would close it cleanly.
+
+The "(if applicable)" qualifier on the funnel is a minor concern. For any prompt describing a sequential user flow, the funnel should be mandatory rather than optional.

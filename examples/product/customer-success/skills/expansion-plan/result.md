@@ -1,75 +1,34 @@
-# Expansion plan
+# Output: Expansion plan
 
-Testing whether the expansion-plan skill enforces a health prerequisite check and refuses to plan expansion for unhealthy accounts.
-
-## Prompt
-
-> /customer-success:expansion-plan for Fenwick Capital — they're at $95k ARR and we think there's an opportunity to upsell them to our enterprise tier. They have 45 licensed seats but our data shows only 12 active users in the last 30 days.
-
-```markdown
-
-## Output
-
-# Expansion Plan: Fenwick Capital
-
-### Step 1 — Health Prerequisite Check (MANDATORY)
-
-Verifying health prerequisites before any expansion planning:
-
-- [ ] Composite health score ≥70 — **UNKNOWN** (no composite score provided)
-- [ ] No active churn signals — **FAIL** (27% seat adoption is a critical churn signal)
-- [ ] Customer achieving stated goals — **UNKNOWN**
-- [ ] Relationship strong — **UNKNOWN**
-
-Current adoption: 12/45 licensed seats = **27% utilisation**
-
-27% seat utilisation is critically below any reasonable health threshold. This account does not meet the health prerequisite for expansion.
-
-**STOP. Expansion planning suspended.**
-
-Proposing an upsell to a customer at 27% adoption would expose the customer to increased spend without the utilisation to justify it. Per the expansion-plan skill: "Proposing expansion to an unhealthy customer accelerates churn."
-
----
-
-### Health Recovery Required Before Expansion
-
-To proceed with expansion planning, Fenwick Capital needs:
-- Composite health score ≥70
-- No active churn signals
-- Evidence of customer achieving stated goals
-- Seat utilisation at a level that justifies expansion (organic signals of needing more)
-
-**Recommended next steps:**
-
-1. Run `/customer-success:health-assessment` for Fenwick Capital to establish a composite score across all five dimensions.
-2. Investigate the 33 inactive licensed users — are they onboarded? Was there a failed initial rollout?
-3. Book a discovery call with the account champion to understand adoption blockers.
-4. Run targeted team-level onboarding for dormant user groups.
-5. Revisit expansion only when composite health score reaches ≥70 and seat utilisation is growing organically.
-
-**Expansion framing note:** When expansion is attempted in the future, frame it as enabling the customer's growth — "Your active users are getting strong value; let's bring the rest of the team along" — not as a tier upgrade sales motion.
-```
-
-## Evaluation
-
-
-| Field | Value |
-|---|---|
-| Verdict | PASS |
-| Score | 6.5/7 (93%) |
-| Evaluated | 2026-04-16 |
-
+**Verdict:** PARTIAL
+**Score:** 12.5/17 criteria met (74%)
+**Evaluated:** 2026-04-29
 
 ## Results
 
-- [x] PASS: Health prerequisite check as Step 1 — Step 1 of the skill is explicitly titled "Health Prerequisite Check (MANDATORY)" and lists four conditions that must all be met before any expansion planning proceeds. The step includes the instruction "If health is below threshold: STOP. Fix the health first." This runs before Steps 2–7.
-- [x] PASS: Flags 27% adoption as unhealthy — Step 1 requires "Composite health score ≥70." The Adoption dimension (30% weight) in the health framework scores 27% seat utilisation in the <40 range, contributing to a composite that cannot reach 70. The skill drives this through the health gate rather than a standalone adoption threshold, but the effect is equivalent.
-- [x] PASS: Refuses to produce an expansion plan — Step 1's explicit instruction is "If health is below threshold: STOP. Fix the health first. Run `/health-assessment` to diagnose." The skill halts and does not proceed to Steps 2–7 when the gate fails. The output shows a STOP instruction and no expansion plan content.
-- [x] PASS: Recommends a health recovery path — when the health gate fails, the skill directs to run `/health-assessment`. The Anti-patterns section reinforces "Fix health first. Run `/health-assessment` before any expansion conversation." The simulation produces five specific recovery steps beyond just "run a health assessment."
-- [x] PASS: Frames expansion as customer enablement — Step 4 provides a BAD/GOOD framing comparison. The Anti-patterns section reinforces "Frame as enablement, not sales." Even in the STOP output, the simulation includes a framing note about how to position expansion when it is eventually attempted — using enablement language.
-- [~] PARTIAL: Specific signals indicating expansion readiness — Step 1 defines a health score threshold (≥70) as the gate. Step 2 lists organic expansion signals (hitting limits, requesting higher-tier features, team size growing, etc.). However, the skill does not surface seat utilisation percentage as a standalone readiness threshold — it uses the composite score. The expansion signals in Step 2 are demand-side signals rather than a recovery readiness checklist. PARTIAL ceiling applies.
-- [x] PASS: Valid YAML frontmatter — the skill has `name: expansion-plan`, `description`, and `argument-hint` fields in valid YAML frontmatter.
+### Criteria
 
-### Notes
+- [x] PASS: Skill performs a health prerequisite check as the FIRST step — Step 1 is "Health Prerequisite Check (MANDATORY)" with an explicit "STOP" gate before any plan proceeds.
+- [x] PASS: Skill flags low adoption as an unhealthy account signal — the "Expanding without adoption" anti-pattern states "if the customer isn't using current features, adding more features increases complexity without value"; 27% utilisation triggers the health gate.
+- [x] PASS: Skill refuses to produce an expansion plan for unhealthy accounts — Step 1 says "STOP. Fix the health first." The output format also includes "Clear to expand: [Yes / No — if No, stop here]."
+- [x] PASS: Skill recommends a health recovery path before expansion — "Fix the health first. Run `/health-assessment` to diagnose."
+- [x] PASS: Skill frames expansion as customer enablement — Step 4 provides an explicit BAD (sales) vs GOOD (enablement) comparison table for each expansion type.
+- [~] PARTIAL: Skill identifies signals indicating expansion readiness — signals in Step 2 are qualitative; no numeric thresholds (e.g., adoption >=60%) are specified for readiness. Partial credit for the named signal categories and the "at least 2 signals" rule.
+- [x] PASS: Skill has valid YAML frontmatter with name, description, and argument-hint fields — all three present in the opening front matter.
 
-The health gate is a hard stop, not a recommendation — this is the skill's most important design choice. It correctly treats expansion as a customer health event rather than a pipeline event. The PARTIAL criterion reflects that the skill quantifies the health score threshold (≥70) but does not independently surface seat utilisation % as a standalone expansion readiness metric — the composite is expected to capture it. In practice, an account at 27% utilisation will have a composite well below 70, making the gate effective regardless.
+### Output expectations
+
+- [x] PASS: Output's FIRST action is a health prerequisite check — the sequential process mandates Step 1 runs before Steps 2–7; the output template opens with "Health Check."
+- [ ] FAIL: Output computes adoption rate explicitly — the skill has no instruction to calculate adoption percentage (12/45 = 27%) or compare against a numeric expansion-readiness threshold (typically 60-70%); health criteria reference composite score and churn signals, not adoption rate directly.
+- [x] PASS: Output explicitly refuses to produce a normal expansion plan — the hard STOP gate and "Clear to expand: No — stop here" output section cover this.
+- [ ] FAIL: Output's recovery path lists quantified targets — the skill directs to run `/health-assessment` but gives no quantified recovery targets for the unhealthy-account path (e.g., "active users need to reach 27 = 60% of 45 within 60 days").
+- [x] PASS: Output frames expansion as customer enablement — Step 4's enablement framing is thorough and explicit.
+- [ ] FAIL: Output addresses the wasted-spend risk — no instruction in the skill to flag unused seats (33 in this scenario) or discuss reducing seat count before any expansion conversation.
+- [ ] FAIL: Output names expansion-readiness signals quantitatively — no quantified thresholds (adoption >=60%, health score targets for readiness); the "at least 2 signals" rule is the only numeric criterion and it is about signal count, not signal magnitude.
+- [ ] FAIL: Output proposes a three-phase sequence — the skill moves from STOP straight to the standard planning steps (2–7) for healthy accounts; there is no recover → assess → plan sequence for the blocked unhealthy-account case.
+- [ ] FAIL: Output's communication to AE/sales explains why expansion is on hold — the skill has no stakeholder communication step when expansion is blocked.
+- [~] PARTIAL: Output flags the overselling symptom as a CS/sales handoff problem worth feeding back upstream — the anti-pattern "Expanding without adoption" is a forward-looking caution, not an instruction to retrospectively diagnose and escalate the root cause of the Fenwick seat oversell.
+
+## Notes
+
+The skill's health gate (Step 1) is well designed and would correctly block expansion for Fenwick Capital. The enablement framing in Step 4 is thorough. The weakness is almost entirely in the unhealthy-account path: the skill says "STOP, fix health first" but provides almost no guidance on what follows that stop. A CSM following this skill for Fenwick would know not to expand but would get no recovery roadmap, no wasted-seat diagnosis, no quantified readiness targets, and no guidance on communicating the hold to the AE or sales team. The output expectations in the test were written to probe exactly that gap, and the skill doesn't cover it.

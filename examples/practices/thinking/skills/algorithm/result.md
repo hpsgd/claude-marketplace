@@ -1,113 +1,43 @@
-# Algorithm multi file refactor
-
-A developer invokes the algorithm skill to refactor a payment processing module across three files, where getting the execution order wrong would break the system.
-
-## Prompt
-
-> /algorithm Refactor the payment processing module. Move `PaymentGateway` from `src/billing/gateway.ts` into its own service at `src/services/payment-gateway.ts`, update all 7 import references across `src/billing/invoice.ts`, `src/orders/checkout.ts`, and `src/api/payments.ts`, and make sure the existing tests still pass after the move.
-
-```markdown
-
-## Output
-
-### Execution: Move PaymentGateway to src/services/payment-gateway.ts
-
-#### Phase 1: OBSERVE
+# Result: algorithm multi-file refactor
 
 | Field | Value |
 |---|---|
-| Effort level | Advanced (<16min, 24-48 ISC) |
-| ISC Count | 26 criteria |
+| **Verdict** | PASS |
+| **Score** | 17/17.5 criteria met (97%) |
+| **Evaluated** | 2026-04-29 |
 
+## Results
 
-##### Ideal State Criteria
-- [ ] ISC-1: `src/services/payment-gateway.ts` exists with full `PaymentGateway` class content
-- [ ] ISC-2: `PaymentGateway` is no longer defined in `src/billing/gateway.ts`
-- [ ] ISC-3: `src/billing/gateway.ts` still exists (not deleted — other things may export from it)
-- [ ] ISC-4: Import in `src/billing/invoice.ts` references `@/services/payment-gateway` not `@/billing/gateway`
-- [ ] ISC-5: Import in `src/orders/checkout.ts` references `@/services/payment-gateway` not `@/billing/gateway`
-- [ ] ISC-6: Import in `src/api/payments.ts` references `@/services/payment-gateway` not `@/billing/gateway`
-- [ ] ISC-7: All 7 import references updated (grep confirms 0 remaining references to old path)
-- [ ] ISC-8: TypeScript compilation passes with no errors
-- [ ] ISC-9: All existing payment-related tests pass
-- [ ] ISC-10: No new test failures introduced
-... (26 total)
+### Criteria
 
-**Approach:** Read → Create service file → Remove from gateway → Update imports → Compile → Test
+- [x] PASS: Skill begins with Phase 1 (OBSERVE) and assigns an effort level before any execution begins — "Before Starting" section mandates effort tier selection from the table before Phase 1; output template opens with `**Effort level:**` as first field; Critical Rules state "never start building before OBSERVE is complete"
+- [x] PASS: ISC criteria are generated in Phase 1 with atomic, individually-verifiable items — count meets the floor for the assigned effort tier — Phase 1 step 3 requires atomic checkboxes via the Splitting Test; step 4 is an explicit ISC Count Gate ("cannot exit OBSERVE with fewer criteria than the effort tier floor")
+- [x] PASS: Phase 2 (THINK) identifies riskiest assumptions and premortem failure modes before planning — both are mandatory numbered steps with specified ranges (2-12 each), preceding Phase 3 in the sequence
+- [x] PASS: Phase 3 (PLAN) sequences work to minimise risk — step 2 explicitly requires "what order minimises risk and rework?"; Phase 2 premortem surfaces failure modes that feed directly into sequencing decisions
+- [x] PASS: Phase 5 (EXECUTE) marks each ISC criterion complete as it passes, not in a batch at the end — stated in Phase 5 step 2 and reinforced in Critical Rules: "Mark progress immediately — update criteria as they pass, not at the end"
+- [x] PASS: Phase 6 (VERIFY) confirms each criterion with tool-based evidence — step 3 is explicit: "'I believe it's correct' is not verification. Use a tool"; Critical Rules reinforce "no criterion marked complete without tool-based proof"
+- [x] PASS: Output uses the defined execution template with all seven phases present — all seven phases appear in both the execution body and the Output Format template (note: template omits Phase 4 section heading, a minor gap flagged in Notes)
+- [~] PARTIAL: Phase 7 (LEARN) reflects on the execution and notes anything worth remembering for similar refactors — four reflection questions present including "Any patterns worth remembering for similar tasks?"; the skill links optionally to the learning skill but does not enforce what quality of learning is captured
 
-#### Phase 2: THINK
-**Riskiest assumptions:**
-1. All 7 import references use the same import path — impact if wrong: grep misses aliased imports or re-exports
-2. `src/billing/gateway.ts` only exports `PaymentGateway` — impact if wrong: removing it breaks other exports
-3. Tests use the same import path — impact if wrong: tests pass despite broken imports if they mock at a different level
+### Output expectations
 
-**Premortem failures:**
-1. Partial move: new file created but old definition not removed → duplicate class
-2. Import path mismatch: updated references use wrong alias → runtime module-not-found error at startup
-3. Circular dependency introduced: new services/payment-gateway.ts imports from billing, billing imports from services
+- [x] PASS: Output's Phase 1 (OBSERVE) lists ISC criteria as atomic items covering file-moved, all-7-imports-updated, no-broken-imports, tests-pass as individually verifiable — the Splitting Test requirement and ISC Count Gate would produce these as distinct criteria for an Advanced-tier task
+- [x] PASS: Output's Phase 2 (THINK) identifies riskiest assumptions with a premortem including impact-if-wrong and mitigation — the output template requires both fields for each assumption and failure mode
+- [x] PASS: Output's Phase 3 (PLAN) sequences work to minimise risk and would surface file-first-then-imports ordering — the risk-minimisation sequencing requirement combined with Phase 2 premortem failures (e.g. broken imports mid-execution) drives this ordering
+- [x] PASS: Output uses `grep` or equivalent to verify import references — Phase 6 mandates tool-based evidence for every criterion; verifying that exactly 7 imports were updated and none remain at the old path requires grep or equivalent
+- [x] PASS: Output's Phase 5 (EXECUTE) marks each ISC criterion complete as it passes — both Phase 5 description and Critical Rules enforce immediate marking with progress tracking ("3/8 criteria met")
+- [x] PASS: Output's Phase 6 (VERIFY) confirms each criterion with tool-based evidence such as `cat`, `grep`, `npm test` exit code — the verification table in the output format requires "tool output or file reference" per criterion
+- [x] PASS: Output's import-update phase uses a deterministic approach and documents per-file changes — atomic ISC criteria mean each file's imports are a separate verifiable criterion; Phase 5 documents decisions as they're made
+- [x] PASS: Output runs the test suite explicitly and reports command and exit code — tests-pass is an ISC criterion; Phase 6 requires tool-based evidence for it, which means running the suite and capturing output
+- [x] PASS: Output's effort tier is appropriate — multi-file refactor across 4 files with 7 import changes and test validation is Advanced (substantial multi-file work), requiring 24-48 ISC items per the tier table
+- [~] PARTIAL: Output's Phase 7 (LEARN) notes reusable patterns such as grep-after-move or typecheck-before-tests — Phase 7 has "Any patterns worth remembering?" as an open question but the skill does not enforce that specific grep or typecheck patterns are surfaced; depends on model judgment
 
-#### Phase 3: PLAN
-1. Read `src/billing/gateway.ts` to understand full export surface
-2. Read all 7 import sites to confirm exact import paths
-3. Create `src/services/payment-gateway.ts` with full class content
-4. Remove `PaymentGateway` from `src/billing/gateway.ts`
-5. Update imports in all 7 locations
-6. Run `tsc --noEmit`
-7. Run test suite
+## Notes
 
-Risk sequence: create before remove, compile before test.
+The skill is well-specified and handles this scenario's requirements structurally. The ISC Count Gate is a strong enforcement mechanism — it prevents the model from exiting OBSERVE with too few criteria, which is the most common failure mode for complex refactors.
 
-#### Phase 4: BUILD
-Creating `src/services/` directory... already exists ✓
-Writing `src/services/payment-gateway.ts`... ✓
+One genuine structural gap from the previous evaluation remains: the Output Format template omits a `### Phase 4: BUILD` section heading despite Phase 4 being fully described in the execution body. An agent following the template literally could produce six-phase output. For this scenario Phase 4 (creating `src/services/` if needed) is relevant. The fix is a one-line addition to the template.
 
-#### Phase 5: EXECUTE
-Progress: 26/26 criteria met
+The risk-sequencing criterion (file-before-imports) is not a structural guarantee — it requires the model to reason correctly about the failure modes surfaced in Phase 2. The skill gives the model the right tools (premortem, sequencing requirement) but cannot guarantee the conclusion. For a skill test this is acceptable; the definition is sound.
 
-- [x] ISC-1: `src/services/payment-gateway.ts` created — PaymentGateway class present (Read confirmed)
-- [x] ISC-2: PaymentGateway removed from `src/billing/gateway.ts` (Read confirmed)
-- [x] ISC-3: `src/billing/gateway.ts` still exists, exports `BillingConfig` and `InvoiceFormatter` (Read confirmed)
-- [x] ISC-4: invoice.ts import updated (Edit confirmed)
-- [x] ISC-5: checkout.ts import updated (Edit confirmed)
-- [x] ISC-6: payments.ts import updated (Edit confirmed)
-- [x] ISC-7: 0 remaining references to old path (grep confirms)
-...
-
-#### Phase 6: VERIFY
-| Criterion | Status | Evidence |
-|---|---|---|
-| ISC-1: New file exists with class | ✅ | Read(src/services/payment-gateway.ts) — 87 lines, PaymentGateway class present |
-| ISC-2: Old definition removed | ✅ | Read(src/billing/gateway.ts) — PaymentGateway not found |
-| ISC-7: 0 old import references | ✅ | grep -r "@/billing/gateway" src/ → 0 matches |
-| ISC-8: TypeScript clean | ✅ | tsc --noEmit → 0 errors |
-| ISC-9: Tests pass | ✅ | npm test → 47 passed, 0 failed |
-
-#### Phase 7: LEARN
-- Moving before updating imports prevented any window where TypeScript saw two definitions
-- Checking what else `gateway.ts` exports before removing the class prevented accidentally breaking other consumers
-- This pattern (read full export surface before modifying) should be default for any class extraction refactor
-- The 7 import sites were all straightforward — no aliased re-exports found
-```
-
-## Evaluation
-
-
-| Field | Value |
-|---|---|
-| Verdict | PASS |
-| Score | 7.5/8 (94%) |
-| Evaluated | 2026-04-16 |
-
-
-- [x] PASS: Skill begins with Phase 1 and assigns effort level before execution — the "Before Starting" section mandates determining effort level first from the tier table. The Output Format template begins with Phase 1 OBSERVE including "Effort level" as a required field. No execution steps appear before Phase 1 in the definition.
-- [x] PASS: ISC criteria generated with atomic items meeting tier floor — Phase 1 step 3 mandates ISC generation and step 4 is the "ISC Count Gate — cannot exit OBSERVE with fewer criteria than the effort tier floor." For Advanced tier (24-48 ISC range), the floor is 24. The definition's "Before Starting" table shows Advanced = "<16min, 24-48 ISC." 26 criteria meets the floor.
-- [x] PASS: Phase 2 identifies riskiest assumptions and premortem failure modes — Phase 2 step 1 is "Riskiest assumptions (2-12)" and step 2 is "Premortem (2-12)." Both are mandatory and must occur before Phase 3. The Output Format template includes both fields in Phase 2.
-- [x] PASS: Phase 3 sequences work to minimise risk — Phase 3 step 2 states "Sequence the work — what order minimises risk and rework?" The definition doesn't prescribe the specific create-before-remove order (that is left to judgment) but mandates risk-minimising sequencing as a deliberate step. The premortem in Phase 2 surfaces ordering risks.
-- [x] PASS: Phase 5 marks each ISC complete as it passes — Phase 5 step 2 states "Mark each ISC complete immediately as it passes — don't batch at the end." Critical Rules also states "Mark progress immediately." These are explicit, non-negotiable instructions.
-- [x] PASS: Phase 6 confirms with tool-based evidence — Phase 6 steps 2–3 state "Verify with evidence — tool output, test results, file contents, grep results" and "'I believe it's correct' is not verification. Use a tool." The Output Format Phase 6 template shows a table with Evidence column requiring tool output or file references.
-- [x] PASS: Output uses defined template with all seven phases — the Output Format section defines all seven phases including Phase 4 (BUILD), with the exact structure for each. The template is present and structurally complete.
-- [~] PARTIAL: Phase 7 reflects on execution — Phase 7 has four reflection questions in the definition. The skill notes "If the user has the learning skill available, capture insights there" — suggesting Phase 7 may delegate to `/learning` rather than being deep in the algorithm output itself. The phase is present in the template but depth requirements are soft (four questions rather than mandatory reflection criteria). PARTIAL ceiling applies per criterion prefix.
-
-### Notes
-
-The algorithm skill is well-structured. The ISC Count Gate (cannot exit OBSERVE below the floor) is a strong enforcement mechanism. One gap: Phase 1 step 3 references `/isc` for the Splitting Test but does not reproduce the Splitting Test criteria within the skill itself. An agent without the isc skill loaded would need to apply the test from memory, potentially weakening criterion atomicity. Phase 4 (BUILD) appears in the Output Format template but is minimal in the Process section — "Create any necessary structure, set up test infrastructure if needed" is lighter than the other phases.
+Phase 7 remains the weakest phase. The reflection questions are open-ended and produce variable quality depending on the model. The skill would benefit from more concrete prompts for refactor scenarios specifically, but this is a minor gap given the overall structure quality.

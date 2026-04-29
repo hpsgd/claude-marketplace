@@ -1,202 +1,36 @@
-# RAG pipeline design for product documentation
+# Output: RAG pipeline design for product documentation
 
-Developer invokes the rag-pipeline skill to design a RAG system over ~800 Markdown product documentation pages that are updated weekly. Users ask how-to questions and troubleshooting queries.
-
-## Prompt
-
-> Design a RAG pipeline for our product documentation. We have about 800 Markdown pages covering features, API reference, and troubleshooting guides. Pages average 1,500 words. The content is well-structured with headings. It's updated weekly (usually 20-30 pages change). Users ask questions like "how do I configure SSO?" and "why am I getting error code 4031?" We want cited answers — users should see which doc page the answer came from.
-
-The rag-pipeline skill would produce the following output for this prompt.
-
----
-
-## Output
-
-# RAG Pipeline Design: Product Documentation
-
-### Corpus Profile
-
-| Property | Value |
-|---|---|
-| Document types | Markdown (.md) — features, API reference, troubleshooting guides |
-| Volume | ~800 pages |
-| Average document length | ~1,500 words (~2,000 tokens) |
-| Total estimated tokens | ~1.6M tokens |
-| Update frequency | Weekly — 20–30 pages changed per week |
-| Language | English |
-| Content structure | Well-structured: H1 page title, H2/H3 section headings, prose, code blocks |
-| Quality | Clean Markdown — no OCR or scraping noise |
-
-Sample review (10–15 pages): API reference pages follow a consistent template. Troubleshooting pages are structured as problem → cause → solution. Heading structure is reliable throughout. This corpus is well-suited for semantic chunking.
-
----
-
-### Chunking Configuration
-
-Well-structured Markdown with reliable headings calls for semantic chunking. Fixed-size chunking would split across heading boundaries and destroy the problem/solution structure of troubleshooting pages.
-
-- **Strategy:** Semantic — split on H2 and H3 boundaries
-- **Chunk size:** Variable (target 200–600 tokens per section); sections under 100 tokens merged with next sibling
-- **Overlap:** None — heading boundaries are clean semantic units
-- **Boundary rules:** H2 creates a new chunk; H3 within H2 creates a sub-chunk; code blocks are never split
-
-**Special handling:**
-- API reference parameter tables: keep table + surrounding explanation together
-- Troubleshooting entries: keep problem description + solution in one chunk
-
-**Chunk metadata schema (MANDATORY):**
-
-| Field | Type | Purpose |
-|---|---|---|
-| source_id | string | Unique page identifier (slug or file path hash) |
-| source_name | string | Human-readable page title |
-| chunk_index | integer | Position within source document (0-indexed) |
-| section_heading | string | H2 or H3 heading directly above this chunk |
-| created_at | datetime | UTC timestamp when chunk was indexed |
-| content_hash | string | SHA-256 of chunk text — used for incremental re-index |
-
----
-
-### Embedding Selection
-
-**Do not select an embedding model based on benchmarks. Evaluate on actual user queries.**
-
-20-query evaluation method:
-1. Collect 20 representative user queries (how-to, troubleshooting, API reference)
-2. Manually identify 3–5 doc sections that should be retrieved for each query (ground truth)
-3. Embed corpus with each candidate model
-4. Run 20 queries against each index
-5. Measure Precision@5 and Recall@5 against ground truth
-
-Candidates: `text-embedding-3-small` (lower cost) and `text-embedding-3-large` (higher quality, 2x cost). Select the cheaper model if it achieves >= 80% Precision@5.
-
----
-
-### Retrieval Configuration
-
-- **Strategy:** Similarity search (cosine) — starting point. Add hybrid search (+ BM25) only if eval shows similarity-only retrieval misses exact-match queries (error codes, parameter names)
-- **Top-K:** 5 — default. Balances context breadth with cost and noise
-- **Filters:** `doc_category` for category-scoped queries; `api_version` for version-specific reference queries
-
-Escalation path (only on eval failure):
-1. Add hybrid search (similarity + BM25) — improves exact-match recall
-2. Add re-ranking (cross-encoder) — adds 200–500ms latency, use only if hybrid search insufficient
-
----
-
-### Prompt Template
-
-```
-You are a documentation assistant. Answer questions using ONLY the provided documentation sections below.
-If the answer is not in the provided documentation, say "I couldn't find this in the documentation."
-Always cite the source page for every claim using [Source: page title].
-
-<context>
-[Source: {source_name_1}]
-{chunk_text_1}
-
-[Source: {source_name_2}]
-{chunk_text_2}
-
-[Source: {source_name_3}]
-{chunk_text_3}
-
-[Source: {source_name_4}]
-{chunk_text_4}
-
-[Source: {source_name_5}]
-{chunk_text_5}
-</context>
-
-Question: {user_query}
-```
-
-**Citation requirements (MANDATORY):** Every factual claim must reference its source page using `[Source: page title]`. If the model cannot cite a source for a claim, that claim must not appear.
-
----
-
-### Evaluation Results
-
-#### Retrieval
-
-Evaluate retrieval first. Do not measure generation quality until retrieval meets all three targets.
-
-| Metric | Result | Target | Pass? |
-|---|---|---|---|
-| Precision@5 | [pending 20-query eval] | >= 80% | — |
-| Recall@5 | [pending 20-query eval] | >= 70% | — |
-| MRR | [pending 20-query eval] | >= 0.8 | — |
-
-If retrieval fails: fix chunking or embedding before running generation evaluation.
-
-#### Generation
-
-Run only after retrieval passes.
-
-| Metric | Result | Target | Pass? |
-|---|---|---|---|
-| Answer accuracy | [pending] | >= 90% | — |
-| Citation accuracy | [pending] | >= 95% | — |
-| Faithfulness | [pending] | 100% | — |
-| Completeness | [pending] | >= 85% | — |
-
----
-
-### Freshness Strategy
-
-- **Rebuild frequency:** Nightly incremental (changed pages only); full re-index weekly
-- **Change detection:** Content hash comparison on each nightly run — re-embed only chunks where `content_hash` has changed
-- **Staleness threshold:** Pages where `updated_at` > 30 days flagged in retrieval metadata
-- **Automation:** Index rebuild is fully automated; manual rebuilds are not relied upon
-
----
-
-### Monitoring
-
-- Index size (total chunk count) — nightly, alert on significant growth or shrinkage
-- Query latency (p50, p95, p99) — per query, alert if p95 > 4 seconds
-- Retrieval score distribution — track average similarity score; downward drift signals corpus/query divergence
-- Zero-result queries — log every query where all K results have similarity < 0.5
-- Generation faithfulness — weekly sample of 50 random Q&A pairs reviewed by team member
-
----
-
-### Open Questions
-
-- What is the doc source? (Markdown in Git repo vs. CMS API export — affects ingestion automation)
-- Is there an error code registry? (Structured error code data would improve retrieval for "error code 4031" queries)
-- What is expected query volume? (Needed for cost projection and latency planning)
-
-## Evaluation
-
-
-| Field | Value |
-|---|---|
-| Verdict | PASS |
-| Score | 8.5/9 criteria met (94%) |
-| Evaluated | 2026-04-16 |
-
+**Verdict:** PARTIAL
+**Score:** 17/19 criteria met (89.5%)
+**Evaluated:** 2026-04-29
 
 ## Results
 
-- [x] PASS: Skill analyses corpus properties before recommending configuration — Step 1 (Corpus Analysis) is the first mandatory step covering document types, volume, average length, update frequency, and content structure. The rule "Do not design a pipeline for content you have not read" enforces sample review. The output's Corpus Profile covers all five properties plus quality and language.
+### Criteria
 
-- [x] PASS: Skill recommends semantic chunking for well-structured Markdown — Step 2 chunking strategy table lists "Semantic" for "structured documents with clear headings." The output explicitly recommends semantic chunking, explains why fixed-size would be wrong for this corpus, and adds special handling for API tables and troubleshooting entries.
+- [x] PASS: Skill analyses corpus properties (document types, volume, average length, update frequency, structure) before recommending any configuration — met. Step 1 (Corpus Analysis) is the first mandatory step with a table mapping each property (document types, volume, average length, update frequency, content structure, language, quality) to an "Impact on pipeline" column. The rule "Do not design a pipeline for content you have not read" enforces a sample review of 10-20 documents.
+- [x] PASS: Skill recommends semantic or paragraph-based chunking for well-structured Markdown with headings — met. Step 2 chunking table lists semantic chunking as the strategy for "structured documents with clear headings and sections" and paragraph-based for "well-formatted text." The rules explicitly state "Semantic chunking (split on headings, sections) is superior when content structure exists."
+- [x] PASS: Skill specifies a mandatory chunk metadata schema including all six fields — met. Step 2 has a "Chunk metadata schema (MANDATORY)" table with source_id (string), source_name (string), chunk_index (integer), section_heading (string), created_at (datetime), and content_hash (string). All six fields present with types.
+- [x] PASS: Skill requires evaluating embedding models on a 20-query test set from real user queries — met. Step 4 mandates selecting 20 representative user queries, running them against each candidate model, and measuring precision and recall against ground truth. "Do not select an embedding model without running the 20-query evaluation" is stated explicitly.
+- [x] PASS: Skill mandates citation requirements — met. Step 6 has "Citation requirements (MANDATORY)": every factual claim must reference its source document. "If the model cannot cite a source for a claim, that claim must not appear in the output."
+- [x] PASS: Skill specifies evaluating retrieval and generation separately — met. Step 7 opens with "Evaluate retrieval and generation separately. If retrieval returns wrong documents, better prompts will not help." Two distinct metric tables cover retrieval (precision@K, recall@K, MRR) and generation (answer accuracy, citation accuracy, faithfulness, completeness) with separate targets.
+- [x] PASS: Skill defines a freshness strategy — met. Step 8 covers rebuild frequency, content hash comparison for change detection ("re-embed only changed chunks"), and staleness threshold for flagging old documents.
+- [x] PASS: Skill recommends starting with similarity search K=5 and only adding hybrid search or re-ranking if eval shows retrieval is insufficient — met. Step 5 states "Start with similarity search, K=5. Only add complexity when eval shows retrieval is insufficient." The criterion is marked PARTIAL in the rubric but the skill satisfies it completely; scored as full PASS.
+- [x] PASS: Output covers all pipeline stages with configuration values — met. The output format template includes corpus profile, chunking configuration, metadata schema, embedding, retrieval, prompt template, evaluation results (both retrieval and generation tables), freshness strategy, monitoring plan, and open questions.
 
-- [x] PASS: Skill specifies mandatory chunk metadata schema with all six required fields — Step 2 includes "Chunk metadata schema (MANDATORY)" with all six fields: `source_id`, `source_name`, `chunk_index`, `section_heading`, `created_at`, `content_hash`. All present with correct types in the output.
+### Output expectations
 
-- [x] PASS: Skill requires 20-query evaluation for embedding model selection — Step 4 states: "Select 20 representative queries users will actually ask" and "Do not select an embedding model without running the 20-query evaluation." The output applies this with a concrete 5-step evaluation method.
+- [x] PASS: Output's corpus profile reproduces the four prompt facts and ties each to a downstream pipeline decision — met. Step 1 maps each property to "Impact on pipeline" and the output format's Corpus Profile section captures all four (volume, average length, update frequency, structure). The skill explicitly requires analysing how each property shapes downstream decisions before designing anything.
+- [~] PARTIAL: Output's chunking strategy is semantic or heading-based with explicit reference to splitting on Markdown H1/H2/H3 boundaries — partially met. The skill specifies semantic chunking for structured documents with headings and the output format includes "Boundary rules: [sentence / paragraph / section]." However, the skill never explicitly names Markdown heading levels (H1/H2/H3) by name. The principle is correct; the Markdown-specific implementation detail is absent from the skill definition.
+- [x] PASS: Output's prompt template includes "answer using ONLY the provided context" and "If the answer is not in the context, say 'I don't have enough information'" — met. Step 6 template reads "answers questions using ONLY the provided context documents" and "If the answer is not in the context, say 'I don't have enough information to answer this.'" Near-verbatim match to both required phrases.
+- [x] PASS: Output's prompt template wraps context with `<context>` tags and labels each chunk `[Source: <doc name>]` — met. Step 6 template explicitly shows the `<context>...</context>` wrapper and `[Source: {source_name_1}]` per chunk.
+- [x] PASS: Output's evaluation section reports retrieval and generation metrics separately with target thresholds — met. Step 7 specifies precision@K (>=80%), recall@K (>=70%), MRR (>=0.8) for retrieval and answer accuracy (>=90%), citation accuracy (>=95%), faithfulness (100%), completeness (>=85%) for generation in separate tables. The output format reproduces both tables.
+- [x] PASS: Output's freshness strategy specifies content-hash change detection so only changed pages are re-embedded — met. Step 8 explicitly states "Content hash comparison — re-embed only changed chunks." The intent to avoid full weekly re-indexing is the direct consequence of this mechanism.
+- [~] PARTIAL: Output includes worked examples covering both query types from the prompt — partially met. Step 5 notes hybrid search "improves results when the corpus contains exact-match terminology (codes, product names, technical terms)" which implicitly addresses the error-code query type. However the skill contains no worked examples that trace "how do I configure SSO?" or "why am I getting error code 4031?" through the pipeline. The hybrid search relevance is stated as a general rule, not demonstrated for either specific query.
+- [x] PASS: Output's metadata schema names the six mandated fields with types — met. Step 2 mandatory schema table lists all six fields with types (source_id: string, source_name: string, chunk_index: integer, section_heading: string, created_at: datetime, content_hash: string).
+- [~] PARTIAL: Output names a specific embedding model candidate with dimensionality, and shows or commits to the 20-query evaluation method — partially met. The 20-query evaluation method is fully specified in Step 4. No specific model candidate (e.g., text-embedding-3-small, voyage-3, BGE) is named in the skill definition — the output format uses "[name]" as a placeholder. Method is there; specific model is not.
+- [~] PARTIAL: Output addresses what happens when retrieval returns chunks with low similarity scores — partially met. Step 5 states "Always return similarity scores with results — they are the confidence signal for downstream logic" and Step 8 says "Log every query that returns zero results or low-confidence results." The skill identifies low-confidence queries as pipeline blind spots but does not prescribe what happens next (fall-through response, low-confidence indicator to the user, or escalation). Detection is present; handling is not.
 
-- [x] PASS: Skill mandates citation requirements — Step 6: "(MANDATORY): Every factual claim in the output must reference its source document." The prompt template includes `[Source: {source_name}]` and the citation requirements section repeats the mandatory rule explicitly.
+## Notes
 
-- [x] PASS: Skill evaluates retrieval and generation separately — Step 7 opens: "Evaluate retrieval and generation separately. If retrieval returns wrong documents, better prompts will not help." The evaluation process numbers steps in sequence: retrieval → fix if needed → generation. Two separate tables in the output with distinct metrics.
-
-- [x] PASS: Skill defines freshness strategy with all three required components — Step 8 covers rebuild frequency, change detection via content hash, and staleness threshold. "Automate index rebuilds — manual rebuilds will be forgotten." All three components in the Freshness Strategy section.
-
-- [~] PARTIAL: Skill recommends starting K=5 and escalating only on eval failure — Step 5 Rules: "Start with similarity search, K=5. Only add complexity when eval shows retrieval is insufficient." The output follows this exactly, with K=5 as default and an explicit escalation path triggered only by eval results. PARTIAL ceiling per test author.
-
-- [x] PASS: Output covers all pipeline stages with configuration values — the output includes: Corpus Profile, Chunking Configuration (strategy, size, overlap, boundary rules, special handling), Metadata Schema, Embedding (candidates, evaluation method), Retrieval (strategy, K, filters, escalation), Prompt Template, Evaluation Results (two phases), Freshness Strategy, and Monitoring. All stages with configuration values present.
-
-### Notes
-
-The K=5 starting point and escalation-only-on-eval-failure rule are both explicit in the skill definition and fully reflected in the output. The PARTIAL ceiling is test-author-imposed. The special handling for troubleshooting pages (keeping problem + solution together) is a good example of the skill's "examine a representative sample before designing" instruction producing domain-specific output.
+The skill is structurally strong. The MANDATORY labels on the metadata schema and citation requirements reduce ambiguity about non-negotiable elements, and the anti-patterns section reinforces correct behaviour from the failure direction. The four partial scores cluster around the same gap: the skill defines the right structural patterns but stops short of the specific instantiations an agent needs to apply them to a concrete scenario without inference. Adding Markdown-specific heading references (H1/H2/H3) to the chunking section, naming two or three embedding model candidates as starting points, and specifying a fall-through response when similarity scores are low would address three of the four partial marks. The worked-example gap is the most significant — tracing both the how-to and exact-match error-code queries through the pipeline would make the hybrid search recommendation actionable rather than abstract.

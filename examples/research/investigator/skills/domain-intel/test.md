@@ -17,3 +17,16 @@ Scenario: A security analyst wants to investigate a domain that appeared in a th
 - [ ] PASS: Privacy-protected WHOIS is logged as a finding, not a failure — investigation continues with DNS and certificate transparency
 - [ ] PARTIAL: Follow-on skill routing is indicated — if A record warrants IP investigation, `/investigator:ip-intel` is suggested; if related domains are found, further domain-intel runs are suggested
 - [ ] PASS: Passive methods only — no active scanning or enumeration attempted
+
+## Output expectations
+
+- [ ] PASS: Output logs the stated purpose — security research / C2 host investigation per threat report — at the top before any lookup
+- [ ] PASS: Output's WHOIS lookup uses a generic-TLD source (who.is, whoisxml, ICANN lookup) for trackupdate-cdn77.com — not registry-specific tools that don't apply to .com
+- [ ] PASS: Output's DNS records cover A, AAAA, MX, TXT, NS — with the actual record values shown (or "no record" if absent) — and TXT records are interpreted for SPF / DKIM / DMARC / verification tokens that signal third-party services in use
+- [ ] PASS: Output's certificate transparency search via crt.sh returns the subdomain history — listing seen subdomains (e.g. cdn.trackupdate-cdn77.com, api.trackupdate-cdn77.com) and naming patterns that may reveal service typology
+- [ ] PASS: Output's ASN / hosting identification uses ipinfo.io, BGP.he.net, or equivalent passive lookup — naming the AS number, AS organisation, and hosting provider; flagging if hosted on bulletproof / common abuse-source providers
+- [ ] PASS: Output's Wayback Machine check shows historical content — registration date vs first archived content gap is a finding (legitimate domains usually have content soon after registration; C2 domains often don't)
+- [ ] PASS: Output handles privacy-protected WHOIS as a finding (typical for malicious infrastructure) — does NOT stop the investigation; continues with DNS, certificate transparency, and reputation databases
+- [ ] PASS: Output queries reputation sources — VirusTotal, URLhaus, AbuseIPDB on the resolving IP, AlienVault OTX — with the lookup URLs and the result counts / verdict per source
+- [ ] PASS: Output recommends follow-on routing — if the A record points to interesting infrastructure (e.g. shared IP with other known-bad domains), routes to `/investigator:ip-intel`; if related domains surface via reverse lookup, recommends additional `/investigator:domain-intel` runs
+- [ ] PASS: Output uses passive methods only — no active port scans, no curl to fetch the actual domain content, no DNS bruteforce — staying strictly within passive OSINT scope

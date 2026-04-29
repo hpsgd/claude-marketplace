@@ -17,3 +17,16 @@ Write a query to answer: What percentage of users who started a trial in Q1 2024
 - [ ] PASS: Data sources section documents the grain of each table used and any known data quality issues
 - [ ] PARTIAL: Query handles the case where a user has multiple trial subscriptions (deduplication logic)
 - [ ] PASS: Output includes the query with full documentation header, sanity checks, expected result shape, and any caveats
+
+## Output expectations
+
+- [ ] PASS: Output's documentation header (SQL comments) defines "trial user" (any user with a row in `subscriptions` where `plan_type = 'trial'`), "converted" (subsequent row with `plan_type = 'paid'`), and the 14-day window (paid.started_at - trial.started_at <= 14 days)
+- [ ] PASS: Output explicitly filters Q1 2024 by trial start (`started_at >= '2024-01-01' AND started_at < '2024-04-01'`) — not by paid conversion date — so Q1 cohorts are measured properly
+- [ ] PASS: Output excludes test accounts via `is_test_account = false` and the acme-corp domain via `email NOT LIKE '%@acme-corp.com'` (or domain-extracted equivalent), with both filters visible at the cohort-defining stage
+- [ ] PASS: Output uses CTEs (WITH clauses) named for what they compute — e.g. `trial_cohort`, `converted_users`, `final_metrics` — not nested subqueries or one giant SELECT
+- [ ] PASS: Output's final SELECT groups by `acquisition_channel` and reports both the converted count and the conversion rate (percentage), with descriptive column names like `trial_users`, `converted_within_14d`, `conversion_rate_pct`
+- [ ] PASS: Output handles users with multiple trial subscriptions by deduplicating to one trial row per user (e.g. earliest trial in Q1) before joining — the `users.user_id` should appear at most once in the cohort
+- [ ] PASS: Output includes at least 2 sanity check queries: one verifying `conversion_rate_pct` falls in [0, 100], and one verifying every output row has a non-NULL `acquisition_channel` from the four expected values
+- [ ] PASS: Output documents the grain of `users` (one row per user) and `subscriptions` (one row per subscription, multiple per user possible) and notes the dependency on `started_at` accuracy
+- [ ] PARTIAL: Output addresses edge cases — users who churned then re-subscribed, users who paid before officially trialling, users with overlapping trial windows — even just to state how each is handled
+- [ ] PARTIAL: Output includes an expected result shape (e.g. 4 rows, one per acquisition_channel, with conversion rates between 0% and ~25%) so the reader can sanity-check actual results against expectations

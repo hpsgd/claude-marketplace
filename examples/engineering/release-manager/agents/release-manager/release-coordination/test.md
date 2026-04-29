@@ -23,3 +23,16 @@ The migration has been tested on staging. The security patch bumps a minor versi
 - [ ] PASS: Agent identifies the migration as requiring special attention — rollback of a migration that has already altered production data is different from code rollback
 - [ ] PARTIAL: Agent produces a structured output with Scope table, Readiness gates, Strategy, Rollback Criteria, Communication plan, and Decision
 - [ ] PASS: Agent refuses to override a failed engineering gate under time pressure
+
+## Output expectations
+
+- [ ] PASS: Output's scope table lists all four release items individually — migration (subscriptions columns + subscription_events table), billing dashboard feature, CVE-2024-38372 patch, subscription service refactor — with risk per item
+- [ ] PASS: Output's risk classification matches the asks: migration medium-high (data shape change + new table), security patch low-medium (named CVE, minor bump), feature flag low (off by default), refactor low (unless tests are weak), with reasoning per
+- [ ] PASS: Output's go/no-go gates require evidence per gate — staging test pass with screenshot/log, migration applied + reverted on staging, security scan re-run, baseline metrics captured — not just "team confirms"
+- [ ] PASS: Output's rollback plan distinguishes code rollback (redeploy previous artefact) from data/migration rollback (the new columns/table either need a separate down-migration or a forward-fix-only policy if data was already written), naming which it is for THIS migration
+- [ ] PASS: Output's rollback thresholds are concrete and pre-defined — error rate >2x baseline, p95 latency >3x baseline (or similar), with the baseline values recorded BEFORE deploy so the comparison is well-defined
+- [ ] PASS: Output assigns a named rollback owner (single accountable person, not "the team") with on-call coverage for at least the post-deploy window
+- [ ] PASS: Output's communication plan briefs the support team BEFORE deploy with the new feature flag state, the migration impact (none expected user-facing), and the support script for any billing dashboard questions
+- [ ] PASS: Output's feature flag strategy keeps `billing-dashboard-v2` off in production at deploy time, with a stated rollout plan (% rollout or whitelist of customers) AFTER the deploy is verified stable
+- [ ] PASS: Output explicitly states the agent will NOT override a failed engineering gate under Thursday-deadline pressure — if any gate fails, NO-GO and reschedule
+- [ ] PARTIAL: Output's structured format covers Scope table, Readiness gates, Strategy, Rollback Criteria, Communication plan, and a final GO/NO-GO Decision with reasoning
