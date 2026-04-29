@@ -42,18 +42,17 @@ Use `Glob` to find documentation files (`**/*.md`, `**/docs/**`, `**/*.rst`, `**
 
 ## Step 2: Map Coverage
 
-Create a feature-by-quadrant coverage matrix:
+Build a coverage matrix with **user tasks as rows**, not feature areas. A feature area can have docs in all four quadrants and still leave specific user tasks uncovered. Derive task rows from support tickets, onboarding flows, and the product's job-to-be-done — concrete user verbs ("export a report", "invite a teammate"), not noun-phrase feature names.
 
 ```markdown
 ### Coverage Matrix
 
-| Feature / Area | Tutorial | How-to | Reference | Explanation | Overall |
+| User task | Tutorial | How-to | Reference | Explanation | Overall |
 |---|---|---|---|---|---|
-| [Feature 1] | [Yes/No/Stale] | [Yes/No/Stale] | [Yes/No/Stale] | [Yes/No/Stale] | [Complete/Partial/Missing] |
-| [Feature 2] | ... | ... | ... | ... | ... |
-| Authentication | Yes | Yes | Stale | No | Partial |
-| API integration | No | Yes | Yes | No | Partial |
-| Deployment | No | No | Yes | No | Missing |
+| [User task — e.g. "export a report"] | [doc / —] | [doc / —] | [doc / —] | [doc / —] | [Complete/Partial/Missing] |
+| Invite a teammate | — | how-to-invite.md | roles-reference.md | — | Partial |
+| Export a report | — | — | — | — | Missing |
+| Set up SSO | sso-tutorial.md (stale) | how-to-sso.md | — | — | Partial |
 
 ### Coverage Summary
 
@@ -65,32 +64,40 @@ Create a feature-by-quadrant coverage matrix:
 | Explanation | [count] | [%] | ... |
 ```
 
-**Output:** Coverage matrix showing which features have which content types, plus quadrant summary.
+**Output:** Coverage matrix showing which user tasks have which content types, plus quadrant summary. Blank cells reveal gaps.
 
 ## Step 3: Identify Gaps
 
-Analyse the coverage matrix for specific gap patterns:
+Analyse the coverage matrix for specific gap patterns. Each gap category maps to one action: **Missing → create**, **Stale → rewrite**, **Orphaned → retire**, **Findability → fix IA** (the content exists but users can't reach it).
 
 ```markdown
 ### Gap Analysis
 
-#### Missing content (no documentation exists)
+#### Missing content — action: create
 
-| # | Feature | Missing quadrant(s) | Impact | Priority |
+| # | User task | Missing quadrant(s) | Impact | Priority |
 |---|---|---|---|---|
-| G1 | [Feature] | [Tutorial / How-to / Reference / Explanation] | [Who is affected and how] | [High/Medium/Low] |
+| G1 | [User task] | [Tutorial / How-to / Reference / Explanation] | [Who is affected and how] | [High/Medium/Low] |
 
-#### Stale content (exists but outdated)
+#### Stale content — action: rewrite
 
 | # | Document | Path | Last updated | What changed since |
 |---|---|---|---|---|
 | G2 | [Title] | [path] | [date] | [What in the product changed that makes this stale] |
 
-#### Orphaned content (exists but unreachable)
+#### Orphaned content — action: retire
 
 | # | Document | Path | Issue |
 |---|---|---|---|
 | G3 | [Title] | [path] | [Not linked from navigation / references removed feature / duplicate] |
+
+#### Findability gaps — action: fix IA
+
+Cross-reference recurring support questions against the inventory. If the answer exists in a doc but users couldn't find it, the problem is information architecture, not coverage. Fix it via search, navigation, or tagging — not by writing more content.
+
+| # | User question (from tickets) | Answer exists at | Why users miss it | IA fix |
+|---|---|---|---|---|
+| G4 | [Question pattern] | [path / "no doc"] | [Buried in nav / wrong title / not indexed / no tags] | [Surface in primary nav / rewrite title / add synonyms to search / add tag] |
 
 #### Common gap patterns
 
@@ -102,7 +109,7 @@ Analyse the coverage matrix for specific gap patterns:
 | **Freshness gap** | Docs not updated when features changed | [Yes/No] |
 ```
 
-**Output:** Gap analysis with specific missing content, stale content, and orphaned content.
+**Output:** Gap analysis covering missing, stale, orphaned, and findability gaps — each tagged with its action (create / rewrite / retire / fix IA).
 
 ## Step 4: Prioritise Content Creation
 
@@ -213,6 +220,7 @@ Synthesise the prioritised backlog into a phased roadmap:
 - **Don't mix quadrants in one document.** A tutorial that turns into a reference table confuses the reader. Each document serves one quadrant. Link between them instead.
 - **Prioritise by user impact, not completeness.** A perfect explanation doc for a rarely-used feature is less valuable than a basic tutorial for the core onboarding flow. Traffic and support tickets drive priority.
 - **Content without ownership decays.** Every piece of documentation needs an owner. Unowned docs become stale within 6 months.
+- **Findability is part of the strategy.** Good content users can't find is invisible. When support tickets show users asking questions the docs already answer, the fix is search, navigation, or tagging — not more writing. Treat IA as a separate gap category alongside missing/stale/orphaned.
 
 ## Output Format
 
@@ -228,7 +236,7 @@ Synthesise the prioritised backlog into a phased roadmap:
 [From Step 2 — feature × quadrant matrix]
 
 ## 3. Gap Analysis
-[From Step 3 — missing, stale, and orphaned content]
+[From Step 3 — missing (create), stale (rewrite), orphaned (retire), findability (fix IA)]
 
 ## 4. Prioritised Backlog
 [From Step 4 — ranked content pieces with owners]

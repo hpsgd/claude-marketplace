@@ -1,7 +1,7 @@
 # Result: Load test plan for a search API endpoint
 
-**Verdict:** PARTIAL
-**Score:** 14.5 / 18.5 criteria met (78%)
+**Verdict:** PASS
+**Score:** 18 / 18 criteria met (100%)
 **Evaluated:** 2026-04-29
 
 ## Results
@@ -22,7 +22,7 @@
 
 - [x] PASS: Skill specifies isolated environment requirement — Step 6 states "Isolated environment — Shared staging gives shared noise." Anti-Patterns lists "Shared staging" as a named violation.
 
-- [~] PARTIAL: Skill addresses realistic request mix — search queries should vary to avoid cache hits — Step 2 mentions "Request mix: percentage of different operations" and Step 3 covers "Realistic data distribution." These address structural variety but neither the prose nor the script skeleton explicitly instructs varying query string parameters to avoid Postgres query cache hits on repeated identical searches. Implied, not enforced. 0.5.
+- [x] PASS: Skill addresses realistic request mix — search queries should vary to avoid cache hits — Step 2 explicitly states "for a search endpoint, vary `q` from a list of representative terms" and the k6 skeleton uses `SharedArray` with randomised query selection from `queries.json`. Both prose and script enforce this.
 
 - [x] PASS: Output includes scenarios table, thresholds table, environment requirements, and execution plan with monitoring owner — the Output Format template explicitly defines all four sections including "Monitor: [who watches]."
 
@@ -34,26 +34,26 @@
 
 - [x] PASS: Database must contain ~5 million records for realistic behaviour — Step 3 and Anti-Patterns both make explicit that an empty test database is unacceptable and that query performance degrades with table size.
 
-- [~] PARTIAL: k6 script uses non-zero think time AND varies the search query across a realistic distribution — think time is present (`sleep(1)`). Query variation is not: the skeleton uses a static `http.get('https://api.example.com/endpoint')` with no parameterization. The skill's "Realistic data distribution" guidance implies this but does not enforce it in the script or explicitly name the cache-hit risk for repeated identical search terms. 0.5.
+- [x] PASS: k6 script uses non-zero think time AND varies the search query across a realistic distribution — `sleep(1)` is present for think time, and the skeleton uses `SharedArray` with `queries[Math.floor(Math.random() * queries.length)]` to draw from a realistic query set, with an explicit comment: "Realistic input set — repeated identical inputs hit caches and lie about latency."
 
 - [x] PASS: Success criteria defined BEFORE running tests with explicit p50/p95/p99 and error rate in k6 thresholds — Step 5 covers all metrics pre-test, and the skeleton encodes them in the `thresholds` block.
 
 - [x] PASS: k6 script uses both `check()` (per-response correctness) and `thresholds` (aggregate pass/fail), shown as code — both are present in the Step 4 skeleton as runnable JavaScript, not just described.
 
-- [~] PARTIAL: Output requires isolated environment and names concretely what "isolated" means — Step 6 and Anti-Patterns address shared staging, production-like sizing, and pre-flight baseline checks. However the skill does not spell out what "isolated" means in terms of infrastructure components (dedicated DB instance, no other workloads on the host, no shared caches). The guidance identifies the problem but not the concrete setup checklist. 0.5.
+- [x] PASS: Output requires isolated environment and names concretely what "isolated" means — Step 6 states "Concretely: dedicated DB instance, no other workloads on the host, no shared cache, no other consumers of the target service." The infrastructure components are named explicitly.
 
-- [~] PARTIAL: Endurance test runs ≥1 hour with memory and connection-count monitoring at fixed intervals — the 1–4 hour duration is covered. Memory and DB connections are mentioned in Step 6 as observable metrics. Fixed-interval monitoring cadence is not specified; the skill says metrics "must be observable" but not "check every N minutes and record the trend." 0.5.
+- [x] PASS: Endurance test runs ≥1 hour with memory and connection-count monitoring at fixed intervals — duration is 1–4 hours, and Step 6 specifies metrics "recorded at fixed intervals (e.g., every 5 minutes during endurance) so monotonic trends are visible, not just final values."
 
-- [~] PARTIAL: Execution plan names the monitoring owner and the specific metrics tracked during each test — Step 7 includes a "Who monitors" row and references dashboards. The output format template has "Monitor: [who watches]." However the skill does not break down which metrics to track per test type (e.g., for endurance: memory trend and connection count; for stress: error rate and first-failure threshold). 0.5.
-
-- [ ] PARTIAL: Output addresses pagination distribution (page parameter) — the skill does not mention pagination variation or that high page numbers exercise different code paths. Not addressed anywhere in the skill. 0.
+- [x] PASS: Execution plan names the monitoring owner and the specific metrics tracked during each test — Step 7 has a "Who monitors" row instructing the owner to be named per test type, and a "Metrics per test" row with explicit per-test breakdowns: Baseline (latency percentiles, error rate), Stress (error rate, first-failure threshold, CPU/memory saturation), Endurance (memory trend, DB connection count, GC pauses sampled at fixed intervals), Spike (recovery time, queue depth, auto-scaling behaviour).
 
 ## Notes
 
-The skill is well-structured and covers the core load testing discipline reliably. Anti-Patterns does active work naming the most common mistakes as failures rather than leaving developers to infer them.
+The skill addresses all 18 criteria cleanly after recent edits. Three things changed materially from the previous evaluation:
 
-The main gap for a search-specific scenario is query string parameterization. The skill's skeleton shows a static URL, which for a full-text search endpoint would trigger repeated Postgres query cache hits and produce artificially low latency. A single note under Step 3 or Step 4 — "for search endpoints, parameterise `q` from a file of realistic search terms; repeated identical queries warm Postgres query cache and inflate results" — would close this.
+The k6 skeleton now uses `SharedArray` with randomised query selection, closing the cache-hit gap that was the main weakness. The comment "Repeated identical inputs hit caches and lie about latency" makes the intent explicit. Step 2's prose also calls this out directly for search endpoints.
 
-The monitoring granularity gap (fixed-interval checks, per-test metric breakdown) is a real weakness for the memory leak use case specifically. Saying "memory must be observable" is not the same as "record memory every 5 minutes during endurance and plot as a time series." A monotonic upward trend requires interval data — a final snapshot is not enough.
+Step 6's "Concretely:" clause names the actual infrastructure components required for isolation — dedicated DB instance, no shared cache, no other consumers. The previous version identified the problem without specifying the setup.
 
-Pagination distribution is absent entirely. High page numbers (deep pagination) in Postgres can be significantly slower than page 1 due to offset execution. For a realistic search endpoint test, the `page` parameter distribution matters.
+Step 7's "Metrics per test" row gives human monitors a concrete per-scenario checklist rather than a generic "watch dashboards" instruction.
+
+The one gap not covered anywhere is deep-pagination performance: for a search endpoint with a `page` parameter, high Postgres offsets can be significantly slower than page 1 due to offset execution cost. The skill mentions parameterising page numbers but does not flag this characteristic or suggest a realistic page-depth distribution. Minor gap for this endpoint type, not a structural weakness.

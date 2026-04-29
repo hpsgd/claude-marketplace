@@ -28,4 +28,3 @@ We're running a Django 4.2 app called PalletTrack on a single Ubuntu 22.04 bare-
 - [ ] PASS: Output stops and asks before recommending new infrastructure with ongoing cost (e.g. Kubernetes cluster, container registry, managed Redis for Celery broker), framing the cost trade-offs
 - [ ] PASS: Output addresses environment configuration — secrets handling (not baked into the image), env var injection at runtime, and how Neon Postgres credentials reach the container without ending up in a layer
 - [ ] PARTIAL: Output addresses observability for the new deployment — health endpoints, log aggregation, metrics — given the move from a single bare-metal server with familiar logs to ephemeral containers
-- [ ] PARTIAL: Output addresses the migration path from bare-metal to containers as an incremental cutover (parallel running, traffic shift) rather than a big-bang switch

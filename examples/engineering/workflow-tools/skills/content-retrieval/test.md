@@ -14,7 +14,6 @@ Scenario: A researcher needs to retrieve the content of a JavaScript-rendered re
 - [ ] PASS: Tier 4 escalates to human with actionable options (manual retrieval, managed services, Apify actors, alternative sources) rather than attempting flaky automated workarounds
 - [ ] PASS: robots.txt compliance is noted — Tier 3 bypasses it, and skill acknowledges this requires legitimate purpose and terms of service confirmation
 - [ ] PASS: Retrieved content is extracted with structure preserved — navigation, headers, footers stripped; headings, paragraphs, tables retained
-- [ ] PARTIAL: Output includes the tier used, escalation path taken, and any content quality issues or partial retrieval notes
 - [ ] PASS: If all tiers fail, skill reports the failure with specific errors and suggests manual retrieval or an alternative source — does not fabricate content
 
 ## Output expectations
@@ -25,7 +24,5 @@ Scenario: A researcher needs to retrieve the content of a JavaScript-rendered re
 - [ ] PASS: Output checks Playwright availability before attempting Tier 3 (e.g. `npx playwright --version` or equivalent) and falls through to Tier 4 if not available
 - [ ] PASS: Output's Tier 4 (human escalation) lists actionable options — manual download by the user, alternative formats (PDF download from the same site), or alternative sources (transparency.gov.au has annual reports indexed elsewhere) — and does NOT silently invoke a paid service
 - [ ] PASS: Output preserves document structure on extraction — headings, paragraphs, tables retained; navigation, footer, and chrome stripped — and reports any lossy steps
-- [ ] PASS: Output addresses the transparency.gov.au domain context — Australian government transparency report, public disclosure, no robots.txt or auth bypass concerns beyond standard ToS — explicitly, not in generic terms
 - [ ] PASS: Output reports the tier ultimately used, the escalation path attempted, and content-quality notes (e.g. "table extracted may have merged cells", "footnotes attached at end") rather than just dumping content
 - [ ] PASS: If all tiers fail, output does NOT fabricate content — explicitly reports the failure with the exact error per tier and recommends a specific human action
-- [ ] PARTIAL: Output checks for an alternative format on the same source (PDF / DOCX / data API) before committing to scraping the JS-rendered HTML — government transparency sites often publish machine-readable formats

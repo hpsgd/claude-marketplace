@@ -28,6 +28,12 @@ Before defining anything new, understand what exists:
 | Spacing | `16px` | 42 | throughout | Also `1rem` (23 places) — same value, different unit |
 | Font size | `14px` | 28 | body text | Hardcoded in 12 components instead of using token |
 
+For each existing token with zero or low usage, assign a per-token disposition — do not give a blanket "remove orphans" recommendation:
+
+- **REMOVE** — unused with no future plan. Delete from the token set.
+- **ARCHIVE** — reserved for known future use (upcoming brand refresh, planned feature). Move to an archive file, keep out of the active set.
+- **KEEP** — part of an unreleased palette being held intentionally. Document why and when it will be used.
+
 ## Step 2 — Define primitive tokens
 
 Primitives are the raw values. They are named by what they are, not what they do.
@@ -112,6 +118,8 @@ Semantic tokens map primitives to purposes. Components consume semantic tokens, 
 | `color.interactive.hover` | `colour.blue.700` | `colour.blue.300` | Hover state |
 | `color.interactive.active` | `colour.blue.800` | `colour.blue.200` | Pressed state |
 
+**Dark mode is a mode, not a sibling token set.** Resolve the light/dark value at consumption time using the platform's mode mechanism — Figma variable modes (a single semantic variable holds both values, the mode flips which one resolves) and CSS `prefers-color-scheme` (or a `[data-theme="dark"]` attribute selector that swaps custom property values). Do not create parallel `color.text.primary` and `color.text.primary-dark` tokens as siblings. Components reference the semantic token only; the mode does the rest.
+
 ### Spacing semantics
 
 | Semantic token | Value | Usage |
@@ -183,7 +191,22 @@ Compile the final token specification:
 [Contrast checks, coverage audit from Step 4]
 
 ## Migration Guide
-[For existing codebases: mapping from old values to new tokens]
+For existing codebases, sequence the remediation in phases by risk and effort. Do not produce a flat list of changes:
+
+- **Phase 1 — Orphan cleanup (no risk).** Apply the REMOVE / ARCHIVE / KEEP dispositions from the inventory. Effort: hours.
+- **Phase 2 — Unit consolidation (low risk).** Find/replace mixed units (e.g., `px` → `rem`) using the conversion table. Effort: hours to a day.
+- **Phase 3 — Structural refactors (medium risk).** Rewrite tokens that bypass the primitive layer (raw hex in dark-mode tokens, hardcoded values in semantic tokens) to reference primitives. Requires component testing. Effort: days.
+
+Each phase lists every affected file/token by name with old value → new value, and an effort estimate.
+
+## Governance
+
+Define how new tokens get added to prevent the same orphan accumulation from recurring:
+
+- **Proposed** — anyone can propose a new token via PR with the use case and a named consumer.
+- **Reviewed** — design system owner reviews against existing tokens (does it duplicate? could a semantic token cover it?).
+- **Adopted** — token enters the active set with a versioned release. Tokens added without an in-flight consumer are rejected.
+- **Deprecated** — tokens with zero usage for two release cycles get re-triaged (REMOVE / ARCHIVE).
 
 ## Design Tool Export
 - **Figma:** Token JSON compatible with the Figma Tokens plugin (or Figma Variables for native support)

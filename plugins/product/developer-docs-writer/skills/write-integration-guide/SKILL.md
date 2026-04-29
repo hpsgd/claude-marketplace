@@ -109,7 +109,24 @@ This is mandatory — fragments scattered across steps are not enough. Developer
 
 **Output:** A single self-contained code example.
 
-## Step 5 — Write troubleshooting and next steps
+## Step 5 — Write a verification section
+
+After the complete example, add a dedicated verification section that explains how the developer confirms the integration is actually working end-to-end:
+
+```markdown
+## Verifying the integration
+
+1. [Specific test action — e.g. "Send a test event from the source system"]
+2. [What to check — e.g. "Open the destination dashboard and confirm the record appears"]
+3. [Expected behaviour — e.g. "Status should update within 30 seconds"]
+4. [How to inspect logs or telemetry if it doesn't work]
+```
+
+This is in addition to per-step expected results. Per-step checks confirm each piece works in isolation; the verification section confirms the whole flow works together.
+
+**Output:** A verification section with concrete test data, expected behaviour, and inspection steps.
+
+## Step 6 — Write troubleshooting and next steps
 
 ```markdown
 ## Troubleshooting
@@ -133,10 +150,11 @@ Include at minimum:
 - The most common authentication error
 - The most common configuration mistake
 - What happens if the external service is unavailable
+- A rate-limit or transient-failure scenario the reader is likely to hit
 
-**Output:** Troubleshooting section with 3+ entries, and next steps with links.
+**Output:** Troubleshooting section with 4+ entries, and next steps with links.
 
-## Step 6 — Quality checks
+## Step 7 — Quality checks
 
 | Check | Requirement |
 |---|---|

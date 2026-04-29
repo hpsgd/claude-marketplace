@@ -82,10 +82,10 @@ Step-by-step operational procedures for production systems.
    - The exact command to run (copy-pasteable)
    - Expected output (so the operator knows it worked)
    - What to do if it fails (don't leave them stuck)
-4. **Verification** — how to confirm the procedure succeeded
+4. **Verification** — how to confirm the procedure succeeded, with the exact monitoring query or metric reference (same copy-pasteable standard as diagnostic commands) and the threshold that proves recovery
 5. **Rollback** — how to undo if something went wrong
 6. **Troubleshooting** — common issues and their fixes
-7. **Escalation** — who to contact if the runbook doesn't resolve it
+7. **Escalation** — who to contact if the runbook doesn't resolve it, AND the triggers that fire escalation (time elapsed without resolution, scope expansion, vendor status page incident, severity threshold)
 
 **Rules:**
 - **Written for 2am.** Assume the reader is tired, stressed, and handling this for the first time

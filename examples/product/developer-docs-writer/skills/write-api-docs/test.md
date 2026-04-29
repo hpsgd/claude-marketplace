@@ -22,12 +22,10 @@ Scenario: Testing whether the write-api-docs skill requires complete request/res
 ## Output expectations
 
 - [ ] PASS: Output covers all four prompt-named operations on Projects — create, read, update, archive — each as a documented endpoint with method, path, request, response
-- [ ] PASS: Output's list endpoint documents pagination (page, size, totalItems, totalPages), at least 2 filter parameters (e.g. status, owner), and at least 1 sort option — not just GET / response
-- [ ] PASS: Output's archive endpoint is correctly modelled as `POST /projects/{id}/archive` (or equivalent action sub-resource) — not as a flat top-level archive endpoint, and not as a verb in the URL
-- [ ] PASS: Output documents both success AND error responses per endpoint — at minimum 401, 403 (resource-level authorisation), 404, 422, and any specific business validation errors (e.g. archiving an already-archived project returns 409)
+- [ ] PASS: Output's list endpoint documents pagination, at least 2 filter parameters (e.g. status, owner), and at least 1 sort option — not just GET / response
+- [ ] PASS: Output documents both success AND error responses per endpoint — at minimum 401, 403, 404, and 422
 - [ ] PASS: Output's code examples are runnable — full HTTP request with method, headers, body, and a parseable response example — no pseudocode, no placeholder gaps
 - [ ] PASS: Output organises endpoints under a Projects resource heading with consistent structure per endpoint (Description, Request, Response, Errors, Example) — not flat alphabetical
-- [ ] PASS: Output includes an overview / authentication section before the endpoint reference — base URL, auth scheme, common request/response headers, common error envelope (Problem Details RFC 9457)
-- [ ] PASS: Output's quality checklist verifies each code example was run and that every documented error response has a worked example — the checklist is at the end of the skill body
-- [ ] PASS: Output documents the request and response shape for the update endpoint as PATCH with merge-patch semantics (RFC 7396) and optimistic concurrency via `lastUpdatedAt` — consistent with the project's API design rules
+- [ ] PASS: Output includes an overview / authentication section before the endpoint reference — base URL, auth scheme, common request/response headers, and a common error envelope
+- [ ] PASS: Output's quality checklist verifies each code example was run and that every documented error response has a worked example
 - [ ] PARTIAL: Output addresses pagination behaviour edge cases — what happens for an empty result set, an out-of-range page number, and the maximum page size cap

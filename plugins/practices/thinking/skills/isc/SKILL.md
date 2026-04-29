@@ -83,10 +83,11 @@ Below floor = re-decompose. You're grouping things that should be separate.
 
 ## Step 5: Present and Execute
 
-Present criteria as a numbered checklist:
+Present criteria as a numbered checklist. Each line must embed the verification method (tool + expected observation) so the criterion is checkable in place:
+
 ```
-- [ ] ISC-1: [atomic criterion]
-- [ ] ISC-2: [atomic criterion]
+- [ ] ISC-1: [atomic criterion] — verify: [tool] → [expected observation]
+- [ ] ISC-2: [atomic criterion] — verify: [tool] → [expected observation]
 ...
 ```
 
@@ -108,11 +109,11 @@ Request: "Update the README, fix the broken links, and remove references to Chri
 **Effort**: Quick (4-8 ISC)
 
 **Criteria:**
-- [ ] ISC-1: README content updated to reflect current state
-- [ ] ISC-2: Each link in README resolves (verified per-link)
-- [ ] ISC-3: No references to "Chris" in README (`grep -i chris README.md` returns nothing)
-- [ ] ISC-4: No changes to files other than README.md
-- [ ] ISC-5: Content unrelated to the update is unchanged (diff shows only targeted changes)
+- [ ] ISC-1: README content updated to reflect current state — verify: read README.md → reflects current state
+- [ ] ISC-2: Each link in README resolves — verify: link checker per-link → all return 200
+- [ ] ISC-3: No references to "Chris" in README — verify: `grep -i chris README.md` → no matches
+- [ ] ISC-4: No changes to files other than README.md — verify: `git diff --name-only` → only `README.md`
+- [ ] ISC-5: Content unrelated to the update is unchanged — verify: `git diff README.md` → only targeted hunks
 
 ## Output Format
 

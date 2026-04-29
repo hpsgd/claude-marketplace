@@ -118,11 +118,12 @@ For every feature, systematically check:
 
 When defining the overall test strategy for a feature or service, use the `/test-strategy` skill for the full methodology. As QA Lead, your role is:
 
-1. **Determine risk profile** — financial, safety, data integrity, reputation
+1. **Determine risk profile** — financial, safety, data integrity, reputation, legal/regulatory/compliance
 2. **Set coverage targets** — higher risk = more coverage at higher levels
 3. **Choose test levels** — not everything needs E2E. Most things need unit tests
 4. **Define quality gates** — what must pass before merge? Before release?
 5. **Identify what can't be automated** — exploratory testing, visual review, usability
+6. **Cover stated growth or scale targets** — if the prompt names launch volume and a future target, the strategy must validate the trajectory, not just the launch state
 
 ## Principles
 

@@ -95,6 +95,11 @@ Each handler is short-lived (one operation). The managed session ensures:
 ### Wolverine Endpoints
 
 ```csharp
+// Commands and events are C# records (immutable, init-only or positional)
+public record CreateMyEntity(Guid ParentId, string Value);
+public record MyEntityCreated(Guid Id, Guid ParentId, string Value);
+public record MyEntityResponse(Guid Id, string Value);
+
 public static class MyEndpoint
 {
     // Pre-conditions — returns ProblemDetails to short-circuit
@@ -105,15 +110,25 @@ public static class MyEndpoint
         return entity is null ? new ProblemDetails { Status = 404 } : null;
     }
 
-    // Handler — instance method on the aggregate
-    [WolverineGet("/api/parents/{parentId}/children/{id}")]
-    public MyEvent Handle(MyCommand command)
+    // Handler — returns a tuple of (HTTP response, cascading event)
+    [WolverinePost("/api/parents/{parentId}/children")]
+    public static (CreationResponse, MyEntityCreated) Handle(CreateMyEntity command)
     {
-        // Return events as cascading messages
-        return new MyEvent(command.Id, command.Value);
+        var id = Guid.NewGuid();
+        // 201 Created with Location header pointing to the new resource
+        var response = new CreationResponse($"/api/parents/{command.ParentId}/children/{id}");
+        var @event = new MyEntityCreated(id, command.ParentId, command.Value);
+        return (response, @event);
     }
 }
 ```
+
+**Endpoint contract rules:**
+
+- **Commands and events are C# `record` types** — never classes with mutable setters. Use positional or `init`-only properties so instances are immutable.
+- **Response DTOs are records too**, separate from the aggregate. Never serialise the aggregate directly to the HTTP response — define a dedicated response record with only the fields the client needs.
+- **POST creation endpoints return `201 Created`** with a `Location` header pointing to the new resource (`/api/parents/{parentId}/children/{id}`). Use Wolverine's `CreationResponse` (or equivalent) so the framework sets status and header automatically.
+- **Input validation uses [FluentValidation](https://docs.fluentvalidation.net)** — register a `AbstractValidator<TCommand>` for each command record. Wolverine wires it into the request pipeline and returns 400 Problem Details on failure. Use FluentValidation for shape/range rules (string length, numeric ranges like quantity 1-100, required fields). Use `LoadAsync` for state-dependent pre-conditions (entity exists, count below limit).
 
 ### Wolverine Handlers
 

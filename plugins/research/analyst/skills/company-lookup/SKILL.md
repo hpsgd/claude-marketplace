@@ -54,6 +54,8 @@ Search: `[company name] site:news.google.com` or Google News for last 6 months.
 
 Prioritise: funding rounds, product launches, leadership changes, regulatory actions, acquisitions, layoffs.
 
+Flag known reputational issues — controversies, regulatory actions, public criticism, ethics concerns — that may surface in stakeholder conversations. A meeting-prep brief that hides this leaves the user blindsided.
+
 ## Step 6: Assess strategic direction
 
 Signals for where the company is heading:
@@ -63,13 +65,15 @@ Signals for where the company is heading:
 - Product launches and roadmap announcements
 - Investor day or analyst day materials (public companies)
 
+For meeting-prep contexts, also note likely conversation topics: strategic shifts the user may want to ask about, executive statements that have generated discussion, and known sensitivities the other party may raise. Surface these as talking points, not just facts.
+
 ## Rules
 
 - Never present a revenue estimate for a private company without stating the source and explicitly labelling it as an estimate.
 - Cross-reference at least two independent sources for any fact listed in the output.
 - If the company has no meaningful public web presence, flag before proceeding — may be too early-stage for useful intelligence.
 - Revenue ≠ valuation. Distinguish these clearly when both appear.
-- Recency matters on competitive data. Flag any source older than 18 months.
+- Recency matters on competitive data. Flag any source older than 12 months — for public companies that report quarterly, anything beyond the last few quarters is stale. Use a tighter threshold (6 months) for fast-moving sectors like AI, fintech, or anything where the previous quarter's narrative may already be obsolete.
 
 ## Output format
 

@@ -37,6 +37,7 @@ Design tests for each type. Do not skip any — each type reveals different prob
 - Ramp-up: how quickly to reach target load
 - Think time: realistic pause between user actions (not zero — real users think)
 - Request mix: percentage of different operations (e.g., 80% reads, 15% writes, 5% deletes)
+- Input variation: parameterise request inputs (search terms, IDs, page numbers) from a realistic distribution. Repeating the same input warms query/result caches and inflates results — for a search endpoint, vary `q` from a list of representative terms
 
 ### Step 3: Realistic Data
 
@@ -64,6 +65,10 @@ Test with production-like data. Empty databases lie about performance.
 ```javascript
 import http from 'k6/http';
 import { check, sleep } from 'k6';
+import { SharedArray } from 'k6/data';
+
+// Realistic input set — repeated identical inputs hit caches and lie about latency.
+const queries = new SharedArray('queries', () => JSON.parse(open('./queries.json')));
 
 export const options = {
   scenarios: {
@@ -91,7 +96,8 @@ export const options = {
 };
 
 export default function () {
-  const res = http.get('https://api.example.com/endpoint');
+  const q = queries[Math.floor(Math.random() * queries.length)];
+  const res = http.get(`https://api.example.com/endpoint?q=${encodeURIComponent(q)}`);
   check(res, {
     'status is 200': (r) => r.status === 200,
     'response time < 500ms': (r) => r.timings.duration < 500,
@@ -118,9 +124,9 @@ Define pass/fail thresholds BEFORE running the tests:
 
 | Requirement | Why |
 |---|---|
-| **Isolated environment** | Shared staging gives shared noise. Results are meaningless if other tests are running |
+| **Isolated environment** | Shared staging gives shared noise. Concretely: dedicated DB instance, no other workloads on the host, no shared cache, no other consumers of the target service |
 | **Production-like sizing** | Testing on a single-node dev instance tells you nothing about production |
-| **Monitoring active** | CPU, memory, disk I/O, network, database connections — all must be observable during the test |
+| **Monitoring active** | CPU, memory, disk I/O, network, database connections — all must be observable, and recorded at fixed intervals (e.g., every 5 minutes during endurance) so monotonic trends are visible, not just final values |
 | **Pre-flight check** | Before running: verify environment is clean, no existing load, baseline metrics are normal |
 
 ### Step 7: Execution Plan
@@ -128,7 +134,8 @@ Define pass/fail thresholds BEFORE running the tests:
 | Item | Detail |
 |---|---|
 | **When to run** | Off-peak for shared environments. Any time for isolated environments |
-| **Who monitors** | Someone watches dashboards during the test — automated tests need human observation for unexpected patterns |
+| **Who monitors** | Someone watches dashboards during the test — automated tests need human observation for unexpected patterns. Name the owner per test type |
+| **Metrics per test** | Baseline: latency percentiles, error rate. Stress: error rate, first-failure threshold, CPU/memory saturation. Endurance: memory trend, DB connection count, GC pauses (sampled at fixed intervals). Spike: recovery time, queue depth, auto-scaling behaviour |
 | **Results storage** | k6 Cloud, InfluxDB + Grafana, or JSON output committed to repo |
 | **Comparison baseline** | Every run is compared to the previous baseline. Regressions are flagged automatically |
 

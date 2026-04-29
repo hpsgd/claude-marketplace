@@ -140,6 +140,12 @@ public static class GetSourceEndpoint
 ```csharp
 public static class ListSourceCrawlsEndpoint
 {
+    private const int MaxPageSize = 100;
+    private static readonly HashSet<string> AllowedSortFields = new(StringComparer.OrdinalIgnoreCase)
+        { "name", "createdAt" };
+    private static readonly HashSet<string> AllowedDirections = new(StringComparer.OrdinalIgnoreCase)
+        { "asc", "desc" };
+
     public record ListCrawlsRequest(
         Guid SourceId,
         int Page = 1,
@@ -148,21 +154,63 @@ public static class ListSourceCrawlsEndpoint
         string? Dir = "desc",
         string? Q = null);
 
+    // Pre-condition: validate sort/dir against allowlist, check parent source exists.
+    public static async Task<ProblemDetails?> LoadAsync(
+        [AsParameters] ListCrawlsRequest request,
+        HttpContext http,
+        IQuerySession session,
+        CancellationToken ct)
+    {
+        if (request.Sort is not null && !AllowedSortFields.Contains(request.Sort))
+            return new ProblemDetails
+            {
+                Status = 400,
+                Title = "Invalid sort field",
+                Detail = $"sort must be one of: {string.Join(", ", AllowedSortFields)}.",
+                Instance = http.Request.Path
+            };
+
+        if (request.Dir is not null && !AllowedDirections.Contains(request.Dir))
+            return new ProblemDetails
+            {
+                Status = 400,
+                Title = "Invalid sort direction",
+                Detail = "dir must be 'asc' or 'desc'.",
+                Instance = http.Request.Path
+            };
+
+        var sourceExists = await session.Query<Source>()
+            .AnyAsync(s => s.Id == request.SourceId, ct);
+
+        if (!sourceExists)
+            return new ProblemDetails
+            {
+                Status = 404,
+                Title = "Source not found",
+                Detail = $"No source with id '{request.SourceId}'.",
+                Instance = http.Request.Path
+            };
+
+        return null; // Proceed to Handle
+    }
+
     [WolverineGet("/api/sources/{sourceId}/crawls")]
     public static async Task<PagedResult<CrawlResponse>> Handle(
         [AsParameters] ListCrawlsRequest request,
         IQuerySession session,
         CancellationToken ct)
     {
+        var size = Math.Min(request.Size, MaxPageSize); // server-side cap
         var query = session.Query<Crawl>()
             .Where(c => c.SourceId == request.SourceId);
 
         if (!string.IsNullOrWhiteSpace(request.Q))
         {
-            query = query.Where(c => c.Name.Contains(request.Q));
+            // Case-insensitive substring search on the crawl Name field (Marten ILIKE).
+            query = query.Where(c => c.Name.MatchesSql("%?%", request.Q));
         }
 
-        query = request.Sort switch
+        query = request.Sort?.ToLowerInvariant() switch
         {
             "name" => request.Dir == "asc"
                 ? query.OrderBy(c => c.Name)
@@ -174,14 +222,15 @@ public static class ListSourceCrawlsEndpoint
 
         var totalItems = await query.CountAsync(ct);
         var items = await query
-            .Skip((request.Page - 1) * request.Size)
-            .Take(request.Size)
+            .Skip((request.Page - 1) * size)
+            .Take(size)
             .ToListAsync(ct);
 
+        // PagedResult constructor computes totalPages = ceil(totalItems / size).
         return new PagedResult<CrawlResponse>(
             items.Select(c => c.ToResponse()).ToList(),
             request.Page,
-            request.Size,
+            size,
             totalItems);
     }
 }
@@ -189,11 +238,13 @@ public static class ListSourceCrawlsEndpoint
 
 **List endpoint rules:**
 - Every list endpoint supports: `page`, `size`, `sort`, `dir`, `q` (text search)
-- Return `PagedResult<T>` with `items`, `page`, `size`, `totalItems`, `totalPages`
+- Return `PagedResult<T>` with `items`, `page`, `size`, `totalItems`, `totalPages` (derived from `totalItems / size`)
 - Pagination, sorting, and filtering happen in the database (not in memory)
 - Default sort order is sensible (usually `createdAt desc` for time-based, `name asc` for alphabetical)
-- Sort field must be from an allowlist — do not accept arbitrary field names (SQL injection vector)
-- Size has a maximum (100) — enforce server-side
+- Sort field and direction validated in `LoadAsync` against an allowlist — return 400 ProblemDetails on invalid values, never forward arbitrary strings to the ORM
+- Size capped at 100 server-side via `Math.Min(request.Size, MaxPageSize)` — never trust the client value
+- Parent-resource existence checked in `LoadAsync` returning 404 ProblemDetails with `Instance` set to the request path — a list query for a non-existent parent is a 404, not an empty array
+- Text search (`q`) uses case-insensitive substring matching against documented fields (e.g. `Name`) via Marten `ILIKE` / `MatchesSql`, not the default case-sensitive `string.Contains`
 
 ### Step 4: Command and Event Records
 
@@ -334,9 +385,18 @@ public class CreateSourceIntegrationTest : IntegrationContext
 - BDD class naming: `WhenCreatingASource`, `GivenAnExistingSource`
 - NSubstitute for mocks: `Substitute.For<T>()`
 - Shouldly for assertions: `ShouldBe`, `ShouldNotBeNull`, `ShouldThrow`
-- Alba for HTTP integration: full pipeline with real routing and middleware
+- Alba for HTTP integration with Testcontainers-managed Postgres (`IntegrationContext` boots a real database container per test fixture — no shared dev DB, no in-memory provider)
 - Test happy path, conflict (409), not found (404), validation (422), and authorisation (403)
 - Factory helpers for test data — no inline magic strings
+
+**Evidence of passing — paste actual command and exit code into the PR description:**
+
+```bash
+$ dotnet test ./tests/Sources.Tests/Sources.Tests.csproj
+Passed!  - Failed:     0, Passed:    14, Skipped:     0, Total:    14
+$ echo "Exit: $?"
+Exit: 0
+```
 
 ## Anti-Patterns (NEVER do these)
 

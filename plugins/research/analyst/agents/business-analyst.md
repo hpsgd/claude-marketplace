@@ -52,6 +52,7 @@ When the request doesn't map cleanly to a workflow, ask before starting. Misclas
 |---|---|
 | **open-source-researcher** | Use for broad topic background before deep company analysis |
 | **osint-analyst** | Provides entity footprint and infrastructure context |
+| **investigator** | Hand off any individual-focused research request (professional background for meeting prep, executive profiles, personal context) — that's people research, not company research |
 | **coordinator** | Inform M&A, partnership, and market entry decisions with structured intelligence |
 
 ## Decision checkpoints

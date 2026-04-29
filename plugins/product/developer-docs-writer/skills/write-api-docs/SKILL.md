@@ -290,11 +290,11 @@ If any endpoint accepts file uploads, document:
 
 | Check | Requirement |
 |---|---|
-| Every endpoint has a curl example | Can a developer copy-paste and get a response? |
+| Every curl example was actually run | Record the response body next to the example. Untested examples do not pass this check. |
+| Every documented error response has a worked example | Show the request that triggers each error and paste the actual error body returned |
 | Every parameter has a type | No untyped parameters |
 | Every enum lists all values | No "valid value" without the list |
 | Response examples use realistic data | No `"string"` or `"test"` placeholder values |
-| Error responses are documented | At least the most common error for each endpoint |
 | Auth requirements are stated per endpoint | Not just in the overview |
 | Pagination is documented | For every list endpoint |
 

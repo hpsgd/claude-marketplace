@@ -39,6 +39,8 @@ Use the WebFetch tool. This works for the majority of public content.
 
 Simulate a real browser request by adding common headers.
 
+Skip Tier 2 when the cause is confirmed JS rendering (empty container, framework markers like `<div id="root"></div>`) — curl returns the same empty shell. Document the skip and proceed to Tier 3.
+
 ```bash
 curl -s -L \
   -H "User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" \
@@ -58,13 +60,7 @@ curl -s -L \
 
 ## Tier 3: Playwright (JavaScript rendering)
 
-For JavaScript-rendered content, use Playwright to render the page fully before extracting content.
-
-```bash
-npx playwright chromium --no-sandbox "[URL]"
-```
-
-Or via a Playwright script if more control is needed:
+For JavaScript-rendered content, use Playwright to render the page fully before extracting content. Always wait for rendering to complete (network-idle or a content selector) before reading the DOM — extracting immediately after navigation returns the empty shell.
 
 ```javascript
 const { chromium } = require('playwright');

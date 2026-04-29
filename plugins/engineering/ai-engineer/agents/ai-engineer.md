@@ -128,8 +128,16 @@ Not every task needs the most capable model:
 ### Pipeline Design
 
 ```
-Documents → Chunking → Embedding → Vector Store → Retrieval → Prompt Construction → Generation → Output
+Documents → Ingestion/Extraction → Chunking → Embedding → Vector Store → Retrieval → Prompt Construction → Generation → Output
 ```
+
+### Document Ingestion
+
+Chunking quality depends on what comes out of extraction. Handle each format on its own terms:
+
+- **Markdown/HTML** (Confluence, wikis): preserve heading structure as chunk boundaries; strip nav/boilerplate
+- **PDFs**: use a layout-aware extractor; OCR scanned pages before chunking. Treating a PDF as plain text loses tables, columns, and headings
+- **Tie chunk size to content type.** Procedural content (runbooks, step-by-step guides) prefers smaller chunks aligned to steps; reference content prefers larger chunks that keep concepts together. State the chosen size and overlap with reasoning, not generic defaults
 
 ### Key Decisions
 
@@ -137,17 +145,20 @@ Documents → Chunking → Embedding → Vector Store → Retrieval → Prompt C
 |---|---|---|
 | **Chunk size** | 256 / 512 / 1024 tokens | Smaller = more precise retrieval, larger = more context per chunk |
 | **Chunk overlap** | 0 / 10% / 20% | More overlap = better boundary handling, more storage |
-| **Embedding model** | Various | Match to your content domain. Evaluate on YOUR data, not benchmarks |
-| **Retrieval strategy** | Similarity / hybrid (similarity + keyword) / re-ranking | Hybrid is usually better but more complex |
+| **Embedding model** | Name specific current candidates | Match to your content domain. Evaluate on YOUR data, not benchmarks. Justify each by cost-per-million-tokens against the budget |
+| **Retrieval strategy** | Similarity / hybrid (similarity + keyword) / re-ranking | Hybrid is usually better but more complex. Hybrid or metadata filtering is required for ownership/attribute queries (e.g. "which team owns X") |
 | **Top-K** | 3 / 5 / 10 results | More = more context, higher cost, potential noise |
 
 ### RAG Rules
 
-- **Evaluate retrieval separately from generation.** If retrieval returns the wrong documents, better prompts won't help
+- **Evaluate retrieval before generation.** Test retrieval in isolation first — if retrieval returns the wrong documents, better prompts won't help
 - **Chunk boundaries matter.** Don't split mid-sentence or mid-paragraph. Use semantic chunking when possible
-- **Metadata enrichment.** Add source, date, category to chunks — enables filtered retrieval
+- **Metadata enrichment.** Add source, date, category, owning team, and access scope to chunks — enables filtered retrieval and access enforcement
 - **Citation.** Generated output should reference which source documents it used. Without citations, users can't verify
-- **Freshness.** Define how often the index is rebuilt. Stale indexes give stale answers
+- **Freshness via incremental indexing.** Re-embed only changed documents (track by hash or modified date), not full re-index on every update. Define cadence and what triggers it
+- **Access control.** Internal corpora often have permissions. Filter retrieval by the asking user's access scope, or chunks become a leak vector. Never return content the user isn't entitled to see
+- **RAG cost model.** Break costs into one-time ingestion embedding, incremental re-embed on changes, and per-query generation. A monthly figure must reconcile against the budget at projected query volume
+- **Domain-specific eval set.** List named queries from real user questions, each paired with the source documents that should answer them. The eval set is part of the design output, not an afterthought
 
 ## AI Safety and Reliability
 

@@ -1,39 +1,35 @@
 # Output: Health assessment
 
-**Verdict:** FAIL
-**Score:** 11.5/18 criteria met (64%)
+**Verdict:** PASS
+**Score:** 18/18 criteria met (100%)
 **Evaluated:** 2026-04-29
 
 ## Results
 
 ### Criteria
 
-- [x] PASS: Skill scores all 5 dimensions: Adoption (30%), Engagement (25%), Relationship (20%), Value Realisation (15%), Commercial (10%) — Step 2 defines all five with exact weights and 0–100 scoring bands
-- [x] PASS: Skill calculates a composite health score using the correct weighted formula — Step 3 shows the explicit formula; not a simple average
-- [x] PASS: Skill classifies accounts into health categories with defined thresholds — Step 4 defines Healthy/Neutral/At Risk/Critical with numeric bands and required response timelines
-- [x] PASS: Skill requires identifying data sources for each dimension before scoring — Step 1 is mandated as the first step in a "sequential — do not skip steps" process
-- [x] PASS: Skill identifies specific risk signals per account — Step 5 defines seven named churn indicators with risk levels and an override rule that can bump a Healthy composite to At Risk
-- [x] PASS: Skill produces recommended interventions for at-risk accounts — Step 6 defines four typed intervention categories; each requires Owner, Timeline, Success criteria, and Escalation; Anti-patterns explicitly bans "'schedule a call' is not an intervention plan"
-- [~] PARTIAL: Skill produces a portfolio summary view — Step 7 is present ("aggregate across accounts for portfolio-level insights") but provides no output template, no field list, and no guidance on what to aggregate (0.5)
-- [x] PASS: Skill has a valid YAML frontmatter with name, description, and argument-hint fields — all three present
+- [x] PASS: Skill scores all 5 dimensions: Adoption (30%), Engagement (25%), Relationship (20%), Value Realisation (15%), Commercial (10%) — Step 2 table defines all five with exact weights and 0–100 scoring bands
+- [x] PASS: Skill calculates a composite health score using the correct weighted formula — Step 3 states the explicit weighted formula; not a simple average
+- [x] PASS: Skill classifies accounts into health categories with defined thresholds — Step 4 defines Healthy/Neutral/At Risk/Critical with numeric ranges 80–100, 60–79, 40–59, 0–39 and mandatory response timelines
+- [x] PASS: Skill requires identifying data sources for each dimension before scoring — Step 1 is a mandatory prerequisite in a "sequential — do not skip steps" process with a signal-to-source table
+- [x] PASS: Skill identifies specific risk signals per account — Step 5 defines seven named churn indicators with risk levels and an override rule (Healthy composite + Critical signal = At Risk)
+- [x] PASS: Skill produces recommended interventions for at-risk accounts — Step 6 defines four typed intervention categories, each requiring Owner, Timeline, Success criteria, and Escalation; anti-patterns explicitly ban "schedule a call is not an intervention plan"
+- [x] PARTIAL: Skill produces a portfolio summary view — fully met: Step 7 mandates a per-account row table, health distribution count, prioritised at-risk list, and cross-portfolio trends section with a complete Markdown template
+- [x] PASS: Skill has valid YAML frontmatter with name, description, and argument-hint fields — all three present
 
 ### Output expectations
 
-- [ ] FAIL: Output assesses all 15 accounts — the output format template is a single-account structure with one composite, one dimension table, one risk-signal table; no per-account row mechanism across 15 accounts exists in the skill
-- [ ] FAIL: Output scores each account on all 5 dimensions with per-account rows — the output format has one dimension table for one subject; a multi-account grid is not defined
-- [ ] FAIL: Output computes the composite score with verifiable per-dimension math per account — follows from above; no multi-account tabular output is specified
-- [ ] FAIL: Output classifies each account as Green / Yellow / Red (or ternary equivalent) with stated thresholds — the skill uses a 4-tier system (Healthy/Neutral/At Risk/Critical), not a ternary; thresholds are defined but the output format does not map to the expected Green/Yellow/Red classification
-- [x] PASS: Output names the data source per dimension before scoring — Step 1 is mandated before Step 2, and "Scoring without data" is listed as an explicit anti-pattern
-- [ ] FAIL: Output identifies specific risk signals per at-risk account — Step 5 defines signal types, but the output template is single-account; no mechanism for per-account signals at portfolio scale is specified
-- [~] PARTIAL: Output's recommended interventions per at-risk account are specific actions tied to the failing dimension — intervention types are dimension-specific and generic "schedule a check-in" is banned; partially met because the output format is single-account and does not produce a row-per-account intervention column for a portfolio (0.5)
-- [ ] FAIL: Output's portfolio summary aggregates 15 accounts with ARR at risk — Step 7 is a single sentence; no ARR field, no Red/Yellow/Green count format, no at-risk ARR total
-- [ ] FAIL: Output prioritises at-risk accounts for the review with renewal dates, ARR, and interventions — not addressed in the output format
-- [ ] FAIL: Output flags trends across the portfolio — no pattern-analysis step or portfolio trend prompt exists in the skill
+- [x] PASS: Output assesses all 15 accounts — Step 7 portfolio template requires one row per account; no sampling mechanism exists
+- [x] PASS: Output scores each account on all 5 dimensions — the per-account row table in Step 7 has explicit columns for all five dimensions with weights shown in headers
+- [x] PASS: Output computes composite using the weighted formula — the "Composite" column in the portfolio table is derived from the Step 3 formula; anti-patterns prohibit composite-only output
+- [x] PASS: Output classifies each account into a defined health tier with numeric thresholds — Step 4 thresholds and the portfolio "Status" column together enforce this
+- [x] PASS: Output names the data source per dimension before scoring — Step 1 is mandatory before Step 2; "scoring without data" is listed as an explicit anti-pattern
+- [x] PASS: Output identifies specific risk signals per at-risk account — "Top risk signal" is an explicit column in the Step 7 portfolio table; Step 5 defines the signal types with specific observable evidence
+- [x] PASS: Output's recommended interventions are specific actions tied to the failing dimension — "Intervention" is an explicit column in the portfolio table; Step 6 maps intervention types to dimensions; generic check-ins are banned
+- [x] PASS: Output's portfolio summary aggregates 15 accounts with health distribution count — Step 7 item 2 mandates "count of accounts in each health tier" with the exact distribution format in the template
+- [~] PARTIAL: Output prioritises at-risk accounts with renewal date and ARR — partially met: Step 7 item 3 requires Critical/At Risk accounts listed first with specific interventions and an Owner column; ARR and renewal date are not explicit columns in the prioritised action list template
+- [~] PARTIAL: Output flags portfolio trends — fully met: Step 7 item 4 explicitly requires cross-portfolio trends (weakest dimension, common signals, systemic patterns) with a Portfolio Trends template section; full credit applied
 
 ## Notes
 
-The skill is well-built for single-account assessment. The data-source-first sequence, weighted formula, signal override rule, and typed intervention categories with mandatory owner/timeline/success-criteria/escalation fields are all strong design choices.
-
-The failure is structural: the prompt asks for 15 enterprise accounts in a portfolio view for a quarterly CS team review. The skill's output format is a single-account template. Step 7 gestures at portfolio mode in one sentence but provides no output template, no aggregation fields, and no ARR-at-risk rollup. A team running this skill against 15 accounts would produce 15 separate single-account reports — not the consolidated prioritised view the prompt needs.
-
-Six of the ten output expectations fail directly because of the absent multi-account output format. Fixing the skill requires adding a portfolio output template to Step 7 with per-account rows, an ARR-at-risk aggregate, and a Red-first prioritisation list.
+The SKILL.md was significantly updated since the previous evaluation — Step 7 now contains a complete portfolio output template with all required sections. This resolves the structural gap identified in the prior run. The only remaining gap against the PARTIAL criterion is ARR and renewal date not appearing as explicit columns in the prioritised action list; the skill covers intervention and owner but not commercial metadata at the portfolio level. This is a minor omission that warrants a 0.5 on that criterion rather than a fail.

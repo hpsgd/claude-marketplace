@@ -85,6 +85,7 @@ Each step in the onboarding flow follows this format:
 
 **Rules for each step:**
 - **One goal per step.** Each step achieves one thing the user can see or verify.
+- **Match the register to the target user from Step 1.** Developer audiences want code-first, terminal-fluent prose; consumer audiences want plain language with UI cues. Don't hand-hold past what the audience knows.
 - **Under 2 minutes per step.** If a step takes longer, break it into sub-steps.
 - **Show, don't tell.** Use the product to teach the product. Don't explain concepts — have the user do something that demonstrates the concept.
 - **Use exact UI element names.** Bold the names: "Click **Create**" not "click the create button."
@@ -117,12 +118,39 @@ When the user reaches the value moment, confirm it explicitly:
 
 **Rules for the aha moment:**
 - Name what they accomplished, not what features they used
+- Show the real output that proves value — the data, results, or artifact the product just produced — not just a "complete" state
 - Limit "next steps" to 3 options — more creates decision paralysis
 - Link to deeper content, don't summarise it here
 
 **Output:** Completion confirmation with specific outcomes and next steps.
 
-## Step 5 — Quality checks
+## Step 5 — Write skip and abandon recovery
+
+For each drop-off risk identified in Step 1, write the recovery copy. A user who exits mid-flow needs a way back in.
+
+```markdown
+## If a user skips or abandons at [step]
+
+**Empty-state nudge** (where they land if they skipped this step):
+[One sentence: what they're missing and why it matters — e.g., "You haven't set your first milestone yet. Add one now to see how status updates flow to your team."]
+[Primary action: "Add a milestone"]
+
+**Re-engagement on next visit** (in-product tip or notification):
+[One sentence reminding them where they left off — e.g., "Pick up where you left off — 1 step to your first milestone."]
+[Primary action: "Resume setup"]
+
+**Resume path:**
+[Where the user lands when they tap resume — usually the step they abandoned, with any earlier inputs preserved.]
+```
+
+**Rules for skip/abandon:**
+- Cover every drop-off risk from Step 1, not just the worst one.
+- The nudge appears where the user lands after skipping — usually the empty-state of the feature they skipped configuring.
+- Resume returns the user to the step they abandoned. Don't restart the flow.
+
+**Output:** Recovery copy for each drop-off risk.
+
+## Step 6 — Quality checks
 
 | Check | Requirement |
 |---|---|

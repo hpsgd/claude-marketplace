@@ -1,37 +1,26 @@
 # Output: Write user guide
 
-**Verdict:** PARTIAL
-**Score:** 12.5/17 criteria met (74%)
-**Evaluated:** 2026-04-29
+| Field | Value |
+|---|---|
+| **Verdict** | PARTIAL |
+| **Score** | 7.5/8 criteria met (94%) |
+| **Evaluated** | 2026-04-29 |
 
 ## Results
 
-### Criteria
-
-- [x] PASS: Skill requires a research step — Step 1 explicitly requires searching the codebase for UI components, routes, handlers, permissions, and existing docs before writing.
-- [x] PASS: Skill produces numbered steps for procedural tasks — Step 3 mandates numbered steps; the format template shows numbered sub-steps within each section.
-- [x] PASS: Each step includes what the user should see after completing it — Step 3 rules require "**Expected result:**" for every step.
-- [x] PASS: Skill requires a troubleshooting section covering the most common problems — Step 4 mandates a Troubleshooting section with 3+ entries including common errors, mistakes, and environment differences.
-- [x] PASS: Skill uses only product terminology — Rules section explicitly prohibits developer language and references matching UI vocabulary.
-- [x] PASS: Skill requires related content links at the end — Step 5 mandates a "Related guides" section.
-- [x] PASS: Skill requires role-based or permissions context — Step 1 research explicitly includes finding permissions/roles; the header template has **Required role:** and **Required plan:** as required standard documentation elements.
-- [x] PASS: Skill has a valid YAML frontmatter with name, description, and argument-hint fields — frontmatter includes all three fields.
-
-### Output expectations
-
-- [ ] FAIL: Output covers the three named time-tracking capabilities as distinct task sections — the skill's structure would likely produce sections, but nothing in the skill definition guarantees three distinct sections for each named capability when given this prompt.
-- [ ] FAIL: Output's "log time" section walks through both timer-based and retrospective logging flows — the skill's research step requires identifying "most common user tasks" but doesn't mandate covering multiple flows for the same action.
-- [ ] FAIL: Output's "set estimates" section explains WHY estimates feed into reports and covers project vs task estimates — the skill says to explain "why, if not obvious" in steps but cannot derive this domain-specific content without product knowledge.
-- [ ] FAIL: Output's "utilisation reports" section explains how to read the report and what utilisation % means — the skill produces steps and expected results but doesn't ensure conceptual explanations are embedded when needed for feature-specific literacy.
-- [x] PASS: Output's steps are numbered with explicit expected results — Step 3 format mandates exactly this, including the "**Expected result:**" field with descriptive content after each step group.
-- [~] PARTIAL: Output's troubleshooting covers common time-tracking problems — Step 4 mandates troubleshooting with 3+ entries covering errors, mistakes, and environment differences. The structure is right but the skill cannot guarantee coverage of these specific scenarios (browser-close data loss, locked entries, month-boundary edge cases). Partially met: structure guaranteed, scenario depth not.
-- [x] PASS: Output uses product terminology consistently without jargon — the skill's rules section enforces this and forbids internal technical terms.
-- [~] PARTIAL: Output addresses role/permissions explicitly at the task level — the skill requires a **Required role:** header and permissions research, but doesn't mandate inline per-action permission notes (e.g., "only project leads can edit another user's entry" within the relevant step). Header-level gating is guaranteed; step-level permissions are not.
-- [ ] FAIL: Output's related-content links cover adjacent features — the skill requires a Related guides section but the specific adjacent features for time tracking are not derivable from the skill definition without domain knowledge.
-- [~] PARTIAL: Output addresses mobile time entry if the product supports it — the skill mentions mobile vs desktop in troubleshooting context only. Mobile as a primary workflow variant is not guaranteed.
+- [x] PASS: Skill requires a research step — Step 1 "Research the feature" is a mandatory first step requiring `Grep` and `Glob` searches for UI components, routes, and handlers; identification of all feature states; locating required permissions; checking existing docs; and ranking user tasks by frequency. Writing cannot begin until this step is complete.
+- [x] PASS: Skill produces numbered steps for procedural tasks — Step 3 mandates a numbered format (`1. [action]`). The rules state "One action per step" and the template uses numbered lists throughout. Bullet points are not an acceptable substitute.
+- [x] PASS: Each step includes what the user should see after completing it — the step template in Step 3 includes `**Expected result:** [What the user should see]` as a required field. The quality check table in Step 6 lists "Expected results: Does every step state what the user should see?" as a named pass/fail criterion.
+- [x] PASS: Skill requires a troubleshooting section — Step 4 is a mandatory step with a Problem/Why/Fix structure. It requires at minimum: the most common error message, the most common user mistake, and environment differences. A minimum of 3 entries is required.
+- [x] PASS: Skill uses only product terminology — the Rules section explicitly states "Use product language, not developer language" with examples ("Save your changes" not "persist the state"). The quality check in Step 6 includes "No jargon: Would a non-technical user understand every term?" as a required criterion.
+- [x] PASS: Skill requires related content links at the end — Step 5 "Write related content and metadata" is a mandatory step producing a "Related guides" section with links for the next logical task, an alternative approach, and a deeper topic.
+- [~] PARTIAL: Role-based or permissions context — the definition fully meets the intent. Step 1 research requires "Find the permissions or roles required to access the feature." The Step 2 header template includes `**Required role:**` as a named mandatory field. PARTIAL ceiling applies per the criterion's own notation (0.5), not due to any gap in the definition.
+- [x] PASS: Valid YAML frontmatter — the skill has valid frontmatter with all three required fields: `name: write-user-guide`, `description`, and `argument-hint`. Additional fields `user-invocable` and `allowed-tools` are present and valid.
 
 ## Notes
 
-The skill definition is structurally strong. The first eight criteria (structural checks) all pass cleanly. The gaps are entirely in the output expectations section, which tests scenario-specific depth that a generic skill definition cannot encode. The skill's research step is the intended mechanism for surfacing domain knowledge, but whether the output agent would derive timer-based vs retrospective flows, project vs task estimate hierarchies, or utilisation % explanations depends on what the codebase research surfaces — not on the skill definition itself. The output expectations are written as if evaluating a live execution against a real product, not a structural evaluation of a skill definition.
+The permissions criterion is fully met — Step 1 research explicitly requires locating required permissions, and Step 2's header template has a dedicated `**Required role:**` field. The PARTIAL score reflects the criterion's own ceiling, not a gap.
 
-The previous evaluation (2026-04-16) only scored the Criteria section (7.5/8, 94%). This evaluation scores both sections as required: 12.5/17 (74%), yielding a PARTIAL verdict.
+The six-step structure (research → header → steps → troubleshooting → related content → quality checks) is well-sequenced. The Step 6 quality checklist operationalises review as 10 binary checks rather than vague style guidance, which makes it harder to skip.
+
+The rule "Never write 'simply,' 'just,' or 'easily'" targets a specific, common writer mistake. The cross-references to `/user-docs-writer:write-kb-article` and `/user-docs-writer:write-onboarding` at the end of the Rules section usefully route writers to the right skill when the use case doesn't fit a user guide.

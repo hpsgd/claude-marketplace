@@ -20,7 +20,6 @@ We need to add rate limiting to our API. We're getting hammered by a few custome
 ## Output expectations
 
 - [ ] PASS: Output explicitly identifies that the request requires BOTH architecture and implementation work — not just one or the other — and explains why
-- [ ] PASS: Output's trade-off analysis covers per-route vs per-customer vs per-IP rate limiting, and the architectural choice between in-process middleware, an API gateway, or a sidecar — before delegating
 - [ ] PASS: Output dispatches to the architect first using `/architect:system-design` (or equivalent) for the cross-service rate limiting strategy, then to the backend developer for implementation, in that sequence
 - [ ] PASS: Output identifies the immediate problem as a candidate for a quick mitigation (e.g. emergency per-customer limit on the bulk-import endpoint) while the architectural work proceeds, NOT just queueing the proper fix and leaving the noisy customers degrading service for everyone
 - [ ] PASS: Output's delegation includes clear scope boundaries — architect decides where rate limiting lives, what dimensions it applies on, and what the response codes / headers are; developer decides how to implement within that contract

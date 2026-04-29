@@ -30,12 +30,16 @@ Write the title as the question the user would type into a search bar. Use their
 - Good: "Why am I getting a 'permission denied' error?"
 - Bad: "Permission Error Troubleshooting Reference"
 
+If you have access to source tickets, validate the title and short answer against the actual phrasing customers use. The title should match how users describe the problem (e.g. "export failing", "stuck on loading"), not how support describes the solution. Pull at least two ticket subject lines and confirm the title would be a plausible search query for someone who wrote one of them.
+
 ### Short answer
 
 1-2 sentences that directly answer the question. This is for users who scan. It must be self-contained — a user who reads only this sentence should get the core answer.
 
 - Good: "Go to Settings > Export > Download CSV. Your file will download immediately for datasets under 10,000 rows; larger exports are emailed to you."
 - Bad: "Follow the steps below to learn about exporting."
+
+Immediately after the short answer, add one sentence explaining WHY the constraint exists — the system behaviour the user is bumping into (e.g. "Exports time out at 30 seconds, so datasets over ~50,000 rows need to be split"). Users who understand the constraint stop fighting it; users who only have steps repeat the ticket the next time the situation differs.
 
 ### Prerequisites
 
@@ -65,6 +69,7 @@ Rules for steps:
 - If a step involves entering data, give a concrete example.
 - If a step has a loading time or delay, mention it: "This may take up to 30 seconds."
 - If a step can fail, note it: "If you see an error here, see the Troubleshooting section below."
+- For any step where the UI element is non-obvious (a small icon, a hidden menu, a button in an unexpected location), add a screenshot — or, if you can't capture one, leave a placeholder: `![Screenshot: date filter in top-right of dashboard](TODO)`. Don't ship the article without flagging where visuals are needed.
 
 ### Troubleshooting
 
@@ -92,6 +97,15 @@ Link 3-5 related articles. Group them by relationship:
 - **Background**: Articles explaining concepts referenced in this one
 
 If related articles don't exist yet, list the titles that should be written and note them as "[To be created]".
+
+### When the answer is a workaround
+
+If the article's fix is a workaround rather than a real solution (e.g. "split your export into smaller batches" when the user has consistently large datasets), call that out and point to the real path. Examples:
+
+- "If you're exporting datasets this size regularly, the date-range workaround is a band-aid. See API access for very large datasets, or contact support about an Enterprise plan."
+- "This works for one-off cases. If you hit this every week, you want scheduled exports, not the manual fix above."
+
+A power user who keeps hitting the same wall doesn't want a tidier workaround — they want to know there's a different door. Skip this section only when the fix actually solves the problem for everyone.
 
 ## Step 3 — Apply quality rules
 

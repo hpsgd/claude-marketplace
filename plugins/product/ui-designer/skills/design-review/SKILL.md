@@ -150,6 +150,8 @@ grep -rn 'useQuery\|useSWR' --include="*.tsx" --include="*.jsx" -l | xargs grep 
 
 ## Dimension 4: Accessibility
 
+**Policy:** WCAG failures are blocking issues, not suggestions. Any accessibility defect found in this dimension goes in the Blockers section regardless of visual severity.
+
 ### Keyboard Support
 - All interactive elements reachable via Tab
 - Custom interactive elements have `tabIndex={0}` and keyboard handlers
@@ -169,6 +171,7 @@ grep -rn 'useQuery\|useSWR' --include="*.tsx" --include="*.jsx" -l | xargs grep 
 - Large text (18px+ / 14px+ bold) meets 3:1
 - Interactive element boundaries meet 3:1
 - Focus indicators meet 3:1 against adjacent colours
+- State differences (read/unread, selected/unselected, error/valid) are not conveyed by colour alone — combine with typography weight, icon, or text label per WCAG 1.4.1
 
 ```bash
 # Find potential contrast issues: light grey text on white

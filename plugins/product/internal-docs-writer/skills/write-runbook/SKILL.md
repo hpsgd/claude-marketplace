@@ -35,6 +35,7 @@ Use this exact structure. Every section is mandatory.
 |---|---|
 | **What this covers** | [one sentence] |
 | **When to use** | [trigger conditions — alert name, symptom, or scheduled occasion] |
+| **Business impact** | [what breaks for users if this is not done; expected RTO/RPO if applicable] |
 | **Estimated duration** | [time range for the full procedure] |
 | **Risk level** | Low / Medium / High / Critical |
 | **Last tested** | [date] |
@@ -58,6 +59,19 @@ Rules for prerequisites:
 - Every access requirement must include how to get access
 - Every credential must include where to find it (never hardcode credentials)
 - If a prerequisite takes more than 5 minutes to obtain, note it: "⏱ This may take [time] — request in advance"
+
+### Pre-check — is this the right runbook?
+
+Before running the procedure, confirm the trigger is real and not transient. This section is mandatory:
+
+```
+- [ ] Confirm trigger: `[exact health-check or diagnostic command]` → expected output: `[what confirms the condition]`
+- [ ] Wait and retry: if the signal could be transient (network blip, restart in progress), wait 60 seconds and re-run the check before proceeding
+- [ ] Confirm not planned: check [maintenance calendar / change log] — do not proceed if a planned change is in flight
+- [ ] Stop conditions: do NOT proceed if [explicit conditions, e.g. "the check passes after retry", "a planned failover is scheduled within the hour"]
+```
+
+The pre-check must include the exact command, the expected signal, and a retry-before-action rule for any condition that could resolve on its own.
 
 ### Procedure
 
@@ -133,6 +147,11 @@ If the procedure fails or causes issues, how to undo it. This section is not opt
 - [ ] Create incident ticket: [where, with what information]
 ```
 
+If rollback could leave two systems both believing they're authoritative (split-brain — e.g. promoted replica plus recovered primary, two leaders in a cluster, two writers on a shared resource), the rollback section MUST include:
+- An explicit `⚠ WARNING: do not [activate / promote / write to] both` directive
+- Ordered steps to demote, fence, or quarantine the previously-active system before re-introducing it
+- How to safely re-introduce the recovered system (e.g. as a follower, after re-syncing) — never as a peer that can accept writes
+
 ### Troubleshooting
 
 Common issues that arise during or after this procedure, even if not directly caused by the steps:
@@ -157,15 +176,21 @@ Include at minimum:
 
 | Condition | Escalate to | Contact | Expected response time |
 |---|---|---|---|
-| Procedure fails after troubleshooting | [team/person] | [Slack/phone/page] | [time] |
-| Data loss suspected | [team/person] | [Slack/phone/page] | Immediate |
-| Customer impact detected | [team/person] | [Slack/phone/page] | Immediate |
-| Unsure whether to proceed | [team/person] | [Slack/phone/page] | [time] |
+| Procedure fails after troubleshooting | [team/person] | [PagerDuty service ID, Slack channel, or phone] | [time] |
+| Data loss suspected (e.g. replication lag > [N] minutes at failover time) | [team/person] | [PagerDuty service ID, Slack channel, or phone] | Immediate |
+| Customer impact detected | [team/person] | [PagerDuty service ID, Slack channel, or phone] | Immediate |
+| Vendor / cloud provider issue | [vendor support team] | [support case URL or vendor hotline] | [time] |
+| Unsure whether to proceed | [team/person] | [PagerDuty service ID, Slack channel, or phone] | [time] |
 
-Include both primary and backup contacts. If the primary is unavailable, who is next?
+Rules for the escalation table:
+- **Conditions must be specific and measurable** — use numeric thresholds, time windows, or explicit signals (e.g. "replication lag > 5 minutes", "promotion fails after 2 retries", "error rate > 1%"). "If problems" or "escalate as needed" is not acceptable.
+- **Contacts must be concrete identifiers** — PagerDuty service name (e.g. `database-oncall`), Slack channel (e.g. `#sre-incidents`), or vendor support case URL. Not "the on-call team" or "Slack/phone".
+- **Include both primary and backup contacts.** If the primary is unavailable, who is next?
+- **Include vendor/provider escalation** when the procedure depends on a managed service.
 
 ### Appendix
 
+- **References:** source files, ADRs, vendor documentation, and infrastructure definitions consulted while writing this runbook — with paths or URLs. This shows the runbook is grounded in the actual system, not invented procedure.
 - **Related runbooks:** [links to runbooks for related procedures]
 - **Architecture context:** [brief description of the system architecture relevant to this procedure, or link to diagram]
 - **Change log:** [when was this runbook last updated and why]

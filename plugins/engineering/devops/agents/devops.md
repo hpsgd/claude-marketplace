@@ -76,7 +76,7 @@ Check for installed rules — especially `devops--pulumi.md`, `devops--moonrepo.
 - **Cache dependencies** — node_modules, .nuget, pip cache between runs
 - **Matrix strategy** for auto-discovery (e.g., `infrastructure/*/Pulumi.yaml` → matrix of stacks)
 - **Pin versions** — action versions, tool versions, base image versions. No `latest`
-- **Secrets via environment variables** — never hardcoded, never in logs
+- **Secrets injected at runtime** — pulled from a secret store (Pulumi encrypted config, GitHub Actions secrets, the platform's secret manager) and injected as environment variables into the running container. Never hardcoded, never baked into image layers, never written to logs. Database credentials (e.g. Neon Postgres) reach the container via a runtime env var sourced from the secret store, not via a build-time `ARG` or a `COPY` of an `.env` file
 - **Branch protection** — PR titles must be conventional commits, squash merges only
 
 ### Monorepo CI
@@ -133,7 +133,7 @@ Every production deployment must be zero-downtime. Choose the strategy based on 
 Rules:
 - Health check must pass before an instance receives traffic
 - Connection draining on old instances — wait for in-flight requests to complete before terminating
-- Database migrations must be backward-compatible (old code must work with new schema). Deploy the migration separately from the code change if needed
+- Database migrations must be backward-compatible (old code must work with new schema). Run migrations as a discrete step before the code rollout begins so old and new instances both run against the migrated schema during the rolling update. If a migration fails, halt the rollout, leave the old version serving traffic, and treat it as an incident — never proceed with the code rollout against a half-migrated database. Deploy the migration separately from the code change when the change is not backward-compatible
 
 ### Rollback Procedures
 
@@ -143,10 +143,11 @@ Every deployment must have a documented rollback path:
 2. **Manual rollback command** — one command to revert to the previous version. Document it in the service runbook. For containers: redeploy the previous image tag. For IaC: `pulumi up` with the previous commit
 3. **Database rollback** — if the deployment included a migration, the rollback plan must address whether the migration is reversible. Irreversible migrations (column drops, data transforms) require the blue/green strategy so the old version remains available
 4. **Verification after rollback** — run the same health checks and smoke tests that gate the forward deployment
+5. **Time budget (RTO)** — state the target time to restore service for each deployment (typically 5-15 minutes for stateless services, longer if a backward-incompatible migration must be reversed). The runbook records the target so on-call can escalate when it slips
 
 ### Worker and Background Containers
 
-Background workers (queue consumers, scheduled jobs, event processors) have different deployment concerns than web services:
+Background workers (queue consumers like Celery, scheduled jobs, event processors) have different deployment concerns than web services and must be deployed as a separate image or process from the web app, with their own rollout:
 
 - **Graceful shutdown** — workers must finish their current job before terminating. Set `SIGTERM` handler to stop accepting new work and drain in-flight items. Set a termination grace period (default 30s, increase for long-running jobs)
 - **No health endpoint needed** — instead, monitor queue depth, last-processed timestamp, and error rate
@@ -158,7 +159,7 @@ Background workers (queue consumers, scheduled jobs, event processors) have diff
 ### Observability Stack
 
 - **Metrics:** Track latency (p50, p95, p99), error rate, throughput, and saturation
-- **Logs:** Structured JSON logging. Never log passwords, tokens, PII, or full credit card numbers
+- **Logs:** Structured JSON logging shipped to a central aggregator (the container's stdout/stderr is ephemeral — once the container is replaced the logs are gone unless aggregated). Never log passwords, tokens, PII, or full credit card numbers
 - **Traces:** Instrument request paths across services for end-to-end visibility
 - **Health endpoints:** `/health` with pluggable `IHealthContributor` pattern
 

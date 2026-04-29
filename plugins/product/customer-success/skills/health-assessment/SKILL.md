@@ -87,7 +87,38 @@ Each intervention has:
 
 ### Step 7: Portfolio Summary (if assessing multiple accounts)
 
-Aggregate across accounts for portfolio-level insights.
+When assessing more than one account, produce a consolidated portfolio view in addition to per-account detail. The portfolio output must include:
+
+1. **Per-account row table** — one row per account showing: account name, per-dimension score (all 5), composite score, health classification, top risk signal, recommended intervention, owner.
+1. **Health distribution** — count of accounts in each health tier (Healthy / Neutral / At Risk / Critical).
+1. **Prioritised at-risk list** — Critical and At Risk accounts listed first, with the specific intervention required.
+1. **Cross-portfolio trends** — which dimension is weakest across the at-risk cohort, common signals, systemic patterns. Don't just report per-account observations; surface what's true across the group.
+
+Portfolio output template:
+
+```markdown
+# Portfolio Health Assessment: [segment/portfolio name]
+
+## Distribution
+- Healthy: [n] | Neutral: [n] | At Risk: [n] | Critical: [n]
+
+## Per-Account Scores
+
+| Account | Adoption (30%) | Engagement (25%) | Relationship (20%) | Value (15%) | Commercial (10%) | Composite | Status | Top risk signal | Intervention | Owner |
+|---|---|---|---|---|---|---|---|---|---|---|
+| [name] | [0–100] | [0–100] | [0–100] | [0–100] | [0–100] | [weighted] | [tier] | [signal] | [action] | [person] |
+
+## Prioritised Action List (Critical / At Risk first)
+
+| Account | Status | Composite | Intervention | Timeline | Owner |
+|---|---|---|---|---|---|
+| [name] | [tier] | [score] | [action] | [start–review] | [person] |
+
+## Portfolio Trends
+- **Weakest dimension across at-risk cohort:** [dimension] — [observation]
+- **Common signals:** [pattern]
+- **Systemic recommendation:** [cross-account action, e.g. "onboarding gap — propose revised first-30-days programme"]
+```
 
 ## Anti-Patterns (NEVER do these)
 

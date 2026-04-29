@@ -29,4 +29,3 @@ Design a load test plan for `GET /api/search?q=&page=&size=`. Current production
 - [ ] PASS: Output requires an isolated environment with no other workloads — production or shared staging produces noisy results — and names what "isolated" means concretely (dedicated DB, no other consumers)
 - [ ] PASS: Output's endurance test runs at least 1 hour, with memory and connection-count monitoring at fixed intervals, so a leak can be detected as a monotonic upward trend
 - [ ] PASS: Output's execution plan names the monitoring owner and the metrics they track during each test (DB connection count, server memory, GC pauses, error logs)
-- [ ] PARTIAL: Output addresses pagination distribution (`page` parameter) — high page numbers exercise different code paths and may have worse latency than page 1, so realistic pagination should be in the test mix

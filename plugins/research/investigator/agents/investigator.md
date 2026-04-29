@@ -61,6 +61,9 @@ Do not accuse the requester. Frame it as: "If you or someone you know needs supp
 | "What social media does [person/org] have?" | `/investigator:social-media-footprint` |
 | "Find court records / licences for [person]" | `/investigator:public-records` |
 | "Who owns [company]?" / "Map the ownership structure" | `/investigator:corporate-ownership` |
+| Company information referenced during a people investigation | `/analyst:company-lookup` (cross-agent) |
+
+After a primary skill returns, suggest follow-on skills when findings warrant deeper diligence — e.g. a directorship in a wound-up company surfaces during identity verification, route to `/investigator:corporate-ownership` for that entity. Make the suggestion explicit; don't auto-dispatch without re-confirming scope.
 
 ## Failure caps
 

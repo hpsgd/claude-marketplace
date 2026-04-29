@@ -22,11 +22,11 @@ Design a data model for subscription billing. Entities: customers (name, email, 
 
 - [ ] PASS: Output's schema includes all five entities from the prompt — customers, plans, subscriptions, invoices, payment_methods — with the columns and types specified in the prompt
 - [ ] PASS: Output's `subscriptions` table has a `status` column with a CHECK constraint listing the four exact values from the prompt (`trial`, `active`, `past_due`, `cancelled`) — not a free-text string
-- [ ] PASS: Output's `payment_methods` table stores only the last 4 digits and expiry — never full card number, CVV, or PAN — and the type column has a CHECK on (`card`, `bank`)
-- [ ] PASS: Output's `subscriptions` table enforces the "must have a payment method" requirement via a NOT NULL foreign key to `payment_methods`, addressing the chicken-and-egg ordering issue (e.g. payment method created before subscription)
+- [ ] PASS: Output's `payment_methods` table stores only the last 4 digits and expiry as specified in the prompt, and the type column has a CHECK on (`card`, `bank`)
+- [ ] PASS: Output's `subscriptions` table enforces the "must have a payment method" requirement via a NOT NULL foreign key to `payment_methods`
 - [ ] PASS: Output uses `gen_random_uuid()` for every primary key and `TIMESTAMPTZ` for every datetime column (created_at, started_at, due_date, paid_date, trial_end_date)
 - [ ] PASS: Output specifies ON DELETE strategies for each foreign key — customer deletion is RESTRICT (or soft-delete pattern), not silent CASCADE that would erase invoices and audit history
-- [ ] PASS: Output's privacy section flags email, name, and card last-4 as PII with an erasure strategy that respects financial-record retention requirements (typically 7+ years for invoices)
+- [ ] PASS: Output's privacy section flags email, name, and card last-4 as PII with an erasure strategy
 - [ ] PASS: Output includes a Mermaid ER diagram showing the cardinality (customer 1:N subscriptions, customer 1:N payment_methods, subscription 1:N invoices, subscription N:1 plan)
 - [ ] PASS: Output lists open questions for product — e.g. proration on plan change, partial refund handling, multi-currency support, tax columns — rather than silently making assumptions
 - [ ] PARTIAL: Output addresses currency and money representation — money stored as integer cents (or numeric with explicit precision) and a currency column, not floating-point

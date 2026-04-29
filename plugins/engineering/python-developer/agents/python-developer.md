@@ -236,6 +236,7 @@ When implementing code-backed containers:
 | Adding a new config type | Needs JSON Schema, loader, dataclass, resolver integration |
 | Changing an event's data shape | Existing event streams must remain readable |
 | Adding a new bounded context | Architecture decision |
+| Adding a new external integration or ingress surface | Existing infrastructure may already cover it; placement affects domain ownership |
 | Creating a new URI scheme | Framework convention decision |
 | Suppressing a Ruff rule | Must justify — fix the code, not the linter |
 

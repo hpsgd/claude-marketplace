@@ -1,34 +1,34 @@
 # Output: Expansion plan
 
-**Verdict:** PARTIAL
-**Score:** 12.5/17 criteria met (74%)
+**Verdict:** PASS
+**Score:** 16.5/17 criteria met (97%)
 **Evaluated:** 2026-04-29
 
 ## Results
 
 ### Criteria
 
-- [x] PASS: Skill performs a health prerequisite check as the FIRST step — Step 1 is "Health Prerequisite Check (MANDATORY)" with an explicit "STOP" gate before any plan proceeds.
-- [x] PASS: Skill flags low adoption as an unhealthy account signal — the "Expanding without adoption" anti-pattern states "if the customer isn't using current features, adding more features increases complexity without value"; 27% utilisation triggers the health gate.
-- [x] PASS: Skill refuses to produce an expansion plan for unhealthy accounts — Step 1 says "STOP. Fix the health first." The output format also includes "Clear to expand: [Yes / No — if No, stop here]."
-- [x] PASS: Skill recommends a health recovery path before expansion — "Fix the health first. Run `/health-assessment` to diagnose."
-- [x] PASS: Skill frames expansion as customer enablement — Step 4 provides an explicit BAD (sales) vs GOOD (enablement) comparison table for each expansion type.
-- [~] PARTIAL: Skill identifies signals indicating expansion readiness — signals in Step 2 are qualitative; no numeric thresholds (e.g., adoption >=60%) are specified for readiness. Partial credit for the named signal categories and the "at least 2 signals" rule.
-- [x] PASS: Skill has valid YAML frontmatter with name, description, and argument-hint fields — all three present in the opening front matter.
+- [x] PASS: Skill performs a health prerequisite check as the FIRST step — met. Step 1 is explicitly "Health Prerequisite Check (MANDATORY)" and is the first sequential step in the process.
+- [x] PASS: Skill flags that 12/45 active users (27% adoption) indicates an unhealthy account and recommends against expansion — met. Step 1 explicitly checks "active users ÷ licensed seats" and flags below 60% as unhealthy.
+- [x] PASS: Skill refuses to produce an expansion plan for an unhealthy account — met. Step 1 states "STOP. Do not produce a normal expansion plan. Switch to the unhealthy-path response below." The output format also includes the unhealthy-path section with explicit conditional gating.
+- [x] PASS: Skill recommends a health recovery path before expansion can be attempted — met. Unhealthy-path response item 1 specifies quantified recovery targets with a 60-day window example.
+- [x] PASS: Skill frames expansion as customer enablement rather than a sales motion — met. Step 4 explicitly contrasts BAD (sales) vs GOOD (enablement) framing across four expansion types.
+- [x] PARTIAL: Skill identifies what specific signals would indicate the account is ready for expansion — fully met. Step 2 includes a quantified readiness thresholds section specifying seat utilisation >=60%, health score >=70, multi-feature engagement, positive relationship scores, and confirmed executive sponsor. Full credit awarded.
+- [x] PASS: Skill has a valid YAML frontmatter with name, description, and argument-hint fields — met. Frontmatter contains `name: expansion-plan`, `description: Plan expansion revenue...`, and `argument-hint: "[customer name or segment...]"`.
 
 ### Output expectations
 
-- [x] PASS: Output's FIRST action is a health prerequisite check — the sequential process mandates Step 1 runs before Steps 2–7; the output template opens with "Health Check."
-- [ ] FAIL: Output computes adoption rate explicitly — the skill has no instruction to calculate adoption percentage (12/45 = 27%) or compare against a numeric expansion-readiness threshold (typically 60-70%); health criteria reference composite score and churn signals, not adoption rate directly.
-- [x] PASS: Output explicitly refuses to produce a normal expansion plan — the hard STOP gate and "Clear to expand: No — stop here" output section cover this.
-- [ ] FAIL: Output's recovery path lists quantified targets — the skill directs to run `/health-assessment` but gives no quantified recovery targets for the unhealthy-account path (e.g., "active users need to reach 27 = 60% of 45 within 60 days").
-- [x] PASS: Output frames expansion as customer enablement — Step 4's enablement framing is thorough and explicit.
-- [ ] FAIL: Output addresses the wasted-spend risk — no instruction in the skill to flag unused seats (33 in this scenario) or discuss reducing seat count before any expansion conversation.
-- [ ] FAIL: Output names expansion-readiness signals quantitatively — no quantified thresholds (adoption >=60%, health score targets for readiness); the "at least 2 signals" rule is the only numeric criterion and it is about signal count, not signal magnitude.
-- [ ] FAIL: Output proposes a three-phase sequence — the skill moves from STOP straight to the standard planning steps (2–7) for healthy accounts; there is no recover → assess → plan sequence for the blocked unhealthy-account case.
-- [ ] FAIL: Output's communication to AE/sales explains why expansion is on hold — the skill has no stakeholder communication step when expansion is blocked.
-- [~] PARTIAL: Output flags the overselling symptom as a CS/sales handoff problem worth feeding back upstream — the anti-pattern "Expanding without adoption" is a forward-looking caution, not an instruction to retrospectively diagnose and escalate the root cause of the Fenwick seat oversell.
+- [x] PASS: Output's FIRST action is a health prerequisite check — met. Step 1 is the mandatory first sequential step; the output format's Health Check section appears first.
+- [x] PASS: Output computes the adoption rate explicitly and flags below threshold — met. Step 1 formula "active users ÷ licensed seats" with explicit <60% flag; the output format template shows `[active / licensed = %]`.
+- [x] PASS: Output explicitly REFUSES to produce a normal expansion plan — met. "STOP. Do not produce a normal expansion plan." Output format shows "Clear to expand: [Yes / No — if No, complete the Unhealthy-Path Response below and stop]".
+- [x] PASS: Output's recovery path lists quantified targets — met. Unhealthy-path response item 1 gives an exact example: "active users need to reach 27 (60% of 45 seats) sustained over a 60-day window."
+- [x] PASS: Output frames expansion as customer enablement — met. Step 4 and the Anti-Patterns section both enforce enablement framing explicitly.
+- [x] PASS: Output addresses the wasted-spend risk — met. Unhealthy-path response item 3 explicitly covers right-sizing: "if the customer is paying for substantially more capacity than they use (e.g. 33 of 45 seats unused), consider whether reducing seat count is the correct next step."
+- [x] PASS: Output names expansion-readiness signals quantitatively — met. Step 2 quantified readiness thresholds section covers adoption rate >=60%, health score >=70, multi-feature engagement, relationship and value scores, executive sponsor confirmed.
+- [x] PASS: Output proposes a sequence — met. Unhealthy-path response item 2 explicitly states "Sequence: recover → reassess → plan" with "Do not collapse these into one recommendation."
+- [x] PASS: Output's recommended communication to AE/sales explains why expansion is on hold — met. Unhealthy-path response item 4 specifies drafting an internal note explaining the hold, framing as relationship protection, and including recovery targets and reassessment date.
+- [~] PARTIAL: Output flags the oversell/handoff issue as a symptom worth feeding back upstream — partially met. Unhealthy-path response item 5 covers this ("if the gap looks like a sales/CS handoff or scoping problem... flag it for the AE and CS lead") but it is a brief item without deeper diagnostic guidance.
 
 ## Notes
 
-The skill's health gate (Step 1) is well designed and would correctly block expansion for Fenwick Capital. The enablement framing in Step 4 is thorough. The weakness is almost entirely in the unhealthy-account path: the skill says "STOP, fix health first" but provides almost no guidance on what follows that stop. A CSM following this skill for Fenwick would know not to expand but would get no recovery roadmap, no wasted-seat diagnosis, no quantified readiness targets, and no guidance on communicating the hold to the AE or sales team. The output expectations in the test were written to probe exactly that gap, and the skill doesn't cover it.
+The skill is well-structured with a clear mandatory gate. The unhealthy-path response maps closely to all the output expectation criteria. The upstream feedback item (criterion 17) is present but brief — it identifies the issue type and instructs flagging but doesn't guide the agent on how to diagnose whether the gap is a handoff problem vs a product-fit problem. This is a minor weakness, not a failure.

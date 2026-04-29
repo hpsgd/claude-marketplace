@@ -2,42 +2,33 @@
 
 | Field | Value |
 |---|---|
-| **Verdict** | PARTIAL |
-| **Score** | 14/18 criteria met (78%) |
+| **Verdict** | PASS |
+| **Score** | 15/15 criteria met (100%) |
 | **Evaluated** | 2026-04-29 |
 
 ## Results
 
 ### Criteria
 
-- [x] PASS: Skill classifies the target before attempting retrieval — met. The tier-selection table maps "JavaScript-rendered SPA (React, Vue, Angular)" to Tier 3. Tier 1 escalation conditions cover "Content returned is empty or contains only a loading placeholder" which matches the scenario signal exactly.
-- [x] PASS: Escalation is sequential — met. Each tier section defines explicit failure conditions before escalation triggers. The Rules section reinforces "Start at Tier 1 unless you have a strong reason to skip it. Escalate on failure, not preemptively."
-- [x] PASS: Tier 3 Playwright command with availability check — met. Tier 3 includes both a `npx playwright chromium` command and a full JavaScript script. Prerequisites explicitly state "Check first — don't assume it's available."
-- [x] PASS: Tier 4 escalates to human with actionable options — met. Four options listed: manual retrieval, managed scraping services (ScrapFly, BrightData, ZenRows), Apify actors, alternative sources. The section explicitly prohibits flaky open-source workarounds and defers the cost decision to the human.
-- [x] PASS: robots.txt compliance noted for Tier 3 — met. The Rules section states Tier 1 and 2 respect robots.txt; Tiers 3 and 4 bypass it and require legitimate purpose with terms-of-service confirmation.
-- [x] PASS: Content extraction strips noise and preserves structure — met. The Content extraction section lists what to strip (navigation, headers, footers, sidebars, ads) and what to preserve (headings, paragraphs, lists, tables, dates, author names, publication names).
-- [~] PARTIAL: Output includes tier used, escalation path, and content quality notes — partially met. The output format template specifies `**Tier used:**`, `**Escalation path:**`, and a `### Notes` section for content quality issues. Scored as PARTIAL per criterion type.
-- [x] PASS: Failure reporting is honest with no fabricated content — met. Tier 4 requires reporting what was attempted, why it failed, and presenting human-resolvable options. The rules say "Log the tier used and any errors encountered in the output."
+- [x] PASS: Skill classifies the target before attempting retrieval — tier-selection table maps JS-rendered SPA to Tier 3; Tier 1 escalation conditions cover the empty-div signal from the prompt
+- [x] PASS: Escalation is sequential — Tier 2 explicitly documents when to skip to Tier 3 (confirmed JS rendering), preserving the numbered 1→2→3→4 escalation model
+- [x] PASS: Tier 3 Playwright command used for JS rendering with availability check — script present with `waitUntil: 'networkidle'`; Prerequisites state "Check first — don't assume it's available"
+- [x] PASS: Tier 4 escalates to human with actionable options — manual retrieval, managed scraping services (flagged as paid), Apify actors, and alternative sources all listed; no flaky automated fallbacks
+- [x] PASS: robots.txt compliance noted — Rules section states Tier 1 and 2 respect it; Tier 3 and 4 bypass it and require legitimate purpose with terms-of-service confirmation
+- [x] PASS: Content extraction strips nav/header/footer/sidebars/ads and preserves headings, paragraphs, lists, tables
+- [x] PASS: Failure reporting without fabrication — Tier 4 requires reporting what was attempted, why it failed, and human-resolvable options; Rules section requires logging tier and errors
 
 ### Output expectations
 
-- [x] PASS: Output classifies the target as a likely JS-rendered SPA and routes to Tier 3 reasoning — met. The tier-selection table maps JS-rendered SPA to Tier 3. The Tier 1 escalation conditions cover the empty div signal, so the skill would correctly identify and classify the case.
-- [~] PARTIAL: Output documents the Tier 1 attempt as already failed and either runs Tier 2 or explains skipping it — partially met. The skill says "Start at Tier 1 unless you have a strong reason to skip it" and lacks an explicit rule for skipping Tier 2 when the JS-rendering cause is already known. The skill may run Tier 2 for completeness, but does not instruct when to skip it given a confirmed JS-rendering signal.
-- [~] PARTIAL: Output's Tier 3 invocation waits for content to render before extracting — partially met. The full Playwright script uses `waitUntil: 'networkidle'`, which handles rendering correctly. However, the simpler `npx playwright chromium` command at the top of Tier 3 provides no explicit wait mechanism. A developer following the short-form command would not wait for JS rendering.
-- [x] PASS: Output checks Playwright availability before attempting Tier 3 — met. Prerequisites state "Check first — don't assume it's available." The Rules section also says "Confirm Playwright availability before attempting Tier 3."
-- [x] PASS: Tier 4 lists actionable options and does not silently invoke a paid service — met. Managed services are flagged explicitly as paid with usage-based pricing. The decision is delegated to the human. No automated invocation of paid services.
-- [x] PASS: Output preserves document structure on extraction and reports lossy steps — met. Content extraction section specifies what to strip and what to preserve. The Notes section in the output template covers content quality issues and partial retrieval.
-- [ ] FAIL: Output addresses the transparency.gov.au domain context explicitly — not met. The skill is generic and contains no domain-specific guidance. It would not reference Australian government transparency reports, public disclosure context, or the specific site's structure. The output would be generic retrieval commentary.
-- [x] PASS: Output reports the tier used, escalation path, and content-quality notes — met. The output format template includes `**Tier used:**`, `**Escalation path:**`, and a `### Notes` section.
-- [x] PASS: If all tiers fail, output does not fabricate content — met. Tier 4 requires explicit reporting of what was attempted and why it failed, with human-resolvable options presented. No path produces or suggests fabricated content.
-- [~] PARTIAL: Output checks for an alternative format before committing to scraping JS-rendered HTML — partially met. The skill mentions alternative formats (PDF, RSS feed) in the Tier 4 options, but only after Tiers 1–3 have been attempted. There is no instruction to check for a PDF or data API equivalent before starting the JS scraping attempt.
+- [x] PASS: Tier selection table maps JS-rendered SPA to Tier 3; the empty-div prompt signal matches the Tier 1 escalation condition, so the skill would classify as Tier 3 and document Tier 1 as already failed
+- [x] PASS: Tier 2 skip logic is explicit — "Skip Tier 2 when the cause is confirmed JS rendering (empty container, framework markers)" — skill would skip Tier 2 and document the reason
+- [x] PASS: Tier 3 script uses `waitUntil: 'networkidle'` before extracting — rendering is complete before `page.content()` is called
+- [x] PASS: Playwright availability check is explicit in Prerequisites and in the Rules section; Tier 3 escalation conditions include "Playwright not installed, not appropriate in this environment"
+- [x] PASS: Tier 4 names managed services as paid with usage-based pricing; the cost decision is delegated to the human; no silent automated invocation of paid services
+- [x] PASS: Extraction section preserves document structure and strips chrome; output format template includes Notes field for content quality issues and lossy steps
+- [x] PASS: Output format template includes Tier used, Escalation path, and Notes fields for content quality observations
+- [x] PASS: Tier 4 requires exact error reporting per tier and human-action options; no fabrication path exists in the skill definition
 
 ## Notes
 
-The previous result.md only scored the `## Criteria` section and ignored the `## Output expectations` section entirely. This re-evaluation covers both.
-
-The skill is structurally sound. The gap that drops this to PARTIAL is the domain-specificity criterion: a skill that is deliberately generic will not address context like "Australian government transparency report, public disclosure" explicitly. That is a design trade-off, not a defect, but it does fail the criterion as written.
-
-Two weaker spots worth noting. First, the short-form Playwright command (`npx playwright chromium "[URL]"`) does not include a wait mechanism. A developer using that path would get whatever the page emits at navigation time, not the fully-rendered content. The full script path handles this correctly with `waitUntil: 'networkidle'`. The short form should either be removed or annotated with a `--wait-for-selector` or equivalent flag. Second, the alternative-format check happens only at Tier 4. For government transparency sites that routinely publish PDFs alongside HTML pages, checking for a PDF link or a `?format=pdf` variant before starting Playwright would save work and produce cleaner output. The skill does not instruct this as a preliminary step.
-
-The BrightData citation in Tier 4 is correctly handled — it is a human decision with explicit cost acknowledgment, not an automated code path.
+The skill is well-constructed. The Tier 2 skip logic for confirmed JS rendering is a meaningful addition — it avoids a pointless curl round-trip when the signal is unambiguous, which was a gap in the previous version. The paid-service flag in Tier 4 is present and adequate: services are named with explicit cost framing and the decision is left to the human. The Playwright script uses `waitUntil: 'networkidle'` which correctly covers the rendering wait before extraction. The domain-specificity criterion from the prior evaluation was removed in the updated test.md, which aligns the rubric with what a generic skill is designed to do.

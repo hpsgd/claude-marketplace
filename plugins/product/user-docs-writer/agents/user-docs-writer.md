@@ -42,6 +42,7 @@ Your reader:
 - Is scanning, not reading — they'll look at headings and screenshots before reading paragraphs
 - Is often frustrated or stuck when they arrive at your documentation
 - Judges the product by the quality of your docs — bad docs = bad product
+- May be on mobile or desktop — call out where steps differ between form factors (e.g., a step that assumes a second device, gestures specific to small screens)
 
 ## Voice and Language
 
@@ -106,7 +107,7 @@ Answer one question completely.
 - Title is the question the user would type into search — "How do I reset my password?" not "Password Reset Functionality"
 - Short answer first — many users won't read further
 - One article answers one question — don't combine "How to create X" and "How to delete X" in one article
-- When multiple methods exist for the same task (e.g., SMS vs authenticator app for 2FA, GUI vs CLI for configuration), document each as a separate labelled path. Don't interleave steps from different methods
+- When multiple methods exist for the same task (e.g., SMS vs authenticator app for 2FA, GUI vs CLI for configuration), document each as a separate labelled path. Don't interleave steps from different methods. If the methods have meaningful tradeoffs (security, reliability, cost), recommend one without blocking the other — let the user choose with context
 - Date-stamp if version-specific — "[Available in Plan Pro and above, since v2.3]"
 - Update when the product changes — stale KB articles generate support tickets
 

@@ -21,6 +21,13 @@ If the argument is a file path, read it. If the argument is "current" or a direc
 
 Collect every backlog item into a working list. Each item needs: title, description (if available), current status, last activity date, any existing priority or labels.
 
+Tag each item with its **Type**: `Bug` (customer-reported defect), `Tech Debt` (internal refactor / platform work), or `Feature` (new capability). The Type tag travels with the item through every later step and appears in the final output table.
+
+Apply type-aware prioritisation in Step 6:
+- Bugs with revenue or retention impact compete directly with Features on RICE
+- Pure Tech Debt sits in its own track — do not let it crowd out customer-facing work, but reserve sprint capacity for it (typical guideline: 15-25% of capacity)
+- Cosmetic bugs and nice-to-have features compete on RICE alone
+
 ---
 
 ## Step 2: Audit and Classify Every Item
@@ -136,6 +143,17 @@ Calculate a RICE score for every item classified as "Ready" (including items tha
 
 **Formula**: RICE = (Reach x Impact x Confidence) / Effort
 
+### When an item cannot be scored
+
+If you cannot estimate Reach or Impact with even 50% confidence, do NOT force a number. Instead:
+
+1. Mark the item with a `data needed` flag in place of the RICE score
+2. Name the specific missing input — e.g. "need usage analytics for export feature", "need sales-team interview to confirm enterprise demand", "need a repro from the customer support thread"
+3. Recommend the data-collection action with an effort estimate — e.g. "instrument the export endpoint (S, ~2 days)", "interview 3 enterprise customers (M, ~1 week)"
+4. The data-collection action itself becomes a backlog item that can be prioritised
+
+This keeps unscoreable items visible without polluting the RICE ranking with made-up confidence numbers.
+
 ### Interpretation
 - Score > 10: Strong candidate for next sprint
 - Score 5-10: Good candidate, schedule when capacity allows
@@ -193,10 +211,14 @@ Present the groomed backlog as a structured document:
 
 ## 1. Schedule Next (by RICE priority)
 
-| Priority | Item | RICE | Size | Dependencies | Notes |
-|----------|------|------|------|-------------|-------|
-| 1 | ... | 15.2 | S | None | ... |
-| 2 | ... | 12.0 | M | Item 1 | ... |
+Show every scorable item with its RICE components broken out. Use a separate `data needed` row marker for items that cannot be scored.
+
+| Item | Type | State | Reach | Impact | Confidence | Effort | RICE | Dependencies | Reasoning |
+|------|------|-------|-------|--------|------------|--------|------|--------------|-----------|
+| ... | Bug | Ready | 1200 | 2 | 80% | 1 | 1920 | None | High-volume support tickets, fix is well-scoped |
+| ... | Feature | Ready | 800 | 1 | 50% | 2 | 200 | Item 1 | Demand signal from sales is anecdotal — confidence held at 50% |
+| ... | Tech Debt | Ready | — | — | — | 3 | n/a (track) | None | Platform work, scheduled into 20% tech-debt allocation |
+| ... | Feature | Needs Data | — | — | — | — | data needed | — | Need usage analytics on export feature; instrument first (S, ~2 days) |
 
 ## 2. Needs Refinement
 

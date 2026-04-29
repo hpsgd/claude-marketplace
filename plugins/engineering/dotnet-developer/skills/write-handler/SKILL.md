@@ -39,58 +39,57 @@ Choose the correct handler pattern based on what the handler does:
 
 ### Step 3: AggregateHandler Pattern (Primary)
 
+Event-sourced aggregates evolve their state by **emitting events, not mutating fields**. Return the event(s) from `Handle` — Marten appends them to the aggregate stream and `Apply` methods on the aggregate fold them into state.
+
 ```csharp
 [AggregateHandler]
-public static class TriggerCrawlExtractionHandler
+public static class CompleteCrawlHandler
 {
-    public static async Task<object?> Handle(
-        TriggerCrawlExtraction command,
-        Crawl crawl,
-        IDocumentSession session,
-        CancellationToken ct)
+    public static (CrawlCompleted, IEnumerable<ExtractPage>) Handle(
+        CompleteCrawl command,
+        Crawl crawl)
     {
-        // Guard: only trigger extraction if crawl is in the right state
-        if (crawl.Status != CrawlStatus.Completed)
-        {
-            // Return null — no cascade, no error. Silently skip
-            return null;
-        }
+        // Emit the domain event — Marten appends it to the stream.
+        // Do NOT mutate crawl.Status / crawl.CompletedAt directly.
+        var completed = new CrawlCompleted(crawl.Id, DateTimeOffset.UtcNow);
 
-        // One thing: mark the crawl as extracting
-        crawl.Status = CrawlStatus.Extracting;
-        crawl.ExtractionStartedAt = DateTimeOffset.UtcNow;
-        session.Store(crawl);
+        // Fan out — one ExtractPage per page, each its own unit of work
+        var extractions = crawl.Pages.Select(p => new ExtractPage(crawl.Id, p.Id, p.Url));
 
-        // Cascade: return the next command to process
-        return new ExtractCrawlPages(crawl.Id, crawl.Pages.Select(p => p.Id).ToList());
+        return (completed, extractions);
     }
 }
 ```
+
+**Event-sourced state changes:**
+- Return the event from `Handle` — Wolverine + Marten append it to the stream automatically. The aggregate's `Apply(CrawlCompleted)` method updates state on rehydration
+- Never mutate aggregate fields directly (`crawl.Status = ...`) — the change won't be persisted as an event and is invisible on replay
+- For non-event-sourced document aggregates, use `session.Store(crawl)` after explicit field changes — but this is the document path, not the event-sourced path
+- If you need to append events from inside a non-aggregate handler, use `session.Events.Append(streamId, @event)` and let `IDocumentSession` flush
 
 **`[AggregateHandler]` rules:**
 - Wolverine automatically loads the aggregate from Marten using the command's `Id` property (or `{AggregateName}Id`)
 - The aggregate is injected as a method parameter — you don't load it yourself
 - The command MUST have an `Id` property (or a property named `{AggregateName}Id`) that maps to the aggregate identity
 - If the aggregate doesn't exist, Wolverine returns a 404 (for HTTP) or skips (for messages)
+- **Commands and events are C# `record` types** with immutable properties — never classes with setters
 
 ### Step 4: Cascading Returns
 
 Cascading returns are how handlers trigger downstream work. The return value of `Handle` is automatically published as a message.
 
 ```csharp
-// Single cascade — return one message
+// Single cascade — return one event (Marten appends it to the stream)
 public static CrawlCompleted Handle(CompleteCrawl command, Crawl crawl)
 {
-    crawl.Status = CrawlStatus.Completed;
-    return new CrawlCompleted(crawl.Id);
+    return new CrawlCompleted(crawl.Id, DateTimeOffset.UtcNow);
 }
 
-// Multiple cascades — return a tuple
+// Multiple cascades — return a tuple of event + message
 public static (CrawlCompleted, NotifySourceOwner) Handle(CompleteCrawl command, Crawl crawl)
 {
-    crawl.Status = CrawlStatus.Completed;
     return (
-        new CrawlCompleted(crawl.Id),
+        new CrawlCompleted(crawl.Id, DateTimeOffset.UtcNow),
         new NotifySourceOwner(crawl.SourceId, $"Crawl {crawl.Id} completed")
     );
 }
@@ -283,63 +282,64 @@ public class NotifyExternalServiceHandler
 
 #### Unit Test
 
+For event-sourced handlers, assert on the **events returned** by `Handle` (the cascade) — not on persisted state. Persistence is Marten's job and belongs in integration tests.
+
 ```csharp
-public class WhenTriggeringCrawlExtraction
+public class WhenCompletingACrawl
 {
     [Fact]
-    public void it_returns_extract_command_when_crawl_is_completed()
+    public void it_emits_crawl_completed_and_one_extract_per_page()
     {
         // Arrange
-        var crawl = CrawlFactory.Create(status: CrawlStatus.Completed, pageCount: 3);
-        var command = new TriggerCrawlExtraction(crawl.Id);
-        var session = Substitute.For<IDocumentSession>();
+        var crawl = CrawlFactory.Create(pageCount: 3);
+        var command = new CompleteCrawl(crawl.Id);
 
         // Act
-        var result = TriggerCrawlExtractionHandler.Handle(command, crawl, session, CancellationToken.None);
+        var (completed, extractions) = CompleteCrawlHandler.Handle(command, crawl);
 
-        // Assert
-        result.ShouldBeOfType<ExtractCrawlPages>();
-        var extract = (ExtractCrawlPages)result!;
-        extract.PageIds.Count.ShouldBe(3);
-    }
+        // Assert — on the events, not on mutated state
+        completed.ShouldBeOfType<CrawlCompleted>();
+        completed.CrawlId.ShouldBe(crawl.Id);
+        completed.CompletedAt.ShouldBeGreaterThan(DateTimeOffset.MinValue);
 
-    [Fact]
-    public void it_returns_null_when_crawl_is_not_completed()
-    {
-        // Arrange
-        var crawl = CrawlFactory.Create(status: CrawlStatus.InProgress);
-        var command = new TriggerCrawlExtraction(crawl.Id);
-        var session = Substitute.For<IDocumentSession>();
-
-        // Act
-        var result = TriggerCrawlExtractionHandler.Handle(command, crawl, session, CancellationToken.None);
-
-        // Assert
-        result.ShouldBeNull();
+        var pages = extractions.ToList();
+        pages.Count.ShouldBe(3);
+        pages.ShouldAllBe(p => p.CrawlId == crawl.Id);
     }
 }
 ```
 
 #### Integration Test
 
+Verify both the resulting aggregate state **and** the cascading messages published to the bus. Use Wolverine's `TrackedSession` (via `Host.TrackActivity().InvokeMessageAndWaitAsync(...)`) to capture published messages.
+
 ```csharp
-public class TriggerCrawlExtractionIntegrationTest : IntegrationContext
+public class CompleteCrawlIntegrationTest : IntegrationContext
 {
     [Fact]
-    public async Task it_processes_the_full_message_pipeline()
+    public async Task it_completes_the_crawl_and_publishes_one_extract_per_page()
     {
-        // Arrange
-        var crawl = CrawlFactory.Create(status: CrawlStatus.Completed);
+        // Arrange — seed the aggregate via its event stream
+        var crawlId = Guid.NewGuid();
         await using var session = Store.LightweightSession();
-        session.Store(crawl);
+        session.Events.StartStream<Crawl>(crawlId, new CrawlStarted(crawlId, pages: 3));
         await session.SaveChangesAsync();
 
-        // Act
-        await Host.InvokeMessageAndWaitAsync(new TriggerCrawlExtraction(crawl.Id));
+        // Act — track the session so we can assert on cascading messages
+        var tracked = await Host
+            .TrackActivity()
+            .IncludeExternalTransports()
+            .InvokeMessageAndWaitAsync(new CompleteCrawl(crawlId));
 
-        // Assert
-        var updated = await session.LoadAsync<Crawl>(crawl.Id);
-        updated!.Status.ShouldBe(CrawlStatus.Extracting);
+        // Assert — aggregate state
+        var crawl = await session.Events.AggregateStreamAsync<Crawl>(crawlId);
+        crawl!.Status.ShouldBe(CrawlStatus.Completed);
+        crawl.CompletedAt.ShouldNotBeNull();
+
+        // Assert — one ExtractPage per page was published
+        var extracts = tracked.Sent.MessagesOf<ExtractPage>().ToList();
+        extracts.Count.ShouldBe(3);
+        extracts.ShouldAllBe(e => e.CrawlId == crawlId);
     }
 }
 ```
@@ -353,6 +353,8 @@ public class TriggerCrawlExtractionIntegrationTest : IntegrationContext
 - **Missing aggregate ID on command** — `[AggregateHandler]` can't load without an `Id` property matching the aggregate
 - **Business logic in LoadAsync** — LoadAsync is for pre-conditions. Business decisions go in Handle
 - **God handlers** — one handler doing 5 things. Each handler does one thing and cascades the next
+- **Mutating event-sourced aggregates directly** — `crawl.Status = ...` on an event-sourced aggregate is silently lost. Return events from `Handle` and let `Apply` methods fold state
+- **Classes for commands/events** — commands and events are immutable `record` types, not classes with setters
 
 ## Output
 

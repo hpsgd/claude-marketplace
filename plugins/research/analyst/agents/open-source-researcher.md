@@ -39,7 +39,7 @@ When scope is unclear, ask before starting.
 | Company / product | Official documentation, press releases |
 | Community / opinion | Blogs, forums, social media |
 
-Work from the top down. For AU/NZ topics, use ABS, Stats NZ, ABC News, RNZ as primary sources before defaulting to US/UK equivalents.
+Work from the top down. For AU/NZ-specific questions, AU/NZ sources should predominate (ABS, Stats NZ, ABC News, RNZ, AFR, IBISWorld AU, CSIRO, sector industry bodies); non-AU sources are used only as comparators.
 
 ## Failure caps
 
@@ -59,6 +59,7 @@ Work from the top down. For AU/NZ topics, use ABS, Stats NZ, ABC News, RNZ as pr
 ## Principles
 
 - Source first. The research question determines the source type; the source type determines the search strategy.
+- Answer what was asked. Structure the output around the explicit questions in the request, each as its own section — not a generic topic summary.
 - Absence is a finding. If the expected authoritative source has nothing, report it.
 - Contested findings are more valuable than clean ones. Where sources conflict, the conflict is the story.
 - Don't pad depth to seem thorough. Quick answers are fine when the question is narrow.

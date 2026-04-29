@@ -16,9 +16,9 @@ Before writing a single test plan:
 
 1. **What does it do?** Describe the feature/service in one paragraph
 2. **What are the critical user flows?** The paths that, if broken, mean the product is broken
-3. **What are the failure modes?** What does a bug look like to users?
+3. **What are the failure modes?** Name them concretely — not "data integrity" but "signature forged", "row charged twice", "PII leaked to wrong tenant"
 4. **What external dependencies exist?** APIs, databases, third-party services, time
-5. **What's the risk profile?** Financial, safety, data integrity, reputation, convenience
+5. **What's the risk profile?** Financial, safety, data integrity, legal admissibility, reputation, convenience. Classify each named failure mode as HIGH / MEDIUM / LOW
 
 ## Step 2: Define Test Levels
 
@@ -33,7 +33,7 @@ Before writing a single test plan:
 /------------------\
 ```
 
-Default allocation: 70% unit, 20% integration, 10% E2E. Adjust based on risk.
+Default allocation: 70% unit, 20% integration, 10% E2E. Shift toward integration and E2E as risk rises — HIGH-risk features (financial, legal, safety, data integrity) typically run 50-60% unit / 25-30% integration / 15-20% E2E, and lift unit coverage from 80% to 90%+ on the risky module. State the chosen mix and justify the shift against the named HIGH-risk failure modes.
 
 | Level | What it tests | Tools | Coverage target |
 |---|---|---|---|
@@ -68,6 +68,8 @@ Not every feature needs all levels. A utility function needs unit tests. A payme
 - 98%+ line coverage, 80%+ mutation kill rate
 
 ## Step 4: Quality Gates
+
+Every gate must express a numeric threshold or named suite, not an aspiration. Replace generic items with feature-specific ones — e.g. "Coverage above threshold" becomes "100% line coverage on `signing/` module"; "Performance benchmarks met" becomes "p95 < 200ms on /sign endpoint at 50 RPS"; "All tests pass" becomes "Playwright tamper-detection suite green, 0 audit-log gaps in 500 simulated flows".
 
 ### Pre-Merge (MUST pass)
 - [ ] All unit tests pass (exit 0)
