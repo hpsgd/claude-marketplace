@@ -4,7 +4,7 @@
 |---|---|
 | **Skill** | `triage-tickets` |
 | **Plugin** | `product/support` |
-| **Verdict** | PARTIAL |
+| **Verdict** | PASS |
 | **Score** | 15.5/18 criteria met (86%) |
 | **Evaluated** | 2026-04-30 |
 

@@ -1,10 +1,62 @@
-# Test: security-review skill structure
+# Test: security-review skill applied to an authentication endpoint
 
-Scenario: Checking that the security-review skill enforces all six mandatory scans in sequence, requires grep evidence for each scan, suppresses low-confidence findings, and produces CVSS-scored output.
+Scenario: A backend developer asks for a security review of a new login endpoint in a Node/Express application. The handler queries Postgres directly with string concatenation, returns user records on successful authentication, logs the failed-attempt details, and uses a hard-coded secret for JWT signing. The reviewer needs to apply the six-scan security-review methodology.
 
 ## Prompt
 
-Review the security-review skill definition and verify it produces systematic security assessments with evidence rather than intuition-based findings.
+Run a security review on this login endpoint before we ship it.
+
+```typescript
+// src/routes/auth.ts
+import { Router } from 'express'
+import { Pool } from 'pg'
+import jwt from 'jsonwebtoken'
+import bcrypt from 'bcrypt'
+
+const pool = new Pool({ connectionString: process.env.DATABASE_URL })
+const router = Router()
+
+const JWT_SECRET = 'turtle-jwt-secret-2026'
+
+router.post('/login', async (req, res) => {
+  const { email, password } = req.body
+
+  const result = await pool.query(
+    `SELECT id, email, password_hash, role, mfa_secret, last_login
+     FROM users WHERE email = '${email}'`
+  )
+
+  if (result.rows.length === 0) {
+    console.log(`Login failed: no user for ${email}`)
+    return res.status(404).json({ error: 'user not found' })
+  }
+
+  const user = result.rows[0]
+  const ok = await bcrypt.compare(password, user.password_hash)
+
+  if (!ok) {
+    console.log(`Login failed: bad password for ${email}, hash=${user.password_hash}`)
+    return res.status(401).json({ error: 'wrong password' })
+  }
+
+  const token = jwt.sign({ sub: user.id, role: user.role }, JWT_SECRET)
+
+  return res.json({
+    token,
+    user: {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+      mfa_secret: user.mfa_secret,
+      last_login: user.last_login,
+    },
+  })
+})
+
+export default router
+```
+
+Stack: Node 20, Express 4, Postgres 15. This will be deployed behind Cloudflare on api.example.com.
 
 ## Criteria
 
@@ -19,12 +71,14 @@ Review the security-review skill definition and verify it produces systematic se
 
 ## Output expectations
 
-- [ ] PASS: Output is structured as a verification of the skill (verdict per requirement) rather than running an actual security review
-- [ ] PASS: Output verifies the six mandatory scans in order — Input Validation, Injection, Auth/Authz, Secrets/Data Exposure, Dependencies, OWASP Top 10 — and confirms all are mandatory regardless of perceived applicability
-- [ ] PASS: Output verifies grep patterns are provided per scan and per language (TypeScript, Python, C#) — not language-agnostic regex that misses idioms like `Marshal.unsafeRunSync` or Python's `eval`
-- [ ] PASS: Output confirms each scan has a checklist with pass criteria AND the specific finding severity to assign if the criterion is missing — not just a list of things to look for
-- [ ] PASS: Output verifies the confidence calibration rule — findings below 60% confidence are suppressed — with the underlying anti-FUD reasoning
-- [ ] PASS: Output confirms the OWASP Top 10 sweep is the final scan with PASS / FAIL per category and grep evidence for each
-- [ ] PASS: Output verifies the no-rubber-stamp rule for clean reviews — must name a specific positive assertion with file:line proving review depth, not "looks good"
-- [ ] PASS: Output confirms the output format includes Executive Summary (overall risk, finding counts, ship/fix/block recommendation), findings table with CVSS, and scan evidence table with grep commands and result counts
-- [ ] PARTIAL: Output identifies any genuine gaps — e.g. no rule on threat modelling for new features, no guidance on when to escalate to a full pen test, or no explicit handling of test/fixture code (which often has lower bar but can ship to prod)
+- [ ] PASS: Output identifies the SQL injection in the email parameter (template-string concatenation into the query) as a Critical / CVSS 9.0+ finding with parameterised-query fix
+- [ ] PASS: Output identifies the hard-coded `JWT_SECRET` as Critical — secret in source control, predictable across deployments, fix is environment variable + rotation procedure
+- [ ] PASS: Output identifies user enumeration through the 404 vs 401 response distinction (and matching log messages) as a finding with the standard fix — return identical 401 for both unknown user and wrong password
+- [ ] PASS: Output flags the response shape leaking the `mfa_secret` field as Critical / sensitive data exposure — MFA secret should never leave the server, fix is to omit from the response DTO
+- [ ] PASS: Output flags `console.log` of `email` and `password_hash` as a logging-PII / credential-exposure finding (hash leaks let offline attacks proceed if logs are breached)
+- [ ] PASS: Output flags the missing JWT expiry — `jwt.sign` without `expiresIn` produces a non-expiring token that becomes a long-lived credential
+- [ ] PASS: Output flags the missing rate-limit / brute-force protection on the login endpoint
+- [ ] PASS: Output runs the six scans in order (Input Validation, Injection, Auth/Authz, Secrets/Data Exposure, Dependencies, OWASP Top 10) with grep evidence for each — not just the headline findings
+- [ ] PASS: Output produces an Executive Summary with overall risk (HIGH or CRITICAL), per-severity counts, and a ship / fix / block recommendation that is BLOCK or FIX-BEFORE-SHIP given the SQL injection alone
+- [ ] PASS: Each finding has a CVSS score, location (file:line), evidence (the offending line quoted), and a concrete fix
+- [ ] PARTIAL: Output flags configuration concerns — no `Secure`/`HttpOnly`/`SameSite` cookie flags (token returned in body is a cookie design issue), no CSP header, no rate limit infrastructure considered for Cloudflare

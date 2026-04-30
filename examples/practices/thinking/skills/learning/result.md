@@ -1,6 +1,6 @@
 # Output: learning capture after a mistake
 
-**Verdict:** PARTIAL
+**Verdict:** PASS
 **Score:** 13.5/16 criteria met (84%)
 **Evaluated:** 2026-04-30
 

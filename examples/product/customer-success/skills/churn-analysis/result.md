@@ -4,7 +4,7 @@
 |---|---|
 | **Skill** | `plugins/product/customer-success/skills/churn-analysis/SKILL.md` |
 | **Prompt** | `/customer-success:churn-analysis for Bradwick & Sons who just submitted a cancellation request. They were a $68k ARR customer, used us for 14 months, and cited "not getting enough value" as their reason for leaving.` |
-| **Verdict** | PARTIAL |
+| **Verdict** | PASS |
 | **Score** | 15/18 criteria met (83%) |
 | **Evaluated** | 2026-04-30 |
 

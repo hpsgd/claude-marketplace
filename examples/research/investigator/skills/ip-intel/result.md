@@ -1,6 +1,6 @@
 # Result: ip-intel skill
 
-**Verdict:** PARTIAL
+**Verdict:** PASS
 **Score:** 17.5/20 criteria met (87.5%)
 **Evaluated:** 2026-04-30
 

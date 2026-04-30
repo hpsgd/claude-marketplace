@@ -2,7 +2,7 @@
 
 | Field | Value |
 |---|---|
-| **Verdict** | PARTIAL |
+| **Verdict** | PASS |
 | **Score** | 17/19 criteria met (89%) |
 | **Evaluated** | 2026-04-30 |
 | **Skill source** | `plugins/engineering/release-manager/skills/rollback-assessment/SKILL.md` |

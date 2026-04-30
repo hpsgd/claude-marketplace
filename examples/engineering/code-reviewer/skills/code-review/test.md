@@ -1,10 +1,51 @@
-# Test: code-review skill structure
+# Test: code-review skill applied to an Express middleware PR
 
-Scenario: Checking that the code-review skill enforces a structured four-pass methodology with HARD/SOFT signal distinction, mandatory adversarial analysis, and a friction scan — not just a diff skim.
+Scenario: A senior backend engineer opens a PR adding a token-bucket rate limiter to an Express API. The diff introduces an in-memory Map keyed on IP, removes an existing distributed-rate-limit Redis client, and ships without tests. The README, runbooks, and observability dashboards aren't updated. The reviewer needs to apply the four-pass code-review methodology.
 
 ## Prompt
 
-Review the code-review skill definition and verify it produces systematic, evidence-based reviews rather than informal feedback.
+Review this PR. The author is removing the Redis-backed rate limiter and replacing it with an in-process implementation to "reduce infrastructure dependencies."
+
+```typescript
+// src/middleware/rateLimit.ts (new file)
+import type { Request, Response, NextFunction } from 'express'
+
+const buckets = new Map<string, { tokens: number; lastRefill: number }>()
+const RATE = 100         // tokens per minute
+const CAPACITY = 100
+
+export function rateLimit(req: Request, res: Response, next: NextFunction) {
+  const key = req.ip
+  const now = Date.now()
+  let bucket = buckets.get(key)
+
+  if (!bucket) {
+    bucket = { tokens: CAPACITY, lastRefill: now }
+    buckets.set(key, bucket)
+  }
+
+  const elapsed = (now - bucket.lastRefill) / 60000
+  bucket.tokens = Math.min(CAPACITY, bucket.tokens + elapsed * RATE)
+  bucket.lastRefill = now
+
+  if (bucket.tokens < 1) {
+    return res.status(429).json({ error: 'rate_limited' })
+  }
+
+  bucket.tokens -= 1
+  next()
+}
+```
+
+```diff
+// src/app.ts
+- import { redisRateLimit } from './middleware/redisRateLimit'
++ import { rateLimit } from './middleware/rateLimit'
+- app.use(redisRateLimit({ host: process.env.REDIS_HOST }))
++ app.use(rateLimit)
+```
+
+The PR description says: "Removes Redis dependency. Same 100/min limit. All existing tests pass."
 
 ## Criteria
 
@@ -19,12 +60,13 @@ Review the code-review skill definition and verify it produces systematic, evide
 
 ## Output expectations
 
-- [ ] PASS: Output is structured as a verification of the skill (verdict per requirement) rather than producing a sample code review
-- [ ] PASS: Output verifies the four passes are named in sequence — Context, Correctness, Security, Quality — and that the Context pass requires reading full files, not just diff hunks
-- [ ] PASS: Output confirms HARD vs SOFT signal taxonomy is defined, with HARD as production-incorrect-behaviour blockers and SOFT as conditional/important
-- [ ] PASS: Output verifies the correctness pass coverage list — logic errors, null/undefined, race conditions, edge cases, error propagation — and the security pass list — injection, auth/authz, data exposure, cryptography
-- [ ] PASS: Output confirms the friction scan covers DX, debuggability, rollback safety, and feature flag need
-- [ ] PASS: Output verifies the zero-finding gate forces a positive assertion with file:line citation when nothing is found, preventing rubber-stamp approvals
-- [ ] PASS: Output confirms the verdict format names APPROVE / REQUEST_CHANGES / NEEDS_DISCUSSION exactly, with counts of blockers / important / suggestions
-- [ ] PASS: Output verifies calibration rules: no finding without evidence, no finding without fix suggestion, no style preference unless codified in team standards
-- [ ] PARTIAL: Output identifies any gaps — e.g. no explicit guidance on how to handle large diffs (review prioritisation), no documented behaviour for review of tests-only or generated-code PRs
+- [ ] PASS: Output flags the per-process in-memory Map as a HARD signal — rate limit no longer enforced across instances, won't survive restart, defeats the purpose of rate limiting in any horizontally scaled deployment
+- [ ] PASS: Output flags the absence of tests as a HARD signal given the change to a security-relevant control, and proposes specific test cases (refill arithmetic, concurrent requests, capacity boundary, IP key collision behind a proxy)
+- [ ] PASS: Output flags `req.ip` as fragile behind a proxy/load balancer — depends on `trust proxy` configuration, can be spoofed via `X-Forwarded-For` if not configured correctly
+- [ ] PASS: Output flags the unbounded `Map` growth as a memory leak — no eviction, every unique IP forever, OOM risk under botnet or large user base
+- [ ] PASS: Output identifies a concurrency / TOCTOU issue — read-modify-write on `bucket.tokens` is not atomic across simultaneous requests on the same Node process
+- [ ] PASS: Output flags the lack of `Retry-After` header on the 429 response as a friction signal (clients can't back off intelligently)
+- [ ] PASS: Output produces a verdict of `REQUEST_CHANGES` or `NEEDS_DISCUSSION` (not APPROVE) with explicit blocker / important / suggestion counts
+- [ ] PASS: Each finding cites a specific file:line and includes a concrete suggested fix (e.g. switch to `express-rate-limit` with Redis store, or document the trade-off and stay with the existing distributed limiter)
+- [ ] PASS: Output runs an adversarial pass — what happens at 10K req/sec, what happens with one client behind NAT representing 1000 users, what happens during a deploy when in-memory state resets
+- [ ] PARTIAL: Output flags the missing observability — no logged events, no metrics, no dashboard for rate-limit hits/misses — given this is a security control

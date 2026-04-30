@@ -2,7 +2,7 @@
 
 | Field | Detail |
 |---|---|
-| **Verdict** | PARTIAL |
+| **Verdict** | PASS |
 | **Score** | 16.5/19 criteria met (87%) |
 | **Evaluated** | 2026-04-30 |
 | **Skill path** | `plugins/research/investigator/skills/identity-verification/SKILL.md` |

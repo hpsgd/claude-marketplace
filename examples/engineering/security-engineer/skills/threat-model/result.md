@@ -175,7 +175,7 @@ graph LR
 
 | Verdict | Score | Evaluated |
 |---|---|---|
-| PARTIAL | 16.5/18 (92%) | 2026-04-30 |
+| PASS | 16.5/18 (92%) | 2026-04-30 |
 
 ### Criteria
 

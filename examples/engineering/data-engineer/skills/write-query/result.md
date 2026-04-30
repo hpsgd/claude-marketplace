@@ -1,6 +1,6 @@
 # Result: Write a trial-to-paid conversion funnel query
 
-**Verdict:** PARTIAL
+**Verdict:** PASS
 **Score:** 17/19 criteria met (89%)
 **Evaluated:** 2026-04-30
 

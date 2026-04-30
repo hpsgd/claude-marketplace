@@ -111,10 +111,13 @@ Write results to `result.md` in the same directory as `test.md`. The `result.md`
 [Notable findings]
 ```
 
-Verdict rules:
-- **PASS**: score >= 80%
-- **PARTIAL**: score >= 60%
-- **FAIL**: score < 60%
+Verdict rules — these are **mechanical**, derived from the score, not your judgement:
+
+- score >= 80% → **PASS**
+- score >= 60% → **PARTIAL**
+- score < 60% → **FAIL**
+
+A test scoring 80%+ is PASS even if some criteria scored PARTIAL. The verdict reflects the overall score, not whether every criterion was fully met. If you find yourself wanting to label a 92% result as PARTIAL because two criteria were soft, stop — the rules say PASS. Note the gaps in the per-criterion list and the Notes section, not in the verdict.
 
 ## How to evaluate
 
