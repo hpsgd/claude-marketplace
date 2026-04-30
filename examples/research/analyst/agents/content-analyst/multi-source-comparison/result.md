@@ -1,7 +1,7 @@
 # Result: content-analyst — multi-source comparison
 
 **Verdict:** PASS
-**Score:** 17/18 criteria met (94%, with 1 partial = 17.5/18 = 97%)
+**Score:** 17.5/18 criteria met (97%)
 **Evaluated:** 2026-04-30
 
 ---

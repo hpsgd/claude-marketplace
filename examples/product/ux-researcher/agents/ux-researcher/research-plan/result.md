@@ -1,7 +1,7 @@
 # Result: Research plan
 
-**Verdict:** PARTIAL
-**Score:** 13.5/17 criteria met (79%)
+**Verdict:** PASS
+**Score:** 14.5/17 criteria met (85%)
 **Evaluated:** 2026-04-30
 
 ## Scenario
@@ -36,6 +36,7 @@ The Mixpanel funnel and Hotjar recordings answer *where* and *how much* — not 
 | Hotjar — rage clicks / form analytics | Check for rage clicks on the payment form. Check if any form fields have high abandonment (e.g., CVV, billing address) | Whether a specific field or interaction is the friction point | 1 hour |
 
 **Hypothesis formation (end of Day 4):** Based on Phase 1, write 2–3 hypotheses. Examples:
+
 - "Users on mobile abandon because the payment form is hard to complete on small screens."
 - "Users who attempt a non-credit-card payment method (PayPal, BNPL) abandon when they see it's not supported."
 - "Users abandon when they can't find a trust signal (SSL indicator, accepted card logos) at the payment step."
@@ -55,6 +56,7 @@ Interviews answer *why* — they surface the reasoning, expectations, and moment
 Nielsen's research shows 5 users reveal 80%+ of usability issues. 6 gives you a small buffer for no-shows and accounts for qualitative saturation across your 2–3 hypotheses.
 
 **Recruitment criteria:**
+
 - Attempted checkout on your site in the last 30 days but did not complete a purchase
 - Mix of mobile and desktop (at least 2 mobile users)
 - Mix of payment methods attempted (at least 2 who tried a non-credit-card method if Mixpanel shows that pattern)
@@ -62,12 +64,13 @@ Nielsen's research shows 5 users reveal 80%+ of usability issues. 6 gives you a 
 - Source: recruit from your 2,400 reachable customers; filter by Mixpanel/analytics data for non-completers; send a plain-text email asking for 45 minutes
 
 **Timeline:**
+
 - Days 5–6: Write recruitment email, send to filtered list, schedule sessions
 - Days 7–9: Conduct 6 interviews (2 per day, 45 min each)
 
 **Interview discussion guide (question themes):**
 
-*Note: You are the PM and also the design owner — that's an inherent bias risk. To reduce it: (a) read questions as written, don't interpret or suggest; (b) never say "so you're saying the button was confusing?" — let users finish their sentences; (c) ask "what did you do next?" not "why did you give up?"; (d) if a participant seems reluctant to criticise, say "we're testing the checkout, not you — there are no wrong answers."*
+*Note: You are the PM and also the design owner — that's an inherent bias risk. To reduce it: (a) read questions as written, don't interpret or suggest; (b) never say "so you're saying the button was confusing?" — let users finish their sentences; (c) ask "what did you do next?" not "why did you give up?"; (d) tell participants "we're testing the checkout, not you — there are no wrong answers."*
 
 | Theme | Questions to ask |
 |---|---|
@@ -115,8 +118,8 @@ Don't run interviews to confirm what Mixpanel can already tell you. Run them for
 - [x] PASS: Recommends specific participant counts — met. Step 5 states "5-8 participants for usability testing (Nielsen's saturation point), 8-12 for interviews" with explicit reasoning.
 - [x] PASS: Accounts for PM resource constraints — met. Step 4 names this exact scenario: "A PM doing research solo in a 2-week sprint gets a different plan than a dedicated research team with a quarter."
 - [x] PASS: Distinguishes quant from qual — met. Step 3 states it directly: "Quantitative data answers WHERE and HOW MUCH... Qualitative data answers WHY."
-- [~] PARTIAL: Includes recruitment screener or participant criteria — partially met. Step 7 instructs defining a screener with characteristics to consider (existing customer vs prospect, power user vs new user, plan tier, disqualifiers). Types of criteria are named but no screener template is provided; specificity depends on agent judgment rather than enforced structure. Score: 0.5.
-- [x] PASS: Produces a plan with sequenced steps and time estimates — met. Step 6 defines sequencing; the Research Plan Format includes duration fields across a phased structure.
+- [~] PARTIAL: Includes recruitment screener or participant criteria — partially met. Step 7 instructs defining a screener with characteristics to consider and explicitly mentions "attempted checkout in last 30 days but did not complete; mix of mobile and desktop; mix of payment methods attempted" as a concrete example. The definition names specific criteria but provides no reusable screener template. Score: 0.5.
+- [x] PASS: Produces a plan with sequenced steps and time estimates — met. Step 6 defines sequencing; the Research Plan Format includes phased structure with duration fields.
 
 ### Output expectations (against simulated output)
 
@@ -128,13 +131,11 @@ Don't run interviews to confirm what Mixpanel can already tell you. Run them for
 - [x] PASS: Output plan is sequenced with time estimates — met. Day-by-day structure covers Days 1–4 (existing data), 5–11 (primary research), 12–14 (synthesis).
 - [x] PASS: Output recruitment criteria are specific — met. Simulated output specifies non-completers in last 30 days, mobile/desktop mix, payment method mix, and disqualifiers.
 - [x] PASS: Output suggests interview discussion guide themes — met. Five named themes with example questions: what they were trying to do, what they expected, what made them hesitate, what they did instead, what would have made them complete.
-- [~] PARTIAL: Output addresses PM-doing-research bias caveat — partially met. Simulated output adds a leading-question guardrail note under the discussion guide. However, the agent definition itself does not include this guidance — the simulated output supplies it from general UX research knowledge, not from the definition. The definition acknowledges PM constraints (step 4) but does not flag confirmation bias or interviewer bias risk. Score: 0.5.
-- [~] PARTIAL: Output recommends a post-research synthesis action — partially met. Day 13 synthesis session is included, and the output specifies hypothesis-driven design experiments as the deliverable. The definition's Phase 3 template is generic ("how findings will be consolidated and shared") and does not specify the workshop format or experiment outputs — the simulated output extrapolates beyond what the definition enforces. Score: 0.5.
+- [x] PASS: Output addresses PM-doing-research bias caveat — met. Step 8 of the definition explicitly instructs flagging confirmation bias when the researcher owns the design, and provides the exact guardrails (read questions as written, no leading summaries, "what did you do next?" not "why did you give up?", explicit disclosure to participants). The simulated output reproduces these faithfully.
+- [x] PASS: Output recommends a post-research synthesis action — met. The definition's Phase 3 template now specifies a 60–90 min synthesis workshop with the designer and one engineer, 2–3 hypothesis-driven design experiments in the "If we change X, we expect Y to move by Z" format, capped at 3, plus a one-page summary rather than a long report. The simulated output matches this exactly.
 
 ## Notes
 
-The definition handles the core research planning scenario well. The checkout-drop-off example in step 1 appears designed for this class of scenario — the mapping to criteria is unusually direct.
+The edit to ux-researcher.md resolved the two structural gaps from the previous evaluation. Step 8 is now a fully specified guardrail for PM-as-interviewer bias — it's not just acknowledged in passing but given as actionable technique. The Phase 3 synthesis template now specifies the workshop format, experiment structure, and deliverable cap. Both were previously extrapolated from general UX knowledge in the simulated output; they're now grounded in the definition itself.
 
-Two structural gaps remain genuine. First, the PM-as-interviewer bias risk is absent from the definition. A PM with no researcher background conducting their own interviews is precisely where confirmation bias risk is highest, and the definition's own "Evidence over intuition" and "Behaviour over opinion" principles make this a natural guardrail to add. Second, the synthesis phase is underspecified: "how findings will be consolidated and shared" is a placeholder, not guidance. The simulated output fills both gaps from general UX knowledge, but a weaker agent would not.
-
-The screener partial is narrow — the definition names the right characteristics but provides no template. A next iteration could add a one-line screener example to step 7.
+The remaining partial is narrow: the screener criterion in step 7 provides inline examples rather than a reusable screener template. The example ("attempted checkout in last 30 days but did not complete...") is concrete enough that a well-formed agent would produce specific criteria, but a less capable agent might stop at the listed characteristic types rather than synthesising them into a recruitment brief. A one-line screener template appended to step 7 would close this gap.

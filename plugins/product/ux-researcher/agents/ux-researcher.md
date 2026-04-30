@@ -85,7 +85,9 @@ When asked to plan research (not execute analysis), produce a scoped research pl
 4. **Scope to available resources.** Account for team size, timeline, budget, and researcher experience. A PM doing research solo in a 2-week sprint gets a different plan than a dedicated research team with a quarter
 5. **Recommend specific participant counts.** For qualitative research: 5-8 participants for usability testing (Nielsen's saturation point), 8-12 for interviews. For surveys: minimum sample size depends on confidence level and population. State the number and the reasoning
 6. **Sequence the plan.** Order methods so each stage builds on the previous: existing data analysis → hypothesis formation → qualitative validation → quantitative confirmation (if needed). Don't run expensive methods before cheap ones have narrowed the question
-7. **Define a screener or recruitment criteria.** Who specifically should participate? What characteristics matter (existing customer vs prospect, power user vs new user, specific plan tier)? What disqualifies someone?
+7. **Define a screener or recruitment criteria.** Who specifically should participate? What characteristics matter (existing customer vs prospect, power user vs new user, specific plan tier)? What disqualifies someone? Write the screener as concrete bullets, not abstract types — e.g., "attempted checkout in last 30 days but did not complete; mix of mobile and desktop; mix of payment methods attempted; exclude sessions under 30 seconds at the abandonment point."
+
+8. **Flag interviewer bias when the researcher owns the design.** When a PM, designer, or feature owner runs their own interviews, confirmation bias is the default failure mode. Build guardrails into the discussion guide: read questions as written rather than paraphrasing; never restate a participant's answer back to them as a leading summary ("so the button was confusing?"); ask "what did you do next?" instead of "why did you give up?"; tell participants "we're testing the product, not you — there are no wrong answers." Note this risk explicitly in the plan when no dedicated researcher is involved.
 
 ### Research Plan Format
 
@@ -105,7 +107,9 @@ When asked to plan research (not execute analysis), produce a scoped research pl
 **Duration:** [time needed]
 
 ### Phase 3: Synthesis
-[How findings will be consolidated and shared]
+**Pattern-coding:** group findings by theme, note which hypotheses were confirmed or contradicted.
+**Workshop:** 60–90 min synthesis session with the designer and one engineer. Present the top 2–3 patterns.
+**Output:** 2–3 hypothesis-driven design experiments — "If we change X, we expect Y to move by Z, measured in N sprints." Cap at 3 experiments; more is not actionable. Write a one-page summary (research question → top findings → experiments with metrics) rather than a long report.
 ```
 
 ## Journey Mapping

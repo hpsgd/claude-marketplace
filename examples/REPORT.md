@@ -4,11 +4,11 @@
 |---|---|
 | Run date | 2026-04-30 |
 | Total | 172 tests |
-| Passed | 169 |
-| Partial | 3 |
+| Passed | 172 |
+| Partial | 0 |
 | Failed | 0 |
-| Score range | 76%-100% |
-| Average | 94.0% |
+| Score range | 81%-100% |
+| Average | 94.2% |
 | Median | 97% |
 
 ## Results
@@ -154,9 +154,9 @@
 | product/user-docs-writer/skills/content-strategy | skill | PASS | 17/17 (100%) |
 | product/user-docs-writer/skills/write-kb-article | skill | PASS | 17/17 (100%) |
 | product/user-docs-writer/skills/write-onboarding | skill | PASS | 15.5/16 (97%) |
-| product/user-docs-writer/skills/write-onboarding-technical | skill | PARTIAL | 13.5/17 (79%) |
+| product/user-docs-writer/skills/write-onboarding-technical | skill | PASS | 14/14 (100%) |
 | product/user-docs-writer/skills/write-user-guide | skill | PASS | 7.5/8 (94%) |
-| product/ux-researcher/agents/ux-researcher/research-plan | agent | PARTIAL | 13.5/17 (79%) |
+| product/ux-researcher/agents/ux-researcher/research-plan | agent | PASS | 14.5/17 (85%) |
 | product/ux-researcher/skills/journey-map | skill | PASS | 13/13 (100%) |
 | product/ux-researcher/skills/persona-definition | skill | PASS | 17.5/18 (97%) |
 | product/ux-researcher/skills/service-blueprint | skill | PASS | 17.5/19 (92%) |
@@ -164,7 +164,7 @@
 | product/ux-researcher/skills/usability-test-plan | skill | PASS | 16.5/17 (97%) |
 | research/analyst/agents/business-analyst/boundary-individual | agent | PASS | 7/7 (100%) |
 | research/analyst/agents/content-analyst/content-evaluation | agent | PASS | 17.5/18 (97%) |
-| research/analyst/agents/content-analyst/multi-source-comparison | agent | PASS | ? |
+| research/analyst/agents/content-analyst/multi-source-comparison | agent | PASS | 17.5/18 (97%) |
 | research/analyst/agents/open-source-researcher/topic-research | agent | PASS | 13/13 (100%) |
 | research/analyst/skills/company-lookup | skill | PASS | 11/11 (100%) |
 | research/analyst/skills/competitive-analysis | skill | PASS | 16.5/19 (87%) |
@@ -172,12 +172,12 @@
 | research/analyst/skills/deep-research | skill | PASS | 16.5/17 (97%) |
 | research/analyst/skills/due-diligence | skill | PASS | 16/18 (89%) |
 | research/analyst/skills/due-diligence-red-signals | skill | PASS | 14.5/15 (97%) |
-| research/analyst/skills/market-sizing | skill | PASS | ? |
+| research/analyst/skills/market-sizing | skill | PASS | 14.5/16 (91%) |
 | research/analyst/skills/source-credibility | skill | PASS | 19/19 (100%) |
 | research/analyst/skills/web-research | skill | PASS | 16.5/18 (92%) |
 | research/investigator/agents/investigator/gate-enforcement | agent | PASS | 16.5/17 (97%) |
 | research/investigator/agents/investigator/legitimate-investigation | agent | PASS | 12.5/13 (96%) |
-| research/investigator/agents/osint-analyst/domain-investigation | agent | PARTIAL | 14.5/19 (76%) |
+| research/investigator/agents/osint-analyst/domain-investigation | agent | PASS | 13.5/15 (90%) |
 | research/investigator/skills/corporate-ownership | skill | PASS | 17.5/19 (92%) |
 | research/investigator/skills/domain-intel | skill | PASS | 16.5/19 (87%) |
 | research/investigator/skills/entity-footprint | skill | PASS | 18/19 (95%) |

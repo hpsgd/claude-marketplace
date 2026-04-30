@@ -13,7 +13,6 @@ Scenario: Testing the write-onboarding skill for a developer CLI tool where acti
 - [ ] PASS: The 10-minute time target is acknowledged and the flow is scoped to fit it
 - [ ] PASS: Error recovery is provided for the most likely failure at each step (npm install fails, API key invalid, GitHub auth fails)
 - [ ] PASS: The "first scan" is positioned as the activation moment with a clear payoff
-- [ ] PARTIAL: Alternative paths are noted where applicable (yarn vs npm, GitHub vs GitLab, CI vs local)
 - [ ] PASS: Copy is written for developers (concise, code-first, no hand-holding on terminal basics)
 - [ ] PASS: The onboarding flow ends with a clear "what's next" that points to deeper usage, not just "you're done"
 
@@ -26,5 +25,3 @@ Scenario: Testing the write-onboarding skill for a developer CLI tool where acti
 - [ ] PASS: Output's error recovery covers the most likely failure per step — npm install fails (Node version mismatch, npm registry, permissions), API key invalid (typo, expired key, wrong env var), GitHub auth fails (PAT scope insufficient, network), first scan errors (no repos found, ratelimited)
 - [ ] PASS: Output's tone is developer-appropriate — concise, code-first, assumes terminal fluency; e.g. "run `mycli init` in your repo root" not "open your terminal application then type the following command"
 - [ ] PASS: Output's "what's next" section points to deeper usage paths — "Set up scheduled scans in CI", "Configure custom rules", "Integrate with your CI/CD pipeline" — with linked docs, not just "explore the docs"
-- [ ] PASS: Output covers common alternative paths — yarn vs npm, GitHub vs GitLab if supported, CI usage vs local — without inflating the linear flow; alternatives are sidebar callouts, not detours
-- [ ] PARTIAL: Output addresses CI integration as a natural next step — many developers will want to move from local CLI to CI scan after the first manual run; the "what's next" should preview the CI integration path

@@ -1,7 +1,7 @@
 # Result: market-sizing skill
 
-**Skill:** `plugins/research/analyst/skills/market-sizing/SKILL.md`
-**Test:** `examples/research/analyst/skills/market-sizing/test.md`
+**Verdict:** PASS
+**Score:** 14.5/16 criteria met (91%)
 **Evaluated:** 2026-04-30
 
 ---

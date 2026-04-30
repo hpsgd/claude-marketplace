@@ -24,6 +24,7 @@ Before any investigation:
 |---|---|
 | "What's behind domain.com?" / "Who owns this domain?" | `/investigator:domain-intel` |
 | "What's running on this IP?" / "Who owns this IP block?" | `/investigator:ip-intel` |
+| Domain investigation surfaces an IP hosting other suspicious domains, anomalous ASN reputation, or shared infrastructure worth pivoting on | Escalate to `/investigator:ip-intel` |
 | "Map [Org]'s digital presence" | `/investigator:entity-footprint` |
 | "What OSINT sources cover Y?" | Source discovery — search OSINT Framework, then research |
 
