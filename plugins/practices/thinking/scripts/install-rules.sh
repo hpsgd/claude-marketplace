@@ -83,24 +83,42 @@ fi
 # --- Install rules from enabled plugins ---
 installed_count=0
 plugin_count=0
+pruned_versions=0
 installed_files=()  # Track what we install for cleanup
 
 for plugin in "${enabled_plugins[@]}"; do
   plugin_cache="${CACHE_ROOT}/${plugin}"
 
-  # Find the version directory (should be exactly one)
+  # Find the highest version directory (semver-aware sort)
   if [[ ! -d "$plugin_cache" ]]; then
     continue
   fi
 
   version=""
-  for d in "$plugin_cache"/*/; do
-    [[ -d "$d" ]] && version=$(basename "$d") && break
-  done
+  while IFS= read -r d; do
+    [[ -n "$d" ]] && version=$(basename "$d")
+  done < <(find "$plugin_cache" -mindepth 1 -maxdepth 1 -type d 2>/dev/null | sort -V)
 
   if [[ -z "$version" ]]; then
     continue
   fi
+
+  # Prune older version directories from cache.
+  # Safety: never prune the version dir we're currently executing from
+  # (the running thinking plugin); subsequent hook scripts in this session
+  # still need it on disk.
+  for d in "$plugin_cache"/*/; do
+    [[ -d "$d" ]] || continue
+    other=$(basename "$d")
+    if [[ "$other" == "$version" ]]; then
+      continue
+    fi
+    if [[ "$plugin" == "$plugin_dir" && "$other" == "$version_dir" ]]; then
+      continue
+    fi
+    rm -rf "$d"
+    ((pruned_versions++)) || true
+  done
 
   rules_source="${plugin_cache}/${version}/rules"
   if [[ ! -d "$rules_source" ]]; then
@@ -161,13 +179,16 @@ for existing in "$RULES_DIR"/${MARKETPLACE}--*.md; do
 done
 
 # --- Output summary ---
-if [[ $installed_count -gt 0 || $removed_count -gt 0 ]]; then
+if [[ $installed_count -gt 0 || $removed_count -gt 0 || $pruned_versions -gt 0 ]]; then
   echo "<learning-context>"
   if [[ $installed_count -gt 0 ]]; then
     echo "Installed ${installed_count} new/updated rules from ${plugin_count} plugins (${MARKETPLACE})"
   fi
   if [[ $removed_count -gt 0 ]]; then
     echo "Removed ${removed_count} stale rules"
+  fi
+  if [[ $pruned_versions -gt 0 ]]; then
+    echo "Pruned ${pruned_versions} old plugin version directories from cache"
   fi
   echo "</learning-context>"
 fi
