@@ -1,7 +1,7 @@
 {
   "name": "tooling",
   "description": "Organisational tooling conventions — which tool for which function. Auto-loaded rules ensure agents reference the correct tools.",
-  "version": "1.9.2",
+  "version": "1.9.3",
   "author": {
     "name": "hps.gd"
   },
