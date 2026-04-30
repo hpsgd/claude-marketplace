@@ -3,9 +3,102 @@
 | Field | Value |
 |---|---|
 | **Verdict** | PARTIAL |
-| **Score** | 16/19 criteria met (84%) |
-| **Evaluated** | 2026-04-29 |
+| **Score** | 17/19 criteria met (89%) |
+| **Evaluated** | 2026-04-30 |
 | **Skill source** | `plugins/engineering/release-manager/skills/rollback-assessment/SKILL.md` |
+
+---
+
+## Output
+
+The following is a simulated output from the rollback-assessment skill given the v3.0.1 incident prompt.
+
+---
+
+## Rollback Assessment: v3.0.1
+
+### Signal
+
+| Signal | Baseline | Current | Threshold | Exceeded? |
+|---|---|---|---|---|
+| Error rate (`/api/invoices`) | 0.1% | 8% (80x) | >2x baseline for 5 min | YES — exceeded for ~15 min |
+| p95 latency (`/api/invoices`) | 220ms | 1,800ms (8x) | >3x baseline for 5 min | YES — exceeded for ~15 min |
+| Support tickets | ~0/hr | 2 in 15 min (~8/hr) | >3x normal rate/hour | YES |
+| Health check failures | N/A | None reported | Any non-200 | NO |
+
+**Assessment:** Deploy at T-20min. All three signal types triggered simultaneously and remain elevated. Multiple compounding signals — treating as High urgency per the "multiple signals compound urgency" rule.
+
+### Verification
+
+- **False positive ruled out:** monitoring system appears healthy — error rate spike is isolated to `/api/invoices`, not a global metrics failure. Other endpoints show normal error rates. Signal confirmed from two vantage points (APM + support tickets independently corroborate).
+- **Correlated with release:** spike began within minutes of v3.0.1 deployment completing, 20 minutes ago. Pre-deploy baseline was 0.1% error rate. The timing alignment is direct. `git log --oneline -5` confirms v3.0.1 is the most recent change.
+- **External factors ruled out:** no third-party outage in status pages checked (PDF provider, payment gateway). No marketing campaign or traffic event — request volume to `/api/invoices` is normal. No adjacent infrastructure event.
+
+**Verdict:** Signal is real and release-correlated. Proceeding.
+
+### Blast Radius
+
+- **Users affected:** all users attempting to generate invoices — `/api/invoices` is a core billing endpoint, not a segment or feature-flagged path. No way to narrow to a subset.
+- **Features affected:** invoice generation. Downstream effects: PDF export, automated billing emails, and finance reconciliation workflows likely affected if invoice generation is failing at source.
+- **Quantified impact:** at 8% error rate, if `/api/invoices` receives 200 req/min (estimate), that is ~16 failed invoice generations per minute, ~320 failed generations in the 20 minutes since deploy.
+- **Trajectory:** GROWING. Two support tickets in the first 15 minutes suggests the complaint queue is filling. Invoice generation failures are high-friction — customers notice immediately. Expect more tickets if not resolved.
+
+**Escalation trigger:** growing blast radius with unknown root cause = rollback immediately per the cardinal rule.
+
+### Root Cause Hypothesis
+
+| Change | Suspicion | Confidence | Reasoning |
+|---|---|---|---|
+| DB migration — `tax_rate` column (non-nullable, default 0) | HIGH | High | Non-nullable `tax_rate` with default 0 means existing invoices calculate with 0% tax. If invoice calculation logic reads this column, all pre-migration customers get wrong totals. This would cause downstream validation errors if expected tax > 0, or produce wrong-but-not-erroring output. Latency spike is consistent with a calculation path hitting an unexpected value and retrying or throwing. |
+| Invoice calculation refactor | MEDIUM | Medium | Refactor is the second most likely candidate — latency + error spike on the invoice endpoint is a strong match for a calculation logic bug. Without inspecting the diff, confidence is medium. Could be the primary cause or compounding with the migration. |
+| PDF library dependency upgrade | LOW | Low | PDF rendering is downstream of calculation. Error spike at calculation level (8% error rate, not PDF generation failures specifically) makes this less likely as the primary cause. Cannot rule out entirely without inspecting the library changelog for breaking changes. |
+
+**Overall confidence in having found the root cause:** LOW. All three candidates are plausible. The migration is the highest-probability single cause but the refactor may be the actual trigger or may compound it. This is a multi-change release with no feature flags — we cannot isolate.
+
+### Decision: ROLLBACK
+
+**Reasoning:**
+
+1. **Threshold exceeded decisively.** Error rate is 80x baseline (threshold: >2x for 5 min). p95 latency is 8x baseline (threshold: >3x for 5 min). Both have been exceeded for approximately 15 minutes. The criteria are not marginal.
+2. **Root cause is unknown.** Three plausible candidates exist. We cannot identify the specific cause with confidence in the 10-minute limit — forward-fixing blind is guessing.
+3. **Blast radius is wide and growing.** All users hitting `/api/invoices` are affected. Two support tickets in 15 minutes indicates the blast radius is expanding, not stabilising.
+4. **No feature flag available.** This was a big-bang deploy. There is no toggle to isolate or partially revert. The only fast mitigation is a full application rollback.
+
+Forward-fix is not available: root cause not identified with high confidence, fix cannot be shipped within 15 minutes, and the issue is not isolated to a specific well-understood area.
+
+**Forward-fix consideration for DB migration:** rolling back the application code will not undo the `tax_rate` column — it has been added to the production schema. If any invoice records have been written using the new schema in the last 20 minutes, running a down-migration would destroy that data. The column is additive with a default — the previous code version can tolerate it being present (the column did not exist before, so previous code does not reference it). **Policy: roll back the application code only. Do NOT run the down-migration. Assess migration handling separately after service is restored.**
+
+### Execution Plan
+
+1. **Initiate application rollback** — redeploy v3.0.0 (the previous release artifact). Mechanism: standard deploy (big-bang, no feature flag or blue/green). Expected rollback duration: **5-10 minutes**.
+2. **Do NOT run DB down-migration.** The `tax_rate` column is additive and harmless to the previous code version. Running the down-migration risks destroying any invoice data written in the past 20 minutes. Escalate migration handling to the engineering lead after service is restored.
+3. **Monitor during rollback** — watch error rate and p95 latency on `/api/invoices` actively during the redeploy.
+4. **Notify support immediately** — inform them invoice generation is affected, a rollback is in progress, ETA ~10 minutes. Provide them a holding message for customers.
+5. **Notify engineering** — rollback in progress, reason, expected completion.
+
+### Post-Action
+
+**Verify resolution before declaring done:**
+
+- Confirm error rate on `/api/invoices` returns to 0.1% baseline (not just "stopped climbing" — confirm return to baseline)
+- Confirm p95 latency returns to ~220ms
+- Confirm both signals are stable at baseline for at least 5 minutes
+- Check that customers who received errors have a clear path to retry their invoice generation
+
+**Stakeholders to notify on resolution:**
+
+| Audience | Message |
+|---|---|
+| Support | Invoice generation restored; customers can retry; brief summary of impact window |
+| Engineering | Rollback complete, v3.0.0 running, post-mortem scheduled |
+| Leadership | SEV summary — billing endpoint affected for ~30 minutes, service restored, RCA in progress |
+
+**Retrospective scheduled within 48 hours.** Agenda:
+
+1. Why was no feature flag used for the invoice calculation refactor? A change to billing logic is high-risk — should it require a flag by policy?
+2. Why did staging not surface this? Was the `tax_rate` migration applied on staging? Were invoice generation flows tested against the migrated schema?
+3. Should this category of change (billing logic + DB migration together) require a stricter deployment gate — e.g., mandatory canary deployment or a 1-hour soak on a subset of traffic before full rollout?
+4. How should the `tax_rate` migration be re-attempted safely? (This needs a forward plan before v3.0.1 is re-deployed.)
 
 ---
 

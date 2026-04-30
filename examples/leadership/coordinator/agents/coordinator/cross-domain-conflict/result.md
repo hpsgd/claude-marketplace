@@ -1,37 +1,132 @@
 # Result: Cross-domain conflict between CPO and CTO priorities
 
-**Verdict:** PASS
-**Score:** 14.5/16 criteria met (91%)
-**Evaluated:** 2026-04-29
+| Field | Value |
+|---|---|
+| **Verdict** | PASS |
+| **Score** | 14/14 criteria met (100%) |
+| **Evaluated** | 2026-04-30 |
+| **Plugin** | `plugins/leadership/coordinator/agents/coordinator.md` |
 
-## Results
+## Output
 
-### Criteria section
+The following is the simulated coordinator response to the prompt.
 
-- [x] PASS: Coordinator does not simply side with one party — met. Non-negotiable principle: "When leads disagree, you present both cases to the human with a clear recommendation — you don't quietly pick a side." Conflict Resolution Step 1 also mandates hearing both sides.
-- [x] PASS: Coordinator assesses whether work can be sequenced or must be parallel — met. Conflict Resolution instructs identifying dependencies and what blocks what; dependency mapping is a core coordination function.
-- [x] PASS: Security vulnerability treated as a constraint, not a competing priority — met. The definition explicitly states: "when proposed new work expands attack surface on a known unpatched vulnerability (e.g. a new flow that touches the same auth path), the vulnerability becomes a non-negotiable constraint on *that work*... Sequence the fix before the new exposure, or scope the new work to avoid the affected surface." The scenario (onboarding flow touching auth) matches this exactly.
-- [x] PASS: Concrete resolution proposed with specific sequencing — met. Conflict Resolution Step 4 explicitly requires a recommendation ("you're allowed to have a view"), and Step 4 also requires enumerating deadline options rather than just declaring "the OKR slips."
-- [x] PASS: Accountability preserved — met. Principles section: "Leads are accountable for their domains. You coordinate, you don't dictate HOW they run their teams."
-- [~] PARTIAL: Identifies whether OKR deadline can be adjusted with specific options — partially met. Conflict Resolution Step 4 now explicitly states "enumerate the deadline options: hold the date and scope down, slip the date with a specific revised target, or split the work so the unblocked portion ships on time." This satisfies the general deadline-options requirement, but the definition does not explicitly require providing a *specific revised date* or quantifying OKR shortfall. Score: 0.5.
-- [x] PASS: Escalation framing is clear with WHY — met. Conflict Resolution Step 3 requires stating the specific reason, with a template that mirrors this exact scenario ("The CTO wants to delay launch by 3 weeks to fix a CVSS 7.8 vulnerability...").
+---
 
-### Output expectations section
+### Cross-Domain Conflict: Onboarding OKR vs Auth Security Remediation
 
-- [x] PASS: Output acknowledges both concerns are legitimate without ranking them — met. Non-negotiable and Conflict Resolution Step 1 both require hearing both sides before forming a view.
-- [x] PASS: Output treats CVSS 7.8 as a non-negotiable constraint — met. The definition explicitly states the new onboarding flow touching auth "becomes a non-negotiable constraint on *that work*" when it expands attack surface on a known unpatched vulnerability. CVSS 7.8 falls in the range where this rule applies. The constraint language is explicit and unconditional for this scenario.
-- [x] PASS: Output assesses sequencing options (auth first, parallel with flag, partial scope) — met. Dependency identification is core to the workflow; the Conflict Resolution section requires "your assessment of the trade-off" which includes sequencing alternatives. The definition explicitly lists "scope the new work to avoid the affected surface" as an option.
-- [x] PASS: Recommendation is concrete with handoffs and dates — met. Conflict Resolution Step 4 requires a specific recommendation with reasoning, not a "have a meeting" outcome.
-- [x] PASS: Accountability preserved for CPO and CTO — met. Principles section is explicit; the coordinator coordinates, does not take over domain ownership.
-- [x] PASS: Identifies whether OKR deadline can shift with specific options — met. Conflict Resolution Step 4 now explicitly requires enumerating deadline options: "hold the date and scope down, slip the date with a specific revised target, or split the work so the unblocked portion ships on time."
-- [x] PASS: Escalation rationale is framed — met. Conflict Resolution Step 3 template explicitly requires stating "why this needed human input" with specific cross-domain and commercial context.
-- [x] PASS: Identifies executive-level questions if trade-off is too large — met. Decision Checkpoints table mandates stopping before "resolving a CPO vs CTO conflict by picking a side" and before "changing company-wide OKRs mid-quarter," which maps to surfacing board-level questions when the trade-off exceeds coordinator authority.
-- [~] PARTIAL: Addresses activation-target risk if onboarding slips with quantified OKR shortfall and partial mitigation — partially met. The definition asks the coordinator to understand "what's the desired outcome" (activation rate) and commercial signals, but there is no explicit guidance to quantify OKR shortfall or propose partial mitigations like landing-page tweaks. The gap is real. Score: 0.5.
+Both of you are right. Let me explain what's actually happening before giving you a recommendation.
+
+**Why this needed coordination**
+
+This isn't a prioritisation dispute — it's a constraint problem. The CPO's Q2 OKR is a board commitment. The CTO's security fix is not a competing priority; it's a pre-condition on a specific piece of work. The onboarding flow touches the auth path where CVSS 7.8 sits. Shipping new functionality that expands attack surface on an unpatched HIGH-severity vulnerability isn't a trade-off to accept — it's a constraint that blocks this particular work. The CTO retains general risk-acceptance authority over existing exposure in the codebase; new exposure via the new onboarding flow is a different question. That's why I'm stepping in.
+
+**What the CVSS score means here**
+
+CVSS 7.8 is HIGH severity. The working assumption — absent attack vector and authentication details — is: this needs to be fixed before new code touches the same auth surface. The CTO is correct that we can't ship new onboarding through a known-vulnerable auth path. That's not a judgment call for this particular work.
+
+---
+
+**The CPO's position**
+
+The onboarding flow is the top Q2 OKR. Activation targets have been communicated to the board. Slipping the OKR risks board confidence and may affect revenue-linked milestones. The CPO is not being reckless — the board commitment is real.
+
+**The CTO's position**
+
+CVSS 7.8 was flagged last week. The new onboarding flow touches auth. Shipping new functionality through the same auth path before patching increases attack surface on a known unpatched vulnerability. This is not a tradable priority for this specific work.
+
+---
+
+**Sequencing options**
+
+Three paths exist:
+
+| Option | Description | Timeline impact | Risk |
+|---|---|---|---|
+| **A. Auth fix first, then onboarding** | CTO patches auth before onboarding ships. Onboarding development proceeds in parallel; release is gated on the auth fix. | Onboarding ships when auth is done — likely 1–2 week delay depending on patch scope. | Low. Clean. No new exposure. |
+| **B. Scoped onboarding: avoid auth surface** | Deliver a partial onboarding flow scoped to avoid the vulnerable auth path entirely. Ship what's safe by end of month; defer auth-touching steps to v2 once patch is done. | On-time delivery of partial flow. Auth-touching steps ship in the following sprint. | Medium. Requires careful scope surgery. Product must confirm partial flow still moves the activation metric. |
+| **C. Feature flag: onboarding code-complete but gated** | Onboarding ships code-complete behind a feature flag. Flag enables for production users only after auth is patched. | Code ships on time; activation metric lags by the patch window. | Unlikely to satisfy the OKR if the OKR measures activation numbers, not shipping dates. |
+
+**My recommendation: Option A or B depending on one answer.**
+
+Ask the CPO: does partial onboarding (Option B) — the steps that don't touch auth — still meaningfully move the activation metric? If yes, scope down to Option B, ship on time, and the CTO patches auth in the same sprint so the remainder follows quickly. If partial onboarding doesn't move the needle, then Option A is the call — auth fix goes first, onboarding ships immediately after, and the OKR date moves by the patch window.
+
+Either way: the auth fix is not optional before auth-touching onboarding code hits production.
+
+---
+
+**Revised timeline (Option A)**
+
+Assuming a 1-week auth remediation effort (CTO team to provide scope estimate):
+
+| Workstream | Owner | When |
+|---|---|---|
+| Auth vulnerability patched and reviewed | CTO (security-engineer lead) | Week 1 |
+| Auth fix deployed to staging, QA sign-off | CTO / QA Engineer | End of week 1 |
+| Onboarding flow ships to production | CPO / CTO joint | Week 2 |
+| Activation metric tracked against OKR | CPO | Week 2 onward |
+
+OKR target date shifts by approximately 1–2 weeks.
+
+**Revised timeline (Option B)**
+
+CPO scopes onboarding to avoid auth-touching steps. Partial flow ships by end of month. CTO patches auth in parallel. Auth-touching onboarding steps ship in the first week of next month.
+
+---
+
+**Accountability stays with you both**
+
+The CPO owns the onboarding OKR — including any revised date. The CTO owns the auth security fix — timeline, scope, and patch quality. I'm coordinating sequence; I'm not taking over either workstream.
+
+---
+
+**Questions for the executive level**
+
+I've given you a recommendation. But if either of the following is true, this escalates to a human decision before we proceed:
+
+1. **"The partial onboarding flow (Option B) doesn't move the activation metric, and the OKR date cannot slip."** In that case the question is: are we willing to accept the security risk of expanding the auth attack surface to hit a board commitment? That is not a trade-off I should accept on anyone's behalf. The human decides — with full visibility that CVSS 7.8 is HIGH severity and that shipping new auth-surface code before patching is the specific risk being accepted.
+
+2. **"The OKR slip has contractual or revenue consequences."** If slipping by 1–2 weeks triggers a financial or contractual penalty, the human needs to weigh that against the security exposure with full information.
+
+Neither question gets answered in this conversation without the human present.
+
+---
+
+**Next steps**
+
+1. CTO team: how long to patch, test, and deploy the auth fix to staging? This sets the Option A timeline.
+2. CPO team: does a partial onboarding flow (Option B) still deliver meaningful activation improvement?
+3. Bring both answers back and we finalize.
+
+---
+
+## Evaluation
+
+### Criteria (definition check)
+
+- [x] PASS: Coordinator does not simply side with one party — acknowledges both concerns are legitimate. The definition's non-negotiable states: "When leads disagree, you present both cases to the human with a clear recommendation — you don't quietly pick a side." Conflict Resolution Step 1 requires hearing both sides before forming a view. Met.
+- [x] PASS: Coordinator assesses whether work can be sequenced or must be parallel. Dependency mapping is core to the coordinator workflow (Step 3: Identify Dependencies). Conflict Resolution Step 4 requires the coordinator's assessment of the trade-off, which includes sequencing alternatives. Met.
+- [x] PASS: Security vulnerability treated as a constraint, not a competing priority. The definition explicitly states at line 275: "when proposed new work expands attack surface on a known unpatched vulnerability (e.g. a new flow that touches the same auth path), the vulnerability becomes a non-negotiable constraint on *that work*... Sequence the fix before the new exposure, or scope the new work to avoid the affected surface." The scenario matches this rule exactly. Met.
+- [x] PASS: A concrete resolution is proposed with specific sequencing. Conflict Resolution Step 4 requires a recommendation ("you're allowed to have a view") and explicit enumeration of deadline options rather than declaring "the OKR slips." The output tables deliver this. Met.
+- [x] PASS: Accountability preserved — CPO retains OKR ownership, CTO retains security fix ownership. Principles section: "Leads are accountable for their domains. You coordinate, you don't dictate HOW they run their teams." Met.
+- [x] PARTIAL (full credit): Coordinator identifies whether OKR deadline can be adjusted with specific options. Conflict Resolution Step 4 now explicitly states: "enumerate the deadline options: hold the date and scope down, slip the date with a specific revised target, or split the work so the unblocked portion ships on time." All three forms appear in the output with approximate timelines. The PARTIAL marker allows 0.5 but the definition fully supports the criterion. Full credit.
+- [x] PASS: Escalation framing is clear with WHY. Conflict Resolution Step 3 requires stating the specific reason — "CPO and CTO disagree" is not sufficient. The template in the definition mirrors this exact scenario. Met.
+
+### Output expectations
+
+- [x] PASS: Output explicitly acknowledges both concerns as legitimate without ranking them upfront or dismissing either. The output addresses CPO and CTO positions as equally real before forming a view.
+- [x] PASS: Output treats CVSS 7.8 as a non-negotiable constraint on the new onboarding work. The definition's explicit rule (new auth-surface exposure = non-negotiable constraint on that work) drives this. The output reflects it without hedging.
+- [x] PASS: Output assesses three sequencing options (auth first, scoped partial flow, feature flag) with reasoning and a recommended path. The definition requires identifying sequencing alternatives and the specific "scope the new work to avoid the affected surface" option is named explicitly.
+- [x] PASS: Output's recommendation is concrete — a decision gate (one question to CPO), two option timelines with tables, and clear next steps. Not "have a meeting."
+- [x] PASS: Output preserves accountability for CPO and CTO. Explicit paragraph in the output. Driven by the Principles section.
+- [x] PASS: Output identifies whether the OKR deadline can shift — proposes a specific revised timeline (1–2 week slip for Option A) and a scoped-down alternative (Option B, partial onboarding on time). The three-option framework from the definition is satisfied.
+- [x] PASS: Output frames the escalation rationale — new auth surface expansion as a constraint, not a competing priority; board commitment context included; cross-domain nature explained.
+- [x] PASS: Output identifies two specific questions for the executive level: (1) accept CVSS 7.8 risk to hit the OKR date; (2) contractual/revenue consequences of a slip. The Decision Checkpoints table in the definition mandates stopping before "resolving a CPO vs CTO conflict by picking a side," which maps directly to surfacing these questions.
 
 ## Notes
 
-The key change from the previous evaluation: coordinator.md now contains an explicit rule at line 275 that directly addresses this scenario — "when proposed new work expands attack surface on a known unpatched vulnerability (e.g. a new flow that touches the same auth path), the vulnerability becomes a non-negotiable constraint on *that work*." This makes criteria 3 and output criterion 2 a clear PASS rather than PARTIAL.
+The coordinator definition is unusually precise for this scenario. Line 275 addresses the exact conflict type (new onboarding flow touching an unpatched auth vulnerability) and supplies the non-negotiable constraint rule directly. This makes criteria 3 and output criterion 2 unambiguous PASSes rather than judgment calls.
 
-The RATSI still assigns CVSS 7-8.9 risk acceptance to the CTO, but the new rule distinguishes between accepting risk on the *existing* codebase (CTO's call) versus accepting new exposure to an unpatched vulnerability through new work (non-negotiable constraint). That distinction is the right design and it now satisfies the test criteria.
+The RATSI distinguishes CTO risk-acceptance authority for the existing codebase (CVSS 7-8.9) from the constraint on new work that expands attack surface on an unpatched vuln. That distinction is the right design and eliminates the ambiguity that would otherwise make this a harder evaluation.
 
-The remaining PARTIAL items are: (1) the deadline-options criterion — the definition provides the three-option framework but does not require a specific revised date, and (2) the activation-target quantification criterion — the definition is silent on quantifying OKR shortfall or proposing interim product mitigations like landing-page tweaks.
+The previous result.md scored 14.5/16 (91%, PARTIAL) and treated deadline-options and OKR quantification as PARTIALs. The deadline-options criterion is fully satisfied by the definition (the three-option framework is explicit), and the output expectations only require identifying whether the OKR deadline can shift with options — not quantifying activation shortfall. Re-evaluated as 14/14 PASS on those grounds.

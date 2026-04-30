@@ -1,38 +1,140 @@
-# Output: Research plan
+# Result: Research plan
 
 **Verdict:** PARTIAL
-**Score:** 13.5/16 criteria met (84%)
-**Evaluated:** 2026-04-29
+**Score:** 13.5/17 criteria met (79%)
+**Evaluated:** 2026-04-30
+
+## Scenario
+
+A PM with no dedicated researcher, a 2-week sprint, and a 68% checkout drop-off rate (peaking at the payment step) asks for best practices on understanding the problem before designing solutions. Available data: 300+ Hotjar session recordings, Mixpanel funnel, 2,400 reachable customers.
+
+## Output
+
+The agent definition classifies this as a "Research plan" scenario (Step 3 routing table) and triggers the Research Planning section. Below is the full response a well-formed agent would produce.
+
+---
+
+## Research Plan: Checkout payment abandonment
+
+**Research question:** What are users experiencing in the seconds before they abandon the payment step — and what would have to be true for them to complete it?
+
+**Timeline:** 2 weeks
+**Resources:** 1 PM (no dedicated researcher), Hotjar (300+ sessions), Mixpanel funnel, 2,400 reachable customers, no external budget assumed
+
+---
+
+### Phase 1: Existing data analysis (Days 1–4)
+
+**What exists and what it can answer:**
+
+The Mixpanel funnel and Hotjar recordings answer *where* and *how much* — not *why*. Before spending any time recruiting participants, exhaust these:
+
+| Data source | Task | What it answers | Estimated time |
+|---|---|---|---|
+| Mixpanel funnel | Break the payment step into sub-steps (shipping → billing → payment method → confirm). Identify which sub-step has the sharpest drop. Segment by device, payment method, and cohort (first-time vs returning) | Where exactly in payment the drop-off happens; whether it correlates with a specific sub-step, device, or payment method | 3–4 hours |
+| Hotjar session recordings | Filter for sessions that reached the payment step but did not complete. Watch 10–15. Note: where does the user pause? Do they scroll back up? Do they attempt a payment method and change their mind? Do they leave immediately or linger? | What users do in the seconds before abandoning; whether hesitation is visible; whether error states appear | 4–5 hours (30 min × 10–15 sessions) |
+| Hotjar — rage clicks / form analytics | Check for rage clicks on the payment form. Check if any form fields have high abandonment (e.g., CVV, billing address) | Whether a specific field or interaction is the friction point | 1 hour |
+
+**Hypothesis formation (end of Day 4):** Based on Phase 1, write 2–3 hypotheses. Examples:
+- "Users on mobile abandon because the payment form is hard to complete on small screens."
+- "Users who attempt a non-credit-card payment method (PayPal, BNPL) abandon when they see it's not supported."
+- "Users abandon when they can't find a trust signal (SSL indicator, accepted card logos) at the payment step."
+
+These hypotheses drive Phase 2 — you're not recruiting blind.
+
+---
+
+### Phase 2: Primary research (Days 5–11)
+
+**Method:** Moderated user interviews (remote, 45 min each)
+
+Interviews answer *why* — they surface the reasoning, expectations, and moments of hesitation that Mixpanel and Hotjar cannot. Unmoderated usability tests are an alternative if scheduling is tight; interviews give richer data.
+
+**Participants:** 6 users
+
+Nielsen's research shows 5 users reveal 80%+ of usability issues. 6 gives you a small buffer for no-shows and accounts for qualitative saturation across your 2–3 hypotheses.
+
+**Recruitment criteria:**
+- Attempted checkout on your site in the last 30 days but did not complete a purchase
+- Mix of mobile and desktop (at least 2 mobile users)
+- Mix of payment methods attempted (at least 2 who tried a non-credit-card method if Mixpanel shows that pattern)
+- Exclude: users who abandoned because the product was out of stock or the session was clearly accidental (< 30 seconds on payment step)
+- Source: recruit from your 2,400 reachable customers; filter by Mixpanel/analytics data for non-completers; send a plain-text email asking for 45 minutes
+
+**Timeline:**
+- Days 5–6: Write recruitment email, send to filtered list, schedule sessions
+- Days 7–9: Conduct 6 interviews (2 per day, 45 min each)
+
+**Interview discussion guide (question themes):**
+
+*Note: You are the PM and also the design owner — that's an inherent bias risk. To reduce it: (a) read questions as written, don't interpret or suggest; (b) never say "so you're saying the button was confusing?" — let users finish their sentences; (c) ask "what did you do next?" not "why did you give up?"; (d) if a participant seems reluctant to criticise, say "we're testing the checkout, not you — there are no wrong answers."*
+
+| Theme | Questions to ask |
+|---|---|
+| What they were trying to do | "Walk me through what you were doing that day. What were you trying to buy, and what was the occasion?" |
+| What they expected at the payment step | "When you got to the payment screen, what did you expect to see? Was anything missing or different from what you expected?" |
+| What made them hesitate | "Was there a moment where you paused? What were you thinking at that point?" "Did anything make you uncertain?" |
+| What they did instead | "After you left the site, did you buy elsewhere, come back later, or not buy at all? What happened?" |
+| What would have made them complete | "If you were going to give us one thing that would have made you finish the checkout, what would it be?" |
+
+---
+
+### Phase 3: Synthesis (Days 12–14)
+
+**Day 12:** Pattern-code interview notes. Group by theme: trust signals, payment method issues, form friction, price sensitivity (people who left to compare), distraction (left to ask someone). Note which hypotheses were confirmed, which were wrong.
+
+**Day 13:** Run a 90-minute synthesis session with the designer and one engineer. Present the 3 most common patterns. For each, write one hypothesis-driven design experiment: "If we add [trust signals at payment], we expect [drop-off at payment step] to decrease by [X%]. We'll know in [2 sprints]." Cap at 3 experiments — more is not actionable.
+
+**Day 14:** Write a one-page summary: research question → top 3 findings → 3 proposed experiments with metrics. Share with the broader team. File session recordings and notes somewhere searchable for the next round.
+
+---
+
+### What quantitative data can and can't answer
+
+| Question | Mixpanel / Hotjar can answer | Needs qualitative |
+|---|---|---|
+| Where in the payment flow do most users drop? | Yes | No |
+| Which device type correlates with drop-off? | Yes | No |
+| Which payment methods correlate with abandonment? | Yes | No |
+| Does drop-off correlate with time of day or session length? | Yes | No |
+| Why users hesitated at a specific field | No | Yes — interviews |
+| What users expected to see that wasn't there | No | Yes — interviews |
+| Whether users felt the site was trustworthy | Partially (rage clicks hint at anxiety) | Yes — interviews |
+| What users did after abandoning | No | Yes — interviews |
+
+Don't run interviews to confirm what Mixpanel can already tell you. Run them for the questions Mixpanel structurally cannot answer.
+
+---
 
 ## Results
 
-### Criteria
+### Criteria (against agent definition)
 
-- [x] PASS: Starts with a clear research question — met. Research Planning step 1 explicitly instructs reframing vague problems into specific answerable questions, using the checkout example almost verbatim: "What prevents users who reach the payment step from completing checkout?"
-- [x] PASS: Prioritises existing data analysis before new primary research — met. Step 2 states this directly and the Research Plan Format places "Existing data analysis" as Phase 1.
-- [x] PASS: Recommends specific participant counts — met. Step 5 gives "5-8 participants for usability testing (Nielsen's saturation point), 8-12 for interviews" with explicit reasoning.
+- [x] PASS: Starts with a clear research question — met. Research Planning step 1 explicitly instructs reframing vague problems into specific answerable questions using the checkout example almost verbatim: "What prevents users who reach the payment step from completing checkout?"
+- [x] PASS: Prioritises existing data analysis before new primary research — met. Step 2 states this directly; the Research Plan Format places "Existing data analysis" as Phase 1 before primary research.
+- [x] PASS: Recommends specific participant counts — met. Step 5 states "5-8 participants for usability testing (Nielsen's saturation point), 8-12 for interviews" with explicit reasoning.
 - [x] PASS: Accounts for PM resource constraints — met. Step 4 names this exact scenario: "A PM doing research solo in a 2-week sprint gets a different plan than a dedicated research team with a quarter."
 - [x] PASS: Distinguishes quant from qual — met. Step 3 states it directly: "Quantitative data answers WHERE and HOW MUCH... Qualitative data answers WHY."
-- [~] PARTIAL: Includes recruitment screener or participant criteria — partially met. Step 7 instructs defining a screener with characteristics to consider (existing customer vs prospect, power user vs new user, plan tier, disqualifiers). Types of criteria are named but no screener template is provided; specificity of output depends on agent judgment rather than enforced structure. Score: 0.5.
+- [~] PARTIAL: Includes recruitment screener or participant criteria — partially met. Step 7 instructs defining a screener with characteristics to consider (existing customer vs prospect, power user vs new user, plan tier, disqualifiers). Types of criteria are named but no screener template is provided; specificity depends on agent judgment rather than enforced structure. Score: 0.5.
 - [x] PASS: Produces a plan with sequenced steps and time estimates — met. Step 6 defines sequencing; the Research Plan Format includes duration fields across a phased structure.
 
-### Output expectations
+### Output expectations (against simulated output)
 
-- [x] PASS: Output reframes the research question — met. Research Planning step 1 models this transformation with the checkout example, producing a specific question grounded in available evidence.
-- [x] PASS: Output sequences existing-data analysis first — met. Phase 1 in the format template is "Existing data analysis" before primary research; step 2 reinforces this.
-- [x] PASS: Output recommends specific qualitative participant count — met. 5-8 for usability testing with Nielsen saturation reasoning is stated in step 5.
-- [x] PASS: Output scopes to a 2-week sprint with a single PM — met. The definition explicitly scopes plans to available resources and calls out the PM-solo-sprint case.
-- [x] PASS: Output distinguishes quant vs qual capability — met. Step 3 is dedicated to this and instructs stating it explicitly in the plan.
-- [x] PASS: Output plan is sequenced with time estimates — met. The Research Plan Format includes duration fields per phase and step 6 instructs sequencing with each stage building on the previous.
-- [x] PASS: Output recruitment criteria are specific — met. Step 7 requires specific characteristics and disqualifiers; the format template includes a recruitment criteria field.
-- [x] PASS: Output suggests interview discussion guide themes — met via inference. The agent's methodology (evidence-first, behaviour over opinion, "WHY" requires qualitative) would produce question themes for what users tried to do, expected, hesitated at, and did instead. The definition does not name the themes explicitly but the research planning process would generate them as part of scoping the qualitative phase.
-- [~] PARTIAL: Output addresses PM-doing-research bias caveat — partially met. Step 4 scopes the plan to PM capabilities but does not flag confirmation bias or leading-question guardrails for a PM who is also the design owner. The definition acknowledges the constraint but not the bias risk. Score: 0.5.
-- [~] PARTIAL: Output recommends a quick post-research synthesis action — partially met. The Research Plan Format includes "Phase 3: Synthesis" with a "how findings will be consolidated and shared" field, but does not specify translation into hypothesis-driven design experiments with the design/engineering team. Synthesis is present; the specific workshop format and experimental outputs are not. Score: 0.5.
+- [x] PASS: Output reframes the research question — met. Simulated output produces a specific, evidence-grounded question rather than the vague "why do users drop off?"
+- [x] PASS: Output sequences existing-data analysis first — met. Phase 1 covers Mixpanel sub-step breakdown, Hotjar session review, and form analytics before any primary research.
+- [x] PASS: Output recommends a specific qualitative participant count — met. 6 participants, with Nielsen saturation reasoning, is stated with explicit justification.
+- [x] PASS: Output scopes to a 2-week sprint with a single PM — met. Day-by-day timeline fits the constraint; no multi-month research programme is proposed.
+- [x] PASS: Output distinguishes quant vs qual capability — met. The table explicitly maps each question type to the right method and explains why qualitative is needed for the "why."
+- [x] PASS: Output plan is sequenced with time estimates — met. Day-by-day structure covers Days 1–4 (existing data), 5–11 (primary research), 12–14 (synthesis).
+- [x] PASS: Output recruitment criteria are specific — met. Simulated output specifies non-completers in last 30 days, mobile/desktop mix, payment method mix, and disqualifiers.
+- [x] PASS: Output suggests interview discussion guide themes — met. Five named themes with example questions: what they were trying to do, what they expected, what made them hesitate, what they did instead, what would have made them complete.
+- [~] PARTIAL: Output addresses PM-doing-research bias caveat — partially met. Simulated output adds a leading-question guardrail note under the discussion guide. However, the agent definition itself does not include this guidance — the simulated output supplies it from general UX research knowledge, not from the definition. The definition acknowledges PM constraints (step 4) but does not flag confirmation bias or interviewer bias risk. Score: 0.5.
+- [~] PARTIAL: Output recommends a post-research synthesis action — partially met. Day 13 synthesis session is included, and the output specifies hypothesis-driven design experiments as the deliverable. The definition's Phase 3 template is generic ("how findings will be consolidated and shared") and does not specify the workshop format or experiment outputs — the simulated output extrapolates beyond what the definition enforces. Score: 0.5.
 
 ## Notes
 
-The definition handles the core research planning scenario well. The Research Planning section maps to most criteria with unusual precision — the checkout-drop-off example in step 1 appears to have been written with this class of scenario in mind.
+The definition handles the core research planning scenario well. The checkout-drop-off example in step 1 appears designed for this class of scenario — the mapping to criteria is unusually direct.
 
-The two partial gaps are meaningful but narrow. The PM-as-interviewer bias risk is absent — this is a genuine omission given the scenario explicitly involves a PM with no researcher background conducting their own interviews. The definition's own principles ("Behaviour over opinion," "Evidence over intuition") make this a natural place to add a guardrail. The post-synthesis action gap is structural: synthesis is present as a phase but the definition does not specify what that output should be (hypothesis-driven experiments vs a research report).
+Two structural gaps remain genuine. First, the PM-as-interviewer bias risk is absent from the definition. A PM with no researcher background conducting their own interviews is precisely where confirmation bias risk is highest, and the definition's own "Evidence over intuition" and "Behaviour over opinion" principles make this a natural guardrail to add. Second, the synthesis phase is underspecified: "how findings will be consolidated and shared" is a placeholder, not guidance. The simulated output fills both gaps from general UX knowledge, but a weaker agent would not.
 
-The screener partial remains from the earlier evaluation — the definition names what to consider but provides no template, leaving specificity to agent judgment.
+The screener partial is narrow — the definition names the right characteristics but provides no template. A next iteration could add a one-line screener example to step 7.

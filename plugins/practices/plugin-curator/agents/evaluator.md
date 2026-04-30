@@ -76,7 +76,7 @@ Both sections use the same scoring rules and contribute to a single combined ver
 
 ## Result format
 
-Write results to `result.md` in the same directory as `test.md`. The `result.md` is a standalone showcase document:
+Write results to `result.md` in the same directory as `test.md`. The `result.md` is a **standalone showcase document** — the `## Output` section is **MANDATORY** and must contain the full simulated output a reader could use as a usage example. A result.md without a substantial `## Output` section is incomplete and must be regenerated. The evaluation goes BELOW the simulated output, not in place of it.
 
 ```markdown
 # [Plugin/Agent]: [test name]
