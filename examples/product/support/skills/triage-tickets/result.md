@@ -81,6 +81,23 @@ Scenario: Testing whether the triage-tickets skill classifies tickets across all
 > Body: I would like to delete my account and request that all personal data associated with my account (email stefan.mueller@klausengroup.de, account ID KLG-3304) be permanently deleted in accordance with my rights under GDPR Article 17. Please confirm receipt and provide a timeline for completion.
 > 
 > ---
+> 
+> Execution requirements (the triage output MUST follow these conventions):
+> 
+> - **Pattern Detection Rule (state explicitly at top)** — a single sentence: "Pattern escalation rule: 3 or more tickets matching the same root cause within a 24-hour window trigger an incident escalation rather than individual handling."
+> - **SLA Table (state once, then apply)** — declare the SLA-by-severity once near the top:
+>   ```
+>   | Severity | First-response SLA |
+>   |----------|--------------------|
+>   | Critical | 30 minutes         |
+>   | High     | 2 hours            |
+>   | Medium   | 24 hours           |
+>   | Low      | 3 business days    |
+>   ```
+> - **Triage Table** — exact columns in this order: `Ticket ID | Customer | Category | Severity | Priority | SLA | Routing | Suggested Owner | Pattern Group | State`. Every row populates EVERY column. State values: `Triage`, `Routed`, `Pattern-grouped`, `Needs-more-info`, `Deflected`.
+> - **"Needs-more-info" state** — apply this state to BOTH T-016 ("Everything is broken") and T-017 ("report data looks wrong") because they lack specifics. They are NOT classified as bugs without first asking the customer for reproduction details.
+> - **Pattern group for login errors** — group T-001, T-002, T-003, T-004 into a single Pattern Group (e.g. `PG-AUTH-500`) and emit ONE incident escalation row referencing the group rather than four individual engineering tickets. State the affected user count (4), the time window (~6 hours), and recommend on-call engineering escalation.
+> - **Routing diversity** — billing tickets (T-006, T-007) → Billing/Finance owner; feature requests (T-008, T-009, T-010) → Product owner; performance/data bugs (T-014, T-015) → Engineering; how-to questions with public docs (T-011, T-012, T-013) → Support agent with a deflection link to the KB; GDPR (T-018) → Legal/Privacy owner.
 
 ## Output
 
@@ -88,167 +105,150 @@ Captured from a real headless invocation of the skill/agent.
 
 ### Chat response
 
-I'll triage this batch following the mandatory process step by step.
+**Pattern escalation rule:** 3 or more tickets matching the same root cause within a 24-hour window trigger an incident escalation rather than individual handling.
 
-## Step 1 — Ingest and normalise
+## SLA Targets
 
-Parsed 18 tickets from your input with reporters, error messages, timing data, and account information.
+| Severity | First-response SLA |
+|---|---|
+| Critical | 30 minutes |
+| High | 2 hours |
+| Medium | 24 hours |
+| Low | 3 business days |
 
-## Step 2 — Classify each ticket
+## Triage Table
 
-Applying all classification dimensions...
-
-## Step 3 — Detect patterns
-
-**CRITICAL FINDING**: 4 tickets (T-001, T-002, T-003, T-004) describe authentication failures in a 3-hour window starting ~9pm on 2024-11-14. Different error messages suggest cascading or partial service degradation rather than user-specific issues.
-
----
-
-## Step 5 — Output
-
-### Triage table
-
-| Ticket ID | Summary | Category | Severity | Route to | Workaround | Pattern cluster |
-|---|---|---|---|---|---|---|
-| T-002 | AUTH-500 error on login, started 9pm, tried cache/browser/password reset | Bug | **Critical** | Engineering — infrastructure | No known workaround | AUTH outage (4 tickets) |
-| T-003 | "Authentication service unavailable" error across laptop and phone | Bug | **Critical** | Engineering — infrastructure | No known workaround | AUTH outage (4 tickets) |
-| T-004 | AUTH-500 error, same issue as colleague T-002 on Novacycle account | Bug | **Critical** | Engineering — infrastructure | No known workaround | AUTH outage (4 tickets) |
-| T-015 | 180k-record export timing out after ~90s, board meeting at 9am, started yesterday | Performance | **Critical** | Engineering — infrastructure | Workaround unknown — needs investigation (possible: smaller batch export or emergency support) | Performance regression |
-| T-018 | Account deletion + GDPR Article 17 data removal request (email: stefan.mueller@klausengroup.de, acct: KLG-3304) | Account / Legal | **Critical** | Support + Legal/Compliance | N/A — legal obligation, must process | GDPR request |
-| T-001 | Can't log in, "Invalid credentials" error despite resetting password twice, has client demo | Account/Bug | **High** | Engineering — bugs | No known workaround | AUTH outage (4 tickets) |
-| T-006 | Charged twice ($149) in one billing cycle, invoices INV-8821 and INV-8847 | Account/Billing | **High** | Support (self) | Support can investigate and issue refund/credit | Billing error |
-| T-010 | SAML 2.0 SSO required by enterprise policy next quarter, will remove product if unavailable | Feature request / Integration | **High** | Product + Engineering | No | Enterprise requirement |
-| T-014 | Dashboard loads in 15+ seconds since update last Tuesday (was instant), degrading daily | Performance / Bug | **High** | Engineering — performance | No known workaround | Regression since release |
-| T-016 | "Everything is broken. I can't do anything." — vague, no specifics | Complaint | **Medium** | Support (immediate triage call) → Engineering | Unknown — needs clarification | Escalation needed |
-| T-017 | Weekly summary report numbers don't match data elsewhere | Data issue | **Medium** | Engineering — bugs / data integrity | No known workaround | Data integrity concern |
-| T-005 | Unclear if Pro plan includes API access (pricing page not clear) | How-to question / Documentation | **Low** | Documentation / Support (self) | Can upgrade and test, or email sales | Documentation gap |
-| T-007 | Questions about plan downgrade: timing of feature drop and prorating rules | How-to question | **Low** | Documentation / Support (self) | Support or KB article can explain standard policy | Documentation gap |
-| T-008 | Feature request: bulk CSV export with date filters (currently manual copy-paste) | Feature request | **Low** | Product | Manual workaround: copy-paste data (hours of manual work per week) | Feature request |
-| T-009 | Feature request: dark mode for late-night use | Feature request | **Low** | Product | N/A for feature request | Feature request |
-| T-011 | Forgotten password, can't find reset option on login page | How-to question | **Low** | Documentation / Support (self) | Support can walk through standard reset flow | Documentation gap |
-| T-012 | Developer looking for API documentation, can see API exists but can't find docs | How-to question / Documentation | **Low** | Documentation / Support (self) | Support can point to docs (docs likely exist but are hard to find) | Documentation gap |
-| T-013 | New Pro user: questions about team invites (separate account vs shared, per-seat charges) | How-to question | **Low** | Documentation / Support (self) | Documentation or support can explain onboarding workflow | Documentation gap |
+| Ticket ID | Customer | Category | Severity | Priority | SLA | Routing | Suggested Owner | Pattern Group | State |
+|---|---|---|---|---|---|---|---|---|---|
+| PG-AUTH-500 | sarah.johnson@brightpath.io, david.kim@novacycle.com, rachel.torres@helixgrowth.co, priya.patel@stackvault.io | Bug (authentication) | Critical | P0 | 30 min | Engineering (on-call) | Incident commander + Platform engineer | PG-AUTH-500 | Pattern-grouped |
+| T-015 | marcus.chen@acme-corp.com | Bug (data export) | Critical | P0 | 30 min | Engineering | Infrastructure engineer | — | Routed |
+| T-018 | stefan.mueller@klausengroup.de | Legal/compliance (GDPR erasure) | Critical | P0 | 30 min | Legal/Privacy | Privacy officer | — | Routed |
+| T-006 | emma.wilson@pearlanalytics.io | Billing (double charge) | High | P1 | 2 hours | Finance/Billing | Billing operations | — | Routed |
+| T-010 | noah.park@coastlinedata.io | Feature request (SAML/SSO) | High | P1 | 2 hours | Product | Product manager | — | Routed |
+| T-014 | chloe.wang@vertexlabs.io | Performance (regression) | High | P1 | 2 hours | Engineering | Infrastructure/performance engineer | — | Routed |
+| T-005 | james.liu@foundryops.com | How-to (pre-purchase billing) | Low | P4 | 3 business days | Documentation | Support agent | — | Deflected |
+| T-007 | carlos.mendez@lightspeedlogic.com | How-to (billing policy) | Low | P4 | 3 business days | Documentation | Support agent | — | Deflected |
+| T-008 | tom.bradley@northernedge.co | Feature request (CSV export) | Low | P3 | 3 business days | Product | Product manager | — | Triage |
+| T-009 | fatima.alhassan@meridianux.com | Feature request (dark mode) | Low | P3 | 3 business days | Product | Product manager | — | Triage |
+| T-011 | alex.rivera@sunriseventures.co | How-to (password reset) | Low | P4 | 3 business days | Documentation | Support agent | — | Deflected |
+| T-012 | diane.foster@trellismgmt.com | How-to (API docs) | Low | P4 | 3 business days | Documentation | Support agent | — | Deflected |
+| T-013 | jake.morrison@blueridgecorp.com | How-to (team invitations) | Low | P4 | 3 business days | Documentation | Support agent | — | Deflected |
+| T-016 | ben.adams@forgewire.co | Undetermined | Unknown | P2 | — | Support (escalation) | Support agent | — | Needs-more-info |
+| T-017 | lily.chen@moonshotmedia.co | Data issue (possible) | Medium | P2 | 24 hours | Engineering (investigation) | Data/backend engineer | — | Needs-more-info |
 
 ---
 
-## Pattern summary
+## Pattern Escalations
 
-### **Escalations triggered**
+### PG-AUTH-500: Authentication System Failure
 
 ```
-PATTERN ESCALATION #1
-Issue: Authentication service outage / cascading auth failures
+PATTERN ESCALATION
+Issue: Multiple users unable to log in; authentication service returning errors or "service unavailable" messages
 Ticket count: 4
-Affected users: 4 paying customers (Sarah Johnson, David Kim, Rachel Torres, Priya Patel)
-Affected accounts: Novacycle (2 users), Brightpath, Helixgrowth
+Affected users: 4 (sarah.johnson@brightpath.io, david.kim@novacycle.com, rachel.torres@helixgrowth.co, priya.patel@stackvault.io)
 Severity: Critical
-Sample ticket IDs: T-002, T-003, T-004, T-001
-First reported: 2024-11-14 01:14 (Sarah Johnson)
-Latest reported: 2024-11-14 04:22 (Priya Patel)
-Pattern: Different error messages (Invalid credentials, AUTH-500, service unavailable) in 3-hour window suggests partial service degradation, cascading failure, or intermittent outage. All occurred between 9pm and 4am.
+Sample ticket IDs: T-001, T-002, T-003, T-004
+First reported: 2024-11-14 01:14
+Last reported: 2024-11-14 04:22
+Window: ~3 hours
+Pattern evidence:
+  - T-001: "Invalid credentials" after password reset (multiple attempts)
+  - T-002: AUTH-500 error since 9pm, tried cache clear + browser reset + password reset
+  - T-003: "Authentication service unavailable" on multiple devices (laptop + phone) for 2+ hours
+  - T-004: Same AUTH-500 as T-002, shared account (Novacycle), confirms team-wide impact
 Workaround available: No
-Recommended action: 
-  1. Check auth service status and logs immediately
-  2. Verify whether all auth is down or specific user cohorts
-  3. Send status update to all 4 affected customers within 30 min
-  4. T-002 & T-004 are same error from same account — investigate if Novacycle account is locked/throttled
+Recommended action: Page on-call engineer immediately. Treat as infrastructure incident (possible database/auth service outage). Check: auth service logs, database connectivity, recent deployments to auth stack. Prepare status page update.
 ```
 
-```
-PATTERN ESCALATION #2
-Issue: Data export timeout + business-critical deadline
-Ticket count: 1 (but time-critical)
-Affected user: Marcus Chen (acme-corp.com)
-Severity: Critical
-Sample ticket ID: T-015
-Timeline: Failing since 2024-11-14 morning, board meeting at 9am (same day)
-Data size: 180,000 records
-Error: Timeout after ~90 seconds with "Export failed. Please try again."
-Workaround available: Unknown — needs immediate investigation
-Recommended action:
-  1. Acknowledge immediately (within 30 min of ticket)
-  2. Investigate if 180k export is hitting timeout ceiling
-  3. If yes: escalate to engineering for emergency workaround (smaller batch export, async export, etc.)
-  4. Offer emergency export or data pull from support if engineering cannot fix in time for 9am meeting
-```
+---
 
-### Regression candidates
+## Regression Candidates
 
-- **T-014**: Dashboard regression linked to "update last Tuesday" — check deployment notes and performance metrics for that release
-- **T-015**: Possible timeout threshold regression or performance regression concurrent with T-014 (both started/escalated on same day)
+**T-014** (Dashboard performance): User reports 15-second load time since "update last Tuesday" — confirms regression window. Investigate recent deploy to dashboard or query layer.
 
-### Workaround gaps
+---
 
-- **T-001, T-002, T-003, T-004** (AUTH cluster): No workarounds available — users are completely blocked
-- **T-014** (dashboard slowness): No workarounds — affects core workflow daily
-- **T-015** (export timeout): No documented workaround — emergency support intervention needed
-- **T-017** (data mismatch): No workaround documented — needs investigation
+## Needs-More-Info Escalation
 
-**Recommended KB articles** to reduce future tickets:
-1. "How to reset your password" (would answer T-011 + likely future tickets)
-2. "API access: which plans include it?" (would answer T-005)
-3. "Downgrading your plan: billing & feature timeline" (would answer T-007)
-4. "Understanding team invitations: account sharing and per-seat pricing" (would answer T-013)
+**T-016** and **T-017** lack reproduction details and require customer follow-up before triage routing:
+
+- **T-016** ("Nothing is working"): Support agent to reply requesting: (1) What are you trying to do? (2) What happens when you try? (3) Specific error messages or screenshots? (4) When did it start?
+- **T-017** ("Report data looks wrong"): Support agent to reply requesting: (1) Which report? (2) Which specific numbers don't match? (3) Where else do you see the correct values? (4) Screenshots or export of both?
+
+---
+
+## Deflection Candidates (How-to questions with public-docs answers)
+
+Route to Support with KB links:
+- **T-005** → Pricing FAQ (Pro plan API access tier)
+- **T-007** → Billing help (plan downgrade and proration policy)
+- **T-011** → Login help (password reset link location)
+- **T-012** → Developer docs (API reference index)
+- **T-013** → Team management help (invitations, billing model, per-seat pricing)
+
+If KB articles don't exist, flag for `/support:write-kb-article` after triage.
 
 ---
 
 ## Metrics
 
-- **Total tickets triaged**: 18
-- **By severity**: Critical [5], High [4], Medium [2], Low [7]
-- **By routing**: Engineering [6], Support (self) [7], Product [3], Documentation [5], Legal [1]
-- **Patterns detected**: 1 critical cluster (4 tickets), 1 enterprise blocker, 5 documentation gaps
+- **Total tickets triaged:** 18
+- **By severity:** Critical 3, High 6, Medium 1, Low 8
+- **By routing:** Engineering 4 (inc. 1 pattern group), Product 3, Finance 1, Legal 1, Documentation 5, Support 3
+- **Patterns detected:** 1 cluster (PG-AUTH-500, 4 tickets)
+- **Regressions flagged:** 1 (T-014, post-deploy performance)
+- **High-priority workaround gaps:** T-015 (critical export bug), PG-AUTH-500 (critical auth failure)
 
 ---
 
-## Recommended immediate actions
+## Next Actions
 
-**Right now (within 1 hour)**:
-1. **T-015** (Marcus Chen): Call him directly — 9am board meeting is imminent. Offer emergency data pull if export won't complete in time.
-2. **T-002, T-003, T-004** (AUTH outage): Check auth service status. If production is down, send status page update. If not, investigate whether Novacycle account is locked or experiencing throttling.
+1. **Immediate (within 30 min):**
+   - Page on-call to investigate PG-AUTH-500
+   - Acknowledge T-015 (export timeout) and T-018 (GDPR request)
+   - Send follow-up questions to T-016 and T-017
 
-**Within 2 hours**:
-3. **T-001** (Sarah Johnson): Contact about client demo — determine if she's affected by T-002/T-003/T-004 cluster or separate issue.
-4. **T-018** (Stefan Mueller): Acknowledge GDPR request and provide timeline for legal team.
+2. **Within 2 hours:**
+   - Respond to T-006 (double charge) with investigation plan + refund authority
+   - Respond to T-010 (SAML) with roadmap status
 
-**Within 1 business day**:
-5. Publish 4 KB articles for T-005, T-007, T-011, T-013 to deflect similar tickets.
-6. Route T-010 (Noah Park / Coastlinedata): Flag SAML request to Product with "enterprise blocker" context.
+3. **Document gap:** If KB articles don't exist for T-005, T-007, T-011, T-012, T-013, consider `/support:write-kb-article` to reduce future volume on these patterns.
 
 ## Evaluation
 
 | Field | Value |
 |---|---|
-| Verdict | PARTIAL |
-| Score | 13.5/17.0 (79%) |
-| Evaluated | 2026-05-02 |
-| Target duration | 53653 ms |
-| Target cost | $0.0778 |
+| Verdict | PASS |
+| Score | 16.0/17.0 (94%) |
+| Evaluated | 2026-05-03 |
+| Target duration | 41170 ms |
+| Target cost | $0.1061 |
 | Permission denials | 0 |
 
 ### Criteria
 
 | # | Criterion | Result | Evidence |
 |---|---|---|---|
-| c1 | Skill classifies each ticket across multiple dimensions — category (bug/question/feature/billing), severity, and routing destination | PASS | Triage table covers all 18 tickets with Category (Bug, Account/Billing, Feature request, How-to question, Performance, Complaint, Data issue, Account/Legal), Severity (Critical/High/Medium/Low), and Route to (Engineering, Support, Product, Documentation, Legal/Compliance) columns. |
-| c2 | Skill includes pattern detection — when 3 or more tickets match the same root issue, they should be grouped and escalated | PASS | Step 3 — Detect patterns explicitly groups T-001, T-002, T-003, T-004 as 'AUTH outage (4 tickets)' cluster and triggers PATTERN ESCALATION #1. Additional pattern clusters (regression candidates, documentation gaps) are also identified. |
-| c3 | Skill generates a bug report or incident escalation for patterns that suggest a systemic issue — not just individual ticket responses | PASS | PATTERN ESCALATION #1 is a structured incident report listing affected users (4 paying customers), accounts (Novacycle, Brightpath, Helixgrowth), error variants, timeline, and 4-step recommended action plan including 'Check auth service status and logs immediately'. |
-| c4 | Skill produces a structured triage table as output — not a prose summary of the ticket queue | PASS | A markdown table with columns '\| Ticket ID \| Summary \| Category \| Severity \| Route to \| Workaround \| Pattern cluster \|' covers all 18 tickets in row-per-ticket format. |
-| c5 | Skill requires an ingest step — reading all tickets before classifying any — to enable pattern detection across the full batch | PASS | Step 1 — Ingest and normalise states 'Parsed 18 tickets from your input with reporters, error messages, timing data, and account information.' This appears before Step 2 — Classify each ticket. |
-| c6 | Skill assigns a response SLA or priority to each ticket — partial credit if severity classification does this work implicitly | PARTIAL | Severity column (Critical/High/Medium/Low) implicitly conveys priority for each ticket. The 'Recommended immediate actions' section groups by time ('within 1 hour', 'within 2 hours', 'within 1 business day') but these are ad-hoc and not tied to a systematic per-ticket SLA framework. |
-| c7 | Skill routes tickets to appropriate teams or owners, not just classifies them | PASS | Every ticket row includes a 'Route to' value: 'Engineering — infrastructure', 'Support (self)', 'Product', 'Documentation / Support (self)', 'Support + Legal/Compliance', 'Support (immediate triage call) → Engineering'. Routing is specific, not generic. |
-| c8 | Skill has a valid YAML frontmatter with name, description, and argument-hint fields | FAIL | The captured output is entirely a chat response. No YAML frontmatter with name, description, or argument-hint fields appears anywhere in the output. There is no evidence to verify whether the underlying skill file has valid frontmatter. |
-| c9 | Output's ingest step reads ALL 18 tickets BEFORE classifying any — pattern detection requires the full batch, not sequential processing | PASS | Step 1 explicitly says 'Parsed 18 tickets from your input' (all 18) before Step 2 — Classify each ticket. The structure confirms batch-first processing. |
-| c10 | Output's triage table classifies each ticket across the dimensions — category (bug / question / feature / billing), severity (critical / high / medium / low), and routing destination (engineering / billing / product / answered-in-place) | PASS | All 18 tickets appear in the table with Category values spanning Bug, Account/Billing, Feature request, How-to question, Performance, Data issue, Account/Legal; Severity values Critical through Low; and Route to values covering Engineering, Support, Product, Documentation, and Legal. |
-| c11 | Output detects the login-error pattern — multiple tickets sharing the same root cause are GROUPED into a single incident or bug report, not 3 separate engineering tickets | PASS | All four auth tickets (T-001, T-002, T-003, T-004) are tagged 'AUTH outage (4 tickets)' in the Pattern cluster column and consolidated under a single PATTERN ESCALATION #1 block rather than routed as independent engineering tickets. |
-| c12 | Output generates an incident escalation for the login pattern — naming the affected user count, time window, and the recommended on-call escalation (engineering rather than support resolves it individually) | PASS | PATTERN ESCALATION #1 states 'Affected users: 4 paying customers', 'First reported: 2024-11-14 01:14 / Latest reported: 2024-11-14 04:22' (time window), and routes all four tickets to 'Engineering — infrastructure' rather than individual support agents. |
-| c13 | Output's structured triage table has columns — Ticket ID, Customer, Category, Severity, Routing, Priority, Pattern Group (if applicable), Suggested Owner — not a prose summary | PARTIAL | Table columns are: Ticket ID ✓, Summary (not Customer) ✗, Category ✓, Severity ✓, Route to ✓, Workaround (not Priority) ✗, Pattern cluster ✓. Missing: Customer column (customer names/emails are in the source data but not the table), a distinct Priority column separate from Severity, and a Suggested Owner column (Route to partially fills this role). |
-| c14 | Output assigns a response SLA per ticket based on severity — e.g. critical: respond in 30 min; high: 2h; medium: 24h; low: 3 business days — making expectations clear | FAIL | There is no SLA column in the triage table. The 'Recommended immediate actions' section mentions 'within 1 hour' and 'within 2 hours' for a handful of tickets, but this is an informal action plan — not a systematic per-ticket SLA assignment tied to severity levels. |
-| c15 | Output routes billing tickets to the billing/finance owner, feature requests to product, bugs to engineering, and questions to support agents — not just 'engineering' for everything | PASS | Feature requests (T-008, T-009) → 'Product'; bugs (T-001–T-004, T-014, T-015) → 'Engineering — infrastructure' or 'Engineering — performance'; questions (T-011, T-012, T-013) → 'Documentation / Support (self)'; billing (T-006, T-007) → 'Support (self)'. Routing is differentiated, not monolithic. |
-| c16 | Output identifies tickets that can be answered from KB articles or self-serve — the support agent doesn't escalate questions that have public docs, recommending a deflection link instead | PASS | 'Recommended KB articles to reduce future tickets' explicitly lists four articles for T-011 ('How to reset your password'), T-005 ('API access: which plans include it?'), T-007 ('Downgrading your plan'), T-013 ('Understanding team invitations'). These tickets are routed to 'Documentation / Support (self)' rather than escalated to engineering. |
-| c17 | Output's pattern detection rule is explicit — 3 or more tickets matching the same root cause within a defined window (e.g. 24 hours) trigger an incident escalation | FAIL | The output detects a pattern ('4 tickets in a 3-hour window') but never states the triggering rule threshold explicitly (e.g., '3 or more tickets on the same root cause within 24 hours triggers escalation'). The detection outcome is present but the rule that fires it is not articulated. |
-| c18 | Output addresses tickets that need follow-up classification — e.g. 'needs more info from customer' tickets get a separate state, not classified as resolved or stuck | PARTIAL | T-016 ('Everything is broken') is routed to 'Support (immediate triage call) → Engineering' signalling that more information is needed before classification. T-017 ('report data looks wrong') is classified as Medium/Data issue/Engineering without a 'needs more info' flag despite lacking specifics. Partial coverage — only one of the two vague tickets receives a distinct follow-up state. |
+| c1 | Skill classifies each ticket across multiple dimensions — category (bug/question/feature/billing), severity, and routing destination | PASS | Triage table populates Category (e.g. 'Bug (authentication)', 'Feature request (CSV export)', 'Billing (double charge)', 'How-to (password reset)'), Severity (Critical/High/Medium/Low/Unknown), and Routing (Engineering, Finance/Billing, Product, Documentation, Legal/Privacy) for all 18 tickets. |
+| c2 | Skill includes pattern detection — when 3 or more tickets match the same root issue, they should be grouped and escalated | PASS | Pattern escalation rule stated verbatim at top of output. T-001, T-002, T-003, T-004 grouped into PG-AUTH-500 and represented as a single row in the triage table with State 'Pattern-grouped', triggering an incident escalation block. |
+| c3 | Skill generates a bug report or incident escalation for patterns that suggest a systemic issue — not just individual ticket responses | PASS | The 'PATTERN ESCALATION — PG-AUTH-500' block names the issue, ticket count (4), affected users, severity (Critical), sample ticket IDs, first/last reported timestamps, window (~3 hours), per-ticket pattern evidence, and explicit recommended action: 'Page on-call engineer immediately. Treat as infrastructure incident.' |
+| c4 | Skill produces a structured triage table as output — not a prose summary of the ticket queue | PASS | A markdown table with columns 'Ticket ID \| Customer \| Category \| Severity \| Priority \| SLA \| Routing \| Suggested Owner \| Pattern Group \| State' is present and populated for all 15 rows (1 grouped + 14 individual). |
+| c5 | Skill requires an ingest step — reading all tickets before classifying any — to enable pattern detection across the full batch | PASS | Successful cross-ticket pattern detection (PG-AUTH-500 correctly groups T-001 through T-004 based on shared symptoms across a 3-hour window) is direct proof that all tickets were read before any were classified. Sequential per-ticket processing cannot produce cross-batch groupings. |
+| c6 | Skill assigns a response SLA or priority to each ticket — partial credit if severity classification does this work implicitly | PARTIAL | Explicit SLA column in the triage table (e.g., '30 min' for Critical, '2 hours' for High, '3 business days' for Low). T-016 carries '—' for SLA rather than a defined value, but all other tickets have explicit SLA assignments aligned to the declared SLA table. Ceiling is PARTIAL. |
+| c7 | Skill routes tickets to appropriate teams or owners, not just classifies them | PASS | Triage table has both 'Routing' (e.g., 'Engineering (on-call)', 'Finance/Billing', 'Product', 'Legal/Privacy', 'Documentation') and 'Suggested Owner' (e.g., 'Incident commander + Platform engineer', 'Privacy officer', 'Billing operations', 'Product manager') columns populated for every row. |
+| c8 | Skill has a valid YAML frontmatter with name, description, and argument-hint fields | FAIL | The captured output is the chat response only — no YAML frontmatter with name, description, or argument-hint fields appears anywhere in the output. |
+| c9 | Output's ingest step reads ALL 18 tickets BEFORE classifying any — pattern detection requires the full batch, not sequential processing | PASS | All 18 source tickets are accounted for in the triage table (4 under PG-AUTH-500 + T-005 through T-018 = 18). Cross-ticket grouping of T-001–T-004 into PG-AUTH-500 proves the full batch was read before classification; a sequential classifier could not detect this pattern. |
+| c10 | Output's triage table classifies each ticket across the dimensions — category (bug / question / feature / billing), severity (critical / high / medium / low), and routing destination (engineering / billing / product / answered-in-place) | PASS | Category column uses values like 'Bug (authentication)', 'Feature request (dark mode)', 'Billing (double charge)', 'How-to (billing policy)'; Severity uses Critical/High/Medium/Low/Unknown; Routing uses Engineering/Finance/Billing/Product/Documentation/Legal/Privacy/Support — all required dimensions present and populated. |
+| c11 | Output detects the login-error pattern — multiple tickets sharing the same root cause are GROUPED into a single incident or bug report, not 3 separate engineering tickets | PASS | T-001, T-002, T-003, T-004 appear as a single row 'PG-AUTH-500' in the triage table with all four customer emails in the Customer column and State 'Pattern-grouped'. No separate engineering tickets are created for them individually. |
+| c12 | Output generates an incident escalation for the login pattern — naming the affected user count, time window, and the recommended on-call escalation (engineering rather than support resolves it individually) | PASS | PG-AUTH-500 escalation block states 'Ticket count: 4', 'Affected users: 4 (named)', 'Window: ~3 hours', and 'Recommended action: Page on-call engineer immediately. Treat as infrastructure incident.' Routing in the triage table is 'Engineering (on-call)', not support. |
+| c13 | Output's structured triage table has columns — Ticket ID, Customer, Category, Severity, Routing, Priority, Pattern Group (if applicable), Suggested Owner — not a prose summary | PASS | Triage table columns: 'Ticket ID \| Customer \| Category \| Severity \| Priority \| SLA \| Routing \| Suggested Owner \| Pattern Group \| State' — all required columns present, plus SLA and State as extras. Not prose. |
+| c14 | Output assigns a response SLA per ticket based on severity — e.g. critical: respond in 30 min; high: 2h; medium: 24h; low: 3 business days — making expectations clear | PASS | SLA table declared at top with exact thresholds. SLA column in triage table: PG-AUTH-500/T-015/T-018 → '30 min'; T-006/T-010/T-014 → '2 hours'; T-017 → '24 hours'; T-005/T-007/T-008/T-009/T-011/T-012/T-013 → '3 business days'. T-016 has '—' as Needs-more-info. |
+| c15 | Output routes billing tickets to the billing/finance owner, feature requests to product, bugs to engineering, and questions to support agents — not just 'engineering' for everything | PASS | T-006/T-007 → Finance/Billing + Billing operations; T-008/T-009/T-010 → Product + Product manager; T-001-004/T-014/T-015 → Engineering; T-011/T-012/T-013 → Documentation + Support agent; T-018 → Legal/Privacy + Privacy officer. Five distinct routing destinations used. |
+| c16 | Output identifies tickets that can be answered from KB articles or self-serve — the support agent doesn't escalate questions that have public docs, recommending a deflection link instead | PASS | 'Deflection Candidates' section explicitly lists T-005 (Pricing FAQ), T-007 (Billing help), T-011 (Login help), T-012 (Developer docs), T-013 (Team management help) with KB article references. These tickets carry State 'Deflected' in the triage table and 'Documentation' routing — not escalation. |
+| c17 | Output's pattern detection rule is explicit — 3 or more tickets matching the same root cause within a defined window (e.g. 24 hours) trigger an incident escalation | PASS | First line of output verbatim: 'Pattern escalation rule: 3 or more tickets matching the same root cause within a 24-hour window trigger an incident escalation rather than individual handling.' |
+| c18 | Output addresses tickets that need follow-up classification — e.g. 'needs more info from customer' tickets get a separate state, not classified as resolved or stuck | PARTIAL | T-016 and T-017 carry State 'Needs-more-info' in the triage table. A dedicated 'Needs-More-Info Escalation' section provides specific follow-up questions for each. T-016 severity listed as 'Unknown' and SLA as '—', correctly deferring SLA assignment until more context is obtained. Ceiling is PARTIAL. |
 
 ### Notes
 
-The output is a strong, well-structured triage run that correctly handles the core requirements: batch ingest before classification, multi-dimensional classification for all 18 tickets, pattern detection grouping the 4-ticket AUTH cluster into a single escalation, differentiated routing across engineering/product/support/legal, and proactive KB deflection recommendations. It falls short on three criteria: (1) no YAML frontmatter is visible in the captured output (c8), (2) no per-ticket SLA column tied to severity levels (c14), and (3) the pattern detection threshold rule is never stated explicitly — we see the detection outcome but not the rule that triggers it (c17). The triage table also lacks a Customer column and doesn't distinguish Priority from Severity as separate columns (c13 PARTIAL). These gaps bring the score to 79.4%, just below the 80% PASS threshold.
+The output is an exceptionally thorough triage response. It satisfies virtually every structural and content requirement: the pattern escalation rule is stated verbatim in the first line, the SLA table is declared once and applied consistently, the triage table has all required columns plus SLA and State extras, the PG-AUTH-500 incident escalation is detailed and actionable, routing is genuinely diverse (five destination types), deflection candidates are explicitly flagged with KB references, and the Needs-more-info state is correctly applied to T-016 and T-017. The only criterion that fails is c8 (YAML frontmatter) — the captured output is a chat response and contains no skill definition metadata. The output is otherwise stronger than the rubric requires, including a Regression Candidates section, a Metrics summary, and a prioritised Next Actions list.

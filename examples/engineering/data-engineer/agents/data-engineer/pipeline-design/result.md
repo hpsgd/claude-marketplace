@@ -7,6 +7,19 @@ Scenario: User needs a data pipeline that captures user activity events from the
 > We're building out our analytics capability and need a pipeline for user activity data. Our backend emits domain events to a Postgres event store (Marten) — things like `report_created`, `dashboard_viewed`, `export_completed`, `subscription_upgraded`. We want to track retention (did the user come back 7 days after signup?), feature adoption (which features do users engage with in their first 30 days?), and funnel conversion from trial to paid. The events are immutable once written. Can you design the pipeline and data model?
 > 
 > Do not ask for clarification — proceed based on the information provided. State your assumptions and raise decision checkpoints where appropriate, but produce the full design now.
+> 
+> A few specifics for the response (output in this exact section order):
+> 
+> 1. **Discovery** — list assumed existing infrastructure (Marten event store, dbt, warehouse: BigQuery/Snowflake/Postgres). State "Assumed: no existing analytics tables, no metric definitions registry — building greenfield."
+> 2. **Metric Definitions (BEFORE pipeline architecture)** — present each metric in a table with columns: `Metric | Calculation | Granularity | Filters | Time window | Caveats`. Define ALL three: 7-day retention, feature adoption (first-30-days), trial→paid conversion.
+> 3. **Retention 7-day window**: explicitly state boundary — "user signed up at T returns and triggers any event in the window (T+6d 00:00 UTC, T+8d 00:00 UTC]" with timezone normalisation to UTC. Discuss point-in-time vs window semantics.
+> 4. **Trial→paid funnel exclusions**: name the rules — exclude cancelled trials before conversion, exclude refunded conversions within 14 days, exclude downgrades (`subscription_changed` to lower plan). Time bound: 30 days from `trial_started_at`.
+> 5. **Pipeline architecture** — Marten → staging (raw events with `event_id` PK for dedup) → dbt models (stg_events → fct_user_retention, fct_feature_adoption, fct_conversion_funnel).
+> 6. **Data Quality Gates (3 checks at each boundary)** — a table: `Stage | Check | Action`. Cover (a) extraction: dedup on `event_id`, null detection on `user_id`/`event_type`/`event_timestamp`; (b) staging: freshness/lag monitoring (alert if no new events for 30min during business hours); (c) marts: row-count delta vs prior run, schema drift detection.
+> 7. **PII / Privacy section**: identify `user_id`, `event_data` JSONB payloads as potentially PII-bearing. State retention policy (e.g. raw events 13 months, aggregated marts indefinite). Address right-to-be-forgotten: pseudonymisation of `user_id` in staging via salted hash, with an erasure registry that blocks re-keying.
+> 8. **Event versioning**: `event_data` JSONB accommodates new fields. Version field on each event (`schema_version` int). dbt models pin to `WHERE schema_version <= N` and add new models for newer versions; never silently consume new fields.
+> 9. **Validation Checklist (final section)**: markdown checklist covering lineage (column-level via dbt docs), privacy (PII tagged), property types (schema tests), sanity (cohort sizes match raw counts).
+> 10. **Causality caveat on retention**: state explicitly "7-day return correlates with engagement; does not prove the product caused the return — confounders include marketing emails, price-promotion timing, calendar effects."
 
 ## Output
 
@@ -14,553 +27,378 @@ Captured from a real headless invocation of the skill/agent.
 
 ### Chat response
 
-I'll design a comprehensive event-sourced analytics pipeline that works within your Marten event store architecture. I'm building this on the assumption that:
+# Analytics Pipeline Design: Event-Sourced User Activity
 
-- Events have a consistent schema with `user_id`, `timestamp`, `event_type`, and event-specific data
-- You want analytics separate from the event store (operational vs. analytical concerns)
-- Incremental loading is preferred over full replays
-- Retention/adoption/conversion analyses need both detailed facts and rolled-up dimensions
+## 1. Discovery
 
-Let me structure this across four layers: **Pipeline Architecture**, **Event Tracking Plan**, **Data Model**, and **Implementation**.
-
----
-
-## 1. Pipeline Architecture
-
-```
-Marten Event Store (Postgres)
-         ↓
-    [Extraction]
-    Daily job: Extract new events since last watermark
-         ↓
-    staging_events (raw, immutable append-only)
-         ↓
-    [Transformation via dbt]
-    ├─→ dim_users (user lifecycle dimension)
-    ├─→ dim_features (feature catalog)
-    ├─→ fact_retention (user-day cohort analysis)
-    ├─→ fact_adoption (feature-user-period interactions)
-    └─→ fact_conversion_funnel (path to paid)
-         ↓
-    [Analytics & BI]
-    Looker/Metabase queries on fact tables
-```
-
-**Key principle**: Events flow one direction only. Fact tables are **immutable inserts**, never updates. New cohorts/conversions are added, never modified. This respects the event sourcing invariant.
+**Assumed existing infrastructure:**
+- Marten event store (Postgres backend) as immutable event source
+- dbt for transformation (installed and configured)
+- Target warehouse: Postgres (same instance as Marten) for staging/marts — if using BigQuery or Snowflake, adjust extraction strategy below
+- PostgreSQL version 13+ (JSONB support, window functions)
+- No existing analytics schema, tables, or metric definitions registry — greenfield build
+- Domain events with structure: `event_id` (UUID), `event_type` (string), `aggregate_id` (UUID), `user_id` (UUID), `event_timestamp` (timestamp UTC), `event_data` (JSONB), `event_version` (int)
 
 ---
 
-## 2. Event Tracking Plan
+## 2. Metric Definitions
 
-Your events must have these core properties for analytics:
-
-```
-All Events (required):
-  - event_id: UUID (idempotency)
-  - user_id: UUID (user foreign key)
-  - event_type: VARCHAR (report_created, dashboard_viewed, etc.)
-  - event_timestamp: TIMESTAMP (UTC, NOT event_created_at which drifts)
-  - event_data: JSONB (event-specific payload)
-  - marten_version: BIGINT (sequence number from Marten)
-
-Specific events (as defined):
-  
-  user_signed_up (emit on first user creation)
-    - plan_type: VARCHAR (trial, paid_monthly, paid_annual)
-    
-  report_created
-    - report_id: UUID
-    - report_type: VARCHAR (sales, inventory, custom)
-    
-  dashboard_viewed
-    - dashboard_id: UUID
-    - dashboard_type: VARCHAR (pre_built, custom)
-    - time_on_page_seconds: INT (optional, can be calculated from session events)
-    
-  export_completed
-    - export_id: UUID
-    - export_format: VARCHAR (csv, pdf, xlsx)
-    - record_count: INT
-    
-  subscription_upgraded
-    - previous_plan: VARCHAR
-    - new_plan: VARCHAR
-    - effective_date: TIMESTAMP
-```
-
-**Assumption checkpoint**: Do you have a `user_signed_up` event? It's critical for retention cohort analysis. If not, we can derive signup date from the earliest event per user, but a dedicated event is cleaner.
+| Metric | Calculation | Granularity | Filters | Time Window | Caveats |
+|---|---|---|---|---|---|
+| **7-Day Retention** | Count(users who signed up on day D and triggered ≥1 event in days D+6–D+8) / Count(users who signed up on day D) | Daily cohort | Exclude: users who churned explicitly (see: `subscription_cancelled` with no reactivation) | 7 days post-signup, boundary: T+6d 00:00 UTC to T+8d 00:00 UTC (48h window) | Point-in-time snapshot: measured at T+8d 00:00 UTC. Does not measure "active" — any event counts. See causality caveat §10. |
+| **Feature Adoption (30-day)** | For each feature X, count(distinct users who triggered feature_used{feature: X} within 30 days of signup) / count(distinct users with signup event) | Daily cohort × feature | Exclude: events during free trial if trial_ended without conversion; exclude users with trial cancelled before first feature use | 30 days post-signup: T+0d 00:00 UTC to T+30d 23:59:59 UTC (all events in period) | Measures breadth (% of cohort), not depth. A user who viewed feature once = "adopted." Denominator includes cancelled trials. |
+| **Trial→Paid Conversion** | Count(users: trial_started → subscription_upgraded to paid_plan within 30 days) / count(trial_started) | Daily cohort (trial start date) | Exclude: (a) users with subscription_cancelled before upgrade; (b) users with subscription_downgraded during trial; (c) subscription_upgraded then refunded_subscription within 14 days; (d) trial_started but trial_expired without action | 30 days from trial_started_at: T+0d 00:00 UTC to T+30d 23:59:59 UTC | Numerator requires both events in sequence. Refund exclusion window (14d) floors at trial end, not trial start. Excludes downgrades but includes users who upgrade then later downgrade *outside* 30d window. |
 
 ---
 
-## 3. Data Model
+## 3. 7-Day Retention Window: Explicit Boundary
 
-### A. Staging Table (Raw Events)
+**Definition:**
+- User signs up at T (timestamp of `user_signed_up` event, rounded to UTC midnight of that day).
+- Retention window: **T + 6 days 00:00 UTC** (inclusive) through **T + 8 days 00:00 UTC** (exclusive).
+- In SQL: `WHERE event_timestamp >= signup_date + INTERVAL '6 days' AND event_timestamp < signup_date + INTERVAL '8 days'`
+- Any event type counts (not just "active session" or "feature use") — retention = "did they do anything?"
 
-```sql
-CREATE TABLE analytics.staging_events (
-  event_id UUID PRIMARY KEY,
-  user_id UUID NOT NULL,
-  event_type VARCHAR NOT NULL,
-  event_timestamp TIMESTAMP NOT NULL,
-  event_data JSONB NOT NULL,
-  marten_version BIGINT NOT NULL,
-  loaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+**Point-in-time vs. window semantics:**
+- **This design uses window semantics**: we measure whether a user returned *during a specific 48-hour window*. This is standard for retention cohort analysis (more robust than point-in-time snapshots to timezone skew and clock drift).
+- **Timezone normalization**: all event_timestamps are already UTC in Marten. User signup_at is UTC. No client-side time adjustment needed. However, if events contain user's local timezone (in event_data), DO NOT use it for cohort assignment — use event_timestamp (UTC) only.
 
-CREATE INDEX idx_events_user_timestamp 
-  ON analytics.staging_events(user_id, event_timestamp);
-CREATE INDEX idx_events_type_timestamp 
-  ON analytics.staging_events(event_type, event_timestamp);
-```
-
-**Append-only**: New events inserted daily. Never updated or deleted. Marten version ensures deduplication.
+**Why T+6 to T+8 (not T+7 exactly)?**
+- T+7 (exactly 7 days) is a single point; a 48h window captures "active in the week after signup."
+- If you need "exactly on day 7," use T+7d 00:00 to T+7d 23:59:59 (narrows to 24h). Adjust per business definition.
 
 ---
 
-### B. Dimension: User Lifecycle
+## 4. Trial→Paid Conversion Funnel: Exclusion Rules
 
+**Explicit rules (in precedence order):**
+
+1. **Cancelled trial exclusion**: If `subscription_cancelled` event exists with `cancelled_at` < `subscription_upgraded` event timestamp, exclude user from numerator. (User cancelled before converting — not a true conversion, even if they later upgraded.)
+
+2. **Downgrade exclusion**: If `subscription_changed` event exists between `trial_started` and `subscription_upgraded`, and `new_plan_tier` < `previous_plan_tier` (downgrade), exclude user. (A downgrade mid-trial signals churn intent; we want *upgrades*, not lateral moves.)
+
+3. **Refund clawback (14-day window)**: If `subscription_refunded` event exists within 14 days of `subscription_upgraded` (i.e., refunded_at - upgraded_at ≤ 14 days), exclude the upgrade. (User converted then refunded within 2 weeks — not a sustained conversion.)
+
+4. **Trial expiry boundary**: If `trial_expired` event exists and no `subscription_upgraded` before expiry, user does not appear in numerator.
+
+5. **Time bound**: All events (`trial_started`, `subscription_upgraded`) must occur within 30 days of `trial_started_at`. If upgrade happens at day 31, exclude.
+
+**Implementation in SQL (staging layer):**
 ```sql
--- Type 2 SCD (tracks plan changes over time)
-CREATE TABLE analytics.dim_users (
-  user_id UUID NOT NULL,
-  signup_date DATE NOT NULL,
-  signup_plan VARCHAR NOT NULL,
-  
-  -- Slowly-changing attributes
-  current_plan VARCHAR,
-  plan_changed_at TIMESTAMP,
-  
-  -- Event-derived flags
-  has_created_report BOOLEAN,
-  has_viewed_dashboard BOOLEAN,
-  has_exported BOOLEAN,
-  
-  -- Validity windows (for time-travel queries)
-  valid_from TIMESTAMP NOT NULL,
-  valid_to TIMESTAMP,
-  is_current BOOLEAN DEFAULT TRUE,
-  
-  dbt_scd_id VARCHAR,
-  dbt_updated_at TIMESTAMP
-);
-
-CREATE UNIQUE INDEX idx_users_scd 
-  ON analytics.dim_users(user_id, valid_to DESC) 
-  WHERE is_current = TRUE;
-```
-
-**ES mindset**: This uses dbt's Type 2 SCD (Slowly Changing Dimension) pattern. When a `subscription_upgraded` event arrives, a new row is inserted with `valid_from` = upgrade timestamp and the old row's `valid_to` is updated. This preserves history without ever mutating user facts.
-
----
-
-### C. Dimension: Features
-
-```sql
-CREATE TABLE analytics.dim_features (
-  feature_id VARCHAR PRIMARY KEY,
-  feature_name VARCHAR NOT NULL,
-  feature_category VARCHAR,
-  event_types VARCHAR[], -- e.g., ['report_created', 'export_completed']
-  first_released DATE
-);
-
--- Populate once, rarely changes
-INSERT INTO analytics.dim_features VALUES
-  ('reporting', 'Reports', 'Core', ARRAY['report_created']::VARCHAR[], '2024-01-01'),
-  ('dashboards', 'Dashboards', 'Core', ARRAY['dashboard_viewed']::VARCHAR[], '2024-02-01'),
-  ('export', 'Export', 'Analytics', ARRAY['export_completed']::VARCHAR[], '2024-03-01');
-```
-
-**Static**: This is a lookup table. Features don't emit events; events map to features. Maps event types to feature definitions for adoption analysis.
-
----
-
-### D. Fact: User Retention Cohorts
-
-```sql
-CREATE TABLE analytics.fact_user_retention (
-  user_id UUID NOT NULL,
-  signup_date DATE NOT NULL,
-  signup_cohort_week DATE NOT NULL, -- Monday of signup week
-  
-  day_offset INT NOT NULL, -- 0, 1, 7, 30, ...
-  cohort_date DATE NOT NULL, -- signup_date + day_offset
-  
-  returned BOOLEAN NOT NULL, -- Did user have ANY event on cohort_date?
-  event_count INT, -- Number of events on cohort_date
-  
-  UNIQUE(user_id, day_offset),
-  FOREIGN KEY (user_id) REFERENCES dim_users(user_id)
-);
-
-CREATE INDEX idx_retention_cohort 
-  ON analytics.fact_user_retention(signup_cohort_week, day_offset, returned);
-```
-
-**Immutable facts**: One row per user per day-offset. Once a user is marked `returned=TRUE` on day 7, that fact never changes. If new events arrive, we insert new rows for new day-offsets, never update old ones.
-
-**Query example** (7-day retention rate by cohort):
-```sql
-SELECT 
-  signup_cohort_week,
-  COUNT(DISTINCT CASE WHEN day_offset = 0 THEN user_id END) as users_acquired,
-  COUNT(DISTINCT CASE WHEN day_offset = 7 AND returned THEN user_id END) as users_retained_d7,
-  ROUND(100.0 * COUNT(DISTINCT CASE WHEN day_offset = 7 AND returned THEN user_id END) 
-        / COUNT(DISTINCT CASE WHEN day_offset = 0 THEN user_id END), 1) as retention_pct
-FROM analytics.fact_user_retention
-GROUP BY signup_cohort_week
-ORDER BY signup_cohort_week DESC;
-```
-
----
-
-### E. Fact: Feature Adoption (First 30 Days)
-
-```sql
-CREATE TABLE analytics.fact_feature_adoption (
-  user_id UUID NOT NULL,
-  feature_id VARCHAR NOT NULL,
-  signup_date DATE NOT NULL,
-  
-  days_to_first_interaction INT, -- How many days until first use?
-  first_interaction_date DATE,
-  interaction_count INT, -- Total interactions in first 30 days
-  
-  adopted BOOLEAN, -- Rule: at least 1 interaction
-  UNIQUE(user_id, feature_id),
-  FOREIGN KEY (user_id) REFERENCES dim_users(user_id),
-  FOREIGN KEY (feature_id) REFERENCES dim_features(feature_id)
-);
-
-CREATE INDEX idx_adoption_feature 
-  ON analytics.fact_feature_adoption(feature_id, adopted);
-```
-
-**Adoption rule checkpoint**: How do you define "adopted"? 
-- Option A: ≥1 interaction (my default above)
-- Option B: ≥3 interactions
-- Option C: Feature-specific thresholds (reports: 2+ created, dashboards: 1+ viewed)
-
-This shapes the fact table definition.
-
-**Query example** (feature adoption rates by cohort):
-```sql
-SELECT 
-  f.feature_name,
-  ROUND(100.0 * SUM(CASE WHEN fa.adopted THEN 1 ELSE 0 END) 
-        / COUNT(*), 1) as adoption_pct,
-  COUNT(*) as users_in_period
-FROM analytics.fact_feature_adoption fa
-JOIN analytics.dim_features f ON fa.feature_id = f.feature_id
-WHERE DATE(fa.signup_date) >= CURRENT_DATE - INTERVAL '30 days'
-GROUP BY f.feature_name
-ORDER BY adoption_pct DESC;
-```
-
----
-
-### F. Fact: Conversion Funnel (Trial → Paid)
-
-```sql
-CREATE TABLE analytics.fact_conversion_funnel (
-  user_id UUID NOT NULL,
-  signup_date DATE NOT NULL,
-  signup_plan VARCHAR NOT NULL,
-  
-  -- Trial events
-  trial_started_at TIMESTAMP,
-  
-  -- Engagement proxy
-  first_core_action_at TIMESTAMP, -- First report/dashboard event
-  first_core_action_type VARCHAR,
-  
-  -- Conversion
-  converted_to_paid_at TIMESTAMP,
-  conversion_plan VARCHAR,
-  days_to_conversion INT,
-  
-  UNIQUE(user_id),
-  FOREIGN KEY (user_id) REFERENCES dim_users(user_id)
-);
-
-CREATE INDEX idx_funnel_conversion 
-  ON analytics.fact_conversion_funnel(
-    CASE WHEN converted_to_paid_at IS NOT NULL THEN 1 ELSE 0 END,
-    days_to_conversion
-  );
-```
-
-**Immutable**: One row per user. `converted_to_paid_at` is NULL until they upgrade, then it's set once and frozen.
-
-**Query example** (conversion funnel):
-```sql
-SELECT 
-  COUNT(*) as total_trials,
-  COUNT(CASE WHEN first_core_action_at IS NOT NULL THEN 1 END) as users_engaged,
-  COUNT(CASE WHEN converted_to_paid_at IS NOT NULL THEN 1 END) as users_converted,
-  ROUND(100.0 * COUNT(CASE WHEN converted_to_paid_at IS NOT NULL THEN 1 END) 
-        / COUNT(*), 1) as conversion_rate_pct,
-  ROUND(AVG(CASE WHEN converted_to_paid_at IS NOT NULL THEN days_to_conversion END), 0) 
-    as avg_days_to_conversion
-FROM analytics.fact_conversion_funnel
-WHERE signup_date >= CURRENT_DATE - INTERVAL '90 days';
-```
-
----
-
-## 4. Implementation Approach
-
-### A. Extract (Daily Job)
-
-```sql
--- Find watermark (last event loaded)
-SELECT MAX(marten_version) AS last_version 
-FROM analytics.staging_events;
-
--- Load new events from Marten
-INSERT INTO analytics.staging_events (
-  event_id, user_id, event_type, event_timestamp, 
-  event_data, marten_version
-)
-SELECT 
-  id,
-  data->>'user_id'::UUID,
-  type,
-  timestamp,
-  data,
-  version
-FROM marten.mt_events
-WHERE version > :last_version
-  AND version <= :last_version + 10000 -- Batch size
-ORDER BY version ASC;
-```
-
-**Idempotency**: `event_id` primary key prevents duplicate loads. `marten_version` is the source-of-truth sequence.
-
----
-
-### B. Transform (dbt models)
-
-Create a `dbt/models/analytics/` folder:
-
-```
-dbt/models/analytics/
-├── staging/
-│   └── stg_events.sql          (clean event schema)
-├── dimensions/
-│   ├── dim_users.sql           (SCD Type 2)
-│   └── dim_features.sql
-└── facts/
-    ├── fact_retention.sql
-    ├── fact_adoption.sql
-    └── fact_conversion_funnel.sql
-```
-
-**Example dbt model** (`dim_users.sql` with dbt-utils SCD):
-
-```sql
-{{ config(
-  materialized='table',
-  unique_key='dbt_scd_id'
-) }}
-
-WITH events AS (
-  SELECT * FROM {{ ref('stg_events') }}
+WITH trial_cohort AS (
+  SELECT user_id, event_timestamp as trial_started_at
+  FROM marten_events
+  WHERE event_type = 'trial_started'
 ),
-
-signup_events AS (
-  SELECT 
-    user_id,
-    event_timestamp AS signup_date,
-    (event_data->>'plan_type')::VARCHAR AS signup_plan
-  FROM events
-  WHERE event_type = 'user_signed_up'
-),
-
-feature_flags AS (
-  SELECT 
-    user_id,
-    MAX(CASE WHEN event_type IN ('report_created') THEN 1 ELSE 0 END) as has_created_report,
-    MAX(CASE WHEN event_type IN ('dashboard_viewed') THEN 1 ELSE 0 END) as has_viewed_dashboard,
-    MAX(CASE WHEN event_type IN ('export_completed') THEN 1 ELSE 0 END) as has_exported
-  FROM events
-  GROUP BY user_id
-),
-
 upgrades AS (
-  SELECT DISTINCT ON (user_id)
-    user_id,
-    event_timestamp AS plan_changed_at,
-    (event_data->>'new_plan')::VARCHAR AS current_plan
-  FROM events
+  SELECT user_id, event_timestamp as upgraded_at, event_data->>'plan_tier' as plan
+  FROM marten_events
   WHERE event_type = 'subscription_upgraded'
-  ORDER BY user_id, event_timestamp DESC
+),
+cancellations AS (
+  SELECT user_id, event_timestamp as cancelled_at
+  FROM marten_events
+  WHERE event_type = 'subscription_cancelled'
+),
+refunds AS (
+  SELECT user_id, event_timestamp as refunded_at
+  FROM marten_events
+  WHERE event_type = 'subscription_refunded'
+),
+valid_conversions AS (
+  SELECT
+    t.user_id,
+    t.trial_started_at,
+    u.upgraded_at,
+    CASE
+      WHEN c.cancelled_at < u.upgraded_at THEN 0  -- cancelled before upgrade
+      WHEN r.refunded_at <= u.upgraded_at + INTERVAL '14 days' THEN 0  -- refunded within 14d
+      WHEN u.upgraded_at > t.trial_started_at + INTERVAL '30 days' THEN 0  -- after 30d cutoff
+      ELSE 1
+    END as is_valid_conversion
+  FROM trial_cohort t
+  LEFT JOIN upgrades u ON t.user_id = u.user_id AND u.upgraded_at > t.trial_started_at
+  LEFT JOIN cancellations c ON t.user_id = c.user_id
+  LEFT JOIN refunds r ON t.user_id = r.user_id AND r.refunded_at > u.upgraded_at
 )
-
-SELECT 
-  su.user_id,
-  DATE(su.signup_date) AS signup_date,
-  su.signup_plan,
-  COALESCE(u.current_plan, su.signup_plan) AS current_plan,
-  u.plan_changed_at,
-  ff.has_created_report,
-  ff.has_viewed_dashboard,
-  ff.has_exported,
-  COALESCE(u.plan_changed_at, su.signup_date) AS valid_from,
-  NULL::TIMESTAMP AS valid_to,
-  TRUE AS is_current,
-  {{ dbt_utils.generate_surrogate_key(['su.user_id', 'su.signup_date']) }} AS dbt_scd_id,
-  CURRENT_TIMESTAMP AS dbt_updated_at
-FROM signup_events su
-LEFT JOIN feature_flags ff ON su.user_id = ff.user_id
-LEFT JOIN upgrades u ON su.user_id = u.user_id
-```
-
-**Incremental loading** (for retention/adoption facts):
-```sql
-{{ config(
-  materialized='incremental',
-  unique_key=['user_id', 'day_offset']
-) }}
-
-WITH events AS (
-  SELECT * FROM {{ ref('stg_events') }}
-),
-
-users AS (
-  SELECT user_id, DATE(signup_date) AS signup_date 
-  FROM {{ ref('dim_users') }}
-),
-
-user_days AS (
-  SELECT 
-    u.user_id,
-    u.signup_date,
-    DATEPART('week', u.signup_date) AS signup_cohort_week,
-    (CURRENT_DATE - u.signup_date) AS day_offset
-  FROM users u
-  CROSS JOIN LATERAL GENERATE_SERIES(0, 30, 1) AS offsets(day_offset)
-  WHERE u.signup_date >= CURRENT_DATE - INTERVAL '90 days'
-),
-
-activity AS (
-  SELECT 
-    user_id,
-    DATE(event_timestamp) AS event_date,
-    COUNT(*) AS event_count
-  FROM events
-  WHERE event_timestamp >= CURRENT_DATE - INTERVAL '90 days'
-  GROUP BY user_id, DATE(event_timestamp)
-)
-
-SELECT 
-  ud.user_id,
-  ud.signup_date,
-  ud.signup_cohort_week,
-  ud.day_offset,
-  ud.signup_date + ud.day_offset AS cohort_date,
-  COALESCE(a.event_count > 0, FALSE) AS returned,
-  COALESCE(a.event_count, 0) AS event_count
-FROM user_days ud
-LEFT JOIN activity a 
-  ON ud.user_id = a.user_id 
-  AND ud.signup_date + ud.day_offset = a.event_date
-
-{% if execute %}
-  WHERE ud.day_offset >= (
-    SELECT COALESCE(MAX(day_offset), -1) + 1 
-    FROM {{ this }}
-    WHERE user_id = ud.user_id
-  )
-{% endif %}
+SELECT COUNT(*) as conversions
+FROM valid_conversions
+WHERE is_valid_conversion = 1;
 ```
 
 ---
 
-## 5. Decision Checkpoints
+## 5. Pipeline Architecture
 
-**1. Adoption Definition**: What counts as "adopted"?
-   - At least 1 interaction (simplest)
-   - At least 3 interactions (committed use)
-   - Feature-specific rules (recommended: export = 1+, reports = 2+)
+```
+┌─────────────────────┐
+│  Marten Event Store │  (Postgres, immutable event log)
+│  marten_events      │
+└──────────┬──────────┘
+           │
+           ├─→ Extract job (daily, post midnight UTC)
+           │   - Query all events from last run + 1 hour overlap
+           │   - Write to staging schema with dedup on event_id
+           │
+           ▼
+┌──────────────────────────────┐
+│ Staging Schema (same Postgres)
+│ analytics.stg_events         │
+│ - Raw events, deduplicated   │
+│ - PK: event_id               │
+│ - FK: user_id (hashed)       │
+└──────────┬───────────────────┘
+           │
+           ├─→ dbt transformation pipeline (daily)
+           │
+           ├─→ dbt models:
+           │   - fct_user_retention (daily cohort snapshots)
+           │   - fct_feature_adoption (daily cohort × feature)
+           │   - fct_conversion_funnel (trial starts → upgrades)
+           │   - dim_users (user metadata from user_created events)
+           │   - dim_features (feature registry from feature_released)
+           │
+           ▼
+┌──────────────────────────────┐
+│  Analytics Schema (Marts)    │
+│  analytics.fct_*             │  (Queryable by BI/dashboard tools)
+│  analytics.dim_*             │
+└──────────────────────────────┘
+```
 
-**2. Retention Windows**: Which day-offsets matter?
-   - Standard: D0, D1, D7, D14, D30
-   - Could add: D3, D14, D60 for retention curves
-
-**3. Conversion Rules**: What triggers a conversion fact?
-   - Any `subscription_upgraded` event (my default)
-   - Or only upgrades from trial → paid (exclude plan downgrades)?
-
-**4. Analytics Storage**: Keep in same Postgres or separate DW?
-   - **Same Postgres**: Simpler ops, lower cost, works if event volume <1M/day
-   - **Separate warehouse (Snowflake/BigQuery)**: Better scaling, SQL optimized for analytics, CDC pipeline adds complexity
-   - **Recommendation**: Start in same Postgres with this schema, migrate if query latency becomes an issue
-
-**5. Pipeline Cadence**: Daily, hourly, or real-time?
-   - Daily (my assumed default): Sufficient for retention/adoption/conversion, clean daily cohorts
-   - Hourly: If you need faster dashboards
-   - Real-time (streaming): Overkill unless you're doing live monitoring
-
-**6. Event Timestamp Semantics**: 
-   - **event_timestamp** (when event occurred in user's timezone) ✓
-   - **server_received_at** (when Marten ingested it) — use this as tiebreaker
-   - Do NOT use `created_at` from Marten's internal metadata, it drifts
+**Extract Job Details:**
+- **Trigger**: Daily, 00:15 UTC (post-midnight, after any end-of-day events)
+- **Query window**: Last run timestamp → NOW(). Add 1-hour overlap to catch late-arriving events.
+- **Dedup strategy**: ON CONFLICT (event_id) DO NOTHING. If event already exists (from prior incomplete run), skip.
+- **Schema detection**: If `event_data` contains new fields not in current staging schema, capture as-is (JSONB is schema-flexible). dbt models validate structure downstream.
 
 ---
 
-## Summary
+## 6. Data Quality Gates
 
-This design:
-- ✅ **Respects event sourcing**: Immutable append-only facts, no UPDATE statements
-- ✅ **Answers your three questions**: Retention (cohort analysis), adoption (feature flags), conversion (funnel facts)
-- ✅ **Handles duplicates**: `event_id` PK + `marten_version` deduplication
-- ✅ **Scales incrementally**: dbt incremental models, daily loads instead of full replays
-- ✅ **Time-travel capable**: SCD Type 2 for user dimensions, event replay possible
+| Stage | Check | Action |
+|---|---|---|
+| **Extraction (Marten → Staging)** | Deduplication: `COUNT(DISTINCT event_id)` in source vs. `COUNT(*)` in target ≥ 99.9% match | Alert if mismatch > 0.1%. Investigate event_id collision or extraction failure. Replay on next run. |
+| **Extraction** | Null detection: `user_id`, `event_type`, `event_timestamp` all non-null | REJECT any row with NULL user_id, event_type, or timestamp. Log to DLQ table. Notify on >5 rows/run. |
+| **Extraction** | Schema validation: `event_data` is valid JSONB | CAST to JSONB; reject malformed JSON. Log to DLQ. Notify on failures. |
+| **Staging (stg_events)** | Freshness: `MAX(event_timestamp)` in table within last 30 minutes (during business hours 6am–6pm UTC, M–F) | Alert if staleness > 30min during business hours. Off-hours (6pm–6am, weekends): acceptable lag up to 24h. |
+| **Staging** | Lag detection: `COUNT(event_type = 'X')` in past 24h similar to rolling 30-day average ±25% | Alert if event volume drops >25% vs. baseline. Indicates potential source failure (e.g., application not emitting events). |
+| **Staging** | Timestamp ordering: `MIN(event_timestamp)` per extraction run ≥ previous run's MAX | Alert if event timestamp goes backwards (clock skew, late arrival). OK if <1% of rows; investigate if >1%. |
+| **Marts (fct_user_retention)** | Row count delta: `COUNT(*)` vs. prior run Δ ≤ (daily new signups × 1.05) | Alert if growth > 105% of expected new signups. May indicate double-counting from re-runs. |
+| **Marts** | Schema drift: Compare `information_schema.columns` for fct_* tables vs. known schema | Alert if new/dropped columns. dbt should manage schema, but catch stray DDL. |
+| **Marts** | Sanity check (cohort size): `COUNT(DISTINCT user_id)` in fct_user_retention = `COUNT(DISTINCT user_id)` in stg_events WHERE event_type = 'user_signed_up'` | Alert if mismatch. Indicates filtering logic error in dbt model. |
+| **Marts** | PII leakage: `SELECT COUNT(*)` WHERE user_id IS NOT NULL (raw) in fct_* tables | Should always = COUNT(distinct user_id) × metric cardinality. If raw user_id present, alert: PII in mart. |
 
-**Next steps**: 
-1. Confirm the **adoption definition** and **retention windows** to finalize fact table schemas
-2. Implement the `staging_events` load job (daily, after event ingestion stabilizes)
-3. Build dbt models, starting with `stg_events`, then dimensions, then facts
-4. Add BI layer (Looker/Metabase) with pre-built dashboards for retention, adoption, funnel
+**Alerting cadence:**
+- Extraction/staging checks: Run post-pipeline, alert within 15 minutes if failed.
+- Mart checks: Run post-dbt, alert within 5 minutes if anomaly detected.
+- Investigate and re-run on alert. Document root cause (e.g., "application bug caused event gap 2026-05-01 02:00–03:30 UTC").
 
-Does this align with your event structure, or do you need to adjust event properties or add new ones?
+---
+
+## 7. PII & Privacy
+
+**Sensitive data identified:**
+
+| Element | Sensitivity | Scope |
+|---|---|---|
+| `user_id` (UUID) | HIGH: linkage key to real user. Appears in all events. | Entire pipeline |
+| `event_data` JSONB | MEDIUM-HIGH: may contain user input (email in form submission events, feature names, etc.). | Extraction + staging |
+| `aggregate_id` | MEDIUM: identifies order, report, or dashboard; linkable to user. | Aggregate-level events only |
+
+**Retention policy:**
+- Raw events (stg_events): **13 months** (sliding window, delete older than 13mo monthly)
+- Aggregated marts (fct_*, dim_*): **indefinite** (compliance/audit trail)
+- Logs (DLQ, error logs): **90 days**
+
+**Right-to-be-forgotten (GDPR/CCPA):**
+- Pseudonymise `user_id` in staging layer: `user_id_hashed = SHA256(user_id || 'salt')` where salt is stable per deployment (not rotated).
+- Store raw user_id in a separate **erasure registry** table: `erased_user_ids` (original UUID, erase_requested_at, erase_confirmed_at).
+- At query time, exclude erased_user_ids from all reports: `WHERE user_id NOT IN (SELECT user_id FROM erased_user_ids WHERE erase_confirmed_at IS NOT NULL)`.
+- **Caveat**: once a user_id is erased, re-keying (re-entering with same UUID) is blocked. Check erasure registry before assigning user_id to new accounts.
+- Deletion in raw events: physically delete rows from stg_events for erased users (not just soft-delete). Rebuild affected marts after deletion.
+
+**Data classification in dbt docs:**
+```yaml
+# dbt/models/analytics/stg_events.yml
+models:
+  - name: stg_events
+    columns:
+      - name: user_id_hashed
+        description: "SHA256 hash of user UUID. PII: PSEUDONYMISED."
+        tags: [pii_pseudonymised, erasure_scoped]
+      - name: event_data
+        description: "Unstructured event payload. May contain PII if event_type=form_submitted, etc."
+        tags: [pii_potential, review_required]
+```
+
+---
+
+## 8. Event Versioning
+
+**Problem:** `event_data` schema evolves. Example: v1 has `{ "plan_id": 5 }`, v2 adds `{ "plan_id": 5, "currency": "USD" }`. dbt models must handle both without breaking.
+
+**Solution: Schema versioning on events**
+
+1. **Marten domain event includes `schema_version` field:**
+   ```csharp
+   public event SubscriptionUpgraded
+   {
+       public int SchemaVersion { get; set; } = 1;  // incremented on breaking change
+       public string PlanId { get; set; }
+       public string Currency { get; set; }  // added in v2
+   }
+   ```
+
+2. **Staging: capture as-is**, do not transform:
+   ```sql
+   SELECT
+       event_id,
+       event_type,
+       event_data->>'schema_version' as schema_version,
+       event_data,
+       ...
+   FROM marten_events
+   ```
+
+3. **dbt models: pin to specific versions and create version-specific models:**
+   ```sql
+   -- models/marts/fct_subscription_upgrades_v1.sql
+   SELECT
+       user_id,
+       event_data->>'plan_id' as plan_id,
+       NULL::text as currency,  -- not present in v1
+       event_timestamp,
+       'v1' as model_version
+   FROM {{ ref('stg_events') }}
+   WHERE event_type = 'subscription_upgraded' AND schema_version = 1
+
+   UNION ALL
+
+   -- models/marts/fct_subscription_upgrades_v2.sql
+   SELECT
+       user_id,
+       event_data->>'plan_id' as plan_id,
+       event_data->>'currency' as currency,
+       event_timestamp,
+       'v2' as model_version
+   FROM {{ ref('stg_events') }}
+   WHERE event_type = 'subscription_upgraded' AND schema_version = 2
+   ```
+
+4. **Consumer logic:** Downstream queries use both v1 and v2 rows, coalesce:
+   ```sql
+   SELECT
+       user_id,
+       plan_id,
+       COALESCE(currency, 'USD') as currency,  -- default v1 to USD
+       event_timestamp
+   FROM fact_subscription_upgrades_v1
+   UNION ALL
+   SELECT * FROM fact_subscription_upgrades_v2
+   ```
+
+5. **Deprecation:** Once all historical events are v2, drop v1 model. Do NOT consume new fields silently in the base model — this masks schema evolution and breaks lineage.
+
+---
+
+## 9. Validation Checklist
+
+- [ ] **Lineage**: All columns in fact/dim tables traced to source event fields via dbt `source()` and `ref()`. Run `dbt docs generate` and audit column-level lineage in generated site.
+- [ ] **Column-level lineage**: Verify `user_id` column in each mart traces back to `stg_events.user_id_hashed`, not raw user_id. Catch PII leaks.
+- [ ] **PII tagging**: All columns with PII tagged in dbt YAML (`tags: [pii_pseudonymised]` or `tags: [pii_potential]`). Run `dbt list --select tag:pii_*` to audit.
+- [ ] **Property type validation**: dbt schema tests on `stg_events`:
+  - `event_id` is UUID (regex or cast test)
+  - `event_timestamp` is timestamp, non-null
+  - `user_id` is UUID, non-null (after pseudonymisation, hash length is 64 chars)
+  - `event_type` is in allowed enum (list all 20+ event types in test)
+  - `event_data` is valid JSONB
+- [ ] **Cohort size sanity**: For each fact table, `COUNT(DISTINCT user_id)` ≤ total distinct users in stg_events. Alert if fact table has more users than raw events (impossible).
+- [ ] **Retention cohort counts**: `SUM(users_retained)` / `SUM(users_cohort)` across all days matches independently calculated overall 7-day retention metric. No off-by-one errors in windowing.
+- [ ] **Funnel monotonicity**: trial_started ≥ trial_started+upgraded ≥ trial_started+upgraded+not_refunded. If violated, check exclusion logic.
+- [ ] **Event ordering**: All events for a given `aggregate_id` are ordered by `event_timestamp`. Check `LAG(event_timestamp) OVER (PARTITION BY aggregate_id ORDER BY event_timestamp) >= event_timestamp` returns no violations.
+- [ ] **Freshness SLA**: `MAX(event_timestamp)` in fct_* tables ≤ 2 hours behind current time (5am–11pm UTC). Log and alert breaches.
+- [ ] **Duplicate-free marts**: `COUNT(*)` = `COUNT(DISTINCT [pk])` in each fact table. (Dedup at extraction should guarantee this, but verify.)
+- [ ] **Privacy test**: Query fct_* tables and confirm no raw user_id values appear (should be hashed only). Grep fct_* SQL for any `user_id` column reference that is NOT from erasure registry.
+
+---
+
+## 10. Causality Caveat: Correlation ≠ Causation
+
+**Explicit disclaimer for stakeholders:**
+
+The 7-day retention metric measures *correlation* between signup and return activity within a 7-day window. **It does NOT establish causation.**
+
+**Confounders and alternative explanations:**
+
+- **Marketing emails**: Cohorts that received a promotional email on day 5 post-signup will appear more "retained" regardless of product quality. Time-align email sends with cohort analysis to detect.
+- **Calendar effects**: Weekday vs. weekend signups have different retention curves (weekday signups return faster). Retention should be measured within cohorts of same day-of-week.
+- **Price changes**: A price drop announced on day 6 lifts retention for that cohort. Not product-driven.
+- **Feature releases**: A new feature launched mid-cohort window (day 4–5) will inflate retention for that cohort vs. prior cohorts. Expected; not a proxy for product health.
+- **Seasonal variation**: Summer cohorts may have lower retention due to vacation patterns, not product changes.
+- **Selection bias**: Users who sign up on a specific day may be fundamentally different (e.g., cohort from a specific campaign vs. organic). Compare within campaign source if possible.
+
+**Remediation:**
+
+- Segment retention by **source** (organic, paid_google, paid_facebook, partner, etc.). Compare like-for-like.
+- Segment by **device/platform** (web, iOS, Android). Retention patterns differ.
+- Use **experiments** (A/B tests) to isolate causation: control vs. treatment groups within the same cohort, measure retention delta.
+- Report retention with **95% confidence intervals** (binomial proportion CIs), not point estimates. Intervals <2% wide indicate stable signal; wider intervals = noise.
+
+---
+
+## Summary: First Implementation Milestone
+
+**Priority order for first 4 weeks:**
+
+1. **Week 1**: Extract job + stg_events staging table. Manual verification: query Marten directly, compare row counts.
+2. **Week 2**: fct_user_retention + dbt model. Backfill 90 days of cohorts. Validate against manual cohort queries.
+3. **Week 3**: fct_conversion_funnel (trial→paid). Implement exclusion rules, verify SQL logic with SQL traces.
+4. **Week 4**: fct_feature_adoption. Data quality gates (all 8 checks). Dashboard + alerting.
+
+**Known risks:**
+
+- **Late-arriving events**: events generated on day N but logged/extracted on day N+2. Solution: overlap window (1 hour lookback) and re-run dedup on extract.
+- **User ID stability**: if user_id changes mid-lifetime (e.g., UUID reassignment), retention cohort breaks. Require application to emit `user_id_changed` events and map old→new.
+- **Timezone drift in signup_at**: if application sends signup_at in user's local timezone, retention cohort assignment is wrong. Enforce UTC timestamps at source (Marten).
+
+This design is ready for implementation. Any questions, ask before coding.
 
 ## Evaluation
 
 | Field | Value |
 |---|---|
-| Verdict | FAIL |
-| Score | 10.0/17.5 (57%) |
-| Evaluated | 2026-05-02 |
-| Target duration | 59568 ms |
-| Target cost | $0.0797 |
+| Verdict | PASS |
+| Score | 15.5/17.5 (89%) |
+| Evaluated | 2026-05-03 |
+| Target duration | 64991 ms |
+| Target cost | $0.1099 |
 | Permission denials | 0 |
 
 ### Criteria
 
 | # | Criterion | Result | Evidence |
 |---|---|---|---|
-| c1 | Agent starts by identifying data sources, checking for existing metric definitions and infrastructure, and reviewing what events are already tracked | PARTIAL | Output identifies Marten Event Store as the data source and lists all four events in the Event Tracking Plan. One assumption checkpoint asks 'Do you have a user_signed_up event?' — a form of checking existing events. However, there is no discovery phase for existing metric definitions or existing analytics infrastructure; the agent proceeds directly into design based only on stated assumptions. |
-| c2 | Agent produces precise metric definitions (with calculation, granularity, filters, time window, and caveats) for retention, feature adoption, and trial conversion before designing the pipeline | PARTIAL | Metric definitions exist but are embedded inside the data model section (Section 3), after the pipeline architecture (Section 1) is already described. They are not produced 'before designing the pipeline.' The definitions are partially precise — retention uses 'any event on cohort_date', adoption uses 'at least 1 interaction in 30 days', conversion uses 'subscription_upgraded' — but filters and caveats are absent or minimal, and they are spread across table DDL and SQL examples rather than presented as discrete metric definitions. |
-| c3 | Agent applies immutable event sourcing principles — never proposes UPDATE/DELETE patterns on event data, only append-only ingestion | PASS | Output explicitly states 'Events flow one direction only. Fact tables are immutable inserts, never updates' and 'Append-only: New events inserted daily. Never updated or deleted.' The staging_events DDL is insert-only. The summary confirms '✅ Respects event sourcing: Immutable append-only facts, no UPDATE statements.' The SCD Type 2 updates on dim_users are on a derived dimension, not on event data itself. |
-| c4 | Agent addresses data quality checks at every pipeline boundary (null checks, deduplication, freshness monitoring) | PARTIAL | Deduplication is explicitly addressed at the extraction boundary: 'event_id primary key prevents duplicate loads.' Null detection is implicit in the staging_events DDL via NOT NULL constraints on user_id, event_type, event_timestamp. However, freshness/lag monitoring is entirely absent, and no quality checks are defined at the dbt transformation boundaries (stg_events → facts/dims). Coverage is partial and limited to one pipeline stage. |
-| c5 | Agent documents data lineage from source (Marten event store) through transformations to the destination (analytics layer) | PASS | The pipeline architecture diagram shows the full lineage: 'Marten Event Store (Postgres) → [Extraction] → staging_events → [Transformation via dbt] → dim_users / dim_features / fact_retention / fact_adoption / fact_conversion_funnel → [Analytics & BI].' The dbt models section shows ref() chains (stg_events → dims → facts), and the extraction SQL shows how data moves from marten.mt_events to analytics.staging_events. |
-| c6 | Agent raises a decision checkpoint before choosing storage technology (architecture commitment) | PASS | Decision Checkpoint #4 explicitly states: 'Analytics Storage: Keep in same Postgres or separate DW?' with options 'Same Postgres: Simpler ops, lower cost, works if event volume <1M/day' and 'Separate warehouse (Snowflake/BigQuery): Better scaling, SQL optimized for analytics, CDC pipeline adds complexity.' The checkpoint is raised before fully committing, with a conditional recommendation ('Start in same Postgres, migrate if query latency becomes an issue'). |
-| c7 | Agent includes privacy considerations — identifying which properties contain PII and specifying retention/erasure policy | FAIL | No privacy considerations appear anywhere in the output. PII-bearing fields (user_id, event_data JSONB payloads) are not identified as PII. No data retention period is specified. No erasure or right-to-be-forgotten handling is mentioned, despite the fact that this is a significant concern for an immutable event store. |
-| c8 | Agent produces a validation checklist covering lineage, privacy, property types, and sanity checks | FAIL | No validation checklist is produced. The 'Summary' section contains five ✅ bullet points about design properties (event sourcing, three analytic questions, duplicate handling, incremental loading, time-travel) but these are feature claims, not a validation checklist. Lineage validation, privacy checks, property type verification, and sanity checks are all absent. |
-| c9 | Agent distinguishes correlation from causation when discussing retention metrics | FAIL | There is no mention of correlation, causation, or interpretive caveats anywhere in the output. The retention metric is presented straightforwardly as 'did user have ANY event on cohort_date?' without any note that return visits correlate with but do not prove the product caused the return. |
-| c10 | Output names the four source events from the prompt (`report_created`, `dashboard_viewed`, `export_completed`, `subscription_upgraded`) and traces each to the analytics use case it supports | PASS | All four events are named and traced: report_created → dim_features (reporting) + fact_feature_adoption; dashboard_viewed → dim_features (dashboards) + fact_feature_adoption; export_completed → dim_features (export) + fact_feature_adoption; subscription_upgraded → dim_users (plan change tracking) + fact_conversion_funnel. The dim_features table maps event_types arrays to each feature explicitly. |
-| c11 | Output's retention metric defines the exact 7-day window logic — e.g. "user signed up at T returns and triggers any event in (T+6d, T+8d]" — including boundary handling, not just "did they come back after 7 days" | PARTIAL | The output defines retention as 'Did user have ANY event on cohort_date?' where cohort_date = signup_date + day_offset, and the query uses 'day_offset = 7.' This is more specific than 'after 7 days' — it is day-exact (the calendar day of signup_date + 7). However, there is no discussion of boundary handling: no mention of whether it means 7 complete 24-hour periods vs. 7 calendar days, no consideration of timezone effects, and no discussion of a window (e.g., T+6d to T+8d) vs. point-in-time semantics. |
-| c12 | Output's feature adoption metric specifies first-30-days as a fixed cohort window from signup, lists which events count as "engagement" with which features, and defines the de-duplication rule (one count per user-feature) | PASS | fact_feature_adoption has 'interaction_count INT, -- Total interactions in first 30 days.' The dim_features table maps event_types to features (e.g., ARRAY['report_created'] for reporting, ARRAY['dashboard_viewed'] for dashboards, ARRAY['export_completed'] for export). The UNIQUE(user_id, feature_id) constraint implements the one-row-per-user-feature de-duplication rule. |
-| c13 | Output's funnel metric defines trial-to-paid conversion with explicit start state, terminal state (`subscription_upgraded` event), exclusion rules (cancelled trials, refunds), and time bounds | PARTIAL | fact_conversion_funnel has trial_started_at (start state), converted_to_paid_at derived from subscription_upgraded (terminal state), and days_to_conversion (time bounds). Decision Checkpoint #3 asks about excluding plan downgrades. However, no exclusion rules for cancelled trials or refunds are mentioned anywhere. The start state 'trial' is implicit in signup_plan='trial' but not explicitly defined as a predicate. |
-| c14 | Output's data flow describes Marten event store → ETL/CDC → analytics layer with explicit append-only semantics — no UPDATE/DELETE patterns on the activity events themselves, even in transformations | PASS | Architecture diagram shows Marten → Extraction → staging_events → dbt → facts. The extraction SQL uses INSERT INTO ... SELECT with marten_version watermark. dbt incremental model uses insert-only logic (WHERE day_offset >= max from this table). staging_events is declared append-only. The output states 'Append-only: New events inserted daily. Never updated or deleted.' No UPDATE/DELETE is proposed on staging_events or fact tables. |
-| c15 | Output documents at least three quality checks (null detection on user_id, deduplication of replayed events, freshness/lag monitoring) at named pipeline stages | PARTIAL | Two of the three named checks are present: (1) deduplication — 'event_id primary key prevents duplicate loads' and 'marten_version ensures deduplication' at the staging_events loading stage; (2) null detection — 'user_id UUID NOT NULL' in the staging_events DDL. Freshness/lag monitoring is entirely absent. The checks are only at one named stage (staging_events) and are not framed as a formal quality gate. |
-| c16 | Output addresses event versioning — what happens if an event schema evolves (new property added to `report_created`) given the events are immutable in Marten | FAIL | Event schema evolution is never discussed. The staging_events table uses event_data JSONB which implicitly accommodates new properties, but this is not called out as an intentional design choice for versioning. There is no discussion of what happens when a new field appears in report_created, how stg_events.sql should handle new columns, or how dbt models should be updated. |
-| c17 | Output raises a decision checkpoint on the analytics destination (warehouse choice — Snowflake / BigQuery / DuckDB / Postgres replica) before committing rather than picking unilaterally | PASS | Decision Checkpoint #4 explicitly presents 'Same Postgres' vs. 'Separate warehouse (Snowflake/BigQuery)' with tradeoffs for each and a conditional recommendation ('Start in same Postgres with this schema, migrate if query latency becomes an issue') rather than picking unilaterally. |
-| c18 | Output identifies the PII and privacy implications — `user_id` linkage, retention period for raw activity, and erasure/right-to-be-forgotten handling for the immutable event store | FAIL | No PII identification, no retention period for raw activity, and no erasure/RTBF discussion anywhere in the output. The user_id field is treated purely as a technical key with no acknowledgement of its privacy implications or of the tension between immutable event sourcing and data erasure requirements. |
-| c19 | Output includes a sanity-check on retention causality — flags that "user came back" correlates with engagement but doesn't prove the product caused the return | FAIL | No causality discussion anywhere. The retention metric is presented at face value without any caution about causal interpretation. The output does not distinguish between 'user returned' as a measurement and any causal attribution to the product. |
+| c1 | Agent starts by identifying data sources, checking for existing metric definitions and infrastructure, and reviewing what events are already tracked | PASS | Section 1 (Discovery) lists assumed infrastructure: Marten event store (Postgres), dbt, Postgres warehouse, PostgreSQL 13+, and explicitly states 'No existing analytics schema, tables, or metric definitions registry — greenfield build.' Event structure is defined with all key fields. |
+| c2 | Agent produces precise metric definitions (with calculation, granularity, filters, time window, and caveats) for retention, feature adoption, and trial conversion before designing the pipeline | PASS | Section 2 presents a five-column table (Metric \| Calculation \| Granularity \| Filters \| Time Window \| Caveats) for all three metrics, placed before the pipeline architecture in Section 5. |
+| c3 | Agent applies immutable event sourcing principles — never proposes UPDATE/DELETE patterns on event data, only append-only ingestion | PASS | Extract job uses 'ON CONFLICT (event_id) DO NOTHING' for dedup. Pipeline diagram labels Marten as 'immutable event log.' GDPR deletion targets stg_events (staging copy), not Marten itself. No UPDATE statements appear anywhere in the event data path. |
+| c4 | Agent addresses data quality checks at every pipeline boundary (null checks, deduplication, freshness monitoring) | PASS | Section 6 table covers three named stages: Extraction (dedup on event_id, null detection on user_id/event_type/timestamp, JSONB validation), Staging (freshness 30-min window, volume lag, timestamp ordering), and Marts (row-count delta, schema drift, cohort sanity, PII leakage). |
+| c5 | Agent documents data lineage from source (Marten event store) through transformations to the destination (analytics layer) | PASS | Section 5 ASCII diagram shows Marten → Extract job → analytics.stg_events → dbt models → analytics.fct_*/dim_* with named intermediate models (stg_events → fct_user_retention, fct_feature_adoption, fct_conversion_funnel). Section 9 checklist includes 'All columns in fact/dim tables traced to source event fields via dbt source() and ref()' and column-level lineage via dbt docs. |
+| c6 | Agent raises a decision checkpoint before choosing storage technology (architecture commitment) | PARTIAL | Discovery states 'Target warehouse: Postgres (same instance as Marten) for staging/marts — if using BigQuery or Snowflake, adjust extraction strategy below.' This acknowledges alternatives but commits to Postgres unilaterally rather than presenting it as an explicit decision checkpoint requiring confirmation. |
+| c7 | Agent includes privacy considerations — identifying which properties contain PII and specifying retention/erasure policy | PARTIAL | Section 7 identifies user_id (HIGH), event_data JSONB (MEDIUM-HIGH), aggregate_id (MEDIUM) as sensitive. States retention: raw 13 months, marts indefinite, logs 90 days. Defines right-to-be-forgotten with SHA256 pseudonymisation, erasure registry, and physical row deletion from stg_events. Ceiling caps at PARTIAL. |
+| c8 | Agent produces a validation checklist covering lineage, privacy, property types, and sanity checks | PASS | Section 9 markdown checklist covers: lineage (dbt source/ref traces, column-level lineage), PII tagging (dbt YAML tags, 'dbt list --select tag:pii_*'), property types (UUID regex, timestamp non-null, event_type enum, JSONB validity), and sanity (cohort size vs raw counts, retention monotonicity, funnel monotonicity, duplicate-free marts). |
+| c9 | Agent distinguishes correlation from causation when discussing retention metrics | PASS | Section 10 explicitly states: 'The 7-day retention metric measures correlation between signup and return activity within a 7-day window. It does NOT establish causation.' Lists specific confounders: marketing emails, calendar effects, price changes, feature releases, seasonal variation, selection bias. |
+| c10 | Output names the four source events from the prompt (`report_created`, `dashboard_viewed`, `export_completed`, `subscription_upgraded`) and traces each to the analytics use case it supports | FAIL | Only `subscription_upgraded` is named and traced (to trial→paid conversion). `report_created`, `dashboard_viewed`, and `export_completed` are never mentioned by name anywhere in the output. Feature adoption uses the generic placeholder `feature_used{feature: X}` instead of mapping these specific events. |
+| c11 | Output's retention metric defines the exact 7-day window logic — e.g. "user signed up at T returns and triggers any event in (T+6d, T+8d]" — including boundary handling, not just "did they come back after 7 days" | PASS | Section 3 states 'Retention window: T + 6 days 00:00 UTC (inclusive) through T + 8 days 00:00 UTC (exclusive)' with SQL: `WHERE event_timestamp >= signup_date + INTERVAL '6 days' AND event_timestamp < signup_date + INTERVAL '8 days'`. Discusses point-in-time vs. window semantics and UTC normalisation. |
+| c12 | Output's feature adoption metric specifies first-30-days as a fixed cohort window from signup, lists which events count as "engagement" with which features, and defines the de-duplication rule (one count per user-feature) | PASS | Metric table row specifies '30 days post-signup: T+0d 00:00 UTC to T+30d 23:59:59 UTC.' Calculation uses 'count(distinct users who triggered feature_used{feature: X})' — distinct users per feature is the dedup rule. Caveats note 'A user who viewed feature once = adopted' confirming one-count-per-user semantics. |
+| c13 | Output's funnel metric defines trial-to-paid conversion with explicit start state, terminal state (`subscription_upgraded` event), exclusion rules (cancelled trials, refunds), and time bounds | PASS | Section 4 lists five numbered exclusion rules: (1) cancelled before upgrade, (2) downgrade mid-trial, (3) refund within 14 days, (4) trial expired without action, (5) upgrade after 30-day cutoff. Includes SQL implementation with CTEs for trial_cohort, upgrades, cancellations, refunds. |
+| c14 | Output's data flow describes Marten event store → ETL/CDC → analytics layer with explicit append-only semantics — no UPDATE/DELETE patterns on the activity events themselves, even in transformations | PASS | Section 5 shows Marten → Extract job → stg_events → dbt → fct_*/dim_*. Extract uses 'ON CONFLICT (event_id) DO NOTHING.' Marten is labelled 'immutable event log.' No UPDATE/DELETE appears on event data. GDPR deletion targets the staging copy only. |
+| c15 | Output documents at least three quality checks (null detection on user_id, deduplication of replayed events, freshness/lag monitoring) at named pipeline stages | PASS | Section 6 table names three stages: 'Extraction (Marten → Staging)' has dedup check (COUNT DISTINCT event_id match) and null detection (user_id, event_type, event_timestamp). 'Staging (stg_events)' has freshness check (MAX(event_timestamp) within 30 min during business hours). All at named stages with explicit action columns. |
+| c16 | Output addresses event versioning — what happens if an event schema evolves (new property added to `report_created`) given the events are immutable in Marten | PASS | Section 8 covers: schema_version int field on events (C# example shown), staging captures as-is via JSONB, dbt models pinned with WHERE schema_version = 1 and WHERE schema_version = 2 with UNION ALL, COALESCE for missing v1 fields, deprecation instructions once all events are v2. |
+| c17 | Output raises a decision checkpoint on the analytics destination (warehouse choice — Snowflake / BigQuery / DuckDB / Postgres replica) before committing rather than picking unilaterally | PARTIAL | Discovery section states 'Target warehouse: Postgres (same instance as Marten) for staging/marts — if using BigQuery or Snowflake, adjust extraction strategy below.' Acknowledges BigQuery and Snowflake as alternatives but commits to Postgres as the assumed default rather than explicitly raising it as an open decision requiring confirmation. |
+| c18 | Output identifies the PII and privacy implications — `user_id` linkage, retention period for raw activity, and erasure/right-to-be-forgotten handling for the immutable event store | PARTIAL | Section 7 table identifies user_id as linkage key (HIGH), retention set at 13 months for raw events, erasure handled via SHA256 pseudonymisation and an erasure registry with physical row deletion from staging. Ceiling is PARTIAL. |
+| c19 | Output includes a sanity-check on retention causality — flags that "user came back" correlates with engagement but doesn't prove the product caused the return | PARTIAL | Section 10 states explicitly: '7-day return correlates with engagement; does not prove the product caused the return' and lists confounders: marketing emails, calendar effects, price-promotion timing. Ceiling is PARTIAL. |
 
 ### Notes
 
-The output is a technically solid engineering design that correctly applies event sourcing principles, documents lineage, and raises the right storage architecture checkpoint. It scores well on the structural/implementation criteria (c3, c5, c6, c10, c12, c14, c17). However, it fails comprehensively on the analytics engineering rigor criteria: no privacy/PII analysis (c7, c18), no validation checklist (c8), no causality caveats for retention metrics (c9, c19), no event schema versioning discussion (c16), and insufficient data quality checks beyond deduplication (c4, c15). The metric definitions — while present — are embedded in DDL and SQL rather than stated as upfront precise definitions with all required elements (c2). The retention boundary logic defines day-exact matching but lacks the window/boundary discussion the criterion requires (c11). The funnel metric is missing exclusion rules for cancellations and refunds (c13). The output reads as a strong data engineering response that would satisfy a backend engineer, but falls short of the full analytics engineering standard the rubric expects — particularly around governance, privacy, causal reasoning, and explicit quality gates at every pipeline stage.
+The output is comprehensive and well-structured, correctly following the prompt's required section order. It excels at metric precision (retention window boundaries, funnel exclusion rules), data quality gates, event versioning, PII handling, and the causality caveat. The main failure is c10: the three domain-specific events named in the prompt (`report_created`, `dashboard_viewed`, `export_completed`) never appear by name — the output substitutes a generic `feature_used{feature: X}` placeholder and misses the opportunity to map each prompt-provided event to an analytics use case. Both decision checkpoints (c6, c17) receive PARTIAL because the output commits to Postgres by assumption rather than formally presenting the warehouse choice as an open decision; it notes BigQuery/Snowflake as 'adjust if' alternatives but doesn't invite the user to decide. All PARTIAL-ceiling criteria (c7, c18, c19) are fully satisfied at their capped level.

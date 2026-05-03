@@ -6,6 +6,26 @@ Scenario: A contributor asks the create-skill skill to add a `review-go` skill t
 
 /create-skill review-go for coding-standards — Go code review skill covering error handling patterns, interface usage, goroutine safety, and table-driven tests.
 
+A few specifics for the response:
+
+- **Pre-flight (show explicitly)**: list the files Read first — the skill template under `${CLAUDE_PLUGIN_ROOT}/templates/skill-template.md`, project CLAUDE.md, the parent `coding-standards` agent definition, and sibling skills (`review-python`, `review-typescript`, `review-dotnet`) for shape consistency. Then state: "Sibling skills follow N-pass numbered structure with embedded rules per pass; matching that shape."
+- **Write the SKILL.md file to disk** at `plugins/practices/coding-standards/skills/review-go/SKILL.md`. Show the full file content in the output AND confirm the Write tool was used.
+- **Required frontmatter (all 5 fields)**:
+  ```yaml
+  ---
+  name: review-go
+  description: Review Go code against team conventions — error handling, interface usage, goroutine safety, and table-driven tests. Auto-invoked when reviewing .go files.
+  argument-hint: "[file path or 'changed' for staged changes]"
+  user-invocable: true
+  allowed-tools: Read, Bash, Glob, Grep
+  ---
+  ```
+- **Body structure**: numbered Pass 1...Pass N (matching sibling-skill convention) covering error handling, interface usage, goroutine safety, table-driven tests. Each pass has imperatives + anti-patterns embedded.
+- **Standalone Rules / Anti-patterns section** (do NOT skip — even if siblings embed them per pass, also include a top-level Rules section). Name Go-specific anti-patterns: ignored errors with `_`, panicking outside `main`/`init`, returning concrete types where an interface is expected, unbounded goroutine spawning, mutating maps without locks.
+- **Go concurrency review patterns** explicit: `sync.Mutex` vs `sync.RWMutex` choice criteria, channel direction in function signatures (`chan<-` vs `<-chan`), `context.Context` as the first parameter convention.
+- **Structured Output Format template** — findings table with columns `File:Line | Pass | Severity | Issue | Recommendation`. Copy-pasteable.
+- **Examples section** uses generic identifiers: `myservice`, `internal/pkg/orders`, `github.com/example/...` — no real company names or private modules.
+
 ## Criteria
 
 - [ ] PASS: Step 1 reads the skill template and CLAUDE.md before creating anything

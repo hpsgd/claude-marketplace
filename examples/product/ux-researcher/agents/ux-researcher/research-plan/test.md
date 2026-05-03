@@ -12,6 +12,16 @@ We're seeing a 68% drop-off rate at our checkout flow. Analytics show most aband
 
 We're a 12-person team. No dedicated researcher — I'm a PM doing this myself. Sprint is 2 weeks. Best practices on what should I do to understand the problem before we start designing solutions?
 
+A few specifics for the response:
+
+- **Open with a specific Research Question** at the top, grounded in the available evidence — not the generic "why do users drop off". Something like: "What are users experiencing in the seconds before they abandon the payment step, and what would have to be true for them to complete it?"
+- **Reframe block**: after the Mixpanel + Hotjar pass, restate the research question more specifically (e.g. "Now: users who see the address form on mobile are quitting — what's blocking them?").
+- **Recruitment criteria** must be explicit: users who attempted checkout in the last 30 days but didn't complete; mix of mobile vs desktop; mix of payment methods attempted (credit card, Apple/Google Pay, BNPL). Include screener questions to confirm fit.
+- **Qualitative sample size with rationale**: recommend 5-8 user interviews / unmoderated tests, citing Nielsen's finding that 5 reveals ~80% of usability issues with diminishing returns beyond 8.
+- **Discussion guide** with named question themes: (1) what they were trying to do, (2) what they expected at the payment step, (3) what made them hesitate, (4) what they did instead, (5) what would have made them complete it.
+- **PM-as-researcher bias guardrails**: a section warning that the PM is the design owner and therefore at risk of confirmation bias and leading questions. Specific guardrails: write open-ended questions only ("tell me about..." not "did you find X confusing?"), have a colleague review the discussion guide for leading framing, record sessions and re-listen for moments where you led the witness.
+- **Post-research action**: after analysis, hold a 1-hour synthesis workshop with design + engineering to translate findings into 2-3 hypothesis-driven design experiments — don't wait for a comprehensive research report.
+
 ## Criteria
 
 

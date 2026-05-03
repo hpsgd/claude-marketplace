@@ -12,6 +12,16 @@ We have three things all asking for attention on Helipad (our logistics SaaS) ri
 
 How do you prioritise these?
 
+A few specifics for the response:
+
+- **Apply frequency × severity reasoning** with rough math. State the comparison: 30% activation drop on every new signup compounds into ARR loss per cohort (e.g. "30% × 50 new signups/week × $X ACV = $Y/quarter forgone ARR if unfixed") vs the two enterprise prospects' deal value. Show the arithmetic.
+- **Cite the principle**: "94% of feature requests come from <10% of users — feature requests at small N are low-confidence signal" (or equivalent named heuristic) when challenging the mobile request based on a sample of two prospects.
+- **Address validation fix needs a specific success metric**: e.g. "reduce address-step dropout from 30% to under 15% within 4 weeks of ship". State the target number.
+- **PostgreSQL is a CTO call, not a product call**: explicitly escalate the timeline decision to the CTO. Frame it as "I'll coordinate with the CTO to fit it alongside the activation fix — the technical timeline is theirs to set, not mine."
+- **Mobile request needs cheap discovery first**: name a specific low-cost action — interview the two prospects, pull mobile-vs-desktop usage analytics from existing customers, send a 5-question survey — before committing engineering time. Don't approve build.
+- **Sales-team mitigation**: name the action to take with sales while the mobile request is in discovery — e.g. "have customer success reach out to the two prospects with a roadmap conversation; acknowledge mobile is on the radar without committing a date".
+- **Sequencing plan if PG upgrade and address-fix conflict**: state whether they run in parallel (different engineers) or sequentially, and which goes first if forced to choose.
+
 ## Criteria
 
 - [ ] PASS: Challenges the mobile app request as a solution rather than a validated problem — asks for evidence beyond two anecdotal prospects

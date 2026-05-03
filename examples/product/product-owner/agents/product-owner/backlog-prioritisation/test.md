@@ -18,6 +18,14 @@ I need help prioritising my backlog for next sprint. Here are 8 items that diffe
 
 Which ones should we do next sprint?
 
+A few specifics for the response:
+
+- **Open with 3 clarifying questions** at the top: (1) sprint capacity (story points / weeks), (2) team composition (full-stack vs frontend-heavy, devops capacity), (3) any commitments already made (CEO promised dark mode by date X? sales committed SSO to a specific deal?). State the questions, THEN proceed with the full RICE table and recommendation using stated assumptions (e.g. "assuming 2-week sprint, full-stack team of 4, no hard commitments — adjust if these are wrong"). Do NOT defer the analysis pending answers.
+- **Apply RICE** explicitly. Produce a scoring table with columns `Item | Reach (users) | Impact (1/2/3) | Confidence (% based on data quality) | Effort (weeks) | RICE = (R×I×C)/E`. Compute the RICE number for each item even when data is uncertain — flag uncertainty as low Confidence.
+- **Flag missing data per item**: name what data is needed (e.g. "Onboarding: need funnel drop-off data — currently 0% confidence on Reach"; "API rate limit: need affected-user count from logs").
+- **Three-way recommendation buckets** (label them explicitly): (1) **Ship next sprint** (likely SSO + a quick win), (2) **Do data work this sprint, ship next** (onboarding instrumentation), (3) **Do not pull in** (mobile redesign — no evidence).
+- **Frame as proposal, not directive**: end with "This is a proposal — please discuss with the team before committing. Headcount decisions and CEO/board commitments are out of scope for this analysis and should be factored in by the team."
+
 ## Criteria
 
 

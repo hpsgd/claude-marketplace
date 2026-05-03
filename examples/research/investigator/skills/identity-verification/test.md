@@ -15,6 +15,30 @@ Subject aware:  Yes — subject provided credentials as part of onboarding mater
 
 /investigator:identity-verification Dr Priya Narayanan claims to be a licensed financial adviser registered with ASIC, previously at Macquarie Wealth Management, based in Sydney
 
+Execution requirements (the output MUST follow this exact section order):
+
+1. **Gate Record** — four separate labelled lines, verbatim from the prompt:
+   ```
+   Authorisation:  ...
+   Purpose:        ...
+   Scope:          ...
+   Subject Aware:  ...
+   ```
+2. **Result Categories** — explicitly define VERIFIED / UNVERIFIABLE / CONTRADICTED at the top of the document, including the example "ASIC register shows a different name spelling or licence start date" for CONTRADICTED.
+3. **Claims to Verify** — a standalone numbered list BEFORE any verification work:
+   ```
+   Claim 1: Currently registered financial adviser with ASIC
+   Claim 2: Holds doctorate (Dr title)
+   Claim 3: Previously at Macquarie Wealth Management
+   Claim 4: Sydney-based
+   ```
+4. **Verification per Claim** — a section per claim, each with its URL + method + result co-located in the same section (do not split into a "Next Steps" appendix). For ASIC: URL `https://moneysmart.gov.au/financial-advisers-register`, method `name-based search`, result. For the doctorate: include Trove (`https://trove.nla.gov.au`) plus Google Scholar; if nothing found, write the verbatim flag line "Dr title used without verifiable academic record — signal worth flagging to the engaging party."
+5. **Photo Consistency Check** — mandatory standalone section. Compare LinkedIn profile photo vs Macquarie alumni page imagery vs speaking-event photos. State the observation in one of these forms: "photos appear consistent across sources", "photos differ — possible different person", or "no photo source accessible — visual check not possible". Do not skip this section even if no images are accessible — explicitly state the negative result.
+6. **Common-Name Disambiguation (3-attempt rule)** — standalone section. Document the disambiguation signals (Sydney location + financial-advisory specialism + Macquarie alumni linkage). Then state the rule explicitly: "If ambiguity persists after three disambiguation attempts, STOP and request more context (ASIC ARN, employment dates, degree documents)." If multiple matches remain, STOP here and list the required context — do NOT proceed to soft "next steps" framing.
+7. **Verification Results Table** — final table with columns `Claim | Status (VERIFIED / UNVERIFIABLE / CONTRADICTED) | Evidence`, followed by an `Overall Confidence Rating: LOW / MEDIUM / HIGH` line.
+
+Do NOT investigate residential address, family, social media activity, or personal finances — gate scope is professional-only.
+
 ## Criteria
 
 - [ ] PASS: Skill requires and references an authorisation gate record before proceeding — does not run without a logged gate

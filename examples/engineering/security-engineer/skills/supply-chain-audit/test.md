@@ -6,6 +6,19 @@ Scenario: Checking that the supply-chain-audit skill assesses all four supply ch
 
 Review the supply-chain-audit skill definition and verify it produces a SLSA-aligned assessment with specific findings that can drive a hardening roadmap.
 
+Read the skill at `/Users/martin/Projects/turtlestack/plugins/engineering/security-engineer/skills/supply-chain-audit/SKILL.md` and verify each item by name. Quote skill text where present:
+
+- **Source integrity controls**: signed commits, branch protection, code review requirements, CODEOWNERS, force-push prevention. Verify the skill uses `gh api repos/X/branches/main/protection` or equivalent to actually check these (not just CODEOWNERS file presence).
+- **Build integrity**: hosted vs self-hosted runners, build-defined-in-code, build provenance / SLSA attestations, AND **log retention** explicitly.
+- **Dependency integrity**: lockfiles committed, **no floating version ranges** (`^`, `~`, `*` flagged), Dependabot or PR dependency review, AND CI vulnerability scanning.
+- **Artifact integrity**: container image signing (cosign / sigstore), SBOM generation (Syft / cyclonedx), AND **immutable image tags** (no `:latest`).
+- **SLSA level mapping rule**: explicitly confirm "assessed level = highest where ALL requirements are met (not the average)" appears.
+- **CI action SHA-pinning** with citation to the [GitHub Actions security hardening guide](https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions).
+- **All four supply-chain layers** (source, build, dependency, artifact) covered, none skippable.
+- Bash commands provided per layer for evidence collection.
+
+Confirm presence/absence of each by name — do not paraphrase.
+
 ## Criteria
 
 - [ ] PASS: Skill assesses source integrity controls — signed commits, branch protection, code review requirements, CODEOWNERS, and force push prevention

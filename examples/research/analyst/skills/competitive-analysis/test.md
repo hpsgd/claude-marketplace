@@ -6,6 +6,14 @@ Scenario: A product team wants a competitive analysis of Australian HR software 
 
 /analyst:competitive-analysis Australian HR software for SMBs — specifically payroll and leave management. We're targeting businesses with 10-200 employees in AU.
 
+A few specifics for the response:
+
+- **Three-way classification**: Direct (HR + payroll specialists for AU SMB — Employment Hero, KeyPay, foundU, Microkeeper, etc.), Indirect (broader accounting suites with payroll modules — Xero, MYOB, QuickBooks), Substitute (manual processes — spreadsheets + accountant, outsourced bookkeeping). Three distinct categories — do NOT collapse Substitute into Indirect.
+- **Source staleness flag**: any source older than 18 months (relative to the analysis date) MUST carry a `[STALE — N months old, may be outdated]` annotation inline at every citation. Competitive landscape moves fast in AU SaaS.
+- **AU-specific source coverage**: include all five source types — IBISWorld AU, Seek job postings (hiring signal), G2/Capterra AU reviews, AFR coverage, SmartCompany. List each in the source list.
+- **Comparison matrix columns**: Competitor | AU compliance coverage (STP Phase 2, SuperStream, Award interpretation) | Pricing tier ($/employee/month) | Feature breadth (payroll-only / payroll+leave / full HRIS) | Strengths | Weaknesses | SMB segment fit (10-50 / 50-200). Include each column explicitly.
+- **White-space synthesis (mandatory final section)**: name the specific segment + feature + pricing combination that's currently underserved, framed as the funding-pitch positioning angle ("the gap is X for Y customers at Z price point because incumbents are moving in the opposite direction").
+
 ## Criteria
 
 - [ ] PASS: Skill defines the market before listing competitors — states buyer type (SMB), purchase unit, geography (AU), and any timing assumptions

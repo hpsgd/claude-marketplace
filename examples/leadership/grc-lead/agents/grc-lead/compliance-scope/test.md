@@ -6,6 +6,15 @@ Scenario: A user asks the GRC lead about compliance obligations for a new featur
 
 We're adding a "customer health score" feature to Meridian, our B2B CRM. It will pull together data from multiple sources: email open rates, support ticket history, login frequency, and payment history. The score will be calculated by an ML model and used by our customer success team to flag at-risk accounts. Our customers are businesses in Australia, the UK, and Germany. What do we need to know about compliance?
 
+A few specifics for the response:
+
+- **Risk Quantification table** — for each major risk, give explicit `Likelihood: LOW/MED/HIGH` and `Impact: LOW/MED/HIGH` ratings with a one-line rationale (e.g. "Likelihood: MEDIUM — opt-out rates from analytics suggest 5-10% will object; Impact: HIGH — automated decisioning without consent could trigger regulatory fines and account blocking"). Don't describe risks narratively.
+- **Lawful basis as a BLOCKING open question** per jurisdiction: present BOTH paths — (A) **Legitimate Interest** (Art 6(1)(f)) requiring a formal LIA, vs (B) **Consent** (Art 6(1)(a)) with explicit opt-in flow. State trade-offs of each and frame the choice as blocking — engineering cannot proceed without the call.
+- **Data minimisation analysis**: explicitly question whether ALL FOUR data sources (email open rates, support tickets, login frequency, payment history) are necessary. Propose the minimum subset that achieves the customer-success goal — e.g. "payment history may be excluded if churn signal is captured by support+login alone".
+- **Cross-border transfer**: Germany/UK data flowing to wherever the ML model trains/runs. If outside EU/UK, require Standard Contractual Clauses (SCCs) and a Transfer Impact Assessment (TIA). Name the safeguards.
+- **DPIA recommendation with skill handoff**: explicitly recommend `/grc-lead:write-dpia` as the next step (Article 35 mandates it for large-scale profiling combined with multiple data sources).
+- **GRC vs Engineering split**: explicitly delegate technical guardrails (input validation, audit logging, data deletion mechanisms, model explainability instrumentation) to the **security engineer / ML engineer**. Don't specify them yourself — just hand off.
+
 ## Criteria
 
 - [ ] PASS: Identifies the applicable regulatory frameworks correctly — Australian Privacy Principles (APPs), GDPR (Germany and UK), and UK GDPR post-Brexit

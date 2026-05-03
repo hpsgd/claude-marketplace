@@ -7,6 +7,11 @@ Scenario: Testing whether the write-user-guide skill requires a research step, n
 
 /user-docs-writer:write-user-guide for our time tracking feature — users can log time against projects and tasks, set estimates, and view utilisation reports.
 
+A few specifics for the response:
+
+- Begin with a short **Research** subsection listing what you would consult before writing — feature spec, existing support tickets, prior product docs. State the assumptions you're making in lieu of those (e.g. "no spec available; assuming standard time-entry model"). Don't start cold.
+- Include a footer YAML-style metadata block (or markdown table) listing: `name:`, `description:`, `argument-hint:`, `category:`, `tags:` so the article can be ingested by a docs system.
+
 ## Criteria
 
 

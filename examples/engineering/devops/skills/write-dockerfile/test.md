@@ -6,6 +6,18 @@ Scenario: Checking that the write-dockerfile skill enforces multi-stage builds, 
 
 Review the write-dockerfile skill definition and verify it produces production-hardened Dockerfiles rather than minimal single-stage examples.
 
+In your verification report, confirm or flag each item by name. Quote the skill text where present:
+
+- **Multi-stage build requirement** + the layer-caching rule: dependency manifests (`package.json`, `requirements.txt`, `*.csproj`, `go.mod`, `Cargo.toml`) MUST be copied and installed BEFORE source code, to preserve cache on source-only changes.
+- **Base image table** for all 5 stacks (Node.js, .NET, Python, Go, Rust) with **specific pinned versions** (not `:latest`, not floating major). Quote the actual versions from the skill.
+- **Non-root USER directive** marked MANDATORY, with the ordering rule: `USER` must come BEFORE the `COPY` of application files (so source files are owned correctly).
+- **HEALTHCHECK in every Dockerfile** with all FOUR parameters: `--interval`, `--timeout`, `--start-period`, `--retries`.
+- **`.dockerignore` MANDATORY** with required exclusions named: `.git`, `node_modules`, `.env`, `tests/`, `*.md` (and similar build noise).
+- **Anti-patterns list (5)**: (1) single-stage build, (2) running as root, (3) `:latest` tag, (4) secrets in build args (`ARG SECRET=...`), (5) no HEALTHCHECK.
+- **Identified gaps**: explicitly call out `--platform`/`BUILDPLATFORM`/buildx for multi-arch (arm64+amd64), distroless / alpine final-image-size guidance, SBOM/provenance generation.
+
+Confirm or flag each by name — do not paraphrase.
+
 ## Criteria
 
 - [ ] PASS: Skill requires multi-stage builds — build tools and dev dependencies must never appear in the runtime stage

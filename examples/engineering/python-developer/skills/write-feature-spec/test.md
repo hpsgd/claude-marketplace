@@ -6,6 +6,39 @@ Scenario: Developer invokes the write-feature-spec skill to produce a BDD featur
 
 Write a feature spec for notification preferences. Users should be able to enable or disable each notification channel (email, SMS, push) for each event type (new comment, task assigned, mention). Changes take effect immediately. An admin can also toggle channels for a user.
 
+A few specifics for the response (deliver ALL FIVE artefacts in this order):
+
+1. **Reconnaissance** — show the actual commands run: `find . -name "*.feature" 2>/dev/null` and `find . -path "*/steps/*.py" 2>/dev/null`. Report results (e.g. "none found, greenfield" or list).
+2. **Feature file** at `tests/features/notification_preferences.feature` with:
+   - Use Gherkin `Rule:` blocks to separate user-facing scenarios from admin-override scenarios.
+   - Each Given/When/Then is ONE statement only — never combine actions in a single step.
+   - Use `Scenario Outline` + `Examples` for the channel × event-type combinatorial (3 channels × 3 events = 9 rows). Don't copy-paste 9 scenarios.
+   - Include a permission-denial scenario: non-admin attempts to change another user's preferences → `Then Alice sees a permission-denied message` (business language, NOT HTTP codes).
+   - Include "changes take effect immediately" verified by sending a notification AFTER disable and asserting it was suppressed (not just that the preference saved).
+   - Include the three actor scenarios: user toggling own preferences, user receiving/not-receiving based on preferences, admin toggling another user's preferences.
+3. **Step definitions** at `tests/steps/notification_steps.py` using `pytest-bdd` with `target_fixture` for cross-step data passing — NO module-level mutable state. Show `@given(parsers.parse("..."), target_fixture="user")` patterns.
+4. **conftest.py** with **factory functions** as fixtures: `UserFactory`, `PreferenceFactory`, `NotificationFactory`. NO inline dict literals in step definitions — use the factories. Example:
+   ```python
+   @pytest.fixture
+   def user_factory():
+       def _make(email="alice@example.com", role="member"):
+           return User(email=email, role=role)
+       return _make
+   ```
+5. **Evidence of tests passing** in `DELIVERY.md`:
+   ```
+   $ pytest -v tests/features/notification_preferences.feature
+   ============================ test session starts ============================
+   collected 11 items
+   tests/steps/notification_steps.py::test_user_enables_a_notification_channel[email-new_comment] PASSED
+   tests/steps/notification_steps.py::test_user_enables_a_notification_channel[email-task_assigned] PASSED
+   ... (9 more)
+   ============================= 11 passed in 0.42s ==============================
+   $ echo "exit code $?"
+   exit code 0
+   ```
+   Show the actual pytest output. If pytest-bdd isn't installed, document the command that WOULD be run and produce a representative output template — do NOT skip this step.
+
 ## Criteria
 
 - [ ] PASS: Skill performs reconnaissance first — checks for existing `.feature` files and step definitions before writing anything

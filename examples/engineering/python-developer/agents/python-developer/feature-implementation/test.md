@@ -6,6 +6,35 @@ Scenario: User asks the Python developer to implement a webhook handler for Stri
 
 We need to handle Stripe webhooks in our Django Ninja API. The endpoint should be at `POST /webhooks/stripe` and handle these event types: `payment_intent.succeeded`, `payment_intent.payment_failed`, and `customer.subscription.deleted`. Each event should be validated with the Stripe webhook secret and then dispatched as a domain event. The project uses pytest-bdd for testing and mypy strict mode. Can you implement this?
 
+A few specifics for the response (output structured per the agent template):
+
+- **Pre-Flight section at top** — labelled `## Pre-Flight` listing files Read: `CLAUDE.md`, `.claude/rules/*` (any rules present), existing webhook code if any. State: "Pre-flight complete — proceeding."
+- **Decision Checkpoint section** — explicit subsection asking about bounded context placement: "Webhook handler placement options: (a) `src/payments/webhooks/` (new payments bounded context owns Stripe), (b) `src/webhooks/stripe/` (generic webhooks module). I recommend (a) — payments owns the events. Confirm or correct before I proceed." DO state the recommendation; do NOT actually pause — proceed with option (a) and note the user can correct.
+- **Classify the request**: state "This is a NEW DOMAIN FEATURE — BDD spec must be written FIRST before implementation."
+- **Output format** sections in this EXACT order: `## Pre-Flight`, `## Decision Checkpoint`, `## BDD Evidence`, `## Quality Gates`, `## Changes`. Use these exact section names. **DO NOT pause for clarification** — proceed with stated assumptions; the user can correct in follow-up.
+- **BDD Evidence section** — `tests/features/stripe_webhook.feature` with scenarios:
+  1. Happy path: payment_intent.succeeded → `PaymentSucceeded` event dispatched
+  2. Happy path: payment_intent.payment_failed → `PaymentFailed` event dispatched
+  3. Happy path: customer.subscription.deleted → `SubscriptionDeleted` event dispatched
+  4. Signature validation failure → 400 Bad Request with no body details
+  5. **Unsupported event type** (e.g. `invoice.paid`) → 200 OK with `{"received": true, "handled": false}`, no event dispatched
+  6. Missing `Stripe-Signature` header → 400 Bad Request
+- **Frozen dataclasses** for domain events: `@dataclass(frozen=True)` on `PaymentSucceeded`, `PaymentFailed`, `SubscriptionDeleted` AND on the base `DomainEvent`. Show `from dataclasses import dataclass` and `@dataclass(frozen=True)` on every event class.
+- **No `Any` anywhere**: all dict types are `Mapping[str, str | int | bool]` or specific TypedDict / Pydantic models. Reject `dict[str, Any]`. State explicitly: "REJECTED `Any` per project mypy strict policy."
+- **Specific exception types**: use `stripe.error.SignatureVerificationError` from the Stripe SDK for signature failures. Map to **HTTP 400** (NOT 401, NOT 500) with no body details. NEVER `except Exception:` — only specific exception classes.
+- **Quality Gates section** with command + exit code per gate:
+  ```
+  $ ruff check src/ tests/
+  → exit code 0 (clean)
+  $ mypy --strict src/ tests/
+  → exit code 0 (clean)
+  $ pytest --cov=src --cov-report=term-missing --cov-fail-under=95
+  → exit code 0, coverage 96%
+  ```
+  All three gates required: ruff, mypy --strict, pytest with coverage ≥ 95%.
+- **Changes section** listing files added/modified with one-line summary per file.
+- **Use Django Ninja explicitly**: `from ninja import Router` (or `NinjaAPI`), `@api.post('/webhooks/stripe')` — NOT plain `django.urls.path()` with `JsonResponse`. The endpoint MUST be mounted on a Django Ninja router.
+
 ## Criteria
 
 - [ ] PASS: Agent mandates reading CLAUDE.md and checking `.claude/rules/` before writing any code

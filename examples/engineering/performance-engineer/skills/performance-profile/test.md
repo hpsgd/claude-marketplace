@@ -6,6 +6,39 @@ Scenario: Developer invokes the performance-profile skill against the report gen
 
 Profile `POST /api/reports/generate`. Current measurements: p50=420ms, p95=3.2s, p99=8s. This endpoint fetches data from up to 20 configured datasources, runs calculations, and builds a report. The multi-datasource feature was added 3 weeks ago. Team suspects N+1 queries — each datasource might be triggering individual DB calls. Also want to check if external API calls to datasource connectors are sequential when they could be parallel.
 
+A few specifics for the response (output in this exact section order):
+
+1. **Baseline table (FIRST)** — ALL fields populated:
+   ```
+   | Metric              | Current | Target | Status |
+   |---------------------|---------|--------|--------|
+   | p50 latency         | 420ms   | <300ms | ⚠️     |
+   | p95 latency         | 3.2s    | <1.5s  | ✗      |
+   | p99 latency         | 8s      | <3s    | ✗      |
+   | Throughput (req/s)  | (state assumption) | — | — |
+   | Error rate          | (state assumption) | — | — |
+   | Conditions          | up to 20 datasources, ~unknown payload size | — | — |
+   ```
+2. **Component timing breakdown (BEFORE bottleneck identification)** — table:
+   ```
+   | Segment              | Current contribution (est.) | Target |
+   |----------------------|------------------------------|--------|
+   | Server processing    | (estimate)                   |        |
+   | Database queries     | (estimate, expect dominant)  |        |
+   | External datasource API calls | (estimate)         |        |
+   | Calculation          | (estimate)                   |        |
+   | Serialisation        | (estimate)                   |        |
+   ```
+3. **Recent feature suspect**: explicitly call out "Multi-datasource feature added 3 weeks ago — PRIME SUSPECT. Recommended: review the diff (`git log --since='3 weeks ago' -- src/reports/`) before any optimisation."
+4. **N+1 query check (with expected baseline)**: state explicitly — "Expected query count: 1-3 (one for config, one for results). Observed: enable SQL logging and count. If >20 queries for 20 datasources, N+1 confirmed. Fix: batch with `WHERE datasource_id IN (...)` or eager-load via JOIN."
+5. **USE Method (Utilisation, Saturation, Errors)** OR **RED Method (Rate, Errors, Duration)** explicitly named for systematic resource analysis. State which framework you're applying and why.
+6. **Stack-appropriate profiler**: ASSUME Python/Django stack (state assumption explicitly: "Assumed Python/Django; substitute the appropriate profiler if the stack differs"). Recommend `py-spy top --pid <pid>` AND `py-spy record -o profile.svg --pid <pid>`. List alternates per stack: Node `clinic doctor`, .NET `dotnet-trace collect`, JVM `async-profiler`. **DO NOT pause to ask** — proceed with the assumption.
+
+Throughput / error-rate baseline assumptions: assume `~10 req/s sustained, 0% error rate` if not stated. **DO NOT pause to ask** — proceed with these assumed values; the team can correct in follow-up.
+7. **Bottlenecks table** with columns `# | Component | Problem | Impact (HIGH/MEDIUM/LOW) | Effort (S/M/L) | Priority`. Include Effort column for sequencing.
+8. **One-change-at-a-time discipline (mandatory section)**: state explicitly — "Fix N+1 first → re-measure with SAME load → if p99 still above target, then parallelise external calls → re-measure. NEVER both at once." Sequence the recommendations.
+9. **Per-recommendation before/after measurement plan**: each fix carries an expected improvement tied to a specific metric (e.g. "Fix N+1: expected to reduce DB time from ~2.5s to ~150ms based on 20× query reduction → measure p99 at same load before/after"). Measurement protocol: warm-up 60s, sample 10min at fixed RPS.
+
 ## Criteria
 
 - [ ] PASS: Skill establishes a baseline with exact measurements before recommending anything — records p50, p95, p99, throughput, error rate, and the conditions (load, data volume)

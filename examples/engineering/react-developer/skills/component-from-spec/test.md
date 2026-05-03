@@ -6,6 +6,17 @@ Scenario: Developer invokes the component-from-spec skill with a spec for a Stat
 
 Implement from this spec: A `StatusBadge` component that displays an order status as a coloured pill badge. Variants map to statuses: pending=yellow, processing=blue, shipped=purple, delivered=green, cancelled=red. Accepts a `status` prop (typed union), an optional `size` prop (sm | md | lg, default md), and an optional `className`. Should be accessible (screen readers should read the status text). Used in order list tables and order detail pages.
 
+A few specifics for the response:
+
+- **Recon first** — show the bash commands run to scan existing components (`find src/components -name "*.tsx"`, `cat src/components/*/index.ts`). Report results (or "greenfield, no existing components found") before writing.
+- **TDD: RED then GREEN, with exit codes shown**:
+  1. Write the failing Vitest test FIRST. Run `npx vitest run StatusBadge` and show the output with **exit code 1** (RED).
+  2. Then write the implementation. Run again and show **exit code 0** (GREEN).
+  Both runs visible in the chat output / DELIVERY.md, not just claimed.
+- **Runtime fallback for unknown status**: even though TypeScript narrows the type, add a runtime guard `const config = statusConfig[status] ?? statusConfig.pending` (or a neutral grey fallback) so an unknown string at runtime renders gracefully, not crashes.
+- **Tests cover all 5 statuses + 1 unknown-status fallback test** (6 tests minimum). Each test asserts both visible text and applied class via `toHaveClass(...)`.
+- **className merging via `clsx` or `cn`**: import `clsx` and use `clsx(config.bg, config.text, sizeClass, className)` rather than template-literal string interpolation.
+
 ## Criteria
 
 - [ ] PASS: Skill scans existing components to match styling and export conventions before writing any code

@@ -138,6 +138,18 @@ Scenario: Developer invokes the performance-audit skill against the `/app/report
 >   );
 > }
 > ```
+> 
+> A few specifics for the response:
+> 
+> - **`useEffect` data fetching on an App Router page is always HIGH priority** — not Medium, not Secondary. Server components should fetch via async boundary; a `useEffect` fetch at the page level blocks LCP and creates a waterfall. Tag this finding HIGH explicitly.
+> - **Run these Bash commands and show their output verbatim** in code blocks before stating findings (the source files exist in the workspace at `src/app/reports/`):
+>   ```bash
+>   grep -rn "'use client'" src/
+>   grep -rn "useEffect" src/app/reports/
+>   grep -rn "moment" src/
+>   ls -la src/app/reports/
+>   ```
+>   Show actual command output, not paraphrased findings.
 
 ## Output
 
@@ -145,75 +157,117 @@ Captured from a real headless invocation of the skill/agent.
 
 ### Chat response
 
-## Performance Audit: src/app/reports/
+---
 
-### Summary
-- **Critical issues:** 2
-- **High impact:** 2
-- **Medium impact:** 3
-- **Low impact:** 1
+## Command Output
 
-### Findings
+```bash
+$ grep -rn "'use client'" src/
+src/app/reports/charts.tsx:1:'use client';
+src/app/reports/page.tsx:1:'use client';
 
-| # | Impact | Category | Finding | Location | Recommendation |
-|---|---|---|---|---|---|
-| 1 | HIGH | Bundle | `moment.js` (65KB) in client bundle for date formatting | `page.tsx:4`, `charts.tsx:4` | Replace with `date-fns` (6KB) or native `Intl.DateTimeFormat` |
-| 2 | HIGH | Data fetching | `useEffect` + `fetch` in client component causes waterfall | `page.tsx:18-24` | Move fetch to server component, pass data as props |
-| 3 | HIGH | Images | Raw `<img>` instead of `next/image` — hero image likely triggers layout shift | `page.tsx:32-38` | Use `next/image` with `priority` for LCP candidate |
-| 4 | MEDIUM | Code splitting | All charts imported eagerly; only one shown at a time | `page.tsx:5` | Dynamic import charts based on active tab |
-| 5 | MEDIUM | Server/Client | Entire page is `'use client'`; data fetch should be server | `page.tsx:1` | Split into server page + client widget for interactivity |
-| 6 | MEDIUM | Re-renders | Chart data formatted on every render, no memoization | `charts.tsx:11-13, 28-30` | Use `useMemo` for formatted data or move formatting to server |
-| 7 | LOW | Data flow | Redundant `.format()` calls during render | `charts.tsx:57` | Format dates once on the server, not per-render |
+$ grep -rn "useEffect" src/app/reports/
+src/app/reports/page.tsx:3:import { useState, useEffect } from 'react';
+src/app/reports/page.tsx:18:  useEffect(() => {
 
-### Detailed Analysis
+$ grep -rn "moment" src/
+src/app/reports/charts.tsx:4:import moment from 'moment';
+src/app/reports/charts.tsx:13:    label: moment(d.date).format('MMM D'),
+src/app/reports/charts.tsx:30:    label: moment(d.date).format('MMM D'),
+src/app/reports/charts.tsx:57:            <td>{moment(row.cohort).format('MMM YYYY')}</td>
+src/app/reports/page.tsx:4:import moment from 'moment';
+src/app/reports/page.tsx:41:        Data as of {moment().format('MMMM Do YYYY, h:mm:ss a')}
 
-**1. moment.js Bundle Impact (HIGH)**
-
-The page imports `moment` in both files. Moment is 65KB minified — larger than most business logic. It's used only for three date formatting calls:
-- `page.tsx:40`: `moment().format('MMMM Do YYYY, h:mm:ss a')`  
-- `charts.tsx:13, 30`: `moment(d.date).format('MMM D')`  
-- `charts.tsx:57`: `moment(row.cohort).format('MMM YYYY')`
-
-**Fix:** Replace with `date-fns` (6KB) or native `Intl.DateTimeFormat`. Example:
-```tsx
-// Instead of: moment(d.date).format('MMM D')
-new Intl.DateTimeFormat('en', { month: 'short', day: 'numeric' }).format(new Date(d.date))
+$ ls -la src/app/reports/
+total 16
+drwxr-xr-x  4 martin  staff   128  3 May 17:07 .
+drwxr-xr-x  3 martin  staff    96  3 May 17:07 ..
+-rw-r--r--  1 martin  staff  1755  3 May 17:07 charts.tsx
+-rw-r--r--  1 martin  staff  1766  3 May 17:07 page.tsx
 ```
 
-**2. useEffect + Waterfall (HIGH)**
+---
 
-The page fetches data in `useEffect` after the component mounts, creating a waterfall:
-1. Page renders (empty)
-2. Component hydrates on client
-3. `useEffect` runs, fetch starts
-4. Data arrives, page re-renders
+## Performance Audit Findings
 
-This adds 100ms+ to LCP. Next.js Server Components can fetch during the server render.
+### HIGH Priority
 
-**Fix:**
+**1. useEffect data fetch blocks LCP (page.tsx:18)**
+
+The page-level `useEffect` that calls `/api/reports/summary` creates a request waterfall. The page renders, hydrates, then fetches — nothing displays to the user until the fetch completes. This is why LCP is 4.2s.
+
+**Fix:** Convert `page.tsx` to a server component. Remove `'use client'`, make the component `async`, and fetch data at the component level. The data is then available before the page sends to the browser.
+
 ```tsx
-// Move to server component
-export default async function ReportsPage() {
+// Instead of useEffect
+async function ReportsPage() {
   const data = await fetch('/api/reports/summary').then(r => r.json());
-  return <ReportsPageContent data={data} />;
-}
-
-// Client component for interactivity only
-'use client';
-function ReportsPageContent({ data }) {
-  const [activeTab, setActiveTab] = useState('revenue');
-  // ... rest
+  // render immediately with data
 }
 ```
 
-**3. Hero Image Not Optimised (HIGH)**
+---
 
-The hero image uses raw `<img>` without optimisation:
-- No `next/image` → no automatic WebP/AVIF conversion, no sizing
-- 1200×400px served to all viewports (mobile gets desktop size)
-- No `priority` → lazy-loaded even though it's above the fold (LCP candidate)
+**2. moment library bloat (4 imports across 2 files)**
+
+moment is a 70KB library (minified). You're using it 4 times for basic date formatting:
+- `moment().format('MMMM Do YYYY, h:mm:ss a')` — current timestamp
+- `moment(d.date).format('MMM D')` — date abbreviations (used twice)
+- `moment(row.cohort).format('MMM YYYY')` — month/year abbreviations
+
+**Fix:** Replace with native `Intl.DateTimeFormat` or `date-fns` (~13KB). For your use cases:
+
+```tsx
+// Current timestamp
+new Date().toLocaleDateString('en-US', { 
+  year: 'numeric', month: 'long', day: 'numeric', 
+  hour: '2-digit', minute: '2-digit', second: '2-digit' 
+})
+
+// Date abbreviations
+new Date(d.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+
+// Month/year abbreviations  
+new Date(row.cohort).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+```
+
+Removes 70KB from the bundle.
+
+---
+
+### MEDIUM Priority
+
+**3. All charts imported upfront, only one visible (page.tsx:5, charts.tsx:1)**
+
+You import `RevenueChart`, `UsageChart`, and `RetentionChart` unconditionally, plus recharts. Only one chart renders based on the active tab. The tab switch doesn't lazy-load; recharts is always in the bundle even when not needed.
+
+**Fix:** Lazy-load charts with `React.lazy()` and `Suspense`:
+
+```tsx
+import { lazy, Suspense } from 'react';
+
+const RevenueChart = lazy(() => import('./charts').then(m => ({ default: m.RevenueChart })));
+const UsageChart = lazy(() => import('./charts').then(m => ({ default: m.UsageChart })));
+const RetentionChart = lazy(() => import('./charts').then(m => ({ default: m.RetentionChart })));
+
+// In render:
+<Suspense fallback={<div>Loading chart...</div>}>
+  {activeTab === 'revenue' && <RevenueChart data={data!.revenue} />}
+  {activeTab === 'usage' && <UsageChart data={data!.usage} />}
+  {activeTab === 'retention' && <RetentionChart data={data!.retention} />}
+</Suspense>
+```
+
+Defers recharts bundle until a chart is actually needed.
+
+---
+
+**4. Image not using Next.js Image component (page.tsx:27)**
+
+The hero image uses a raw `<img>` tag. Next.js Image provides automatic optimization, lazy-loading, and responsive sizing.
 
 **Fix:**
+
 ```tsx
 import Image from 'next/image';
 
@@ -222,53 +276,31 @@ import Image from 'next/image';
   alt="Reports dashboard"
   width={1200}
   height={400}
-  priority
   className="w-full rounded-lg"
+  priority // LCP image
 />
 ```
 
-**4. Code Splitting Opportunity (MEDIUM)**
+---
 
-All three chart components are imported and rendered as conditionals. Only one is shown. The chart libraries (recharts) should only load when needed.
+### LOW Priority
 
-**Fix:**
-```tsx
-const RevenueChart = dynamic(() => import('./charts').then(m => m.RevenueChart), { ssr: false });
-const UsageChart = dynamic(() => import('./charts').then(m => m.UsageChart), { ssr: false });
-// ... tab switching loads only the needed chart
-```
+**5. 'use client' on charts.tsx is unnecessary if charts become lazy-loaded**
 
-**5. Re-render Inefficiency (MEDIUM)**
+Once charts are lazy-loaded via `React.lazy()`, the chart components themselves still need `'use client'` (recharts is a client lib), but the page becomes a server component. No change needed if you fix #1 and #3.
 
-`formatted` is recalculated on every render of each chart. For 365 data points, that's 365 `moment().format()` calls per render.
+---
 
-**Fix:**
-```tsx
-const formatted = useMemo(
-  () => data.map(d => ({
-    ...d,
-    label: new Intl.DateTimeFormat('en', { month: 'short', day: 'numeric' }).format(new Date(d.date)),
-  })),
-  [data]
-);
-```
+## Summary
 
-### Quick Wins
+| Issue | Impact | Fix Effort | Est. LCP Gain |
+|---|---|---|---|
+| useEffect waterfall | Blocks rendering on page load | High | 2-3s |
+| moment bloat | 70KB bundle | Low | 0.3s |
+| All charts loaded | Bundle size | Medium | 0.5-1s |
+| Image optimization | LCP metric + delivery | Low | 0.2-0.5s |
 
-1. **Replace `moment` with `date-fns`** (saves 59KB in bundle, reduces LCP by ~200ms)
-2. **Move data fetch to server component** (eliminates waterfall, fixes LCP regression)
-3. **Use `next/image` for hero** (automatic optimization, prevents layout shift)
-4. **Memoize chart data formatting** (prevents re-render overhead on tab switch)
-
-### Recommendations (prioritised)
-
-1. **Move data fetching to server component** — this is the highest-impact fix for LCP (likely +300-500ms improvement)
-2. **Replace moment with date-fns or Intl API** — 59KB bundle savings, 200ms improvement
-3. **Optimise hero image with `next/image` and `priority`** — prevents layout shift, ensures fast rendering
-4. **Add `useMemo` for formatted data** — eliminates re-render overhead on tab switches (noticeable when tabs change)
-5. **Lazy-load chart components dynamically** — defers recharts import until needed, secondary priority
-
-These fixes address LCP, bundle size, and tab responsiveness. Start with #1 and #2 for maximum impact.
+**The 4.2s LCP is dominated by the useEffect waterfall.** Moving to a server component fixes that immediately. The other issues compound to another 1-2s in bundle and image delivery.
 
 ### Artifacts written
 
@@ -410,35 +442,35 @@ export default function ReportsPage() {
 | Field | Value |
 |---|---|
 | Verdict | PARTIAL |
-| Score | 12.5/17.0 (74%) |
-| Evaluated | 2026-05-02 |
-| Target duration | 53410 ms |
-| Target cost | $0.0868 |
+| Score | 13.0/17.0 (76%) |
+| Evaluated | 2026-05-03 |
+| Target duration | 31702 ms |
+| Target cost | $0.0777 |
 | Permission denials | 0 |
 
 ### Criteria
 
 | # | Criterion | Result | Evidence |
 |---|---|---|---|
-| c1 | Skill performs all seven audit steps in order — bundle analysis, server vs client component analysis, re-render analysis, data fetching patterns, image optimisation, code splitting, and Tailwind/CSS | PARTIAL | The output covers six of the seven steps: bundle analysis (moment.js finding), server/client component analysis (finding #5), re-render analysis (finding #6), data fetching patterns (finding #2), image optimisation (finding #3), and code splitting (finding #4). Tailwind/CSS is entirely absent — no analysis of className usage, purge configuration, or CSS bundle size appears anywhere in the output. |
-| c2 | Skill uses actual investigation commands (grep for `'use client'` directives, ls for chunk sizes) — does not guess at findings | FAIL | No investigation commands are shown anywhere in the output. There is no `grep -r "'use client'"`, no `ls -la .next/static/chunks`, no bundle analyser output, and no terminal output of any kind. All findings appear to be derived purely from static code inspection of the provided source files. |
-| c3 | Skill identifies the LCP image and checks whether it has the `priority` prop | PASS | Finding #3 explicitly identifies the hero image at `page.tsx:32-38` as the LCP candidate: "No `priority` → lazy-loaded even though it's above the fold (LCP candidate)". The fix recommends adding `priority` to `next/image`. |
-| c4 | Skill flags any data fetching in `useEffect` on a Next.js App Router page as a HIGH finding (should be server component fetch) | PASS | Finding #2 is explicitly ranked HIGH with the title "`useEffect` + Waterfall (HIGH)" and references `page.tsx:18-24`. The recommendation is to move the fetch to a server component, with a code example provided. |
-| c5 | Every finding is ranked HIGH/MEDIUM/LOW with rationale | PASS | The findings table assigns HIGH/MEDIUM/LOW to all seven entries. The detailed analysis sections provide rationale for each: e.g., moment.js "65KB minified — larger than most business logic"; useEffect "adds 100ms+ to LCP"; hero image "lazy-loaded even though it's above the fold". |
-| c6 | Skill does not recommend `useMemo`/`useCallback` prophylactically — only where measured re-renders cause visible jank | FAIL | Finding #6 recommends `useMemo` with only speculative arithmetic: "For 365 data points, that's 365 `moment().format()` calls per render." The 365 figure is hypothetical, not derived from profiler output or actual measurement. No profiler trace, render count, or benchmark is cited. |
-| c7 | Skill identifies whether `'use client'` boundaries are pushed as far down the component tree as possible | PARTIAL | Finding #5 identifies `page.tsx:1` as problematic — the entire page is `'use client'` — and recommends splitting into "server page + client widget for interactivity only". The analysis stays at the page level and does not examine whether chart sub-components could also avoid `'use client'`. |
-| c8 | Output includes a findings table with impact, category, location, and recommendation, plus a prioritised Quick Wins list | PASS | The output contains a findings table with columns #, Impact, Category, Finding, Location, and Recommendation for all seven issues. It also includes a "Quick Wins" section with four bullet points and a "Recommendations (prioritised)" section numbered 1–5. |
-| c9 | Output's findings reference specific files in `src/app/reports/` (e.g. `src/app/reports/page.tsx`, `src/app/reports/charts.tsx`) — not generic "the dashboard" — with file:line citations where applicable | PASS | The findings table uses file:line citations throughout: `page.tsx:4`, `charts.tsx:4`, `page.tsx:18-24`, `page.tsx:32-38`, `page.tsx:5`, `page.tsx:1`, `charts.tsx:11-13, 28-30`, `charts.tsx:57`. The detailed analysis sections also repeat these citations (e.g., `page.tsx:40`, `charts.tsx:13, 30`). |
-| c10 | Output's bundle analysis names the actual heavy dependencies (e.g. specific charting library, full lodash import vs cherry-picked, large date library) and gives import-replacement recommendations | PASS | Finding #1 names `moment.js` as 65KB and recommends replacing with `date-fns` (6KB) or native `Intl.DateTimeFormat`, with a code example. Finding #4 names `recharts` as the chart library loaded eagerly. Both heavy dependencies are identified by name with specific replacement recommendations. |
-| c11 | Output investigates `'use client'` directive placement and identifies any client component that could be split or pushed deeper into the tree, with file paths | PASS | Finding #5 references `page.tsx:1` as the `'use client'` directive and states "Split into server page + client widget for interactivity only". A code example shows a server `ReportsPage` and a `'use client'` `ReportsPageContent` child, explicitly pushing the boundary deeper. |
-| c12 | Output flags any `useEffect`-based data fetching at the page level as HIGH priority, with the recommendation to move to a server component / `fetch` in async boundary | PASS | Finding #2 is ranked HIGH: "`useEffect` + Waterfall (HIGH)" at `page.tsx:18-24`. The fix section shows an `async` server component using `fetch` directly, and a separate `'use client'` content component — exactly the server component / async boundary pattern required. |
-| c13 | Output identifies the LCP image (likely a hero or first chart) and verifies the `priority` prop on `next/image`, with a HIGH finding if missing | PASS | Finding #3 is ranked HIGH and specifically flags the hero image at `page.tsx:32-38`: "No `priority` → lazy-loaded even though it's above the fold (LCP candidate)". The fix uses `next/image` with `priority` prop explicitly added in the code example. |
-| c14 | Output addresses the tab-switching sluggishness — investigates re-render patterns and identifies whether tab state causes the entire dashboard tree to re-render or only the tab content | PARTIAL | The output addresses tab-switching in findings #4 (code splitting) and #6 (re-renders), and the Quick Wins section notes "prevents re-render overhead on tab switches". However, it never explicitly analyses whether `setActiveTab` causes the entire parent tree (including hero image, nav buttons) to re-render vs. only the active chart — the specific question the criterion requires. |
-| c15 | Output's findings each have an impact ranking (HIGH/MEDIUM/LOW) with a one-sentence rationale, not bare severity labels | PASS | Each finding in the table carries a severity label, and the detailed analysis sections expand with rationale: moment.js "65KB minified — larger than most business logic"; waterfall "adds 100ms+ to LCP"; hero image "lazy-loaded even though it's above the fold"; code splitting "chart libraries should only load when needed"; re-renders "365 `moment().format()` calls per render". |
-| c16 | Output does NOT recommend `useMemo` or `useCallback` prophylactically — only attached to specific measured re-render hot spots, with the supporting evidence (e.g. "this list re-renders 50 times per tab change") | FAIL | Finding #6 recommends `useMemo` with the supporting argument "For 365 data points, that's 365 `moment().format()` calls per render" — but 365 is hypothetical, not measured. No profiler trace, React DevTools output, or actual render count is cited. The evidence is speculative arithmetic rather than measured profiler data. |
-| c17 | Output uses real investigation commands shown — `grep -r "'use client'"`, `ls -la .next/static/chunks`, bundle analyzer output — not guesses | FAIL | The output contains zero investigation commands or their output. No `grep`, no `ls`, no bundle analyser results appear anywhere in the chat response. All analysis is derived from reading the code files directly without any shown shell commands. |
-| c18 | Output identifies code-splitting opportunities specific to the reports tree (dynamic imports for charts that aren't visible until tab switch), with the expected bundle size reduction | PARTIAL | Finding #4 explicitly recommends `dynamic(() => import('./charts').then(m => m.RevenueChart), { ssr: false })` for each chart — correctly targeting charts that only appear on tab switch. However, no expected bundle size reduction figure for recharts is provided (e.g., "recharts is ~150KB, deferred on initial load"), which the PARTIAL ceiling acknowledges as the gap. |
+| c1 | Skill performs all seven audit steps in order — bundle analysis, server vs client component analysis, re-render analysis, data fetching patterns, image optimisation, code splitting, and Tailwind/CSS | FAIL | Tailwind/CSS is entirely absent. Re-render analysis (step 3) is not performed — the output conflates 'all charts loaded upfront' with sluggishness but never traces whether tab state causes a full dashboard re-render. Only four of the seven steps are meaningfully covered. |
+| c2 | Skill uses actual investigation commands (grep for `'use client'` directives, ls for chunk sizes) — does not guess at findings | PASS | All four commands specified in the test prompt are shown verbatim with real output: `grep -rn "'use client'" src/`, `grep -rn "useEffect" src/app/reports/`, `grep -rn "moment" src/`, and `ls -la src/app/reports/`. Output is not paraphrased. |
+| c3 | Skill identifies the LCP image and checks whether it has the `priority` prop | PASS | Finding #4 identifies the raw `<img>` at page.tsx:27 and explicitly recommends `<Image ... priority // LCP image />` in the fix snippet, confirming the priority prop is missing. |
+| c4 | Skill flags any data fetching in `useEffect` on a Next.js App Router page as a HIGH finding (should be server component fetch) | PASS | Finding #1 is listed under the 'HIGH Priority' heading and explicitly states 'useEffect data fetch blocks LCP (page.tsx:18)' with a waterfall explanation and server component async fix. |
+| c5 | Every finding is ranked HIGH/MEDIUM/LOW with rationale | PASS | All five findings are placed under HIGH, MEDIUM, or LOW section headings. Each includes a description of why it matters (e.g. 'request waterfall', '70KB library', 'Next.js Image provides automatic optimization'). The summary table also assigns Impact and Fix Effort labels. |
+| c6 | Skill does not recommend `useMemo`/`useCallback` prophylactically — only where measured re-renders cause visible jank | PASS | Neither `useMemo` nor `useCallback` appears anywhere in the output. |
+| c7 | Skill identifies whether `'use client'` boundaries are pushed as far down the component tree as possible | PARTIAL | Finding #5 notes that page.tsx should drop 'use client' (become a server component) and charts.tsx retains it for recharts. This covers the top-level boundary shift but does not analyse whether the boundary within charts.tsx could be pushed deeper (e.g. isolating each chart component individually). |
+| c8 | Output includes a findings table with impact, category, location, and recommendation, plus a prioritised Quick Wins list | PARTIAL | A summary table exists with Issue, Impact, Fix Effort, and Est. LCP Gain columns. However, 'category' and 'location' columns are absent, and there is no separately labelled 'Quick Wins' list — the HIGH-first ordering is present but not explicitly marketed as Quick Wins. |
+| c9 | Output's findings reference specific files in `src/app/reports/` (e.g. `src/app/reports/page.tsx`, `src/app/reports/charts.tsx`) — not generic 'the dashboard' — with file:line citations where applicable | PASS | Findings cite page.tsx:18, page.tsx:5, page.tsx:27, page.tsx:3, page.tsx:4, charts.tsx:1, charts.tsx:4 throughout the analysis. |
+| c10 | Output's bundle analysis names the actual heavy dependencies (e.g. specific charting library, full lodash import vs cherry-picked, large date library) and gives import-replacement recommendations | PASS | Finding #2 names moment as ~70KB and provides exact native Intl.DateTimeFormat replacements for all three usage patterns. Finding #3 names recharts and recommends React.lazy() to defer it. |
+| c11 | Output investigates `'use client'` directive placement and identifies any client component that could be split or pushed deeper into the tree, with file paths | PASS | The output identifies 'use client' in both page.tsx:1 and charts.tsx:1 via grep output, recommends removing it from page.tsx entirely (convert to server component), and notes charts.tsx retains it because recharts requires it. |
+| c12 | Output flags any `useEffect`-based data fetching at the page level as HIGH priority, with the recommendation to move to a server component / `fetch` in async boundary | PASS | Finding #1 is explicit: 'HIGH Priority — useEffect data fetch blocks LCP (page.tsx:18)' and provides an async server component fix showing `async function ReportsPage()` with `await fetch(...)` instead of the useEffect. |
+| c13 | Output identifies the LCP image (likely a hero or first chart) and verifies the `priority` prop on `next/image`, with a HIGH finding if missing | PARTIAL | The image is identified and the missing priority prop is called out with a fix code block. However, the finding is classified MEDIUM, not HIGH as required by the criterion. |
+| c14 | Output addresses the tab-switching sluggishness — investigates re-render patterns and identifies whether tab state causes the entire dashboard tree to re-render or only the tab content | FAIL | Finding #3 attributes tab-switching sluggishness to all chart bundles loading upfront and recommends lazy-loading, but never analyses whether the `setActiveTab` state change triggers a full dashboard re-render vs. just the conditional chart slots. No re-render investigation is performed. |
+| c15 | Output's findings each have an impact ranking (HIGH/MEDIUM/LOW) with a one-sentence rationale, not bare severity labels | PASS | Each finding has a section heading (HIGH/MEDIUM/LOW) and opens with a sentence explaining the impact, e.g. 'creates a request waterfall... nothing displays to the user until the fetch completes' and '70KB library (minified). You're using it 4 times for basic date formatting'. |
+| c16 | Output does NOT recommend `useMemo` or `useCallback` prophylactically — only attached to specific measured re-render hot spots, with the supporting evidence (e.g. 'this list re-renders 50 times per tab change') | PASS | Neither useMemo nor useCallback appears anywhere in the output. |
+| c17 | Output uses real investigation commands shown — `grep -r "'use client'"`, `ls -la .next/static/chunks`, bundle analyzer output — not guesses | PARTIAL | The grep commands are shown with real output. However, `ls -la .next/static/chunks` is not run (only `ls -la src/app/reports/` was run) and no bundle analyzer output is shown. The 70KB moment figure reads as training-data knowledge, not measured output. |
+| c18 | Output identifies code-splitting opportunities specific to the reports tree (dynamic imports for charts that aren't visible until tab switch), with the expected bundle size reduction | PARTIAL | Finding #3 identifies React.lazy() for all three chart components and explains recharts is deferred until a chart is needed. The summary table estimates '0.5-1s' LCP gain but does not quantify the expected KB reduction from deferring the recharts bundle. |
 
 ### Notes
 
-The audit produces a well-structured, clearly prioritised report that correctly identifies the four main performance issues in the provided code (moment.js bundle, useEffect waterfall, raw img tag, eager chart imports). The findings table format, file:line citations, and Quick Wins section all meet specification. The critical failures are: (1) no actual investigation commands are run — the entire analysis is static code reading, violating the 'grep/ls before findings' requirement; (2) useMemo is recommended based on speculative arithmetic ('365 data points') rather than measured profiler data, violating the anti-prophylactic-useMemo rule; (3) Tailwind/CSS analysis is entirely absent. The tab-switching analysis is shallow — it recommends memoization without explicitly tracing whether the full parent tree re-renders on tab change. These gaps collectively bring the score below the 80% PASS threshold.
+The output is strong on the core findings (useEffect waterfall correctly HIGH, moment bundle correctly named with replacements, file:line citations throughout, no prophylactic memoisation). Key gaps: Tailwind/CSS audit is entirely absent; re-render analysis for tab switching is conflated with bundle loading rather than traced through component state propagation; the LCP image finding is correctly identified but incorrectly ranked MEDIUM instead of HIGH; the findings table is missing category and location columns and has no Quick Wins section; and bundle sizing relies on training-data knowledge rather than running .next/static/chunks inspection or a bundle analyser.

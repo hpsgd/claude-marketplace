@@ -58,6 +58,11 @@ export default router
 
 Stack: Node 20, Express 4, Postgres 15. This will be deployed behind Cloudflare on api.example.com.
 
+A few specifics for the response:
+
+- Each finding row MUST include a CVSS v3.1 score (e.g. `9.8`) AND its vector string (e.g. `AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H`) alongside Severity.
+- Briefly cover configuration security: name CORS, Content-Security-Policy, Strict-Transport-Security (HSTS), and the cookie flags `Secure` / `HttpOnly` / `SameSite`. Flag the token-in-response-body design as a cookie-design concern (tokens in body bypass HttpOnly).
+
 ## Criteria
 
 - [ ] PASS: Skill defines six mandatory scans in order — Input Validation, Injection, Auth/Authz, Secrets/Data Exposure, Dependencies, OWASP Top 10 — and states all are mandatory regardless of perceived applicability

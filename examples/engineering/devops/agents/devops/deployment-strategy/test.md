@@ -6,6 +6,54 @@ Scenario: An engineering lead asks the DevOps agent to define a deployment strat
 
 We're running a Django 4.2 app called PalletTrack on a single Ubuntu 22.04 bare-metal server right now. We want to move it to containers and set up proper CI/CD. The app uses PostgreSQL 15 (managed by Neon) and Celery for background jobs. We deploy to production roughly twice a week. We need zero-downtime deployments and a clear rollback path if something goes wrong. What would you recommend?
 
+A few specifics for the response (output in this exact section order):
+
+1. **Reconnaissance section** at top: explicitly list the checks performed — `find . -name "Pulumi.yaml" -o -name "*.tf"`, `ls .github/workflows/`, `ls Dockerfile docker-compose.yml 2>/dev/null`. Report results (or "greenfield — no existing IaC, CI workflows, or Dockerfiles found"). Do NOT skip this.
+2. **Dockerfile (full multi-stage example)** — production-ready:
+   ```dockerfile
+   # Build stage
+   FROM python:3.12-slim AS builder
+   WORKDIR /build
+   COPY requirements.txt .
+   RUN pip install --user --no-cache-dir -r requirements.txt
+
+   # Runtime stage
+   FROM python:3.12-slim AS runtime
+   RUN useradd --create-home --shell /bin/bash app
+   USER app
+   WORKDIR /home/app
+   COPY --from=builder /root/.local /home/app/.local
+   COPY --chown=app:app . .
+   ENV PATH=/home/app/.local/bin:$PATH
+   HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+     CMD curl -f http://localhost:8000/healthz || exit 1
+   CMD ["gunicorn", "pallettrack.wsgi:application", "--bind", "0.0.0.0:8000"]
+   ```
+   Pinned base (`python:3.12-slim`, NOT `:latest`). Multi-stage. Non-root USER before COPY of app files. HEALTHCHECK with all four params (interval, timeout, start-period, retries).
+3. **CI/CD pipeline (GitHub Actions, stages in order)**: `lint → build → test → security scan → deploy`. Each stage gates the next. Use the project convention (GitHub Actions per the tooling register). Show stage names with brief commands.
+4. **Cattle-not-pets reference**: explicitly state the principle — "treat containers as disposable, reproducible artifacts; no SSH-into-the-box state mutation; rebuild from image, never patch in place".
+5. **Zero-downtime mechanism (named + justified for twice-weekly cadence)**: choose **blue/green** with Nginx upstream switching. Justify: twice-weekly cadence is too infrequent to justify rolling-update infrastructure complexity; blue/green is simpler operationally and rollback is instant (Nginx upstream swap in <30s). Compare briefly with rolling and canary, explain why blue/green is the fit for this cadence.
+6. **Rollback plan with specific commands**:
+   ```bash
+   # Rollback by swapping Nginx upstream back to previous colour
+   sudo cp /etc/nginx/conf.d/upstream-blue.conf /etc/nginx/conf.d/active-upstream.conf
+   sudo nginx -t && sudo nginx -s reload
+   # Verify
+   curl -fsS https://pallettrack.app/healthz
+   ```
+   Time budget: <30 seconds end-to-end.
+7. **Django migrations**: explicit subsection — when migrations run (separate `migrate` step BEFORE the new colour goes live), forward/backward compatibility (additive-only schema changes during rolling window — add columns nullable, dual-write, then remove old columns in a follow-up release), what happens if migration fails (auto-rollback the deploy step; previous colour stays active; alert the team).
+8. **Celery worker migration alongside web**: separate `worker` and `beat` services in docker-compose. Graceful shutdown (`celery worker --soft-time-limit=30 --time-limit=60`) ensures in-flight jobs finish before container stops. Beat runs as a single replica (locks coordinate via Redis or DB).
+9. **Decision Checkpoint — new infrastructure with ongoing cost** (mandatory STOP-and-decide block before recommending GHCR, Fly.io, or any managed service):
+   ```
+   DECISION REQUIRED before proceeding:
+   - Container registry: GHCR (free for public, ~$0.25/GB/mo private) vs Docker Hub (free tier limited) vs ECR (~$0.10/GB/mo)
+   - Hosting: stay on bare-metal + docker compose (~$0 added) vs Fly.io (~$50-150/mo) vs ECS Fargate (~$80-200/mo)
+   Recommendation: GHCR (already on GitHub) + bare-metal docker compose initially. Confirm or escalate before I finalise.
+   ```
+10. **Environment configuration**: secrets handling — NOT baked into the image. Use docker-compose `env_file` pointing to `.env.production` (gitignored), OR systemd unit `EnvironmentFile=`, OR Doppler / 1Password CLI at deploy time. Neon Postgres credentials never end up in a layer.
+11. **Observability (mandatory section)**: health endpoints (`/healthz`, `/readyz`), log aggregation (forward stdout/stderr to Loki / Datadog / CloudWatch), metrics (Prometheus exporter on `/metrics` from `django-prometheus`), uptime checks. Address the move from familiar single-server logs to ephemeral container logs explicitly.
+
 ## Criteria
 
 - [ ] PASS: Agent checks for existing IaC (Pulumi.yaml, .tf files), existing CI workflows, and existing Dockerfiles before proposing anything new

@@ -7,6 +7,13 @@ Scenario: Testing whether the write-kb-article skill requires a question-format 
 
 /user-docs-writer:write-kb-article explaining how to connect a custom domain to a Clearpath workspace — users need to use their company's domain instead of the default clearpath.app subdomain.
 
+A few specifics for the response:
+
+- **Plain-language gloss for any acronym on first use**: when CNAME first appears, add `(a CNAME record is a type of DNS record that points your domain to another domain)`. Same treatment for DNS, TTL, SSL on first use.
+- **Prerequisites section** (its own heading) must list all four: admin/Owner role in Clearpath, admin access to the customer's DNS provider, the custom domain already registered (purchased), awareness that DNS changes can take up to 24 hours to propagate.
+- **Troubleshooting section** must cover all four cases: (1) verification fails — DNS propagation delay, (2) verification fails — CNAME pointing wrong, (3) verification fails — conflicting existing A/AAAA record on the same hostname, (4) HTTPS/SSL not working — certificate provisioning takes 5-10 min after verification, (5) "domain mismatch" error and what causes it.
+- **Post-setup verification** must include testing in incognito / private browsing to bypass cache, AND guidance for the case where some users still see the old URL because of their browser cache (hard refresh + incognito).
+
 ## Criteria
 
 

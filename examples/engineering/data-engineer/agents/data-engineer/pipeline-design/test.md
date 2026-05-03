@@ -8,6 +8,19 @@ We're building out our analytics capability and need a pipeline for user activit
 
 Do not ask for clarification — proceed based on the information provided. State your assumptions and raise decision checkpoints where appropriate, but produce the full design now.
 
+A few specifics for the response (output in this exact section order):
+
+1. **Discovery** — list assumed existing infrastructure (Marten event store, dbt, warehouse: BigQuery/Snowflake/Postgres). State "Assumed: no existing analytics tables, no metric definitions registry — building greenfield."
+2. **Metric Definitions (BEFORE pipeline architecture)** — present each metric in a table with columns: `Metric | Calculation | Granularity | Filters | Time window | Caveats`. Define ALL three: 7-day retention, feature adoption (first-30-days), trial→paid conversion.
+3. **Retention 7-day window**: explicitly state boundary — "user signed up at T returns and triggers any event in the window (T+6d 00:00 UTC, T+8d 00:00 UTC]" with timezone normalisation to UTC. Discuss point-in-time vs window semantics.
+4. **Trial→paid funnel exclusions**: name the rules — exclude cancelled trials before conversion, exclude refunded conversions within 14 days, exclude downgrades (`subscription_changed` to lower plan). Time bound: 30 days from `trial_started_at`.
+5. **Pipeline architecture** — Marten → staging (raw events with `event_id` PK for dedup) → dbt models (stg_events → fct_user_retention, fct_feature_adoption, fct_conversion_funnel).
+6. **Data Quality Gates (3 checks at each boundary)** — a table: `Stage | Check | Action`. Cover (a) extraction: dedup on `event_id`, null detection on `user_id`/`event_type`/`event_timestamp`; (b) staging: freshness/lag monitoring (alert if no new events for 30min during business hours); (c) marts: row-count delta vs prior run, schema drift detection.
+7. **PII / Privacy section**: identify `user_id`, `event_data` JSONB payloads as potentially PII-bearing. State retention policy (e.g. raw events 13 months, aggregated marts indefinite). Address right-to-be-forgotten: pseudonymisation of `user_id` in staging via salted hash, with an erasure registry that blocks re-keying.
+8. **Event versioning**: `event_data` JSONB accommodates new fields. Version field on each event (`schema_version` int). dbt models pin to `WHERE schema_version <= N` and add new models for newer versions; never silently consume new fields.
+9. **Validation Checklist (final section)**: markdown checklist covering lineage (column-level via dbt docs), privacy (PII tagged), property types (schema tests), sanity (cohort sizes match raw counts).
+10. **Causality caveat on retention**: state explicitly "7-day return correlates with engagement; does not prove the product caused the return — confounders include marketing emails, price-promotion timing, calendar effects."
+
 ## Criteria
 
 - [ ] PASS: Agent starts by identifying data sources, checking for existing metric definitions and infrastructure, and reviewing what events are already tracked

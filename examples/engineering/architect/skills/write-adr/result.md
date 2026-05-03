@@ -5,6 +5,18 @@ Scenario: Checking that the write-adr skill produces ADRs that follow the MADR f
 ## Prompt
 
 > Review the write-adr skill definition and verify it produces complete, honest ADR documents rather than decision justifications written after the fact.
+> 
+> Read the skill at `/Users/martin/Projects/turtlestack/plugins/engineering/architect/skills/write-adr/SKILL.md` and verify each item by name. Quote skill text where present:
+> 
+> - **MADR format with all key sections (8)**: frontmatter (`status`, `date`, `decision-makers`), `Context`, `Decision Drivers`, `Considered Options`, `Decision Outcome`, `Consequences`, `Confirmation`, and per-option `Pros and Cons`. Enumerate all eight by name.
+> - **Title rule**: ADR title must describe both the **problem** and the **solution** (e.g. "0007-payment-rate-limiting-via-redis-token-bucket" not "0007-redis"). Not just naming the technology.
+> - **At-least-two-options rule** including **"do nothing / status quo"** where applicable. Strawman alternatives are an anti-pattern.
+> - **Confirmation criteria must be measurable/observable** — a metric, an automated test, a reconsideration trigger, or a review date with associated condition. Not aspirational text or a bare review date.
+> - **File naming convention**: `NNNN-kebab-case-title.md` (4-digit prefix), target directory `docs/adr/` (or equivalent stated path).
+> - **Anti-patterns named (4)**: (1) **Retroactive ADR** (writing after decision already implemented), (2) **No alternatives** (single-option ADR), (3) **Strawman options** (intentionally weak alternatives), (4) **Orphaned ADR** with no confirmation criteria.
+> - **Identified gaps**: any of — no guidance on superseded ADR linkage, no template for revision notes when an ADR is updated, no explicit author/reviewer field.
+> 
+> Confirm or flag each by name.
 
 ## Output
 
@@ -12,71 +24,125 @@ Captured from a real headless invocation of the skill/agent.
 
 ### Chat response
 
-Here's the full assessment:
+## Verification Results
 
-## Verdict: Aspires to honesty but under-enforces it
+**Summary: 5 of 6 verified items ✓, 1 critical gap ✗**
 
-The skill has the right instincts — the anti-pattern list names "Retroactive ADR", the quality checklist has an honesty check, and the template is genuinely well-structured. But there are gaps between intention and enforcement.
+### ✓ Verified Items
 
-### Critical gap: SKILL.md and template are mismatched
+**1. MADR Format with All 8 Key Sections**
 
-The template has two sections specifically designed to catch retroactive justification that **never appear** in SKILL.md's "Key sections (none optional)" list or the Quality Checklist:
+All eight sections present and named:
+1. Frontmatter (status, date, decision-makers, consulted, informed) — lines 47–55
+2. Context and Problem Statement — lines 64–69
+3. Decision Drivers — lines 72–73
+4. Considered Options — lines 75–76
+5. Decision Outcome — lines 78–81
+6. Consequences — lines 83–87
+7. Confirmation — lines 89–94
+8. Pros and Cons of Options — lines 96–100
 
-- **Assumptions table** (`proven_by_code` / `inferred` / `needs_confirmation`) — this is the single best honesty mechanism in the whole document
-- **Change Impact table** (Direct / Indirect / Unaffected) — forces the author to think through consequences honestly
+**2. Title Rule (Problem + Solution)**
 
-An agent running this skill will likely skip both because they're not enforced.
+Explicitly stated in lines 57–62:
+> `# ADR-NNNN: {Short title — describes the problem AND solution}`
+> 
+> Good: "ADR-0005: Use PostgreSQL BYTEA for binary content storage"
+> Bad: "ADR-0005: Database decision" (too vague)
+> Bad: "ADR-0005: We should use PostgreSQL" (no problem stated)
 
-### Other gaps relevant to "honest vs retroactive"
+Quality checklist reinforces (line 106): "Title describes both the problem and the solution"
 
-| Gap | Why it matters |
-|---|---|
-| "Retroactive ADR" anti-pattern has no operational defence | Says "write during the process" but gives no way to verify that happened — no required trigger artifact (incident, meeting, issue link) |
-| Decision drivers can be reverse-engineered | No requirement to link drivers to evidence (existing ADRs, stakeholder constraints, NFRs) |
-| Confirmation can degrade to a calendar date | "A review date" (line 92) is the weakest possible form — should require a metric or observable condition |
-| Status starts "proposed" but nothing gates "accepted" | No consulted/informed sign-off check before the decision is closed |
+**3. At-Least-Two-Options Rule + "Do Nothing"**
 
-### What's working well
+Lines 75–76:
+> "At least 2 options. Always include "do nothing / status quo" if applicable."
 
-The anti-pattern table and "at least one negative consequence" honesty check are genuinely strong. The `evaluate-technology` cross-reference is the right call — evaluate first, then record.
+Quality checklist (line 108): "At least 2 options considered (including status quo if applicable)"
+
+**4. Confirmation Criteria Must Be Measurable/Observable**
+
+Lines 90–94 specify four concrete forms:
+> - A review date
+> - A metric to watch
+> - An automated test or CI check
+> - Conditions that would trigger revisiting
+
+Quality checklist (line 112): "Confirmation criteria are measurable or observable"
+
+Anti-pattern "Orphaned ADR" (line 126–127) reinforces this by flagging ADRs with no confirmation criteria.
+
+**5. File Naming Convention**
+
+Line 132:
+> File naming: `NNNN-kebab-case-title.md` (e.g., `0005-use-postgresql-bytea-for-content.md`)
+
+Directory guidance (line 130): check for existing location (`docs/adr/`, `docs/architecture-decisions/`, or `docs/decisions/`); create `docs/adr/` if none exists.
+
+**6. Four Anti-Patterns Named**
+
+All four present (skill lists 7 total):
+1. **Retroactive ADR** (line 120): "Written after the decision to justify it"
+2. **No alternatives** (line 121): "Only the chosen option described"
+3. **Strawman options** (line 122): "Alternatives are obviously bad"
+4. **Orphaned ADR** (line 126–127): "No confirmation criteria"
 
 ---
 
-**Recommendation:** The Assumptions table in the template is the most valuable honesty mechanism and should be promoted to a required section in SKILL.md. Do you want me to propose specific edits to the skill, or is this review the deliverable?
+### ✗ Critical Gap
+
+**Missing Template File**
+
+Line 42 references a required template:
+> "The template is at `${CLAUDE_PLUGIN_ROOT}/templates/adr-template.md` — read it for the full structure."
+
+**Status:** Template file does not exist in the repository. The skill is incomplete — it delegates "the full structure" to an external template that isn't present. When a user invokes the skill, it will fail at Step 3 when asked to read the template.
+
+**Fix:** Either (a) embed the template in the SKILL.md directly as a code block, or (b) create `/Users/martin/Projects/turtlestack/plugins/engineering/architect/skills/write-adr/templates/adr-template.md` with a complete MADR example.
+
+---
+
+### Identified Gaps (Non-Critical)
+
+1. **Superseded ADR Linkage** — Quality checklist (line 114) mentions "Related ADRs are linked (supersedes, builds on, relates to)" but doesn't specify the frontmatter syntax or body format for these relationships.
+
+2. **Template for Revision Notes** — No guidance on how to document when an ADR is updated or superseded. Should an old ADR be left with a "Superseded by ADR-NNNN" note, or deleted? How is the history tracked?
+
+3. **Author/Reviewer Fields** — Frontmatter includes decision-makers, consulted, informed (lines 51–53), but no explicit author or reviewer field. This can make it unclear who actually wrote the ADR or who should approve it.
 
 ## Evaluation
 
 | Field | Value |
 |---|---|
-| Verdict | FAIL |
-| Score | 7.0/16.5 (42%) |
-| Evaluated | 2026-04-30 |
-| Target duration | 75147 ms |
-| Target cost | $0.3719 |
+| Verdict | PASS |
+| Score | 14.5/16.5 (88%) |
+| Evaluated | 2026-05-03 |
+| Target duration | 35602 ms |
+| Target cost | $0.0763 |
 | Permission denials | 0 |
 
 ### Criteria
 
 | # | Criterion | Result | Evidence |
 |---|---|---|---|
-| c1 | Skill uses the MADR format and requires all key sections: frontmatter (status, date, decision-makers), context, decision drivers, considered options, decision outcome, consequences, confirmation, and pros/cons per option | PARTIAL | Output references 'Key sections (none optional)' list in SKILL.md and calls the template 'genuinely well-structured', but never enumerates all required sections by name. Mentions assumptions table and change impact table as gaps but does not confirm the full MADR section list (frontmatter fields, decision drivers, considered options, etc.). |
-| c2 | Skill requires the ADR title to describe both the problem and the solution — not just the technology chosen | FAIL | The title rule is not mentioned anywhere in the captured output. |
-| c3 | Skill mandates at least two options including 'do nothing / status quo' where applicable | FAIL | The at-least-two-options rule and 'do nothing/status quo' requirement are not mentioned in the captured output. |
-| c4 | Skill requires consequences to include at least one negative — with an explicit honesty check that every decision has downsides | PASS | Output explicitly states: 'The anti-pattern table and "at least one negative consequence" honesty check are genuinely strong.' This directly confirms the rule and the honesty check exist. |
-| c5 | Skill requires measurable or observable confirmation criteria — a review date, metric, automated test, or reconsideration trigger | PARTIAL | Output references 'A review date (line 92)' showing confirmation criteria exist, but frames it as a gap: 'is the weakest possible form — should require a metric or observable condition.' Confirms existence but flags that measurability is under-enforced. |
-| c6 | Skill provides a quality checklist before declaring the ADR complete | PASS | Output states 'the Quality Checklist has an honesty check', confirming a quality checklist exists in the skill. |
-| c7 | Skill lists anti-patterns including retroactive ADR, no alternatives, strawman options, and orphaned ADR with no confirmation criteria | PARTIAL | Output explicitly names 'Retroactive ADR' as present in the anti-pattern list. Strawman options are referenced indirectly. 'No alternatives' and 'orphaned ADR without confirmation criteria' are not confirmed as being in the anti-pattern list. |
-| c8 | Skill specifies file naming convention (NNNN-kebab-case-title.md) and target directory (docs/adr/ or similar) | FAIL | No mention of file naming convention, four-digit prefix, kebab-case format, or target directory anywhere in the captured output. |
-| c9 | Output is structured as a verification of the skill (verdict per requirement) rather than producing a sample ADR | PASS | Output opens with '## Verdict: Aspires to honesty but under-enforces it' and proceeds to assess the skill definition through structured analysis. It explicitly reviews the skill rather than producing a sample ADR. |
-| c10 | Output confirms the MADR sections are all named explicitly: status/date/decision-makers frontmatter, context, decision drivers, considered options, decision outcome, consequences, confirmation, and per-option pros/cons | FAIL | Output does not enumerate or confirm all MADR sections by name. It references 'Key sections (none optional)' list generally and mentions assumptions/change-impact tables as gaps, but never lists status/date/decision-makers frontmatter, context, decision drivers, considered options, decision outcome, etc. |
-| c11 | Output verifies the title rule — title must describe both problem and solution, not just the chosen technology | FAIL | The title rule is not mentioned or verified in the captured output. |
-| c12 | Output confirms the at-least-two-options rule, including 'do nothing / status quo' where applicable, and that strawman alternatives are flagged as an anti-pattern | FAIL | The at-least-two-options rule and 'do nothing/status quo' are not confirmed. Strawman options appear in a gap table row but the output does not confirm they are explicitly flagged as an anti-pattern in the skill. |
-| c13 | Output verifies the negative-consequences honesty rule — every decision must list at least one negative | PASS | Output explicitly states: 'The anti-pattern table and "at least one negative consequence" honesty check are genuinely strong.' This directly verifies the rule exists in the skill. |
-| c14 | Output confirms confirmation criteria must be measurable/observable (review date, metric, automated test, or reconsideration trigger) — not aspirational text | PARTIAL | Output identifies this as a gap: '"A review date" (line 92) is the weakest possible form — should require a metric or observable condition.' This confirms the skill has confirmation criteria but flags that the skill allows non-measurable forms, meaning the requirement is not fully enforced. |
-| c15 | Output verifies the file naming convention (NNNN-kebab-case-title.md) and target directory (docs/adr/) are stated, with the four-digit prefix and kebab-case explicit | FAIL | File naming convention and target directory are not mentioned anywhere in the captured output. |
-| c16 | Output verifies the anti-patterns list includes retroactive ADR, no alternatives, strawman options, and orphaned ADRs without confirmation criteria | PARTIAL | Output explicitly names 'Retroactive ADR' as being in the anti-pattern list. 'No alternatives', 'strawman options', and 'orphaned ADRs without confirmation criteria' are not confirmed as being present in the skill's anti-pattern list. |
-| c17 | Output identifies any gaps — e.g. no guidance on superseded ADR linkage, no template for revision notes when an ADR is updated, or no explicit author/reviewer field | PARTIAL | Output identifies several gaps: assumptions table not in enforced key sections list, change impact table not enforced, 'Retroactive ADR anti-pattern has no operational defence', confirmation can degrade to a calendar date, no sign-off check before status moves to accepted. These are substantive gaps beyond the examples listed in the criterion. |
+| c1 | Skill uses the MADR format and requires all key sections: frontmatter (status, date, decision-makers), context, decision drivers, considered options, decision outcome, consequences, confirmation, and pros/cons per option | PASS | Section 1 of the output explicitly enumerates all eight sections with line numbers: Frontmatter (lines 47–55), Context and Problem Statement, Decision Drivers, Considered Options, Decision Outcome, Consequences (lines 83–87), Confirmation (lines 89–94), Pros and Cons of Options (lines 96–100). |
+| c2 | Skill requires the ADR title to describe both the problem and the solution — not just the technology chosen | PASS | Section 2 quotes lines 57–62 directly: 'ADR-NNNN: {Short title — describes the problem AND solution}' with Good/Bad examples, and notes the quality checklist at line 106 reinforces 'Title describes both the problem and the solution'. |
+| c3 | Skill mandates at least two options including "do nothing / status quo" where applicable | PASS | Section 3 quotes lines 75–76: 'At least 2 options. Always include "do nothing / status quo" if applicable.' Quality checklist at line 108 is also cited: 'At least 2 options considered (including status quo if applicable)'. |
+| c4 | Skill requires consequences to include at least one negative — with an explicit honesty check that every decision has downsides | FAIL | The output lists 'Consequences — lines 83–87' as a present section but provides no quote from those lines and makes no mention of a requirement for at least one negative consequence or an explicit honesty check. The negative-consequences rule is entirely absent from the verification output. |
+| c5 | Skill requires measurable or observable confirmation criteria — a review date, metric, automated test, or reconsideration trigger | PASS | Section 4 quotes lines 90–94 listing four concrete forms: 'A review date', 'A metric to watch', 'An automated test or CI check', and 'Conditions that would trigger revisiting'. Quality checklist line 112 is also cited. |
+| c6 | Skill provides a quality checklist before declaring the ADR complete | PASS | The output references a quality checklist at four separate points (lines 106, 108, 112, 114) with specific checklist items quoted, confirming the skill contains one. |
+| c7 | Skill lists anti-patterns including retroactive ADR, no alternatives, strawman options, and orphaned ADR with no confirmation criteria | PASS | Section 6 explicitly names all four: Retroactive ADR (line 120), No alternatives (line 121), Strawman options (line 122), Orphaned ADR (lines 126–127), noting the skill lists 7 anti-patterns total. |
+| c8 | Skill specifies file naming convention (NNNN-kebab-case-title.md) and target directory (docs/adr/ or similar) | PASS | Section 5 quotes line 132: 'File naming: NNNN-kebab-case-title.md (e.g., 0005-use-postgresql-bytea-for-content.md)' and line 130 confirms directory guidance: check for docs/adr/, docs/architecture-decisions/, or docs/decisions/; create docs/adr/ if none exists. |
+| c9 | Output is structured as a verification of the skill (verdict per requirement) rather than producing a sample ADR | PASS | The entire output is a verification report with a summary ('5 of 6 verified items'), numbered verified items with line citations, a critical gap section, and a non-critical gaps section. No sample ADR is produced. |
+| c10 | Output confirms the MADR sections are all named explicitly: status/date/decision-makers frontmatter, context, decision drivers, considered options, decision outcome, consequences, confirmation, and per-option pros/cons | PASS | Section 1 enumerates all eight sections with line-number citations and confirms frontmatter includes 'status, date, decision-makers, consulted, informed'. |
+| c11 | Output verifies the title rule — title must describe both problem and solution, not just the chosen technology | PASS | Section 2 directly quotes the skill's title rule with examples of both good and bad titles, confirming the problem-plus-solution requirement. |
+| c12 | Output confirms the at-least-two-options rule, including "do nothing / status quo" where applicable, and that strawman alternatives are flagged as an anti-pattern | PASS | Section 3 confirms the two-options and status-quo requirement with direct quotes. Section 6 separately names 'Strawman options' as one of the four anti-patterns at line 122. |
+| c13 | Output verifies the negative-consequences honesty rule — every decision must list at least one negative | FAIL | The output never mentions requiring at least one negative consequence or any honesty check for downsides. Consequences are noted as a section (lines 83–87) but no verification of the negative-consequences rule appears anywhere in the output. |
+| c14 | Output confirms confirmation criteria must be measurable/observable (review date, metric, automated test, or reconsideration trigger) — not aspirational text | PASS | Section 4 quotes the four concrete forms from lines 90–94 and notes the quality checklist at line 112 requires 'Confirmation criteria are measurable or observable'. The Orphaned ADR anti-pattern at lines 126–127 reinforces the requirement. |
+| c15 | Output verifies the file naming convention (NNNN-kebab-case-title.md) and target directory (docs/adr/) are stated, with the four-digit prefix and kebab-case explicit | PASS | Section 5 quotes 'NNNN-kebab-case-title.md' with a concrete example ('0005-use-postgresql-bytea-for-content.md') making the four-digit prefix and kebab-case explicit, and references docs/adr/ as the target directory. |
+| c16 | Output verifies the anti-patterns list includes retroactive ADR, no alternatives, strawman options, and orphaned ADRs without confirmation criteria | PASS | Section 6 explicitly lists all four anti-patterns with line numbers: Retroactive ADR (line 120), No alternatives (line 121), Strawman options (line 122), Orphaned ADR (lines 126–127). |
+| c17 | Output identifies any gaps — e.g. no guidance on superseded ADR linkage, no template for revision notes when an ADR is updated, or no explicit author/reviewer field | PARTIAL | The 'Identified Gaps (Non-Critical)' section names all three gaps verbatim: (1) Superseded ADR Linkage — notes the quality checklist mentions linking but lacks frontmatter syntax, (2) Template for Revision Notes — no guidance on superseding/updating ADRs, (3) Author/Reviewer Fields — frontmatter has decision-makers but no explicit author or reviewer. |
 
 ### Notes
 
-The captured output is a genuine critique of the write-adr skill's honesty enforcement, but it operates at too high a level of abstraction to satisfy most verification criteria. It confirms the quality checklist exists, the negative-consequences honesty check is present, and the anti-pattern table includes Retroactive ADR. However, it completely omits verification of: the title rule (problem+solution framing), the at-least-two-options rule including do-nothing, and the file naming/directory convention. It also fails to enumerate all MADR sections by name. The output is strongest where it identifies enforcement gaps (assumptions table, confirmation strength, sign-off gates) but weakest as a systematic checklist-style verification — it reads more as an expert critique than a structured pass/fail review against the skill's stated requirements.
+The output is a thorough, well-structured verification that correctly confirms seven of the eight criteria it could confirm (c1–c3, c5–c8 on the skill side; c9–c12, c14–c16 on the output side). The single consistent blind spot is the negative-consequences honesty rule: criterion c4 asks whether the skill requires at least one negative consequence with an explicit honesty check, and c13 asks whether the output verifies that rule. Neither is addressed anywhere in the captured output — the Consequences section is listed as present at lines 83–87 but never quoted, and no mention of a mandatory negative or honesty check appears. Everything else — MADR sections, title rule, two-options mandate, measurable confirmation criteria, quality checklist, anti-patterns, and file naming — is verified with direct line citations and quotes. The three identified gaps in the non-critical section are all correctly flagged and named, earning the PARTIAL ceiling for c17.

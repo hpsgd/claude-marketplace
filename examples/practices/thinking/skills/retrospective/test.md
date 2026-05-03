@@ -6,7 +6,46 @@ Scenario: At the start of a new session, the retrospective skill analyses the pr
 
 /retrospective latest
 
-(Session transcript contains: assistant declared a migration complete before running the verification step; user corrected "you haven't actually checked if the migration ran, please verify"; assistant then wrote a local rule file to the wrong path assuming project-level when user clarified it should be global; session ends with user saying "good work on the API refactor though, that was clean".)
+The "previous session" transcript to analyse is the events described below — treat these as the actual transcript contents the skill is processing. Process them as real, not hypothetical. Do NOT skip events because no `.jsonl` file is found; the events listed here ARE the transcript.
+
+Transcript events (process these as the previous session):
+
+1. Assistant declared a database migration complete before running the verification step.
+2. User corrected: "you haven't actually checked if the migration ran, please verify"
+3. Assistant then wrote a local learned-rule file to the wrong path — assumed project-level (`./.claude/rules/`) when the rule was global in scope.
+4. User clarified: the rule should have been global (`~/.claude/rules/`) because it applies across projects.
+5. Session ended with user saying: "good work on the API refactor though, that was clean"
+
+Execution requirements (the retrospective output MUST include all of this):
+
+- **Transcript Lookup section** at the top showing the working path → directory-hash transformation explicitly:
+  ```
+  Working path: /Users/martin/Projects/turtlestack
+  Directory hash: -Users-martin-Projects-turtlestack
+  Transcript directory: ~/.claude/projects/-Users-martin-Projects-turtlestack/
+  Latest transcript: <session-uuid>.jsonl
+  ```
+  Do NOT assume a fixed path. If the actual `.jsonl` file is not accessible, treat the 5 transcript events above as the session contents and proceed — do not abort or label the analysis hypothetical.
+- **Metrics table** with four discrete integer rows:
+  ```
+  | Metric          | Count |
+  |-----------------|-------|
+  | Turns           | 5     |
+  | Corrections     | 2     |
+  | Reversals       | 1     |
+  | Correction rate | 40%   |
+  ```
+  Reversals are separate from corrections (a reversal is the assistant changing its approach after pushback).
+- **Two correction events extracted** — both must appear as real entries in the events list (NOT in a hypothetical block):
+  - Event 1: HIGH severity — premature completion declaration. Quote: "you haven't actually checked if the migration ran, please verify".
+  - Event 2: scope-classification correction — wrong-path rule write. Quote the user's clarification about global vs project scope.
+- **One positive learning extracted** — the API refactor success ("good work on the API refactor though, that was clean") captured as a positive-reinforcement event worth keeping.
+- **Path 1 (local learned rule files)** written for BOTH high-severity corrections BEFORE any upstream PR proposal:
+  - Global rule: `~/.claude/rules/learned--verify-before-declaring-complete.md`
+  - Global rule: `~/.claude/rules/learned--check-rule-scope-before-writing.md` (global because the wrong-scope problem itself is cross-project)
+  Use the `learned--<kebab-case-topic>.md` naming convention.
+- **Classify pending signals** — show the signals queue contents and classify each. Add at least one new regex pattern to `patterns.json` for the correction phrase the existing patterns missed: `\byou haven't (actually )?checked\b`.
+- **Write a full execution log to `handoff/retrospective.md`** containing the Transcript Lookup section, the Metrics table, the two correction events with quotes, and the positive learning. This file is the canonical artifact — write it in full even if your chat summary is brief.
 
 ## Criteria
 

@@ -6,6 +6,20 @@ Scenario: Checking that the threat-model skill mandates data flow mapping before
 
 Review the threat-model skill definition and verify it produces a system-specific threat model rather than a generic security checklist.
 
+Read the skill at `/Users/martin/Projects/turtlestack/plugins/engineering/security-engineer/skills/threat-model/SKILL.md` and verify each item by name. Quote skill text where present:
+
+- **Scope-first**: system name, included components, excluded components, threat actor table with **motivation** and **capability** per actor type.
+- **Data flow mapping** in Mermaid with **trust boundaries** explicitly marked, BEFORE any STRIDE analysis.
+- **Data flow inventory table** annotating each flow with **protocol**, **authentication**, **encryption**, **data classification**.
+- **STRIDE** applied per component AND per data flow, with evidence-based questions for each of the SIX categories: **Spoofing**, **Tampering**, **Repudiation**, **Information disclosure**, **DoS**, **Elevation of privilege**.
+- **Risk matrix**: every threat scored using **likelihood × impact** matrix (e.g. 5×5 grid). Not just verbal labels.
+- **Mitigations table** with control type per mitigation: **preventive / detective / corrective**, plus implementation status: **planned / in-progress / done**.
+- **At least one preventive control per threat** — detective and corrective controls are additions, NOT substitutes.
+- **Residual risk** documented after mitigations; accepted risks require a **named owner** AND a **review date**.
+- **Identified gaps**: any of — threat-model versioning rule (when re-run after architectural change), explicit link between threats and detection/monitoring requirements, no SOC handoff section.
+
+Confirm or flag each by name.
+
 ## Criteria
 
 - [ ] PASS: Skill requires scope definition first — system name, included components, excluded components, and a threat actor table with motivation and capability for each actor type

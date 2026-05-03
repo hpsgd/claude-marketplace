@@ -6,6 +6,14 @@ Scenario: A policy consultant needs exhaustive research on Australia's Critical 
 
 /analyst:deep-research Impact of Australia's Security of Critical Infrastructure Act 2021 on private sector obligations — specifically what changed for the energy and data storage sectors, and what is contested or unclear.
 
+A few specifics for the response:
+
+- Domain map MUST name these AU sources by name even if not all are reachable: Department of Home Affairs (CISC), ACSC/ASD, PJCIS, **AER (Australian Energy Regulator)**, **OAIC (for data)**, AEMO (energy), and the **Federal Register of Legislation** (for the Act itself and the CIRMP Rules). Include a Federal Register URL for the Act in the source list.
+- Confidence taxonomy: use ALL of `HIGH`, `MEDIUM`, `LOW`, `CONTESTED`, `UNVERIFIED` as inline tags on claims (not just High/Medium/Low). At minimum, tag the industry compliance-cost claim as CONTESTED and any claim that has no traceable source as UNVERIFIED.
+- Source-type diversity: include at least one journalism source (e.g. AFR, ABC, The Guardian Australia) and at least one academic / think-tank source (e.g. ASPI, Lowy Institute, university law review) alongside the law-firm analyses, so no single source type dominates. Note any source-type gaps in the Gap Analysis section.
+- Sources section MUST map each source to the specific claims it supported (cross-reference the entity confidence table by claim ID or short label) — not just authority level alone.
+- End with a "Submission-readiness" subsection mapping findings to what an inquiry-submission drafter would need: primary regulatory text, parliamentary record, balanced industry submissions. Flag which gaps are submission-critical vs background.
+
 ## Criteria
 
 - [ ] PASS: Skill completes all six passes — domain mapping, primary source sweep, secondary source sweep, entity scoring, URL verification, and gap analysis

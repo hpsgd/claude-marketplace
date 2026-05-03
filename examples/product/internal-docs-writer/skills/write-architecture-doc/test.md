@@ -199,6 +199,23 @@ Then run:
 
 /internal-docs-writer:write-architecture-doc for our notification system — it handles in-app, email, and push notifications, with a queue-based delivery system and user preference management.
 
+Execution requirements (the architecture doc MUST include these sections):
+
+- **Research step with citations** — at the top, a "Research" or "Sources" subsection listing the file paths read (e.g. `src/notifications/service.py`, `src/notifications/channels/email.py`, `src/notifications/queue.py`, `src/notifications/models.py`). Cite source file paths inline throughout the document where you describe code-derived facts (e.g. `SENDGRID_TEMPLATE_MAP — see src/notifications/channels/email.py`).
+- **Sequence diagram** — Mermaid `sequenceDiagram` for the dispatch flow with EVERY external provider as its own participant: `Caller`, `API`, `PreferencesSvc`, `Queue`, `Worker`, `InAppChannel`, `EmailChannel`, `PushChannel`, `SendGrid`, `FCM`, `APNs`, `Callback`. Show the external provider→callback step explicitly. Do not collapse external providers into self-calls.
+- **Key Decisions with rejected alternatives** — for each decision document: Decision, Chosen approach, **Alternative considered** (named), **Why rejected** (reason), Rationale. E.g. "Queue-based delivery: chosen because external providers fail unpredictably. Alternative considered: synchronous dispatch. Rejected because caller latency couples to slowest provider and a SendGrid outage would block order placement." Provide at least 3 such decisions with explicit rejected alternatives.
+- **Known Limitations with backlog links** — every limitation MUST link to a backlog item or issue. Use placeholder issue references like `BACKLOG-NOTIF-12: no retry policy on SendGrid 5xx` or `[GH-123]: preferences cache not invalidated on update` if no real tracker exists.
+- **Preferences (first-class section)** — a dedicated section that includes (1) a channel × event-type matrix table (rows = event types like `project.status_changed`, `task.assigned`, `comment.mention`; columns = `IN_APP`, `EMAIL`, `PUSH`; cell = default + overridable), (2) opt-out enforcement statement at delivery time, AND (3) an explicit "Race Condition" subsection covering what happens when a preference change races with a notification already mid-flight (e.g. enqueued before opt-out, dequeued after — re-checked at deliver time, but cache TTL of 5min creates a stale window — document the resolution).
+- **Observability section** — list specific metrics (`notification_delivery_rate`, `notification_queue_depth`, `notification_provider_error_rate{provider}`, `notification_dlq_growth`), named dashboards (`Notifications Overview`, `Provider Health`), and named alert conditions (`DLQ depth > 100 over 5min`, `Email provider error rate > 5%`, `Queue lag > 60s`).
+- **Quality Checklist (mandatory final section)** — a markdown checklist:
+  ```
+  - [ ] All Mermaid diagrams render without syntax errors (validated in mermaid.live)
+  - [ ] Every architectural decision references an ADR (or `ADR-TBD by YYYY-MM-DD`)
+  - [ ] Every NFR has a numeric target and a measurement method
+  - [ ] Every limitation links to a backlog item
+  - [ ] Source code citations resolve to existing files
+  ```
+
 ## Criteria
 
 

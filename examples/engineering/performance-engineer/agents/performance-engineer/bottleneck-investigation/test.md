@@ -8,6 +8,28 @@ Our API is getting slow under load. Two weeks ago P99 was around 200ms. Now it's
 
 Do not ask for clarification — proceed using the information provided. State your assumptions where relevant.
 
+A few specifics for the response (output in this exact section order):
+
+1. **Baseline section (FIRST, before any fixes)** — explicit table:
+   ```
+   | Metric            | 2 weeks ago | Now    | Delta  |
+   |-------------------|-------------|--------|--------|
+   | P50 latency       | ~180ms      | ~180ms | flat   |
+   | P95 latency       | (estimate)  | (estimate) | (delta) |
+   | P99 latency       | 200ms       | 2000ms | 10×    |
+   | Throughput (req/s)| baseline    | +30%   | +30%   |
+   | Error rate        | (record)    | (record) | (delta) |
+   ```
+   State the disproportionality explicitly: "10× P99 jump on 30% traffic growth is non-linear — suggests resource contention crossing a threshold, NOT linear scaling."
+2. **Outside-in latency breakdown (BEFORE diving into DB)** — break the request flow into stages: client → load balancer → ingress → application layer → database → external calls → response. Estimate or measure time spent at each stage. Only narrow into the database AFTER you've identified database time as the likely contributor.
+3. **Stack confirmation** — explicitly note "Assumed Python/Django stack based on common patterns; CONFIRM stack before recommending application profiler. If Python: `py-spy top --pid <pid>`. If Node: `clinic doctor`. If .NET: `dotnet-trace collect`. If JVM: `async-profiler`." Name the stack-appropriate profiler.
+4. **Two-endpoint analysis** — `GET /api/reports/{id}` (read, sync) vs `POST /api/exports` (write, likely async). Different bottleneck profiles: reports → query/cache, exports → queue depth + lock contention + background-job worker capacity. Address each separately.
+5. **Deploy bisection (multiple-times-a-day strategy)** — `git log --since="2 weeks ago" --pretty=format:"%h %ai %s"` to enumerate. Use deploy timestamps to bisect: identify the day when P99 crossed a threshold from APM, then bisect commits within that day.
+6. **One-change-at-a-time discipline** — explicit subsection. Every recommended fix MUST be followed by a re-measurement step at the same load with the same metric BEFORE the next change. State the protocol: "warm-up 60s, sample 10min at fixed RPS, compare P99 with statistical significance (≥30 runs preferred for tight CI)."
+7. **Decision Checkpoint before infrastructure scaling**: a STOP-and-decide block before any recommendation to add nodes, increase pool size, or upsize the DB. Frame: "Scaling will mask the underlying bottleneck and increase cost ~$X/month. Proceed only if root cause is confirmed and not addressable at the application layer."
+8. **Findings table** with columns `Component | Impact (HIGH/MEDIUM/LOW) | Hypothesis | Evidence | Recommended Fix | Re-measure Plan`.
+9. **Before/after measurement requirement** stated explicitly for every fix — same load, same metric, same protocol. No fix is "done" without before/after evidence.
+
 ## Criteria
 
 - [ ] PASS: Agent establishes a baseline measurement before recommending any fixes — records the exact current metrics (P50, P95, P99, throughput, error rate)

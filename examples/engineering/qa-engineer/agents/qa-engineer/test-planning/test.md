@@ -176,6 +176,17 @@ def stripe_webhook(request) -> dict:
     return {"received": True}
 ```
 
+A few specifics for the response:
+
+- **TDD with both exit codes shown**: run `.venv/bin/pytest tests/ -v 2>&1` BEFORE implementing — show the actual output ending with **`exit code 1`** (RED phase, expected import errors). Then implement, run again — show output ending with **`exit code 0`** (GREEN). Both runs must appear in DELIVERY.md.
+- **Single-assertion-per-test discipline**: each `def test_*` asserts ONE behaviour. If you need to assert that a charge was created with the right amount AND currency AND the Stripe API was called once, that's THREE separate tests, not one with three asserts. Apply this consistently.
+- **Mock at external boundary ONLY**: never mock `src.payments.webhooks.verify_webhook_signature` (internal). Mock `stripe.Webhook.construct_event` (external SDK boundary) in the verify-signature unit tests. Endpoint integration tests should call the real `verify_webhook_signature` with a mocked `stripe.Webhook.construct_event`.
+- **Idempotency contract tests (2)**: (1) same idempotency key twice with same params → returns same charge, no duplicate stripe call; (2) same idempotency key with different params → raises `stripe.error.IdempotencyError`. Both required.
+- **Refund tests (3 distinct)**: full refund (amount=None), partial refund (amount<original), AND **over-refund** (amount > remaining balance) raising `stripe.error.InvalidRequestError`. Plus refund-of-already-refunded charge.
+- **Webhook signature tests (4)**: valid, missing `Stripe-Signature` header, invalid signature (tampered body), AND **replayed timestamp** outside Stripe's tolerance window (Stripe rejects events older than 5 minutes by default).
+- **Use pytest fixtures / factories** for mock charge/refund/webhook objects in `conftest.py` — never inline dict construction repeated across tests. Define `charge_factory(amount=1000, currency="usd")` and reuse.
+- **Evidence table** with columns: `Test name | Command | Exit code | Result (PASS/FAIL)`. List every test individually — not just category counts. Include both RED and GREEN runs.
+
 ## Criteria
 
 - [ ] PASS: Agent reads existing code before writing any tests — inspects the module's public API surface, inputs, outputs, and error paths

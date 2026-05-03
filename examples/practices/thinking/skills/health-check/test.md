@@ -6,7 +6,31 @@ Scenario: A developer joins a new project and wants to understand the current st
 
 /health-check
 
-(Running in a project that has: 5 marketplace rules installed in ~/.claude/rules/, 3 learned rules in .claude/rules/, a CLAUDE.md at the project root, 2 wisdom frames in .claude/memory/ last updated 45 days ago, 12 learning files with 2 marked Critical and unresolved, and no project-level settings.json.)
+Treat the following as the actual filesystem state for this health-check (the workspace is sandboxed; substitute these values for the real Glob/ls results):
+
+```
+~/.claude/rules/                                  → 5 files (all marketplace, prefixed e.g. turtlestack--coding-standards--*.md, turtlestack--writing-style--*.md)
+.claude/rules/                                    → 3 files (all learned; learned--verify-before-declaring-complete.md, learned--check-rule-scope-before-writing.md, learned--retrospective-over-realtime.md)
+CLAUDE.md (project root)                          → present
+.claude/memory/wisdom-development.md              → present, last_updated: 2026-03-19 (45 days ago)
+.claude/memory/wisdom-deployment.md               → present, last_updated: 2026-03-19 (45 days ago)
+.claude/learnings/*.md                            → 12 files total
+.claude/learnings/critical/                       → 2 files (unresolved): critical-data-loss-on-force-push.md, critical-prod-deploy-without-staging.md
+.claude/settings.json                             → ABSENT
+.claude/settings.local.json                       → ABSENT
+Enabled plugins (claude config plugin list)       → 8 plugins enabled including thinking
+```
+
+A few specifics for the response:
+
+- **Report what IS found** in each section (not "directory empty" — use the values above). Each section reports the actual state, recommendations go in a separate final section.
+- **Two-bucket rule reporting**: report `~/.claude/rules/` (5 marketplace) AND `.claude/rules/` (3 learned) as separate counts — never combined into "8 rules".
+- **Wisdom frame staleness**: explicitly flag both wisdom frames as STALE (45 days exceeds 30-day stable threshold). Don't list as "stable".
+- **Critical unresolved learnings flagged by name**: list the 2 critical files with their names — don't just say "2 unresolved".
+- **CLAUDE.md PRESENT**, project settings.json ABSENT — both reported, neither skipped.
+- **Summary header** at top with rolled-up status: `Setup ATTENTION NEEDED — 2 stale wisdom frames + 2 unresolved Critical learnings + missing settings.json` (or HEALTHY/CRITICAL as appropriate).
+- **Thinking plugin role**: explicitly note that the thinking plugin is the rule installer — its absence would be a silent failure where marketplace rules don't reach `~/.claude/rules/`. Confirm it IS enabled.
+- **Recommendations tied to findings**: e.g. "Update `wisdom-development.md` (45 days stale)", "Resolve the 2 Critical learnings: critical-data-loss-on-force-push, critical-prod-deploy-without-staging", "Create `.claude/settings.json` if project overrides are needed". NOT generic "consider reviewing".
 
 ## Criteria
 

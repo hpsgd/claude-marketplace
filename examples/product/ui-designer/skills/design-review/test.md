@@ -176,6 +176,21 @@ Now:
 
 /ui-designer:design-review of the new notification centre designs — a slide-out panel showing all user notifications with read/unread states, filtering, and bulk actions.
 
+A few specifics for the response:
+
+- **Six dimensions, each with its own labelled subsection** — even if no issues, write "✓ no issues found" for that dimension:
+  1. Design system consistency
+  2. Component patterns
+  3. State coverage (all 8 states)
+  4. Accessibility (WCAG)
+  5. Responsive behaviour (breakpoints)
+  6. Code handoff quality
+- **8 component states** — review EACH explicitly (Default, Hover, Focus, Active, Disabled, Loading, Error, Empty). Missing states are **Blockers**, not Suggestions.
+- **All WCAG failures are Blockers** — including 1.4.1 (semantic meaning), 1.4.3 (colour contrast). Move them out of Suggestions if the model placed them there.
+- **Responsive behaviour**: review all three breakpoints — mobile (<640px), tablet (640-1024px), desktop (>1024px). Specific findings per breakpoint.
+- **Design system token check**: any inline hex value (`#e5e7eb`, `#6366f1`) or non-token Tailwind utility (`bg-indigo-600` when the token is `bg-brand-600`) is a Blocker. Spacing values must be on the 4px grid.
+- **Code handoff quality**: review whether spacing/colour values are measured (token-named) or implied, whether component accepts `className`, whether prop types are extensible.
+
 ## Criteria
 
 

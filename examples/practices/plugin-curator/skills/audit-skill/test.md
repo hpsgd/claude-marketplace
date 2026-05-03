@@ -32,6 +32,14 @@ After writing the stub file, immediately run the skill — do not stop after the
 
 /audit-skill performance-profile (performance-engineer)
 
+Execution requirements (follow these when running the audit):
+
+- Use the Read tool on `plugins/practices/plugin-curator/skills/audit-skill/SKILL.md` first — the 12 criteria there are the audit checklist. State which template file you read at the top of the audit (e.g., `Template: plugins/practices/plugin-curator/skills/audit-skill/SKILL.md`).
+- In every Evidence cell, quote the exact phrase from the audited skill that triggered the finding. In the Criterion 3 (Self-contained) row, quote both `look for bottlenecks` and `your preferred tool` directly and explain that another agent invoking the skill cannot proceed without external knowledge.
+- In the Criterion 6 (Rules with anti-patterns) row, explicitly state that the casual prose mention of "preferred tool" is NOT a rules section — distinguish soft prose guidance from a formal Rules section with anti-patterns.
+- In the Criterion 7 (Structured output format) row, cite the exact structural symptom: "skill ends after the single step with no markdown template / no Output Format heading".
+- Reference the parent agent (`performance-engineer`) by name in your Recommended Actions — at least one action must say the rewrite should align with that agent's methodology rather than duplicate it.
+
 ## Criteria
 
 - [ ] PASS: Step 1 reads the skill template before evaluating — uses template criteria as the audit checklist
@@ -52,6 +60,6 @@ After writing the stub file, immediately run the skill — do not stop after the
 - [ ] PASS: Output's missing-output-format finding cites the exact symptom — "skill ends after the single step with no markdown template / no Output section heading" — not just "no output format"
 - [ ] PASS: Output's self-containment evaluation flags "look for bottlenecks" / "preferred tool" as failing — explaining that another agent invoking this skill cannot proceed without external knowledge of what tools and what bottleneck patterns to look for
 - [ ] PASS: Output's missing-rules-section finding distinguishes "soft guidance phrasing in prose" from a Rules section with anti-patterns — the casual mention of preferred tools is NOT a rules section
-- [ ] PASS: Output reports the line count (13) and the target band (50-300 lines for a complete skill) explicitly, classifying 13 as below the stub threshold
+- [ ] PASS: Output reports the line count (13) and the target band (100-500 lines for a complete skill) explicitly, classifying 13 as below the stub threshold
 - [ ] PASS: Output's rewrite recommendation includes specific guidance — what the rewritten skill must contain (multi-step process, named tools per stack, output format template with sections, anti-patterns list, rules) — not just "expand it"
 - [ ] PARTIAL: Output references the related performance-engineer agent for context — the skill is owned by performance-engineer, so the rewrite should align with the parent agent's methodology and not duplicate it

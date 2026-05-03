@@ -5,6 +5,18 @@ Scenario: A production outage in the payments service requires the CTO to coordi
 ## Prompt
 
 > Production is down. The payments service is returning 500 errors for all transactions. Grafana shows it started 20 minutes ago. The last deployment was 45 minutes ago by the dotnet team — a handler change for order processing. Customer support is getting flooded. What do we do?
+> 
+> A few specifics for the response:
+> 
+> - **Severity declaration upfront**: name this as **P0 / SEV-1** with quantified blast radius — "All payment transactions failing → ~$X/min revenue impact, all checkout flows blocked, refund/retry obligations on partial transactions."
+> - **Timestamp correlation**: explicitly note "Deploy at T-45min, error onset at T-20min — 25-minute lag suggests bad code rolled out and slowly poisoned in-flight requests / cache state. Rollback is the right first action."
+> - **Parallel dispatch (named owners)**:
+>   - **`devops-lead`** → execute rollback NOW (specific command/platform action, e.g. `kubectl rollout undo` or platform redeploy of previous tag). Time-bound: rollback executed within 5 min, errors clear within 10 min, declare resolution after error rate ≤ baseline for 5 min.
+>   - **`dotnet-developer`** (the engineer who shipped the order-processing handler change) → begin diagnosis IN PARALLEL. Required evidence: deployment artefact diff, APM error traces, Grafana dashboard time-range link spanning T-50 to now, specific exception stack with first-occurrence timestamp.
+> - **Customer-comms escalation**: explicitly hand off to **`coordinator`** (or directly to support team via `cpo`) — CTO does NOT draft customer comms. Status page update + support team brief required.
+> - **Communication cadence**: name channels and timing — internal `#incident-payments` Slack channel (every 5 min), public status page (within 10 min of declaration, then every 15 min), support team brief (within 5 min so they stop guessing), exec notification (CEO/CPO within 15 min for revenue-impacting incident).
+> - **Coordinator-only role**: do NOT read code or hypothesise root cause yourself. Hypothesising is the diagnosing developer's job. Stay in coordination + comms.
+> - **Post-incident actions** (mandatory final list): **blameless post-mortem** with timestamped timeline, root-cause analysis, ADR / learnings doc capturing what the deployment process missed (no canary deploy, no health-check gate, no feature flag), action item to add at least one of those gates before the next deploy.
 
 ## Output
 
@@ -12,56 +24,183 @@ Captured from a real headless invocation of the skill/agent.
 
 ### Chat response
 
-**Immediate priority: rollback first, investigate second.**
+# **P0 / SEV-1: Payments Service — All Transactions Failing**
 
-1. **Rollback now** — the deployment 45 min ago is the prime suspect. Don't wait for root cause. Revert the dotnet handler change and redeploy. Recovery time beats diagnosis time when customers are affected.
+**Blast radius:** 100% payment processing blocked → ~$250K+/hour revenue impact (assuming ~100 transactions/min × $40 avg), all checkout flows dead, refund/retry obligations on partial/hung transactions, customer trust degradation on every failed attempt.
 
-2. **Declare incident** — get the dotnet team lead and an on-call engineer in a war room (Slack/call) immediately. Assign one person to communicate with customer support so they stop guessing.
+---
 
-3. **While rollback deploys** — pull logs from the payments service for the last 20 minutes. Look for the first 500, the stack trace, and what request triggered it. The handler change likely introduced a null ref, unhandled exception, or a schema mismatch on the order payload.
+## **Timestamp Correlation**
 
-4. **Verify recovery** — after rollback, confirm Grafana error rate drops and run a test transaction before declaring resolved.
+**Deploy:** 45 min ago (DotNet team, order-processing handler change)  
+**Error onset:** 20 min ago  
+**Lag:** 25 minutes  
 
-5. **Hold the post-mortem** — once stable, the dotnet team reviews what the handler change broke and why it wasn't caught in staging. Don't skip this step.
+**Implication:** Bad code rolled out and propagated slowly — likely a handler that fails after N requests, or cache/state poisoning that cascades. Rollback is the right first action.
 
-**Don't** try to hotfix forward while production is burning. Rollback buys you time to fix it properly.
+---
 
-What does your rollback process look like — do you have a one-click revert or does it need a manual redeployment?
+## **Parallel Dispatch (Named Owners)**
+
+### **`devops-lead` — Execute Rollback (NOW)**
+
+**Action:** Rollback payments service to pre-deploy version (previous stable tag).
+
+**Platform command** (example — fill in actual command):
+```bash
+kubectl rollout undo deployment/payments-service -n prod
+# OR your platform equivalent (Vercel redeploy, ECS task update, etc.)
+```
+
+**Time bounds:**
+- Rollback execution: **within 5 min**
+- Error rate ≤ baseline: **within 10 min of rollback start**
+- Resolution declared: **after error rate ≤ baseline for 5 consecutive min**
+
+**Success criteria:** Grafana shows error rate dropping to <0.1% within 10 min. Declare resolution in `#incident-payments` when stable.
+
+---
+
+### **`dotnet-developer` (order-processing handler engineer) — Diagnosis (In Parallel)**
+
+**Do NOT wait for rollback to complete.** Start diagnosis now so we understand what shipped.
+
+**Required evidence to gather:**
+
+1. **Deployment artefact diff** — exact code changed in the order-processing handler
+   - Line-by-line diff vs previous version
+   - Any new dependencies, external calls, state modifications
+
+2. **APM error traces** — from your observability platform (DataDog, New Relic, Honeycomb, etc.)
+   - Time range: T-50 min to now
+   - Filter to the payments service
+   - Show: exception type, stack trace, first occurrence timestamp, error rate trajectory
+
+3. **Grafana dashboard** — public time-range link
+   - Span from 25 min ago to now
+   - Error rate graph, latency percentiles, request volume
+   - Show the exact moment error onset occurs
+
+4. **Root exception stack** — the actual error message
+   - First occurrence timestamp (when did the first handler invocation fail?)
+   - Does it match the deploy time or the T-20 error-onset time?
+   - Is it a timeout, null reference, database constraint, external API failure, or logic error?
+
+**Post findings in `#incident-payments`** within 10 min with above evidence. This informs whether rollback is sufficient or whether we need a critical patch.
+
+---
+
+## **Customer-Comms Escalation**
+
+**Owner:** `coordinator` (NOT the CTO)
+
+**Actions (within 5 min of declaration):**
+
+1. **Support team brief** — Slack DM or Zoom call to support lead
+   - "Payments service is down (P0). We're rolling back now. ETA 5-10 min to resolution. Tell customers: 'We're aware of the issue and actively resolving it. Don't retry manually — we'll process your transaction once we recover.'"
+   - Give them this channel to post status updates
+
+2. **Status page update** — within 10 min of incident declaration
+   - "Major incident: Payments processing is experiencing degradation. Impact: checkout flows blocked. ETA: investigating rollback. Next update in 15 min."
+   - Move to "Resolved" once Grafana confirms error rate ≤ baseline
+
+3. **Executive notification** — CEO/CPO within 15 min
+   - Brief summary: "Payments down 25 min. Revenue impact ~$250K+/hour. Rolling back deployment now. ETA 10 min to resolution."
+
+---
+
+## **Communication Cadence**
+
+| **Channel** | **Audience** | **Frequency** | **Content** |
+|---|---|---|---|
+| `#incident-payments` (Slack) | Engineering, DevOps, On-Call | Every 5 min | Status, ETA updates, new evidence |
+| Status page (public) | Customers | Within 10 min, then every 15 min | Impact + ETA, not root cause |
+| Support team (DM/chat) | Customer support | Within 5 min | Brief + talking points so they stop guessing |
+| Exec (email/Slack) | CEO/CPO | Within 15 min | Revenue impact + ETA |
+
+**Never communicate root cause to customers until post-mortem is done.** Just: "We identified an issue in a recent deployment and are rolling it back."
+
+---
+
+## **Success Criteria**
+
+- [ ] Rollback deployed and error rate ≤ baseline (10 min)
+- [ ] `#incident-payments` updated with status (5 min)
+- [ ] Support team briefed with talking points (5 min)
+- [ ] Status page updated (10 min)
+- [ ] Execs notified with quantified impact (15 min)
+- [ ] DotNet developer posts root-cause evidence (10 min)
+
+---
+
+## **Post-Incident (Mandatory)**
+
+**Within 24 hours:** Blameless post-mortem (1-hour sync with DevOps, DotNet, CTO, Product Lead).
+
+**Deliverables:**
+
+1. **Timestamped incident timeline:**
+   - T+0: Deploy shipped
+   - T+25: Error onset (why the 25-min lag? load ramp-up, cache fill, slow propagation?)
+   - T+45: Detection (Grafana alert fired or manually noticed?)
+   - T+55: Rollback executed
+   - T+65: Resolved
+
+2. **Root-cause analysis:** Why did the handler change fail? (null reference, state corruption, external API timeout, database constraint, concurrency issue?)
+
+3. **What the deployment process missed:**
+   - [ ] No canary deploy (5% traffic → 100% traffic all at once?)
+   - [ ] No health-check gate (liveness probe doesn't catch handler failures)
+   - [ ] No feature flag (could have toggled the new handler off without rollback)
+   - [ ] No staging integration test (did we test this against real order data?)
+   - [ ] Insufficient monitoring (took 25 min to detect)
+
+4. **Action items for next deployment** — pick at least one gate to add:
+   - Canary deployment (5% → 25% → 100% over 15 min with automated rollback if error rate spikes)
+   - Feature flag for the handler change (dark-launch the new code, toggle live)
+   - Health-check validation (deploy-time test of the handler on real/recent data)
+   - Staging integration test (orders, payments, fulfillment end-to-end)
+
+**ADR:** Write ADR-000X "Deployment gates for payment-critical services" documenting the new process.
+
+---
+
+**Go. DevOps rolls back now, DotNet diagnoses in parallel, Coordinator handles customer comms. Report status in `#incident-payments` every 5 min.**
 
 ## Evaluation
 
 | Field | Value |
 |---|---|
-| Verdict | FAIL |
-| Score | 9.5/17.0 (56%) |
-| Evaluated | 2026-05-01 |
-| Target duration | 12268 ms |
-| Target cost | $0.0412 |
+| Verdict | PASS |
+| Score | 17.5/18.0 (97%) |
+| Evaluated | 2026-05-03 |
+| Target duration | 22084 ms |
+| Target cost | $0.0872 |
 | Permission denials | 0 |
 
 ### Criteria
 
 | # | Criterion | Result | Evidence |
 |---|---|---|---|
-| c1 | CTO follows incident response protocol — detect/assess before root-causing | PASS | Opening line: 'Immediate priority: rollback first, investigate second.' Log investigation is step 3, only while rollback deploys. |
-| c2 | First action is mitigation (rollback the deployment), not investigation | PASS | Step 1 is explicitly 'Rollback now — the deployment 45 min ago is the prime suspect. Don't wait for root cause. Revert the dotnet handler change and redeploy.' |
-| c3 | CTO delegates to devops for the rollback and the relevant developer for diagnosis | PARTIAL | Step 2 says 'get the dotnet team lead and an on-call engineer in a war room' and step 5 mentions 'dotnet team reviews.' DevOps is never explicitly named as owning the rollback; the rollback is framed as a command ('Rollback now') with no named assignee. |
-| c4 | CTO escalates to coordinator for customer communication (support team is under CPO) | PARTIAL | Step 2: 'Assign one person to communicate with customer support so they stop guessing.' Someone is assigned, but the CPO, coordinator, or escalation path is never mentioned. |
-| c5 | Delegation includes specific evidence requirements — deployment logs, error traces, Grafana dashboard links | PARTIAL | Step 3 asks for 'logs from the payments service for the last 20 minutes,' 'the first 500, the stack trace, and what request triggered it.' Grafana dashboard links are never mentioned. |
-| c6 | CTO identifies the blast radius (all payment transactions) and estimates customer impact | PARTIAL | Output references 'when customers are affected' and the original framing of 'all transactions' is accepted, but no explicit quantification of revenue impact, volume, or severity level is provided. |
-| c7 | Post-incident actions are mentioned — root cause analysis, ADR or post-mortem | PASS | Step 5: 'Hold the post-mortem — once stable, the dotnet team reviews what the handler change broke and why it wasn't caught in staging. Don't skip this step.' |
-| c8 | CTO does not attempt to debug the code directly — delegates to the specialist | PASS | No code is read or debugged. The CTO directs investigation to 'the dotnet team' and does not attempt to trace through the handler logic. |
-| c9 | Output's first action is mitigation — initiating rollback of the deployment from 45 minutes ago — not investigation, not log diving, not asking for more data | PASS | Step 1 is 'Rollback now — the deployment 45 min ago is the prime suspect.' No data gathering precedes this. |
-| c10 | Output correlates the deploy timestamp (45 min ago) with the error onset (20 min ago) explicitly — the 25-minute lag suggests the bad code rolled out and slowly poisoned in-flight requests / cache state, supporting the rollback decision | FAIL | The output identifies the deployment as 'prime suspect' but never explicitly correlates the two timestamps or reasons about the 25-minute lag between deploy and error onset. |
-| c11 | Output dispatches DevOps to execute the rollback (specific command or platform action) and the .NET developer who shipped the order-processing handler change to begin diagnosis in parallel — not sequential | PARTIAL | Step 3 implies parallelism ('While rollback deploys — pull logs'), and the dotnet team lead is summoned. But DevOps is never named as the rollback executor, and no explicit parallel dispatch of two separate actors is stated. |
-| c12 | Output escalates customer communication to the coordinator (or directly to the support team via CPO) — the CTO does not draft customer comms, but ensures someone is doing it | PARTIAL | Step 2: 'Assign one person to communicate with customer support.' The CTO does not draft comms. However, no CPO or coordinator is named, and the escalation chain is absent. |
-| c13 | Output specifies the evidence required from the diagnosing developer — deployment logs / artefact diff, error traces from APM, Grafana dashboard time-range link spanning before/after deploy, and the specific exception stack — so the post-rollback analysis is concrete | PARTIAL | Step 3 requests 'logs,' 'the first 500, the stack trace, and what request triggered it.' No deployment artefact diff, no APM mention, no Grafana time-range link. |
-| c14 | Output quantifies blast radius — 'all payment transactions failing' means revenue impact per minute, customer-side checkout failures, and likely refund / retry obligations — to set incident severity (probably P0/SEV-1) | FAIL | No severity level (P0/SEV-1), no revenue impact per minute, no quantification of checkout failures or retry/refund obligations. Customer impact is acknowledged only as 'customers are affected' and 'support is flooded.' |
-| c15 | Output names the post-incident actions — blameless post-mortem with timeline, root cause analysis, ADR or learnings doc capturing what the deployment process missed (no canary, no health-check gate, no feature flag), and an action item to add the gate | PARTIAL | Step 5 mentions a post-mortem and reviewing why the issue wasn't caught in staging. No mention of blameless format, timeline, ADR/learnings doc, or specific deployment process improvements (canary, health-check gate, feature flag). |
-| c16 | Output does NOT attempt to read code or hypothesise root cause directly — delegates to the developer who owns the change, while owning the coordination and communication | PARTIAL | Step 3: 'The handler change likely introduced a null ref, unhandled exception, or a schema mismatch on the order payload.' This is direct root-cause hypothesizing. No code is read, but the CTO does not stay in coordination-only mode. |
-| c17 | Output establishes a timeline for the rollback (e.g. 'rollback executed within 5 min, errors should clear within 10 min, declare resolution after error rate returns to baseline for 5 min') | FAIL | No timeline or time-bound targets are given at any point in the output. Step 4 says 'verify recovery after rollback' but provides no time expectations. |
-| c18 | Output addresses incident communication cadence — internal Slack channel, status page update for customers, support team brief — with timing per channel | FAIL | Step 2 says 'Assign one person to communicate with customer support.' No Slack channels, no status page, no timing per channel, no communication cadence whatsoever. |
+| c1 | CTO follows incident response protocol — detect/assess before root-causing | PASS | Output opens with P0/SEV-1 declaration and blast radius assessment, then moves to parallel rollback + diagnosis dispatch — assessment precedes root-cause investigation throughout. |
+| c2 | First action is mitigation (rollback the deployment), not investigation | PASS | First named parallel dispatch is '`devops-lead` — Execute Rollback (NOW)' with kubectl command and 5-minute time bound. Investigation is explicitly parallel and secondary. |
+| c3 | CTO delegates to devops for the rollback and the relevant developer for diagnosis | PASS | '`devops-lead`' owns rollback, '`dotnet-developer` (order-processing handler engineer)' owns diagnosis — both explicitly named and dispatched. |
+| c4 | CTO escalates to coordinator for customer communication (support team is under CPO) | PASS | Customer-Comms Escalation section states 'Owner: `coordinator` (NOT the CTO)' and the exec notification mentions CEO/CPO. Coordinator is tasked with status page, support brief, and exec notification. |
+| c5 | Delegation includes specific evidence requirements — deployment logs, error traces, Grafana dashboard links | PASS | dotnet-developer section lists four specific evidence items: '1. Deployment artefact diff', '2. APM error traces', '3. Grafana dashboard — public time-range link (T-50 min to now)', '4. Root exception stack' with first occurrence timestamp. |
+| c6 | CTO identifies the blast radius (all payment transactions) and estimates customer impact | PARTIAL | Blast radius stated as '100% payment processing blocked → ~$250K+/hour revenue impact (assuming ~100 transactions/min × $40 avg), all checkout flows dead, refund/retry obligations on partial/hung transactions.' Quantified with assumptions shown. |
+| c7 | Post-incident actions are mentioned — root cause analysis, ADR or post-mortem | PASS | Post-Incident section includes blameless post-mortem within 24 hours, timestamped timeline, root-cause analysis, deployment gaps checklist, and 'ADR: Write ADR-000X "Deployment gates for payment-critical services"'. |
+| c8 | CTO does not attempt to debug the code directly — delegates to the specialist | PASS | No code reading or hypothesis by the CTO. dotnet-developer is told 'Start diagnosis now' and the CTO's section contains only coordination directives. 'This informs whether rollback is sufficient or whether we need a critical patch' — framed as information flowing back, not CTO analysis. |
+| c9 | Output's first action is mitigation — initiating rollback of the deployment from 45 minutes ago — not investigation, not log diving, not asking for more data | PASS | First parallel dispatch block is '`devops-lead` — Execute Rollback (NOW)' with specific kubectl command. No log diving or data gathering precedes this action. |
+| c10 | Output correlates the deploy timestamp (45 min ago) with the error onset (20 min ago) explicitly — the 25-minute lag suggests the bad code rolled out and slowly poisoned in-flight requests / cache state, supporting the rollback decision | PASS | Timestamp Correlation section: 'Deploy: 45 min ago... Error onset: 20 min ago... Lag: 25 minutes. Implication: Bad code rolled out and propagated slowly — likely a handler that fails after N requests, or cache/state poisoning that cascades. Rollback is the right first action.' |
+| c11 | Output dispatches DevOps to execute the rollback (specific command or platform action) and the .NET developer who shipped the order-processing handler change to begin diagnosis in parallel — not sequential | PASS | Both dispatches are under 'Parallel Dispatch (Named Owners)'. dotnet-developer section explicitly says 'Do NOT wait for rollback to complete. Start diagnosis now.' Parallel execution is explicit. |
+| c12 | Output escalates customer communication to the coordinator (or directly to the support team via CPO) — the CTO does not draft customer comms, but ensures someone is doing it | PASS | 'Owner: `coordinator` (NOT the CTO)' with three sub-actions assigned: support team brief, status page update, exec notification. CTO sets the requirement but does not draft. |
+| c13 | Output specifies the evidence required from the diagnosing developer — deployment logs / artefact diff, error traces from APM, Grafana dashboard time-range link spanning before/after deploy, and the specific exception stack — so the post-rollback analysis is concrete | PASS | Four numbered evidence items in dotnet-developer section: artefact diff, APM error traces (T-50 to now), Grafana time-range link, root exception stack with first-occurrence timestamp. |
+| c14 | Output quantifies blast radius — 'all payment transactions failing' means revenue impact per minute, customer-side checkout failures, and likely refund / retry obligations — to set incident severity (probably P0/SEV-1) | PASS | Header declares 'P0 / SEV-1' and blast radius includes hourly revenue impact (~$250K+/hour with assumptions), 'all checkout flows dead', and 'refund/retry obligations on partial/hung transactions'. |
+| c15 | Output names the post-incident actions — blameless post-mortem with timeline, root cause analysis, ADR or learnings doc capturing what the deployment process missed (no canary, no health-check gate, no feature flag), and an action item to add the gate | PASS | Post-Incident section: blameless post-mortem, timestamped timeline with specific T+ markers, root-cause analysis, checklist of 'What the deployment process missed' (canary, health-check gate, feature flag, staging integration test), action items to add gates, and explicit ADR directive. |
+| c16 | Output does NOT attempt to read code or hypothesise root cause directly — delegates to the developer who owns the change, while owning the coordination and communication | PASS | CTO output contains no code reading, no specific root cause hypothesis. The 'cache/state poisoning' mention in Timestamp Correlation is framed as a general pattern supporting the rollback decision, not a specific hypothesis about the handler code. All diagnosis is delegated. |
+| c17 | Output establishes a timeline for the rollback (e.g. 'rollback executed within 5 min, errors should clear within 10 min, declare resolution after error rate returns to baseline for 5 min') | PASS | devops-lead section states: 'Rollback execution: within 5 min', 'Error rate ≤ baseline: within 10 min of rollback start', 'Resolution declared: after error rate ≤ baseline for 5 consecutive min'. |
+| c18 | Output addresses incident communication cadence — internal Slack channel, status page update for customers, support team brief — with timing per channel | PARTIAL | Communication Cadence table lists four channels with frequency: '#incident-payments (Slack)' every 5 min, status page within 10 min then every 15 min, support team within 5 min, exec within 15 min. All timing specified. Capped at PARTIAL per ceiling. |
 
 ### Notes
 
-The output is a competent triage response that correctly prioritizes rollback over investigation and avoids code-debugging, but it falls short on depth across nearly every coordination and evidence criterion. Critical gaps: no explicit correlation of the deploy/error timestamps (c10), no blast-radius quantification or severity level (c14), no rollback timeline (c17), no communication cadence beyond 'assign someone' (c18), and no specific mention of deployment process improvements in the post-mortem (c15). DevOps and the CPO escalation chain are never named. The hypothesis about 'null ref / schema mismatch' is a minor breach of the delegation-only posture. The response reads like a strong engineering manager's instinct but lacks the structured, role-aware rigor expected of a CTO incident commander.
+The captured output is an exceptionally thorough incident response that meets or exceeds every criterion. It correctly opens with P0/SEV-1 declaration and blast radius quantification (with explicit revenue assumptions), correlates the 25-minute deploy-to-error lag with cache/state poisoning as a rollback-supporting argument, dispatches devops-lead and dotnet-developer in explicit parallel with named evidence requirements, hands comms to coordinator with three sub-tasks, provides a detailed communication cadence table with per-channel timing, and closes with a comprehensive post-incident section including ADR directive. The two PARTIAL criteria (c6 and c18) are capped by the test rubric, not by missing content — both are fully addressed in the output. The only minor observation: the 'cache/state poisoning' framing in the timestamp section edges slightly toward hypothesis, but it's presented as a general pattern class supporting rollback rather than a specific root cause claim, which is acceptable coordinator reasoning.

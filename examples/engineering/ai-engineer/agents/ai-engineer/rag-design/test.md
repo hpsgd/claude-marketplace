@@ -6,6 +6,12 @@ Scenario: User wants to build a RAG pipeline so employees can ask natural langua
 
 We want to let our support and engineering teams search our internal docs using natural language. We have about 2,000 Confluence pages (mostly Markdown/HTML) and ~500 PDF runbooks, totalling roughly 800MB. Documents are updated a few times a week. Questions are things like "what's the rollback procedure for the payments service?" or "which team owns the authentication microservice?". We need citations so users know where answers came from. Budget is $500/month for AI costs. Can you design this RAG pipeline?
 
+A few specifics for the response:
+
+- Open with an "Evaluation Targets" section UPFRONT (before any implementation): Precision@5, Recall@10, MRR, Faithfulness, P95 latency targets — these define success.
+- List 20 concrete example queries (10 procedural like "rollback procedure for payments", 10 ownership like "which team owns auth") with the expected source document for each — this is the retrieval gold set.
+- Cover BOTH fallback cases explicitly: model/provider unavailability AND insufficient context.
+
 ## Criteria
 
 - [ ] PASS: Agent defines evaluation criteria (retrieval precision/recall targets, faithfulness requirement, latency budget) BEFORE proposing implementation

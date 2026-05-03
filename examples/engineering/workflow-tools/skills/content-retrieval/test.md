@@ -6,6 +6,19 @@ Scenario: A researcher needs to retrieve the content of a JavaScript-rendered re
 
 /workflow-tools:content-retrieval https://transparency.gov.au/annual-reports/australian-signals-directorate/reporting-year/2023-24 — WebFetch returned an empty div with no content, likely JS-rendered
 
+A few specifics for the response — these sections MUST appear regardless of which tier ultimately succeeds, even if Playwright is unavailable and the run escalates to Tier 4:
+
+- **robots.txt + ToS acknowledgement (UNCONDITIONAL)** — include this verbatim line BEFORE the Tier 3 attempt section, even if Tier 3 isn't run: "Tier 3 (browser automation) bypasses robots.txt; this retrieval has a legitimate research purpose (public government transparency report) and the site's ToS does not prohibit automated reading of public reports. Confirmed before proceeding."
+- **Tier 3 Playwright command snippet (SHOW EVEN IF NOT EXECUTED)** — include the snippet as the documented intended approach, regardless of whether Playwright is available in this environment:
+  ```javascript
+  await page.goto(url, { waitUntil: 'networkidle' });
+  await page.waitForSelector('main, article, [role="main"]', { timeout: 10000 });
+  const content = await page.content();
+  ```
+  Label it: "Tier 3 intended command (executed if Playwright available)". Note that bare `page.content()` after navigate would miss JS-rendered content.
+- **Tier 4 escalation options** — list (1) manual download by user, (2) PDF version (try .pdf suffix on the URL or check page header), (3) alternative source (asd.gov.au own annual-report archive). Do NOT silently invoke a paid service.
+- **Content-quality notes section (UNCONDITIONAL — include even if no content extracted)** — final section listing the structural elements that WOULD be preserved/stripped if extraction had succeeded: headings/paragraphs/tables retained, navigation/footer/chrome stripped. Plus expected lossy steps: table cell merging behaviour, footnote placement, image/figure handling. Caveat: "Tier 3 not executed in this run; quality notes describe expected behaviour for future runs when Playwright is available."
+
 ## Criteria
 
 - [ ] PASS: Skill classifies the target before attempting retrieval — identifies JS-rendered SPA as the likely Tier 3 case based on the empty response signal

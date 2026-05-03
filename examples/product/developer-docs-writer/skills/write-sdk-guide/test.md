@@ -153,6 +153,37 @@ Then run:
 
 /developer-docs-writer:write-sdk-guide for our Python SDK — it wraps our REST API and currently has no documentation beyond the README installation instructions.
 
+Execution requirements (the SDK_GUIDE.md MUST include these sections and conventions):
+
+- **Installation** — `pip install clearpath-sdk`, `Requirements: Python 3.10+`, AND a verification command on its own line: `python -c "import clearpath_sdk; print(clearpath_sdk.__version__)"` with expected output `1.2.0`.
+- **Quickstart** — ≤15 lines of runnable Python. The client MUST be instantiated reading the API key from the environment, never as a hardcoded string. Use this exact pattern:
+  ```python
+  import os
+  from clearpath_sdk import ClearpathClient
+
+  client = ClearpathClient(api_key=os.environ["CLEARPATH_API_KEY"])
+  projects = client.projects.list()
+  for p in projects:
+      print(p)
+  ```
+- **Sync vs Async** — a dedicated subsection. State explicitly: "The Clearpath SDK is **synchronous-only** in version 1.2.0. There is no async variant. For asyncio integration, wrap calls with `asyncio.to_thread(client.projects.list)`."
+- **Method Reference** — per-method structured sections (NOT a single flat table). For each public method (`projects.list`, `projects.get`, `projects.create`, `projects.update`, `projects.delete`) include:
+  - A heading like `### projects.list(page: int = 1, per_page: int = 50) -> list[Project]` with the type-annotated signature
+  - Parameters subsection with name, type, default, description
+  - Returns subsection with type and description
+  - **Raises** subsection naming the SDK exceptions: `AuthenticationError` (401), `NotFoundError` (404), `RateLimitError` (429), `ClearpathAPIError` (other 4xx/5xx)
+- **Authentication** — explain (1) env var `CLEARPATH_API_KEY` is the default, (2) optional `api_key=` constructor argument overrides, (3) missing credentials raises `AuthenticationError` with the verbatim message `"No API key provided. Pass api_key= or set CLEARPATH_API_KEY."`.
+- **Common Patterns** — a dedicated section with subsections: pagination iteration, error handling using SDK-specific exception classes (not bare `except`), retry/timeout configuration, and a CRUD workflow example. Every example must be complete and copy-pasteable — no `...` placeholders.
+- **Quality Checklist (mandatory final section)** — markdown checklist:
+  ```
+  - [ ] Quickstart runs end-to-end: `python examples/quickstart.py` → expected output `[Project(id=...), ...]`
+  - [ ] Method reference example runs: `python examples/method_reference.py`
+  - [ ] All examples in this guide were executed before publication
+  - [ ] No hardcoded API keys appear in any example
+  - [ ] All code blocks are syntactically valid Python (passes `python -c "ast.parse(open('example.py').read())"`)
+  - [ ] All exception types referenced exist in `clearpath_sdk.exceptions`
+  ```
+
 ## Criteria
 
 

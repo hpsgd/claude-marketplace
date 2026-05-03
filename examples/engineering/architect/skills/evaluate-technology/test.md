@@ -6,6 +6,20 @@ Scenario: Checking that the evaluate-technology skill enforces an honest, eviden
 
 Review the evaluate-technology skill definition and verify it produces a structured, bias-resistant technology comparison.
 
+In your verification report, confirm or flag each item by name (do not paraphrase):
+
+- **Pre-committed weights** before research, with the explicit "post-hoc rationalisation" anti-pattern guard cited.
+- **Default criteria set (8)**: maturity, community, team familiarity, performance, maintenance burden, lock-in risk, cost, integration. List all eight.
+- **Research brief schema (per option)** with all named fields: `current version`, `license`, `notable adopters`, `maturity signals`, `community signals`, `known limitations`.
+- **Scoring**: 1-5 scale with one-sentence justification per score; 1-5 weight scale; weighted total. Binary scoring REJECTED as anti-pattern.
+- **Trade-off table** AND a **risk register** with `trigger signals` and `mitigations` columns.
+- **Recommendation must include**: (a) chosen option, (b) **what is sacrificed** by choosing it, (c) **reconsideration triggers**.
+- **Tie-handling fallback**: when neither option is clearly better, recommend a **time-boxed spike** (e.g. 1-2 weeks, with success criteria) rather than forcing a choice.
+- **Anti-patterns named (3)**: (1) conclusion-first evaluation, (2) popularity as proxy for quality, (3) binary scoring.
+- **Identified gaps**: any of — no guidance for single-option fitness check, missing licence-compatibility consideration, no exit-cost / reversibility metric beyond lock-in risk.
+
+Confirm or flag each by name.
+
 ## Criteria
 
 - [ ] PASS: Skill requires evaluation criteria and weights to be defined BEFORE research begins — explicitly to prevent post-hoc rationalisation

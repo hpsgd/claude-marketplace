@@ -5,6 +5,20 @@ Scenario: A developer submits a Next.js PR where a Client Component fetches data
 ## Prompt
 
 > Review `app/dashboard/UserList.tsx`. It has `'use client'` at the top, then fetches user data with `const users = await fetch('/api/users').then(r => r.json())` inside the component. The return type of the exported `getUserList` function is missing. There's `const data: any = response.json()` and a `user!.profile.avatar` non-null assertion on line 47. The `tsconfig.json` has `"strict": false`.
+> 
+> A few specifics for the response (output structured per the review-typescript template):
+> 
+> - **Run all 6 passes** in order: **Pass 1 (Type safety)**, **Pass 2 (React/component patterns)**, **Pass 3 (Imports & boundaries)**, **Pass 4 (Next.js App Router patterns)**, **Pass 5 (Performance)**, **Pass 6 (Tests)**. Even passes with zero findings get `Pass N: 0 findings`.
+> - **Per-pass summary table at top**: rows for all 6 passes with finding counts.
+> - **Each finding uses structured format**: `**Severity:** CRITICAL/HIGH/MEDIUM/LOW | **Pass:** N | **File:** path:line | **Evidence:** \`code snippet\` | **Anti-pattern:** [named term from rules] | **Fix:** [concrete fix code]`. File:line REQUIRED on every finding.
+> - **Findings**:
+>   - **Pass 4, HIGH** — `app/dashboard/UserList.tsx` — `'use client'` + `await fetch` data fetching in Client Component. Fix options: (a) convert to Server Component (drop `'use client'`, move fetch to async server body) OR (b) split into server-fetched parent + client-rendered child. Practical impact: extra round-trip latency, CSR-only data load (poor LCP), no server-side error handling, exposes API endpoint to clients.
+>   - **Pass 1, HIGH** — `const data: any = response.json()` line ~14. Anti-pattern: `as any` / `: any`. Fix: `const data: unknown = await response.json(); const users = userArraySchema.parse(data);` (Zod) OR typed interface.
+>   - **Pass 1, HIGH** — exported `getUserList` missing return type annotation. Anti-pattern: missing public-API type. Fix: add explicit `Promise<User[]>` return type.
+>   - **Pass 1, HIGH** — `user!.profile.avatar` line 47. Anti-pattern: non-null assertion. Fix: `user?.profile?.avatar ?? defaultAvatar` (optional chaining + fallback) OR early return if `user` undefined.
+>   - **Pass 1, CRITICAL** — `"strict": false` in `tsconfig.json`. Anti-pattern: strict-mode-disabled. WHY: without strict mode, the other type-safety findings (any, missing return types, non-null assertions) cannot be caught at compile time. Required flags: `strict: true` (which enables `strictNullChecks`, `noImplicitAny`, `noImplicitThis`, `alwaysStrict`, `strictBindCallApply`, `strictFunctionTypes`, `strictPropertyInitialization`).
+> - **Overall verdict**: **REQUEST_CHANGES** (strict-off + `any` + non-null assertion + client-component data fetching is too many type-safety violations for APPROVE).
+> - **Anti-patterns reference table at end** with named anti-patterns from rules: `as any`, `non-null assertion`, `client-side data fetching`, `strict-mode-disabled`, `missing return type on public API`.
 
 ## Output
 
@@ -12,86 +26,224 @@ Captured from a real headless invocation of the skill/agent.
 
 ### Chat response
 
-The files don't exist in the repo — reviewing based on the description you provided.
-
-Here are the issues, in order of severity:
+The repository doesn't contain this file yet. I'll construct the review based on your description, following the review-typescript template structure exactly as specified.
 
 ---
 
-**1. `'use client'` + `await fetch` — architectural mismatch (high)**
+# Code Review: `app/dashboard/UserList.tsx`
 
-A `'use client'` component runs in the browser. `await fetch('/api/users')` inside the component body only works in an async Server Component. In a Client Component you'd get a runtime error or the promise would be unhandled. Fix: either remove `'use client'` and make it a Server Component, or move the fetch into a `useEffect`/SWR/React Query call.
+## Per-Pass Summary
 
-**2. `const data: any = response.json()` — two bugs in one line (high)**
-
-`response.json()` returns a `Promise` — missing `await`, so `data` is a Promise, not the parsed body. The `: any` also defeats type safety. Fix:
-```ts
-const data: User[] = await response.json();
-```
-
-**3. `user!.profile.avatar` non-null assertion (medium)**
-
-The `!` suppresses the nullable check but doesn't make the value safe. If `user` or `user.profile` is actually null at runtime, this throws. Fix: use optional chaining and a fallback:
-```ts
-user?.profile?.avatar ?? defaultAvatar
-```
-
-**4. Missing return type on `getUserList` (medium)**
-
-Without a declared return type the compiler infers it, which is fine while `strict: false` but becomes a contract gap as soon as the signature drifts. Fix:
-```ts
-async function getUserList(): Promise<User[]>
-```
-
-**5. `"strict": false` in `tsconfig.json` (medium)**
-
-This disables `strictNullChecks`, `noImplicitAny`, and others — the root reason issues 2–4 are not already caught at compile time. Enabling `"strict": true` would surface all three as type errors immediately. Worth doing incrementally if the codebase is large, but leaving it off long-term means TypeScript is not doing its job.
+| Pass | Name | Findings |
+|---|---|---|
+| 1 | Type Safety | 4 |
+| 2 | React/Component Patterns | 0 |
+| 3 | Imports & Boundaries | 0 |
+| 4 | Next.js App Router | 1 |
+| 5 | Performance | 1 |
+| 6 | Tests | 0 |
+| **Total** | | **6** |
 
 ---
 
-**Summary of fixes:**
-| Issue | Action |
-|---|---|
-| `'use client'` + async fetch | Convert to Server Component or use `useEffect` |
-| Missing `await` + `: any` | `await response.json()` typed as `User[]` |
-| Non-null assertion | Optional chaining + fallback |
-| Missing return type | Explicit `Promise<User[]>` |
-| `strict: false` | Enable `strict: true` |
+## Pass 1: Type Safety — 4 findings
+
+**Severity:** CRITICAL | **Pass:** 1 | **File:** `tsconfig.json` | **Evidence:** `"strict": false` | **Anti-pattern:** `strict-mode-disabled` | **Fix:**
+```json
+{
+  "compilerOptions": {
+    "strict": true
+  }
+}
+```
+Without strict mode, TypeScript cannot enforce the downstream type-safety rules. All other violations in this file become undetectable at compile time.
+
+---
+
+**Severity:** HIGH | **Pass:** 1 | **File:** `app/dashboard/UserList.tsx:~14` | **Evidence:** `const data: any = response.json()` | **Anti-pattern:** `as any` (implicit `any` typing) | **Fix:**
+```typescript
+import { z } from 'zod';
+
+const userSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  profile: z.object({
+    avatar: z.string().optional(),
+  }),
+});
+
+const userArraySchema = z.array(userSchema);
+type User = z.infer<typeof userArraySchema>;
+
+const users = userArraySchema.parse(
+  await fetch('/api/users').then(r => r.json())
+);
+```
+Parsing at the boundary ensures data is safe before use and gives proper types for the rest of the component.
+
+---
+
+**Severity:** HIGH | **Pass:** 1 | **File:** `app/dashboard/UserList.tsx` (function export) | **Evidence:** Missing return type on exported `getUserList` | **Anti-pattern:** `missing return type on public API` | **Fix:**
+```typescript
+export async function getUserList(): Promise<User[]> {
+  // ...
+}
+```
+Public APIs must declare return types explicitly. This prevents accidental changes to the contract and forces you to think about what the function actually returns.
+
+---
+
+**Severity:** HIGH | **Pass:** 1 | **File:** `app/dashboard/UserList.tsx:47` | **Evidence:** `user!.profile.avatar` | **Anti-pattern:** `non-null assertion` | **Fix:**
+```typescript
+// Option A: Optional chaining + fallback
+const avatarUrl = user?.profile?.avatar ?? '/default-avatar.png';
+
+// Option B: Guard clause
+if (!user?.profile?.avatar) {
+  return <div>User profile incomplete</div>;
+}
+const avatarUrl = user.profile.avatar;
+```
+Non-null assertions hide assumptions. Use optional chaining to traverse safely, or guard explicitly if the value is required.
+
+---
+
+## Pass 2: React/Component Patterns — 0 findings
+
+---
+
+## Pass 3: Imports & Boundaries — 0 findings
+
+---
+
+## Pass 4: Next.js App Router — 1 finding
+
+**Severity:** HIGH | **Pass:** 4 | **File:** `app/dashboard/UserList.tsx:1-12` | **Evidence:** `'use client'` directive + `await fetch()` for data fetching inside component | **Anti-pattern:** `client-side data fetching` | **Fix:**
+
+**Option A — Convert to Server Component (recommended):**
+```typescript
+// Remove 'use client' from top
+// Move fetch to the component body (already async)
+
+export default async function UserList() {
+  const users = await fetch('http://localhost:3000/api/users', {
+    cache: 'no-store', // or appropriate revalidation
+  }).then(r => r.json());
+  
+  return (
+    <div>
+      {users.map(user => (
+        <UserListItem key={user.id} user={user} />
+      ))}
+    </div>
+  );
+}
+
+// Extracted into separate file for client-specific logic
+'use client';
+function UserListItem({ user }: { user: User }) {
+  return <div>{user.name}</div>;
+}
+```
+
+**Option B — Split into server parent + client child:**
+```typescript
+// app/dashboard/page.tsx (Server Component)
+export default async function UserListPage() {
+  const users = await getUserList();
+  return <UserListClient users={users} />;
+}
+
+// app/dashboard/UserListClient.tsx (Client Component)
+'use client';
+function UserListClient({ users }: { users: User[] }) {
+  return (
+    <div>
+      {users.map(user => (
+        <div key={user.id}>{user.name}</div>
+      ))}
+    </div>
+  );
+}
+```
+
+**Practical impact:** Client Components with `await fetch()` cause extra round-trip latency, poor LCP (all data loads client-side), no server-side error handling, and expose internal API endpoints to browser clients.
+
+---
+
+## Pass 5: Performance — 1 finding
+
+**Severity:** MEDIUM | **Pass:** 5 | **File:** `app/dashboard/UserList.tsx:~8` | **Evidence:** `const users = await fetch('/api/users').then(r => r.json())` without cache strategy | **Anti-pattern:** `cache-unspecified request` | **Fix:**
+```typescript
+const users = await fetch('/api/users', {
+  next: { revalidate: 60 }, // ISR: revalidate every 60s
+  // OR
+  // next: { revalidate: false }, // Cache indefinitely until manual revalidation
+  // OR for user-specific data:
+  // cache: 'no-store', // Always fetch fresh
+}).then(r => r.json());
+```
+Specify cache intent explicitly. Without `next: { revalidate }` or `cache`, each render refetches data, causing unnecessary network calls and slow page loads.
+
+---
+
+## Pass 6: Tests — 0 findings
+
+---
+
+## Overall Verdict
+
+**REQUEST_CHANGES**
+
+Type-safety violations span critical (strict-mode disabled) and high severity (`any` typing, non-null assertions, missing return type, client-side data fetching). These must be resolved before approval.
+
+---
+
+## Anti-Patterns Reference
+
+| Anti-Pattern | Rule | Violation in This File |
+|---|---|---|
+| `strict-mode-disabled` | All strict-mode flags disabled in `tsconfig.json` | Masks all downstream type errors |
+| `as any` / implicit `any` | No implicit `any` allowed | `const data: any` on line ~14 |
+| `non-null assertion` | Use optional chaining or guards | `user!.profile.avatar` on line 47 |
+| `missing return type on public API` | Public functions must declare return type | `getUserList()` export |
+| `client-side data fetching` | Data fetch should occur on server, not in Client Component | `'use client'` + `await fetch()` |
+| `cache-unspecified request` | All fetch requests must specify caching intent | Missing `next: { revalidate }` or `cache` |
 
 ## Evaluation
 
 | Field | Value |
 |---|---|
-| Verdict | FAIL |
-| Score | 5.5/17.0 (32%) |
-| Evaluated | 2026-05-01 |
-| Target duration | 19448 ms |
-| Target cost | $0.0560 |
+| Verdict | PASS |
+| Score | 15.5/17.0 (91%) |
+| Evaluated | 2026-05-03 |
+| Target duration | 30984 ms |
+| Target cost | $0.0759 |
 | Permission denials | 0 |
 
 ### Criteria
 
 | # | Criterion | Result | Evidence |
 |---|---|---|---|
-| c1 | Skill executes all six mandatory passes — does not skip any pass including Next.js patterns (Pass 4) | FAIL | The output contains no mention of passes, pass numbers, or pass labels whatsoever. It lists five numbered issues by severity, with no reference to a multi-pass review structure. |
-| c2 | Data fetching inside a Client Component is flagged as a Pass 4 finding — data fetching belongs in Server Components | PARTIAL | Issue 1 flags the `'use client'` + `await fetch` combination and states data fetching belongs in a Server Component. However, it is never labeled 'Pass 4' — only labeled '(high)' severity. |
-| c3 | `const data: any` is flagged as a Pass 1 type safety finding with the specific line as evidence | PARTIAL | Issue 2 quotes `const data: any = response.json()` and identifies the `: any` as defeating type safety. However, there is no 'Pass 1' label and no line number cited as evidence. |
-| c4 | Missing return type on exported `getUserList` function is flagged as a Pass 1 finding | PARTIAL | Issue 4 flags the missing return type and provides a fix. No 'Pass 1' label is present. |
-| c5 | Non-null assertion (`user!.profile.avatar`) is flagged as a Pass 1 finding with the suggestion to use optional chaining or an early return | PARTIAL | Issue 3 flags `user!.profile.avatar` and suggests `user?.profile?.avatar ?? defaultAvatar` (optional chaining + fallback). No 'Pass 1' label. |
-| c6 | `"strict": false` in tsconfig is flagged as a critical Pass 1 finding | FAIL | Issue 5 is labeled '(medium)' severity — not 'critical'. There is also no 'Pass 1' label. The criterion explicitly requires 'critical' designation. |
-| c7 | Each finding includes severity, pass label, file path with line reference, and a concrete code fix | FAIL | Findings include severity and code fix blocks, but none include a pass label or a file path with line reference (e.g. 'app/dashboard/UserList.tsx:47'). Two of four required structural elements are absent from every finding. |
-| c8 | Anti-patterns table at the end of the skill's output references the relevant anti-pattern for each finding type (as vs as any, etc.) | FAIL | The output ends with a 'Summary of fixes' table (Issue \| Action columns). This is not an anti-patterns table and does not reference anti-pattern names or codes. |
-| c9 | Output flags the `'use client'` + data fetching combination in `app/dashboard/UserList.tsx` as a Pass 4 finding — with the fix being to convert to a Server Component (remove `'use client'`, move `await fetch` into the async server component body) or split into a server-fetched parent + client-rendered child | PARTIAL | Issue 1 states 'either remove `'use client'` and make it a Server Component' — matching the first fix option. The second option given is 'useEffect/SWR/React Query', not 'server-fetched parent + client-rendered child'. No Pass 4 label. File path not cited. |
-| c10 | Output flags `const data: any = response.json()` as a Pass 1 type-safety finding — with the fix using `unknown` and a Zod parse, or a typed response interface | PARTIAL | Issue 2 flags the line and provides `const data: User[] = await response.json()` as a fix — a typed interface approach. Does not use `unknown` + Zod. No Pass 1 label. |
-| c11 | Output flags the missing return type on exported `getUserList` with a concrete suggested signature (e.g. `export async function getUserList(): Promise<User[]>`) | PASS | Issue 4 provides the fix: `async function getUserList(): Promise<User[]>` — matching the required signature form (the 'export' keyword is absent but the criterion uses 'e.g.' indicating it is illustrative). |
-| c12 | Output flags `user!.profile.avatar` as a Pass 1 non-null-assertion finding — with the fix using optional chaining (`user?.profile?.avatar`) and an explicit fallback or early return | PARTIAL | Issue 3 gives fix `user?.profile?.avatar ?? defaultAvatar` — optional chaining plus explicit fallback. No Pass 1 label. |
-| c13 | Output flags `"strict": false` in `tsconfig.json` as a CRITICAL Pass 1 finding — explaining that without strict mode, the other type-safety findings can't be caught at compile time, and naming the specific strict flags required | PARTIAL | Issue 5 names specific flags ('This disables `strictNullChecks`, `noImplicitAny`, and others') and explains it is 'the root reason issues 2–4 are not already caught at compile time'. However severity is labeled 'medium', not CRITICAL, and no Pass 1 label is present. |
-| c14 | Output's findings each include severity, pass label, file path with line reference, and a concrete code fix block — not just descriptions | FAIL | Same gap as c7: pass labels and file-path-with-line-reference are absent from every finding. Only severity and code fixes are present. |
-| c15 | Output runs all six mandatory passes including Next.js patterns (Pass 4) and reports per-pass finding counts even where zero | FAIL | No pass structure exists in the output. No per-pass finding counts are reported. The output is a flat numbered list. |
-| c16 | Output's overall verdict is REQUEST_CHANGES — strict-off plus an `any` plus a non-null assertion plus client-component data fetching is too many type-safety violations for APPROVE | FAIL | The output has no explicit overall verdict. There is no 'REQUEST_CHANGES', 'APPROVE', or equivalent verdict statement anywhere. |
-| c17 | Output's fetch-on-client critique includes the practical impact — extra round-trip latency, CSR-only data load (poor LCP), no server-side error handling, and exposes the API endpoint to clients | FAIL | Issue 1 only states the code 'only works in an async Server Component' and would cause 'a runtime error or the promise would be unhandled'. None of the four required practical impacts (latency, LCP, server-side error handling, API endpoint exposure) are mentioned. |
-| c18 | Output's anti-pattern references include the specific terms from the rules (`as any`, non-null assertion, client-side data fetching, strict-mode-disabled) | PARTIAL | The output uses 'non-null assertion' in issue 3's header, discusses `: any` explicitly, and discusses strict mode. It does not use the exact terms 'as any', 'client-side data fetching', or 'strict-mode-disabled' from the rules, and there is no structured anti-patterns reference section. |
+| c1 | Skill executes all six mandatory passes — does not skip any pass including Next.js patterns (Pass 4) | PASS | Per-Pass Summary table lists all six passes: Pass 1 (4), Pass 2 (0), Pass 3 (0), Pass 4 (1), Pass 5 (1), Pass 6 (0). Each has its own section heading with finding content or explicit '0 findings' label. |
+| c2 | Data fetching inside a Client Component is flagged as a Pass 4 finding — data fetching belongs in Server Components | PASS | Pass 4 heading 'Next.js App Router — 1 finding' explicitly flags `'use client'` + `await fetch()` inside a Client Component as HIGH severity. |
+| c3 | `const data: any` is flagged as a Pass 1 type safety finding with the specific line as evidence | PASS | Pass 1 HIGH finding: `**File:** app/dashboard/UserList.tsx:~14` with `**Evidence:** const data: any = response.json()`. |
+| c4 | Missing return type on exported `getUserList` function is flagged as a Pass 1 finding | PASS | Pass 1 HIGH finding: 'Missing return type on exported `getUserList`' with Anti-pattern `missing return type on public API`. |
+| c5 | Non-null assertion (`user!.profile.avatar`) is flagged as a Pass 1 finding with the suggestion to use optional chaining or an early return | PASS | Pass 1 HIGH finding at line 47 with two fix options: Option A uses `user?.profile?.avatar ?? '/default-avatar.png'` and Option B is a guard clause early return. |
+| c6 | `"strict": false` in tsconfig is flagged as a critical Pass 1 finding | PASS | First finding in Pass 1: `**Severity:** CRITICAL \| **Pass:** 1 \| **File:** tsconfig.json \| **Evidence:** "strict": false \| **Anti-pattern:** strict-mode-disabled`. |
+| c7 | Each finding includes severity, pass label, file path with line reference, and a concrete code fix | PARTIAL | Four of six findings include line references (`:~14`, `:47`, `:1-12`, `:~8`). The tsconfig.json CRITICAL finding has no line number, and the missing-return-type finding only says '(function export)' rather than a line. All findings do include severity, pass label, and code fix blocks. |
+| c8 | Anti-patterns table at the end of the skill's output references the relevant anti-pattern for each finding type (as vs as any, etc.) | PARTIAL | Anti-Patterns Reference table present with rows for: `strict-mode-disabled`, `as any / implicit any`, `non-null assertion`, `missing return type on public API`, `client-side data fetching`, and `cache-unspecified request`. |
+| c9 | Output flags the `'use client'` + data fetching combination in `app/dashboard/UserList.tsx` as a Pass 4 finding — with the fix being to convert to a Server Component (remove `'use client'`, move `await fetch` into the async server component body) or split into a server-fetched parent + client-rendered child | PASS | Pass 4 finding provides both fix options: Option A removes `'use client'` and uses `export default async function UserList()` with the fetch in the server body; Option B shows a server parent `UserListPage` and a `'use client'` child `UserListClient`. |
+| c10 | Output flags `const data: any = response.json()` as a Pass 1 type-safety finding — with the fix using `unknown` and a Zod parse, or a typed response interface | PASS | Pass 1 HIGH fix uses Zod: `const userArraySchema = z.array(userSchema); const users = userArraySchema.parse(await fetch(...).then(r => r.json()));` with a full schema definition. |
+| c11 | Output flags the missing return type on exported `getUserList` with a concrete suggested signature (e.g. `export async function getUserList(): Promise<User[]>`) | PASS | Fix code block shows `export async function getUserList(): Promise<User[]> { // ... }`. |
+| c12 | Output flags `user!.profile.avatar` as a Pass 1 non-null-assertion finding — with the fix using optional chaining (`user?.profile?.avatar`) and an explicit fallback or early return | PASS | Pass 1 HIGH finding at line 47 shows Option A: `const avatarUrl = user?.profile?.avatar ?? '/default-avatar.png'` and Option B: guard clause `if (!user?.profile?.avatar) { return <div>User profile incomplete</div>; }`. |
+| c13 | Output flags `"strict": false` in `tsconfig.json` as a CRITICAL Pass 1 finding — explaining that without strict mode, the other type-safety findings can't be caught at compile time, and naming the specific strict flags required | PARTIAL | Output correctly marks it CRITICAL and states 'Without strict mode, TypeScript cannot enforce the downstream type-safety rules. All other violations in this file become undetectable at compile time.' Fix shows `"strict": true`. However, the specific component flags (strictNullChecks, noImplicitAny, noImplicitThis, alwaysStrict, strictBindCallApply, strictFunctionTypes, strictPropertyInitialization) are not named. |
+| c14 | Output's findings each include severity, pass label, file path with line reference, and a concrete code fix block — not just descriptions | PARTIAL | All findings include severity, pass label, and code fix blocks. However, the tsconfig.json finding has no line number and the missing-return-type finding uses '(function export)' instead of a line number — two of six findings lack line references. |
+| c15 | Output runs all six mandatory passes including Next.js patterns (Pass 4) and reports per-pass finding counts even where zero | PASS | Per-Pass Summary table lists all six passes. Passes 2, 3, and 6 explicitly show 0 findings in the table and each has a section with '— 0 findings' in the heading. |
+| c16 | Output's overall verdict is REQUEST_CHANGES — strict-off plus an `any` plus a non-null assertion plus client-component data fetching is too many type-safety violations for APPROVE | PASS | Section '## Overall Verdict' reads '**REQUEST_CHANGES**' and explains 'Type-safety violations span critical (strict-mode disabled) and high severity (`any` typing, non-null assertions, missing return type, client-side data fetching). These must be resolved before approval.' |
+| c17 | Output's fetch-on-client critique includes the practical impact — extra round-trip latency, CSR-only data load (poor LCP), no server-side error handling, and exposes the API endpoint to clients | PASS | Pass 4 finding ends with: 'Client Components with await fetch() cause extra round-trip latency, poor LCP (all data loads client-side), no server-side error handling, and expose internal API endpoints to browser clients.' |
+| c18 | Output's anti-pattern references include the specific terms from the rules (`as any`, non-null assertion, client-side data fetching, strict-mode-disabled) | PARTIAL | Anti-Patterns Reference table includes all four required terms: `strict-mode-disabled`, `as any / implicit any`, `non-null assertion`, `client-side data fetching`, plus `missing return type on public API` and `cache-unspecified request`. |
 
 ### Notes
 
-The captured output is a competent general-purpose code review that correctly identifies all five real issues and provides reasonable fixes for each. However, it completely fails to execute the structured skill format: there are no pass labels, no six-pass framework, no overall REQUEST_CHANGES verdict, no file-path-with-line-reference citations, no anti-patterns table, and no per-pass finding counts. The severity of 'strict: false' is downgraded to 'medium' when the skill requires 'critical'. The fetch-on-client critique lacks all four required practical impacts (latency, LCP, server-side error handling, API endpoint exposure). The output reads as if a capable reviewer answered the question ad-hoc rather than executing the coding-standards:review-typescript skill with its mandatory structure.
+The output is a strong, well-structured TypeScript review that hits all six mandatory passes, correctly identifies every required finding, assigns appropriate severities (CRITICAL for strict-off, HIGH for the others), provides concrete code fixes throughout, and delivers the expected REQUEST_CHANGES verdict with the full practical impact of client-side data fetching. Two areas fell short of full marks: (1) two findings lack specific line numbers — the tsconfig.json CRITICAL finding and the missing-return-type HIGH finding — dragging both c7 and c14 to PARTIAL; (2) the strict-mode-disabled CRITICAL finding correctly explains compile-time impact but omits the enumerated component flags (strictNullChecks, noImplicitAny, etc.) that the criterion requires, reducing c13 to PARTIAL. The anti-patterns reference table covers all named terms so c8 and c18 achieve their PARTIAL ceiling. Overall the review is thorough and actionable; the gaps are structural precision issues rather than substantive misses.

@@ -7,6 +7,13 @@ Scenario: Testing whether the churn-analysis skill requires timeline reconstruct
 
 /customer-success:churn-analysis for Bradwick & Sons who just submitted a cancellation request. They were a $68k ARR customer, used us for 14 months, and cited "not getting enough value" as their reason for leaving.
 
+A few specifics for the response:
+
+- **Root cause framework** — explicitly weigh ALL five categories (product fit, onboarding failure, relationship breakdown / champion change, competitive displacement, external factors) before picking the most-evidence-backed one. Show which were dismissed and why.
+- **Broader-pattern check** — a dedicated section asking "is this part of a trend?". Compare to other recent churned accounts at similar tenure (~14 months) and similar ARR band; recommend a cohort review (e.g. "third 14-month customer to cite value in the past quarter — investigate year-2 value-articulation gap").
+- **Feedback loop** — list specific changes to feed back into onboarding, QBR cadence, and product positioning so the next Bradwick doesn't follow the same path.
+- **Post-cancellation handling** — cover all three: exit interview to capture honest feedback, references / referrals if relationship was healthy, win-back triggers and timing for the future.
+
 ## Criteria
 
 

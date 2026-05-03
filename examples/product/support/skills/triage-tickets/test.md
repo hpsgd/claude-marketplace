@@ -83,6 +83,23 @@ Body: I would like to delete my account and request that all personal data assoc
 
 ---
 
+Execution requirements (the triage output MUST follow these conventions):
+
+- **Pattern Detection Rule (state explicitly at top)** — a single sentence: "Pattern escalation rule: 3 or more tickets matching the same root cause within a 24-hour window trigger an incident escalation rather than individual handling."
+- **SLA Table (state once, then apply)** — declare the SLA-by-severity once near the top:
+  ```
+  | Severity | First-response SLA |
+  |----------|--------------------|
+  | Critical | 30 minutes         |
+  | High     | 2 hours            |
+  | Medium   | 24 hours           |
+  | Low      | 3 business days    |
+  ```
+- **Triage Table** — exact columns in this order: `Ticket ID | Customer | Category | Severity | Priority | SLA | Routing | Suggested Owner | Pattern Group | State`. Every row populates EVERY column. State values: `Triage`, `Routed`, `Pattern-grouped`, `Needs-more-info`, `Deflected`.
+- **"Needs-more-info" state** — apply this state to BOTH T-016 ("Everything is broken") and T-017 ("report data looks wrong") because they lack specifics. They are NOT classified as bugs without first asking the customer for reproduction details.
+- **Pattern group for login errors** — group T-001, T-002, T-003, T-004 into a single Pattern Group (e.g. `PG-AUTH-500`) and emit ONE incident escalation row referencing the group rather than four individual engineering tickets. State the affected user count (4), the time window (~6 hours), and recommend on-call engineering escalation.
+- **Routing diversity** — billing tickets (T-006, T-007) → Billing/Finance owner; feature requests (T-008, T-009, T-010) → Product owner; performance/data bugs (T-014, T-015) → Engineering; how-to questions with public docs (T-011, T-012, T-013) → Support agent with a deflection link to the KB; GDPR (T-018) → Legal/Privacy owner.
+
 ## Criteria
 
 

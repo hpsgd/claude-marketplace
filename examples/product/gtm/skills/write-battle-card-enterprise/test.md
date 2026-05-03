@@ -6,6 +6,23 @@ Scenario: Testing the write-battle-card skill with an enterprise deal where obje
 
 /gtm:write-battle-card against Salesforce for our CRM product — the deal is a 500-seat enterprise account where the economic buyer (CFO) cares about TCO, the technical buyer (VP Engineering) cares about API extensibility and data migration, and the end users (sales reps) care about mobile UX and speed.
 
+For this card, use the following product reference data (don't leave [confirm] placeholders — fill these in directly):
+
+- **Our product (Pipedeck CRM)**: $65/user/month at Enterprise tier, native iOS/Android apps with offline mode, REST API at 1,000 calls/sec/tenant burst (sustained 200/sec), pre-built integrations: Slack, MS Teams, HubSpot, Zendesk, NetSuite, Workday. Migration tool: Pipedeck Bridge — Salesforce object mapping wizard, dual-write phase, 3-week typical 500-seat migration. Mobile App Store rating 4.7 (15k reviews), Salesforce Mobile rating 3.8 (45k reviews).
+- **Salesforce Enterprise tier**: ~$165/user/month list. SI engagement 1-2× first-year licence cost typical at 500 seats ($500k-$1M). Salesforce admin FTE typical at this scale: 1.5 FTE ($180k/yr loaded). API governor: 100k daily calls per org for Enterprise.
+- **Win/loss data (last 12 months, internal)**: vs Salesforce we win 62% of deals where TCO is decisive; lose 71% of deals where AppExchange ecosystem breadth is the gating requirement; win 78% of deals where mobile field-rep usability is scored.
+- **Enterprise case study**: NorthRiver Logistics, 540 seats, migrated from Salesforce in Q2 2025 — 21-day migration via Bridge, 3-week time-to-productivity, 38% lower 3-year TCO, sales-rep weekly active up 41%.
+
+A few specifics for the response:
+
+- **Single-page TL;DR at top** — one callout block, ≤8 bullets max, scannable in 30 seconds. The detailed sections follow.
+- **TCO table with actual dollar figures**: Licence ($65 vs $165/user/month), Implementation ($150k vs $750k for 500 seats), Training, Admin FTE ($60k vs $180k/yr), 3-year total. No placeholders.
+- **Technical differentiators (specific)**: name our API rate limit (1000/sec) vs Salesforce (100k/day), name our migration tool (Pipedeck Bridge) vs Salesforce (Data Loader / SI engagement), name our specific integrations (Slack, MS Teams, NetSuite, Workday) vs Salesforce's AppExchange.
+- **Mobile differentiators (specific)**: our 4.7 vs Salesforce Mobile 3.8, offline mode supported, gestures (swipe-to-log-call, voice-note transcription).
+- **Win/Lose analysis grounded in the win-rate stats above** — not generic. Each claim cites the win-rate %.
+- **Proof points section** with NorthRiver case study fully populated (from data above).
+- **Multi-stakeholder DEAL DYNAMICS section**: explicit subsection on what to do when CFO (TCO), VP Eng (integration depth), and sales rep (UX) priorities conflict. Sequencing: lead with rep-mobile demo to win usability sentiment, follow with VP-Eng API/migration deep-dive to defuse risk concerns, close with CFO TCO pitch (cheapest *and* better) — explain why this order works.
+
 ## Criteria
 
 - [ ] PASS: Objection handling is segmented by buyer persona (CFO, VP Eng, sales reps) not generic

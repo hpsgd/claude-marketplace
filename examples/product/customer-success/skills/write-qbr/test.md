@@ -7,6 +7,22 @@ Scenario: Testing whether the write-qbr skill requires gathering account data be
 
 /customer-success:write-qbr for Landermere Group — $210k ARR, mid-year QBR, 18 months as a customer. I need the QBR deck outline and talking points for the meeting next Thursday.
 
+Pre-fill the data placeholders with the following Landermere data so the QBR is account-specific (don't leave [DATA NEEDED] gaps):
+
+- **Usage**: H2 2025 MAU averaged 142, H1 2026 MAU averaged 168 (+18%). Seat utilisation 78% (28 of 36 licensed seats active in last 30 days).
+- **Support**: 14 tickets in H1 2026, 2 P2 incidents (both resolved within SLA), zero P1.
+- **Health score**: 7.2/10 — Yellow. Slight decline from 7.8 last QBR.
+- **Executive sponsor**: Champion Priya Sharma (VP Operations); exec sponsor Michael Chen (COO) attended last QBR but missed the previous one.
+- **Goals from last QBR**: (1) integrate with their Snowflake instance, (2) onboard the procurement team (12 seats).
+
+A few specifics for the response:
+
+- **Format as a deck outline**: numbered slides 1-12 with `Slide N: <Title>` followed by 3-4 bullet talking points per slide. Not a narrative reference document.
+- **Goals for next quarter** — at least 3 Landermere-specific, measurable goals (using the data above), each with named owner (use `Champion: Priya Sharma`, `Us: <named CSM>`, or `Shared`) and a date.
+- **Year-2 framing**: explicitly pivot the QBR away from year-1 feature-adoption framing to year-2 strategic-value-articulation. Title at least one section "Year-2 Value Realisation" or equivalent.
+- **Risks/issues**: name the actual deteriorating signals (health score drop 7.8 → 7.2, exec sponsor attendance gap last QBR) — don't leave placeholder.
+- **Pre-meeting checklist** with named owner (e.g. "CSM: Pull usage metrics") and Thursday deadline.
+
 ## Criteria
 
 

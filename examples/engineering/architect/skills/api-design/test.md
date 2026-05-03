@@ -6,6 +6,20 @@ Scenario: Checking that the api-design skill contains the required elements for 
 
 Review the api-design skill definition and verify it provides sufficient guidance to produce a well-formed REST API specification.
 
+In your verification report, confirm or flag each of the following items by name. Quote skill text where present:
+
+- **URL hierarchy rule** with the specific clause forbidding flat top-level listings of child resources.
+- **HTTP method semantics table** covering ALL FIVE methods (GET, POST, PUT, PATCH, DELETE) with idempotency confirmed per method.
+- **Paginated response shape** with all FIVE fields named: `items`, `page`, `size`, `totalItems`, `totalPages`.
+- **Error format** complies with **RFC 9457 Problem Details** with all five fields (`type`, `title`, `status`, `detail`, `instance`) AND a status-code table covering at minimum: 400, 401, 403, 404, 409, 422, 429, 500.
+- **Versioning strategy** with at least TWO options (e.g. URL prefix `/v2/` vs header `Accept-Version`) and explicit rules for when a new version is required (breaking change vs additive).
+- **Authentication**: Bearer tokens with **short-lived access tokens** AND **resource-level authorisation** (not just role-level RBAC).
+- **Anti-patterns list (4)**: (1) flat URL namespace, (2) verbs in URLs, (3) silent failures, (4) leaking internal IDs.
+- **Output template includes**: an **error catalogue** section AND a **resource hierarchy visual** (tree diagram or similar).
+- **Identified gaps**: any of: missing rate-limit response semantics (`Retry-After` header, 429 body shape), ambiguous HATEOAS guidance, no field-level deprecation pattern.
+
+Confirm or flag each by name — do not paraphrase.
+
 ## Criteria
 
 - [ ] PASS: Skill defines a URL hierarchy rule — resources must be accessed through parent chains, no flat top-level listings of child resources

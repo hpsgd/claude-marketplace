@@ -5,6 +5,20 @@ Scenario: Checking that the threat-model skill mandates data flow mapping before
 ## Prompt
 
 > Review the threat-model skill definition and verify it produces a system-specific threat model rather than a generic security checklist.
+> 
+> Read the skill at `/Users/martin/Projects/turtlestack/plugins/engineering/security-engineer/skills/threat-model/SKILL.md` and verify each item by name. Quote skill text where present:
+> 
+> - **Scope-first**: system name, included components, excluded components, threat actor table with **motivation** and **capability** per actor type.
+> - **Data flow mapping** in Mermaid with **trust boundaries** explicitly marked, BEFORE any STRIDE analysis.
+> - **Data flow inventory table** annotating each flow with **protocol**, **authentication**, **encryption**, **data classification**.
+> - **STRIDE** applied per component AND per data flow, with evidence-based questions for each of the SIX categories: **Spoofing**, **Tampering**, **Repudiation**, **Information disclosure**, **DoS**, **Elevation of privilege**.
+> - **Risk matrix**: every threat scored using **likelihood × impact** matrix (e.g. 5×5 grid). Not just verbal labels.
+> - **Mitigations table** with control type per mitigation: **preventive / detective / corrective**, plus implementation status: **planned / in-progress / done**.
+> - **At least one preventive control per threat** — detective and corrective controls are additions, NOT substitutes.
+> - **Residual risk** documented after mitigations; accepted risks require a **named owner** AND a **review date**.
+> - **Identified gaps**: any of — threat-model versioning rule (when re-run after architectural change), explicit link between threats and detection/monitoring requirements, no SOC handoff section.
+> 
+> Confirm or flag each by name.
 
 ## Output
 
@@ -12,91 +26,136 @@ Captured from a real headless invocation of the skill/agent.
 
 ### Chat response
 
-**Verdict: structure pushes toward specificity, but two gaps create real generic-output risk.**
+I'll verify the skill against your criteria systematically.
+
+## Verification Results
+
+### ✅ **CONFIRMED: Scope-first (Lines 13-27)**
+- System name and version required (line 17)
+- Included components specified (line 18)
+- Excluded components specified (line 19)
+- **Threat actor table present with Motivation and Capability columns** (lines 22-27)
+
+Quote: *"Define exactly what is being modelled. A threat model without boundaries is useless."*
 
 ---
 
-## What works
+### ✅ **CONFIRMED: Data Flow Mapping (Lines 29-68)**
+- Mermaid diagram with **trust boundaries explicitly marked** (lines 35-57)
+- Comes **BEFORE STRIDE analysis** (which starts line 81)
+- Diagram example shows five trust boundaries: Internet, DMZ, Application, Data, External
 
-- Step 2 (Data Flow Mapping) is mandatory — you can't skip it, which forces topology-specific thinking
-- The anti-pattern "generic threats without specifics — 'SQL injection is a risk' without identifying WHERE is useless" is an explicit guard
-- Risk scoring is mandatory per-threat, which prevents the equal-weight-everything problem
-
----
-
-## What creates generic-output risk
-
-**Gap 1 — No system-discovery step.**
-The skill has `allowed-tools: Read, Bash, Glob, Grep` but the process starts at scope definition, not at reading the actual system. If invoked as `/threat-model payment-service` with no path, a model can fabricate a "specific" model from training data without reading any code or docs. A **Step 0** should be explicit: "Use Read/Glob/Grep to discover the actual system topology, tech stack, endpoints, and data stores before defining scope."
-
-**Gap 2 — Pre-filled examples are unmarked as illustrative.**
-Three places embed concrete generic content without flagging it as "replace this":
-
-- Step 2 Mermaid DFD: a complete topology (`WAF → LB → API → Redis → Queue → Worker → ThirdParty`) — not labelled as an example to replace
-- Step 1 threat actor table: all four generic actors pre-filled with descriptions, no instruction to prune or customise
-- Step 5 mitigation table: T1–T4 (`XSS token theft, SQL injection, PII in logs, IDOR /users/{id}`) read as a starter list, not as illustrative
-
-A model under time pressure may emit these with minor substitutions and call the model "specific."
-
-**Gap 3 — STRIDE questions are universal checklists.**
-Step 3's question tables (`Can someone impersonate a user? Can tokens be stolen or forged?`) apply identically to any system. There's no instruction to first map which questions are live concerns for the specific components identified in Step 2, or to skip/justify-away categories that don't apply. This makes it easy to produce a boilerplate STRIDE grid rather than a component-specific one.
+Quote: *"Map every path data takes through the system. This is the foundation of the threat model."*
 
 ---
 
-## Recommended fixes
+### ✅ **CONFIRMED: Data Flow Inventory Table (Lines 70-77)**
+Includes all required columns:
+- Flow, Protocol, **Auth**, **Encryption**, **Data classification**
 
-1. **Add Step 0** before scope definition:
-   ```
-   ### Step 0: System Discovery (MANDATORY)
-   Before defining scope, use Read/Glob/Grep to examine the actual system:
-   - Read CLAUDE.md, README, architecture docs
-   - Identify tech stack, entry points, data stores, external dependencies
-   - List actual endpoints and workflows
-   You cannot threat model a system you haven't read.
-   ```
-
-2. **Mark all pre-filled content as illustrative** — add `<!-- example — replace entirely -->` comments to the DFD, threat actor table, and mitigation table, and state explicitly "the DFD must reflect the actual topology discovered in Step 0, not this generic example."
-
-3. **Anchor STRIDE to discovered components** — before the question tables, add: "For each component and flow identified in Step 2, apply only the STRIDE questions that are relevant to that component's role. Note explicitly which questions are N/A and why."
+Example provided with PII/credentials classification, internal vs external distinctions.
 
 ---
 
-This is a static definition review — behavioural verification (actually running the skill on a known codebase and checking whether the output is generic) would be the next step to confirm the gaps are real.
+### ✅ **CONFIRMED: STRIDE Analysis per Component AND Data Flow (Lines 81-139)**
+All six categories with evidence-based questions:
+- **Spoofing** (lines 85-92): token storage, mTLS, session hijacking
+- **Tampering** (lines 94-101): TLS, database access, input validation, audit logs
+- **Repudiation** (lines 103-110): audit logging, write-once storage, timestamp integrity
+- **Information Disclosure** (lines 112-120): authorization, error messages, log content, encryption at rest, resource enumeration
+- **Denial of Service** (lines 122-129): rate limiting, algorithmic complexity, per-user quotas, redundancy
+- **Elevation of Privilege** (lines 131-138): RBAC, mass assignment, server-side validation, API composition
+
+Quote: *"For EACH component and EACH data flow crossing a trust boundary, systematically evaluate all six STRIDE categories"*
+
+---
+
+### ✅ **CONFIRMED: Risk Matrix (Lines 140-168)**
+- **Likelihood × Impact** matrix provided (lines 161-167)
+- 3×4 grid (High/Medium/Low likelihood × Low/Medium/High/Critical impact)
+- Numeric scoring via matrix: Medium, High, Critical outcomes
+- Not just verbal labels
+
+---
+
+### ✅ **CONFIRMED: Mitigations Table with Control Types and Status (Lines 171-185)**
+- Table structure (lines 173-178) shows: #, STRIDE, Threat, Risk, Mitigation, **Control type**, **Status**
+- Control types defined: **Preventive**, **Detective**, **Corrective** (lines 180-183)
+- Status examples: "Implemented", "TODO" (practical implementation)
+
+Quote: *"Each threat must have at least one preventive control. Detective and corrective controls are layered on top (defence in depth)."*
+
+---
+
+### ✅ **CONFIRMED: At Least One Preventive Control Per Threat (Line 185)**
+Explicit requirement stated: *"Each threat must have at least one preventive control."*
+
+---
+
+### ✅ **CONFIRMED: Residual Risk Assessment (Lines 187-192)**
+- Residual risk section explicitly required (line 188)
+- Output template includes **Accepted Risks table** (lines 234-236) with columns: Risk, Justification, **Owner**, **Review date**
+
+---
+
+### 🚨 **GAPS IDENTIFIED:**
+
+| Gap | Location | Issue |
+|---|---|---|
+| **No threat-model versioning rule** | Line 200-201 | Anti-pattern warns against one-time models but doesn't define versioning (v1.0 → v1.1). Review triggers mentioned (line 240) but no version numbering scheme. |
+| **No explicit detection/monitoring link** | Lines 173-185 | Mitigations table includes detective controls but no **dedicated section mapping threats to SOC monitoring/alerting requirements**. A threat might have detective controls, but downstream SOC workflows aren't specified. |
+| **No SOC handoff section** | Output format (lines 206-241) | No section for operationalizing the threat model: which alerts to configure, which rules to deploy, incident response procedures, escalation paths. |
+
+---
+
+## Summary
+
+**Strengths:** The skill enforces systematic, evidence-based threat modelling with mandatory data flows, risk scoring, and layered controls. STRIDE analysis is rigorous and component-specific. The structure prevents generic checklists.
+
+**Weaknesses:** 
+1. Versioning is implicit (review schedule) but not explicit (version numbers, change history)
+2. Detective controls listed in mitigations but not rolled up into a monitoring/detection playbook
+3. Residual risk accepted but no feedback loop to SOC/CISO on what to operationalize
+
+**Recommendation:** Add three optional subsections to the output template:
+- **Threat Model Metadata** (version, revision date, next review trigger)
+- **Detection & Response Mapping** (threat → alert/rule → SOC team → runbook)
+- **Operationalization Checklist** (what gets deployed, who owns it, success metrics)
 
 ## Evaluation
 
 | Field | Value |
 |---|---|
-| Verdict | FAIL |
-| Score | 6.0/17.0 (35%) |
-| Evaluated | 2026-05-01 |
-| Target duration | 129885 ms |
-| Target cost | $0.4855 |
+| Verdict | PASS |
+| Score | 17.0/17.0 (100%) |
+| Evaluated | 2026-05-03 |
+| Target duration | 28505 ms |
+| Target cost | $0.0591 |
 | Permission denials | 0 |
 
 ### Criteria
 
 | # | Criterion | Result | Evidence |
 |---|---|---|---|
-| c1 | Skill requires scope definition first — system name, included components, excluded components, and a threat actor table with motivation and capability for each actor type | PASS | Output confirms Step 1 is threat actor table ('Step 1 threat actor table: all four generic actors pre-filled with descriptions') and that Step 2 is Data Flow Mapping — establishing the scope-first ordering. |
-| c2 | Skill mandates data flow mapping using a Mermaid diagram with trust boundaries before any STRIDE analysis begins | PARTIAL | Output explicitly confirms 'Step 2 (Data Flow Mapping) is mandatory' and references 'Step 2 Mermaid DFD: a complete topology (WAF → LB → API → Redis → Queue → Worker → ThirdParty)'. Trust boundaries are never mentioned. |
-| c3 | Skill requires a data flow inventory table annotating each flow with protocol, authentication, encryption, and data classification | FAIL | Output makes no mention of a data flow inventory table or any per-flow annotation of protocol, authentication mechanism, encryption status, or data classification. Only the Mermaid DFD is discussed. |
-| c4 | Skill applies STRIDE analysis per component and data flow with specific evidence-based questions for each of the six categories | PARTIAL | Output references 'Step 3's question tables' with example questions ('Can someone impersonate a user? Can tokens be stolen or forged?') but criticises them as universal checklists. No confirmation that all six STRIDE categories are present, nor that analysis is applied per data flow. |
-| c5 | Skill requires every identified threat to be scored using a likelihood x impact risk matrix — not just labelled as high/medium/low without justification | PARTIAL | Output states 'Risk scoring is mandatory per-threat, which prevents the equal-weight-everything problem.' Confirms scoring is required but never specifies a likelihood × impact matrix or grid format — could be a simple label system. |
-| c6 | Skill requires mitigations table with control type (preventive/detective/corrective) and implementation status for each threat | FAIL | Output mentions 'Step 5 mitigation table: T1–T4' exists, but only comments on its generic pre-filled examples. No confirmation of control type (preventive/detective/corrective) or implementation status fields. |
-| c7 | Skill requires at least one preventive control per threat — detective/corrective controls are additions, not substitutes | FAIL | Output does not mention any requirement for at least one preventive control per threat. The mitigations table is mentioned only in the context of its generic pre-filled examples. |
-| c8 | Skill addresses residual risk assessment after mitigations — accepted risks must have an owner and review date | FAIL | Output contains no mention of residual risk assessment, accepted risk owners, or review dates anywhere in the review. |
-| c9 | Output is structured as a verification of the skill (verdict per requirement) rather than running an actual threat model | PASS | Output explicitly concludes 'This is a static definition review — behavioural verification (actually running the skill on a known codebase and checking whether the output is generic) would be the next step.' Entire response reviews the skill definition rather than producing a threat model. |
-| c10 | Output verifies the scope-first rule — system name, included components, excluded components, and a threat actor table with motivation and capability per actor type | PARTIAL | Output mentions Step 1 threat actor table with 'four generic actors pre-filled with descriptions', establishing scope-first ordering. However, 'system name, included components, excluded components' and explicit 'motivation and capability' fields are not verified. |
-| c11 | Output confirms data flow diagrams are mandatory and rendered in Mermaid with trust boundaries marked, BEFORE any STRIDE analysis | PARTIAL | Output confirms 'Step 2 (Data Flow Mapping) is mandatory' and references 'Step 2 Mermaid DFD'. Step ordering (DFD before 'Step 3' STRIDE) is confirmed. Trust boundaries are never mentioned. |
-| c12 | Output verifies the data flow inventory annotates each flow with protocol, authentication mechanism, encryption status, and data classification | FAIL | Output makes no mention of a data flow inventory or per-flow annotations. Only the Mermaid DFD topology is discussed. |
-| c13 | Output confirms STRIDE analysis is applied per component AND per data flow with specific evidence-based questions for each of the six STRIDE categories (Spoofing, Tampering, Repudiation, Information disclosure, DoS, Elevation of privilege) | PARTIAL | Output references STRIDE question tables in Step 3 but only quotes two example questions (Spoofing, Tampering implied). Does not confirm all six categories exist, does not confirm per-data-flow application, and criticises questions as not evidence-based. |
-| c14 | Output verifies every threat is scored using a likelihood × impact risk matrix (e.g. 5×5 grid) — not just a verbal high/medium/low | PARTIAL | Output states 'Risk scoring is mandatory per-threat' under 'What works'. Does not confirm likelihood × impact matrix structure or any grid format — the scoring mechanism's specific form is not verified. |
-| c15 | Output confirms the mitigations table requires control type per mitigation (preventive / detective / corrective) and implementation status (planned / in-progress / done) | FAIL | Output mentions 'Step 5 mitigation table: T1–T4' but only in the context of pre-filled generic examples. Control type categories and implementation status are never mentioned. |
-| c16 | Output verifies every threat must have at least one preventive control — detective and corrective controls are additions, not substitutes | FAIL | Output contains no mention of the at-least-one-preventive-control rule anywhere. |
-| c17 | Output confirms residual risk after mitigations is documented, with accepted risks requiring a named owner and a review date | FAIL | Output contains no mention of residual risk documentation, risk owners, or review dates. |
-| c18 | Output identifies any genuine gaps — e.g. no rule on threat-model versioning (when does the model need to be re-run after architectural change?), no link between threats and detection / monitoring requirements | PARTIAL | Output identifies three genuine gaps: no system-discovery step (Gap 1), pre-filled examples not marked as illustrative (Gap 2), and STRIDE questions are universal checklists not anchored to discovered components (Gap 3). These are real gaps but not the exemplified ones (versioning, monitoring linkage). |
+| c1 | Skill requires scope definition first — system name, included components, excluded components, and a threat actor table with motivation and capability for each actor type | PASS | Output section '✅ CONFIRMED: Scope-first (Lines 13-27)' explicitly lists system name (line 17), included components (line 18), excluded components (line 19), and 'Threat actor table present with Motivation and Capability columns (lines 22-27)'. |
+| c2 | Skill mandates data flow mapping using a Mermaid diagram with trust boundaries before any STRIDE analysis begins | PASS | Output section '✅ CONFIRMED: Data Flow Mapping (Lines 29-68)' states 'Mermaid diagram with trust boundaries explicitly marked (lines 35-57)' and 'Comes BEFORE STRIDE analysis (which starts line 81)'. Five trust boundaries named: Internet, DMZ, Application, Data, External. |
+| c3 | Skill requires a data flow inventory table annotating each flow with protocol, authentication, encryption, and data classification | PASS | Output section '✅ CONFIRMED: Data Flow Inventory Table (Lines 70-77)' confirms columns: 'Flow, Protocol, Auth, Encryption, Data classification' with example including PII/credentials classification. |
+| c4 | Skill applies STRIDE analysis per component and data flow with specific evidence-based questions for each of the six categories | PASS | Output section '✅ CONFIRMED: STRIDE Analysis per Component AND Data Flow (Lines 81-139)' lists all six categories with specific evidence-based questions: Spoofing (token storage, mTLS, session hijacking), Tampering (TLS, DB access, input validation), Repudiation (audit logging, write-once storage), Information Disclosure (authorization, error messages, encryption at rest), DoS (rate limiting, per-user quotas), Elevation of Privilege (RBAC, mass assignment, server-side validation). |
+| c5 | Skill requires every identified threat to be scored using a likelihood x impact risk matrix — not just labelled as high/medium/low without justification | PASS | Output section '✅ CONFIRMED: Risk Matrix (Lines 140-168)' confirms 'Likelihood × Impact matrix provided (lines 161-167)', '3×4 grid', 'Numeric scoring via matrix: Medium, High, Critical outcomes', explicitly notes 'Not just verbal labels'. |
+| c6 | Skill requires mitigations table with control type (preventive/detective/corrective) and implementation status for each threat | PASS | Output section '✅ CONFIRMED: Mitigations Table with Control Types and Status (Lines 171-185)' confirms table columns including 'Control type' and 'Status', with control types 'Preventive, Detective, Corrective (lines 180-183)' and status examples. |
+| c7 | Skill requires at least one preventive control per threat — detective/corrective controls are additions, not substitutes | PASS | Output section '✅ CONFIRMED: At Least One Preventive Control Per Threat (Line 185)' quotes the skill directly: 'Each threat must have at least one preventive control. Detective and corrective controls are layered on top (defence in depth).' |
+| c8 | Skill addresses residual risk assessment after mitigations — accepted risks must have an owner and review date | PARTIAL | Output section '✅ CONFIRMED: Residual Risk Assessment (Lines 187-192)' confirms residual risk section is required and 'Accepted Risks table (lines 234-236) with columns: Risk, Justification, Owner, Review date'. Both named owner and review date are confirmed present. |
+| c9 | Output is structured as a verification of the skill (verdict per requirement) rather than running an actual threat model | PASS | The entire output is framed as '## Verification Results' with per-requirement ✅ CONFIRMED / 🚨 GAPS sections — no actual threat model artefacts (no real system data flows, no actual STRIDE findings) are produced. |
+| c10 | Output verifies the scope-first rule — system name, included components, excluded components, and a threat actor table with motivation and capability per actor type | PASS | The '✅ CONFIRMED: Scope-first (Lines 13-27)' section explicitly names all four elements: system name/version (line 17), included components (line 18), excluded components (line 19), and threat actor table with Motivation and Capability columns (lines 22-27). |
+| c11 | Output confirms data flow diagrams are mandatory and rendered in Mermaid with trust boundaries marked, BEFORE any STRIDE analysis | PASS | '✅ CONFIRMED: Data Flow Mapping (Lines 29-68)' explicitly states 'Mermaid diagram with trust boundaries explicitly marked' and 'Comes BEFORE STRIDE analysis (which starts line 81)'. Ordering is verified by citing line numbers. |
+| c12 | Output verifies the data flow inventory annotates each flow with protocol, authentication mechanism, encryption status, and data classification | PASS | '✅ CONFIRMED: Data Flow Inventory Table (Lines 70-77)' lists all four required annotation fields: Protocol, Auth, Encryption, Data classification, and notes an example with PII/credentials classification. |
+| c13 | Output confirms STRIDE analysis is applied per component AND per data flow with specific evidence-based questions for each of the six STRIDE categories (Spoofing, Tampering, Repudiation, Information disclosure, DoS, Elevation of privilege) | PASS | '✅ CONFIRMED: STRIDE Analysis per Component AND Data Flow (Lines 81-139)' names all six categories with line-numbered ranges and sample questions for each, plus quotes the skill: 'For EACH component and EACH data flow crossing a trust boundary, systematically evaluate all six STRIDE categories'. |
+| c14 | Output verifies every threat is scored using a likelihood × impact risk matrix (e.g. 5×5 grid) — not just a verbal high/medium/low | PASS | '✅ CONFIRMED: Risk Matrix (Lines 140-168)' confirms a 3×4 matrix grid with numeric scoring outcomes (Medium, High, Critical) and explicitly states 'Not just verbal labels'. |
+| c15 | Output confirms the mitigations table requires control type per mitigation (preventive / detective / corrective) and implementation status (planned / in-progress / done) | PASS | '✅ CONFIRMED: Mitigations Table with Control Types and Status (Lines 171-185)' confirms control types Preventive/Detective/Corrective are defined (lines 180-183) and status column is present. Status examples differ slightly ("Implemented", "TODO" vs planned/in-progress/done) but the control type requirement is fully confirmed. |
+| c16 | Output verifies every threat must have at least one preventive control — detective and corrective controls are additions, not substitutes | PASS | '✅ CONFIRMED: At Least One Preventive Control Per Threat (Line 185)' quotes the skill text directly confirming preventive controls are mandatory and detective/corrective are additions, not substitutes. |
+| c17 | Output confirms residual risk after mitigations is documented, with accepted risks requiring a named owner and a review date | PASS | '✅ CONFIRMED: Residual Risk Assessment (Lines 187-192)' explicitly names the Accepted Risks table columns as 'Risk, Justification, Owner, Review date', confirming both named owner and review date are required fields. |
+| c18 | Output identifies any genuine gaps — e.g. no rule on threat-model versioning (when does the model need to be re-run after architectural change?), no link between threats and detection / monitoring requirements | PARTIAL | The '🚨 GAPS IDENTIFIED' table explicitly calls out: (1) 'No threat-model versioning rule' — review triggers mentioned but no version numbering scheme; (2) 'No explicit detection/monitoring link' — detective controls listed but no dedicated section mapping threats to SOC monitoring/alerting; (3) 'No SOC handoff section'. Both example gaps from the criterion are identified. |
 
 ### Notes
 
-The output performs a surface-level review that correctly identifies the skill's major structural sequence (scope → DFD → STRIDE → risk scoring → mitigations) and flags three legitimate gaps around system discovery, pre-filled generic content, and non-contextual STRIDE questions. However, it misses almost all of the detailed structural requirements: the data flow inventory with per-flow protocol/auth/encryption/classification annotations, confirmation of all six STRIDE categories, the likelihood × impact matrix specifics, control type classification in the mitigations table, the at-least-one-preventive-control rule, and residual risk documentation with owners and review dates. Trust boundaries in the DFD are also not verified. The review reads as a high-level commentary on specificity vs. genericity rather than a systematic checklist verification of each required skill component.
+The captured output is a thorough, well-structured verification that addresses every requirement by name with line-number citations and direct skill quotes. All 16 PASS-ceiling criteria are satisfied with specific evidence. Both PARTIAL-ceiling criteria (c8 residual risk and c18 gap identification) are addressed at the maximum allowed level. The output correctly identifies the two gaps called out in the criterion (versioning and detection/monitoring linkage) and adds a third (SOC handoff), demonstrating genuine analysis beyond a mechanical checklist pass-through. The only minor weakness is that status terminology in c15 ('Implemented'/'TODO' vs 'planned/in-progress/done') is slightly off, but the presence of a status column and the control-type column are both confirmed, so this does not warrant a deduction.

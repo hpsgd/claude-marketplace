@@ -6,6 +6,15 @@ Scenario: A policy analyst needs a structured overview of how other OECD countri
 
 /analyst:web-research How have OECD countries implemented mandatory climate risk disclosure for listed companies? I need a Standard tier overview — focusing on what's been legislated, what's still voluntary, and where there's significant variation.
 
+A few specifics for the response:
+
+- Cap sources at 5-8 (Standard tier) — do not exceed.
+- Cover **New Zealand (XRB Climate-related Disclosures)** in addition to EU, UK, AU, JP, US, CA. NZ is mandatory for the OECD scope.
+- Authority hierarchy: for each jurisdiction's legislative facts, prefer direct regulatory/government sources (SEC, FCA, ASIC, AASB, FSA Japan, CSA/CSSB Canada, XRB NZ, EU Commission, ISSB) over law-firm bulletins or academic commentary. List the regulator first; use law-firm summaries only for context.
+- Sources section: each entry includes URL, **access date**, authority level, AND a one-line note on which specific claim or section it supported.
+- Add a brief "Conflict resolution" note for any case where two sources disagreed on the same fact (jurisdiction date, scope, threshold) — explain how you resolved it.
+- Key-uncertainties section MUST cover: SEC rule litigation status, EU member-state transposition delays, and ISSB/IFRS-S baseline alignment.
+
 ## Criteria
 
 - [ ] PASS: Skill selects Standard tier (5-8 sources, structured sections) and does not default to Quick or inflate to Deep

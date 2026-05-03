@@ -6,6 +6,18 @@ Scenario: Checking that the dependency-audit skill enforces reachability analysi
 
 Review the dependency-audit skill definition and verify it produces a triaged, evidence-based audit rather than a raw vulnerability list dump.
 
+In your verification report, confirm or flag each of the following items by name:
+
+- **Per-stack tool list (5)**: npm audit, pip-audit, dotnet list package --vulnerable, govulncheck, cargo audit — each with `--json` output flag for parseability.
+- **Reachability framework (3 questions, named verbatim)**: (1) Is the vulnerable path reachable? (2) Is it exploitable in this context? (3) What is the actual impact?
+- **Triage categories (4, named)**: Fix Now, Fix Soon, Monitor, Accept — each with criteria, action, and timeline.
+- **Accept entries**: must require a named owner AND a review date AND the explicit rule "accepted risks must be re-evaluated at review date, not silently closed".
+- **HIGH/CRITICAL CVE detail**: CVSS score AND full vector string (e.g. `AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H`) AND import-chain evidence AND recommended action.
+- **License compliance scan**: GPL/AGPL copyleft licences flagged for legal review.
+- **Anti-patterns named (3)**: (1) running `npm audit fix` blindly, (2) suppressing findings without reason/owner/expiry, (3) "no findings — done" rubber-stamps.
+
+Confirm presence/absence of each by name. Don't paraphrase.
+
 ## Criteria
 
 - [ ] PASS: Skill requires running the appropriate audit tool per stack (npm audit, pip-audit, dotnet list package --vulnerable, govulncheck, cargo audit) with JSON output

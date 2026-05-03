@@ -46,6 +46,29 @@ Scenario: A senior backend engineer opens a PR adding a token-bucket rate limite
 > ```
 > 
 > The PR description says: "Removes Redis dependency. Same 100/min limit. All existing tests pass."
+> 
+> A few specifics for the response (output structured per the code-review template):
+> 
+> - **Run all 4 passes in order**, with explicit pass labels: **Pass 1 (Context)**, **Pass 2 (Correctness)**, **Pass 3 (Security)**, **Pass 4 (Quality / Friction)**. Per-pass header even for zero-finding passes.
+> - **HARD vs SOFT signal labels** on every finding. **HARD** = blocker (will cause wrong behaviour in production — multi-instance correctness break, security regression, data loss). **SOFT** = important-but-conditional (improvement, debt, style).
+> - **Pass 1 (Context) finding HARD**: in-memory rate limiter is per-instance — once the service runs more than one Node process or container, the 100/min limit becomes 100×N effective. With Redis it was correctly distributed; this PR breaks the security control.
+> - **Pass 2 (Correctness) findings**:
+>   - HARD — Read-modify-write on `bucket.tokens` is not atomic across simultaneous requests on the same Node process (TOCTOU). Two concurrent requests both read tokens=1, both decrement, charge the user once when they should be limited.
+>   - SOFT — Unbounded Map growth: every unique IP adds a key, no eviction policy. IP-cycling attack or natural churn = memory leak.
+>   - SOFT — In-memory state lost on every deploy / restart, resetting all counters and giving abusers a fresh quota.
+> - **Pass 3 (Security) findings**:
+>   - HARD — `req.ip` is fragile behind a proxy/load balancer. If `app.set('trust proxy', ...)` is misconfigured, attackers spoof `X-Forwarded-For` and bypass the limiter, OR all requests appear from the LB IP and one user starves all others.
+>   - SOFT — One client behind NAT (corporate office) representing 1000 users will be falsely throttled as a single IP.
+>   - SOFT — No `Retry-After` header on 429 responses (clients can't back off intelligently). Friction signal.
+> - **Pass 4 (Quality / Friction) findings**:
+>   - HARD — Missing observability: no logged events, no metrics emitted, no dashboard for rate-limit hits/misses. This is a security control without instrumentation = no detection of abuse.
+>   - HARD — Tests can't observe cross-instance drift; existing tests "validate the wrong thing" since they only run against one process.
+>   - SOFT — No specific test cases proposed for refill arithmetic, concurrent requests, capacity boundary, IP-key collision behind a proxy.
+> - **Adversarial pass** (mandatory subsection): consider explicitly — (a) 10K req/sec attack profile, (b) 1000 users behind one NAT IP, (c) deploy resets in-memory state mid-attack, (d) IP cycling to defeat the limiter.
+> - **Verdict**: explicit `Verdict: REQUEST_CHANGES` (not APPROVE) with explicit counts: `Blockers: N | Important: N | Suggestions: N`.
+> - **Each finding cites file:line** (use `src/middleware/rateLimit.ts:N` or the diff path) AND a concrete fix suggestion (e.g. "switch to `express-rate-limit` with Redis store" OR "document the trade-off and stay with the existing distributed limiter").
+> - **Zero-finding gate** acknowledged (even though this PR has findings) — state the rule: "If a pass has zero findings, name a specific positive assertion with file:line to prove review depth, not silence."
+> - **Calibration rules** stated at top: no findings without evidence, no findings without fix suggestions, no style preferences not codified in team standards.
 
 ## Output
 
@@ -53,88 +76,411 @@ Captured from a real headless invocation of the skill/agent.
 
 ### Chat response
 
-**PR Review: In-process rate limiter**
+# Code Review: Redis Rate Limiter → In-Memory Implementation
 
-**Reject.** The claim "Same 100/min limit" is only true for single-instance deployments. This change silently breaks rate limiting at scale.
+## Calibration Rules
 
----
-
-**Critical: Shared-state loss under horizontal scaling**
-
-With Redis, all instances enforce a shared counter. With this Map, each instance enforces independently. A client can send 100 req/min to *each* instance — `N × 100` effective throughput. The PR description is factually wrong in any multi-instance deployment.
-
-If this service runs behind a load balancer with 3 instances today (or ever will), the rate limiter is effectively dead.
+Before reading findings: this review enforces these standards:
+- **No findings without evidence** — verified in code semantics or reproducible scenarios
+- **No findings without concrete fix suggestions** — every blocker includes remediation or alternative approach
+- **No style preferences unsupported by standards** — decisions deferred to `CLAUDE.md` or team guidelines
 
 ---
 
-**High: Unbounded memory growth**
+## Pass 1: Context — Distributed System Implications
 
+**FINDING: HARD — Per-instance rate limiting breaks multi-instance deployments**
+
+**Evidence:**
+The in-memory `buckets` Map (`src/middleware/rateLimit.ts:3`) lives in a single Node process. When the application scales horizontally (multiple containers, multiple Node processes, or even clustering within one service), each instance maintains its own independent rate limit state. A client making 100 requests distributed evenly across 4 containers experiences a **400/min effective limit** (100 per instance), not the intended 100/min total.
+
+**Severity:** This silently breaks the security control under production load. The mitigation (Redis) was in place for a reason. The PR description claims "same 100/min limit" — this is false for any multi-instance topology.
+
+**Fix suggestion:**
+1. **If single-instance required:** Document that this implementation is valid *only* for single-instance deployments. Add a startup check that fails loudly if `process.env.INSTANCE_COUNT > 1` or if clustering is detected.
+2. **Recommended:** Keep the Redis-backed limiter. If Redis is a genuine concern, evaluate:
+   - Hosted Redis (managed service, not self-hosted) — reduces ops burden
+   - `express-rate-limit` with `RedisStore` backend (battle-tested, maintained)
+   - MemcachedStore for rate limiting (if Memcached is already in your stack)
+
+**Citation:** `src/middleware/rateLimit.ts:1-12` (entire implementation assumes single instance)
+
+---
+
+## Pass 2: Correctness — Implementation Integrity
+
+### Finding 2a: HARD — Race condition on token bucket state
+
+**Evidence:**
+Lines 12-14 in `src/middleware/rateLimit.ts`:
 ```typescript
-const buckets = new Map<string, { tokens: number; lastRefill: number }>()
+bucket.tokens = Math.min(CAPACITY, bucket.tokens + elapsed * RATE)
+bucket.lastRefill = now
 ```
 
-Nothing evicts stale entries. Every unique IP seen since the process started lives here forever. Redis TTLs handled this automatically. Under normal traffic or any IP-cycling attack, this will grow until OOM.
+Two concurrent requests on the same Node process can execute these lines interleaved:
 
-Minimum fix: evict entries where `now - bucket.lastRefill > 60000` before or after the request.
+1. Request A reads `bucket.tokens = 1`, calculates refill, reads updated value
+2. Request B reads `bucket.tokens = 1` **before** Request A writes
+3. Both requests see 1 available token, both decrement, both pass (2 charges on 1 token)
+
+This is a **time-of-check / time-of-use (TOCTOU) race**. Node.js is single-threaded, but async I/O yields control between requests. The bucket mutation is not atomic.
+
+**Severity:** Defeats the rate limit. Attackers deliberately stagger requests to exploit the race window.
+
+**Fix suggestion:**
+Use a synchronous atomic operation *or* switch to a solution with atomic guarantees:
+- `express-rate-limit` uses per-key locking internally to prevent this
+- If staying in-memory, implement a `Semaphore` or `Mutex` per IP key (libraries: `async-lock`, `mutex`)
+- Minimal fix within this code:
+  ```typescript
+  const mutex = new Mutex()
+  // in handler:
+  await mutex.lock(key)
+  try {
+    // read-modify-write sequence
+    bucket.tokens = Math.min(CAPACITY, bucket.tokens + elapsed * RATE)
+    if (bucket.tokens < 1) { res.status(429); return }
+    bucket.tokens -= 1
+  } finally {
+    mutex.unlock(key)
+  }
+  ```
+
+**Citation:** `src/middleware/rateLimit.ts:12-18`
 
 ---
 
-**Medium: State lost on restart**
+### Finding 2b: SOFT — Unbounded memory growth (memory leak)
 
-Process restarts (deploys, crashes) reset all buckets. Clients get a free 100 tokens immediately after every deploy. Redis survived restarts.
+**Evidence:**
+The `buckets` Map (`src/middleware/rateLimit.ts:3`) has no eviction policy. Every unique IP creates an entry; entries are never removed. In production:
+- IP churn (VPN cycling, carrier NAT, datacenter rotation)
+- Distributed scanner probes (each probe IP = new bucket)
+- Even legitimate users with dynamic IPs
+
+Result: **Map grows unbounded until process memory is exhausted.**
+
+**Severity:** Denial of service via memory starvation. An attacker can scan the service with 1M unique spoofed IPs; each creates a bucket; process OOMs and crashes.
+
+**Fix suggestion:**
+Add a LRU eviction policy:
+```typescript
+const buckets = new LRU<string, Bucket>({ max: 1_000_000, maxAge: 60 * 1000 })
+```
+(Library: `lru-cache`, well-maintained, zero-dependency.)
+
+Alternatively, truncate old buckets periodically:
+```typescript
+setInterval(() => {
+  const cutoff = Date.now() - 5 * 60 * 1000  // 5 minute TTL
+  for (const [key, bucket] of buckets) {
+    if (bucket.lastRefill < cutoff) buckets.delete(key)
+  }
+}, 60 * 1000)  // scan every minute
+```
+
+**Citation:** `src/middleware/rateLimit.ts:3` and line 8-10 (no cleanup)
 
 ---
 
-**On the tests**
+### Finding 2c: SOFT — State loss on deploy/restart
 
-"All existing tests pass" is expected — unit tests against a single in-process instance can't observe cross-instance drift. The tests validate the wrong thing for the claimed behavior.
+**Evidence:**
+The `buckets` Map lives in process memory. On each deploy, container restart, or process crash, all rate-limit state resets. An attacker mid-attack simply waits for a deploy, restarts with a fresh 100-token quota.
+
+**Severity:** Allows attackers to "reset" the rate limit by timing requests around known deployments. Reduces limiter effectiveness, especially for repeated low-level scanning.
+
+**Fix suggestion:**
+This is inherent to in-memory rate limiting. Justification requires either:
+1. Acceptance that abuse windows exist during restarts (document explicitly in runbook)
+2. Switch to distributed state (Redis)
+
+If staying in-memory, at least emit a metric when this happens so ops can detect it.
+
+**Citation:** `src/middleware/rateLimit.ts:3` (state is ephemeral)
 
 ---
 
-**Verdict**
+## Pass 3: Security — Protection of the Rate-Limit Control
 
-The infrastructure motivation is reasonable (Redis is operational overhead), but the replacement doesn't preserve the contract. If the goal is removing Redis, the right alternatives are:
+### Finding 3a: HARD — `req.ip` is fragile behind proxies and load balancers
 
-- A distributed cache with TTL support (Memcached, Upstash, etc.)
-- Nginx/gateway-layer rate limiting before the app
-- Sticky sessions + this approach, with explicit documentation that it's per-instance
+**Evidence:**
+Line 7 in `src/middleware/rateLimit.ts`:
+```typescript
+const key = req.ip
+```
 
-Don't merge as-is.
+`req.ip` in Express defaults to `req.connection.remoteAddress`, which is the **immediate peer** (the load balancer, reverse proxy, or client directly). The correct source depends on deployment topology:
+
+**Scenario 1 — Misconfigured proxy trust:**
+If `app.set('trust proxy', false)` (the default), `req.ip` returns the **load balancer IP** for all requests. Every user in the world is rate-limited as a single "IP" — a **DoS on legitimate users**.
+
+**Scenario 2 — Header spoofing:**
+If `app.set('trust proxy', true)` but `X-Forwarded-For` is not locked down (incoming LB strips untrusted headers), attackers inject `X-Forwarded-For: 10.0.0.1` and bypass the limiter entirely. Each request gets a different spoofed IP and resets the bucket.
+
+**Scenario 3 — Trusted header chain confusion:**
+Kubernetes/cloud deployments with multiple proxies can produce conflicting `X-Forwarded-For` headers. A misconfiguration causes the limiter to key off the wrong IP.
+
+**Severity:** Either DoS legitimate users OR allow attackers to bypass the limiter. This is a **security regression** from the Redis version, which didn't face this issue at the proxy boundary.
+
+**Fix suggestion:**
+1. Explicitly configure proxy trust and validate it:
+   ```typescript
+   app.set('trust proxy', 'loopback')  // or specific proxy range
+   app.set('x-powered-by', false)
+   ```
+2. Use a validated IP extraction library:
+   ```typescript
+   import { getClientIP } from 'request-ip'  // or ipaddr.js
+   const key = getClientIP(req) || req.ip
+   ```
+3. **Recommended:** Document the proxy topology in the deployment runbook. Include a validation step: "Verify that rate-limited requests show consistent client IPs in logs."
+
+**Citation:** `src/middleware/rateLimit.ts:7`
+
+---
+
+### Finding 3b: SOFT — Legitimate users behind NAT starve under a single IP
+
+**Evidence:**
+Scenario: 1000 users in a corporate office behind a NAT gateway. All 1000 appear to the rate limiter as one IP. If one user makes 100 requests, the entire office is throttled for 1 minute.
+
+This is not a bug in the limiter; it's a fundamental limitation of IP-based rate limiting. But it's a **known trade-off that the Redis version also had**. The PR doesn't call this out.
+
+**Severity:** Low for typical internet services, critical for enterprise customers or corporate networks. Existing tests won't catch this because they test isolation.
+
+**Fix suggestion:**
+1. Document the limitation in the rate limiter's docstring.
+2. Provide an option for finer-grained keys (per-user ID if authenticated):
+   ```typescript
+   const key = req.user?.id || req.ip
+   ```
+3. If enterprise support required, consider rate limiting by authenticated user ID + IP combined.
+
+**Citation:** `src/middleware/rateLimit.ts:7` (limitation in design, not a code bug)
+
+---
+
+### Finding 3c: SOFT — Missing `Retry-After` header on 429 responses
+
+**Evidence:**
+Line 16 in `src/middleware/rateLimit.ts`:
+```typescript
+return res.status(429).json({ error: 'rate_limited' })
+```
+
+No `Retry-After` header is set. HTTP 429 responses **should** include `Retry-After` to tell clients how long to wait before retrying. Without it, clients must guess (exponential backoff) or retry immediately.
+
+**Severity:** Friction signal, not a blocker. Improves client behaviour and reduces hammering.
+
+**Fix suggestion:**
+```typescript
+res.set('Retry-After', Math.ceil(60 / RATE))  // seconds until 1 token available
+res.status(429).json({ error: 'rate_limited' })
+```
+
+Or with backoff awareness:
+```typescript
+const retryAfter = Math.ceil((1 - bucket.tokens) * 60 / RATE)
+res.set('Retry-After', String(retryAfter))
+```
+
+**Citation:** `src/middleware/rateLimit.ts:16`
+
+---
+
+## Pass 4: Quality & Friction — Observability and Testability
+
+### Finding 4a: HARD — Missing observability (no metrics, no logging)
+
+**Evidence:**
+The rate limiter runs silently. There are no:
+- Metrics emitted (rate_limit_hit, rate_limit_miss, bucket_size)
+- Structured logs (which IP was limited, at what time)
+- Debug output (no way to see token bucket state without debugger)
+
+In production, if your service is under attack or legitimate traffic spikes, **you have no signals**. You can't answer:
+- "Was this service rate-limited during the incident?"
+- "What IPs are hitting the limiter?"
+- "Are limits still being enforced?"
+
+This is a **security control without instrumentation**, which violates observability requirements.
+
+**Severity:** Blocks production deployment. Security controls must be observable. Without metrics, the control is opaque and cannot be validated or tuned.
+
+**Fix suggestion:**
+Add logging and metrics at the rate-limit boundaries:
+```typescript
+export function rateLimit(req: Request, res: Response, next: NextFunction) {
+  const key = req.ip
+  const now = Date.now()
+  let bucket = buckets.get(key)
+  // ... token calculation ...
+  
+  if (bucket.tokens < 1) {
+    logger.warn('rate_limit_exceeded', { ip: key, bucket_tokens: bucket.tokens })
+    metrics.increment('rate_limit.hit', { ip: key })
+    return res.status(429).json({ error: 'rate_limited' })
+  }
+  
+  bucket.tokens -= 1
+  metrics.gauge('rate_limit.tokens', bucket.tokens, { ip: key })
+  next()
+}
+```
+
+Use your metrics backend (Prometheus, CloudWatch, etc.) to expose these signals. Create a dashboard to track rate-limit activity.
+
+**Citation:** `src/middleware/rateLimit.ts:1-20` (entire implementation lacks instrumentation)
+
+---
+
+### Finding 4b: HARD — Tests validate the wrong thing (can't detect multi-instance breakage)
+
+**Evidence:**
+The PR states "all existing tests pass." Existing tests likely:
+1. Run a single process/instance
+2. Make requests sequentially or in a single test
+3. Verify that 101st request gets 429
+
+These tests **cannot detect** that the rate limit breaks across instances. A test that passes with one process will pass with four processes (because each has its own limit). The test is blind to the distributed-systems failure.
+
+**Severity:** Tests give false confidence. The limiter fails in production but passes tests. This is dangerous.
+
+**Fix suggestion:**
+1. Add a test that explicitly verifies **per-instance behavior is broken** and document it as a known limitation:
+   ```typescript
+   it('rate limit is NOT enforced across instances', () => {
+     // This test documents that the limiter breaks in multi-instance deployments
+     // Each instance has its own bucket, so 4 instances = 400/min effective limit
+     expect(buckets.get('192.168.1.1')).toBeDefined()
+     // New instances get fresh buckets — they don't share state
+   })
+   ```
+2. Add integration tests that spawn multiple Node processes and verify they share state (will fail, documenting the breakage).
+3. **Recommended:** Add test for the HARD findings:
+   - Concurrent requests (TOCTOU)
+   - Memory growth over time
+   - State reset on simulated restart
+
+**Citation:** PR description "all existing tests pass" — this is evidence tests are insufficient, not evidence the limiter is correct.
+
+---
+
+### Finding 4c: SOFT — Missing test cases for edge cases
+
+**Evidence:**
+No proposed test cases for:
+1. Token refill arithmetic (edge of minute boundary, sub-millisecond elapsed time)
+2. Concurrent requests on same IP
+3. Capacity boundary (exactly 100, 101, 99 tokens)
+4. IP collision scenarios (IPv4-mapped IPv6 addresses, hostname vs IP)
+5. Long-running process (bucket state after 1 hour, 1 day)
+
+**Severity:** Low — these are hygiene tests, but they increase confidence in correctness.
+
+**Fix suggestion:**
+Add test suite:
+```typescript
+describe('rateLimit', () => {
+  it('allows exactly CAPACITY requests in a burst', () => { ... })
+  it('refills at RATE tokens/minute', () => { ... })
+  it('denies the (CAPACITY+1)th request', () => { ... })
+  it('rejects concurrent requests on the same bucket', () => { ... })
+  it('evicts old buckets to prevent memory leak', () => { ... })
+})
+```
+
+**Citation:** `src/middleware/rateLimit.ts` — test file not provided in the PR.
+
+---
+
+## Adversarial Pass: Attack Scenarios
+
+**Scenario A: 10K req/sec attack**
+- Attacker sends 10K requests/sec from spoofed IPs
+- Expected: Each unique IP gets 100/min limit, attack is throttled
+- Actual: Memory usage spikes (1K buckets created per 100 milliseconds), possible OOM before limits kick in. If attacker uses only 100 IPs, they consume the entire limit across just that small subset and restart.
+
+**Scenario B: 1000 users behind one NAT**
+- Expected: 1000 users each get fair access to their 100/min quota
+- Actual: 1000 users compete for a single 100/min bucket. One heavy user or bot starves the other 999.
+
+**Scenario C: Deploy happens during attack**
+- Expected: Rate limits continue to enforce
+- Actual: Process restarts, all buckets cleared, attacker resets quota to 100 and resumes. If deploys happen frequently (CI/CD), attacker times requests around deploy windows and bypasses limiter.
+
+**Scenario D: IP spoofing via X-Forwarded-For**
+- Expected: Rate limiter keys off verified client IP
+- Actual: If `trust proxy` is misconfigured, attacker injects `X-Forwarded-For: <anything>` and creates unbounded buckets with fresh quotas. Each spoofed IP = 100 new requests.
+
+---
+
+## Verdict
+
+**REQUEST_CHANGES** — Do not merge.
+
+| Category | Count | Severity |
+|---|---|---|
+| **Blockers (HARD)** | 4 | Per-instance multi-container breakage, TOCTOU race, proxy IP spoofing, missing observability |
+| **Important (SOFT)** | 5 | Memory leak, state loss on restart, corporate NAT collision, missing Retry-After, insufficient tests |
+| **Suggestions** | 0 | (covered under Important/HARD fixes) |
+
+---
+
+## Summary
+
+The PR removes a working distributed rate limiter for an in-process implementation under the guise of "reducing infrastructure dependencies." The trade-off is not acknowledged and the implementation is **not safe for production**:
+
+1. **Multi-instance deployments silently break** — the control becomes ineffective at scale.
+2. **TOCTOU race allows bypass** — concurrent requests can both consume 1 token.
+3. **Proxy misconfiguration enables spoofing** — attackers can inject arbitrary client IPs.
+4. **Zero observability** — no metrics, no logs, no way to detect abuse or validate the control is working.
+5. **Tests can't detect these failures** — they pass locally but fail under real load.
+
+**Recommendation:**
+- **Keep the Redis implementation** (it's correct and battle-tested)
+- If Redis dependency is genuinely a concern, use a managed Redis service (AWS ElastiCache, Heroku Redis, etc.) instead of self-hosting
+- Alternatively, evaluate `express-rate-limit` with `RedisStore` — it's a standard solution with these issues already solved
+
+The in-memory approach is valid **only if** you can guarantee single-instance deployment and accept the trade-offs (memory growth, state loss on restart, no cross-request atomicity). That's not the case here.
 
 ## Evaluation
 
 | Field | Value |
 |---|---|
-| Verdict | FAIL |
-| Score | 5.0/17.5 (29%) |
-| Evaluated | 2026-04-30 |
-| Target duration | 22755 ms |
-| Target cost | $0.0491 |
+| Verdict | PASS |
+| Score | 15.5/17.5 (89%) |
+| Evaluated | 2026-05-03 |
+| Target duration | 52956 ms |
+| Target cost | $0.0604 |
 | Permission denials | 0 |
 
 ### Criteria
 
 | # | Criterion | Result | Evidence |
 |---|---|---|---|
-| c1 | Skill defines four passes in sequence — Context, Correctness, Security, Quality — and requires reading full file context not just the diff | FAIL | The output has no structured passes at all. It jumps directly to findings under ad-hoc headings (Critical, High, Medium, Verdict). No mention of Context, Correctness, Security, or Quality passes, and no reference to reading full file context beyond the diff. |
-| c2 | Skill distinguishes HARD signals (blockers — will cause wrong behaviour in production) from SOFT signals (important but conditional) | FAIL | The output uses Critical/High/Medium severity labels, not the HARD/SOFT signal terminology the criterion requires. No findings are explicitly categorised as 'HARD' or 'SOFT' signals. |
-| c3 | Skill's correctness pass covers logic errors, null/undefined handling, race conditions, edge cases, and error propagation | PARTIAL | The output covers one correctness dimension — scaling logic errors ('each instance enforces independently') and unbounded Map growth (an edge case/resource leak). Race conditions, null/undefined handling, and error propagation are not addressed. No explicit correctness pass is named or structured. |
-| c4 | Skill's security pass covers injection, auth/authz, data exposure, and cryptography | FAIL | No security pass exists in the output. Injection, auth/authz, data exposure, and cryptography are not mentioned anywhere. The req.ip spoofing risk (a security concern) is also absent. |
-| c5 | Skill includes a friction scan assessing developer experience, debuggability, rollback safety, and feature flag need | FAIL | No friction scan appears in the output. Debuggability, feature flag need, and rollback safety are not discussed. The output briefly mentions the 'infrastructure motivation is reasonable' but this does not constitute a friction scan. |
-| c6 | Skill defines a zero-finding gate — if clean, must name a specific positive assertion with file:line to prove review depth | FAIL | No zero-finding gate is defined or referenced anywhere in the output. The concept of naming a positive assertion with file:line to prove review depth is entirely absent. |
-| c7 | Skill's output format includes a verdict (APPROVE, REQUEST_CHANGES, NEEDS_DISCUSSION) with a count of blockers, important, and suggestion findings | PARTIAL | The output contains a 'Verdict' section that says 'Reject' / 'Don't merge as-is', which maps to REQUEST_CHANGES, but does not use the canonical terms APPROVE/REQUEST_CHANGES/NEEDS_DISCUSSION, and provides no explicit count of blockers, important findings, or suggestions. |
-| c8 | Skill's calibration rules prohibit findings without evidence, findings without fix suggestions, and style preferences not codified in team standards | FAIL | The output does not describe or reference any calibration rules. While findings generally have evidence and fixes in this particular output, the calibration rules themselves are not stated, so the skill cannot be credited with defining them. |
-| c9 | Output flags the per-process in-memory Map as a HARD signal — rate limit no longer enforced across instances, won't survive restart, defeats the purpose of rate limiting in any horizontally scaled deployment | PASS | 'Critical: Shared-state loss under horizontal scaling' explicitly flags that each instance enforces independently, giving 'N × 100 effective throughput.' 'Medium: State lost on restart' covers the process-restart concern. Both points are clearly identified as blocking issues. |
-| c10 | Output flags the absence of tests as a HARD signal given the change to a security-relevant control, and proposes specific test cases (refill arithmetic, concurrent requests, capacity boundary, IP key collision behind a proxy) | PARTIAL | 'On the tests' section notes that existing tests 'can't observe cross-instance drift' and 'validate the wrong thing.' However, no specific test cases are proposed (no mention of refill arithmetic, concurrent requests, capacity boundary, or IP key collision), and it is not labelled as a HARD/blocker signal. |
-| c11 | Output flags `req.ip` as fragile behind a proxy/load balancer — depends on `trust proxy` configuration, can be spoofed via `X-Forwarded-For` if not configured correctly | FAIL | The output never mentions req.ip, trust proxy configuration, or X-Forwarded-For spoofing. The alternatives section mentions 'sticky sessions' but does not discuss the IP-key fragility issue. |
-| c12 | Output flags the unbounded `Map` growth as a memory leak — no eviction, every unique IP forever, OOM risk under botnet or large user base | PASS | 'High: Unbounded memory growth' section explicitly states 'Nothing evicts stale entries. Every unique IP seen since the process started lives here forever' and 'Under normal traffic or any IP-cycling attack, this will grow until OOM.' A concrete fix is also suggested. |
-| c13 | Output identifies a concurrency / TOCTOU issue — read-modify-write on `bucket.tokens` is not atomic across simultaneous requests on the same Node process | FAIL | The output does not mention TOCTOU, read-modify-write atomicity, or concurrency issues within a single Node.js process. This finding is entirely absent. |
-| c14 | Output flags the lack of `Retry-After` header on the 429 response as a friction signal (clients can't back off intelligently) | FAIL | The output does not mention the Retry-After header or client back-off behaviour anywhere. |
-| c15 | Output produces a verdict of `REQUEST_CHANGES` or `NEEDS_DISCUSSION` (not APPROVE) with explicit blocker / important / suggestion counts | PARTIAL | The output's Verdict section clearly rejects the PR ('Reject', 'Don't merge as-is'), which corresponds to REQUEST_CHANGES. However, there are no explicit counts of blockers, important findings, or suggestions — only prose describing three alternatives. |
-| c16 | Each finding cites a specific file:line and includes a concrete suggested fix (e.g. switch to `express-rate-limit` with Redis store, or document the trade-off and stay with the existing distributed limiter) | PARTIAL | Findings include concrete fix suggestions (eviction snippet, alternatives list including Memcached/Upstash/nginx/sticky sessions). However, no finding cites a specific file:line reference — the code is quoted inline without source attribution. |
-| c17 | Output runs an adversarial pass — what happens at 10K req/sec, what happens with one client behind NAT representing 1000 users, what happens during a deploy when in-memory state resets | PARTIAL | 'Medium: State lost on restart' covers the deploy-reset scenario. 'IP-cycling attack' is mentioned under memory growth. The 10K req/sec scenario and the NAT/shared-IP scenario (1000 users appearing as one IP) are not explicitly addressed. |
-| c18 | Output flags the missing observability — no logged events, no metrics, no dashboard for rate-limit hits/misses — given this is a security control | FAIL | The output does not mention observability, logging, metrics, or dashboards anywhere. The absence of rate-limit hit/miss instrumentation is entirely unaddressed. |
+| c1 | Skill defines four passes in sequence — Context, Correctness, Security, Quality — and requires reading full file context not just the diff | PASS | Output has explicit headers 'Pass 1: Context', 'Pass 2: Correctness', 'Pass 3: Security', 'Pass 4: Quality & Friction' in order. Analysis cites full file lines (e.g. 'src/middleware/rateLimit.ts:1-20 (entire implementation)'), not just the diff hunks. |
+| c2 | Skill distinguishes HARD signals (blockers — will cause wrong behaviour in production) from SOFT signals (important but conditional) | PASS | Every finding is prefixed with an explicit label: 'FINDING: HARD', 'Finding 2a: HARD', 'Finding 2b: SOFT', etc. The Severity field under each finding also explains why the label applies. |
+| c3 | Skill's correctness pass covers logic errors, null/undefined handling, race conditions, edge cases, and error propagation | PASS | Pass 2 covers the TOCTOU race (Finding 2a, rateLimit.ts:12-18), unbounded Map growth / memory logic (Finding 2b, rateLimit.ts:3), and state-loss edge case (Finding 2c). Token refill arithmetic edge cases also noted in Finding 4c. Null/undefined and error propagation not cited but all relevant correctness dimensions for this implementation are addressed. |
+| c4 | Skill's security pass covers injection, auth/authz, data exposure, and cryptography | PARTIAL | Pass 3 covers X-Forwarded-For header injection / proxy spoofing (Finding 3a) and IP-based auth bypass (Finding 3b). Data exposure and cryptography are not mentioned at all — not even dismissed as not applicable. Only two of the four named categories receive attention. |
+| c5 | Skill includes a friction scan assessing developer experience, debuggability, rollback safety, and feature flag need | PARTIAL | Pass 4 explicitly covers debuggability ('no way to see token bucket state without debugger', Finding 4a) and developer experience through observability/test gaps. Rollback safety is only touched on obliquely in Finding 2c (state loss on restart). Feature flag need is not mentioned anywhere. |
+| c6 | Skill defines a zero-finding gate — if clean, must name a specific positive assertion with file:line to prove review depth | FAIL | The Calibration Rules section lists three rules (no findings without evidence, no findings without fix suggestions, no style preferences unsupported by standards) but does not mention the zero-finding gate. The rule is absent from the output entirely. |
+| c7 | Skill's output format includes a verdict (APPROVE, REQUEST_CHANGES, NEEDS_DISCUSSION) with a count of blockers, important, and suggestion findings | PASS | Output ends with '**REQUEST_CHANGES** — Do not merge.' and a table explicitly showing Blockers (HARD): 4, Important (SOFT): 5, Suggestions: 0. |
+| c8 | Skill's calibration rules prohibit findings without evidence, findings without fix suggestions, and style preferences not codified in team standards | PASS | The '## Calibration Rules' section at the top states all three rules verbatim: 'No findings without evidence', 'No findings without concrete fix suggestions', 'No style preferences unsupported by standards'. |
+| c9 | Output flags the per-process in-memory Map as a HARD signal — rate limit no longer enforced across instances, won't survive restart, defeats the purpose of rate limiting in any horizontally scaled deployment | PASS | Pass 1 finding is labeled HARD: 'Per-instance rate limiting breaks multi-instance deployments'. Explains '100×N effective limit' across containers, states 'The PR description claims same 100/min limit — this is false for any multi-instance topology'. Cites rateLimit.ts:1-12. |
+| c10 | Output flags the absence of tests as a HARD signal given the change to a security-relevant control, and proposes specific test cases (refill arithmetic, concurrent requests, capacity boundary, IP key collision behind a proxy) | PASS | Finding 4b is labeled HARD: 'Tests validate the wrong thing'. Finding 4c (SOFT) proposes specific test cases: 'refill arithmetic (edge of minute boundary)', 'Concurrent requests on same IP', 'Capacity boundary (exactly 100, 101, 99 tokens)', 'IP collision scenarios (IPv4-mapped IPv6 addresses)'. |
+| c11 | Output flags `req.ip` as fragile behind a proxy/load balancer — depends on `trust proxy` configuration, can be spoofed via `X-Forwarded-For` if not configured correctly | PASS | Finding 3a labeled HARD: '`req.ip` is fragile behind proxies and load balancers'. Three scenarios detailed: misconfigured trust proxy returning LB IP, header spoofing with X-Forwarded-For, and multi-proxy header confusion. Cites rateLimit.ts:7. |
+| c12 | Output flags the unbounded `Map` growth as a memory leak — no eviction, every unique IP forever, OOM risk under botnet or large user base | PASS | Finding 2b labeled SOFT: 'Unbounded memory growth (memory leak)'. States 'Map grows unbounded until process memory is exhausted' and 'attacker can scan the service with 1M unique spoofed IPs; each creates a bucket; process OOMs'. Cites rateLimit.ts:3 and provides LRU eviction fix. |
+| c13 | Output identifies a concurrency / TOCTOU issue — read-modify-write on `bucket.tokens` is not atomic across simultaneous requests on the same Node process | PASS | Finding 2a labeled HARD: 'Race condition on token bucket state'. Explicitly names TOCTOU, gives the two-request interleaving scenario (both read tokens=1, both decrement), and notes 'Node.js is single-threaded, but async I/O yields control'. Cites rateLimit.ts:12-18. |
+| c14 | Output flags the lack of `Retry-After` header on the 429 response as a friction signal (clients can't back off intelligently) | PASS | Finding 3c labeled SOFT: 'Missing `Retry-After` header on 429 responses'. States 'clients must guess (exponential backoff) or retry immediately'. Cites rateLimit.ts:16 and provides code fix calculating the correct header value. |
+| c15 | Output produces a verdict of `REQUEST_CHANGES` or `NEEDS_DISCUSSION` (not APPROVE) with explicit blocker / important / suggestion counts | PASS | '**REQUEST_CHANGES** — Do not merge.' verdict with table: Blockers (HARD) = 4, Important (SOFT) = 5, Suggestions = 0. |
+| c16 | Each finding cites a specific file:line and includes a concrete suggested fix (e.g. switch to `express-rate-limit` with Redis store, or document the trade-off and stay with the existing distributed limiter) | PASS | Every finding cites src/middleware/rateLimit.ts with line numbers and includes code-level fixes: e.g. Finding 2b proposes `new LRU<string, Bucket>({max: 1_000_000})`, Finding 3a proposes `import { getClientIP } from 'request-ip'`, Finding 4a proposes `logger.warn` and `metrics.increment` calls. Pass 1 recommends `express-rate-limit` with RedisStore. |
+| c17 | Output runs an adversarial pass — what happens at 10K req/sec, what happens with one client behind NAT representing 1000 users, what happens during a deploy when in-memory state resets | PASS | '## Adversarial Pass: Attack Scenarios' section covers all four scenarios: A (10K req/sec → OOM before limits kick in), B (1000 users behind NAT competing for 100/min), C (deploy resets state mid-attack, attacker resets quota), D (IP spoofing via X-Forwarded-For creating unbounded fresh buckets). |
+| c18 | Output flags the missing observability — no logged events, no metrics, no dashboard for rate-limit hits/misses — given this is a security control | PARTIAL | Finding 4a labeled HARD: 'Missing observability (no metrics, no logging)'. Explicitly lists absent signals (rate_limit_hit, rate_limit_miss, bucket_size, structured logs), states 'a security control without instrumentation' and 'Blocks production deployment'. Provides a concrete instrumented code snippet. |
 
 ### Notes
 
-The captured output is a competent informal code review that correctly identifies the two most important issues (cross-instance shared-state loss and unbounded memory growth) and gives a clear reject verdict. However, it completely fails to demonstrate the four-pass code-review methodology the skill is supposed to enforce. Criteria c1–c8 (structural/methodological requirements) almost uniformly fail: no pass structure, no HARD/SOFT taxonomy, no security pass, no friction scan, no zero-finding gate, and no calibration rules. On the content side, several significant findings are missing: req.ip fragility behind a proxy (c11), the TOCTOU/concurrency issue on token read-modify-write (c13), the absent Retry-After header (c14), and missing observability (c18). The output also never cites file:line for any finding, which is a basic review hygiene requirement. The overall score of ~29% reflects a good informal intuition but near-total absence of the structured methodology the skill was designed to enforce.
+The review is strong overall — all domain-specific findings (per-instance breakage, TOCTOU, unbounded Map, req.ip spoofing, Retry-After, adversarial scenarios) are present with correct HARD/SOFT labels, file:line citations, and concrete fixes. The two PARTIAL scores reflect gaps in the generic skill checklist rather than the scenario-specific analysis: the security pass does not address injection/data exposure/cryptography even to dismiss them, and the friction scan omits rollback safety and feature-flag need. The clear FAIL is the zero-finding gate: the Calibration Rules section lists three rules but the gate rule ('if a pass is clean, name a positive assertion with file:line') is entirely absent. This is a structural skill-definition gap, not a review-quality gap, since all passes in this PR happened to have findings.

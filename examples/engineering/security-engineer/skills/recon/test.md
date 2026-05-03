@@ -6,6 +6,20 @@ Scenario: Checking that the recon skill enforces authorisation logging, uses pas
 
 Review the recon skill definition and verify it enables thorough passive attack surface mapping while enforcing scope discipline and authorisation requirements.
 
+Read the skill at `/Users/martin/Projects/turtlestack/plugins/engineering/security-engineer/skills/recon/SKILL.md` and verify each item by name. Quote skill text where present:
+
+- **Authorisation reference logged before starting** — no exceptions. The skill defines the legal risk of scope drift (unauthorised recon = potential CFAA / Computer Misuse Act violation).
+- **Strictly passive** — every method touches third-party data sources only, never the target's systems. No port scans, no probes.
+- **Domain / DNS enumeration sources (5)**: crt.sh (certificate transparency), Censys CT search, historical DNS (SecurityTrails / DNSDumpster), WHOIS, Google dorking. At least three named.
+- **ASN / IP range mapping**: BGP.he.net AND RIR allocation records (ARIN, RIPE, APNIC, LACNIC, AFRINIC) named.
+- **Technology fingerprinting includes job postings** as a recon source — explicitly framed as "the most underrated reconnaissance source".
+- **Shodan and Censys** for passive infrastructure data, with the rule that **scan timestamps must be cited** to avoid presenting stale data as current.
+- **Credential / breach data**: HaveIBeenPwned AND GitHub / paste-site dorking.
+- **Out-of-scope findings section** in the output template — assets discovered outside agreed scope are noted but not investigated.
+- **Identified gaps**: any of — no rule on rate-limiting passive lookups to avoid suspicion, no guidance on combining findings into an attack-surface graph, no mention of social media / LinkedIn enumeration as a recon source.
+
+Confirm or flag each by name.
+
 ## Criteria
 
 - [ ] PASS: Skill requires authorisation reference to be logged before starting — no exceptions — and defines the legal risk of scope drift

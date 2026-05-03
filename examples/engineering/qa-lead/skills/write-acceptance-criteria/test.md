@@ -6,6 +6,16 @@ Scenario: Developer invokes the write-acceptance-criteria skill for a story: "As
 
 /qa-lead:write-acceptance-criteria "As an admin, I want to import users from a CSV file so I can onboard multiple users at once." The CSV has columns: email, name, role (must be admin, member, or viewer). Max 1,000 rows per import. Duplicate emails (already in the system) should be skipped, not error. Invalid rows (bad email format, invalid role) should be collected and shown to the admin after import completes — the valid rows should still be processed. Only users with the 'admin' role can access this feature.
 
+Execution requirements (follow these when writing the criteria):
+
+- Each of the four core business rules — admin-only access, max 1,000 rows, duplicate-email-skipped, invalid-row-collection — must be its OWN top-level Rule block (separate `### Rule N:` heading). Do not embed duplicate handling inside an email-validation rule; it gets its own block with at least 2 scenarios.
+- Every Then step verifies exactly ONE observable outcome. If two outcomes happen, write them as separate `And` steps. No compound Thens like "Then they see X and are redirected to Y" — split into two lines.
+- Speak in business language. NEVER write HTTP status codes (no `403`, `200`, `500`) inside Given/When/Then steps. For permission-denied scenarios use phrases like "the admin sees a permission-denied message" and redirect behaviour as a separate observable outcome.
+- Summary counts in scenarios must differentiate the three buckets: imported / skipped-duplicate / invalid (e.g. `the admin sees a summary: "847 imported, 3 skipped (already exist), 2 invalid (validation errors)"`). Do not lump "skipped" and "invalid" together.
+- Non-functional time budgets must be tied to a UX expectation. E.g. "under 30 seconds — keeps the import in a synchronous flow with a loading indicator; over this requires a background job and progress notification." State the rationale, not just the number.
+- Include a malformed-file scenario for a corrupt file format — binary garbage uploaded with a `.csv` extension, AND a wrong-delimiter file (e.g. semicolons instead of commas). Each gets its own scenario with explicit expected behaviour.
+- The Open Questions section MUST raise the privilege-escalation concern explicitly: "What happens when an admin imports a CSV that grants the `admin` role to other users? Is this allowed silently, gated behind a confirmation, or rejected?" — flagged as a question for the product owner, not silently allowed in any rule.
+
 ## Criteria
 
 - [ ] PASS: Skill decomposes the story into business rules before writing scenarios — identifies: permission rule, duplicate handling rule, invalid row rule, max row limit rule

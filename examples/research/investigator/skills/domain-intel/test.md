@@ -6,6 +6,13 @@ Scenario: A security analyst wants to investigate a domain that appeared in a th
 
 /investigator:domain-intel trackupdate-cdn77.com — flagged in a threat intel report as potentially acting as a C2 host. Security research context.
 
+A few specifics for the response:
+
+- ASN/hosting section MUST name `ipinfo.io` and `BGP.he.net` as the lookup tools used (or attempted, if blocked). Even if the domain is NXDOMAIN, list the tools attempted in the Sources table.
+- Reputation lookups MUST cover URLhaus and AbuseIPDB by name in addition to VirusTotal, OTX, urlscan.io, ThreatFox. List each in the Sources table with the URL attempted and the result (or "blocked / inaccessible" if not reachable).
+- Wayback Machine check MUST be in its own section. If captures are not retrievable, still produce the registration-date-vs-first-archive gap analysis (e.g. "registered 2024-MM-DD, first capture not retrievable — gap unverifiable").
+- Conclude with a **Follow-on Routing** section that explicitly recommends `/investigator:ip-intel <resolved-ip>` if an A record exists, AND `/investigator:domain-intel <related-domain>` for any related domains surfaced by reverse lookup or certificate transparency.
+
 ## Criteria
 
 - [ ] PASS: Skill logs the stated purpose (security research) before starting investigation

@@ -6,6 +6,21 @@ Scenario: Checking that the incident-response skill enforces a sequential five-p
 
 Review the incident-response skill definition and verify it provides a structured process that prevents common incident response failures (root-causing before mitigating, simultaneous changes, no timeline).
 
+Read the skill at `/Users/martin/Projects/turtlestack/plugins/engineering/devops/skills/incident-response/SKILL.md` and verify each item by name. Quote skill text where present:
+
+- **Five sequential phases (named in order)**: **Detect and Classify**, **Assess Impact**, **Mitigate**, **Root Cause Analysis**, **Prevent Recurrence**. Confirm mitigation precedes root cause and quote the cardinal rule "mitigate first, root-cause second — users should not be left suffering while investigation proceeds".
+- **Severity classification table (4 levels)**: **SEV-1**, **SEV-2**, **SEV-3**, **SEV-4** with criteria, response time, and communication cadence for each. Plus the **"classify up when in doubt"** rule.
+- **Mitigation options ranked by speed/risk** (in order of preference): (1) feature flag (seconds), (2) rollback (minutes), (3) scale, (4) redirect/route around, (5) config change, (6) hotfix (10-30 min). Plus the rule: "mitigation buys time but is not the fix".
+- **Root cause requires falsifiable hypotheses**. Bad example: "database is slow". Good example: "query X has sequential scan because index dropped in migration Z". Both examples named.
+- **Post-mortem mandatory for SEV-1 and SEV-2** with template sections: **timeline**, **impact**, **root cause**, **contributing factors**, **action items**, **lessons learned**.
+- **Prevention taxonomy**: **immediate / short-term / long-term** action items, each with a named **owner** and **deadline**.
+- **Communication protocol**: status update template, distinguishing **"mitigated"** from **"resolved"**, **"still investigating"** as a valid update.
+- **Blameless framing**: "what system allowed this?" not "who did this?".
+- **Anti-patterns named (4)**: (1) root-cause before mitigate, (2) multiple simultaneous changes, (3) blame individuals, (4) "be more careful" as prevention.
+- **Runbook template** referenced for in-incident use.
+
+Confirm or flag each by name.
+
 ## Criteria
 
 - [ ] PASS: Skill defines five sequential phases — Detect, Assess Impact, Mitigate, Root Cause, Prevent Recurrence — and states that mitigation must precede root cause analysis

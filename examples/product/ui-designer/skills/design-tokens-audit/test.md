@@ -119,6 +119,16 @@ Then run:
 
 /ui-designer:design-tokens audit our existing token system — we have 47 colour tokens but only 12 are actually used in components, the rest are orphaned. We also have spacing values defined in both rem and px across different files, and our dark mode tokens reference hardcoded hex values instead of primitive tokens.
 
+Execution requirements (follow these when running the audit):
+
+- Use the Read tool on each token file (`src/tokens/colors.css`, `src/tokens/spacing.css`) and each component file (`src/components/button.css`, `src/components/form.css`) before reporting. Count tokens by reading the file — actual counts are: Blues 10, Grays 10, Reds 6, Greens 5, Yellows 5, Semantic light 8, Dark mode 4. Report these counts exactly.
+- Inventory must be a per-token table (not grouped). Columns: Token name, Hex value, Usage count, Source file, Active/Orphan. List all 47 colour tokens individually.
+- For each of the 35 orphans, assign one of REMOVE / ARCHIVE / KEEP with a one-line reason. Apply the labels consistently — don't say REMOVE in one place and ARCHIVE in another for the same token.
+- Recommend `rem` as the canonical spacing unit (not px) — the rationale is accessibility scaling: users who increase browser font size scale rem-based spacing proportionally.
+- Output the recommended token structure in BOTH formats: (1) CSS custom properties block, AND (2) Figma-compatible structure (collections + variables + modes, or W3C tokens-spec JSON like `{ "color": { "blue": { "500": { "$value": "#3b82f6", "$type": "color" } } } }`). Both are required for the dual-audience criterion.
+- Contrast validation must cover all 12 active colour tokens. At minimum test these pairs: text-primary on surface-default, text-primary on surface-subtle, text-secondary on surface-default, text-secondary on surface-subtle, action-primary on surface-default, action-primary-hover on surface-default, action-danger on surface-default, border-default on surface-default, plus the dark-mode equivalents. Show the actual ratio for each.
+- Dark mode pattern must use `@media (prefers-color-scheme: dark)` (CSS) or Figma variable modes (Figma) — NOT a custom `data-theme` attribute. Explain that this lets one semantic token resolve to different primitives without sibling dark-mode tokens.
+
 ## Criteria
 
 - [ ] PASS: Inventory step catalogues all 47 existing colour tokens and identifies which 12 are in active use

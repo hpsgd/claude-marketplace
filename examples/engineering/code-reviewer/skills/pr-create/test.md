@@ -6,6 +6,18 @@ Scenario: Checking that the pr-create skill analyses ALL commits on a branch (no
 
 Review the pr-create skill definition and verify it produces well-formed pull requests that give reviewers sufficient context.
 
+In your verification report, confirm or flag each of the following items by name. Quote skill text where present:
+
+- **Full commit history**: `git log --oneline BASE..HEAD` mandated before drafting the title; title must reflect ALL commits, not just HEAD.
+- **Conventional Commits format**: type, optional scope, imperative mood, **under 70 characters** — all four named.
+- **Description template sections**: **Summary**, **Changes (grouped by area)**, **Test plan** — all three named as required.
+- **Safety checks (2)**: (1) **stop if current branch is `main`**, (2) **detect uncommitted changes and ask the user** before proceeding.
+- **Workflow verification**: uses `gh pr create` AND verifies creation via `gh pr view` (or `gh pr list`) post-push.
+- **Edge cases (3)**: (1) **draft PRs** (`--draft` flag), (2) **single-commit branches**, (3) **branches with many small commits**.
+- **Identified gaps**: explicitly call out any of: no rule on linking issues with `Closes #N`, no guidance on assigning reviewers, no defined behaviour for branches diverged behind base.
+
+Confirm or flag each by name — do not paraphrase.
+
 ## Criteria
 
 - [ ] PASS: Skill explicitly requires reading every changed file in the diff — "if there are 20 changed files, read all 20" — not just the diffstat

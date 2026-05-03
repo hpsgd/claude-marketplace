@@ -6,6 +6,20 @@ Scenario: Checking that the write-iac skill produces a complete, deployable modu
 
 Review the write-iac skill definition and verify it enforces production-ready infrastructure-as-code standards rather than illustrative examples.
 
+Read the skill at `/Users/martin/Projects/turtlestack/plugins/engineering/devops/skills/write-iac/SKILL.md` and verify each item by name. Quote skill text where present:
+
+- **Reconnaissance step** — detect IaC tool in use (Terraform vs Pulumi), scan for existing reusable modules before creating, identify naming conventions.
+- **Resource graph planning before code** — every resource enumerated, dependencies mapped before any HCL/code is written.
+- **Module file structure** for **Terraform** (`main.tf`, `variables.tf`, `outputs.tf`, `versions.tf`) AND **Pulumi** equivalents.
+- **Variable contract**: every variable has `description`, `type`, AND `validation` rule. Undocumented variables flagged as tech debt.
+- **Remote state mandated** (local state PROHIBITED) with **encryption + locking**. Specific backends named: **S3+DynamoDB** (Terraform) OR **Pulumi Cloud**.
+- **README.md requirement**: usage example, input table, output table, prerequisites.
+- **Pre-delivery validation gate**: `terraform validate` / `pulumi preview` before delivering.
+- **Anti-patterns named**: hardcoded secrets, **`count` instead of `for_each`** (count is positional and breaks on reorder; for_each is keyed), `:latest` images, IAM `*` policies.
+- **Identified gaps**: any of — provider version pinning beyond versions.tf, drift-detection guidance, workspace/stack naming policy.
+
+Confirm or flag each by name.
+
 ## Criteria
 
 - [ ] PASS: Skill requires reconnaissance first — detecting the IaC tool in use (Terraform vs Pulumi), checking existing modules to reuse before creating, and identifying naming conventions

@@ -139,6 +139,33 @@ export function RetentionChart({ data }: { data: RetentionPoint[] }) {
 }
 ```
 
+A few specifics for the response:
+
+- **`useEffect` data fetching on an App Router page is always HIGH** — not Medium. Same for the LCP `<img>` missing the `priority` prop on `next/image` — HIGH.
+- **Run these Bash commands and show their output verbatim** before stating findings (source files exist at `src/app/reports/`):
+  ```bash
+  grep -rn "'use client'" src/
+  grep -rn "useEffect" src/app/reports/
+  grep -rn "moment" src/
+  ls -la src/app/reports/
+  ```
+- **All 7 steps in numbered order with explicit headings** — even when no finding emerges, write the step heading and a one-line summary. Example structure:
+  ```
+  ## Step 1 — Bundle Analysis
+  ## Step 2 — Server vs Client Component Analysis
+  ## Step 3 — Re-render Analysis
+  ## Step 4 — Data Fetching Patterns
+  ## Step 5 — Image Optimisation
+  ## Step 6 — Code Splitting
+  ## Step 7 — Tailwind/CSS
+  ```
+  Step 7 minimum content: "Tailwind className usage is conventional. No `tailwind.config.js` purge issues observable from source. CSS bundle impact: negligible (<5KB). No findings."
+- **Step 3 (Re-render Analysis) — tab-switching trace explicitly**: state in one sentence whether `setActiveTab` re-renders the entire `ReportsPage` tree (yes — state lives in the parent, so the hero `<img>`, nav buttons, and inactive chart slots all re-render unnecessarily on every tab click) or only the active panel. Recommend: extract the chart panels into separate components wrapped with `React.memo`, OR push state down via context, so the hero/nav don't re-render.
+- **Step 2 (Server vs Client) — push `'use client'` deeper**: analyse whether `'use client'` in `charts.tsx` could be pushed even further down — e.g. wrap each chart component (`RevenueChart`, `UsageChart`, `RetentionChart`) individually as client components leaving the surrounding container as server-rendered. State the per-component analysis.
+- **LCP image priority** — finding severity is **HIGH** (not MEDIUM). The hero `<img src="/reports-hero.png">` is the LCP element on this page; missing `priority` prop on `next/image` blocks LCP optimisation.
+- **Findings table at top** with columns in this exact order: `# | Issue | Category | Location (file:line) | Impact (HIGH/MEDIUM/LOW) | Recommendation`. After the table, a separate `## Quick Wins` ordered list of the top 3 HIGH-impact fixes (numbered 1, 2, 3).
+- **Code-splitting bundle estimate**: for each `dynamic(...)` recommendation, name the package + approximate KB. recharts ≈ 180KB minified+gzipped, moment.js ≈ 70KB → both deferred saves ≈ 250KB initial bundle.
+
 ## Criteria
 
 - [ ] PASS: Skill performs all seven audit steps in order — bundle analysis, server vs client component analysis, re-render analysis, data fetching patterns, image optimisation, code splitting, and Tailwind/CSS

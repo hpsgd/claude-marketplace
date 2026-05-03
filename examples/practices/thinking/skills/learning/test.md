@@ -6,6 +6,37 @@ Scenario: A developer just force-pushed to the wrong branch and wants to capture
 
 /learning Capture this: I just ran `git push --force origin main` from the wrong directory — I was in the `payments-service` repo but thought I was in `my-feature-branch` project. Pushed over 3 commits on `origin/main` in the payments-service repo. Had to ask the platform team to restore from their backup. This wasted about 2 hours and caused a 20-minute deploy freeze.
 
+A few specifics for the response:
+
+- **Dedup check first**: `ls ~/.claude/learnings/ | grep -iE "force|push|directory"` AND `ls .claude/learnings/ 2>/dev/null | grep -iE "force|push|directory"`. Report results — "no existing learning found, creating new" or "found existing X, updating instead".
+- **Save to workspace-accessible path** — write the file to `learnings/learned--verify-directory-before-force-push.md` (relative to the workspace root; the `learnings/` directory is writable in the eval workspace). Report the path. ALSO state the canonical global location it would be moved to: `~/.claude/learnings/learned--verify-directory-before-force-push.md`. Use the `learned--<kebab-case>.md` naming convention.
+- **Show the full file content INLINE in the chat response** (between fenced markdown blocks) so the frontmatter and all body sections are visible to readers — even if the file is also written to disk.
+- **File format** — the file content (and inline display) must use this exact structure:
+  ```markdown
+  ---
+  name: Verify directory before force push
+  description: Always verify cwd, repo, and branch before any git push --force command
+  type: system
+  severity: high
+  category: SYSTEM
+  ---
+
+  # Learned: Verify directory before force-pushing
+
+  **What happened:** [verbatim from the prompt — `git push --force origin main` from payments-service repo while thinking it was my-feature-branch; 3 commits overwritten on origin/main; platform team restored from backup; 2h lost + 20-min deploy freeze]
+
+  **Learning:** Before any `git push --force`, run `pwd && git remote -v && git log --oneline -5` and verify all three.
+
+  **Why:** Force-push to the wrong repo overwrites commits on a shared branch. Recovery requires upstream backup restore (not always available), blocks teammate work, and triggers deploy freezes.
+
+  **How to apply:** Trigger pattern — before any `git push --force` command, mentally tick: am I in the right repo? am I on the right branch? am I overwriting commits I shouldn't? Optional shell helper: alias `gpf` to a script that runs the three verification commands and prompts for `y/N` before invoking force-push.
+
+  **Severity:** HIGH (data loss, requires upstream restore, blocks team)
+
+  **Category:** SYSTEM (tool/environment behaviour, not a methodology gap — the rule constrains how the tool is invoked, not how to reason about a problem)
+  ```
+- **Category reasoning**: include 1-2 sentences explaining why SYSTEM (not METHOD or DOMAIN) — it's about tool invocation behaviour, not a process or domain knowledge gap.
+
 ## Criteria
 
 - [ ] PASS: Step 1 assigns a category (SYSTEM, METHOD, DOMAIN, or FEEDBACK) with reasoning

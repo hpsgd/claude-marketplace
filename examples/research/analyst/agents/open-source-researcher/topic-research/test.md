@@ -6,6 +6,14 @@ Scenario: A user needs background research on edge computing adoption in Austral
 
 I need background research on edge computing adoption in Australian manufacturing. Specifically: how widely is it being adopted, what's driving it, and what are the main barriers? I need this for a client meeting on Friday — Standard tier is fine.
 
+A few specifics for the response:
+
+- Begin by explicitly invoking the `/analyst:web-research` skill (state "Invoking /analyst:web-research at Standard tier" at the top).
+- **Source priority for AU-specific question**: prefer AU sources — ABS (Australian Bureau of Statistics), AFR, AMTIL (Australian Manufacturing Technology Institute Ltd), AMGC (Advanced Manufacturing Growth Centre), DISR (Department of Industry, Science and Resources), CSIRO, IBISWorld AU, ABC News. Use US/EU sources only as comparators with explicit framing ("for context, in the US..."). Aim for ≥4 of 6 sources to be Australian.
+- **Authority ranking**: government / industry-body sources (ABS, AMGC, DISR, CSIRO) take precedence over commercial market-research firms (IMARC, STL Partners) which take precedence over user-generated content platforms (vocal.media, Medium). State the ranking and apply it — don't cite vocal.media for headline statistics.
+- **Inline citations** for every quantitative claim — every $/figure/percentage carries a `[Source N]` marker referencing the numbered sources list.
+- **Acknowledge gaps**: where authoritative AU data doesn't exist (e.g. no ABS adoption survey on edge computing specifically), say so explicitly rather than padding with lower-quality sources.
+
 ## Criteria
 
 - [ ] PASS: Agent invokes `/analyst:web-research` with Standard tier

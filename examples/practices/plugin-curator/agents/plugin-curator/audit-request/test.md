@@ -4,7 +4,24 @@ Scenario: User asks the plugin-curator agent to audit an existing agent definiti
 
 ## Prompt
 
-Can you audit the `qa` agent for me? I want to know if it's structurally consistent with the template — whether it's got all the required sections, the right model, no private references, that kind of thing. Just give me the full breakdown.
+Can you audit the `qa` agent for me? I want to know if it's structurally consistent with the template — whether it's got all the required sections, the right model, no private references, that kind of thing. Just give me the full breakdown. Audit the `qa-lead` agent specifically (located at `/Users/martin/Projects/turtlestack/plugins/engineering/qa-lead/agents/qa-lead.md`). Proceed without asking — the user has confirmed `qa-lead` is the target.
+
+A few specifics for the response:
+
+- **Pre-flight section at top** — labelled `## Pre-flight Reads` listing each Read with absolute path:
+  ```
+  Read: /Users/martin/Projects/turtlestack/CLAUDE.md
+  Read: /Users/martin/Projects/turtlestack/.claude-plugin/marketplace.json
+  Read: /Users/martin/Projects/turtlestack/plugins/practices/plugin-curator/templates/agent-template.md
+  Read: /Users/martin/Projects/turtlestack/plugins/engineering/qa-lead/agents/qa-lead.md
+  ```
+- **Audit table covering ALL 15 criteria from the agent template**. Columns: `# | Criterion | Status (MET / PARTIALLY MET / MISSING) | Evidence (file:line or exact quote)`. No criterion blank or assumed.
+- **Quality score**: `X/15` AND **line count** of the audited agent (both numeric, not approximate).
+- **Model correctness check**: confirm `qa-lead` uses `sonnet` (specialist agent). Flag if `opus` or `haiku` mismatched.
+- **Private-reference check**: scan for company names, private package paths, internal URLs that shouldn't appear in a public marketplace plugin.
+- **Tool-link conventions**: third-party tools mentioned in prose should have markdown hyperlinks on first mention. Flag any missing.
+- **Boundary check**: explicitly state "Boundary respected — plugin-curator is excluded from 'all' audits per the skill's anti-patterns; this audit targets only qa-lead as requested."
+- **Recommended Actions** ordered structural → content → style with severity tag prefix `[STRUCTURAL]`, `[CONTENT]`, `[STYLE]`. Each action is concrete (what to add or change at specific location), not "improve this section".
 
 ## Criteria
 

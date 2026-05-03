@@ -16,6 +16,15 @@ The table will be used on the `/admin/orders` and `/admin/users` pages, so it ne
 
 Do not ask for clarification — proceed using the information provided. Use reasonable defaults for anything not specified (e.g. assume App Router, TypeScript strict, clsx for class composition) and state your assumptions.
 
+A few specifics for the response:
+
+- **Recon first**: show `find src/components -name "*.tsx" 2>/dev/null` and `cat CLAUDE.md 2>/dev/null` results (or "no existing components / no CLAUDE.md found, greenfield"). Include a one-line **Decision Checkpoint**: "Checked for existing Table primitive in shadcn/ui, Radix UI — none found in this project; building from scratch." (state explicitly even if synthetic).
+- **TDD with exit codes**: write the failing Vitest test FIRST, run `npx vitest run DataTable`, show **exit code 1 (RED)**. Then implementation, run again, show **exit code 0 (GREEN)**. Tests cover at minimum: renders with data, renders empty state, renders skeleton when loading, sort click updates URL.
+- **Export ONE `DataTableProps<T>` type** — exported from the component file, used everywhere. No separate inline definition that diverges from the exported one.
+- **URL state via `router.replace`** with `scroll: false` — NOT `router.push` (avoid history entries on every sort/filter/page change).
+- **Accessibility for sortable headers**: `<th aria-sort="ascending|descending|none">` with `role="button"`, `tabIndex={0}`, AND `onKeyDown` handling Space/Enter to activate sort. Add `aria-label` on `<table>`.
+- **Output structure**: end with a `## TDD Evidence` section (RED command + exit 1, GREEN command + exit 0) AND a `## Checklist` section enumerating completed items.
+
 ## Criteria
 
 - [ ] PASS: Agent reads CLAUDE.md and scans existing components before writing any code

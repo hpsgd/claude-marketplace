@@ -6,6 +6,20 @@ Scenario: Checking that the write-pipeline skill produces a fail-fast pipeline w
 
 Review the write-pipeline skill definition and verify it produces CI/CD pipelines that meet production standards for speed, security, and reliability.
 
+Read the skill via the loaded plugin (it is available as `/devops:write-pipeline` in this session). The skill source is at `${CLAUDE_PLUGIN_ROOT}/skills/write-pipeline/SKILL.md` or equivalently `/Users/martin/Projects/turtlestack/plugins/engineering/devops/skills/write-pipeline/SKILL.md`. Read it and verify the following items by name. Quote skill text where present:
+
+- **Stage order (6)**: lint/format → build → unit tests → integration tests → security scan → deploy. Fail-fast reasoning explicit.
+- **Fast-path target**: lint + build + unit tests under **10 minutes**, enforced.
+- **Cache key from lockfile hash**, plus **80% cache hit rate** threshold flag.
+- **GitHub Actions pinned to full 40-char commit SHAs** (not tags), supply-chain reasoning cited.
+- **Deploy restricted to `main` branch** after ALL checks pass.
+- **Security scan stage**: dependency audit at HIGH/CRITICAL, SAST, container image scanning.
+- **Test commands**: `CI=true` or `--run` flag — no default watch mode.
+- **Monorepo (3)**: change detection, selective execution, dependency graph awareness.
+- **Identified gaps**: any of — `concurrency: cancel-in-progress`, artifact retention, required-status-check ruleset.
+
+Confirm or flag each by name.
+
 ## Criteria
 
 - [ ] PASS: Skill enforces the correct stage order — lint/format first, then build, then unit tests, then integration tests, then security scan, then deploy — with explicit fail-fast reasoning
