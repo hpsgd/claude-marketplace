@@ -1,470 +1,1028 @@
-# Result: Payment processing module test suite
+# Test Planning
 
-**Verdict:** PASS
-**Score:** 18.5/19 criteria met (97%)
-**Evaluated:** 2026-04-30
+Scenario: User asks the QA engineer to write tests for a payment processing module that handles charge creation, refunds, and webhook verification. The module has no existing tests.
+
+## Prompt
+
+> We've just finished the payment processing module for our SaaS app. It handles three things: creating Stripe charges (with idempotency keys), processing refunds (full and partial), and verifying incoming Stripe webhooks using signature validation. There are currently zero tests. The module code is provided below as the specification — **treat it as code to implement via TDD, not code already on disk.**
+> 
+> Follow TDD in two phases:
+> 1. **Phase 1 (RED):** Write ALL test files first, then run: `python3 -m venv .venv && .venv/bin/pip install -r requirements.txt -q && .venv/bin/pytest tests/ -v 2>&1 | tail -20` — confirm exit code 1 (import errors expected)
+> 2. **Phase 2 (GREEN):** Write ALL source files, then run: `.venv/bin/pytest tests/ -v 2>&1 | tail -30` — confirm exit code 0
+> 
+> Create the project structure (`requirements.txt`, `config.py`, `src/__init__.py`, `src/payments/__init__.py`, `tests/__init__.py`, `tests/payments/__init__.py`) before writing tests.
+> 
+> ```
+> # requirements.txt
+> stripe>=7.0.0
+> Django>=5.0.0
+> django-ninja>=1.3.0
+> pytest>=8.0.0
+> pytest-mock>=3.14.0
+> ```
+> 
+> ```python
+> # config.py
+> class _Settings:
+>     STRIPE_SECRET_KEY = "sk_test_fake_key_for_testing"
+>     STRIPE_WEBHOOK_SECRET = "whsec_test_secret_for_testing"
+> 
+> settings = _Settings()
+> ```
+> 
+> Here is the module code to implement (write to disk in Phase 2, AFTER tests are written):
+> 
+> ```python
+> # src/payments/charges.py
+> from __future__ import annotations
+> 
+> import stripe
+> from dataclasses import dataclass
+> from config import settings
+> 
+> 
+> @dataclass(frozen=True)
+> class ChargeResult:
+>     charge_id: str
+>     amount: int
+>     currency: str
+>     status: str
+> 
+> 
+> class ChargeError(Exception):
+>     pass
+> 
+> 
+> def create_charge(
+>     amount: int,
+>     currency: str,
+>     source: str,
+>     idempotency_key: str,
+> ) -> ChargeResult:
+>     if amount <= 0:
+>         raise ChargeError(f"Amount must be positive, got {amount}")
+>     if not idempotency_key:
+>         raise ChargeError("idempotency_key is required")
+> 
+>     try:
+>         charge = stripe.Charge.create(
+>             amount=amount,
+>             currency=currency,
+>             source=source,
+>             idempotency_key=idempotency_key,
+>             api_key=settings.STRIPE_SECRET_KEY,
+>         )
+>     except stripe.error.CardError as exc:
+>         raise ChargeError(str(exc)) from exc
+> 
+>     return ChargeResult(
+>         charge_id=charge["id"],
+>         amount=charge["amount"],
+>         currency=charge["currency"],
+>         status=charge["status"],
+>     )
+> ```
+> 
+> ```python
+> # src/payments/refunds.py
+> from __future__ import annotations
+> 
+> import stripe
+> from dataclasses import dataclass
+> from config import settings
+> 
+> 
+> @dataclass(frozen=True)
+> class RefundResult:
+>     refund_id: str
+>     charge_id: str
+>     amount: int
+>     status: str
+> 
+> 
+> class RefundError(Exception):
+>     pass
+> 
+> 
+> def create_refund(charge_id: str, amount: int | None = None) -> RefundResult:
+>     """Create a refund. amount=None means full refund."""
+>     if amount is not None and amount <= 0:
+>         raise RefundError(f"Refund amount must be positive, got {amount}")
+> 
+>     params: dict = {"charge": charge_id}
+>     if amount is not None:
+>         params["amount"] = amount
+> 
+>     try:
+>         refund = stripe.Refund.create(
+>             **params,
+>             api_key=settings.STRIPE_SECRET_KEY,
+>         )
+>     except stripe.error.InvalidRequestError as exc:
+>         raise RefundError(str(exc)) from exc
+> 
+>     return RefundResult(
+>         refund_id=refund["id"],
+>         charge_id=refund["charge"],
+>         amount=refund["amount"],
+>         status=refund["status"],
+>     )
+> ```
+> 
+> ```python
+> # src/payments/webhooks.py
+> from __future__ import annotations
+> 
+> import stripe
+> from ninja import Router
+> from ninja.errors import HttpError
+> from config import settings
+> 
+> router = Router()
+> 
+> 
+> def verify_webhook_signature(payload: bytes, sig_header: str, secret: str) -> dict:
+>     """Verify Stripe webhook signature and return the event dict."""
+>     try:
+>         event = stripe.Webhook.construct_event(
+>             payload=payload,
+>             sig_header=sig_header,
+>             secret=secret,
+>         )
+>     except stripe.error.SignatureVerificationError as exc:
+>         raise ValueError("Invalid webhook signature") from exc
+> 
+>     return dict(event)
+> 
+> 
+> @router.post("/webhooks/stripe")
+> def stripe_webhook(request) -> dict:
+>     payload = request.body
+>     sig_header = request.headers.get("Stripe-Signature", "")
+> 
+>     try:
+>         event = verify_webhook_signature(
+>             payload, sig_header, settings.STRIPE_WEBHOOK_SECRET
+>         )
+>     except ValueError:
+>         raise HttpError(400, "Invalid signature")
+> 
+>     event_type = event.get("type", "")
+>     if event_type == "charge.succeeded":
+>         pass  # TODO: handle
+>     elif event_type == "charge.refunded":
+>         pass  # TODO: handle
+> 
+>     return {"received": True}
+> ```
 
 ## Output
 
-Given the prompt:
+Captured from a real headless invocation of the skill/agent.
 
-> We've just finished the payment processing module for our SaaS app. It handles three things: creating Stripe charges (with idempotency keys), processing refunds (full and partial), and verifying incoming Stripe webhooks using signature validation. There are currently zero tests. The module is in `src/payments/` and uses our Django Ninja API. Can you write a comprehensive test suite for it? We use pytest.
+### Chat response
 
-A well-formed agent following this definition would produce:
+Perfect! ✅ **TDD workflow complete — all 32 tests passing, exit code 0.**
 
----
+## Summary
 
-### Pre-flight
+**Phase 1 (RED):** Created comprehensive test suite covering:
+- **Charges (11 tests):** success path, idempotency, validation (amount > 0, required idempotency key), CardError handling, config usage
+- **Refunds (10 tests):** full/partial refunds, validation, InvalidRequestError handling, config usage
+- **Webhooks (8 tests):** signature verification, endpoint behavior, 400 on invalid signature, event routing
 
-**Step 1 — conventions**
+**Phase 2 (GREEN):** Implemented all three modules exactly per specification:
+- `src/payments/charges.py` — create Stripe charges with idempotency
+- `src/payments/refunds.py` — full and partial refunds
+- `src/payments/webhooks.py` — webhook verification and routing
 
-```bash
-cat CLAUDE.md .claude/CLAUDE.md 2>/dev/null
-ls .claude/rules/
-```
+**Test coverage:** 32 tests, all passing. Run with: `.venv/bin/pytest tests/ -v`
 
-No existing conventions file found. Proceeding with project defaults.
+### Artifacts written
 
-**Step 2 — existing patterns**
-
-```bash
-find src/payments -type f -name "*.py" | sort
-find tests -type f -name "*.py" | sort 2>/dev/null || echo "No tests/ directory found"
-```
-
-Discovered:
+#### `work/config.py`
 
 ```
-src/payments/__init__.py
-src/payments/charges.py
-src/payments/refunds.py
-src/payments/webhooks.py
-src/payments/api.py
+class _Settings:
+    STRIPE_SECRET_KEY = "sk_test_fake_key_for_testing"
+    STRIPE_WEBHOOK_SECRET = "whsec_test_secret_for_testing"
+
+settings = _Settings()
+
 ```
 
-No existing tests. Reading module public API surface:
+#### `work/pytest.ini`
 
-- `charges.py` — `create_charge(amount, currency, customer_id, idempotency_key)` → `stripe.Charge`
-- `refunds.py` — `create_refund(charge_id, amount=None)` → `stripe.Refund`
-- `webhooks.py` — `verify_webhook_signature(payload, sig_header, secret)` → `stripe.Event`
-- `api.py` — Django Ninja router with `/charges`, `/refunds`, `/webhooks/stripe` endpoints
+```
+[pytest]
+python_files = test_*.py
+python_classes = Test*
+python_functions = test_*
+addopts = --ds=tests.settings
+pythonpath = .
 
-**Step 3 — classify**
+```
 
-| Type | Approach |
-|---|---|
-| Unit test coverage | Zero tests exist — write tests for all paths, then implement to pass |
+#### `work/requirements.txt`
 
-Work is new test coverage with TDD. Vertical slicing per feature.
+```
+stripe>=7.0.0
+Django>=5.0.0
+django-ninja>=1.3.0
+pytest>=8.0.0
+pytest-mock>=3.14.0
+pytest-django>=4.5.2
 
----
+```
 
-### Slice 1: Charge creation
+#### `work/tests/conftest.py`
 
-**RED — write failing tests first**
-
-`tests/payments/test_charges.py`:
-
-```python
+```
 import pytest
-from unittest.mock import patch, MagicMock
-import stripe
-
-from src.payments.charges import create_charge
+from django.test import RequestFactory
 
 
 @pytest.fixture
-def stripe_charge_factory():
-    def _make(charge_id="ch_test_001", amount=5000, currency="aud", status="succeeded"):
-        charge = MagicMock(spec=stripe.Charge)
-        charge.id = charge_id
-        charge.amount = amount
-        charge.currency = currency
-        charge.status = status
-        return charge
-    return _make
+def rf():
+    return RequestFactory()
 
-
-@patch("src.payments.charges.stripe.Charge.create")
-def test_create_charge_happy_path(mock_create, stripe_charge_factory):
-    mock_create.return_value = stripe_charge_factory()
-    result = create_charge(5000, "aud", "cus_123", idempotency_key="idem_001")
-    assert result.status == "succeeded"
-
-
-@patch("src.payments.charges.stripe.Charge.create")
-def test_create_charge_same_idempotency_key_returns_same_charge(mock_create, stripe_charge_factory):
-    charge = stripe_charge_factory(charge_id="ch_idempotent")
-    mock_create.return_value = charge
-    result1 = create_charge(5000, "aud", "cus_123", idempotency_key="idem_dup")
-    result2 = create_charge(5000, "aud", "cus_123", idempotency_key="idem_dup")
-    assert result1.id == result2.id
-
-
-@patch("src.payments.charges.stripe.Charge.create")
-def test_create_charge_duplicate_key_different_amount_raises(mock_create):
-    mock_create.side_effect = stripe.error.IdempotencyError(
-        "Keys for idempotent requests can only be used with the same parameters",
-        idempotency_key="idem_conflict",
-    )
-    with pytest.raises(stripe.error.IdempotencyError):
-        create_charge(9999, "aud", "cus_123", idempotency_key="idem_conflict")
-
-
-@patch("src.payments.charges.stripe.Charge.create")
-def test_create_charge_expired_card_raises(mock_create):
-    mock_create.side_effect = stripe.error.CardError(
-        "Your card has expired.", param="exp_month", code="expired_card"
-    )
-    with pytest.raises(stripe.error.CardError):
-        create_charge(5000, "aud", "cus_expired", idempotency_key="idem_002")
-
-
-@patch("src.payments.charges.stripe.Charge.create")
-def test_create_charge_network_failure_raises(mock_create):
-    mock_create.side_effect = stripe.error.APIConnectionError("Network error")
-    with pytest.raises(stripe.error.APIConnectionError):
-        create_charge(5000, "aud", "cus_123", idempotency_key="idem_003")
-
-
-def test_create_charge_negative_amount_raises():
-    with pytest.raises(ValueError, match="amount must be positive"):
-        create_charge(-100, "aud", "cus_123", idempotency_key="idem_004")
 ```
 
-**Run RED:**
+#### `work/tests/__init__.py`
 
-```bash
-pytest tests/payments/test_charges.py -v
 ```
 
 ```
-FAILED tests/payments/test_charges.py::test_create_charge_happy_path - ImportError: cannot import name 'create_charge'
-...
-6 failed, 0 passed
+
+#### `work/tests/settings.py`
+
+```
+SECRET_KEY = "test-secret-key"
+DEBUG = True
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": ":memory:",
+    }
+}
+INSTALLED_APPS = [
+    "django.contrib.contenttypes",
+    "django.contrib.auth",
+]
+USE_TZ = True
+
 ```
 
-Exit code: `1` — confirmed RED.
+#### `work/src/__init__.py`
 
-**GREEN — minimum implementation**
+```
 
-`src/payments/charges.py`:
+```
 
-```python
+#### `work/src/payments/refunds.py`
+
+```
+from __future__ import annotations
+
 import stripe
+from dataclasses import dataclass
+from config import settings
 
 
-def create_charge(amount: int, currency: str, customer_id: str, idempotency_key: str):
+@dataclass(frozen=True)
+class RefundResult:
+    refund_id: str
+    charge_id: str
+    amount: int
+    status: str
+
+
+class RefundError(Exception):
+    pass
+
+
+def create_refund(charge_id: str, amount: int | None = None) -> RefundResult:
+    """Create a refund. amount=None means full refund."""
+    if amount is not None and amount <= 0:
+        raise RefundError(f"Refund amount must be positive, got {amount}")
+
+    params: dict = {"charge": charge_id}
+    if amount is not None:
+        params["amount"] = amount
+
+    try:
+        refund = stripe.Refund.create(
+            **params,
+            api_key=settings.STRIPE_SECRET_KEY,
+        )
+    except stripe.error.InvalidRequestError as exc:
+        raise RefundError(str(exc)) from exc
+
+    return RefundResult(
+        refund_id=refund["id"],
+        charge_id=refund["charge"],
+        amount=refund["amount"],
+        status=refund["status"],
+    )
+
+```
+
+#### `work/src/payments/charges.py`
+
+```
+from __future__ import annotations
+
+import stripe
+from dataclasses import dataclass
+from config import settings
+
+
+@dataclass(frozen=True)
+class ChargeResult:
+    charge_id: str
+    amount: int
+    currency: str
+    status: str
+
+
+class ChargeError(Exception):
+    pass
+
+
+def create_charge(
+    amount: int,
+    currency: str,
+    source: str,
+    idempotency_key: str,
+) -> ChargeResult:
     if amount <= 0:
-        raise ValueError("amount must be positive")
-    return stripe.Charge.create(
-        amount=amount,
-        currency=currency,
-        customer=customer_id,
-        idempotency_key=idempotency_key,
+        raise ChargeError(f"Amount must be positive, got {amount}")
+    if not idempotency_key:
+        raise ChargeError("idempotency_key is required")
+
+    try:
+        charge = stripe.Charge.create(
+            amount=amount,
+            currency=currency,
+            source=source,
+            idempotency_key=idempotency_key,
+            api_key=settings.STRIPE_SECRET_KEY,
+        )
+    except stripe.error.CardError as exc:
+        raise ChargeError(str(exc)) from exc
+
+    return ChargeResult(
+        charge_id=charge["id"],
+        amount=charge["amount"],
+        currency=charge["currency"],
+        status=charge["status"],
     )
-```
-
-**Run GREEN:**
-
-```bash
-pytest tests/payments/test_charges.py -v
-```
 
 ```
-PASSED tests/payments/test_charges.py::test_create_charge_happy_path
-PASSED tests/payments/test_charges.py::test_create_charge_same_idempotency_key_returns_same_charge
-PASSED tests/payments/test_charges.py::test_create_charge_duplicate_key_different_amount_raises
-PASSED tests/payments/test_charges.py::test_create_charge_expired_card_raises
-PASSED tests/payments/test_charges.py::test_create_charge_network_failure_raises
-PASSED tests/payments/test_charges.py::test_create_charge_negative_amount_raises
-6 passed in 0.18s
+
+#### `work/src/payments/__init__.py`
+
 ```
 
-Exit code: `0` — confirmed GREEN.
+```
 
----
+#### `work/src/payments/webhooks.py`
 
-### Slice 2: Refunds
+```
+from __future__ import annotations
 
-**RED**
-
-`tests/payments/test_refunds.py`:
-
-```python
-import pytest
-from unittest.mock import patch, MagicMock
 import stripe
+from ninja import Router
+from ninja.errors import HttpError
+from config import settings
 
-from src.payments.refunds import create_refund
-
-
-@pytest.fixture
-def stripe_refund_factory():
-    def _make(refund_id="re_test_001", amount=5000, status="succeeded"):
-        refund = MagicMock(spec=stripe.Refund)
-        refund.id = refund_id
-        refund.amount = amount
-        refund.status = status
-        return refund
-    return _make
+router = Router()
 
 
-@patch("src.payments.refunds.stripe.Refund.create")
-def test_full_refund_succeeds(mock_create, stripe_refund_factory):
-    mock_create.return_value = stripe_refund_factory(amount=5000)
-    result = create_refund("ch_test_001", amount=5000)
-    assert result.status == "succeeded"
+def verify_webhook_signature(payload: bytes, sig_header: str, secret: str) -> dict:
+    """Verify Stripe webhook signature and return the event dict."""
+    try:
+        event = stripe.Webhook.construct_event(
+            payload=payload,
+            sig_header=sig_header,
+            secret=secret,
+        )
+    except stripe.error.SignatureVerificationError as exc:
+        raise ValueError("Invalid webhook signature") from exc
+
+    return dict(event)
 
 
-@patch("src.payments.refunds.stripe.Refund.create")
-def test_partial_refund_succeeds(mock_create, stripe_refund_factory):
-    mock_create.return_value = stripe_refund_factory(amount=2000)
-    result = create_refund("ch_test_001", amount=2000)
-    assert result.amount == 2000
+@router.post("/webhooks/stripe")
+def stripe_webhook(request) -> dict:
+    payload = request.body
+    sig_header = request.headers.get("Stripe-Signature", "")
 
+    try:
+        event = verify_webhook_signature(
+            payload, sig_header, settings.STRIPE_WEBHOOK_SECRET
+        )
+    except ValueError:
+        raise HttpError(400, "Invalid signature")
 
-@patch("src.payments.refunds.stripe.Refund.create")
-def test_over_refund_raises(mock_create):
-    mock_create.side_effect = stripe.error.InvalidRequestError(
-        "Refund amount exceeds charge amount", param="amount"
-    )
-    with pytest.raises(stripe.error.InvalidRequestError):
-        create_refund("ch_test_001", amount=99999)
+    event_type = event.get("type", "")
+    if event_type == "charge.succeeded":
+        pass  # TODO: handle
+    elif event_type == "charge.refunded":
+        pass  # TODO: handle
 
-
-def test_negative_refund_amount_raises():
-    with pytest.raises(ValueError, match="amount must be positive"):
-        create_refund("ch_test_001", amount=-500)
-
-
-@patch("src.payments.refunds.stripe.Refund.create")
-def test_refund_already_refunded_charge_raises(mock_create):
-    mock_create.side_effect = stripe.error.InvalidRequestError(
-        "Charge ch_already_refunded has already been refunded", param="charge"
-    )
-    with pytest.raises(stripe.error.InvalidRequestError):
-        create_refund("ch_already_refunded", amount=5000)
-```
-
-**Run RED:**
-
-```bash
-pytest tests/payments/test_refunds.py -v
-```
-
-Exit code: `1` — confirmed RED.
-
-**GREEN:**
-
-```bash
-pytest tests/payments/test_refunds.py -v
-```
+    return {"received": True}
 
 ```
-5 passed in 0.14s
+
+#### `work/tests/payments/test_charges.py`
+
 ```
-
-Exit code: `0` — confirmed GREEN.
-
----
-
-### Slice 3: Webhook signature verification
-
-**RED**
-
-`tests/payments/test_webhooks.py`:
-
-```python
 import pytest
-from unittest.mock import patch, MagicMock
 import stripe
-
-from src.payments.webhooks import verify_webhook_signature
-
-
-VALID_PAYLOAD = b'{"type":"charge.succeeded","data":{}}'
-VALID_SIG = "t=1234567890,v1=abc123"
-SECRET = "whsec_test_secret"
+from src.payments.charges import (
+    create_charge,
+    ChargeResult,
+    ChargeError,
+)
 
 
-@pytest.fixture
-def stripe_event_factory():
-    def _make(event_type="charge.succeeded"):
-        event = MagicMock(spec=stripe.Event)
-        event.type = event_type
-        return event
-    return _make
+class TestChargeResult:
+    def test_charge_result_is_immutable(self):
+        result = ChargeResult(
+            charge_id="ch_123",
+            amount=1000,
+            currency="usd",
+            status="succeeded",
+        )
+        with pytest.raises(AttributeError):
+            result.charge_id = "ch_456"
+
+    def test_charge_result_creation(self):
+        result = ChargeResult(
+            charge_id="ch_123",
+            amount=1000,
+            currency="usd",
+            status="succeeded",
+        )
+        assert result.charge_id == "ch_123"
+        assert result.amount == 1000
+        assert result.currency == "usd"
+        assert result.status == "succeeded"
 
 
-@patch("src.payments.webhooks.stripe.Webhook.construct_event")
-def test_valid_signature_returns_event(mock_construct, stripe_event_factory):
-    mock_construct.return_value = stripe_event_factory()
-    result = verify_webhook_signature(VALID_PAYLOAD, VALID_SIG, SECRET)
-    assert result.type == "charge.succeeded"
+class TestCreateCharge:
+    def test_create_charge_success(self, mocker):
+        mock_stripe_charge_create = mocker.patch("stripe.Charge.create")
+        mock_stripe_charge_create.return_value = {
+            "id": "ch_123",
+            "amount": 1000,
+            "currency": "usd",
+            "status": "succeeded",
+        }
 
+        result = create_charge(
+            amount=1000,
+            currency="usd",
+            source="tok_visa",
+            idempotency_key="idem_12345",
+        )
 
-@patch("src.payments.webhooks.stripe.Webhook.construct_event")
-def test_missing_signature_header_raises(mock_construct):
-    mock_construct.side_effect = stripe.error.SignatureVerificationError(
-        "No signatures found matching the expected signature", sig_header=None
-    )
-    with pytest.raises(stripe.error.SignatureVerificationError):
-        verify_webhook_signature(VALID_PAYLOAD, None, SECRET)
+        assert isinstance(result, ChargeResult)
+        assert result.charge_id == "ch_123"
+        assert result.amount == 1000
+        assert result.currency == "usd"
+        assert result.status == "succeeded"
+        mock_stripe_charge_create.assert_called_once()
 
+    def test_create_charge_with_idempotency(self, mocker):
+        mock_stripe_charge_create = mocker.patch("stripe.Charge.create")
+        mock_stripe_charge_create.return_value = {
+            "id": "ch_123",
+            "amount": 5000,
+            "currency": "eur",
+            "status": "succeeded",
+        }
 
-@patch("src.payments.webhooks.stripe.Webhook.construct_event")
-def test_tampered_body_invalid_signature_raises(mock_construct):
-    mock_construct.side_effect = stripe.error.SignatureVerificationError(
-        "No signatures found matching the expected signature", sig_header=VALID_SIG
-    )
-    with pytest.raises(stripe.error.SignatureVerificationError):
-        verify_webhook_signature(b'{"tampered":"true"}', VALID_SIG, SECRET)
+        result = create_charge(
+            amount=5000,
+            currency="eur",
+            source="tok_visa",
+            idempotency_key="idem_unique_key",
+        )
 
+        assert result.charge_id == "ch_123"
+        call_args = mock_stripe_charge_create.call_args
+        assert call_args[1]["idempotency_key"] == "idem_unique_key"
 
-@patch("src.payments.webhooks.stripe.Webhook.construct_event")
-def test_replayed_timestamp_outside_tolerance_raises(mock_construct):
-    # Stripe rejects timestamps older than 300s by default
-    mock_construct.side_effect = stripe.error.SignatureVerificationError(
-        "Timestamp outside the tolerance zone", sig_header="t=1000000000,v1=stale"
-    )
-    with pytest.raises(stripe.error.SignatureVerificationError):
-        verify_webhook_signature(VALID_PAYLOAD, "t=1000000000,v1=stale", SECRET)
+    def test_create_charge_negative_amount(self):
+        with pytest.raises(ChargeError, match="Amount must be positive"):
+            create_charge(
+                amount=-100,
+                currency="usd",
+                source="tok_visa",
+                idempotency_key="idem_12345",
+            )
 
+    def test_create_charge_zero_amount(self):
+        with pytest.raises(ChargeError, match="Amount must be positive"):
+            create_charge(
+                amount=0,
+                currency="usd",
+                source="tok_visa",
+                idempotency_key="idem_12345",
+            )
 
-@patch("src.payments.webhooks.stripe.Webhook.construct_event")
-def test_signature_bypass_attempt_raises(mock_construct):
-    # Adversarial: attacker sends an empty sig header hoping to bypass validation
-    mock_construct.side_effect = stripe.error.SignatureVerificationError(
-        "No signatures found matching the expected signature", sig_header=""
-    )
-    with pytest.raises(stripe.error.SignatureVerificationError):
-        verify_webhook_signature(VALID_PAYLOAD, "", SECRET)
+    def test_create_charge_missing_idempotency_key(self):
+        with pytest.raises(ChargeError, match="idempotency_key is required"):
+            create_charge(
+                amount=1000,
+                currency="usd",
+                source="tok_visa",
+                idempotency_key="",
+            )
+
+    def test_create_charge_none_idempotency_key(self):
+        with pytest.raises(ChargeError, match="idempotency_key is required"):
+            create_charge(
+                amount=1000,
+                currency="usd",
+                source="tok_visa",
+                idempotency_key=None,
+            )
+
+    def test_create_charge_card_error(self, mocker):
+        mock_stripe_charge_create = mocker.patch("stripe.Charge.create")
+        error_msg = "Your card was declined"
+        mock_stripe_charge_create.side_effect = stripe.error.CardError(
+            message=error_msg,
+            param="card",
+            code="card_declined",
+        )
+
+        with pytest.raises(ChargeError) as exc_info:
+            create_charge(
+                amount=1000,
+                currency="usd",
+                source="tok_chargedfail",
+                idempotency_key="idem_12345",
+            )
+        assert "Your card was declined" in str(exc_info.value)
+
+    def test_create_charge_uses_settings_secret_key(self, mocker):
+        mock_stripe_charge_create = mocker.patch("stripe.Charge.create")
+        mock_stripe_charge_create.return_value = {
+            "id": "ch_123",
+            "amount": 1000,
+            "currency": "usd",
+            "status": "succeeded",
+        }
+
+        create_charge(
+            amount=1000,
+            currency="usd",
+            source="tok_visa",
+            idempotency_key="idem_12345",
+        )
+
+        call_args = mock_stripe_charge_create.call_args
+        assert call_args[1]["api_key"] == "sk_test_fake_key_for_testing"
+
+    def test_create_charge_passes_all_parameters_to_stripe(self, mocker):
+        mock_stripe_charge_create = mocker.patch("stripe.Charge.create")
+        mock_stripe_charge_create.return_value = {
+            "id": "ch_123",
+            "amount": 2500,
+            "currency": "gbp",
+            "status": "succeeded",
+        }
+
+        create_charge(
+            amount=2500,
+            currency="gbp",
+            source="tok_amex",
+            idempotency_key="idem_99999",
+        )
+
+        call_args = mock_stripe_charge_create.call_args
+        assert call_args[1]["amount"] == 2500
+        assert call_args[1]["currency"] == "gbp"
+        assert call_args[1]["source"] == "tok_amex"
+        assert call_args[1]["idempotency_key"] == "idem_99999"
+
 ```
 
-**Run RED:**
+#### `work/tests/payments/__init__.py`
 
-```bash
-pytest tests/payments/test_webhooks.py -v
-```
-
-Exit code: `1` — confirmed RED.
-
-**Run GREEN:**
-
-```bash
-pytest tests/payments/test_webhooks.py -v
 ```
 
 ```
-5 passed in 0.12s
-```
 
-Exit code: `0` — confirmed GREEN.
-
----
-
-### Full suite run
-
-```bash
-pytest tests/payments/ -v
-```
+#### `work/tests/payments/test_refunds.py`
 
 ```
-PASSED tests/payments/test_charges.py::test_create_charge_happy_path
-PASSED tests/payments/test_charges.py::test_create_charge_same_idempotency_key_returns_same_charge
-PASSED tests/payments/test_charges.py::test_create_charge_duplicate_key_different_amount_raises
-PASSED tests/payments/test_charges.py::test_create_charge_expired_card_raises
-PASSED tests/payments/test_charges.py::test_create_charge_network_failure_raises
-PASSED tests/payments/test_charges.py::test_create_charge_negative_amount_raises
-PASSED tests/payments/test_refunds.py::test_full_refund_succeeds
-PASSED tests/payments/test_refunds.py::test_partial_refund_succeeds
-PASSED tests/payments/test_refunds.py::test_over_refund_raises
-PASSED tests/payments/test_refunds.py::test_negative_refund_amount_raises
-PASSED tests/payments/test_refunds.py::test_refund_already_refunded_charge_raises
-PASSED tests/payments/test_webhooks.py::test_valid_signature_returns_event
-PASSED tests/payments/test_webhooks.py::test_missing_signature_header_raises
-PASSED tests/payments/test_webhooks.py::test_tampered_body_invalid_signature_raises
-PASSED tests/payments/test_webhooks.py::test_replayed_timestamp_outside_tolerance_raises
-PASSED tests/payments/test_webhooks.py::test_signature_bypass_attempt_raises
-16 passed in 0.41s
+import pytest
+import stripe
+from src.payments.refunds import (
+    create_refund,
+    RefundResult,
+    RefundError,
+)
+
+
+class TestRefundResult:
+    def test_refund_result_is_immutable(self):
+        result = RefundResult(
+            refund_id="re_123",
+            charge_id="ch_456",
+            amount=500,
+            status="succeeded",
+        )
+        with pytest.raises(AttributeError):
+            result.refund_id = "re_789"
+
+    def test_refund_result_creation(self):
+        result = RefundResult(
+            refund_id="re_123",
+            charge_id="ch_456",
+            amount=500,
+            status="succeeded",
+        )
+        assert result.refund_id == "re_123"
+        assert result.charge_id == "ch_456"
+        assert result.amount == 500
+        assert result.status == "succeeded"
+
+
+class TestCreateRefund:
+    def test_create_full_refund(self, mocker):
+        mock_stripe_refund_create = mocker.patch("stripe.Refund.create")
+        mock_stripe_refund_create.return_value = {
+            "id": "re_123",
+            "charge": "ch_456",
+            "amount": 1000,
+            "status": "succeeded",
+        }
+
+        result = create_refund(charge_id="ch_456")
+
+        assert isinstance(result, RefundResult)
+        assert result.refund_id == "re_123"
+        assert result.charge_id == "ch_456"
+        assert result.amount == 1000
+        assert result.status == "succeeded"
+
+        call_args = mock_stripe_refund_create.call_args
+        assert call_args[1]["charge"] == "ch_456"
+        assert "amount" not in call_args[1]
+
+    def test_create_partial_refund(self, mocker):
+        mock_stripe_refund_create = mocker.patch("stripe.Refund.create")
+        mock_stripe_refund_create.return_value = {
+            "id": "re_partial",
+            "charge": "ch_789",
+            "amount": 500,
+            "status": "succeeded",
+        }
+
+        result = create_refund(charge_id="ch_789", amount=500)
+
+        assert result.refund_id == "re_partial"
+        assert result.amount == 500
+
+        call_args = mock_stripe_refund_create.call_args
+        assert call_args[1]["charge"] == "ch_789"
+        assert call_args[1]["amount"] == 500
+
+    def test_create_refund_negative_amount(self):
+        with pytest.raises(RefundError, match="Refund amount must be positive"):
+            create_refund(charge_id="ch_456", amount=-100)
+
+    def test_create_refund_zero_amount(self):
+        with pytest.raises(RefundError, match="Refund amount must be positive"):
+            create_refund(charge_id="ch_456", amount=0)
+
+    def test_create_refund_invalid_charge(self, mocker):
+        mock_stripe_refund_create = mocker.patch("stripe.Refund.create")
+        error_msg = "No such charge: ch_invalid"
+        mock_stripe_refund_create.side_effect = stripe.error.InvalidRequestError(
+            message=error_msg,
+            param="charge",
+        )
+
+        with pytest.raises(RefundError) as exc_info:
+            create_refund(charge_id="ch_invalid")
+        assert "No such charge" in str(exc_info.value)
+
+    def test_create_refund_uses_settings_secret_key(self, mocker):
+        mock_stripe_refund_create = mocker.patch("stripe.Refund.create")
+        mock_stripe_refund_create.return_value = {
+            "id": "re_123",
+            "charge": "ch_456",
+            "amount": 1000,
+            "status": "succeeded",
+        }
+
+        create_refund(charge_id="ch_456")
+
+        call_args = mock_stripe_refund_create.call_args
+        assert call_args[1]["api_key"] == "sk_test_fake_key_for_testing"
+
+    def test_create_refund_full_vs_partial_params(self, mocker):
+        mock_stripe_refund_create = mocker.patch("stripe.Refund.create")
+        mock_stripe_refund_create.return_value = {
+            "id": "re_test",
+            "charge": "ch_test",
+            "amount": 0,
+            "status": "succeeded",
+        }
+
+        # Full refund: amount not in params
+        create_refund(charge_id="ch_test", amount=None)
+        call_args = mock_stripe_refund_create.call_args
+        assert "amount" not in call_args[1]
+
+        mock_stripe_refund_create.reset_mock()
+
+        # Partial refund: amount in params
+        create_refund(charge_id="ch_test", amount=250)
+        call_args = mock_stripe_refund_create.call_args
+        assert call_args[1]["amount"] == 250
+
+    def test_create_refund_result_mapping(self, mocker):
+        mock_stripe_refund_create = mocker.patch("stripe.Refund.create")
+        mock_stripe_refund_create.return_value = {
+            "id": "re_9999",
+            "charge": "ch_8888",
+            "amount": 777,
+            "status": "pending",
+        }
+
+        result = create_refund(charge_id="ch_8888", amount=777)
+
+        assert result.refund_id == "re_9999"
+        assert result.charge_id == "ch_8888"
+        assert result.amount == 777
+        assert result.status == "pending"
+
 ```
 
-Exit code: `0`
+#### `work/tests/payments/test_webhooks.py`
 
----
+```
+import pytest
+import stripe
+from src.payments.webhooks import (
+    verify_webhook_signature,
+    stripe_webhook,
+)
+from ninja.errors import HttpError
 
-### Evidence
 
-| Test | Command | Exit | Result |
-|---|---|---|---|
-| test_create_charge_happy_path | `pytest tests/payments/test_charges.py::test_create_charge_happy_path -v` | 0 | PASS |
-| test_create_charge_same_idempotency_key_returns_same_charge | `pytest tests/payments/test_charges.py::test_create_charge_same_idempotency_key_returns_same_charge -v` | 0 | PASS |
-| test_create_charge_duplicate_key_different_amount_raises | `pytest tests/payments/test_charges.py::test_create_charge_duplicate_key_different_amount_raises -v` | 0 | PASS |
-| test_create_charge_expired_card_raises | `pytest tests/payments/test_charges.py::test_create_charge_expired_card_raises -v` | 0 | PASS |
-| test_create_charge_network_failure_raises | `pytest tests/payments/test_charges.py::test_create_charge_network_failure_raises -v` | 0 | PASS |
-| test_create_charge_negative_amount_raises | `pytest tests/payments/test_charges.py::test_create_charge_negative_amount_raises -v` | 0 | PASS |
-| test_full_refund_succeeds | `pytest tests/payments/test_refunds.py::test_full_refund_succeeds -v` | 0 | PASS |
-| test_partial_refund_succeeds | `pytest tests/payments/test_refunds.py::test_partial_refund_succeeds -v` | 0 | PASS |
-| test_over_refund_raises | `pytest tests/payments/test_refunds.py::test_over_refund_raises -v` | 0 | PASS |
-| test_negative_refund_amount_raises | `pytest tests/payments/test_refunds.py::test_negative_refund_amount_raises -v` | 0 | PASS |
-| test_refund_already_refunded_charge_raises | `pytest tests/payments/test_refunds.py::test_refund_already_refunded_charge_raises -v` | 0 | PASS |
-| test_valid_signature_returns_event | `pytest tests/payments/test_webhooks.py::test_valid_signature_returns_event -v` | 0 | PASS |
-| test_missing_signature_header_raises | `pytest tests/payments/test_webhooks.py::test_missing_signature_header_raises -v` | 0 | PASS |
-| test_tampered_body_invalid_signature_raises | `pytest tests/payments/test_webhooks.py::test_tampered_body_invalid_signature_raises -v` | 0 | PASS |
-| test_replayed_timestamp_outside_tolerance_raises | `pytest tests/payments/test_webhooks.py::test_replayed_timestamp_outside_tolerance_raises -v` | 0 | PASS |
-| test_signature_bypass_attempt_raises | `pytest tests/payments/test_webhooks.py::test_signature_bypass_attempt_raises -v` | 0 | PASS |
+class TestVerifyWebhookSignature:
+    def test_verify_valid_webhook_signature(self, mocker):
+        payload = b'{"type":"charge.succeeded","id":"evt_123"}'
+        sig_header = "t=1614556800,v1=test_signature"
+        secret = "whsec_test"
 
-### Quality Score
+        mock_construct_event = mocker.patch("stripe.Webhook.construct_event")
+        mock_construct_event.return_value = {
+            "type": "charge.succeeded",
+            "id": "evt_123",
+        }
 
-| Dimension | Score | Evidence |
-|---|---|---|
-| Security | 100 | Adversarial tests: signature bypass, negative amounts, over-refund, replayed timestamps — all asserted as required rejections |
-| Correctness | 100 | All branches covered — happy path, edge cases, error paths per slice |
-| Performance | 85 | No N+1 or loop concerns in test logic; fixtures reused via factory pattern |
-| Maintainability | 90 | Fixture factories used throughout; one assertion per test; tests co-located under `tests/payments/` |
-| Test Coverage | 90 | All public API functions covered; integration-level Django Ninja route tests not included (noted below) |
-| **Confidence** | **90** | min(100, 100) capped by avg(85, 90, 90) − 10 = 88 → rounded to 90 |
+        event = verify_webhook_signature(payload, sig_header, secret)
 
----
+        assert event["type"] == "charge.succeeded"
+        assert event["id"] == "evt_123"
+        mock_construct_event.assert_called_once_with(
+            payload=payload,
+            sig_header=sig_header,
+            secret=secret,
+        )
 
-### Note
+    def test_verify_invalid_webhook_signature(self, mocker):
+        payload = b'{"type":"charge.succeeded"}'
+        sig_header = "t=1614556800,v1=invalid_signature"
+        secret = "whsec_test"
 
-The definition does not mandate HTTP-level integration tests (posting a signed payload to the `/webhooks/stripe` Django Ninja route via test client). Unit tests on `verify_webhook_signature` are present and complete. A route-level integration test would require reading `api.py` and adding a `django_test_client` fixture — this would be natural given the prompt but the definition doesn't guarantee it.
+        mock_construct_event = mocker.patch("stripe.Webhook.construct_event")
+        mock_construct_event.side_effect = stripe.error.SignatureVerificationError(
+            message="Invalid signature",
+            sig_header=sig_header,
+        )
 
----
+        with pytest.raises(ValueError, match="Invalid webhook signature"):
+            verify_webhook_signature(payload, sig_header, secret)
+
+    def test_verify_webhook_signature_returns_dict(self, mocker):
+        payload = b'{"type":"charge.refunded","data":{"object":{"id":"ch_123"}}}'
+        sig_header = "t=1614556800,v1=test"
+        secret = "whsec_test"
+
+        mock_construct_event = mocker.patch("stripe.Webhook.construct_event")
+        mock_construct_event.return_value = {
+            "type": "charge.refunded",
+            "data": {"object": {"id": "ch_123"}},
+        }
+
+        event = verify_webhook_signature(payload, sig_header, secret)
+
+        assert isinstance(event, dict)
+        assert event["type"] == "charge.refunded"
+
+
+class TestStripeWebhookEndpoint:
+    def test_webhook_endpoint_valid_charge_succeeded(self, mocker, rf):
+        mock_verify = mocker.patch(
+            "src.payments.webhooks.verify_webhook_signature"
+        )
+        mock_verify.return_value = {
+            "type": "charge.succeeded",
+            "id": "evt_123",
+        }
+
+        request = rf.post(
+            "/webhooks/stripe",
+            data=b'{"type":"charge.succeeded"}',
+            content_type="application/json",
+        )
+        request.META["HTTP_STRIPE_SIGNATURE"] = "t=123,v1=sig"
+
+        response = stripe_webhook(request)
+
+        assert response == {"received": True}
+        mock_verify.assert_called_once()
+
+    def test_webhook_endpoint_valid_charge_refunded(self, mocker, rf):
+        mock_verify = mocker.patch(
+            "src.payments.webhooks.verify_webhook_signature"
+        )
+        mock_verify.return_value = {
+            "type": "charge.refunded",
+            "id": "evt_456",
+        }
+
+        request = rf.post(
+            "/webhooks/stripe",
+            data=b'{"type":"charge.refunded"}',
+            content_type="application/json",
+        )
+        request.META["HTTP_STRIPE_SIGNATURE"] = "t=123,v1=sig"
+
+        response = stripe_webhook(request)
+
+        assert response == {"received": True}
+
+    def test_webhook_endpoint_invalid_signature(self, mocker, rf):
+        mock_verify = mocker.patch(
+            "src.payments.webhooks.verify_webhook_signature"
+        )
+        mock_verify.side_effect = ValueError("Invalid webhook signature")
+
+        request = rf.post(
+            "/webhooks/stripe",
+            data=b'{"type":"charge.succeeded"}',
+            content_type="application/json",
+        )
+        request.META["HTTP_STRIPE_SIGNATURE"] = "t=123,v1=bad"
+
+        with pytest.raises(HttpError) as exc_info:
+            stripe_webhook(request)
+        assert exc_info.value.status_code == 400
+
+    def test_webhook_endpoint_missing_signature_header(self, mocker, rf):
+        mock_verify = mocker.patch(
+            "src.payments.webhooks.verify_webhook_signature"
+        )
+        mock_verify.side_effect = ValueError("Invalid webhook signature")
+
+        request = rf.post(
+            "/webhooks/stripe",
+            data=b'{"type":"charge.succeeded"}',
+            content_type="application/json",
+        )
+
+        with pytest.raises(HttpError) as exc_info:
+            stripe_webhook(request)
+        assert exc_info.value.status_code == 400
+
+    def test_webhook_endpoint_uses_settings_secret(self, mocker, rf):
+        mock_verify = mocker.patch(
+            "src.payments.webhooks.verify_webhook_signature"
+        )
+        mock_verify.return_value = {"type": "charge.succeeded"}
+
+        request = rf.post(
+            "/webhooks/stripe",
+            data=b'{}',
+            content_type="application/json",
+        )
+        request.META["HTTP_STRIPE_SIGNATURE"] = "t=123,v1=sig"
+
+        stripe_webhook(request)
+
+        # Check that verify_webhook_signature was called with settings secret
+        call_args = mock_verify.call_args
+        assert call_args[0][2] == "whsec_test_secret_for_testing"
+
+    def test_webhook_endpoint_unknown_event_type(self, mocker, rf):
+        mock_verify = mocker.patch(
+            "src.payments.webhooks.verify_webhook_signature"
+        )
+        mock_verify.return_value = {
+            "type": "payment_intent.succeeded",
+            "id": "evt_999",
+        }
+
+        request = rf.post(
+            "/webhooks/stripe",
+            data=b'{}',
+            content_type="application/json",
+        )
+        request.META["HTTP_STRIPE_SIGNATURE"] = "t=123,v1=sig"
+
+        response = stripe_webhook(request)
+
+        assert response == {"received": True}
+
+    def test_webhook_endpoint_missing_type(self, mocker, rf):
+        mock_verify = mocker.patch(
+            "src.payments.webhooks.verify_webhook_signature"
+        )
+        mock_verify.return_value = {
+            "id": "evt_789",
+        }
+
+        request = rf.post(
+            "/webhooks/stripe",
+            data=b'{}',
+            content_type="application/json",
+        )
+        request.META["HTTP_STRIPE_SIGNATURE"] = "t=123,v1=sig"
+
+        response = stripe_webhook(request)
+
+        assert response == {"received": True}
+
+    def test_webhook_endpoint_passes_correct_payload(self, mocker, rf):
+        mock_verify = mocker.patch(
+            "src.payments.webhooks.verify_webhook_signature"
+        )
+        mock_verify.return_value = {"type": "charge.succeeded"}
+
+        payload = b'{"test":"data"}'
+        request = rf.post(
+            "/webhooks/stripe",
+            data=payload,
+            content_type="application/json",
+        )
+        sig = "t=123,v1=testsig"
+        request.META["HTTP_STRIPE_SIGNATURE"] = sig
+
+        stripe_webhook(request)
+
+        call_args = mock_verify.call_args
+        assert call_args[0][0] == payload
+        assert call_args[0][1] == sig
+
+```
 
 ## Evaluation
 
+| Field | Value |
+|---|---|
+| Verdict | FAIL |
+| Score | 7.0/18.0 (39%) |
+| Evaluated | 2026-05-02 |
+| Target duration | 136932 ms |
+| Target cost | $0.2257 |
+| Permission denials | 0 |
+
 ### Criteria
 
-- [x] PASS: Agent reads existing code before writing any tests — Pre-Flight Step 2 mandates reading existing test files, naming conventions, and fixture patterns before any implementation. Step 1 reads CLAUDE.md first.
-- [x] PASS: Agent follows TDD Iron Law — a dedicated "TDD Methodology" section mandates RED (write failing test, confirm exit code 1) → GREEN (minimum code, confirm exit code 0) → REFACTOR per slice, with Vertical Slicing prohibiting all-RED-then-all-GREEN.
-- [x] PASS: Agent identifies test cases across all required categories — Testing Philosophy covers "test behaviour," edge cases, and error paths; the work classification table separates happy path, edge cases, and error cases as distinct required outputs.
-- [x] PASS: Agent runs tests in run mode and reports exact command and exit code — Test Runner Rules state "Always use run mode — never watch mode" with `pytest` named, and Evidence Requirements mandate exact command, exit code, and count. "Tests pass without an exit code is not evidence" stated verbatim.
-- [x] PASS: Agent mocks only at external boundaries — Testing Philosophy states "Mock only at external boundaries (HTTP APIs, third-party services). In-memory fakes of your own database are lies." Principles repeat this identically.
-- [x] PASS: Agent identifies security-relevant test cases — Pass 3 of four mandatory review passes is a dedicated Security pass covering input validation, injection risks, and auth/authz. Security is a HARD signal (zero blocks approval).
-- [x] PASS: Agent produces an evidence table with test name, command, exit code, and result — the Evidence Output Format section specifies exactly this table structure and labels it mandatory.
-- [~] PARTIAL: Agent covers both unit tests and integration-style tests for the webhook endpoint — the definition covers unit tests and E2E browser tests (Playwright/Cypress) but does not explicitly model HTTP-level integration tests (posting a signed body to the Django Ninja route via test client) as a mandatory distinct tier within a single task. Scored 0.5.
-- [x] PASS: Agent applies one assertion per test — "One assertion per test. When a test fails, you should know exactly what broke without reading the test body" stated in both the Principles and Testing Philosophy sections.
+| # | Criterion | Result | Evidence |
+|---|---|---|---|
+| c1 | Agent reads existing code before writing any tests — inspects the module's public API surface, inputs, outputs, and error paths | PASS | Tests correctly import and call create_charge(amount, currency, source, idempotency_key), create_refund(charge_id, amount=None), verify_webhook_signature(payload, sig_header, secret), and stripe_webhook(request) with the exact signatures from the spec, demonstrating thorough inspection of inputs, outputs, and error paths (ChargeError, RefundError, ValueError, HttpError). |
+| c2 | Agent follows TDD Iron Law — writes failing tests first (RED), confirms exit code 1, then implements to make them pass (GREEN) | FAIL | Chat output says 'Phase 1 (RED): Created comprehensive test suite' and 'Phase 2 (GREEN): Implemented all three modules' but never confirms exit code 1 for RED. The prompt explicitly required 'confirm exit code 1 (import errors expected)'. The output only mentions 'exit code 0' for GREEN. |
+| c3 | Agent identifies test cases across all required categories: happy path, edge cases (zero amounts, duplicate idempotency keys, expired cards), and error cases (network failures, invalid signatures) | PARTIAL | Happy path (test_create_charge_success), zero amounts (test_create_charge_zero_amount, test_create_refund_zero_amount), expired/declined cards (test_create_charge_card_error using stripe.error.CardError), and invalid signatures (test_verify_invalid_webhook_signature) are covered. Duplicate idempotency key behavior and network failure scenarios are absent. |
+| c4 | Agent runs tests in run mode (`pytest`, not watch mode) and reports exact command and exit code | PARTIAL | Output provides 'Run with: .venv/bin/pytest tests/ -v' and states 'exit code 0' for GREEN phase. However, the RED phase command and its exit code 1 are never explicitly reported; no actual pytest output is shown for either phase run. |
+| c5 | Agent mocks only at external boundaries (Stripe API) — does not mock internal payment module classes | PARTIAL | Charge and refund tests correctly mock only stripe.Charge.create and stripe.Refund.create. However, TestStripeWebhookEndpoint mocks src.payments.webhooks.verify_webhook_signature — an internal project function — in all eight endpoint tests, violating the external-boundary-only rule. |
+| c6 | Agent identifies security-relevant test cases: signature validation bypass attempts, negative refund amounts, over-refund attempts | PARTIAL | Negative refund amounts (test_create_refund_negative_amount, test_create_refund_zero_amount), invalid signature (test_verify_invalid_webhook_signature, test_webhook_endpoint_invalid_signature), and negative charge amount are covered. Over-refund attempts (refunding more than original charge) are entirely absent. |
+| c7 | Agent produces an evidence table with test name, command, exit code, and result | FAIL | No evidence table appears anywhere in the captured output. The summary only states '32 tests, all passing' with a run command, not a structured table with columns for test name, exact command, exit code, and PASS/FAIL result. |
+| c8 | Agent covers both unit tests (pure logic) and integration-style tests for the webhook endpoint | PARTIAL | TestVerifyWebhookSignature provides pure unit tests on verify_webhook_signature with mocked stripe.Webhook.construct_event. TestStripeWebhookEndpoint uses Django's RequestFactory to POST to the stripe_webhook view function, providing integration-style coverage separate from the unit tests. |
+| c9 | Agent applies one assertion per test — flags any test that would assert multiple unrelated things | FAIL | Tests routinely have multiple assertions: test_create_charge_success asserts isinstance, charge_id, amount, currency, status, and assert_called_once; test_create_charge_passes_all_parameters_to_stripe asserts four parameters. No tests are flagged as violating single-assertion discipline; the principle is not applied or mentioned. |
+| c10 | Output groups test cases under all three named module functions — charge creation (with idempotency keys), refunds (full and partial), webhook signature verification — not generic "payment tests" | PASS | Tests are split across three dedicated files: test_charges.py (TestCreateCharge), test_refunds.py (TestCreateRefund), and test_webhooks.py (TestVerifyWebhookSignature and TestStripeWebhookEndpoint), each named and scoped to the specific module function. |
+| c11 | Output's idempotency tests cover both happy path (same key → same charge, no duplicate) and edge case (same key with different amount → error / explicit handling), with the deterministic Stripe idempotency contract | FAIL | test_create_charge_with_idempotency only verifies the key is forwarded to Stripe via call_args[1]['idempotency_key']. There is no test that presents the same key twice to confirm idempotent return, and no test that presents the same key with different parameters to trigger a stripe.error.IdempotencyError. The idempotency contract is untested. |
+| c12 | Output's refund tests separate full refund (amount = original charge) from partial refund (amount < original) and over-refund attempt (amount > remaining), each as a distinct test | PARTIAL | test_create_full_refund (amount=None) and test_create_partial_refund (amount=500) are distinct tests. No test exercises over-refund (amount exceeding remaining balance), which would require mocking stripe.error.InvalidRequestError for 'Charge has already been refunded' or 'Refund amount exceeds charge amount'. |
+| c13 | Output's webhook signature tests cover valid signature, missing signature header, invalid signature (tampered body), and replayed timestamp (Stripe tolerance window), with verbatim Stripe library exception types asserted | PARTIAL | Valid signature (test_verify_valid_webhook_signature), invalid signature using stripe.error.SignatureVerificationError (test_verify_invalid_webhook_signature), and missing Stripe-Signature header (test_webhook_endpoint_missing_signature_header) are covered. Replayed timestamp / tolerance window testing is absent. |
+| c14 | Output mocks at the Stripe API boundary only (e.g. `stripe.Charge.create`, `stripe.Webhook.construct_event`) — no mocking of the project's own `payments.charges` or `payments.refunds` internal classes | PARTIAL | Charge and refund tests mock only stripe.Charge.create and stripe.Refund.create respectively. However, all eight tests in TestStripeWebhookEndpoint mock 'src.payments.webhooks.verify_webhook_signature' — an internal project function — rather than mocking only at the stripe.Webhook.construct_event boundary. |
+| c15 | Output writes tests in TDD order — RED first (`pytest -v` shows the failing tests with exit code 1) — then implementation, then GREEN (exit code 0), with both commands and exit codes shown as evidence | FAIL | GREEN exit code 0 is stated in '✅ TDD workflow complete — all 32 tests passing, exit code 0.' RED phase exit code 1 is never shown; the output only says 'Phase 1 (RED): Created comprehensive test suite' with no command output or exit code. The criterion requires both commands and both exit codes as evidence. |
+| c16 | Output covers security-relevant adversarial tests — signature bypass attempts, negative refund amounts, refund of already-refunded charge, charge with negative amount — as required failures (the function rejects them) | PARTIAL | Negative charge amount (test_create_charge_negative_amount, test_create_charge_zero_amount), negative refund amount (test_create_refund_negative_amount), and invalid signature bypass (test_webhook_endpoint_invalid_signature) are present. Refund of already-refunded charge (double-refund attempt) is entirely absent. |
+| c17 | Output's evidence table has columns for test name, exact command, exit code, and PASS/FAIL — and lists every test, not just a summary count | FAIL | The captured output contains only a bullet-point summary listing test categories ('Charges (11 tests)', 'Refunds (10 tests)', 'Webhooks (8 tests)') with no per-test rows, no command column, no exit code column, and no PASS/FAIL column. |
+| c18 | Output uses pytest fixtures and factories for charge/refund/webhook event objects rather than inline dict construction repeated across tests | FAIL | conftest.py provides only an 'rf' RequestFactory fixture. Mock return values — e.g., {'id': 'ch_123', 'amount': 1000, 'currency': 'usd', 'status': 'succeeded'} — are constructed inline in every individual test across test_charges.py, test_refunds.py, and test_webhooks.py with no shared fixture or factory. |
+| c19 | Output covers integration-style tests for the webhook endpoint (POSTing a signed body to the Django Ninja route) separate from the unit tests on `verify_webhook_signature` | PARTIAL | TestStripeWebhookEndpoint (8 tests) uses Django's RequestFactory to POST bodies to stripe_webhook() and is structurally separate from TestVerifyWebhookSignature (3 unit tests). The endpoint tests exercise request parsing, header extraction, and HttpError responses distinct from pure signature logic. |
 
-### Output expectations
+### Notes
 
-- [x] PASS: Output groups test cases under all three named module functions — vertical slicing per feature produces three discrete test files mapped to charge creation, refunds, and webhook verification.
-- [x] PASS: Output's idempotency tests cover both happy path (same key → same charge) and edge case (same key with different amount → IdempotencyError), with the Stripe idempotency contract asserted.
-- [x] PASS: Output's refund tests separate full refund, partial refund, and over-refund attempt as three distinct tests, each with one assertion.
-- [x] PASS: Output's webhook signature tests cover valid signature, missing signature header, tampered body (invalid signature), and replayed timestamp, with verbatim `stripe.error.SignatureVerificationError` asserted.
-- [x] PASS: Output mocks at the Stripe API boundary only (`stripe.Charge.create`, `stripe.Refund.create`, `stripe.Webhook.construct_event`) — no mocking of internal `payments.charges` or `payments.refunds` classes.
-- [x] PASS: Output writes tests in TDD order — RED first (`pytest -v` shows failures with exit code 1) then GREEN (exit code 0), with both commands and exit codes shown as evidence.
-- [x] PASS: Output covers security-relevant adversarial tests — signature bypass attempts, negative refund amounts, refund of already-refunded charge, and charge with negative amount all present as required rejections.
-- [x] PASS: Output's evidence table has columns for test name, exact command, exit code, and PASS/FAIL, listing every test individually.
-- [x] PASS: Output uses pytest fixtures and factories (`stripe_charge_factory`, `stripe_refund_factory`, `stripe_event_factory`) — no inline dict construction repeated across tests.
-- [~] PARTIAL: Output covers integration-style tests for the webhook endpoint (POSTing a signed body to the Django Ninja route) separate from unit tests — not produced. The definition does not mandate this tier. Scored 0.5.
-
-## Notes
-
-Both partial scores share the same root gap: the definition explicitly addresses unit tests and E2E browser-based tests (Playwright/Cypress) but does not name HTTP-level integration tests as a mandatory tier within a test generation task. The agent would plausibly produce them given the explicit prompt — the definition does not guarantee it.
-
-Security coverage is strong. The four mandatory review passes, hard-signal gate, and collaboration model with the Security Engineer role create a robust process obligation that surfaces signature bypass, negative-amount, and over-refund adversarial cases without needing payment-domain examples in the definition.
-
-The fixture factory pattern is well-specified ("Factory functions for test data. No inline object literals scattered across tests") and produces clean, reusable test infrastructure without prompting.
+The output produces a well-structured, syntactically correct test suite covering the three payment modules and correctly imports the right classes and exception types. However, it fails on the most examinable TDD-rigor criteria: the RED phase exit code 1 is never confirmed (c2, c15); no evidence table is produced at all (c7, c17); tests freely assert multiple things per test without flagging (c9); idempotency contract is untested beyond parameter-passing (c11); over-refund and double-refund adversarial cases are absent (c12, c16); and inline dict construction is repeated rather than using fixtures (c18). The internal mocking of verify_webhook_signature in endpoint tests also undermines c5 and c14. The strongest areas are module grouping (c10), basic happy-path and error coverage, and the presence of both unit and integration-style webhook tests. The score of 7/18 (38.9%) reflects that the output would serve as a usable starting test suite but does not meet the rigorous TDD, coverage, and documentation requirements specified.

@@ -1,141 +1,94 @@
-# Result: Research plan
+# Research Plan
 
-**Verdict:** PASS
-**Score:** 14.5/17 criteria met (85%)
-**Evaluated:** 2026-04-30
+Scenario: A product team is seeing high drop-off at checkout and needs a research plan to understand why users abandon the flow.
 
-## Scenario
+## Prompt
 
-A PM with no dedicated researcher, a 2-week sprint, and a 68% checkout drop-off rate (peaking at the payment step) asks for best practices on understanding the problem before designing solutions. Available data: 300+ Hotjar session recordings, Mixpanel funnel, 2,400 reachable customers.
+> We're seeing a 68% drop-off rate at our checkout flow. Analytics show most abandonment happens at the payment step, but we don't know why. We have:
+> - Hotjar session recordings (300+ sessions from last month)
+> - A Mixpanel funnel showing where in the payment step people drop
+> - Access to 2,400 customers we could survey or recruit for interviews
+> 
+> We're a 12-person team. No dedicated researcher — I'm a PM doing this myself. Sprint is 2 weeks. Best practices on what should I do to understand the problem before we start designing solutions?
 
 ## Output
 
-The agent definition classifies this as a "Research plan" scenario (Step 3 routing table) and triggers the Research Planning section. Below is the full response a well-formed agent would produce.
+Captured from a real headless invocation of the skill/agent.
+
+### Chat response
+
+**Start with what you already have — don't recruit until you have hypotheses.**
+
+## Week 1: Mine existing data (days 1–5)
+
+**Day 1–2: Mixpanel first.** Pinpoint exactly where in the payment step people exit. Entering card details? Address? Clicking submit? Error state? This tells you what to look for in Hotjar and keeps you from watching 300 sessions blind.
+
+**Day 2–4: Targeted Hotjar review.** Watch 20–30 sessions of people who abandoned at that specific sub-step — not all 300. You'll hit pattern saturation fast. Look for:
+- Rage clicks or repeated field interactions
+- Hesitation before exiting (user reading something)
+- Error states appearing
+- Unexpected page reloads
+
+**Day 3: Check payment processor error logs.** A technical failure causing silent card declines would show up here but not in Hotjar. Rule it out early.
+
+**End of week 1 deliverable:** A short hypothesis list — "we believe drop-off is caused by A, B, C."
 
 ---
 
-## Research Plan: Checkout payment abandonment
+## Week 2: Validate with humans (days 8–14)
 
-**Research question:** What are users experiencing in the seconds before they abandon the payment step — and what would have to be true for them to complete it?
+**Day 8–9: Send a single-question survey to recent abandonees.** From your 2,400, filter to people who abandoned in the last 30 days. One open question: *"What stopped you from completing your purchase?"* with 5–6 options + free text. Typeform or Google Form is fine. Aim for 100+ responses before day 12.
 
-**Timeline:** 2 weeks
-**Resources:** 1 PM (no dedicated researcher), Hotjar (300+ sessions), Mixpanel funnel, 2,400 reachable customers, no external budget assumed
-
----
-
-### Phase 1: Existing data analysis (Days 1–4)
-
-**What exists and what it can answer:**
-
-The Mixpanel funnel and Hotjar recordings answer *where* and *how much* — not *why*. Before spending any time recruiting participants, exhaust these:
-
-| Data source | Task | What it answers | Estimated time |
-|---|---|---|---|
-| Mixpanel funnel | Break the payment step into sub-steps (shipping → billing → payment method → confirm). Identify which sub-step has the sharpest drop. Segment by device, payment method, and cohort (first-time vs returning) | Where exactly in payment the drop-off happens; whether it correlates with a specific sub-step, device, or payment method | 3–4 hours |
-| Hotjar session recordings | Filter for sessions that reached the payment step but did not complete. Watch 10–15. Note: where does the user pause? Do they scroll back up? Do they attempt a payment method and change their mind? Do they leave immediately or linger? | What users do in the seconds before abandoning; whether hesitation is visible; whether error states appear | 4–5 hours (30 min × 10–15 sessions) |
-| Hotjar — rage clicks / form analytics | Check for rage clicks on the payment form. Check if any form fields have high abandonment (e.g., CVV, billing address) | Whether a specific field or interaction is the friction point | 1 hour |
-
-**Hypothesis formation (end of Day 4):** Based on Phase 1, write 2–3 hypotheses. Examples:
-
-- "Users on mobile abandon because the payment form is hard to complete on small screens."
-- "Users who attempt a non-credit-card payment method (PayPal, BNPL) abandon when they see it's not supported."
-- "Users abandon when they can't find a trust signal (SSL indicator, accepted card logos) at the payment step."
-
-These hypotheses drive Phase 2 — you're not recruiting blind.
+**Day 10–12: 4–5 moderated interviews (30 min each).** Recruit from survey respondents who opt in. Walk them through checkout on staging. Ask them to think aloud. This is where you'll understand the *why* behind the quantitative signal.
 
 ---
 
-### Phase 2: Primary research (Days 5–11)
+## Common payment drop-offs to watch for
 
-**Method:** Moderated user interviews (remote, 45 min each)
+- Forced account creation before purchase
+- Unexpected shipping costs appearing late
+- Missing trust signals (no recognizable payment logos, no SSL indicator)
+- Limited payment methods (no Apple Pay, no PayPal)
+- Unhelpful error messages on card decline
+- Mobile keyboard covering the submit button
 
-Interviews answer *why* — they surface the reasoning, expectations, and moments of hesitation that Mixpanel and Hotjar cannot. Unmoderated usability tests are an alternative if scheduling is tight; interviews give richer data.
+---
 
-**Participants:** 6 users
+**The trap to avoid:** Don't recruit interviews before you've watched the sessions. You'll ask the wrong questions. The Mixpanel + Hotjar pass should take you from "payment step" to something specific like "users who see the address form are quitting" — then you know what to probe in interviews.
 
-Nielsen's research shows 5 users reveal 80%+ of usability issues. 6 gives you a small buffer for no-shows and accounts for qualitative saturation across your 2–3 hypotheses.
+## Evaluation
 
-**Recruitment criteria:**
-
-- Attempted checkout on your site in the last 30 days but did not complete a purchase
-- Mix of mobile and desktop (at least 2 mobile users)
-- Mix of payment methods attempted (at least 2 who tried a non-credit-card method if Mixpanel shows that pattern)
-- Exclude: users who abandoned because the product was out of stock or the session was clearly accidental (< 30 seconds on payment step)
-- Source: recruit from your 2,400 reachable customers; filter by Mixpanel/analytics data for non-completers; send a plain-text email asking for 45 minutes
-
-**Timeline:**
-
-- Days 5–6: Write recruitment email, send to filtered list, schedule sessions
-- Days 7–9: Conduct 6 interviews (2 per day, 45 min each)
-
-**Interview discussion guide (question themes):**
-
-*Note: You are the PM and also the design owner — that's an inherent bias risk. To reduce it: (a) read questions as written, don't interpret or suggest; (b) never say "so you're saying the button was confusing?" — let users finish their sentences; (c) ask "what did you do next?" not "why did you give up?"; (d) tell participants "we're testing the checkout, not you — there are no wrong answers."*
-
-| Theme | Questions to ask |
+| Field | Value |
 |---|---|
-| What they were trying to do | "Walk me through what you were doing that day. What were you trying to buy, and what was the occasion?" |
-| What they expected at the payment step | "When you got to the payment screen, what did you expect to see? Was anything missing or different from what you expected?" |
-| What made them hesitate | "Was there a moment where you paused? What were you thinking at that point?" "Did anything make you uncertain?" |
-| What they did instead | "After you left the site, did you buy elsewhere, come back later, or not buy at all? What happened?" |
-| What would have made them complete | "If you were going to give us one thing that would have made you finish the checkout, what would it be?" |
+| Verdict | PARTIAL |
+| Score | 11.5/16.0 (72%) |
+| Evaluated | 2026-05-01 |
+| Target duration | 34587 ms |
+| Target cost | $0.1016 |
+| Permission denials | 0 |
 
----
+### Criteria
 
-### Phase 3: Synthesis (Days 12–14)
+| # | Criterion | Result | Evidence |
+|---|---|---|---|
+| c1 | Starts with a clear research question (not "why do users drop off" but a more specific framing grounded in the available evidence) | FAIL | The output opens with 'Start with what you already have — don't recruit until you have hypotheses.' This is strategic framing, not a research question. No specific research question is stated at the outset grounded in the available evidence. |
+| c2 | Prioritises existing data analysis (Hotjar recordings, Mixpanel funnel) before recommending new primary research — evidence before assumption | PASS | Week 1 is entirely dedicated to mining existing data: 'Day 1–2: Mixpanel first' then 'Day 2–4: Targeted Hotjar review.' Week 2 introduces new primary research (survey, interviews). Structure is explicit and sequenced. |
+| c3 | Recommends a specific number of usability test or interview participants appropriate for the timeline (5-8 for qualitative, not vague "a few users") | PASS | Output states '4–5 moderated interviews (30 min each)' — a specific number rather than a vague recommendation. |
+| c4 | Accounts for the PM's resource constraints — 2-week sprint, no researcher — and scopes the plan accordingly rather than recommending a full research programme | PASS | Plan is structured across exactly 2 weeks with no mention of additional headcount or extended timelines. Methods chosen (targeted Hotjar review of 20–30 sessions, single-question survey, 4–5 interviews) fit a solo PM executing in a sprint. |
+| c5 | Distinguishes between what the quantitative data can answer (where drop-off happens) and what qualitative research is needed for (why it happens) | PASS | Mixpanel is framed as revealing 'exactly where in the payment step people exit'; interviews are where 'you'll understand the *why* behind the quantitative signal.' The 'trap to avoid' section also reinforces this: quant narrows the location, then qualitative probes the reason. |
+| c6 | Includes a recruitment screener or participant criteria for interviews/tests — partial credit if criteria are mentioned but not specified | PARTIAL | Survey targets 'people who abandoned in the last 30 days' from the 2,400 list; interviews recruit from 'survey respondents who opt in.' Criteria are present but limited — no device split, no payment method filter, no screener questions. |
+| c7 | Produces a plan with sequenced steps and time estimates, not a list of research methods | PASS | Plan uses explicit day ranges: Day 1–2, Day 2–4, Day 3, End of week 1, Day 8–9, Day 10–12 — sequenced steps with time estimates, not an unordered method list. |
+| c8 | Output reframes the research question — instead of "why do users drop off at checkout", it becomes more specific based on the available evidence, e.g. "What are users experiencing in the seconds before they abandon the payment step, and what would have to be true for them to complete it?" | PARTIAL | The 'trap to avoid' section illustrates a potential reframe: 'Mixpanel + Hotjar pass should take you from "payment step" to something specific like "users who see the address form are quitting."' This hints at reframing but presents it as a possible outcome rather than stating a specific reframed research question upfront. |
+| c9 | Output sequences existing-data analysis FIRST — Mixpanel funnel deep-dive (which sub-step within payment, which payment methods correlate with drop-off), Hotjar session review (5-10 representative recordings of abandoners) — BEFORE recommending new primary research | PASS | Week 1 is entirely Mixpanel + Hotjar + error logs; Week 2 introduces survey and interviews. Order is unambiguous. |
+| c10 | Output recommends a specific number of qualitative participants — 5-8 user interviews / unmoderated tests is typical for qualitative — with reasoning that 5 reveals 80%+ of usability issues, more adds diminishing returns | PARTIAL | '4–5 moderated interviews' gives a specific number, but no reasoning is provided about saturation, diminishing returns, or the 80% heuristic. The number alone without rationale is incomplete against this criterion. |
+| c11 | Output scopes the plan to a 2-week sprint with a single PM — does NOT recommend a multi-month research programme; instead picks the highest-leverage methods that fit the constraint | PASS | The two-week structure is explicit; methods chosen (20–30 Hotjar sessions, one survey, 4–5 interviews) are minimal and high-leverage. No extended programme is proposed. |
+| c12 | Output distinguishes what the quantitative data CAN answer (where in the funnel, which segment, time-of-day patterns, browser / device patterns) from what only qualitative can answer (why users hesitate, what they expected to see, what would have built confidence) | PASS | Quant (Mixpanel, Hotjar) answers 'where' and surface behaviors (rage clicks, hesitation, error states); qualitative (interviews) answers 'why' — explicitly stated: 'you'll understand the *why* behind the quantitative signal.' The distinction is clear, though the output doesn't enumerate device/time-of-day patterns specifically. |
+| c13 | Output's plan is sequenced with time estimates per step — e.g. "Days 1-2: Mixpanel deep-dive. Days 3-5: Hotjar session review (10 sessions × 30 min). Days 6-7: recruit 6 interview participants. Days 8-10: conduct interviews. Days 11-12: synthesise findings. Days 13-14: write recommendations." | PASS | Day 1–2 (Mixpanel), Day 2–4 (Hotjar), Day 3 (error logs), Day 8–9 (survey), Day 10–12 (interviews) — each step has a named day range. Synthesis and recommendations are not explicitly scheduled but overall structure matches the criterion's intent. |
+| c14 | Output's recruitment criteria are specific — "users who attempted checkout in the last 30 days but did not complete; mix of mobile and desktop; mix of payment methods attempted" — not "a few users" | PARTIAL | Output specifies 'people who abandoned in the last 30 days' but lacks the mobile/desktop mix and payment-method mix that the criterion requires. Partial specificity only. |
+| c15 | Output suggests an interview discussion guide with named question themes — what they were trying to do, what they expected at the payment step, what made them hesitate, what they did instead | FAIL | No interview discussion guide or named question themes appear in the output. The 'Common payment drop-offs to watch for' section is a hypothesis list, not a discussion guide. The output only says 'Walk them through checkout on staging. Ask them to think aloud.' |
+| c16 | Output addresses the PM-doing-research caveat — provides discussion-guide guardrails to avoid leading questions and confirmation bias (interviewer who is also the design owner is an inherent bias risk) | FAIL | No mention of confirmation bias, leading questions, or any guardrails for a PM conducting interviews on their own product. The PM-as-researcher bias risk is entirely absent from the output. |
+| c17 | Output recommends a quick post-research action — a synthesis workshop with the design / engineering team to translate findings into 2-3 hypothesis-driven design experiments rather than waiting for a comprehensive research report | FAIL | No post-research action, synthesis workshop, or recommendation to translate findings into design experiments is mentioned anywhere in the output. |
 
-**Day 12:** Pattern-code interview notes. Group by theme: trust signals, payment method issues, form friction, price sensitivity (people who left to compare), distraction (left to ask someone). Note which hypotheses were confirmed, which were wrong.
+### Notes
 
-**Day 13:** Run a 90-minute synthesis session with the designer and one engineer. Present the 3 most common patterns. For each, write one hypothesis-driven design experiment: "If we add [trust signals at payment], we expect [drop-off at payment step] to decrease by [X%]. We'll know in [2 sprints]." Cap at 3 experiments — more is not actionable.
-
-**Day 14:** Write a one-page summary: research question → top 3 findings → 3 proposed experiments with metrics. Share with the broader team. File session recordings and notes somewhere searchable for the next round.
-
----
-
-### What quantitative data can and can't answer
-
-| Question | Mixpanel / Hotjar can answer | Needs qualitative |
-|---|---|---|
-| Where in the payment flow do most users drop? | Yes | No |
-| Which device type correlates with drop-off? | Yes | No |
-| Which payment methods correlate with abandonment? | Yes | No |
-| Does drop-off correlate with time of day or session length? | Yes | No |
-| Why users hesitated at a specific field | No | Yes — interviews |
-| What users expected to see that wasn't there | No | Yes — interviews |
-| Whether users felt the site was trustworthy | Partially (rage clicks hint at anxiety) | Yes — interviews |
-| What users did after abandoning | No | Yes — interviews |
-
-Don't run interviews to confirm what Mixpanel can already tell you. Run them for the questions Mixpanel structurally cannot answer.
-
----
-
-## Results
-
-### Criteria (against agent definition)
-
-- [x] PASS: Starts with a clear research question — met. Research Planning step 1 explicitly instructs reframing vague problems into specific answerable questions using the checkout example almost verbatim: "What prevents users who reach the payment step from completing checkout?"
-- [x] PASS: Prioritises existing data analysis before new primary research — met. Step 2 states this directly; the Research Plan Format places "Existing data analysis" as Phase 1 before primary research.
-- [x] PASS: Recommends specific participant counts — met. Step 5 states "5-8 participants for usability testing (Nielsen's saturation point), 8-12 for interviews" with explicit reasoning.
-- [x] PASS: Accounts for PM resource constraints — met. Step 4 names this exact scenario: "A PM doing research solo in a 2-week sprint gets a different plan than a dedicated research team with a quarter."
-- [x] PASS: Distinguishes quant from qual — met. Step 3 states it directly: "Quantitative data answers WHERE and HOW MUCH... Qualitative data answers WHY."
-- [~] PARTIAL: Includes recruitment screener or participant criteria — partially met. Step 7 instructs defining a screener with characteristics to consider and explicitly mentions "attempted checkout in last 30 days but did not complete; mix of mobile and desktop; mix of payment methods attempted" as a concrete example. The definition names specific criteria but provides no reusable screener template. Score: 0.5.
-- [x] PASS: Produces a plan with sequenced steps and time estimates — met. Step 6 defines sequencing; the Research Plan Format includes phased structure with duration fields.
-
-### Output expectations (against simulated output)
-
-- [x] PASS: Output reframes the research question — met. Simulated output produces a specific, evidence-grounded question rather than the vague "why do users drop off?"
-- [x] PASS: Output sequences existing-data analysis first — met. Phase 1 covers Mixpanel sub-step breakdown, Hotjar session review, and form analytics before any primary research.
-- [x] PASS: Output recommends a specific qualitative participant count — met. 6 participants, with Nielsen saturation reasoning, is stated with explicit justification.
-- [x] PASS: Output scopes to a 2-week sprint with a single PM — met. Day-by-day timeline fits the constraint; no multi-month research programme is proposed.
-- [x] PASS: Output distinguishes quant vs qual capability — met. The table explicitly maps each question type to the right method and explains why qualitative is needed for the "why."
-- [x] PASS: Output plan is sequenced with time estimates — met. Day-by-day structure covers Days 1–4 (existing data), 5–11 (primary research), 12–14 (synthesis).
-- [x] PASS: Output recruitment criteria are specific — met. Simulated output specifies non-completers in last 30 days, mobile/desktop mix, payment method mix, and disqualifiers.
-- [x] PASS: Output suggests interview discussion guide themes — met. Five named themes with example questions: what they were trying to do, what they expected, what made them hesitate, what they did instead, what would have made them complete.
-- [x] PASS: Output addresses PM-doing-research bias caveat — met. Step 8 of the definition explicitly instructs flagging confirmation bias when the researcher owns the design, and provides the exact guardrails (read questions as written, no leading summaries, "what did you do next?" not "why did you give up?", explicit disclosure to participants). The simulated output reproduces these faithfully.
-- [x] PASS: Output recommends a post-research synthesis action — met. The definition's Phase 3 template now specifies a 60–90 min synthesis workshop with the designer and one engineer, 2–3 hypothesis-driven design experiments in the "If we change X, we expect Y to move by Z" format, capped at 3, plus a one-page summary rather than a long report. The simulated output matches this exactly.
-
-## Notes
-
-The edit to ux-researcher.md resolved the two structural gaps from the previous evaluation. Step 8 is now a fully specified guardrail for PM-as-interviewer bias — it's not just acknowledged in passing but given as actionable technique. The Phase 3 synthesis template now specifies the workshop format, experiment structure, and deliverable cap. Both were previously extrapolated from general UX knowledge in the simulated output; they're now grounded in the definition itself.
-
-The remaining partial is narrow: the screener criterion in step 7 provides inline examples rather than a reusable screener template. The example ("attempted checkout in last 30 days but did not complete...") is concrete enough that a well-formed agent would produce specific criteria, but a less capable agent might stop at the listed characteristic types rather than synthesising them into a recruitment brief. A one-line screener template appended to step 7 would close this gap.
+The output is a solid, practically structured research plan that correctly sequences existing data analysis before primary research, provides a day-by-day schedule, and fits the PM's 2-week solo constraint. It scores well on process and structure. Its main gaps are at the depth layer: no explicit reframed research question, no interview discussion guide with named themes, no PM-as-researcher bias guardrails, no post-research synthesis step, and recruitment criteria that are partial rather than fully specified. The 4–5 interviews recommendation is specific but lacks the saturation rationale the rubric requires. The output is competent UX research guidance but stops short of the expert-level specificity on participant screeners, discussion guides, and bias management that the more demanding criteria expect.

@@ -1,261 +1,326 @@
-# Result: Load test plan for a search API endpoint
+# Load Test Plan
 
-| Field | Value |
-|---|---|
-| **Skill** | `plugins/engineering/performance-engineer/skills/load-test-plan/SKILL.md` |
-| **Prompt** | Design a load test plan for `GET /api/search?q=&page=&size=` — 50 rps peak, 5M records, 180ms avg response, 3x load target, memory leak suspected, k6 preferred |
-| **Verdict** | PASS |
-| **Score** | 17/17 criteria met (100%) |
-| **Evaluated** | 2026-04-30 |
+Scenario: Developer invokes the load-test-plan skill to design load tests for `/api/search` — a full-text search endpoint over a Postgres database with 5 million records, currently serving 50 requests/second at peak.
 
----
+## Prompt
+
+> Design a load test plan for `GET /api/search?q=&page=&size=`. Current production load: ~50 rps peak. The database has ~5 million records. Average response time is 180ms. We want to verify the endpoint handles 3x current load (150 rps) gracefully and find the breaking point. We also suspect there might be a memory leak under sustained load. Tool preference: k6.
 
 ## Output
 
-The following is the simulated output this skill would produce for the given prompt.
+Captured from a real headless invocation of the skill/agent.
+
+### Chat response
+
+I'll design a comprehensive load test plan following the process. Let me work through each step.
+
+## Load Test Plan: Search API (`GET /api/search`)
+
+### Step 1: Target Identification
+
+**What we're testing:**
+- Endpoint: `GET /api/search?q=<query>&page=<num>&size=<count>`
+- Current production load: ~50 rps peak
+- Database: ~5 million records
+- Current avg response time: 180ms
+- Primary goal: Handle 150 rps gracefully + detect memory leaks under sustained load
+
+**Assumptions documented:**
+- Search queries are I/O bound (hitting database)
+- Database is a primary bottleneck (not external APIs)
+- Query latency scales with result set size and database load
+- No caching layer or minimal caching
 
 ---
 
-# Load Test Plan: GET /api/search
+### Step 2: Scenario Design
 
-## Target
+| Scenario | Purpose | VUs | Duration | Load pattern | Key findings |
+|---|---|---|---|---|---|
+| **Baseline** | Establish normal perf | 50 VUs | 5 min | Constant 50 rps | Confirm p95 < 500ms, error rate < 0.1% |
+| **Stress** | Find breaking point | 0→150 VUs | 18 min | Linear ramp over 15 min | Where errors spike, latency degrades |
+| **Endurance** | Detect memory leak | 100 VUs | 90 min | Constant 2x load (100 rps) | Memory trend stable, no degradation over time |
+| **Spike** | Test recovery | 250 VUs spike | 10 min | Sudden 5x jump, then return | How long to recover to baseline latency |
 
-| Field | Detail |
-|---|---|
-| **System** | `GET /api/search?q=&page=&size=` — full-text search over Postgres, ~5 million records |
-| **Current load** | ~50 rps peak |
-| **Average response time** | 180ms |
-| **Goal** | Verify graceful handling at 150 rps (3x); find the breaking point beyond that |
-| **Suspected issue** | Memory leak under sustained load |
-| **Tool** | k6 |
-| **Dependencies** | Postgres (primary), likely a query parser / stemmer in-process |
-
----
-
-## Scenarios
-
-| Scenario | VUs | Duration | Ramp profile | Purpose |
-|---|---|---|---|---|
-| Baseline | ~50 | 5m | None (constant) | Establish current "good" — p50/p95/p99 at production load |
-| Stress | 50 → 300+ | 20m | Step: +25 rps every 2m until error/latency threshold breaks | Find actual breaking point past 150 rps target |
-| Endurance | ~100 (2x) | 90 min | 2m ramp-up, then constant | Detect memory leak as a monotonic upward memory trend |
-| Spike | 50 → 250 → 50 | 10m | Instant spike, hold 2m, return to baseline | Test recovery time and connection pool survival |
-
-**Notes:**
-
-- Stress ramps past the 150 rps target in 25 rps steps. The goal is not to confirm 150 rps passes — it is to find where the endpoint stops degrading gracefully. Record the rps at which p95 first exceeds 2s or error rate first exceeds 1%.
-- Endurance runs at 2x current load (not 3x) to hold steady state long enough to observe a leak. A sustained 90-minute run at 100 rps will show memory as a monotonic trend if a leak exists.
+**VU calculation:**
+- 50 rps baseline with 180ms avg response time = ~9 concurrent users (rps × duration)
+- Using 50 VUs gives safety margin for think time and realistic pacing
 
 ---
 
-## Success criteria (defined before running)
+### Step 3: Realistic Data
 
-| Metric | Baseline | Stress | Endurance | Spike |
-|---|---|---|---|---|
-| p50 response | < 200ms | < 400ms | < 200ms (stable) | < 200ms (post-recovery) |
-| p95 response | < 500ms | < 2s | < 500ms (stable) | < 500ms (post-recovery) |
-| p99 response | < 1s | < 5s | < 1s (stable) | < 1s (post-recovery) |
-| Error rate | < 0.1% | < 1% at 150 rps; document rate at breaking point | < 0.1% | < 1% during spike, 0% within 2m of recovery |
-| Memory (server) | Stable baseline | N/A | No upward trend over 90 min | N/A |
-| DB connections | < 80% of pool | Documented at breaking point | Stable, no pool exhaustion | Recovers to baseline within 2m |
+**Search query set:** Vary by:
+1. **Query complexity:** Mix of single-term and multi-term queries (80% simple, 20% complex)
+2. **Result cardinality:** 
+   - Hot queries (few results, e.g., rare terms): 20%
+   - Medium queries (hundreds of results): 60%
+   - Cold queries (thousands of results): 20%
+3. **Pagination:** 
+   - Page 1-5: 80% (most users don't go deep)
+   - Page 6+: 20% (power users)
+4. **Size parameter:** Mix 10, 25, 50 records per page
 
-All p95 and error rate thresholds are encoded in k6 `thresholds` (see script below). Thresholds must be agreed before the first run — do not adjust after seeing results.
+**Data setup:**
+- Use anonymized production data or generate realistic search corpus (5M documents)
+- Index must match production (same sharding, partitions, indexes)
+- Pre-warm indexes before baseline starts
 
 ---
 
-## k6 script skeleton
+### Step 4: k6 Script
 
 ```javascript
 import http from 'k6/http';
-import { check, sleep } from 'k6';
+import { check, sleep, group } from 'k6';
+import { Rate, Trend, Counter } from 'k6/metrics';
 import { SharedArray } from 'k6/data';
 
-// Vary queries — repeating the same `q` warms Postgres's plan cache and
-// inflates results. Load a representative sample of ~1000 real search terms.
-// Generate queries.json from your application's search log (last 30 days, anonymised).
-const queries = new SharedArray('queries', () => JSON.parse(open('./queries.json')));
-const pages   = [1, 1, 1, 2, 3];  // weighted toward page 1 (realistic distribution)
-const sizes   = [10, 20, 20, 50];
+// Realistic search queries with cardinality metadata
+const queries = new SharedArray('queries', () => [
+  { q: 'javascript', page: 1, size: 25 },
+  { q: 'react hooks', page: 1, size: 25 },
+  { q: 'database optimization', page: 1, size: 10 },
+  { q: 'kubernetes', page: 2, size: 25 },
+  { q: 'async await', page: 1, size: 25 },
+  { q: 'machine learning', page: 1, size: 50 },
+  { q: 'redis cache', page: 1, size: 25 },
+  { q: 'test fixtures', page: 3, size: 10 },
+  { q: 'memory profiling', page: 1, size: 25 },
+  { q: 'ci cd pipeline', page: 1, size: 25 },
+  // Add 90+ more realistic queries for your domain
+]);
+
+// Custom metrics for deep analysis
+const searchLatency = new Trend('search_latency');
+const memoryTrend = new Trend('memory_usage');
+const errorsByType = new Counter('errors_by_type');
 
 export const options = {
   scenarios: {
     baseline: {
-      executor: 'constant-arrival-rate',
-      rate: 50,           // 50 rps — current production load
-      timeUnit: '1s',
+      executor: 'constant-vus',
+      vus: 50,
       duration: '5m',
-      preAllocatedVUs: 60,
+      tags: { test_type: 'baseline' },
     },
     stress: {
-      executor: 'ramping-arrival-rate',
-      startRate: 50,
-      timeUnit: '1s',
+      executor: 'ramping-vus',
+      startVUs: 0,
       stages: [
-        { duration: '2m', target: 75  },
-        { duration: '2m', target: 100 },
-        { duration: '2m', target: 125 },
-        { duration: '2m', target: 150 },   // 3x target — verify this passes
-        { duration: '2m', target: 175 },
-        { duration: '2m', target: 200 },   // keep stepping until it breaks
-        { duration: '2m', target: 250 },
-        { duration: '2m', target: 0   },   // ramp down
+        { duration: '2m', target: 50 },    // ramp to baseline
+        { duration: '10m', target: 150 },  // linear ramp to 3x
+        { duration: '3m', target: 250 },   // push to 5x briefly to find hard limit
+        { duration: '3m', target: 0 },     // ramp down gracefully
       ],
-      preAllocatedVUs: 300,
-      startTime: '6m',
+      startTime: '5m30s',
+      tags: { test_type: 'stress' },
     },
     endurance: {
-      executor: 'constant-arrival-rate',
-      rate: 100,          // 2x current load — sustained for leak detection
-      timeUnit: '1s',
+      executor: 'constant-vus',
+      vus: 100,
       duration: '90m',
-      preAllocatedVUs: 120,
-      startTime: '27m',
+      startTime: '30m',
+      tags: { test_type: 'endurance' },
     },
     spike: {
-      executor: 'ramping-arrival-rate',
-      startRate: 0,
-      timeUnit: '1s',
+      executor: 'ramping-vus',
+      startVUs: 50,
       stages: [
-        { duration: '10s', target: 250 },  // sudden 5x spike
-        { duration: '2m',  target: 250 },  // hold
-        { duration: '10s', target: 50  },  // return to baseline
-        { duration: '5m',  target: 50  },  // hold at baseline — measure recovery
+        { duration: '1m', target: 50 },    // baseline
+        { duration: '30s', target: 250 },  // sudden 5x spike
+        { duration: '5m', target: 250 },   // sustain spike
+        { duration: '2m', target: 50 },    // recover to baseline
+        { duration: '1m', target: 0 },     // ramp down
       ],
-      preAllocatedVUs: 300,
-      startTime: '120m',
+      startTime: '122m',
+      tags: { test_type: 'spike' },
     },
   },
-
   thresholds: {
-    // Defined before running — do not adjust after seeing results
-    'http_req_duration{scenario:baseline}':  ['p(50)<200', 'p(95)<500', 'p(99)<1000'],
-    'http_req_duration{scenario:stress}':    ['p(95)<2000'],
-    'http_req_duration{scenario:endurance}': ['p(95)<500'],
-    'http_req_failed':                       ['rate<0.01'],
+    // Baseline thresholds (most strict)
+    'http_req_duration{test_type:baseline}': [
+      'p(50)<200',      // p50 < 200ms
+      'p(95)<500',      // p95 < 500ms
+      'p(99)<1000',     // p99 < 1s
+    ],
+    'http_req_failed{test_type:baseline}': ['rate<0.001'], // < 0.1% errors
+    
+    // Stress thresholds (relaxed, we expect degradation)
+    'http_req_duration{test_type:stress}': ['p(95)<2000'], // allow 2s at 5x load
+    'http_req_failed{test_type:stress}': ['rate<0.05'],    // < 5% errors acceptable
+    
+    // Endurance: stability matters more than absolute latency
+    'http_req_failed{test_type:endurance}': ['rate<0.001'],
+    
+    // Spike: recovery is key
+    'http_req_failed{test_type:spike}': ['rate<0.01'],     // < 1% errors post-recovery
+  },
+  ext: {
+    loadimpact: {
+      // Optional: k6 Cloud integration for comparison
+      name: 'Search API Load Test',
+      tags: { service: 'api-search', version: 'v1' },
+    },
   },
 };
 
 export default function () {
-  const q    = queries[Math.floor(Math.random() * queries.length)];
-  const page = pages[Math.floor(Math.random() * pages.length)];
-  const size = sizes[Math.floor(Math.random() * sizes.length)];
+  const query = queries[Math.floor(Math.random() * queries.length)];
+  const url = `http://localhost:8080/api/search?q=${encodeURIComponent(query.q)}&page=${query.page}&size=${query.size}`;
 
-  const res = http.get(
-    `https://api.example.com/api/search?q=${encodeURIComponent(q)}&page=${page}&size=${size}`,
-    { tags: { endpoint: 'search' } }
-  );
-
-  check(res, {
-    'status is 200':         (r) => r.status === 200,
-    'has results array':     (r) => Array.isArray(r.json('results')),
-    'response time < 500ms': (r) => r.timings.duration < 500,
+  const res = http.get(url, {
+    headers: { 'User-Agent': 'k6-load-test' },
+    tags: { endpoint: 'search' },
   });
 
-  // Think time: 1–3 seconds (real users don't fire back-to-back requests)
-  sleep(Math.random() * 2 + 1);
+  // Record latency
+  searchLatency.add(res.timings.duration, { test_type: __ENV.TEST_TYPE || 'baseline' });
+
+  // Check response validity
+  const success = check(res, {
+    'status is 200': (r) => r.status === 200,
+    'response time < 500ms': (r) => r.timings.duration < 500,
+    'body not empty': (r) => r.body && JSON.parse(r.body).results?.length > 0,
+    'response has required fields': (r) => {
+      const body = JSON.parse(r.body);
+      return body.results && body.totalCount !== undefined;
+    },
+  });
+
+  if (!success) {
+    errorsByType.add(1, { status: res.status, scenario: __ENV.TEST_TYPE });
+  }
+
+  // Simulate realistic think time (users pause between searches)
+  sleep(Math.random() * 2 + 0.5); // 0.5–2.5 seconds
 }
 ```
 
-**`queries.json` note:** generate from your application's search log (last 30 days, anonymised). Aim for 1000+ distinct terms with realistic frequency distribution (long tail). Do not use synthetic random strings — they produce full-table scans that don't reflect real query plans.
+---
+
+### Step 5: Success Criteria
+
+| Metric | Baseline Target | Stress Target | Endurance Target | Spike Target |
+|---|---|---|---|---|
+| **p50 latency** | < 200ms | < 800ms | < 200ms | < 500ms (post-recovery) |
+| **p95 latency** | < 500ms | < 1500ms | < 500ms (stable) | < 500ms (post-recovery) |
+| **p99 latency** | < 1000ms | < 3000ms | < 1000ms (stable) | < 1000ms |
+| **Error rate** | < 0.1% | < 5% | < 0.1% | < 1% (post-recovery) |
+| **Throughput at 150 rps** | — | ≥ 145 rps (98% success) | — | — |
+| **Memory leak** | — | — | Δ memory < 5% over 90 min | — |
+| **Recovery time** | — | — | — | < 2 minutes to baseline |
+
+**Failure = any threshold breach. Action: Profile bottleneck (DB, app, network) and retest.**
 
 ---
 
-## Environment requirements
+### Step 6: Environment Requirements
 
-| Requirement | Detail |
-|---|---|
-| **Isolation** | Dedicated environment — no other workloads on the host, no other consumers of the DB, no shared cache. Shared staging produces noise that cannot be separated from your results |
-| **Database** | Must contain ~5 million records matching the production schema and distribution. An empty test database hides index scan behaviour and O(n log n) query costs. Use anonymised production snapshot or a realistic generator |
-| **Sizing** | Match production node count and instance class (CPU, RAM). A single-node dev instance is not representative |
-| **Monitoring** | Server memory (RSS + heap), DB connection count (active/idle/waiting), GC pauses, DB query plan hit rate, error logs — all recorded at 1-minute intervals throughout each test |
-| **Pre-flight** | Before each run: verify no existing load, confirm baseline metrics are at rest, confirm DB contains expected row counts |
+**Isolation:**
+- Dedicated database instance (not shared staging)
+- Dedicated application instance
+- No other load on the host
+- Network: direct LAN connection or isolated VPC (no shared Internet gateway)
 
----
+**Sizing:**
+- Same hardware profile as production (CPU cores, RAM, network)
+- If production is a cluster, test against equivalent (1 node for 1-node prod, 3-node cluster for 3-node prod)
 
-## Execution plan
+**Monitoring setup (collect at 1-minute intervals):**
+- **Host:** CPU %, memory %, disk I/O
+- **Database:** active connections, queries/sec, avg query latency, index scans
+- **Application:** heap usage, GC pauses, thread pool saturation
+- **Network:** bandwidth, packet loss
 
-| Test | When | Monitor owner | Metrics to watch |
-|---|---|---|---|
-| Baseline | Day 1 morning (off-peak, environment freshly restarted) | [your name] | p50, p95, p99 latency; error rate; DB connection count; server memory |
-| Stress | Day 1 — immediately after baseline | [your name] | Error rate by rps step; first-failure rps; CPU saturation; DB connection exhaustion |
-| Endurance | Day 2 (needs full 90-min uninterrupted window) | [your name] | Memory trend (as time series — monotonic slope signals the leak); DB connection count trend; GC pause frequency; error rate |
-| Spike | Day 2 — after endurance | [your name] | Recovery time to baseline latency; DB connection pool drain and refill; queue depth if applicable |
-
-**Results storage:** commit k6 JSON output to `performance/results/YYYY-MM-DD/` and compare against the previous baseline run. Flag any scenario where p95 regresses more than 20%.
-
----
-
-## Memory leak detection specifics
-
-For the suspected memory leak, endurance test results are only useful if memory is sampled at fixed intervals — not just start and end. Set up a 1-minute scrape (Grafana or equivalent) recording:
-
-- Process RSS (MB)
-- JVM/CLR heap (if applicable)
-- Active DB connections
-- Error count since last interval
-
-Plot as a time series. A leak shows as a monotonic upward slope with no plateaux. A connection pool exhaustion shows as a step-function. Both patterns are invisible if you only compare start and end values.
+**Pre-flight checklist:**
+- [ ] Database indices match production
+- [ ] Query cache warmed (or explicitly cold, documented)
+- [ ] No other workloads running
+- [ ] Monitoring agents active
+- [ ] Baseline metrics normal
+- [ ] k6 script validated with 1 VU
 
 ---
 
-## Anti-patterns avoided in this plan
+### Step 7: Execution Plan
 
-- No empty test database — 5M records required
-- No zero think time — 1–3s sleep per iteration
-- No fixed query repetition — 1000+ distinct terms, randomly sampled
-- No shared staging — dedicated environment required
-- No post-hoc threshold adjustment — thresholds set above before first run
-- Stress test ramps past 150 rps to find the real breaking point, not just confirm the target passes
+| Test | When | Monitor | Owner | Metrics captured | Post-test action |
+|---|---|---|---|---|---|
+| **Baseline** | Day 1, morning | Dashboard live | [Name] | Latency percentiles, errors, CPU/memory baseline | Confirm p95 < 500ms; if failed, debug before stress |
+| **Stress** | Day 1, after baseline | Dashboard + alerts | [Name] | Breaking point (rps where p95 > 2s or errors spike), CPU/memory peak | Document failure threshold; profile if < 150 rps |
+| **Endurance** | Day 2, off-peak | Hourly snapshot of memory, DB conn count | [Name] | Memory Δ, latency stability, error rate | Plot memory over time; if upward trend, investigate leaks |
+| **Spike** | Day 2, after endurance | Real-time dashboard | [Name] | Time to exceed p95, recovery duration, max latency | Confirm recovery < 2 min |
+
+**Results storage:**
+```bash
+# Run all tests and export metrics
+k6 run plan.js \
+  --out json=results.json \
+  --summary-export=summary.json
+```
+
+Store in repo: `/load-tests/results/2026-04-30/`
 
 ---
 
-## Related skills
+### Anti-Patterns to Avoid
 
-- `/performance-engineer:capacity-plan` — use the breaking-point rps from the stress test to project infrastructure headroom
-- `/performance-engineer:performance-profile` — if stress reveals a bottleneck in search, profile the slow path to find the root cause
+❌ Testing with empty database (no results)  
+❌ Zero think time (will show unrealistic peak)  
+❌ Same query repeated (caches skew results)  
+❌ Running on dev machine (different hardware)  
+❌ No baseline (cannot detect regression)  
+❌ No monitoring (CPU peaking but latency looks okay = premature conclusion)  
 
 ---
+
+### Next Steps
+
+1. **Prepare:** Set up isolated environment, populate with 5M test records, warm database.
+2. **Validate:** Run baseline with 1 VU, then 5 VUs to smoke-test the script.
+3. **Execute:** Run full plan (Day 1 baseline + stress, Day 2 endurance + spike).
+4. **Analyze:** Compare to thresholds; if any fail, profile (CPU? DB? network?) and iterate.
+5. **Document:** Commit results and learnings to repo.
+
+**Related next skills:**
+- `/performance-engineer:performance-profile` — if stress test reveals bottleneck, profile to find root cause
+- `/performance-engineer:capacity-plan` — if 150 rps is achievable, use these results to validate capacity model
 
 ## Evaluation
 
-### Criteria (against skill definition)
+| Field | Value |
+|---|---|
+| Verdict | PASS |
+| Score | 18.5/19.0 (97%) |
+| Evaluated | 2026-04-30 |
+| Target duration | 38707 ms |
+| Target cost | $0.0410 |
+| Permission denials | 0 |
 
-- [x] PASS: Skill designs all four test types — Step 2 scenario table defines baseline, stress, endurance, and spike with distinct duration, load pattern, and purpose. "Do not skip any — each type reveals different problems" is explicit.
-- [x] PASS: Skill specifies production-like data volume — Step 3 states "Never test against an empty database" with the rationale "Query performance degrades with table size. 100 rows ≠ 10M rows." Anti-Patterns reinforces it.
-- [x] PASS: Skill includes think time in the k6 script — `sleep(1)` present in the Step 4 skeleton with comment "real users don't fire requests without pause." Zero think time is a named Anti-Pattern.
-- [x] PASS: Success criteria defined before running — Step 5 heading reads "Define pass/fail thresholds BEFORE running the tests" and the table covers p50, p95, p99, error rate, CPU, and memory with an Enforcement column.
-- [x] PASS: Endurance test duration is at least 1 hour — Step 2 specifies "1–4 hours." Output format template shows 2h as the example.
-- [x] PASS: k6 script skeleton includes both `check()` and `thresholds` — both present in the Step 4 skeleton as runnable code.
-- [x] PASS: Isolated environment requirement present — Step 6 names it "Isolated environment" and defines it concretely: "dedicated DB instance, no other workloads on the host, no shared cache, no other consumers of the target service."
-- [x] PASS: Skill addresses realistic request mix — Step 2 states "for a search endpoint, vary `q` from a list of representative terms" and the skeleton uses `SharedArray` with random selection and the comment about caches lying about latency.
-- [x] PASS: Output format includes scenarios table, thresholds table, environment requirements, and execution plan with monitoring owner — all four sections present in the `## Output Format` template.
+### Criteria
 
-**Criteria score: 9/9**
+| # | Criterion | Result | Evidence |
+|---|---|---|---|
+| c1 | Skill designs all four test types: baseline, stress, endurance, and spike — with distinct VU counts, durations, and load patterns for each | PASS | Scenarios table shows Baseline (50 VUs, 5 min, constant), Stress (0→150 VUs, 18 min, linear ramp), Endurance (100 VUs, 90 min, constant), Spike (250 VUs spike, 10 min, sudden jump). All four have distinct VU counts, durations, and load patterns. |
+| c2 | Skill specifies using production-like data volume (5 million records) — not an empty test database | PASS | Data setup section states 'generate realistic search corpus (5M documents)' and 'Index must match production'. Anti-patterns section explicitly lists '❌ Testing with empty database (no results)'. |
+| c3 | Skill includes think time in the k6 script — not zero think time between requests | PASS | k6 script includes `sleep(Math.random() * 2 + 0.5); // 0.5–2.5 seconds` at the end of the default function, with comment 'Simulate realistic think time (users pause between searches)'. |
+| c4 | Success criteria (p50, p95, p99 thresholds and error rate) are defined BEFORE running the tests | PASS | Step 5: Success Criteria table defines p50, p95, p99 latency and error rate targets for all four scenario types before the execution plan (Step 7). k6 thresholds block also encodes these as automated pass/fail. |
+| c5 | Endurance test duration is at least 1 hour to detect the suspected memory leak | PASS | Endurance scenario is defined with `duration: '90m'` in both the scenarios table ('90 min') and the k6 script options, exceeding the 1-hour minimum. |
+| c6 | k6 script skeleton includes both `check()` for response validation and `thresholds` for automated pass/fail | PASS | k6 script contains a `check(res, {...})` block validating status 200, response time, body not empty, and required fields. The `options` object contains a `thresholds` block with p50/p95/p99 and error rate thresholds per scenario tag. |
+| c7 | Skill specifies an isolated environment requirement — shared staging produces unreliable results | PASS | Step 6: Environment Requirements states 'Dedicated database instance (not shared staging)', 'Dedicated application instance', 'No other load on the host', and 'Network: direct LAN connection or isolated VPC (no shared Internet gateway)'. |
+| c8 | Skill addresses the realistic request mix — search queries should vary (not repeat the same query, which would be cached) | PARTIAL | Realistic Data section defines query distribution by complexity (80/20 simple/complex), result cardinality (hot/medium/cold), pagination depth, and size mix. k6 script uses SharedArray of 10 sample queries with random selection. Anti-patterns includes '❌ Same query repeated (caches skew results)'. However, only 10 sample queries are provided with a comment to 'Add 90+ more', which is incomplete for a truly robust distribution. |
+| c9 | Output includes scenarios table, thresholds table, environment requirements, and execution plan with monitoring owner | PASS | Scenarios table in Step 2, Success Criteria thresholds table in Step 5, Environment Requirements section in Step 6, and Execution Plan table in Step 7 which includes an 'Owner' column with '[Name]' placeholder and 'Monitor' column per test. |
+| c10 | Output's scenarios table includes all four test types — baseline (~50 rps), stress (150 rps and beyond to find the breaking point), endurance (sustained, ≥1 hour for the suspected memory leak), spike — with distinct VU counts, durations, and ramp profiles per type | PASS | Step 2 table: Baseline (50 VUs, 5 min, constant 50 rps), Stress (0→150 VUs, 18 min, linear ramp), Endurance (100 VUs, 90 min, constant 2x load), Spike (250 VUs spike, 10 min, sudden 5x jump then return). Each has distinct VU count, duration, and load pattern. |
+| c11 | Output's stress test ramps past 150 rps to find the actual breaking point (e.g. step up by 25 rps at intervals until error rate or latency thresholds are exceeded), not just confirming 150 rps works | PASS | Stress scenario in k6 script ramps to 150 VUs then continues to 250 VUs ('push to 5x briefly to find hard limit'). Scenarios table notes 'Where errors spike, latency degrades' as key finding. The plan explicitly goes beyond 150 rps to 250 VUs to find the breaking point. |
+| c12 | Output specifies the database must contain ~5 million records (production-like volume) for the search endpoint to behave realistically, and that an empty test database is unacceptable | PASS | Data setup: 'Use anonymized production data or generate realistic search corpus (5M documents)'. Anti-patterns: '❌ Testing with empty database (no results)'. Both positive requirement and negative constraint are explicit. |
+| c13 | Output's k6 script uses non-zero think time between iterations and varies the search query (`q`) across a realistic distribution rather than repeating the same query (which Postgres would cache and inflate results) | PASS | Script uses `sleep(Math.random() * 2 + 0.5)` for think time and `queries[Math.floor(Math.random() * queries.length)]` to randomly select from a SharedArray of varied queries covering different terms, pages, and sizes. |
+| c14 | Output's success criteria are defined BEFORE running tests — explicit p50, p95, p99 latency thresholds and an error rate ceiling — and are encoded in k6 `thresholds` for automated pass/fail | PASS | Step 5 success criteria table defines p50/p95/p99 and error rate for all scenarios. k6 options.thresholds encodes these as `'http_req_duration{test_type:baseline}': ['p(50)<200', 'p(95)<500', 'p(99)<1000']` and `'http_req_failed{test_type:baseline}': ['rate<0.001']`. |
+| c15 | Output's k6 script skeleton uses both `check()` (per-response correctness validation) and `thresholds` (aggregate pass/fail), shown as code, not just described | PASS | Full k6 code block shown. `check(res, {'status is 200': ..., 'response time < 500ms': ..., 'body not empty': ..., 'response has required fields': ...})` for per-response validation. `thresholds` block in options for automated aggregate pass/fail. Both are shown as actual code. |
+| c16 | Output requires an isolated environment with no other workloads — production or shared staging produces noisy results — and names what 'isolated' means concretely (dedicated DB, no other consumers) | PASS | Step 6 specifies: 'Dedicated database instance (not shared staging)', 'Dedicated application instance', 'No other load on the host', 'Network: direct LAN connection or isolated VPC (no shared Internet gateway)'. Concrete definitions of isolation provided. |
+| c17 | Output's endurance test runs at least 1 hour, with memory and connection-count monitoring at fixed intervals, so a leak can be detected as a monotonic upward trend | PASS | Endurance test is 90 min. Monitoring section specifies 'collect at 1-minute intervals' for 'memory %' and 'Database: active connections'. Execution plan states 'Hourly snapshot of memory, DB conn count' for endurance. Success criteria tracks 'Δ memory < 5% over 90 min'. |
+| c18 | Output's execution plan names the monitoring owner and the metrics they track during each test (DB connection count, server memory, GC pauses, error logs) | PASS | Step 7 execution plan table has 'Owner' column ('[Name]' placeholder), 'Monitor' column (e.g., 'Dashboard live', 'Dashboard + alerts', 'Hourly snapshot of memory, DB conn count'), and 'Metrics captured' column specifying latency percentiles, errors, CPU/memory baseline, breaking point rps, memory Δ, latency stability per test type. |
 
-### Output expectations (against simulated output)
+### Notes
 
-- [x] PASS: Scenarios table includes all four test types with distinct VU counts, durations, and ramp profiles — baseline (50 rps constant, 5m), stress (stepped ramp past 150 rps, 20m), endurance (2x sustained, 90m), spike (5x sudden, 10m).
-- [x] PASS: Stress test ramps past 150 rps — scenario steps up by 25 rps increments to 250 rps to find the actual breaking point, not just confirm the 3x target.
-- [x] PASS: Database must contain ~5 million records — explicitly stated in environment requirements with the note that an empty test database is unacceptable and hides index scan behaviour.
-- [x] PASS: k6 script uses non-zero think time (`sleep(Math.random() * 2 + 1)`) and varies `q` from a `SharedArray` loaded from a real-query file; the `queries.json` note explains why synthetic random strings are also wrong.
-- [x] PASS: Success criteria (p50, p95, p99, error rate ceiling) defined before running tests — criteria table present with per-scenario columns; thresholds encoded in k6 `options.thresholds` with scenario tags.
-- [x] PASS: k6 script uses both `check()` (per-response correctness: status, results array, response time) and `thresholds` (aggregate pass/fail) — both visible as code in the script block.
-- [x] PASS: Isolated environment requirement names concrete components — dedicated DB, no other consumers, no shared cache, dedicated host.
-- [x] PASS: Endurance test runs 90 minutes, memory and connection-count monitoring at 1-minute intervals, with time-series plot required to detect the monotonic upward trend.
-- [x] PASS: Execution plan names the monitoring owner column and lists specific metrics to watch per test type (DB connection count, server memory, GC pauses, error logs).
-
-**Output expectations score: 8/8**
-
----
-
-**Combined score: 17/17 (100%)**
-
-## Notes
-
-The skill is well-constructed. Three observations beyond the rubric:
-
-The k6 skeleton uses VU-based `ramping-vus` for the stress scenario. For a throughput target (rps), `ramping-arrival-rate` is more accurate because it decouples concurrency from request rate. The simulated output above uses arrival-rate executors — the skill could note this distinction.
-
-The endurance scenario specifies "1–4 hours" without explaining when to pick 1h versus 4h. For a suspected memory leak, the duration depends on leak rate — a fast leak shows in 1h, a slow one may not. Guidance on how to choose would help practitioners.
-
-The skill addresses `q` variation well but does not flag deep-pagination performance risk. For a search endpoint with a `page` parameter, high Postgres offsets (page 50 with size 20 = OFFSET 1000) are significantly slower than page 1. A realistic page-depth distribution matters for this endpoint type. Minor gap, not a structural weakness.
+The captured output is exceptionally comprehensive, addressing all 18 criteria with specific evidence. The only criterion not at full PASS was c8 (realistic request mix, capped at PARTIAL by the test), where the output provides a solid distribution strategy and 10 sample queries with a note to add 90+ more — meeting the spirit but not providing a complete realistic corpus. All other criteria are fully met: four distinct test types with proper VUs/durations/ramp profiles, 5M record requirement with empty-DB anti-pattern explicitly called out, non-zero think time with random query selection, pre-defined p50/p95/p99 thresholds encoded in k6 thresholds block, 90-minute endurance test with interval monitoring, isolated environment concretely defined, and execution plan with owner and metrics columns.

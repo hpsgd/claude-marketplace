@@ -1,476 +1,487 @@
-# Result: API documentation
+# Api Documentation
 
-| Field | Value |
-|---|---|
-| **Verdict** | PASS |
-| **Score** | 17.5/18 criteria met (97%) |
-| **Evaluated** | 2026-04-30 |
-| **Plugin** | `plugins/product/developer-docs-writer/agents/developer-docs-writer.md` |
+Scenario: A developer needs docs written for a REST API that handles webhook delivery, including authentication and rate limiting behaviour.
 
----
+## Prompt
+
+> Write documentation for our webhooks API. Here's what it does:
+> 
+> - POST /v1/webhooks — register a new webhook endpoint
+> - GET /v1/webhooks — list all registered webhooks
+> - DELETE /v1/webhooks/{id} — remove a webhook
+> - POST /v1/webhooks/{id}/test — send a test event to verify the endpoint works
+> 
+> Auth: Bearer token in Authorization header. All tokens are scoped — you need `webhooks:write` scope to register/delete, `webhooks:read` to list.
+> 
+> Rate limits: 100 requests/minute per token. Returns 429 with Retry-After header when exceeded.
+> 
+> Webhook payloads are signed with HMAC-SHA256 using a secret we provide at registration. Customers must verify the signature or we recommend rejecting the payload.
 
 ## Output
 
-The following simulates what the developer-docs-writer agent would produce for the given prompt. Based on the agent's definition — its per-endpoint structure template, API overview sections requirement, webhook documentation type, and code standards — this is what it generates.
+Captured from a real headless invocation of the skill/agent.
+
+### Chat response
+
+The documentation is written to `webhooks-api.md`. Here's what's covered:
+
+**Overview sections:**
+- Authentication — bearer token, scope table (`webhooks:read` / `webhooks:write`), 403 behaviour
+- Rate limiting — 100 req/min, `Retry-After` header usage
+- Error format — standard JSON structure, full error code table
+- Signature verification — step-by-step instructions, Python and Node.js examples with constant-time comparison, warning about timing attacks
+
+**All four endpoints**, each with:
+- Auth scope required
+- Parameters (path, query, body) — typed, with all constraints called out
+- Realistic response examples (`signing_secret` only on create, not in list)
+- Error table per endpoint
+- Working `curl` example
+- Notes for edge cases (in-flight deliveries on delete, test event signature parity with live events)
+
+Two things I assumed that you should confirm or correct:
+1. **Pagination** — I documented cursor-based pagination for `GET /v1/webhooks`. If it's offset-based, the response shape needs updating.
+2. **`signing_secret` visibility** — I documented it as shown only at creation time, never in list/get responses. If that's not accurate, let me know.
+
+### Artifacts written
+
+#### `work/webhooks-api.md`
+
+```
+# Webhooks API Reference
+
+Webhooks let you receive real-time HTTP notifications when events occur in your account. You register an endpoint, and we deliver signed POST requests to it whenever a relevant event fires.
 
 ---
 
-# Webhooks API Reference
+## Overview
 
-## Authentication
+### Base URL
+
+```
+https://api.example.com/v1
+```
+
+All endpoints are versioned under `/v1`.
+
+---
+
+### Authentication
 
 All requests require a Bearer token in the `Authorization` header:
 
 ```
-Authorization: Bearer <token>
+Authorization: Bearer YOUR_API_TOKEN
 ```
 
-Tokens are scoped. Each endpoint requires a specific scope:
+Tokens are **scoped** — not all tokens can access all endpoints. The required scope is stated on each endpoint.
 
-| Scope | Description |
+| Scope | Grants access to |
 |---|---|
 | `webhooks:read` | List registered webhooks |
 | `webhooks:write` | Register and delete webhooks, send test events |
 
-Obtain tokens from your dashboard at `https://app.example.com/settings/api-keys`. Tokens do not expire but can be revoked. If your token lacks the required scope, the API returns `403 Forbidden`.
+If your token lacks the required scope, you receive a `403 Forbidden` response.
 
-## Base URL
+---
 
-```
-https://api.example.com
-```
+### Rate limiting
 
-## Rate Limits
+All tokens are subject to a rate limit of **100 requests per minute**. The limit is enforced per token, not per IP.
 
-All endpoints share a limit of **100 requests per minute per token**. When exceeded, the API returns `429 Too Many Requests` with a `Retry-After` header:
+When the limit is exceeded, the API returns:
 
 ```
 HTTP/1.1 429 Too Many Requests
 Retry-After: 14
-Content-Type: application/json
-
-{
-  "error": "rate_limit_exceeded",
-  "message": "Too many requests. Retry after 14 seconds.",
-  "retry_after": 14
-}
 ```
 
-`Retry-After` is in seconds. Implement exponential backoff with jitter — do not retry immediately:
+The `Retry-After` header contains the number of seconds to wait before retrying.
 
-```python
-import time
-import random
+---
 
-def call_with_retry(fn, max_attempts=5):
-    for attempt in range(max_attempts):
-        response = fn()
-        if response.status_code == 429:
-            retry_after = int(response.headers.get("Retry-After", 10))
-            jitter = random.uniform(0, 1)
-            sleep_time = retry_after + jitter
-            time.sleep(sleep_time)
-            continue
-        return response
-    raise Exception("Max retries exceeded")
-```
+### Error format
 
-## Error Format
-
-All errors return JSON:
+All errors use the same JSON structure:
 
 ```json
 {
-  "error": "error_code",
-  "message": "Human-readable explanation.",
-  "details": {}
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "Human-readable description of what went wrong",
+    "details": [
+      {
+        "field": "url",
+        "message": "Must be a valid HTTPS URL"
+      }
+    ]
+  }
 }
 ```
 
-Common status codes across all endpoints:
+The `details` array is present only for validation errors and lists each offending field.
 
-| Status | Code | Cause |
-|---|---|---|
-| 401 | `unauthorized` | Missing or invalid Bearer token |
-| 403 | `forbidden` | Token lacks the required scope |
-| 429 | `rate_limit_exceeded` | 100 req/min per token exceeded |
+#### Error codes
+
+| HTTP Status | Code | Meaning | Common cause |
+|---|---|---|---|
+| 400 | `VALIDATION_ERROR` | Request body or parameters are invalid | Missing required field, malformed URL |
+| 401 | `UNAUTHORIZED` | Authentication failed or missing | Expired token, missing `Authorization` header |
+| 403 | `FORBIDDEN` | Authenticated but insufficient permissions | Token missing required scope |
+| 404 | `NOT_FOUND` | Resource does not exist | Wrong webhook ID, already deleted |
+| 429 | `RATE_LIMITED` | Too many requests | Exceeded 100 requests/minute |
+| 500 | `INTERNAL_ERROR` | Server error | Contact support |
+
+---
+
+### Webhook signature verification
+
+Every webhook payload we deliver includes an `X-Webhook-Signature` header. This header contains an HMAC-SHA256 signature computed over the raw request body using the **signing secret** provided when you registered the webhook.
+
+**You must verify this signature before processing any payload.** Reject any request where the signature does not match.
+
+Verification steps:
+
+1. Read the raw request body (do not parse it first).
+2. Compute `HMAC-SHA256(raw_body, signing_secret)`.
+3. Hex-encode the result.
+4. Compare it to the value in `X-Webhook-Signature` using a constant-time comparison function.
+5. If they match, the payload is authentic. If not, return `400` and discard the request.
+
+**Example (Python):**
+
+```python
+import hmac
+import hashlib
+
+def verify_signature(raw_body: bytes, secret: str, signature_header: str) -> bool:
+    expected = hmac.new(
+        secret.encode(),
+        raw_body,
+        hashlib.sha256
+    ).hexdigest()
+    return hmac.compare_digest(expected, signature_header)
+```
+
+**Example (Node.js):**
+
+```javascript
+const crypto = require('crypto');
+
+function verifySignature(rawBody, secret, signatureHeader) {
+  const expected = crypto
+    .createHmac('sha256', secret)
+    .update(rawBody)
+    .digest('hex');
+  return crypto.timingSafeEqual(
+    Buffer.from(expected),
+    Buffer.from(signatureHeader)
+  );
+}
+```
+
+> Use a **constant-time comparison** (`hmac.compare_digest`, `crypto.timingSafeEqual`). Standard string equality is vulnerable to timing attacks.
 
 ---
 
 ## Endpoints
 
-### POST /v1/webhooks
+---
 
-Register a new webhook endpoint.
+## Register a webhook
 
-**Required scope:** `webhooks:write`
+Register a new endpoint to receive webhook events. Returns the webhook record including the signing secret — store this secret securely, it is only shown once.
 
-**Request body:**
+```
+POST /v1/webhooks
+```
+
+### Authentication
+
+Requires Bearer token with `webhooks:write` scope.
+
+### Request body
+
+```
+Content-Type: application/json
+```
 
 | Field | Type | Required | Description |
 |---|---|---|---|
-| `url` | string | Yes | HTTPS URL to deliver events to. Must be publicly reachable |
-| `events` | string[] | Yes | Event types to subscribe to. Use `["*"]` for all events |
-| `description` | string | No | Human-readable label for this webhook |
-| `metadata` | object | No | Arbitrary key-value pairs (string values only, max 10 keys) |
+| `url` | string | Yes | The HTTPS URL to deliver events to. Must begin with `https://`. |
+| `description` | string | No | A human-readable label for this webhook (max 255 characters). |
+| `events` | array of strings | Yes | List of event types to subscribe to. Use `["*"]` to subscribe to all events. |
 
-**Response (201 Created):**
+**Example request body:**
 
 ```json
 {
-  "id": "wh_a1b2c3d4",
-  "url": "https://app.acme.com/webhooks/inbound",
-  "events": ["payment.completed", "subscription.cancelled"],
-  "description": "Production payment handler",
-  "metadata": {
-    "team": "billing",
-    "environment": "production"
-  },
-  "secret": "whsec_7f3k9mxqLp2Tz8nR4vWs1Yd6Bj0Ce5A",
-  "created_at": "2026-04-30T09:15:00Z"
+  "url": "https://app.example.com/hooks/inbound",
+  "description": "Production event receiver",
+  "events": ["order.created", "order.updated", "payment.failed"]
 }
 ```
 
-The `secret` is returned **only on creation**. Store it immediately — it cannot be retrieved again.
+### Response
+
+**Success: `201 Created`**
+
+```json
+{
+  "id": "wh_01HXYZ9ABCDEF1234567890",
+  "url": "https://app.example.com/hooks/inbound",
+  "description": "Production event receiver",
+  "events": ["order.created", "order.updated", "payment.failed"],
+  "signing_secret": "whsec_a3f8d2c91b4e7f0562ad8c3e1b9d4f72",
+  "created_at": "2026-05-01T10:00:00Z",
+  "status": "active"
+}
+```
+
+> The `signing_secret` is returned **only on creation**. It is not available via any subsequent API call. Store it immediately in a secrets manager.
 
 **Errors:**
 
-| Status | Code | Description |
+| Status | Code | When |
 |---|---|---|
-| 401 | `unauthorized` | Missing or invalid token |
-| 403 | `forbidden` | Token lacks `webhooks:write` scope |
-| 422 | `invalid_url` | URL is not HTTPS or not a valid URL |
-| 422 | `invalid_events` | One or more event types are not recognised |
-| 429 | `rate_limit_exceeded` | Rate limit hit — check `Retry-After` |
+| 400 | `VALIDATION_ERROR` | `url` is missing, not HTTPS, or `events` is empty |
+| 401 | `UNAUTHORIZED` | Missing or invalid token |
+| 403 | `FORBIDDEN` | Token lacks `webhooks:write` scope |
 
-**Example:**
+### Example
 
 ```bash
 curl -X POST https://api.example.com/v1/webhooks \
-  -H "Authorization: Bearer $TOKEN" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
-    "url": "https://app.acme.com/webhooks/inbound",
-    "events": ["payment.completed", "subscription.cancelled"],
-    "description": "Production payment handler",
-    "metadata": {
-      "team": "billing",
-      "environment": "production"
-    }
+    "url": "https://app.example.com/hooks/inbound",
+    "description": "Production event receiver",
+    "events": ["order.created", "order.updated", "payment.failed"]
   }'
 ```
 
 ---
 
-### GET /v1/webhooks
+## List webhooks
 
-List all registered webhook endpoints for the authenticated token.
+Returns all webhook endpoints registered under the current token's account.
 
-**Required scope:** `webhooks:read`
+```
+GET /v1/webhooks
+```
 
-**Query parameters:**
+### Authentication
 
-| Parameter | Type | Default | Description |
-|---|---|---|---|
-| `page` | integer | 1 | Page number (1-indexed) |
-| `per_page` | integer | 20 | Results per page (max 100) |
+Requires Bearer token with `webhooks:read` scope.
 
-**Response (200 OK):**
+### Query parameters
+
+| Parameter | Type | Required | Default | Description |
+|---|---|---|---|---|
+| `limit` | integer | No | 20 | Number of results to return (max: 100) |
+| `cursor` | string | No | — | Pagination cursor from the previous response's `next_cursor` field |
+
+### Response
+
+**Success: `200 OK`**
 
 ```json
 {
   "data": [
     {
-      "id": "wh_a1b2c3d4",
-      "url": "https://app.acme.com/webhooks/inbound",
-      "events": ["payment.completed", "subscription.cancelled"],
-      "description": "Production payment handler",
-      "metadata": {
-        "team": "billing",
-        "environment": "production"
-      },
-      "created_at": "2026-04-30T09:15:00Z"
+      "id": "wh_01HXYZ9ABCDEF1234567890",
+      "url": "https://app.example.com/hooks/inbound",
+      "description": "Production event receiver",
+      "events": ["order.created", "order.updated", "payment.failed"],
+      "created_at": "2026-05-01T10:00:00Z",
+      "status": "active"
+    },
+    {
+      "id": "wh_01HXYZ9ABCDEF0987654321",
+      "url": "https://staging.example.com/hooks/inbound",
+      "description": "Staging receiver",
+      "events": ["*"],
+      "created_at": "2026-04-15T08:22:00Z",
+      "status": "active"
     }
   ],
-  "pagination": {
-    "page": 1,
-    "per_page": 20,
-    "total": 1,
-    "total_pages": 1
-  }
+  "next_cursor": "cursor_eyJpZCI6IndoXzAxSFhZWjlBQkNERUYwOTg3NjU0MzIxIn0",
+  "has_more": true
 }
 ```
 
-Note: `secret` is never returned by list or get endpoints.
+The `signing_secret` is never returned in list responses. To paginate, pass `next_cursor` as the `cursor` query parameter in the next request. When `has_more` is `false`, you have reached the last page.
 
 **Errors:**
 
-| Status | Code | Description |
+| Status | Code | When |
 |---|---|---|
-| 401 | `unauthorized` | Missing or invalid token |
-| 403 | `forbidden` | Token lacks `webhooks:read` scope |
-| 429 | `rate_limit_exceeded` | Rate limit hit — check `Retry-After` |
+| 401 | `UNAUTHORIZED` | Missing or invalid token |
+| 403 | `FORBIDDEN` | Token lacks `webhooks:read` scope |
 
-**Example:**
+### Example
 
 ```bash
 curl https://api.example.com/v1/webhooks \
-  -H "Authorization: Bearer $TOKEN"
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+Paginated request:
+
+```bash
+curl "https://api.example.com/v1/webhooks?cursor=cursor_eyJpZCI6IndoXzAxSFhZWjlBQkNERUYwOTg3NjU0MzIxIn0&limit=50" \
+  -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
 ---
 
-### DELETE /v1/webhooks/{id}
+## Delete a webhook
 
-Remove a registered webhook endpoint. Events will no longer be delivered to it.
+Permanently removes a registered webhook. Deliveries in flight at the time of deletion may still be attempted; no new deliveries will be made after deletion completes.
 
-**Required scope:** `webhooks:write`
+```
+DELETE /v1/webhooks/{id}
+```
 
-**Path parameters:**
+### Authentication
+
+Requires Bearer token with `webhooks:write` scope.
+
+### Path parameters
 
 | Parameter | Type | Description |
 |---|---|---|
-| `id` | string | Webhook ID (e.g., `wh_a1b2c3d4`) |
+| `id` | string | The webhook's unique identifier, as returned by the register or list endpoints. |
 
-**Response (204 No Content):** Empty body on success.
+### Response
+
+**Success: `204 No Content`**
+
+The response body is empty.
 
 **Errors:**
 
-| Status | Code | Description |
+| Status | Code | When |
 |---|---|---|
-| 401 | `unauthorized` | Missing or invalid token |
-| 403 | `forbidden` | Token lacks `webhooks:write` scope |
-| 404 | `not_found` | No webhook with this ID exists |
-| 429 | `rate_limit_exceeded` | Rate limit hit — check `Retry-After` |
+| 401 | `UNAUTHORIZED` | Missing or invalid token |
+| 403 | `FORBIDDEN` | Token lacks `webhooks:write` scope |
+| 404 | `NOT_FOUND` | No webhook with this ID exists on the account |
 
-**Example:**
+### Example
 
 ```bash
-curl -X DELETE https://api.example.com/v1/webhooks/wh_a1b2c3d4 \
-  -H "Authorization: Bearer $TOKEN"
+curl -X DELETE https://api.example.com/v1/webhooks/wh_01HXYZ9ABCDEF1234567890 \
+  -H "Authorization: Bearer YOUR_TOKEN"
 ```
+
+### Notes
+
+Deletion is permanent and cannot be undone. If you need to pause deliveries temporarily, consider updating the webhook's `status` instead (see the Update Webhook endpoint).
 
 ---
 
-### POST /v1/webhooks/{id}/test
+## Send a test event
 
-Send a test event to verify the webhook endpoint is reachable and responding correctly.
+Sends a synthetic test event to the registered endpoint. Use this to verify your endpoint is reachable, that your signature verification logic works, and that your server returns `2xx`.
 
-**Required scope:** `webhooks:write`
+```
+POST /v1/webhooks/{id}/test
+```
 
-**Path parameters:**
+### Authentication
+
+Requires Bearer token with `webhooks:write` scope.
+
+### Path parameters
 
 | Parameter | Type | Description |
 |---|---|---|
-| `id` | string | Webhook ID to test |
+| `id` | string | The webhook's unique identifier. |
 
-**Request body:** Optional.
+### Request body
 
-| Field | Type | Required | Description |
-|---|---|---|---|
-| `event_type` | string | No | Event type to simulate. Default: `"webhook.test"` |
+No request body is required. The test payload is generated by the server.
 
-**Response (200 OK):**
+### Response
+
+**Success: `200 OK`**
 
 ```json
 {
-  "delivery_id": "del_x9y8z7w6",
-  "webhook_id": "wh_a1b2c3d4",
-  "event_type": "webhook.test",
-  "delivered_at": "2026-04-30T09:20:00Z",
+  "delivered": true,
   "response_status": 200,
-  "response_time_ms": 142
+  "response_time_ms": 142,
+  "payload": {
+    "id": "evt_test_01HXYZ9ABCDEF0000000001",
+    "type": "webhook.test",
+    "created_at": "2026-05-01T10:05:00Z",
+    "data": {
+      "message": "This is a test event."
+    }
+  }
 }
 ```
 
-If the test delivery fails (your endpoint returns non-2xx), the response still returns `200 OK` but `response_status` reflects what your endpoint returned.
+If your endpoint returns a non-`2xx` status, `delivered` will be `false` and `response_status` will reflect what your server returned.
 
 **Errors:**
 
-| Status | Code | Description |
+| Status | Code | When |
 |---|---|---|
-| 401 | `unauthorized` | Missing or invalid token |
-| 403 | `forbidden` | Token lacks `webhooks:write` scope |
-| 404 | `not_found` | No webhook with this ID exists |
-| 429 | `rate_limit_exceeded` | Rate limit hit — check `Retry-After` |
+| 401 | `UNAUTHORIZED` | Missing or invalid token |
+| 403 | `FORBIDDEN` | Token lacks `webhooks:write` scope |
+| 404 | `NOT_FOUND` | No webhook with this ID exists on the account |
 
-**Example:**
+### Example
 
 ```bash
-curl -X POST https://api.example.com/v1/webhooks/wh_a1b2c3d4/test \
-  -H "Authorization: Bearer $TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{"event_type": "payment.completed"}'
+curl -X POST https://api.example.com/v1/webhooks/wh_01HXYZ9ABCDEF1234567890/test \
+  -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
----
+### Notes
 
-## Scope reference
+The test event is signed with the same secret as live events. If your signature verification rejects the test payload, it will also reject live payloads — fix the verification logic before going to production.
 
-| Endpoint | Required scope |
-|---|---|
-| `POST /v1/webhooks` | `webhooks:write` |
-| `GET /v1/webhooks` | `webhooks:read` |
-| `DELETE /v1/webhooks/{id}` | `webhooks:write` |
-| `POST /v1/webhooks/{id}/test` | `webhooks:write` |
-
-A token with only `webhooks:read` attempting `POST /v1/webhooks` will receive `403 Forbidden` — not `401`. The token is valid but lacks permission.
-
----
-
-## Webhook payloads
-
-When an event fires, the API delivers a POST request to your registered URL:
+Test events are not retried if your endpoint returns a non-`2xx` response.
 
 ```
-POST https://app.acme.com/webhooks/inbound
-Content-Type: application/json
-X-Webhook-Signature: sha256=3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4
-X-Webhook-ID: wh_a1b2c3d4
-X-Delivery-ID: del_x9y8z7w6
-
-{
-  "id": "evt_n3m4l5k6",
-  "type": "payment.completed",
-  "created_at": "2026-04-30T09:19:55Z",
-  "data": {
-    "payment_id": "pay_q7r8s9t0",
-    "amount": 4999,
-    "currency": "AUD",
-    "customer_id": "cus_u1v2w3x4"
-  }
-}
-```
-
-### Signature verification
-
-Always verify the signature before processing the payload. Reject any payload that fails.
-
-The signature in `X-Webhook-Signature` is computed as:
-
-```
-HMAC-SHA256(secret, raw_request_body)
-```
-
-where `secret` is the value returned when you registered the webhook.
-
-**Python:**
-
-```python
-import hashlib
-import hmac
-import os
-
-def verify_webhook(raw_body: bytes, signature_header: str, secret: str) -> bool:
-    # Format is "sha256=<hex_digest>"
-    if not signature_header.startswith("sha256="):
-        return False
-    expected_sig = signature_header[len("sha256="):]
-
-    computed_sig = hmac.new(
-        key=secret.encode("utf-8"),
-        msg=raw_body,
-        digestmod=hashlib.sha256
-    ).hexdigest()
-
-    # Constant-time comparison prevents timing attacks
-    return hmac.compare_digest(computed_sig, expected_sig)
-
-
-# Flask example
-from flask import Flask, request, abort
-
-app = Flask(__name__)
-WEBHOOK_SECRET = os.environ["WEBHOOK_SECRET"]
-
-@app.route("/webhooks/inbound", methods=["POST"])
-def handle_webhook():
-    signature = request.headers.get("X-Webhook-Signature", "")
-    if not verify_webhook(request.get_data(), signature, WEBHOOK_SECRET):
-        abort(400, "Invalid signature")
-
-    event = request.get_json()
-    # process event...
-    return "", 200
-```
-
-**Node.js:**
-
-```javascript
-const crypto = require("crypto");
-
-function verifyWebhook(rawBody, signatureHeader, secret) {
-  if (!signatureHeader.startsWith("sha256=")) return false;
-  const expectedSig = signatureHeader.slice("sha256=".length);
-
-  const computedSig = crypto
-    .createHmac("sha256", secret)
-    .update(rawBody)  // must be a Buffer, NOT parsed JSON
-    .digest("hex");
-
-  return crypto.timingSafeEqual(
-    Buffer.from(computedSig, "hex"),
-    Buffer.from(expectedSig, "hex")
-  );
-}
-
-// Express example
-const express = require("express");
-const app = express();
-
-app.post("/webhooks/inbound", express.raw({ type: "application/json" }), (req, res) => {
-  const signature = req.headers["x-webhook-signature"] || "";
-  if (!verifyWebhook(req.body, signature, process.env.WEBHOOK_SECRET)) {
-    return res.status(400).send("Invalid signature");
-  }
-
-  const event = JSON.parse(req.body);
-  // process event...
-  res.sendStatus(200);
-});
-```
-
-Parse the raw body **before** JSON-parsing it. `express.raw()` gives you the original bytes — `express.json()` does not.
-
-### Delivery semantics
-
-- **Timeout:** 10 seconds per delivery attempt. Timeout counts as a failure.
-- **Retry policy:** On non-2xx response or timeout, retries at 5s, 30s, 5min, 30min, 2h. After 5 failed attempts, the delivery is marked permanently failed.
-- **Ordering:** Events are delivered in the order they occur, but retries may arrive out of order relative to newer events. Use the event `id` for deduplication.
-- **Duplicate delivery:** Under rare network conditions, a delivery may be sent more than once. Use `X-Delivery-ID` to deduplicate at your end.
-
----
 
 ## Evaluation
 
+| Field | Value |
+|---|---|
+| Verdict | PASS |
+| Score | 14.5/17.0 (85%) |
+| Evaluated | 2026-05-01 |
+| Target duration | 86793 ms |
+| Target cost | $0.2034 |
+| Permission denials | 0 |
+
 ### Criteria
 
-- [x] PASS: Every endpoint includes a complete request example with all required headers and a realistic request body — met: all four endpoints have curl examples with `Authorization` and `Content-Type`; POST bodies use realistic data
-- [x] PASS: Every endpoint documents success and error responses — met: 401, 403, 429 on every endpoint; 422 on POST, 404 on DELETE and test
-- [x] PASS: Documents HMAC-SHA256 verification with working code in at least one language — met: Python and Node.js both include extract, compute, and constant-time comparison
-- [x] PASS: Explains token scopes and which endpoints require which scope — met: per-endpoint scope declaration plus consolidated scope reference table
-- [x] PASS: Documents rate limit behaviour including Retry-After header and 429 handling — met: dedicated rate limits section with response body shape, header semantics, and backoff example
-- [x] PASS: Code examples syntactically correct and copy-pasteable — met: env vars for secrets, correct imports, no pseudocode
-- [x] PASS: Authentication overview before endpoint reference — met: standalone Authentication section before any endpoint, with token format and acquisition
-- [x] PASS: Documents webhook payload and verification process, not just the recommendation — met: full payload shape, header names, signature algorithm, two complete language examples
+| # | Criterion | Result | Evidence |
+|---|---|---|---|
+| c1 | Every endpoint includes a complete request example with all required headers (Authorization, Content-Type) and a realistic request body | PASS | POST /v1/webhooks curl includes `Authorization: Bearer YOUR_TOKEN` and `Content-Type: application/json` with full JSON body. GET and DELETE include Authorization only (no body required). POST /test includes Authorization only (no body required per docs). All appropriate headers present for each request type. |
+| c2 | Every endpoint documents both success responses and error responses — at minimum: 401 Unauthorized, 403 Forbidden (wrong scope), 429 Too Many Requests, and relevant 4xx for invalid input | PARTIAL | Each endpoint's error table lists 401 and 403. 429 appears only in the global rate limiting overview section and global error code table, not in any per-endpoint error table. The criterion requires 429 documented at each endpoint. |
+| c3 | Documents the HMAC-SHA256 signature verification process with a working code example in at least one language | PASS | Full 'Webhook signature verification' section with 5-step verification instructions plus Python (`hmac.new`, `hmac.compare_digest`) and Node.js (`crypto.createHmac`, `crypto.timingSafeEqual`) examples, both correctly using HMAC-SHA256. |
+| c4 | Explains token scopes (webhooks:read vs webhooks:write) and which endpoints require which scope | PASS | Authentication overview has a scope table: `webhooks:read` → list; `webhooks:write` → register, delete, test. Each endpoint section also states 'Requires Bearer token with `webhooks:write` scope' or `webhooks:read` scope. |
+| c5 | Documents rate limit behaviour including the Retry-After header and how clients should handle 429 responses | PASS | Rate limiting section shows `HTTP/1.1 429 Too Many Requests / Retry-After: 14` and states 'The `Retry-After` header contains the number of seconds to wait before retrying.' Enforced per-token at 100 req/min. |
+| c6 | Code examples are syntactically correct and copy-pasteable — not pseudocode or placeholder-heavy | PASS | Python uses `hmac.new(secret.encode(), raw_body, hashlib.sha256).hexdigest()` with `hmac.compare_digest` — valid Python. Node.js uses `crypto.createHmac('sha256', secret).update(rawBody).digest('hex')` with `timingSafeEqual` — valid Node.js. curl examples use standard placeholder `YOUR_TOKEN`. |
+| c7 | Includes a quick-start or authentication section before the endpoint reference — partial credit if auth is documented inline per endpoint but not as a standalone overview | PARTIAL | A standalone 'Authentication' section appears under 'Overview' before the endpoint reference, with Bearer token format, scope table, and 403 behavior. No separate quick-start section. Ceiling is PARTIAL. |
+| c8 | Documents what a webhook payload looks like and how to verify the signature, not just that verification should happen | PASS | Verification section gives 5 numbered steps (read raw body, compute HMAC, hex-encode, compare, reject if mismatch) plus Python and Node.js implementations. Test endpoint shows payload shape: `{id, type: 'webhook.test', created_at, data: {message}}`. |
+| c9 | Output documents all four endpoints — POST `/v1/webhooks`, GET `/v1/webhooks`, DELETE `/v1/webhooks/{id}`, POST `/v1/webhooks/{id}/test` — with request/response examples per endpoint, not a generic CRUD template | PASS | All four endpoints have dedicated sections with method+path, scope, parameters, request/response examples, error tables, and curl commands. Each section is specific to its endpoint (e.g., 201 with signing_secret for POST, 204 No Content for DELETE, delivery status object for test). |
+| c10 | Output's request examples for POST endpoints include the full JSON body — endpoint URL, event types subscribed, custom metadata — not just `{"url": "..."}` placeholder | PASS | POST /v1/webhooks body includes `url`, `description`, and `events: ["order.created", "order.updated", "payment.failed"]`. POST /test has no body (documented as server-generated). Not placeholder-only. |
+| c11 | Output documents 401 (missing/invalid token), 403 (wrong scope — e.g. `webhooks:read` token attempting POST), 429 (rate limit with `Retry-After` header), 422 (validation — e.g. invalid URL), and 404 (deleting a non-existent webhook) | PARTIAL | 401, 403, 429 (global section), 404 (DELETE and test endpoints) are all documented. However, validation errors use `400 VALIDATION_ERROR` throughout — the criterion requires 422 specifically for validation (e.g., invalid URL). No 422 appears anywhere in the file. |
+| c12 | Output's HMAC signature verification example shows actual code in at least one language (Python or Node.js typical) — including extracting the signature from the header, computing HMAC-SHA256 using the secret, and constant-time comparison — runnable, not pseudocode | PARTIAL | Both Python and Node.js examples compute HMAC-SHA256 and use constant-time comparison (`hmac.compare_digest`, `crypto.timingSafeEqual`). However, neither example shows extracting the signature from the HTTP header — functions accept `signature_header: str` as a pre-extracted parameter without showing `request.headers['X-Webhook-Signature']` or equivalent. |
+| c13 | Output explains the two scopes (`webhooks:read`, `webhooks:write`) and maps each endpoint to its required scope in a table — not just mentioning scopes in prose | PASS | Authentication overview contains a markdown table: `\| webhooks:read \| List registered webhooks \|` and `\| webhooks:write \| Register and delete webhooks, send test events \|`. Scope is also stated in each endpoint's auth section. |
+| c14 | Output's rate-limit documentation includes the algorithm semantics (per-token, 100/minute), the response body shape on 429, the `Retry-After` header value semantics, and a recommended client backoff strategy | PARTIAL | Documents per-token enforcement, 100 req/min, `Retry-After: 14` example, and 'number of seconds to wait before retrying.' Missing: no recommended client backoff strategy (e.g., exponential backoff with jitter) — only 'wait Retry-After seconds' is stated. |
+| c15 | Output documents the webhook payload structure delivered TO the customer's endpoint — not just the API request structure — including the signed body, the signature header name, and example event types | PASS | Verification section: 'Every webhook payload we deliver includes an `X-Webhook-Signature` header' (header name). Test endpoint shows payload `{id, type: 'webhook.test', created_at, data}` (payload shape). Registration shows `events: ["order.created", "order.updated", "payment.failed"]` (event types). Raw body signing is explained in steps. |
+| c16 | Output's authentication section appears as an overview before the endpoint reference, explaining Bearer token format and where to obtain tokens — not only inline per endpoint | PARTIAL | Authentication overview appears before endpoints and explains Bearer token format (`Authorization: Bearer YOUR_API_TOKEN`) and scopes. However, it does not explain where to obtain tokens — no mention of a dashboard, API key generation, or token provisioning process. |
+| c17 | Output's code examples are syntactically correct and copy-pasteable — no `<your_token_here>` ambiguity that doesn't match runtime expectations, no missing imports | PASS | Python imports `hmac` and `hashlib` at top; valid `hmac.new()` call. Node.js imports `crypto` via `require`. curl examples use `YOUR_TOKEN` / `YOUR_API_TOKEN` — standard readable placeholders. No angle-bracket syntax or missing imports. |
+| c18 | Output addresses webhook delivery semantics — retry policy if the customer's endpoint returns non-2xx, timeout handling, and when a webhook is considered "failed" — important for customers building reliable receivers | PARTIAL | Test endpoint notes 'Test events are not retried if your endpoint returns a non-`2xx` response' and 'delivered will be false' if endpoint returns non-2xx. DELETE notes 'Deliveries in flight may still be attempted.' No retry policy for live events, no timeout handling, no failure definition. Ceiling is PARTIAL. |
 
-### Output expectations
+### Notes
 
-- [x] PASS: All four endpoints documented with per-endpoint request/response examples — met
-- [x] PASS: POST body includes full JSON (URL, events, description, metadata) — met
-- [x] PASS: 401, 403, 429, 422, and 404 all documented — met
-- [~] PARTIAL: HMAC example shows extract, compute, constant-time compare — met in both Python and Node.js; constant-time comparison present but the agent definition does not explicitly mandate it, so this depends on the agent's security knowledge rather than a stated rule
-- [x] PASS: Scope table maps each endpoint to required scope — met
-- [x] PASS: Rate limit section covers algorithm, response body, Retry-After semantics, backoff strategy — met
-- [x] PASS: Webhook payload to customer's endpoint documented with signature header name and event examples — met
-- [x] PASS: Authentication overview before endpoint reference — met
-- [x] PASS: Code examples syntactically correct, no ambiguous placeholders — met
-- [x] PASS: Delivery semantics — retry policy, timeout, failure definition — met: timeout (10s), 5-attempt retry with schedule, permanent failure definition, duplicate delivery handling
-
-## Notes
-
-The agent definition handles this scenario well. Webhook documentation is a named work type in the pre-flight classification table, and the Webhook Documentation subsection directly mandates events, payloads, signature verification, retry policy, and testing — all five relevant to this prompt.
-
-The partial on output expectation 4 (constant-time HMAC comparison) is narrow. The simulated output includes it, and it is present in both language examples. The partial reflects that the agent's definition does not explicitly list it as a requirement — the agent produces it from general security knowledge, not from a stated rule in its definition. This is a minor observation, not a substantive gap.
-
-The definition's non-negotiables, per-endpoint template, API overview sections structure, and code example standards together produce high-quality documentation for this prompt. The scope reference table and delivery semantics section are two areas where the output goes beyond the minimum — both would be directly useful to developers building production webhook receivers.
+The documentation is comprehensive and well-structured. It covers all four endpoints with realistic examples, a strong HMAC verification section with two working code examples, and a clear scope table. The main gaps are: (1) 422 vs 400 for validation errors — the criterion specifically calls out 422; (2) 429 not listed in per-endpoint error tables despite appearing globally; (3) HMAC code examples don't show header extraction from the HTTP request; (4) no client backoff strategy beyond 'wait Retry-After seconds'; (5) auth section omits token provisioning/acquisition; (6) live event retry policy is absent. The assumed pagination and signing_secret visibility callouts in the chat response show good judgment about underdetermined requirements.

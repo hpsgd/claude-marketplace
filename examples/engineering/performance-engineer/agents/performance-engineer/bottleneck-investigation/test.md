@@ -6,6 +6,8 @@ Scenario: User reports that API response times have degraded significantly under
 
 Our API is getting slow under load. Two weeks ago P99 was around 200ms. Now it's hitting 2 seconds. P50 is still okay at about 180ms — it's the tail latency that's the problem. We're seeing this mostly on `GET /api/reports/{id}` and `POST /api/exports`. Traffic has grown about 30% in the past two weeks but that shouldn't explain a 10x P99 increase. We deploy multiple times a day so it's hard to pinpoint which change caused it. Can you investigate?
 
+Do not ask for clarification — proceed using the information provided. State your assumptions where relevant.
+
 ## Criteria
 
 - [ ] PASS: Agent establishes a baseline measurement before recommending any fixes — records the exact current metrics (P50, P95, P99, throughput, error rate)

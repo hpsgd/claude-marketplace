@@ -4,6 +4,115 @@ Scenario: Testing whether the design-tokens skill definition requires primitive 
 
 ## Prompt
 
+First, create CSS files with the hardcoded values scattered across the product:
+
+```bash
+mkdir -p src/styles src/components
+```
+
+Write to `src/styles/global.css`:
+
+```css
+/* Global styles — hardcoded values everywhere */
+body {
+  font-family: Inter, -apple-system, sans-serif;
+  font-size: 16px;
+  color: #1a1a2e;
+  background: #ffffff;
+}
+
+a { color: #3b82f6; }
+a:hover { color: #2563eb; }
+
+.btn-primary {
+  background: #3b82f6;
+  color: #ffffff;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.btn-secondary {
+  background: #f3f4f6;
+  color: #374151;
+  padding: 8px 16px;
+  border-radius: 6px;
+}
+
+.btn-danger {
+  background: #ef4444;
+  color: #ffffff;
+  padding: 8px 16px;
+  border-radius: 6px;
+}
+
+h1 { font-size: 32px; font-weight: 700; color: #111827; margin-bottom: 24px; }
+h2 { font-size: 24px; font-weight: 600; color: #111827; margin-bottom: 16px; }
+h3 { font-size: 20px; font-weight: 600; color: #374151; margin-bottom: 12px; }
+```
+
+Write to `src/styles/sidebar.css`:
+
+```css
+.sidebar {
+  width: 240px;
+  background: #1e293b;
+  padding: 24px 0;
+}
+
+.sidebar-item {
+  padding: 10px 20px;
+  color: #94a3b8;
+  font-size: 14px;
+}
+
+.sidebar-item:hover { background: #334155; color: #ffffff; }
+.sidebar-item.active { background: #3b82f6; color: #ffffff; }
+
+.sidebar-badge {
+  background: #ef4444;
+  color: #ffffff;
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 10px;
+}
+```
+
+Write to `src/components/card.css`:
+
+```css
+.card {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 24px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.card-header {
+  font-size: 18px;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.card-footer {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid #e5e7eb;
+  color: #6b7280;
+  font-size: 13px;
+}
+
+.status-badge-success { background: #dcfce7; color: #166534; padding: 4px 8px; border-radius: 4px; font-size: 12px; }
+.status-badge-warning { background: #fef9c3; color: #854d0e; padding: 4px 8px; border-radius: 4px; font-size: 12px; }
+.status-badge-error   { background: #fee2e2; color: #991b1b; padding: 4px 8px; border-radius: 4px; font-size: 12px; }
+```
+
+Then run:
 
 /ui-designer:design-tokens for our product — we currently have hardcoded hex values and pixel values scattered across our Figma files and CSS, with no token system.
 

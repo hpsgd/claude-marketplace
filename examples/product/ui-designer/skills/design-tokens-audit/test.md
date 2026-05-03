@@ -4,6 +4,119 @@ Scenario: Testing the design-tokens skill with an audit request where the existi
 
 ## Prompt
 
+First, create the token files to audit:
+
+```bash
+mkdir -p src/tokens src/components
+```
+
+Write to `src/tokens/colors.css`:
+
+```css
+/* Primitive colour tokens — 47 defined */
+:root {
+  /* Blues */
+  --color-blue-50: #eff6ff;
+  --color-blue-100: #dbeafe;
+  --color-blue-200: #bfdbfe;
+  --color-blue-300: #93c5fd;
+  --color-blue-400: #60a5fa;
+  --color-blue-500: #3b82f6;
+  --color-blue-600: #2563eb;
+  --color-blue-700: #1d4ed8;
+  --color-blue-800: #1e40af;
+  --color-blue-900: #1e3a8a;
+
+  /* Grays */
+  --color-gray-50: #f9fafb;
+  --color-gray-100: #f3f4f6;
+  --color-gray-200: #e5e7eb;
+  --color-gray-300: #d1d5db;
+  --color-gray-400: #9ca3af;
+  --color-gray-500: #6b7280;
+  --color-gray-600: #4b5563;
+  --color-gray-700: #374151;
+  --color-gray-800: #1f2937;
+  --color-gray-900: #111827;
+
+  /* Reds */
+  --color-red-50: #fef2f2;
+  --color-red-100: #fee2e2;
+  --color-red-400: #f87171;
+  --color-red-500: #ef4444;
+  --color-red-600: #dc2626;
+  --color-red-700: #b91c1c;
+
+  /* Greens */
+  --color-green-50: #f0fdf4;
+  --color-green-100: #dcfce7;
+  --color-green-500: #22c55e;
+  --color-green-600: #16a34a;
+  --color-green-700: #15803d;
+
+  /* Yellows */
+  --color-yellow-50: #fefce8;
+  --color-yellow-100: #fef9c3;
+  --color-yellow-500: #eab308;
+  --color-yellow-600: #ca8a04;
+  --color-yellow-700: #a16207;
+
+  /* Semantic tokens */
+  --color-action-primary: var(--color-blue-500);
+  --color-action-primary-hover: var(--color-blue-600);
+  --color-action-danger: var(--color-red-500);
+  --color-text-primary: var(--color-gray-900);
+  --color-text-secondary: var(--color-gray-500);
+  --color-border-default: var(--color-gray-200);
+  --color-surface-default: #ffffff;
+  --color-surface-subtle: var(--color-gray-50);
+
+  /* Dark mode semantic tokens — BUG: reference hardcoded hex instead of primitives */
+  --color-dm-action-primary: #60a5fa;
+  --color-dm-text-primary: #f9fafb;
+  --color-dm-surface-default: #1f2937;
+  --color-dm-border-default: #374151;
+}
+```
+
+Write to `src/tokens/spacing.css`:
+
+```css
+/* Spacing tokens — mixed rem and px (inconsistent) */
+:root {
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 1rem;    /* BUG: px/rem mix — should be 16px */
+  --space-5: 1.25rem; /* BUG: px/rem mix */
+  --space-6: 1.5rem;  /* BUG: px/rem mix */
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 3rem;   /* BUG: px/rem mix */
+  --space-16: 64px;
+}
+```
+
+Write to `src/components/button.css`:
+
+```css
+/* Only uses 8 of the 47 colour tokens */
+.btn { padding: var(--space-2) var(--space-4); border-radius: 6px; font-size: 14px; }
+.btn-primary { background: var(--color-action-primary); color: white; }
+.btn-primary:hover { background: var(--color-action-primary-hover); }
+.btn-danger { background: var(--color-action-danger); color: white; }
+```
+
+Write to `src/components/form.css`:
+
+```css
+/* Uses 4 tokens */
+input { border: 1px solid var(--color-border-default); color: var(--color-text-primary); }
+label { color: var(--color-text-secondary); font-size: 14px; }
+```
+
+Then run:
+
 /ui-designer:design-tokens audit our existing token system — we have 47 colour tokens but only 12 are actually used in components, the rest are orphaned. We also have spacing values defined in both rem and px across different files, and our dark mode tokens reference hardcoded hex values instead of primitive tokens.
 
 ## Criteria

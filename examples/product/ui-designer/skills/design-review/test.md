@@ -5,6 +5,175 @@ Scenario: Testing whether the design-review skill definition covers all six revi
 ## Prompt
 
 
+First, set up the project by creating these files. Use Bash for mkdir, then Write for each file.
+
+```bash
+mkdir -p src/components
+```
+
+```javascript
+// tailwind.config.js
+module.exports = {
+  content: ['./src/**/*.{tsx,ts}'],
+  theme: {
+    extend: {
+      colors: {
+        brand: {
+          50: '#eef2ff',
+          100: '#e0e7ff',
+          200: '#c7d2fe',
+          500: '#6366f1',
+          600: '#4f46e5',
+          700: '#4338ca',
+        },
+        surface: {
+          DEFAULT: '#ffffff',
+          subtle: '#f8fafc',
+          muted: '#f1f5f9',
+        },
+      },
+      spacing: {
+        // 4px base grid — approved values: 1,2,3,4,5,6,8,10,12,16,20,24
+      },
+    },
+  },
+};
+```
+
+```tsx
+// src/components/NotificationPanel.tsx
+import React, { useState } from 'react';
+
+interface Notification {
+  id: string;
+  title: string;
+  body: string;
+  timestamp: string;
+  read: boolean;
+  type: 'mention' | 'system' | 'billing';
+}
+
+interface NotificationPanelProps {
+  notifications: Notification[];
+  onClose: () => void;
+  onMarkAllRead: () => void;
+  onMarkRead: (id: string) => void;
+  onBulkDelete: (ids: string[]) => void;
+}
+
+export function NotificationPanel({
+  notifications,
+  onClose,
+  onMarkAllRead,
+  onMarkRead,
+  onBulkDelete,
+}: NotificationPanelProps) {
+  const [filter, setFilter] = useState<'all' | 'unread'>('all');
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+
+  const filtered = filter === 'unread'
+    ? notifications.filter(n => !n.read)
+    : notifications;
+
+  const toggleSelect = (id: string) => {
+    setSelected(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  };
+
+  return (
+    <div className="fixed right-0 top-0 h-full w-96 bg-white shadow-xl z-50 flex flex-col">
+      {/* Header */}
+      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200">
+        <h2 className="text-base font-semibold text-gray-900">Notifications</h2>
+        <button
+          onClick={onClose}
+          className="text-gray-400 hover:text-gray-600 p-1 rounded"
+        >
+          ✕
+        </button>
+      </div>
+
+      {/* Filter bar */}
+      <div className="flex items-center gap-2 px-4 py-2" style={{ borderBottom: '1px solid #e5e7eb' }}>
+        <button
+          onClick={() => setFilter('all')}
+          className={`px-3 py-1.5 rounded-full text-sm font-medium ${
+            filter === 'all'
+              ? 'bg-indigo-600 text-white'
+              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+          }`}
+        >
+          All
+        </button>
+        <button
+          onClick={() => setFilter('unread')}
+          className={`px-3 py-1.5 rounded-full text-sm font-medium ${
+            filter === 'unread'
+              ? 'bg-indigo-600 text-white'
+              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+          }`}
+        >
+          Unread
+        </button>
+        <div className="ml-auto flex items-center gap-2">
+          {selected.size > 0 && (
+            <button
+              onClick={() => { onBulkDelete(Array.from(selected)); setSelected(new Set()); }}
+              className="text-sm text-red-600 hover:text-red-800"
+            >
+              Delete ({selected.size})
+            </button>
+          )}
+          <button
+            onClick={onMarkAllRead}
+            className="text-sm text-indigo-600 hover:text-indigo-800"
+          >
+            Mark all read
+          </button>
+        </div>
+      </div>
+
+      {/* Notification list */}
+      <div className="flex-1 overflow-y-auto divide-y divide-gray-100">
+        {filtered.map(notification => (
+          <div
+            key={notification.id}
+            onClick={() => onMarkRead(notification.id)}
+            className={`flex items-start gap-3 px-4 py-3 cursor-pointer hover:bg-gray-50 ${
+              !notification.read ? 'bg-blue-50' : 'bg-white'
+            }`}
+          >
+            <input
+              type="checkbox"
+              checked={selected.has(notification.id)}
+              onChange={e => { e.stopPropagation(); toggleSelect(notification.id); }}
+              className="mt-1 flex-shrink-0"
+            />
+            <div className="flex-shrink-0 mt-2">
+              {!notification.read && (
+                <div className="w-2 h-2 rounded-full" style={{ backgroundColor: '#6366f1' }} />
+              )}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className={`text-sm ${!notification.read ? 'font-semibold text-gray-900' : 'font-normal text-gray-500'}`}>
+                {notification.title}
+              </p>
+              <p className="text-sm text-gray-500 mt-0.5 line-clamp-2">{notification.body}</p>
+              <p className="text-xs text-gray-400 mt-1">{notification.timestamp}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+```
+
+Now:
+
 /ui-designer:design-review of the new notification centre designs — a slide-out panel showing all user notifications with read/unread states, filtering, and bulk actions.
 
 ## Criteria

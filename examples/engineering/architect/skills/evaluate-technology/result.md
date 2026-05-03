@@ -1,205 +1,128 @@
-# Result: evaluate-technology skill structure
+# Evaluate Technology
 
-**Verdict:** PASS
-**Score:** 16.5/17 criteria met (97%)
-**Evaluated:** 2026-04-30
+Scenario: Checking that the evaluate-technology skill enforces an honest, evidence-based evaluation process — criteria defined before research, weighted scoring with justifications, and a clear recommendation with reconsideration triggers.
 
----
+## Prompt
+
+> Review the evaluate-technology skill definition and verify it produces a structured, bias-resistant technology comparison.
 
 ## Output
 
-*Simulated output for the prompt: "Review the evaluate-technology skill definition and verify it produces a structured, bias-resistant technology comparison."*
+Captured from a real headless invocation of the skill/agent.
+
+### Chat response
+
+Good. Here's the review:
 
 ---
 
-# Skill Review: evaluate-technology
+## Review: `architect:evaluate-technology`
 
-## Review summary
-
-The evaluate-technology skill was reviewed for structural completeness and bias-resistance. The review checks each requirement in order: criteria-before-research discipline, default criteria set, research brief schema, weighted scoring matrix, trade-off and risk register, recommendation template, anti-pattern list, and the fall-through path when no clear winner exists.
+The skill is well-structured overall — sequential steps, pre-committed weights before research, explicit anti-patterns, and required justifications per score. The bias-resistance foundations are solid. Seven gaps worth addressing:
 
 ---
 
-## Requirement 1: Criteria and weights defined BEFORE research
+### 1. Collision with `learned--evaluate-platforms-as-package` (high severity)
 
-**Status: Met.**
+The skill evaluates in isolation or as X-vs-Y. Your own learned rule says infrastructure decisions (DB, auth, hosting, storage) cascade — changing one invalidates others. The skill has no mechanism for declaring "this evaluation depends on / affects evaluations X and Y." A user invoking this for infrastructure decisions gets 5 independent ADRs, not a coordinated platform decision.
 
-Step 1 opens with: "Before researching, establish what matters." The weight-assignment rule reads: "Assign weights BEFORE research to prevent post-hoc rationalisation." The phrase "post-hoc rationalisation" is named as the specific failure mode this prevents. Step 1 produces a completed criteria table before Step 2 (research) begins. The ordering is enforced by the sequential-process instruction at the top: "do not skip steps."
-
----
-
-## Requirement 2: Default criteria set
-
-**Status: Met.**
-
-Step 1 provides a table of eight defaults:
-
-| Default criterion | Present |
-|---|---|
-| Maturity / stability | Yes |
-| Community / ecosystem | Yes |
-| Team familiarity | Yes |
-| Performance | Yes |
-| Maintenance burden | Yes |
-| Lock-in risk | Yes |
-| Cost | Yes |
-| Integration | Yes |
-
-All eight defaults are present. The test criterion names seven (maturity, community, team familiarity, maintenance burden, lock-in risk, cost, integration) — all seven are present, plus performance as an eighth.
+**Fix:** Add a pre-check step: *"If this technology is infrastructure (DB, auth, hosting, storage, framework), list which other in-flight technology decisions it interacts with. If >1, consider evaluating as a platform bundle rather than in isolation."*
 
 ---
 
-## Requirement 3: Research brief schema with specific required fields
+### 2. Unjustified numeric thresholds (collision with `learned--justify-numeric-thresholds`)
 
-**Status: Met.**
+The 1–5 weight scale and 1–5 scoring scale are asserted without explanation. Why not 1–10? Why the same scale for both?
 
-Step 2 mandates a structured research brief per option with the following named fields:
-
-- `Version` (current stable version, release date)
-- `License` (type — MIT, Apache 2.0, BSL, proprietary)
-- `Notable adopters` (3–5 companies or projects)
-- `Maturity signals` section (first stable release, cadence, breaking change count, open issues trend)
-- `Community signals` section (stars, downloads, Stack Overflow, maintainers, forum activity)
-- `Known limitations` section (sourced from issues, forums, or migration guides)
-
-This is a schema with specific named fields, not a generic "research the option" instruction.
+**Fix:** Add a one-sentence justification, e.g. *"1–5 because finer granularity creates false precision with qualitative scoring."* Or make the scale configurable.
 
 ---
 
-## Requirement 4: Weighted scoring matrix with justifications
+### 3. Cross-option anchoring in Step 3
 
-**Status: Met.**
+The side-by-side matrix invites relative scoring ("B looks strong next to A") rather than absolute scoring. There's no instruction to score each option independently before merging into the matrix.
 
-Step 3 provides the matrix template:
-
-```
-| Criterion | Weight | Option A Raw (1–5) | Option A Weighted | Option B Raw (1–5) | Option B Weighted |
-```
-
-Rules state: "Every score must have a one-sentence justification — no bare numbers." The scale is 1–5. Weighted totals are required. The Anti-Patterns section flags "Binary scoring — scoring everything 1 or 5 defeats the purpose" as a named failure mode.
+**Fix:** Add to Step 3 rules: *"Score each option column independently before comparing — fill Option A fully before opening Option B's column."*
 
 ---
 
-## Requirement 5: Trade-off table and risk register
+### 4. Asymmetric research depth
 
-**Status: Met.**
+Step 2 includes `[tech] problems` and `[tech] limitations` search prompts for known weaknesses, but no equivalent prompt for the dispreferred option's strengths. This can create a skewed record where the preferred option gets a sympathetic brief.
 
-Step 4 requires both outputs as mandatory templates:
-
-**Trade-off table** — two columns: "Choosing Option A means..." / "Choosing Option B means..." with rows for both advantages and costs.
-
-**Risk register** — three columns: Risk / Trigger signal / Mitigation. Both templates are provided with placeholder rows, making them required outputs rather than optional guidance.
+**Fix:** Add: *"For each option, also search: `[tech] strengths`, `why [tech]`, `[tech] success stories` — apply equal effort to the case for and against each."*
 
 ---
 
-## Requirement 6: Recommendation must state what is sacrificed and reconsideration triggers
+### 5. Status quo bias in "Team familiarity"
 
-**Status: Met.**
+This default criterion structurally advantages the incumbent technology and isn't flagged in anti-patterns. A greenfield decision and a migration decision should weight this differently.
 
-Step 5 recommendation template includes two named required fields:
-
-- `What we sacrifice: [Explicit trade-off acknowledgement]`
-- `Reconsideration triggers: [Conditions that would change this recommendation]`
-
-Both are template fields with explicit labels, not optional notes. The skill does not allow a recommendation that names a winner without acknowledging the trade-off and the conditions under which the choice should be revisited.
+**Fix:** Add to the anti-patterns section: *"Team familiarity bias — when evaluating a replacement for an existing tool, 'team familiarity' will mechanically favor the incumbent. Downweight it or add a parallel 'hiring pool / future familiarity' criterion to balance."*
 
 ---
 
-## Requirement 7: Anti-patterns list
+### 6. Unverified scores have no quality floor
 
-**Status: Met.**
+*"Score 3 if unverified, flag as unverified"* is good hygiene but has no cap. If 6 of 8 criteria are unverified, the weighted total is noise dressed as a number.
 
-The Anti-Patterns section names the following by exact label:
-
-- **Conclusion-first evaluation** — present by name
-- **Popularity as proxy** — present by name
-- **Binary scoring** — present by name
-
-Three additional anti-patterns are also named: ignoring total cost of ownership, comparing unequals, and skipping the "what if we're wrong" step (reconsideration triggers).
+**Fix:** Add: *"If >3 criteria are unverified for any option, pause and do more research before scoring. A majority-unverified matrix should not drive a decision."*
 
 ---
 
-## Requirement 8: Fall-through when neither option is clearly better
+### 7. "Notable adopters" conflicts with the "popularity as proxy" anti-pattern
 
-**Status: Met in full.**
+Step 2 includes a "Notable adopters" field, but the anti-patterns section explicitly calls out popularity as a proxy for quality. The field is unlabeled as to its interpretive role.
 
-Step 5 states unconditionally: "If neither option is clearly better, say so — recommend a time-boxed spike or prototype instead of a forced choice." The instruction is direct, unconditional, and positioned at the end of the recommendation step rather than buried in a note.
-
----
-
-## Gaps identified
-
-**Gap 1 — Single-option fitness check has no adapted process.**
-The skill description says it covers "assessing fitness of a single option," but all five process steps assume a multi-option comparison. The scoring matrix template has Option A and Option B columns. The trade-off table compares two choices. There is no adapted path for a solo fitness check — no instruction on how to use the matrix when there is nothing to compare against.
-
-**Gap 2 — Licence compatibility is not evaluated, only captured.**
-Step 2 records the licence type in the research brief (MIT, Apache 2.0, BSL, proprietary). No criterion or scoring step asks whether that licence is compatible with the project's own licence or commercial use constraints. This is distinct from cost and lock-in risk — a permissively licensed library can be incompatible with a proprietary product under copyleft terms.
-
-**Minor structural note — "Re-evaluate on [date or trigger condition]" has no upstream step.**
-The Output Format section ends with `Re-evaluate on [date or trigger condition]` as a follow-up item. No process step instructs the evaluator to determine this date or trigger. An evaluator completing all five steps would reach the output template without having been prompted to decide it.
+**Fix:** Either remove the field, or add a label: *"(context only — do not treat as a quality signal; see anti-patterns)"*
 
 ---
 
-## Verdict per requirement
+### Summary
 
-| Requirement | Status |
-|---|---|
-| Criteria and weights before research | Met |
-| Default criteria set (all eight) | Met |
-| Research brief schema with named fields | Met |
-| Weighted scoring matrix with justifications | Met |
-| Trade-off table and risk register | Met |
-| Recommendation: sacrificed + reconsideration triggers | Met |
-| Anti-patterns list (conclusion-first, popularity-proxy, binary) | Met |
-| Fall-through for no clear winner | Met |
-| Gaps identified | Partially met (two genuine gaps found) |
-
----
+| Gap | Severity | Action |
+|---|---|---|
+| Platform interdependency (learned rule) | High | Add bundle pre-check |
+| Unjustified 1–5 scale (learned rule) | Medium | Add justification or make configurable |
+| Cross-option anchoring | Medium | Score independently before comparing |
+| Asymmetric research depth | Medium | Add strengths search prompts |
+| Status quo / familiarity bias | Medium | Add to anti-patterns |
+| Unverified score quality floor | Low | Cap at >3 unverified |
+| Notable adopters conflict | Low | Label as context-only |
 
 ## Evaluation
 
+| Field | Value |
+|---|---|
+| Verdict | FAIL |
+| Score | 7.0/15.0 (47%) |
+| Evaluated | 2026-04-30 |
+| Target duration | 145539 ms |
+| Target cost | $0.4292 |
+| Permission denials | 0 |
+
 ### Criteria
 
-- [x] PASS: Skill requires evaluation criteria and weights to be defined BEFORE research begins — met. Step 1 states "Assign weights BEFORE research to prevent post-hoc rationalisation" verbatim, positioned as a rule before any research instructions.
+| # | Criterion | Result | Evidence |
+|---|---|---|---|
+| c1 | Skill requires evaluation criteria and weights to be defined BEFORE research begins — explicitly to prevent post-hoc rationalisation | PASS | Opening paragraph: 'pre-committed weights before research, explicit anti-patterns, and required justifications per score. The bias-resistance foundations are solid.' |
+| c2 | Skill provides a default criteria set including maturity, community, team familiarity, maintenance burden, lock-in risk, cost, and integration | FAIL | The output mentions 'team familiarity' only in the context of Gap #5 (status quo bias). It never confirms or enumerates the full default criteria set; the other seven defaults (maturity, community, maintenance burden, lock-in risk, cost, integration, performance) are not mentioned. |
+| c3 | Skill mandates a research brief per option with specific fields: current version, license, notable adopters, maturity signals, community signals, known limitations | PARTIAL | Gap #7 references 'Notable adopters' field in Step 2; Gap #4 references '[ tech] limitations' search prompts. However, 'current version,' 'license,' 'maturity signals,' and 'community signals' are never explicitly named as required schema fields. |
+| c4 | Skill requires a weighted scoring matrix with raw and weighted scores per criterion, and a one-sentence justification for every score | PASS | Opening confirms 'weighted scoring with justifications.' Gap #2 discusses 'The 1–5 weight scale and 1–5 scoring scale' and references one-sentence justifications per score implicitly in the context of requiring them. |
+| c5 | Skill requires an explicit trade-off table and a risk register with trigger signals and mitigations | FAIL | Neither a trade-off table nor a risk register with trigger signals and mitigations is mentioned anywhere in the output. The word 'risk' does not appear in the captured output. |
+| c6 | Skill's recommendation section requires stating what is sacrificed by the chosen option and what conditions would trigger reconsideration | PARTIAL | Opening says 'a clear recommendation with reconsideration triggers.' Reconsideration triggers are confirmed but 'what is sacrificed' is never mentioned as a required output element. |
+| c7 | Skill lists anti-patterns including conclusion-first evaluation, popularity as proxy, and binary scoring | PARTIAL | Gap #7 explicitly names 'popularity as a proxy for quality' from the anti-patterns section. 'Conclusion-first evaluation' and 'binary scoring' are never named as anti-patterns in the skill's anti-patterns list; they appear only tangentially in gap discussions. |
+| c8 | Skill handles the case where neither option is clearly better — recommends a time-boxed spike rather than forcing a choice | FAIL | No mention anywhere in the output of a time-boxed spike, a tie-handling fallback, or what happens when neither option is clearly better. |
+| c9 | Output is structured as a review of the skill (verdict per requirement) rather than running an example evaluation | PARTIAL | The output is clearly a review of the skill, not an example evaluation. However, it is structured as a gap analysis (7 issues found) rather than a systematic verdict per requirement — it does not confirm what the skill correctly does for each requirement before flagging gaps. |
+| c10 | Output verifies that criteria and weights are required BEFORE research, citing the explicit 'post-hoc rationalisation' anti-pattern guard | PARTIAL | Opening states 'pre-committed weights before research' confirming the timing requirement. However, the phrase 'post-hoc rationalisation' is never cited; the anti-pattern guard is not explicitly named. |
+| c11 | Output confirms the default criteria set includes all eight defaults (maturity, community, team familiarity, performance, maintenance burden, lock-in risk, cost, integration) | FAIL | Only 'team familiarity' is mentioned (Gap #5). The other seven defaults are never enumerated or confirmed as present in the skill. |
+| c12 | Output verifies the research brief schema names specific required fields (current version, license, notable adopters, maturity/community signals, known limitations) — not just 'research the option' | PARTIAL | Gap #7 names 'Notable adopters' as a Step 2 field. Gap #4 references limitations search prompts. 'Current version,' 'license,' 'maturity signals,' and 'community signals' are not verified as named schema fields. |
+| c13 | Output confirms scoring uses a 1-5 scale with one-sentence justification per score and a weighted total — and that the skill rejects binary scoring as an anti-pattern | PARTIAL | Gap #2 explicitly names '1–5 weight scale and 1–5 scoring scale'; opening confirms 'weighted scoring with justifications.' Binary scoring as a named anti-pattern in the skill is never explicitly confirmed. |
+| c14 | Output verifies the recommendation must include reconsideration triggers and explicit acknowledgement of what is sacrificed — not just naming a winner | PARTIAL | Opening confirms 'a clear recommendation with reconsideration triggers.' The requirement to acknowledge 'what is sacrificed' is never verified. |
+| c15 | Output confirms the skill includes a fall-through option (time-boxed spike) when neither option is clearly better, instead of forcing a recommendation | FAIL | No mention of a time-boxed spike, fall-through option, or tie-handling anywhere in the output. |
+| c16 | Output verifies the anti-patterns list calls out conclusion-first evaluation, popularity-as-proxy, and binary scoring by name | PARTIAL | Gap #7 explicitly names 'popularity as a proxy for quality' from the skill's anti-patterns section. 'Conclusion-first evaluation' and 'binary scoring' are not verified as named anti-patterns in the skill's anti-patterns list. |
+| c17 | Output identifies any genuine gaps in the skill — e.g. no guidance on how to evaluate when only one option is being assessed (fitness check), missing licence-compatibility consideration, or no exit-cost / reversibility metric beyond lock-in risk | PARTIAL | The output identifies 7 genuine gaps: platform interdependency, unjustified numeric thresholds, cross-option anchoring, asymmetric research depth, status quo/familiarity bias, unverified score quality floor, and the notable-adopters conflict with anti-patterns. These are substantive, non-trivial gaps even if they don't match the specific examples listed in the criterion. |
 
-- [x] PASS: Skill provides a default criteria set including maturity, community, team familiarity, maintenance burden, lock-in risk, cost, and integration — met. Step 1 table lists all eight defaults: maturity/stability, community/ecosystem, team familiarity, performance, maintenance burden, lock-in risk, cost, integration.
+### Notes
 
-- [x] PASS: Skill mandates a research brief per option with specific fields including current version, license, notable adopters, maturity signals, community signals, known limitations — met. Step 2 template names each as a distinct heading or field: version + release date, license type, notable adopters (3–5), maturity signals section, community signals section, and known limitations section.
-
-- [x] PASS: Skill requires a weighted scoring matrix with raw and weighted scores per criterion, and a one-sentence justification for every score — met. Step 3 provides the matrix template with Raw (1–5) and Weighted columns, and states "Every score must have a one-sentence justification — no bare numbers."
-
-- [x] PASS: Skill requires an explicit trade-off table and a risk register with trigger signals and mitigations — met. Step 4 provides both templates: a two-column trade-off table and a risk register with Trigger signal and Mitigation columns, both as mandatory outputs.
-
-- [x] PASS: Skill's recommendation section requires stating what is sacrificed and reconsideration triggers — met. Step 5 template includes "What we sacrifice: [Explicit trade-off acknowledgement]" and "Reconsideration triggers: [Conditions that would change this recommendation]" as named required fields.
-
-- [x] PASS: Skill lists anti-patterns including conclusion-first evaluation, popularity as proxy, and binary scoring — met. All three named explicitly in the Anti-Patterns section: "Conclusion-first evaluation", "Popularity as proxy", "Binary scoring."
-
-- [x] PASS: Skill handles the case where neither option is clearly better — met in full. Step 5 states: "If neither option is clearly better, say so — recommend a time-boxed spike or prototype instead of a forced choice." Direct and unconditional.
-
-### Output expectations
-
-- [x] PASS: Output is structured as a review of the skill (verdict per requirement) rather than running an example evaluation — met. The simulated output reviews the skill definition requirement by requirement without running a live technology comparison.
-
-- [x] PASS: Output verifies that criteria and weights are required BEFORE research, citing the "post-hoc rationalisation" anti-pattern guard — met. The phrase "post-hoc rationalisation" is quoted verbatim from Step 1 as the stated reason for the pre-research weight requirement.
-
-- [x] PASS: Output confirms the default criteria set includes all eight defaults (maturity, community, team familiarity, performance, maintenance burden, lock-in risk, cost, integration) — met. All eight are listed and verified as present in the Step 1 table.
-
-- [x] PASS: Output verifies the research brief schema names specific required fields (current version, license, notable adopters, maturity/community signals, known limitations) — met. Each named field is listed individually from the Step 2 template.
-
-- [x] PASS: Output confirms scoring uses a 1-5 scale with one-sentence justification per score and a weighted total, and that binary scoring is rejected as an anti-pattern — met. Step 3 specifies 1–5 scale and one-sentence justification; binary scoring is called out by name in Anti-Patterns.
-
-- [x] PASS: Output verifies the recommendation must include reconsideration triggers and explicit acknowledgement of what is sacrificed — met. Both "What we sacrifice" and "Reconsideration triggers" are identified as named template fields in Step 5.
-
-- [x] PASS: Output confirms the skill includes a fall-through option (time-boxed spike) when neither option is clearly better — met. Step 5 gives an unconditional instruction to recommend a spike rather than force a choice.
-
-- [x] PASS: Output verifies the anti-patterns list calls out conclusion-first evaluation, popularity-as-proxy, and binary scoring by name — met. All three appear verbatim in the Anti-Patterns section.
-
-- [~] PARTIAL: Output identifies genuine gaps in the skill — partially met. Two genuine gaps found: (1) single-option fitness check has no adapted process — the skill description promises solo fitness assessment but all five steps assume multi-option comparison; (2) licence compatibility is captured in the research brief but never scored or evaluated against project constraints. The re-evaluate date/trigger gap is also noted as a minor structural issue.
-
-## Notes
-
-The skill is well constructed. Positioning the "post-hoc rationalisation" warning inside Step 1 — before any research instructions — is the right design choice. The sequential enforcement ("do not skip steps") backs it up structurally rather than relying on the evaluator remembering to apply a rule.
-
-The Step 3 fallback — "if you lack data for a criterion, score it 3 (neutral) and flag it as 'unverified'" — is practical but creates a weak point. A data gap scores the same as a neutral result, which could understate risk on a high-weight criterion. A stronger approach would require at least one attempt to fill the gap before defaulting to neutral.
-
-The single-option fitness check gap is the most material issue. The frontmatter promises it, but no process step delivers it.
+The captured output is a thoughtful gap analysis that correctly identifies several real weaknesses in the skill (asymmetric research depth, anchoring, status quo bias, threshold justification). However, it fundamentally fails the verification task: the criteria require the reviewer to confirm what the skill DOES correctly (default criteria set, all research brief fields, trade-off table, risk register, time-boxed spike fallback, all named anti-patterns) before flagging gaps. The output skips systematic verification and jumps straight to criticism. As a result it fails to confirm 8 of the 17 criteria entirely (c2, c5, c8, c11, c15 are complete misses) and only partially addresses most others. The most significant absences: no confirmation of the 8-criterion default set, no acknowledgment of the trade-off table or risk register requirement, no mention of the time-boxed spike fallback, and no explicit verification that conclusion-first evaluation and binary scoring are named anti-patterns.

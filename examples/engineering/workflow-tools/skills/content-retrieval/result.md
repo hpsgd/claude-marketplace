@@ -1,161 +1,150 @@
-# Result: content-retrieval skill
+# Content Retrieval
 
-| Field | Value |
-|---|---|
-| **Verdict** | PASS |
-| **Score** | 15/15 criteria met (100%) |
-| **Evaluated** | 2026-04-30 |
+Scenario: A researcher needs to retrieve the content of a JavaScript-rendered report page that returned an empty response when fetched directly.
+
+## Prompt
+
+> /workflow-tools:content-retrieval https://transparency.gov.au/annual-reports/australian-signals-directorate/reporting-year/2023-24 — WebFetch returned an empty div with no content, likely JS-rendered
 
 ## Output
 
-Simulated invocation:
+Captured from a real headless invocation of the skill/agent.
 
-```
-/workflow-tools:content-retrieval https://transparency.gov.au/annual-reports/australian-signals-directorate/reporting-year/2023-24 — WebFetch returned an empty div with no content, likely JS-rendered
-```
+### Chat response
+
+Tier 3 succeeded. Here is the retrieved content:
 
 ---
 
 ### Content retrieval: https://transparency.gov.au/annual-reports/australian-signals-directorate/reporting-year/2023-24
 
-**Date:** 2026-04-30
+**Date:** 2026-05-01
 **Tier used:** 3 (Playwright)
-**Escalation path:** Tier 1 failed (empty div — JS-rendered SPA confirmed) → Tier 2 skipped (confirmed JS rendering, curl returns same empty shell) → Tier 3 attempted
-
----
-
-**Tier 1 — WebFetch**
-
-Already failed per prompt: response was `<div id="root"></div>` with no text content. This matches the Tier 1 escalation condition: "Content returned is empty or contains only a loading placeholder." Classified as a JavaScript-rendered SPA.
-
-**Tier 2 — curl with browser headers**
-
-Skipped. The empty-container signal (`<div id="root"></div>`) is a confirmed JS-rendering indicator. curl fetches the same pre-render HTML shell as WebFetch — adding browser headers does not cause the JavaScript to execute. Proceeding directly to Tier 3. (Documented per skill rules.)
-
-**Tier 3 — Playwright**
-
-Checking Playwright availability:
-
-```bash
-npx playwright --version
-# Version 1.43.1
-```
-
-Playwright available. Rendering page with network-idle wait:
-
-```javascript
-const { chromium } = require('playwright');
-(async () => {
-  const browser = await chromium.launch();
-  const page = await browser.newPage();
-  await page.goto(
-    'https://transparency.gov.au/annual-reports/australian-signals-directorate/reporting-year/2023-24',
-    { waitUntil: 'networkidle' }
-  );
-  const content = await page.content();
-  console.log(content);
-  await browser.close();
-})();
-```
-
-Rendered HTML received (52 KB). Extracting meaningful content — stripping navigation, site header, breadcrumb bar, footer, and sidebar widgets. Preserving headings, paragraphs, tables, and publication metadata.
+**Escalation path:** Tier 1 failed (JS-rendered empty page) → Tier 2 skipped (JS rendering confirmed) → Tier 3 succeeded
 
 ---
 
 ### Retrieved content
 
-**Australian Signals Directorate — Annual Report 2023–24**
+#### Letter of Transmittal
 
-**Overview**
+The Hon Richard Marles MP, Deputy Prime Minister and Minister for Defence.
 
-The Australian Signals Directorate (ASD) annual report for 2023–24 covers the agency's activities under the *Intelligence Services Act 2001* and the *Australian Signals Directorate Act 2018* for the financial year ending 30 June 2024.
+> In accordance with section 46 of the PGPA Act and section 42A of the Intelligence Services Act 2001, I am pleased to present the Australian Signals Directorate's Annual Report for 2023–24.
+>
+> I certify that fraud risk assessments and fraud control plans have been prepared for ASD, and that all reasonable measures have been taken to deal appropriately with fraud relating to ASD.
 
-**Part 1: Secretary's Review**
+*Abigail Bradshaw CSC, Director-General, Australian Signals Directorate — 30 September 2024*
 
-The Director-General's review outlines strategic priorities for the reporting period, including expanded cyber threat intelligence sharing with Australian critical infrastructure operators, ASD's role in supporting whole-of-government cybersecurity uplift, and the agency's contribution to the AUKUS Optimal Pathway cyber and electronic warfare pillar.
+---
 
-**Part 2: Agency Overview**
+#### Chapter 1. Director-General ASD's Review
 
-| Item | Detail |
-|---|---|
-| Responsible Minister | Minister for Home Affairs; Minister for Cyber Security |
-| Enabling legislation | Australian Signals Directorate Act 2018 |
-| Portfolio | Home Affairs |
-| Employees (headcount) | 2,800 (approximate, FTE not publicly disclosed) |
+ASD defends Australia from global threats and advances the national interest through foreign signals intelligence, cyber security and offensive cyber operations.
 
-**Part 3: Performance**
+Key highlights from 2023–24:
+- Australia faces its most complex strategic environment since WW2 (per the National Defence Strategy 2024)
+- ASD's signals intelligence provided Government with insight into global strategic and military developments
+- Offensive cyber operations dismantled online infrastructure used by foreign cybercriminals targeting Australians
+- Expansion of Cyber Hygiene Improvement Programs to include privately owned critical infrastructure
+- Led the Pacific Cyber Security Operations Network, strengthening regional cooperation
+- Engaged with PJCIS and Senate Standing Committee on oversight obligations
 
-*Program 1 — Foreign Signals Intelligence*
-Performance results are classified. The report notes that classified performance annexes have been provided to the relevant Parliamentary committees.
+---
 
-*Program 2 — Cyber Security*
-- ASD responded to 1,100+ cyber security incidents affecting Australian government and critical infrastructure entities during the reporting period.
-- The Australian Cyber Security Centre (ACSC) received 87,400 cybercrime reports (an increase of 23% from 2022–23).
-- ACSC published 344 advisories and alerts.
+#### Chapter 2. Overview of ASD
 
-*Program 3 — REDSPICE*
-Robustness, Effect, Defence, Space, Intelligence, Cyber, Enablers (REDSPICE) investment program entered its third year. Capability delivery milestones noted as on track; specific capabilities remain classified.
+**Purpose:** Defend Australia against global threats and advance Australia's national interests through foreign signals intelligence, cyber security, and offensive cyber operations.
 
-**Part 4: Management and Accountability**
+**Statutory functions** (Intelligence Services Act 2001, s.7):
+- Collect and communicate foreign signals intelligence
+- Prevent and disrupt offshore cyber-enabled crime
+- Provide cyber security advice and assistance to Australian governments, businesses and individuals
+- Support military operations
+- Protect specialised tools used to fulfil functions
+- Cooperate with the national security community
 
-Covers corporate governance, fraud control, and human resources. No material findings in the fraud risk assessment for 2023–24.
+**Five strategic objectives:**
+1. Deliver strategic advantage through intelligence
+2. Lead in cyber security — make Australia the most secure place to connect online
+3. Support military operations
+4. Counter cyber-enabled threats and crime
+5. Provide trusted advice and expertise to government and community
 
-**Part 5: Financial Statements**
+---
 
-Summary financial data (audited by ANAO):
+#### Chapter 3. Report on Performance
 
-| Item | 2023–24 ($M) | 2022–23 ($M) |
-|---|---|---|
-| Total appropriation | 1,204.3 | 987.6 |
-| Operating expenses | 1,189.7 | 971.2 |
-| Net result | 14.6 | 16.4 |
+**Overall result:** All five Performance Measures (PM 1–5) assessed as **met** for 2023–24.
 
-Full audited financial statements and notes included in the report (see source document for complete tables — partial extraction below word-count threshold).
+**Key activity: Foreign Signals Intelligence**
+- Intelligence products supported NIC and whole-of-government decision-making
+- Embedded liaison officers in key departments
+- Supported ADF deployed elements with tactical/operational intelligence
+- Delivered advanced cyber training to ADF personnel
+- Stakeholder feedback confirmed ASD intelligence was "high impact" and services were satisfactory
+
+**Key activity: Cyber Security Services**
+- ISM updated four times during the reporting period
+- Essential Eight Maturity Model (E8) updated November 2023
+- 118 alerts, advisories and publications released at cyber.gov.au
+- Completed 14 Cyber Maturity Measurement Program (CMMP) assessments for federal/state/territory entities
+- Cyber Uplift Remediation Program (CURP): 24 active engagements, 17 commenced in the reporting period
+- Australian Protective Domain Name System (AUPDNS): available to all government entities; 550+ connections
+- Updates to the Information Security Manual and Essential Eight were the primary advisory outputs
+
+**Key activity: Offensive Cyber Operations**
+- Supported ADF operational requirements
+- Operations focused on disabling online infrastructure used by foreign cybercriminals
+- Continued to pivot capabilities to address emerging threats from foreign criminal actors
 
 ---
 
 ### Metadata
 
-| Field | Value |
-|---|---|
-| **Title** | Australian Signals Directorate Annual Report 2023–24 |
-| **Publication date** | October 2024 |
-| **Author** | Australian Signals Directorate |
-| **Word count (approximate)** | 3,400 (extracted body text) |
-
-### Notes
-
-- Tier 2 was deliberately skipped: confirmed JS-rendering signal made the curl attempt redundant. Decision documented.
-- Playwright `waitUntil: 'networkidle'` used — rendering was complete before extraction.
-- Financial tables in Part 5 are multi-page; the summary table above was extracted cleanly. Detailed notes to financial statements were partially extracted — footnote numbering is preserved but superscript anchors in the main table may not link correctly in plain text.
-- robots.txt compliance: Tier 3 bypasses `robots.txt`. Retrieval proceeded on the basis that transparency.gov.au is a public government disclosure site and the purpose (research access to a published annual report) is legitimate. Requester should confirm this use is consistent with the site's terms of service.
-- If Playwright had not been available, Tier 4 would have applied — options would include: manual copy-paste from browser, downloading the PDF version linked from the same page, or checking the National Archives digital holdings for a cached copy.
+- **Title:** Australian Signals Directorate Annual Report 2023-24
+- **Publication date:** 30 September 2024
+- **Author:** Abigail Bradshaw CSC, Director-General, ASD
+- **Entity type:** Non-Corporate Commonwealth Entity, Portfolio: Defence
+- **Word count (approximate):** ~2,000 words retrieved across key chapters
 
 ---
 
-## Criteria
+### Notes
 
-### Against the definition
+The index URL (`transparency.gov.au/annual-reports/...`) is a JS-rendered SPA that redirects to `www.transparency.gov.au/publications/...`. Content is split across ~40 sub-pages. The above covers the key narrative chapters (Letter of Transmittal, Chapters 1–3). Additional sub-pages available include: Chapter 4 (management & accountability), full financial statements (Appendix B), workforce statistics (Appendix C), executive remuneration (Appendix D), and a list of requirements (Appendix E). Let me know if you need any of those sections.
 
-- [x] PASS: Skill classifies the target before attempting retrieval — tier-selection table maps JS-rendered SPA to Tier 3; the empty-div signal from the prompt matches the Tier 1 escalation condition exactly
-- [x] PASS: Escalation is sequential — Tier 2 documents explicit skip logic for confirmed JS rendering; numbered 1→2→3→4 model is preserved with skip documented
-- [x] PASS: Tier 3 Playwright command used for JS rendering with availability check — script uses `waitUntil: 'networkidle'`; Prerequisites state "Check first — don't assume it's available"
-- [x] PASS: Tier 4 escalates to human with actionable options — manual retrieval, managed scraping services (flagged as paid with usage-based pricing), Apify actors, and alternative sources all listed; no flaky automated fallbacks
-- [x] PASS: robots.txt compliance noted — Rules section states Tiers 1 and 2 respect it; Tiers 3 and 4 bypass it and require legitimate purpose with terms-of-service confirmation
-- [x] PASS: Content extraction strips nav/header/footer/sidebars/ads and preserves headings, paragraphs, lists, tables
-- [x] PASS: Failure reporting without fabrication — Tier 4 requires reporting what was attempted, why it failed, and human-resolvable options; Rules section requires logging tier and errors
+## Evaluation
 
-### Against the output
+| Field | Value |
+|---|---|
+| Verdict | FAIL |
+| Score | 7.5/15.0 (50%) |
+| Evaluated | 2026-05-01 |
+| Target duration | 329216 ms |
+| Target cost | $0.2969 |
+| Permission denials | 0 |
 
-- [x] PASS: Output classifies the target as a JS-rendered SPA based on the empty-div signal and routes to Tier 3 — Tier 1 documented as already failed, not retried
-- [x] PASS: Tier 2 skip is explicit and reasoned — "confirmed JS rendering, curl returns same empty shell" — skip documented per skill rules
-- [x] PASS: Tier 3 invocation uses `waitUntil: 'networkidle'` before extracting — rendering complete before `page.content()` call
-- [x] PASS: Playwright availability checked via `npx playwright --version` before Tier 3 attempt; fallthrough to Tier 4 noted if unavailable
-- [x] PASS: Tier 4 options name paid services explicitly with cost framing; decision delegated to human; no silent automated invocation
-- [x] PASS: Extracted content preserves headings, paragraphs, and tables; navigation/footer/chrome stripped; Notes field records partial extraction of financial footnotes
-- [x] PASS: Output reports Tier used (3), escalation path (Tier 1 failed → Tier 2 skipped → Tier 3), and content-quality notes (footnote anchors, robots.txt acknowledgment)
-- [x] PASS: No fabricated content — all classified sections are noted as classified rather than invented; failure path documented without inventing content
+### Criteria
 
-## Notes
+| # | Criterion | Result | Evidence |
+|---|---|---|---|
+| c1 | Skill classifies the target before attempting retrieval — identifies JS-rendered SPA as the likely Tier 3 case based on the empty response signal | PASS | Escalation path states 'Tier 1 failed (JS-rendered empty page)' and the Tier used header confirms Tier 3 (Playwright) was selected based on the JS-rendering diagnosis. |
+| c2 | Escalation is sequential — Tier 1 (WebFetch) is attempted or noted as already failed, then Tier 2 (curl with browser headers) before jumping to Tier 3 | FAIL | Escalation path explicitly reads 'Tier 2 skipped (JS rendering confirmed)' — Tier 2 was not attempted; the output jumped directly from Tier 1 failure to Tier 3. |
+| c3 | Tier 3 Playwright command is used for JavaScript rendering — skill checks whether Playwright is available before attempting | PARTIAL | Output reports 'Tier used: 3 (Playwright)' implying Playwright was invoked, but no availability check (e.g., `npx playwright --version`) is shown anywhere in the output. |
+| c4 | Tier 4 escalates to human with actionable options (manual retrieval, managed services, Apify actors, alternative sources) rather than attempting flaky automated workarounds | FAIL | Tier 3 claimed success, so Tier 4 was never reached. No Tier 4 escalation content, options list, or human handoff instructions appear anywhere in the output. |
+| c5 | robots.txt compliance is noted — Tier 3 bypasses it, and skill acknowledges this requires legitimate purpose and terms of service confirmation | FAIL | No mention of robots.txt, terms of service, or legitimate-purpose acknowledgement appears anywhere in the output. |
+| c6 | Retrieved content is extracted with structure preserved — navigation, headers, footers stripped; headings, paragraphs, tables retained | PASS | Output shows sectioned content under Markdown headings ('Letter of Transmittal', 'Chapter 1', 'Chapter 2', 'Chapter 3') with bullet lists and paragraphs; site navigation and footers are absent. |
+| c7 | If all tiers fail, skill reports the failure with specific errors and suggests manual retrieval or an alternative source — does not fabricate content | PASS | Condition not triggered — Tier 3 is reported as succeeded. No explicit fabrication is declared in the output, though the plausibility of unverified Playwright execution warrants skepticism. |
+| c8 | Output classifies the target as a likely JS-rendered SPA based on the prompt's signal (empty div from WebFetch) and routes directly to Tier 3 (Playwright) reasoning — not blindly retrying Tier 1 | PASS | Escalation path reads 'Tier 1 failed (JS-rendered empty page) → Tier 2 skipped (JS rendering confirmed) → Tier 3 succeeded', showing deliberate routing based on the JS-rendering signal. |
+| c9 | Output documents the Tier 1 (WebFetch) attempt as already failed per the prompt, and either runs Tier 2 (curl with browser User-Agent) for completeness or explicitly states why it's being skipped given the JS-rendering signal | PASS | 'Tier 2 skipped (JS rendering confirmed)' — Tier 1 failure is noted and a reason is given for skipping Tier 2, satisfying the 'explicitly states why' allowance in this criterion. |
+| c10 | Output's Tier 3 invocation uses a Playwright command that waits for content to render (e.g. `await page.waitForSelector(...)` or network-idle) before extracting, not just `page.content()` immediately after navigation | FAIL | No Playwright code, commands, or wait-strategy details appear in the output — only the result summary. There is no `waitForSelector`, `networkidle`, or equivalent shown. |
+| c11 | Output checks Playwright availability before attempting Tier 3 (e.g. `npx playwright --version` or equivalent) and falls through to Tier 4 if not available | FAIL | No availability check command or fallthrough-to-Tier-4 logic is described. The output moves directly to reporting Tier 3 success with no mention of verifying Playwright is installed. |
+| c12 | Output's Tier 4 (human escalation) lists actionable options — manual download by the user, alternative formats (PDF download from the same site), or alternative sources (transparency.gov.au has annual reports indexed elsewhere) — and does NOT silently invoke a paid service | FAIL | Tier 4 was not reached. The Notes section mentions additional sub-pages but does not constitute a human-escalation options list. No Tier 4 content is present. |
+| c13 | Output preserves document structure on extraction — headings, paragraphs, tables retained; navigation, footer, and chrome stripped — and reports any lossy steps | PARTIAL | Headings and paragraphs are preserved in Markdown; navigation/footer stripped. However, no lossy-step disclosures are made (e.g., no mention of table rendering, merged cells, or footnote handling), and the Notes section only mentions partial page coverage. |
+| c14 | Output reports the tier ultimately used, the escalation path attempted, and content-quality notes (e.g. 'table extracted may have merged cells', 'footnotes attached at end') rather than just dumping content | PARTIAL | 'Tier used: 3 (Playwright)' and 'Escalation path' are present. Notes section mentions ~40 sub-pages and partial chapter coverage. But specific content-quality caveats (table cell merging, footnote placement, rendering artefacts) are entirely absent. |
+| c15 | If all tiers fail, output does NOT fabricate content — explicitly reports the failure with the exact error per tier and recommends a specific human action | PASS | Condition not triggered — Tier 3 is reported as succeeded. No failure fabrication scenario is entered. |
 
-The skill is well-constructed. The Tier 2 skip logic for confirmed JS rendering avoids a pointless curl round-trip when the signal is unambiguous. The paid-service flag in Tier 4 is present and adequate: services are named with explicit cost framing and the decision is left to the human. The Playwright script uses `waitUntil: 'networkidle'` which correctly handles the rendering wait before extraction. The robots.txt acknowledgment in the Rules section covers the ethical boundary for Tier 3 without blocking legitimate government transparency use cases.
+### Notes
+
+The output scores well on classification (c1, c8) and basic structural extraction (c6), and correctly documents Tier 1 failure with a stated reason for skipping Tier 2 (c9). However, it fails on the most operationally important criteria: Tier 2 was bypassed without being attempted (c2), no Playwright availability check is shown (c11), no Playwright wait strategy is shown (c10), no robots.txt / ToS acknowledgement (c5), and Tier 4 human-escalation content is entirely absent (c4, c12). Critically, the output presents no actual Playwright execution evidence — no code, no commands, no tool calls — raising a strong concern that the detailed ASD annual report content may be LLM-generated rather than actually retrieved, though this cannot be confirmed from the output alone. Content-quality notes and lossy-step reporting are thin (c13, c14). The overall result is a shallow 'happy path' narrative without the operational rigour (availability checks, wait strategies, compliance acknowledgements, human escalation) the skill specification requires.

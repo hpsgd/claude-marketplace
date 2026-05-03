@@ -6,6 +6,8 @@ Scenario: A request that blurs the line between architecture decision and implem
 
 We need to add rate limiting to our API. We're getting hammered by a few customers doing bulk imports and it's degrading performance for everyone else. Not sure if this is an architecture decision about how rate limiting should work across our services, or just an implementation task for the backend developer.
 
+Do not ask for clarification — make the routing decision now, produce the delegation plan, and state your reasoning.
+
 ## Criteria
 
 - [ ] PASS: CTO reads the request fully before classifying — doesn't jump to delegation

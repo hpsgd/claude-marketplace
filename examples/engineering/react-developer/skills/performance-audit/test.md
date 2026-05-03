@@ -6,6 +6,139 @@ Scenario: Developer invokes the performance-audit skill against the `/app/report
 
 Audit `src/app/reports/` for performance issues. The reports dashboard has been flagged as slow — Lighthouse shows LCP of 4.2s and the JS bundle on this page is unusually large. Users also report it feels sluggish when switching between report tabs.
 
+Write the files below to disk at `src/app/reports/page.tsx` and `src/app/reports/charts.tsx`, then run investigation commands before writing findings.
+
+Here is the code for the reports section:
+
+```tsx
+// src/app/reports/page.tsx
+'use client';
+
+import { useState, useEffect } from 'react';
+import moment from 'moment';
+import { RevenueChart, UsageChart, RetentionChart } from './charts';
+
+type ReportData = {
+  revenue: { date: string; amount: number }[];
+  usage: { date: string; sessions: number }[];
+  retention: { cohort: string; week: number; rate: number }[];
+};
+
+export default function ReportsPage() {
+  const [activeTab, setActiveTab] = useState<'revenue' | 'usage' | 'retention'>('revenue');
+  const [data, setData] = useState<ReportData | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch('/api/reports/summary')
+      .then(r => r.json())
+      .then(d => {
+        setData(d);
+        setLoading(false);
+      });
+  }, []);
+
+  if (loading) return <div>Loading...</div>;
+
+  return (
+    <div>
+      <div className="flex items-center gap-4 mb-8">
+        <img
+          src="/reports-hero.png"
+          alt="Reports dashboard"
+          width={1200}
+          height={400}
+          className="w-full rounded-lg"
+        />
+      </div>
+      <p className="text-sm text-gray-500">
+        Data as of {moment().format('MMMM Do YYYY, h:mm:ss a')}
+      </p>
+      <div className="flex gap-2 mb-4">
+        {(['revenue', 'usage', 'retention'] as const).map(tab => (
+          <button key={tab} onClick={() => setActiveTab(tab)}
+            className={activeTab === tab ? 'bg-blue-500 text-white px-4 py-2 rounded' : 'px-4 py-2 rounded border'}>
+            {tab}
+          </button>
+        ))}
+      </div>
+      {activeTab === 'revenue' && <RevenueChart data={data!.revenue} />}
+      {activeTab === 'usage' && <UsageChart data={data!.usage} />}
+      {activeTab === 'retention' && <RetentionChart data={data!.retention} />}
+    </div>
+  );
+}
+```
+
+```tsx
+// src/app/reports/charts.tsx
+'use client';
+
+import { LineChart, Line, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import moment from 'moment';
+
+type RevenuePoint = { date: string; amount: number };
+type UsagePoint = { date: string; sessions: number };
+type RetentionPoint = { cohort: string; week: number; rate: number };
+
+export function RevenueChart({ data }: { data: RevenuePoint[] }) {
+  const formatted = data.map(d => ({
+    ...d,
+    label: moment(d.date).format('MMM D'),
+  }));
+  return (
+    <ResponsiveContainer width="100%" height={300}>
+      <LineChart data={formatted}>
+        <XAxis dataKey="label" />
+        <YAxis />
+        <Tooltip />
+        <Line type="monotone" dataKey="amount" stroke="#3b82f6" />
+      </LineChart>
+    </ResponsiveContainer>
+  );
+}
+
+export function UsageChart({ data }: { data: UsagePoint[] }) {
+  const formatted = data.map(d => ({
+    ...d,
+    label: moment(d.date).format('MMM D'),
+  }));
+  return (
+    <ResponsiveContainer width="100%" height={300}>
+      <BarChart data={formatted}>
+        <XAxis dataKey="label" />
+        <YAxis />
+        <Tooltip />
+        <Bar dataKey="sessions" fill="#10b981" />
+      </BarChart>
+    </ResponsiveContainer>
+  );
+}
+
+export function RetentionChart({ data }: { data: RetentionPoint[] }) {
+  return (
+    <table className="w-full border-collapse">
+      <thead>
+        <tr>
+          <th>Cohort</th>
+          <th>Week</th>
+          <th>Retention</th>
+        </tr>
+      </thead>
+      <tbody>
+        {data.map((row, i) => (
+          <tr key={i}>
+            <td>{moment(row.cohort).format('MMM YYYY')}</td>
+            <td>{row.week}</td>
+            <td>{(row.rate * 100).toFixed(1)}%</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+}
+```
+
 ## Criteria
 
 - [ ] PASS: Skill performs all seven audit steps in order — bundle analysis, server vs client component analysis, re-render analysis, data fetching patterns, image optimisation, code splitting, and Tailwind/CSS

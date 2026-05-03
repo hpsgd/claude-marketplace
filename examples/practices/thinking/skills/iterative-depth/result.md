@@ -1,420 +1,381 @@
-# Result: iterative-depth architecture decision analysis
+# Iterative Depth
 
-| Field | Value |
-|---|---|
-| **Verdict** | PASS |
-| **Score** | 17.5/18 criteria met (97%) |
-| **Evaluated** | 2026-04-30 |
-| **Skill source** | `plugins/practices/thinking/skills/iterative-depth/SKILL.md` |
+Scenario: A team is deciding whether to extract their monolith's notification subsystem into a separate microservice. The iterative-depth skill is used to examine the decision from multiple angles.
+
+## Prompt
+
+> /iterative-depth Should we extract the notification subsystem from our Rails monolith into a separate service? It currently handles email, push, and SMS. It has 8,000 lines, 3 engineers have touched it in the past 6 months, and it's the source of 40% of our production incidents. It handles email, push, and SMS. We deploy the whole monolith weekly.
 
 ## Output
 
-The following is a simulated invocation of `/iterative-depth Should we extract the notification subsystem from our Rails monolith into a separate service? It currently handles email, push, and SMS. It has 8,000 lines, 3 engineers have touched it in the past 6 months, and it's the source of 40% of our production incidents. We deploy the whole monolith weekly.`
+Captured from a real headless invocation of the skill/agent.
 
----
+### Chat response
 
 ## Step 1 — Frame the problem
 
 ```
-Problem: Decide whether to extract the notification subsystem (email, push, SMS) from a
-         Rails monolith into a separate service, or address its instability in place.
+Problem: Whether to extract the notification subsystem (email, push, SMS) from the
+         Rails monolith into a separate service to reduce a 40% incident rate.
 
-Context: The notification subsystem is the single largest contributor to production
-         incidents (40%). Weekly monolith deploys mean a bad notification change can
-         take down unrelated features, and vice versa. Three engineers have touched it
-         in 6 months — high enough bus factor to retain context but concentrated enough
-         to create ownership ambiguity.
+Context: The subsystem is the single largest source of production incidents.
+         Weekly monolith deploys mean notification failures and unrelated changes
+         can block each other.
 
-Constraints:
-  - Monolith deploy cycle is weekly, which gates all teams equally
-  - Extraction adds operational complexity the team doesn't currently carry
-  - Unknown: whether the 40% incident rate is caused by notification logic itself or
-    by integration points between notifications and the rest of the monolith
-  - Budget and timeline not specified
+Constraints: 8,000-line Rails codebase; 3 engineers with context; weekly deploy
+             cadence; unknown team size; unknown root cause of incidents.
 
-Stakeholders:
-  - End users: affected by failed notifications (missed OTPs, delivery failures)
-  - Engineering team: absorbs incident response load and any extraction effort
-  - Product: deploys blocked when notification bugs require a rollback
-  - Operations: would own an additional service if extraction proceeds
+Stakeholders: Notification engineers, on-call engineers, end users, product/business.
 
-Current state:
-  - Monolith containing an 8,000-line notification subsystem (email, push, SMS)
-  - Weekly full-monolith deploys
-  - 40% of production incidents trace here
-  - Three engineers with recent context
+Current state: Subsystem embedded in monolith, 40% of production incidents,
+               weekly deployments.
 
-Desired state:
-  - Notification incidents are isolated and don't block other features
-  - Notification defect rate falls significantly
-  - Team has clear ownership and deploy autonomy for this domain
+Desired state: Lower incident rate, predictable deployments, faster notification
+               iteration.
 ```
 
 ---
 
-## Step 2 — Select lenses
+## Step 2 — Lens selection
 
-**Selected lenses: Technical, Operational, Team, Business, Simplicity**
-
-| Lens | Why chosen |
+| Lens | Why selected |
 |---|---|
-| **Technical** | Extraction is a technical decision: API contracts, data ownership, service communication, migration path. Can't skip it. |
-| **Operational** | The 40% incident figure is an operational problem. Extraction changes blast radius and failure surface. The lens surfaces whether extraction solves or moves the problem. |
-| **Team** | Only 3 engineers have touched this in 6 months. Extraction changes their working model significantly — ownership, on-call, deploy autonomy. This is a team-health decision as much as a technical one. |
-| **Business** | 40% of incidents has a cost: SLA risk, engineer time on-call, product velocity blocked. The extraction investment needs to be weighed against the in-place fix alternative. |
-| **Simplicity** | The "extract it" instinct is a common response to a messy module. Simplicity lens asks whether extraction is the simplest lever or whether the same outcome is achievable without it. |
-
-Lens selection rules satisfied: Business + Team = human lenses; Technical + Operational = system lenses.
+| **Technical** | Any extraction decision requires understanding the coupling, new failure modes, and what "extract" actually means in Rails |
+| **Adversarial** | 40% incident rate is the core pain signal — need to challenge whether extraction addresses it |
+| **Business** | Large investment; proportionality check is required |
+| **Temporal** | Extraction is a long-term bet; need to know if it holds up under growth |
+| **Simplicity** | Counterweight — the instinct to extract is strong but may not be the minimum effective intervention |
 
 ---
 
-## Step 3 — Analyse through each lens
+## Step 3 — Analysis
+
+---
 
 ### Lens 1: Technical
 
-**Focus question:** What does extraction actually cost, what do you get, and what hard problems does it create?
+**Focus question:** What does extraction actually require, and what failure modes does it introduce?
 
 **Analysis:**
 
-*Sub-question 1: What is the extraction effort?*
-An 8,000-line subsystem handling three channels likely has: shared ActiveRecord models (users, preferences, subscriptions), direct database access, shared background job infrastructure (Sidekiq), and inline calls from other parts of the monolith. Extraction requires identifying and severing all of these. Conservative estimate: 6-10 engineer-weeks to extract cleanly, plus time for a parallel-run validation period. The monolith will need an HTTP/async client where direct calls used to be.
+*Sub-question 1: What does the coupling look like?*
 
-*Sub-question 2: What communication mechanism would replace direct calls?*
-Options: synchronous HTTP (simplest, adds latency and network failure risk), async messaging (RabbitMQ/Kafka — reliable, adds infra and ops complexity), or a shared event bus already in the stack (if one exists). The choice changes the operational profile entirely. Async messaging is the right pattern for notifications (fire-and-forget acceptable for most cases) but requires the team to learn it if they don't already have it.
+In a Rails monolith, notification calls are typically synchronous (`UserMailer.welcome.deliver_later`) or async via Sidekiq/ActiveJob. If already async: the architectural coupling is already loose — the monolith enqueues a job, the worker fires the provider call. In that case, extraction means pulling Sidekiq workers and provider clients into a separate process, and the failure propagation characteristics barely change. If synchronous: extraction adds a network hop to the critical path of user-facing requests, which is worse.
 
-*Sub-question 3: What happens to shared data?*
-Notification preferences and delivery logs are likely in the monolith's database. Extraction forces a data ownership decision: does the notification service get its own database, or does it continue querying the monolith's DB? A separate database is architecturally correct but doubles the extraction effort. Shared database access defeats the purpose of extraction.
+*Sub-question 2: What new infrastructure does extraction require?*
+
+At minimum: separate repo, separate deploy pipeline, a message queue or HTTP API contract, service discovery, inter-service auth, separate monitoring/alerting, and separate on-call runbooks. Critically: the notification service likely reads user preferences, contact details, and unsubscribe state from the monolith's DB. Options are: shared read replica (tight coupling preserved), API callback to the monolith (circular dependency, new failure mode), or replicated data store (consistency problem). None of these are free.
+
+*Sub-question 3: What is the actual cause of the 40% incident rate?*
+
+This is the pivotal unknown. Possible categories:
+- **External provider outages** (Twilio, SendGrid, APNs): extraction does not fix this — you're still dependent on those providers from the new service
+- **Missing resiliency patterns** (no circuit breakers, bad retry logic, no idempotency): fixable in place
+- **Deployment coupling** (a bad notification deploy takes down the monolith, or vice versa): extraction is the correct fix for this specifically
+- **Resource contention** (notification workers saturating DB connections or queue capacity): fixable with pool limits in place
+
+Extraction only definitively solves one of these four categories.
 
 **Findings unique to this lens:**
-1. Extraction cost is probably 2-3x higher than it appears: the surface area of a notification subsystem in a Rails monolith (shared models, background jobs, preferences, delivery logs) is wide, and most of it is invisible until you start cutting.
-2. Communication mechanism choice is a hidden decision inside the extraction decision. Choosing synchronous HTTP converts a local function call failure into a network call failure, potentially making incident rate worse before it gets better.
-3. The monolith codebase retains callers after extraction — those callers need to be updated to the new interface, which is a second migration workstream running in parallel with building the new service.
+1. If notification calls are already async (Sidekiq/ActiveJob), the failure propagation is already decoupled — extraction changes operational boundaries but not reliability in a fundamental way.
+2. The notification service will likely need access to user/preference data from the monolith; every option for providing it introduces a new coupling or consistency problem.
+3. Extraction introduces new failure modes (network partition, inter-service auth failures, queue depth) that don't exist today — the incident count could increase even if the incident category distribution changes.
 
-**Contradictions with previous lenses:**
-- No previous lenses yet — this is the first.
+**Contradictions with previous lenses:** N/A — first lens.
 
-**Risks identified:**
-
+**Risks:**
 | Risk | Likelihood | Impact | Mitigation |
 |---|---|---|---|
-| Underestimating extraction scope | High | High | Spike: spend 2 days mapping all callers and shared models before committing |
-| Sync HTTP replacing direct calls degrades reliability | Med | High | Use async messaging from day one; accept the learning curve |
-| Shared DB access as a shortcut | Med | High | Hard rule: new service gets its own DB or it's not a real extraction |
+| Incidents shift from "notification code bugs" to "inter-service communication failures" | Medium | High | Design async contract (events, not RPCs) from day one |
+| Subsystem has deep Rails magic (callbacks, concerns, shared models) that's hard to cleanly extract | Medium | High | Spike one channel extraction before committing to the full effort |
+| Shared DB access is required and creates tighter coupling than the service boundary suggests | High | Medium | Audit all DB reads in the notification subsystem before committing |
 
 **Open questions:**
-- Does the team currently operate any async messaging infrastructure?
-- How many call sites in the monolith reference notification functionality directly?
+- Are notification calls sync or async today?
+- What tables does the notification subsystem read from? Does it write to shared tables?
+- What are the top 3 incident root cause types?
 
 ---
 
-### Lens 2: Operational
+### Lens 2: Adversarial
 
-**Focus question:** Does extraction reduce the blast radius of notification incidents, or does it change the failure surface in ways that make things harder?
+**Focus question:** How could this go wrong, and is extraction treating the symptom rather than the disease?
 
 **Analysis:**
 
-*Sub-question 1: What is the current failure mode?*
-In a monolith, a notification bug (memory leak in email rendering, Sidekiq queue backup, third-party API timeout) can exhaust shared resources — database connection pool, Sidekiq workers, memory — and affect unrelated features. The 40% incident rate likely includes both pure notification failures and collateral failures caused by resource contention.
+*Sub-question 1: Is extraction the right response to a 40% incident rate?*
 
-*Sub-question 2: What is the failure mode post-extraction?*
-A separate service means notification failures stay in their blast radius — they don't exhaust the monolith's connection pool. However, the inter-service communication layer becomes the new failure surface. A notification service that goes down means the monolith callers need circuit breakers and graceful degradation ("send notification failed, but the user's action still completed"). Without this, extraction moves the failure from "notification brings down the app" to "notification timeout brings down the app via a different path."
+40% of incidents from one subsystem signals one of four things: (a) the subsystem is complex and undertested, (b) it has no resiliency patterns against external provider failures, (c) it's causing cascading failures across the monolith, or (d) it's just bad code. Extraction definitively solves only (c). For (a), (b), and (d), you can fix the code in place at 10% of the cost. The adversarial framing: are we proposing open-heart surgery when the patient needs antibiotics?
 
-*Sub-question 3: What does deploy frequency look like post-extraction?*
-With an independent service, the notification team can deploy independently — daily if they want. This is a significant operational win, but it also means the notification service must maintain its own deployment pipeline, monitoring, alerting, and on-call rotation.
+*Sub-question 2: What happens during the migration phase?*
+
+The migration window is the highest-risk phase. You'll run dual paths (old and new code), use feature flags, and maintain both codebases simultaneously. Every incident during this period is harder to diagnose — is it the old path, the new service, the message queue, or the contract mismatch? The team that currently generates 40% of incidents will temporarily own two production systems. This is precisely the conditions under which a high-severity incident is most likely.
+
+*Sub-question 3: What new attack surfaces does extraction create?*
+
+A standalone notification service that can send email, push, and SMS to all users is a high-value security target. In the monolith, this code path is protected by the monolith's auth model. As a separate service, it needs its own inter-service auth (API keys, JWTs, mTLS) and its own access controls. If misconfigured, an attacker who compromises the notification service can send arbitrary messages to your entire user base. This attack surface doesn't exist today.
 
 **Findings unique to this lens:**
-1. The 40% incident figure needs decomposition before extraction is justified. If 30 of those 40 points are resource-contention spillover (notification queue backs up and takes the connection pool), extraction eliminates them. If they're pure notification logic bugs, extraction doesn't reduce the incident rate — it just changes who gets paged.
-2. Circuit-breaker and graceful-degradation patterns on the calling side of the monolith are mandatory, not optional. Without them, extraction adds a new class of distributed systems failures on top of the existing notification bugs.
-3. Deploy independence is a double-edged win: faster iteration for notifications, but also the operational burden of running and monitoring an additional service — currently not priced into the decision.
+1. The migration phase itself is the highest-risk period — the team with the worst incident rate in the org will temporarily maintain two production systems. This is when a high-severity incident is most likely, not least likely.
+2. A standalone notification service (arbitrary messages to all users) is a critical security target; extraction creates a new high-value attack surface that doesn't currently exist.
+3. The 40% figure may be a monitoring artifact: if the notification subsystem is well-instrumented and other subsystems are poorly instrumented, the proportion is misleading. Better observability everywhere might discover incidents in other subsystems and change the denominator.
 
 **Contradictions with previous lenses:**
-- Technical lens focused on extraction cost (effort, migration). Operational lens reveals that even a successful extraction doesn't reduce the incident rate unless the root causes are resource-contention — not a conclusion reachable from the technical lens alone.
+- Technical lens noted that if calls are already async, failure propagation is already loose. Adversarial lens adds a harder constraint: the migration phase creates a *worse* failure condition during transition than either steady state. Together: don't extract unless you're committed to doing it carefully and incrementally.
 
-**Risks identified:**
-
+**Risks:**
 | Risk | Likelihood | Impact | Mitigation |
 |---|---|---|---|
-| Extraction proceeds without root-cause analysis of the 40% | High | High | 2-week incident review before committing to extraction vs fix-in-place |
-| Callers in monolith lack circuit breakers post-extraction | High | Med | Add circuit-breaker wrappers as part of extraction, not after |
-| Monitoring gap during transition | Med | Med | Parallel-run period with both paths active and instrumented |
+| Migration phase doubles incident rate temporarily | High | High | Extract incrementally — one channel at a time, with rollback plan at each stage |
+| Extraction completed; root causes were not provider coupling; incident rate unchanged | Medium | High | Mandate root-cause retrospectives before committing to extraction |
+| Auth misconfiguration exposes notification service to unauthorized callers | Medium | Critical | Design auth contract first; security review before any production traffic |
+| Observability gaps follow the code into the new service | High | Medium | Instrument the new service before migrating traffic, not after |
 
 **Open questions:**
-- What does the incident breakdown look like — resource contention vs logic bugs vs third-party failures?
-- Does the team have experience running and monitoring a separate service?
+- What do post-mortems say about notification incidents? Are they categorised by root cause?
+- What's the current observability state of the notification subsystem?
+- Has circuit breaker / retry hardening been tried and abandoned, or never attempted?
 
 ---
 
-### Lens 3: Team
+### Lens 3: Business
 
-**Focus question:** How does extraction change the working reality for the three engineers who own this area?
+**Focus question:** Is extraction economically proportionate, given team size, deployment cadence, and the absolute cost of incidents?
 
 **Analysis:**
 
-*Sub-question 1: What does ownership look like today?*
-Three engineers have touched the code in 6 months — but in a monolith with no formal ownership model, "touched" may mean different things: one may be the domain expert, one may have fixed a bug, one may have added a field. Effective ownership is probably narrower. Extraction forces an explicit ownership decision: who is on-call for the notification service, who reviews its PRs, who sets its roadmap.
+*Sub-question 1: What is the incident cost, and is extraction proportionate?*
 
-*Sub-question 2: Is the team's operational maturity ready for a separate service?*
-Running a separate service means: a dedicated deploy pipeline, separate monitoring dashboards, a separate on-call schedule, SLO ownership, and incident runbooks specific to the service. If the team currently operates only a monolith, they're taking on all of this simultaneously while also extracting. That's a significant capability uplift, not just a code migration.
+40% of production incidents is a striking number but we need the absolute count to evaluate cost. 5 total incidents/month → 2 notification-related → maybe 4 engineer-hours/month. 50 total incidents/month → 20 notification-related → potentially 40-60 engineer-hours/month plus customer trust damage. Extraction is a 3-6 month focused engineering investment plus ongoing operational overhead (own deploy pipeline, monitoring, runbooks, on-call). The break-even point shifts dramatically based on absolute volume. Making this decision without the absolute count is like saying "40% of our budget is wasted" without knowing the budget.
 
-*Sub-question 3: Does the team want this?*
-This sounds like a process question but it's a risk question. Engineers who feel a service was imposed on them rather than chosen will under-invest in its reliability practices. The 40% incident rate is already a morale signal — engineers in this area are absorbing a lot of pain. Extraction could feel like relief (autonomy) or punishment (more to own).
+*Sub-question 2: What is the ongoing operational overhead of a separate service?*
+
+A separate service requires: CI/CD pipeline, monitoring/alerting, runbooks, secrets management, service-to-service auth rotation, and on-call escalation paths. For small teams, each additional service meaningfully increases cognitive overhead and on-call surface area. 3 engineers touched the notification code in 6 months — this is either a small specialist team or a low-churn codebase. Either way, adding a service to own and operate is not free.
+
+*Sub-question 3: Does the weekly deploy cadence actually justify extraction?*
+
+The weekly deploy cycle means notifications are potentially blocked by other changes and vice versa. But this only matters if: notification changes are being delayed by unrelated changes, or notification changes are blocking others' deploys. If the notification team ships one change every two weeks and it's never a blocker, the deploy cadence benefit is theoretical. Before treating this as a driver, confirm it's actually causing friction.
 
 **Findings unique to this lens:**
-1. Ownership clarity is a valid benefit of extraction entirely independent of the technical architecture arguments. Even if the service were technically identical to the subsystem, having a named owner and independent deploy would reduce cognitive switching cost.
-2. The team's operational maturity may be the binding constraint — not the technical extraction complexity. A poorly operated separate service will produce more incidents than the current monolith, not fewer.
-3. The three engineers' career context matters: if they're junior-to-mid, adding service ownership may be growth-accelerating. If they're already stretched, it may be the last straw.
+1. The economic case for extraction is unquantifiable without the absolute incident count — 40% of 5 incidents/month justifies a bug fix sprint, not a 4-month extraction project.
+2. Operational overhead of a separate service may outweigh savings if the team is small; 3 engineers touching a subsystem over 6 months suggests modest team size.
+3. The weekly deploy cadence only provides extraction value if deployment conflicts are actually occurring — this should be confirmed in incident data before being used as a justification.
 
 **Contradictions with previous lenses:**
-- Technical lens says extraction takes 2-3x more effort than expected. Team lens adds: the effort isn't just code — it's capability building. The team needs to learn distributed systems operations, not just write the code. This multiplies the Technical lens estimate further.
-- Operational lens says deploy independence is a win. Team lens says it's only a win if the team has the maturity to use it safely. If they don't, it's a liability.
+- Technical and Adversarial lenses engaged with extraction as architecturally valid. Business lens challenges whether the economics justify it, particularly for a team that may be small. The contradiction is: extraction may be architecturally right and economically wrong simultaneously.
 
-**Risks identified:**
-
+**Risks:**
 | Risk | Likelihood | Impact | Mitigation |
 |---|---|---|---|
-| Team capability gap for service operations | Med | High | Pair with an experienced SRE during initial rollout; invest in runbooks before go-live |
-| No clear ownership post-extraction | Med | Med | Name the service owner before starting — not after |
-| Team morale deteriorates if extraction feels imposed | Med | Med | Include the engineers in the decision; their ground-level knowledge of the 40% is irreplaceable |
+| Extraction takes 5 months but breaks even in 4 years — not worth it | Medium | High | Do a break-even analysis with real incident cost numbers before committing |
+| Small team can't absorb operational overhead of a new service | Medium | High | Count current services in the estate; assess operational overhead per service |
+| Incident rate reduction is partial (external providers still fail); ROI lower than projected | High | Medium | Forecast incident reduction by root cause type, not overall percentage |
 
 **Open questions:**
-- What's the seniority and operational experience of the three engineers?
-- Do they want this?
-- Does the organisation have SRE support for new service rollouts?
+- What is the absolute incident count per month? What fraction are P1/P2?
+- How large is the total engineering team?
+- How often do notification changes conflict with other deployment changes in practice?
+- Is there an SLA on notification delivery that's being breached?
 
 ---
 
-### Lens 4: Business
+### Lens 4: Temporal
 
-**Focus question:** What is the cost of inaction vs the cost of extraction, and is there a cheaper path to the same outcome?
+**Focus question:** What does the notification domain look like in 2-3 years, and does the extraction decision hold up under that trajectory?
 
 **Analysis:**
 
-*Sub-question 1: What is the current cost of 40% incident origination?*
-If the team has, say, 8 incidents per month (a plausible number for a production service with known instability), 3.2 of them trace to notifications. Each incident involves engineer time (detection, diagnosis, fix, post-mortem): conservatively 4 engineer-hours per incident. That's ~13 engineer-hours/month burned on notification incidents. At a fully-loaded engineer cost of ~$150/hour, that's roughly $2,000/month in direct incident cost, not counting product downtime and customer impact.
+*Sub-question 1: Is the notification subsystem likely to grow significantly?*
 
-*Sub-question 2: What does extraction cost vs fix-in-place?*
-Extraction at 6-10 engineer-weeks = 240-400 engineer-hours = $36,000-$60,000. Fix-in-place (targeted refactoring, better test coverage, dependency cleanup, queue isolation) might take 3-5 weeks = $18,000-$30,000. If fix-in-place reduces the incident rate by even 50%, payback period is 18-30 months. If extraction eliminates resource-contention incidents entirely, the payback period may be shorter — but only if the root-cause analysis supports that conclusion.
+Notification systems have a well-known growth trajectory: new channels (in-app, WhatsApp, Slack webhooks), templating engines, user preference management, A/B testing on notification content, delivery scheduling, throttling, deduplication, and compliance logging. If the product is growing and notification features are on the roadmap, the 8,000 lines will become 15,000-20,000 lines within two years. A service boundary becomes more defensible as complexity grows; the question is whether to extract now under incident pressure or plan a deliberate extraction.
 
-*Sub-question 3: What is the strategic value of independent deploys?*
-Beyond incident reduction, deploy independence allows the notification team to ship improvements faster — new channel support, deliverability improvements, customer preference features. If notifications are on the product roadmap as a growth driver, the deploy independence has a value beyond incident reduction. If notifications are pure infrastructure ("make sure emails go out"), the strategic premium is lower.
+*Sub-question 2: Is the monolith on a decomposition trajectory?*
+
+If the organisation is already planning to extract other subsystems, notification extraction fits the direction of travel and amortises the investment in service infrastructure (deploy pipeline, service mesh, monitoring patterns). If this would be an isolated extraction — monolith stays, one service extracted — you've taken on distributed systems complexity with none of the organisational scale benefits. A one-service microservices architecture is often worse than both alternatives.
+
+*Sub-question 3: What is the team trajectory?*
+
+If the notification engineers leave, an extracted service needs runbooks, architecture docs, and onboarding material. A well-bounded service can actually make onboarding easier (clear domain, clear interface). But if the team stays small and notification is considered "platform," extraction creates context-switching overhead without ownership clarity.
 
 **Findings unique to this lens:**
-1. The business case for extraction depends entirely on the root-cause breakdown of the 40% that no other lens surfaced. Without that data, the investment decision is a coin flip dressed up as an architectural debate.
-2. Fix-in-place is meaningfully cheaper and deserves formal consideration in the decision record. The pattern of "rewrite/extract to fix bugs" often repeats the same mistakes in a new location; disciplined in-place refactoring can achieve the same defect reduction at half the cost.
-3. Deploy independence has a strategic value multiplier if notifications are a product growth area — that multiplier should be explicitly estimated, not assumed.
+1. If notification features are on the product roadmap (new channels, preference management, scheduling), extraction value grows over time — the question is whether to extract *now* under incident pressure or *plan* it deliberately in 3-6 months with better preparation.
+2. Extracting notifications as a one-off (monolith stays otherwise intact) creates a two-piece system with distributed systems complexity but none of the organisational scaling benefits — this is often the worst outcome.
+3. The notification domain has high churn potential as products scale — every new product line, geography, or compliance requirement touches notifications — which argues for an independent deploy cadence eventually.
 
 **Contradictions with previous lenses:**
-- Technical and Team lenses both make extraction sound necessary. Business lens says it's conditional — if fix-in-place achieves the same reliability outcome at lower cost, extraction doesn't pass a business case unless the strategic value of independent deploys is quantified.
+- Business lens warned against extraction for small teams given operational overhead. Temporal lens argues extraction becomes more economical as the domain grows. The resolution is timing: extracting *now* under incident pressure has high risk and unclear ROI, while *planning* extraction as a deliberate investment in 3-6 months (after fixing immediate causes) has better economics.
 
-**Risks identified:**
-
+**Risks:**
 | Risk | Likelihood | Impact | Mitigation |
 |---|---|---|---|
-| Decision made without root-cause data | High | High | Mandatory 2-week incident analysis before commit |
-| Fix-in-place ignored as an option | High | Med | Explicitly include it in the decision document as Option B |
-| Strategic value of deploy independence assumed, not quantified | Med | Med | Product team to confirm roadmap priority of notification features |
+| Extraction is completed; monolith otherwise stays — distributed system complexity with no scale benefit | Medium | Medium | Clarify whether this is part of a broader decomposition strategy before starting |
+| Notification domain grows faster than expected; early extraction under-designs the API contract | Low | High | Design the contract as events (not RPCs) to remain extensible |
+| Key engineers leave during or after extraction, leaving an undocumented service | Medium | High | Runbooks and architecture docs must be acceptance criteria for the extraction |
 
 **Open questions:**
-- What is the current incident cost in engineer-hours per month?
-- What is the notification feature roadmap — infrastructure only, or growth driver?
+- Is there a broader microservices strategy, or would this be an isolated extraction?
+- What notification features are on the 12-month product roadmap?
+- Is the team growing, stable, or shrinking?
 
 ---
 
 ### Lens 5: Simplicity
 
-**Focus question:** What is the simplest path to fixing the reliability problem, and is extraction that path?
+**Focus question:** What is the minimum effective intervention, and is extraction necessary to achieve it?
 
 **Analysis:**
 
-*Sub-question 1: What specifically is causing the 40%?*
-If the root causes are: (a) poor test coverage of edge cases, (b) third-party API flakiness (email/SMS provider timeouts), (c) Sidekiq queue misconfiguration, or (d) a handful of known bugs that have never been fixed — then none of these require extraction. A targeted fix campaign over 3-4 weeks with a dedicated engineer could address all four without changing the architecture.
+*Sub-question 1: Can the incident rate be materially reduced without extraction?*
 
-*Sub-question 2: Is the complexity of the module genuinely requiring extraction, or is it a maintenance problem?*
-8,000 lines for a tri-channel notification subsystem is not small, but it's also not unusually large for the scope. The question is whether the code is 8,000 lines because the domain is complex, or because it's accumulated cruft. If it's cruft, a refactoring pass within the monolith is simpler than extraction and achieves the readability goals.
+Most notification subsystem incidents in Rails monoliths trace to a small set of patterns: missing circuit breakers on provider calls (a Twilio outage backs up the queue and causes cascading retries), misconfigured retry logic (thundering herds on provider recovery), missing idempotency keys (duplicate sends after retries), and DB lock contention from notification workers. Each of these can be fixed in the existing codebase in 1-4 weeks. If the top 3 incident root causes can be identified and fixed in place, the incident rate could drop from 40% to 10-15% without extraction.
 
-*Sub-question 3: What is the simplest version of extraction that still delivers the core benefit?*
-If extraction proceeds, the simplest version might not be a full microservice. A "mailbox" pattern — where the monolith writes notification jobs to a shared queue and a lightweight worker consumes them — achieves blast-radius isolation without the full overhead of a service with its own database, API, and deployment pipeline. This captures most of the operational benefit at roughly half the extraction cost.
+*Sub-question 2: Is there a "module boundary" short of full extraction that provides meaningful isolation?*
+
+Rails engines and well-defined module namespaces (`Notifications::`) can create a logical boundary without a physical service boundary. The notification code can be wrapped in a namespace with a clearly defined public interface, tested independently, and constrained to not reference models outside its namespace — all without distributed systems complexity. This "internal service" approach provides code isolation, independent testability, and a clean interface that would make eventual extraction far cheaper. It's not a permanent answer but it's a valuable intermediate step.
+
+*Sub-question 3: What does the minimum viable intervention look like?*
+
+Phase 1 (4-6 weeks): (1) root-cause the last 15 notification incidents, (2) fix the top 3 causes, (3) add circuit breakers and proper retry logic, (4) wrap the subsystem in a `Notifications::` namespace with a clean interface, (5) add structured logging and per-channel metrics.
+
+This is the cheap path. If it fails — if the incident rate remains above 25% after 8 weeks — then extraction is the evidence-backed answer, with a much cleaner codebase to extract from.
 
 **Findings unique to this lens:**
-1. A targeted fix campaign for the known root causes of the 40% may be available for less than half the cost of extraction, and should be formally documented as Option B before the team commits.
-2. The 8,000-line size is not inherently a signal for extraction — it's a signal for a refactoring review. These are different interventions with different costs and outcomes.
-3. If extraction is chosen, a lightweight consumer pattern (queue-based worker rather than full service) delivers most of the blast-radius benefit without the full operational overhead of a separate service.
+1. A phased approach — fix in place first, extract only if insufficient — dramatically reduces risk and preserves optionality while generating the root-cause data needed to justify the extraction decision.
+2. Rails module namespacing (`Notifications::` engine/namespace with a defined interface) provides most of the coupling benefits of a service boundary at a fraction of the cost — and makes eventual extraction cheaper by pre-defining the interface.
+3. The 40% figure may be a monitoring artifact. If the notification subsystem is the only well-instrumented part of the monolith, you're measuring a proportion of a non-representative sample. Adding observability everywhere first may reveal a different picture.
 
 **Contradictions with previous lenses:**
-- Business lens quantified extraction cost vs fix-in-place at a high level. Simplicity lens adds a third option the Business lens didn't surface: partial extraction (queue-based consumer) that sits between "do nothing" and "full microservice" on the cost/benefit curve.
-- Technical lens assumed full-service extraction as the frame. Simplicity lens challenges the frame itself.
+- Technical, Adversarial, and Temporal lenses all accept extraction as a valid path and discuss how to do it. Simplicity challenges whether it's necessary. This is the most significant tension in the analysis: the other four lenses ask "how should we extract?" while Simplicity asks "should we extract at all, and why now?"
+- This contradiction is load-bearing: if you skip this lens, you commit to extraction by default, when the evidence doesn't yet require it.
 
-**Risks identified:**
-
+**Risks:**
 | Risk | Likelihood | Impact | Mitigation |
 |---|---|---|---|
-| Partial extraction creates a worse hybrid — the worst of both worlds | Med | Med | Define clear boundaries upfront; partial extraction must have a completion path |
-| Fix-in-place underinvested and same bugs recur | Med | Med | Fix-in-place option requires a structured refactor plan, not ad-hoc fixes |
+| Fix-in-place reduces incidents partially but not enough, "wasting" 6 weeks | Medium | Low | This is acceptable — 6 weeks of learning is far cheaper than a failed extraction and surfaces root-cause data |
+| Team interprets "fix in place" as "we're not extracting ever" and the problem is never fully resolved | Medium | Medium | Set explicit extraction trigger criteria upfront: "if incident rate > X% after 8 weeks, we extract" |
+| Simplicity lens misses a structural coupling problem that only extraction can solve | Low | High | Technical lens analysis shows only cascading deployment failures are uniquely solved by extraction — confirm via root-cause data |
 
 **Open questions:**
-- Have the root causes of the 40% incidents been formally documented?
-- Is there appetite for a partial extraction (queue-based) as a stepping stone?
+- What are the top 3 causes of notification incidents? (This question has appeared in every lens — it is the single most important input to this decision.)
+- Has resiliency hardening (circuit breakers, retry logic) been attempted and failed?
+- What is the current test coverage of the notification subsystem?
 
 ---
 
-## Step 4 — Synthesise
+## Step 4 — Synthesis
 
 ### Convergent findings
 
-| Finding | Supported by lenses | Confidence | Implication |
+| Finding | Supported by | Confidence | Implication |
 |---|---|---|---|
-| The 40% incident figure needs root-cause decomposition before the decision | Operational, Business, Simplicity | High | A 2-week incident analysis is a prerequisite for this decision, not a nice-to-have |
-| Fix-in-place is a valid option and must be formally considered | Business, Simplicity | High | The decision document must compare at least three options: extract fully, fix-in-place, partial extraction |
-| Circuit breakers and graceful degradation are mandatory if extraction proceeds | Technical, Operational | High | They are not a post-launch addition — they must be part of the extraction design |
-| Team operational maturity is a binding constraint on extraction success | Team, Operational | Medium | If the team lacks distributed systems ops experience, extraction is high-risk regardless of technical soundness |
-| Deploy independence is a real benefit, but conditional on team readiness | Operational, Team, Business | Medium | The benefit is real but not unconditional — it requires investment in tooling and capability |
+| The root cause of the 40% incident rate is unknown and must be identified before committing to extraction | Technical, Adversarial, Simplicity | **High** | Do not commit to extraction without incident retrospectives — this is the single most important input |
+| Extraction solves deployment coupling but may not solve provider reliability, code quality, or observability gaps | Technical, Adversarial, Simplicity | **High** | Extraction is a partial solution; set realistic expectations and measure by root cause, not total percentage |
+| The migration phase is independently high-risk and requires an incremental plan | Adversarial, Business, Temporal | **High** | If extracting, extract one channel at a time with explicit rollback criteria at each stage |
+| Team size, microservices strategy, and product roadmap significantly change the economics | Business, Temporal | **Medium** | Five open questions must be answered before the decision has high confidence |
 
 ### Tensions and trade-offs
 
-| Tension | Technical + Team says | Operational + Business says | Recommended resolution | Rationale |
+| Tension | Lens A | Lens B | Recommended resolution | Rationale |
 |---|---|---|---|---|
-| Extraction effort vs reliability benefit | Extraction is expensive and complex | The reliability benefit is conditional on root-cause type | Do the incident root-cause analysis first. If contention spillover is ≥50% of incidents, proceed with extraction. If not, fix-in-place first. | Making a $50k investment without this data is unjustifiable. |
-| Full microservice vs partial extraction | Full extraction is architecturally clean | Partial extraction (queue consumer) achieves most of the blast-radius benefit at half the cost | Start with partial extraction as a staging point | Keeps options open; delivers measurable reliability improvement faster; lower capability requirement on team. |
-| Autonomy benefit vs operational burden | Team ownership is a benefit | New operational burden may exceed the benefit for an under-experienced team | Only proceed with full extraction if an SRE or senior engineer is available for the rollout period | The autonomy benefit evaporates if the team is underwater with new operational tasks. |
+| Extract now vs. fix in place | Technical/Temporal: extraction is architecturally valid and forward-looking | Simplicity/Business: extraction is expensive and may not address root causes | **Fix in place first, with explicit extraction trigger criteria** | Lower risk, preserves optionality, generates root-cause data that either justifies or eliminates extraction |
+| Speed of relief vs. quality of solution | Business: incident rate has ongoing cost; urgency is real | Adversarial: migration phase increases risk before it decreases it | **Parallel path: immediate resiliency fixes + extraction planning** | Immediate fixes address the incident rate; extraction planning proceeds so you're ready if fixes are insufficient |
+| Small team overhead vs. long-term scalability | Business: separate service has real operational overhead | Temporal: notification domain will grow and reward independent deploys | **Condition extraction on team growth and notification roadmap** | Extract if team and domain are growing; defer if both are stable |
 
 ### Blind spots filled
 
 | Blind spot | Revealed by | Would have caused | Prevention |
 |---|---|---|---|
-| Root-cause decomposition of the 40% | Operational | Investment in extraction that doesn't reduce incident rate | Incident review as standard pre-requisite for reliability-motivated architectural changes |
-| Partial extraction as a middle option | Simplicity | Binary framing (extract or don't) that misses the lower-cost path | Always apply Simplicity lens to architectural decisions; challenge the frame before accepting it |
-| Team operational maturity as a binding constraint | Team | A technically correct extraction that produces more incidents due to operational gaps | Include team capability assessment in any architectural decision with operational consequences |
+| Extraction doesn't fix external provider failures | Adversarial | Extraction completed; incident rate unchanged; team demoralized | Root-cause incidents by type before any architectural intervention |
+| Migration phase is itself a high-risk period | Adversarial | High-severity incident during extraction window; no rollback plan | Plan incremental extraction with explicit rollback criteria before committing |
+| 40% figure may be a monitoring artifact | Simplicity | A major architectural decision driven by a proportion of a non-representative sample | Audit observability coverage across the monolith before drawing conclusions |
+| Business case depends on absolute incident volume | Business | Investment decision made without proportionality check | Always anchor percentage figures to absolute counts and engineer-hours |
+| One-off extraction (monolith otherwise intact) may be the worst outcome | Temporal | Distributed system complexity with no organisational scale benefit | Clarify whether this is part of a broader decomposition strategy |
 
 ### Revised problem framing
 
-```
-Original framing: Should we extract the notification subsystem into a separate service?
+**Original framing:** Should we extract the notification subsystem to reduce incidents?
 
-Revised framing: We have a notification subsystem responsible for 40% of production incidents.
-                 Before committing to extraction, we need to know whether those incidents are caused
-                 by resource-contention spillover (which extraction solves) or by notification logic
-                 bugs (which extraction moves but doesn't fix). That root-cause data determines
-                 which of three options is appropriate: full extraction, targeted fix-in-place, or
-                 partial extraction via a queue-based consumer pattern. The decision also depends on
-                 whether the team has the operational maturity to run an independent service and
-                 whether notifications are a product growth area (which changes the strategic value
-                 of deploy independence).
+**Revised framing:** The notification subsystem generates 40% of production incidents, but the root causes are uncharacterised. Before committing to extraction (a 3-6 month investment with its own high-risk migration phase), we need to determine whether those incidents stem from: code quality and missing resiliency patterns (fixable in place in 4-6 weeks), deployment coupling (uniquely solved by extraction), or external provider dependencies (not solved by extraction at all). The decision is not binary — a fix-in-place phase should precede the extraction decision, and extraction should only proceed as a confirmed, deliberate investment aligned with a broader decomposition strategy.
 
-Key difference: The original framing treated extraction as the question. The revised framing treats
-                the 40% incident rate as the question — extraction is one of three possible answers,
-                conditional on data we don't yet have.
-```
+**Key difference:** The original framing assumes extraction is the solution and asks whether to do it. The revised framing asks whether extraction is the right solution, and requires evidence before committing to it.
 
 ### Refined success criteria
 
-| Criterion | Source lens | Metric | Threshold |
+| Criterion | Source | Metric | Threshold |
 |---|---|---|---|
-| Incident rate from notification origin | Operational, Business | Incidents/month traceable to notifications | ≤50% reduction within 3 months of intervention |
-| Monolith blast radius from notification failures | Operational | Incidents where notification failure cascades to unrelated features | Zero within 1 month of intervention |
-| Deploy independence (if extraction proceeds) | Team, Business | Time from code-complete to notification deploy | ≤1 day (vs current weekly monolith cycle) |
-| Team operational load | Team | Mean time to detect/resolve notification incidents | ≤50% of current MTTR |
-| Extraction cost vs estimate | Technical, Business | Actual engineer-weeks vs estimate | Within 20% of estimate |
-
-### Recommendation
-
-```
-Recommendation: Do not commit to full extraction yet. Spend 2 weeks on an incident root-cause analysis.
-                Based on that data, choose from three options in order of preference:
-
-                Option A (if ≥50% of incidents are resource-contention spillover):
-                  Proceed with partial extraction — queue-based consumer pattern that isolates
-                  notifications from the monolith's resource pool. Full microservice can follow once
-                  the team builds operational experience with the simpler pattern.
-
-                Option B (if <50% of incidents are resource-contention, majority are logic bugs):
-                  Fix-in-place with a structured 3-4 week refactoring campaign targeting root causes.
-                  Reassess extraction after 3 months of incident data.
-
-                Option C (if notifications are a confirmed product growth area with roadmap investment):
-                  Full extraction is justified regardless of the root-cause split, because deploy
-                  independence has strategic value. Proceed only with SRE/senior support during rollout.
-
-Confidence: MEDIUM — based on the problem statement data (40% incidents, 8,000 lines, 3 engineers,
-            weekly deploys). Would rise to HIGH if: (a) incident root-cause analysis confirms
-            contention spillover as the dominant cause, and (b) the team has operated at least one
-            independent service before. Would remain LOW if the incident analysis shows the 40% is
-            predominantly logic bugs with no contention component — in that case extraction is not the
-            right lever.
-
-Key risks:
-  1. Decision made without root-cause data → mitigate by treating the 2-week analysis as mandatory,
-     not optional
-  2. Partial extraction starts but is never completed → mitigate by defining completion criteria
-     before starting and committing to a timeline
-  3. Team operational capability gap → mitigate by securing SRE support before committing to any
-     extraction path
-
-Next steps:
-  1. Assign one engineer to a 2-week structured incident review — classify each notification incident
-     by root cause (contention spillover, logic bug, third-party failure, other)
-  2. Have the product team confirm whether notifications are on the growth roadmap or infrastructure-only
-  3. Based on (1) and (2), bring a formal decision to the team with all three options documented,
-     cost-estimated, and mapped to the root-cause data
-
-What would change this recommendation:
-  - If root-cause analysis shows ≥70% of incidents are contention spillover → move directly to
-    partial extraction without further debate
-  - If the product roadmap shows notifications as a growth area in the next 6 months → full extraction
-    is justified; the strategic value changes the math
-  - If the team already has experience operating a separate service → operational risk concern is
-    significantly reduced; upgrade partial extraction recommendation to full extraction
-  - If incident rate drops materially after a targeted fix campaign → defer extraction indefinitely
-    and revisit only if a new architectural reason emerges
-```
+| Incident rate reduction | Business, Adversarial | % of production incidents from notification subsystem | Below 15% within 6 months of intervention |
+| No migration regression | Adversarial | P1/P2 incident count during extraction window vs. 6-week baseline | Zero increase in P1/P2 count |
+| Independent deploy capability | Temporal, Technical | Notification-only changes deployable without monolith deploy | 100% of notification-only changes |
+| Operational overhead acceptable | Business | Hours/week maintaining notification service vs. current | No more than 1.5× current maintenance burden |
+| Root cause characterised | Simplicity, Technical | % of notification incidents with documented root cause before decision | 100% — this is a gate, not a metric |
 
 ---
 
+### Recommendation
+
+**Recommendation:** Do not extract yet. Run a 6-week "fix and characterise" sprint first. Extraction is a live option, not a rejection — trigger it if the sprint is insufficient.
+
+**Sprint plan:**
+1. Pull the last 15 notification incidents and root-cause each one. Categorise into: provider failures, code quality/resiliency, deployment coupling, resource contention.
+2. Fix the top 2-3 categories in place: add circuit breakers on all provider calls, fix retry logic (exponential backoff + jitter + idempotency keys), set worker pool limits.
+3. Wrap the subsystem in a `Notifications::` namespace with a defined public interface. This costs little and makes extraction far cheaper if you proceed.
+4. Add structured logging and per-channel metrics so the post-sprint measurement is trustworthy.
+5. After 6 weeks, measure. If incident rate is still above 25%: extract. If it drops below 20%: you solved the problem at 10% of the cost.
+
+If extraction is confirmed, extract incrementally: email first (lowest real-time sensitivity), then SMS, then push. Use an async message contract (events, not RPCs) so the monolith is not synchronously coupled to the notification service.
+
+**Confidence:** Medium — the technical and business analysis is strong, but five critical questions remain unanswered (root cause breakdown, absolute incident count, team size, microservices strategy, notification roadmap). The recommendation would shift to High confidence once those are answered.
+
+**Key risks:**
+1. Root-cause analysis reveals deep structural coupling (circular model dependencies, shared transactions) where extraction is genuinely the only path — the sprint surfaces this within 2 weeks, so it's still the right first step.
+2. Leadership pressure to "do something big" makes the fix-in-place approach feel inadequate — frame it explicitly as Phase 1 of a possible extraction, not a rejection of it, and set clear trigger criteria.
+3. The sprint is treated as "done" if it partially works — set the threshold explicitly upfront: "if incident rate is still above 25% after 8 weeks, we extract, no further debate."
+
+**Next steps:**
+1. **This week:** Pull or create post-mortems for the last 15 notification incidents. Categorise by root cause. This is the gate for everything else.
+2. **Weeks 2-4:** Fix top 2-3 root causes in place. Add `Notifications::` namespace boundary. Add structured logging and per-channel metrics.
+3. **Week 6:** Measure incident rate against baseline. Gate the extraction decision on the data.
+4. **In parallel now:** Clarify whether there is a broader microservices strategy and what's on the notification feature roadmap. This shapes the extraction design if you proceed.
+
+**What would change this recommendation:**
+- If root-cause analysis shows >50% of incidents are caused by deployment coupling (a notification deploy bringing down the monolith, or vice versa): extract immediately — that's a structural problem only extraction fixes.
+- If the team is >25 engineers and microservices decomposition is already in motion: the business case for extraction improves substantially; move extraction forward rather than running the sprint first.
+- If there is a hard contractual SLA on notification delivery that is being systematically violated: urgency overrides the phased approach; extract while simultaneously fixing resiliency.
+
 ## Evaluation
+
+| Field | Value |
+|---|---|
+| Verdict | PASS |
+| Score | 17.0/17.0 (100%) |
+| Evaluated | 2026-05-01 |
+| Target duration | 283974 ms |
+| Target cost | $0.2435 |
+| Permission denials | 0 |
 
 ### Criteria
 
-- [x] PASS: Step 1 produces a complete problem framing with problem statement, context, constraints, stakeholders, current state, and desired state — met: the SKILL.md defines an explicit six-field code block template; all six fields are required before lens selection begins.
+| # | Criterion | Result | Evidence |
+|---|---|---|---|
+| c1 | Step 1 produces a complete problem framing with problem statement, context, constraints, stakeholders, current state, and desired state | PASS | Step 1 explicitly lists all six elements: Problem ('Whether to extract...'), Context ('single largest source of production incidents'), Constraints ('8,000-line Rails codebase; 3 engineers; weekly deploy cadence; unknown team size'), Stakeholders ('Notification engineers, on-call engineers, end users, product/business'), Current state ('Subsystem embedded in monolith, 40% of production incidents'), Desired state ('Lower incident rate, predictable deployments, faster notification iteration') |
+| c2 | Step 2 selects 3-5 lenses from the eight available and states which were chosen and why | PASS | Step 2 presents a table selecting exactly 5 lenses (Technical, Adversarial, Business, Temporal, Simplicity) each with a 'Why selected' column explaining the reasoning specific to this decision |
+| c3 | Lens selection includes at least one human lens (User or Business) and one system lens (Technical or Edge case) per the skill's selection rules | PASS | Business lens serves as the human lens ('Large investment; proportionality check is required'); Technical lens serves as the system lens ('Any extraction decision requires understanding the coupling, new failure modes') |
+| c4 | Each lens analysis produces at least one finding not surfaced by any previous lens — not just restating earlier observations | PASS | Technical: unique DB access coupling issue ('notification service likely needs access to user/preference data from the monolith'). Adversarial: unique security attack surface ('standalone notification service...is a high-value security target'). Business: unique proportionality issue ('40% of 5 incidents/month justifies a bug fix sprint'). Temporal: unique one-off extraction risk ('one-off extraction...is often worse than both alternatives'). Simplicity: unique namespace boundary idea ('Rails engines and well-defined module namespaces') |
+| c5 | Contradictions between lenses are explicitly called out — not smoothed over | PASS | Each lens has a 'Contradictions with previous lenses' section. Adversarial: 'Together: don't extract unless you're committed to doing it carefully.' Business: 'extraction may be architecturally right and economically wrong simultaneously.' Simplicity: 'the most significant tension in the analysis: the other four lenses ask how should we extract? while Simplicity asks should we extract at all' |
+| c6 | Step 4 synthesis produces a convergent findings table, a tensions table with recommended resolutions, and a clear recommendation | PASS | Step 4 contains: 'Convergent findings' table with 4 rows showing supporting lenses and confidence; 'Tensions and trade-offs' table with 3 tensions, both lenses, and 'Recommended resolution' column; Recommendation section: 'Do not extract yet. Run a 6-week fix and characterise sprint first.' |
+| c7 | Revised problem framing at the end of Step 4 differs from the Step 1 framing in a meaningful way | PASS | Original framing: 'Should we extract the notification subsystem to reduce incidents?' Revised framing: 'root causes are uncharacterised...the decision is not binary — a fix-in-place phase should precede the extraction decision.' Explicitly notes: 'The original framing assumes extraction is the solution and asks whether to do it. The revised framing asks whether extraction is the right solution' |
+| c8 | Confidence level for the recommendation is stated with the evidence basis (not just "Medium confidence" but what data would raise or lower it) | PARTIAL | States 'Medium — the technical and business analysis is strong, but five critical questions remain unanswered (root cause breakdown, absolute incident count, team size, microservices strategy, notification roadmap).' Also lists specific conditions that would change the recommendation: '>50% incidents from deployment coupling → extract immediately', '>25 engineers + microservices in motion → move forward', 'hard contractual SLA violated → extract while fixing' |
+| c9 | Output's problem framing reproduces the prompt's specific facts — 8,000 lines, 3 engineers in 6 months, 40% of incidents originate here, weekly monolith deploys, three channels (email/push/SMS) — and ties them to the decision | PASS | Step 1 Constraints section: '8,000-line Rails codebase; 3 engineers with context; weekly deploy cadence.' Problem: 'email, push, and SMS.' '40% incident rate' appears throughout. Business lens: '3 engineers touched the notification code in 6 months.' All facts are tied to the analysis (e.g., weekly deploys tied to deployment coupling argument) |
+| c10 | Output selects 3-5 lenses and names them — e.g. Technical (extraction cost vs benefit), Operational (deploy independence, blast radius), Team (cognitive load, expertise), Business (incident reduction value), User (delivery reliability) — and explains why each was chosen for THIS decision | PASS | Step 2 table names 5 lenses and gives decision-specific justifications: Technical: 'extraction decision requires understanding the coupling, new failure modes...in Rails'; Adversarial: '40% incident rate is the core pain signal — need to challenge whether extraction addresses it'; Business: 'Large investment; proportionality check is required'; Temporal: 'Extraction is a long-term bet'; Simplicity: 'Counterweight — the instinct to extract is strong' |
+| c11 | Output's lens selection includes at least one human lens (Team or Business or User) AND one system lens (Technical or Operational or Edge case) per the skill's selection rules | PASS | Business lens is the human lens. Technical lens is the system lens. Both are present and substantively analyzed. |
+| c12 | Output addresses the 40% incident origination directly — does extracting the service reduce the blast radius (yes — incidents stay isolated to notifications) or just shift the failure surface (now needs reliable inter-service comms) | PASS | Technical lens: 'Extraction introduces new failure modes (network partition, inter-service auth failures, queue depth) that don't exist today — the incident count could increase.' Also: 'Extraction only definitively solves one of these four categories' (deployment coupling). Adversarial lens: 'are we proposing open-heart surgery when the patient needs antibiotics?' Both shifting and reducing blast radius are directly addressed. |
+| c13 | Output's lens analyses produce DIFFERENT findings — the technical lens surfaces e.g. "service extraction cost ~3 engineer-months", the operational lens surfaces "deploy frequency could go from weekly to daily for notifications", the team lens surfaces "ownership clarification" — not all converging on the same point | PASS | Technical: DB access coupling issue. Adversarial: migration phase itself is high-risk; security attack surface created. Business: absolute incident count required for proportionality; operational overhead per service. Temporal: notification domain growth trajectory; one-off extraction is worst outcome. Simplicity: Rails namespace boundary as cheaper alternative; monitoring artifact hypothesis. These are substantively different findings. |
+| c14 | Output's contradiction-surfacing step calls out tensions between lenses explicitly — e.g. "the team lens favours extraction (clear ownership), the operational lens cautions extraction (operational complexity for the same 3 engineers)" | PASS | Tensions table explicitly names both lenses per row: 'Extract now vs. fix in place: Technical/Temporal vs. Simplicity/Business'; 'Speed of relief vs. quality of solution: Business vs. Adversarial'; 'Small team overhead vs. long-term scalability: Business vs. Temporal.' Individual lens sections also have 'Contradictions with previous lenses' subsections. |
+| c15 | Output's synthesis produces a convergent findings table (where lenses agree), a tensions table (where lenses disagree, with proposed resolution path), and a clear recommendation | PASS | Step 4 contains all three: 'Convergent findings' table (4 rows), 'Tensions and trade-offs' table (3 rows with 'Recommended resolution' and 'Rationale' columns), Recommendation: 'Do not extract yet. Run a 6-week fix and characterise sprint first.' |
+| c16 | Output's recommendation considers the alternative of fixing-in-place — extracting is one option, addressing the 40% incident root causes within the monolith is another, and the synthesis weighs both rather than only debating extraction | PASS | Simplicity lens is entirely about fix-in-place. The recommendation: 'Do not extract yet. Run a 6-week fix and characterise sprint first.' Sprint plan explicitly describes fixing in place: 'add circuit breakers on all provider calls, fix retry logic, wrap the subsystem in a Notifications:: namespace.' Sprint outcome gate: 'If incident rate is still above 25%: extract. If it drops below 20%: you solved the problem at 10% of the cost.' |
+| c17 | Output's revised problem framing differs from the Step 1 framing — e.g. shifts from "should we extract?" to "what's driving the 40% incidents, and is extraction the leverage point?" | PASS | Step 1 framing: 'Whether to extract the notification subsystem.' Revised framing: 'root causes are uncharacterised...we need to determine whether those incidents stem from: code quality and missing resiliency patterns (fixable in place), deployment coupling (uniquely solved by extraction), or external provider dependencies (not solved by extraction at all).' Explicitly notes original assumed extraction is the solution; revised asks whether it is. |
+| c18 | Output's confidence level is stated with the evidence basis — e.g. "MEDIUM confidence; would rise to HIGH if we had a 2-week incident root-cause analysis showing they're notifications-internal vs HIGH if they're integration boundaries" | PARTIAL | States 'Medium — five critical questions remain unanswered.' Lists specific data that would change recommendation: '>50% incidents are deployment coupling → extract immediately', '>25 engineers and microservices in motion → move extraction forward', 'hard contractual SLA violated → extract while fixing.' This is a solid evidence basis, meeting the PARTIAL ceiling. |
 
-- [x] PASS: Step 2 selects 3-5 lenses from the eight available and states which were chosen and why — met: the skill instructs "Choose 3-5 lenses" and ends Step 2 with "State which lenses you selected and why." The simulated output selects 5 lenses with per-lens justification tied to this specific scenario.
+### Notes
 
-- [x] PASS: Lens selection includes at least one human lens (User or Business) and one system lens (Technical or Edge case) per the skill's selection rules — met: the "Lens selection rules" subsection makes this a hard rule; Business + Team satisfy the human requirement, Technical + Operational satisfy the system requirement.
-
-- [x] PASS: Each lens analysis produces at least one finding not surfaced by any previous lens — met: the per-lens template has a mandatory "Findings unique to this lens:" section; the rules state "Each lens must produce at least one finding not surfaced by any previous lens. If a lens adds nothing new, either the analysis was too shallow or the lens was a poor choice — go deeper or swap it." The simulated output produces distinct findings per lens.
-
-- [x] PASS: Contradictions between lenses are explicitly called out — not smoothed over — met: the per-lens template requires a "Contradictions with previous lenses:" field; the rules state "Don't smooth over contradictions — highlight them." The simulated output surfaces explicit contradictions at each lens step.
-
-- [x] PASS: Step 4 synthesis produces a convergent findings table, a tensions table with recommended resolutions, and a clear recommendation — met: Step 4 in the SKILL.md defines all three with explicit table schemas; each tensions row requires a "Recommended resolution" and "Rationale."
-
-- [x] PASS: Revised problem framing at the end of Step 4 differs from the Step 1 framing in a meaningful way — met: the "Revised problem framing" subsection requires both original and revised framing plus a "Key difference" field; the simulated output shifts from "should we extract?" to "what is driving the 40% and which of three options is appropriate."
-
-- [~] PARTIAL: Confidence level for the recommendation is stated with the evidence basis — partially met: the recommendation template includes "**Confidence:** [High / Medium / Low] — based on [what evidence]" and a "**What would change this recommendation:**" section. The simulated output states "MEDIUM — based on..." and explicitly names conditions that would raise it to HIGH or leave it LOW. The gap: the template prompt says "based on [what evidence]" but doesn't explicitly model the MEDIUM → HIGH transition as a named pattern; the "What would change this recommendation" section fills this functionally.
-
-### Output expectations
-
-- [x] PASS: Output's problem framing reproduces the prompt's specific facts — 8,000 lines, 3 engineers in 6 months, 40% of incidents, weekly deploys, three channels — met: all five specific facts appear in the Step 1 framing and are referenced in lens analyses.
-
-- [x] PASS: Output selects 3-5 lenses and names them with explanation of why each was chosen for THIS decision — met: five lenses named with scenario-specific justification in a table.
-
-- [x] PASS: Output's lens selection includes at least one human lens AND one system lens — met: Business + Team (human), Technical + Operational (system).
-
-- [x] PASS: Output addresses the 40% incident origination directly — does extracting reduce blast radius or shift the failure surface — met: Operational lens Sub-question 2 directly addresses this; the synthesis convergent findings table includes it as a high-confidence finding.
-
-- [x] PASS: Output's lens analyses produce DIFFERENT findings — met: Technical surfaces extraction cost and communication mechanism risk; Operational surfaces root-cause decomposition requirement and circuit-breaker need; Team surfaces operational maturity as binding constraint; Business surfaces fix-in-place cost comparison; Simplicity surfaces partial extraction as a third option.
-
-- [x] PASS: Output's contradiction-surfacing step calls out tensions between lenses explicitly — met: each lens has a "Contradictions with previous lenses" section with named references to prior lenses; the Tensions table in synthesis documents three explicit tensions with recommended resolutions.
-
-- [x] PASS: Output's synthesis produces a convergent findings table, tensions table, and clear recommendation — met: all three present with populated tables and a structured recommendation.
-
-- [x] PASS: Output's recommendation considers the alternative of fixing-in-place — met: fix-in-place is documented as Option B in the recommendation with explicit conditions for when it is preferred; the Business and Simplicity lenses both surface it independently.
-
-- [x] PASS: Output's revised problem framing differs from the Step 1 framing — met: the revised framing reframes from "should we extract?" to "which of three options is appropriate given root-cause data we don't yet have," with a "Key difference" field stating what changed.
-
-- [~] PARTIAL: Output's confidence level is stated with the evidence basis, including what data would raise or lower it — partially met: confidence is stated as MEDIUM with the evidence basis named, and the "What would change this recommendation" section provides conditions for raising to HIGH; the gap is that the template doesn't prompt the confidence-level movement pattern by name, though the output covers it functionally.
-
-## Notes
-
-The skill definition is structurally strong. The mandatory unique-findings field and per-lens contradiction tracking are the key mechanisms preventing lenses from becoming parallel restatements of the same point. The synthesis section — convergent findings, tensions with required resolutions, blind spots, revised framing, success criteria, and what-would-change — produces a decision artifact rather than a brainstorm dump.
-
-Both PARTIAL scores share the same root cause: the confidence template covers the spirit of the criterion via "What would change this recommendation" but doesn't explicitly frame it as "what data would raise confidence from MEDIUM to HIGH." In practice, a well-applied execution produces functionally equivalent output — as demonstrated in the simulated output above.
-
-One structural note outside the rubric: the skill references `/council` and `/first-principles` as related skills but gives no trigger condition for when to hand off. A sentence like "if tensions remain unresolvable after the Tensions table, use `/council`" would remove the ambiguity.
+The captured output is an exceptionally thorough iterative-depth analysis that meets or exceeds every criterion. The five-lens structure is well-executed with genuine differentiation between lenses — each surfaces findings the others don't. The explicit 'Contradictions with previous lenses' subsections in each lens analysis are a strong feature, as is the Simplicity lens serving as a genuine counterweight rather than just endorsing extraction. The synthesis is complete with convergent findings, tensions with resolutions, blind spots identified, revised problem framing, refined success criteria, and a concrete sprint plan recommendation. The confidence statement names five specific unanswered questions and three concrete conditions that would change the recommendation, which meets the PARTIAL ceiling for c8 and c18. No criteria were missed or addressed only superficially.

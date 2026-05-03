@@ -6,6 +6,8 @@ Scenario: A major platform change (multi-tenancy) that spans product, engineerin
 
 We want to add multi-tenancy to the platform. Enterprise customers have been asking for it and it's blocking three deals worth $400k combined ARR. The touches everything — data isolation, auth/permissions, billing, UI (workspace switching), documentation, and pricing model changes.
 
+Do not ask for clarification — proceed based on the information provided. Produce the full decomposition now, noting any assumptions you make.
+
 ## Criteria
 
 - [ ] PASS: Coordinator decomposes into workstreams that map to specific agents (architect for data isolation, CPO for pricing, developer for implementation, etc.)

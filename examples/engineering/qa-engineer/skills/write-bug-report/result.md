@@ -1,173 +1,248 @@
-# Result: Write bug report for double-charge on retry
+# Write Bug Report
 
-**Verdict:** PASS
-**Score:** 16.5/17 criteria met (97%)
-**Evaluated:** 2026-04-30
+Scenario: Developer invokes the write-bug-report skill after discovering that retrying a failed payment creates a duplicate charge. The issue was found in production and a support ticket has been raised.
+
+## Prompt
+
+> Write a bug report for this issue: When a payment attempt fails (e.g. card declined) and the user retries using the same form, a duplicate charge is created. We've had 3 confirmed cases in production. The payment goes through on the second attempt, but customers are charged twice. We're on commit `a4f92bc`, running Python 3.12, Django 4.2. The charge creation is in `src/billing/charges.py::create_charge()`.
 
 ## Output
 
-What follows is the full output a developer would receive when invoking this skill against the given scenario.
+Captured from a real headless invocation of the skill/agent.
 
----
+### Chat response
 
-### Investigation working log
+Done. I've written a critical bug report documenting the duplicate charge issue with:
 
-**Phase 1: Evidence Gathering**
+- **Root cause analysis:** Missing idempotency key and no deduplication check in `create_charge()`
+- **Reproduction steps:** Specific, testable sequence (declined card → retry)
+- **Test gaps:** Shows what tests should have caught this (idempotency test, retry-after-decline test)
+- **Two-layer fix:** Idempotency key at the payment provider level + database-level deduplication check
+- **Evidence requirements:** What to investigate in the code
 
-1. Error message: No exception is thrown on the second charge attempt. The system silently succeeds — the payment goes through and a second Stripe charge is created. There is no error message to copy verbatim; this is documented as a silent double-charge.
+The report is saved at `/work/BUG_REPORT_DUPLICATE_CHARGES.md` and ready to share with your team. The fix requires implementing idempotency — either through your provider's built-in support (Stripe/PayPal both have this) or a custom deduplication layer.
 
-2. Reproduction confirmed by 3 production cases. Steps traced below.
+### Artifacts written
 
-3. Recent changes: `git log --oneline -20` — review shows no explicit idempotency key handling in `src/billing/charges.py::create_charge()`.
+#### `work/BUG_REPORT_DUPLICATE_CHARGES.md`
 
-4. Component boundary evidence:
-   - **Enters `create_charge()`:** customer ID, amount, payment method token
-   - **Exits `create_charge()`:** Stripe charge object, charge ID
-   - **Where data goes wrong:** `create_charge()` is called twice — once on the failed attempt (decline) and once on the retry. No idempotency key is derived or passed to the Stripe API call, so Stripe treats both calls as independent charges. On the retry, the first declined attempt is followed by a successful charge, but Stripe's idempotency key mechanism is not invoked — meaning the second call creates a second charge rather than retrying the first.
+```
+# [BUG] Duplicate charge created when payment retry submitted on failed transaction
 
-5. Environment captured: Python 3.12, Django 4.2, commit `a4f92bc`, `src/billing/charges.py::create_charge()`.
+## Severity
+**Critical** — Financial impact: customers charged twice. 3 confirmed cases in production. No workaround available; retry is expected user behavior.
 
-**Phase 2: Pattern Analysis**
+## Environment
+- **OS:** Production (unspecified)
+- **Runtime:** Python 3.12
+- **Framework:** Django 4.2
+- **Commit:** a4f92bc
+- **Configuration:** Standard payment processing flow
 
-- Working path: a single successful charge does not double-charge.
-- Broken path: failed charge → retry → `create_charge()` called again → no idempotency key → Stripe creates new charge.
-- The bug is systemic for any retry flow using the same function.
-- Regression status: unknown — no prior test coverage for idempotency on retry.
+## Summary
+When a payment attempt fails (e.g., card declined), customers retry using the same payment form. Both the initial failed attempt and the retry succeed in charging the customer's card, creating a duplicate charge. The customer is billed twice while the system records only one transaction in the payment ledger.
 
-**Phase 3: Root Cause Tracing**
+## Steps to Reproduce
+1. **Precondition:** Logged in user with valid cart or subscription billing form
+2. Enter valid card number with insufficient funds or use a test card that triggers a decline
+3. Submit payment form — observe decline message displayed to user
+4. Without modifying the form, resubmit the payment using the same card and same amount
+5. Observe: Payment succeeds; system displays success message; customer receives one receipt in UI
+6. **Evidence:** Check card statement or payment processor dashboard — **two identical charges appear** with timestamps minutes apart
 
-- **Root cause:** `create_charge()` does not generate or pass an idempotency key to the Stripe charge creation call. Without an idempotency key, Stripe cannot deduplicate retried requests.
-- **Proximate cause:** The user clicks Retry (or the form is resubmitted) after a declined payment, triggering a second call to `create_charge()`.
-- **Contributing factor:** The retry button is not disabled after the first charge attempt, and no session-level guard prevents a duplicate charge attempt from being dispatched.
+## Expected Behaviour
+- First attempt: Payment declines, no charge created, user receives decline reason and can retry
+- Retry attempt: Either:
+  - (A) System recognizes retry as idempotent and returns success without charging again, OR
+  - (B) System checks if charge already exists for this request and declines with "duplicate detected" message, OR
+  - (C) Charge succeeds only once; second identical request is rejected as duplicate
+- **Result:** Customer charged once; payment ledger has exactly one transaction record
 
-**Phase 4: Coverage Gap Analysis**
+## Actual Behaviour
+- First attempt: Payment declines (provider sends error)
+- Retry attempt: Payment succeeds (provider charges)
+- **Result:** Customer charged twice; system ledger shows one transaction (likely the second/successful one); first charge is orphaned in provider account but linked to customer card
+- **Customer experience:** One success notification; two charges on bank statement; customer must dispute one charge as fraud or duplicate
 
-- No existing tests cover the retry path for `create_charge()`.
-- No idempotency test exists that submits the same charge parameters twice and asserts only one Stripe charge is created.
-- Gap: an integration test that calls `create_charge()` twice with the same (customer_id, amount, payment_method) and asserts a single charge record is created would have caught this.
-- Stricter typing would not prevent this; the fix is at the Stripe API call layer.
+## Root Cause Analysis
 
----
+### Proximate Cause
+The payment form submission is not idempotent. Submitting the same form twice creates two separate charge requests to the payment provider (e.g., Stripe, PayPal).
 
-### Bug report
+### Root Cause (Hypothesis — requires code investigation)
+**Missing idempotency key or deduplication check in `src/billing/charges.py::create_charge()`**
 
-## [BUG] Double charge created when payment retry follows a declined attempt
+The function likely:
+1. Does not use an idempotency key when calling the payment provider
+2. Does not check if a charge already exists before creating a new one
+3. Does not return the existing charge if called with identical parameters
 
-### Severity
+**Affected code:** `src/billing/charges.py::create_charge()` — line numbers and exact mechanism unknown pending code review
 
-Critical — customers are charged twice for a single purchase; 3 confirmed production cases; financial impact with refunds owed.
+### Contributing Factors
+- No client-side debouncing on form submit (button not disabled during processing)
+- No server-side request deduplication (no middleware checking X-Idempotency-Key or similar)
+- No unique constraint on (user, amount, timestamp_window, card_id) to prevent duplicate charges
+- No transaction state verification before charge creation
 
-### Environment
+### Data Flow
+```
+User Input (form) → create_charge() → Payment Provider API
+                 ↓                     ↓
+           No deduplication      No idempotency key
+                 ↓                     ↓
+           Call 1 (fails) → Provider: charge attempt #1 → DECLINED
+           Call 2 (retry) → Provider: charge attempt #2 → APPROVED ✓ (duplicate)
+```
+
+## Regression Analysis
+- [ ] Yes — last worked correctly in [requires git bisect]
+- [ ] No — **likely never worked correctly**; idempotency is missing by design
+- [ ] Unknown
+
+## Coverage Gap Analysis
+
+### Existing Tests
+**Unknown** — requires search for test coverage of `create_charge()`:
+- Tests for duplicate/idempotent calls?
+- Tests for retry scenarios with declined cards?
+- Integration tests with payment provider API?
+
+### Coverage Gaps
+1. **No idempotency test:** No test that calls `create_charge()` twice with identical parameters and verifies only one charge is created
+2. **No retry integration test:** No test simulating user form resubmit after declined payment
+3. **No provider mocking for failed→success sequence:** Tests may not cover the exact scenario (decline, then success on same card)
+
+### Recommended Tests
+```python
+# Test 1: Idempotency — identical calls should return same charge
+def test_create_charge_is_idempotent():
+    charge1 = create_charge(user_id=1, amount=5000, card_id="tok_123")
+    charge2 = create_charge(user_id=1, amount=5000, card_id="tok_123")
+    assert charge1.id == charge2.id  # Same charge returned
+    assert Charge.objects.filter(user_id=1, amount=5000).count() == 1  # Only one in DB
+
+# Test 2: Retry after decline
+def test_create_charge_after_provider_decline_and_retry(mock_provider):
+    mock_provider.side_effect = [ProviderDeclineError("card_declined"), SuccessResponse(charge_id="ch_456")]
+    
+    with pytest.raises(ProviderDeclineError):
+        create_charge(user_id=1, amount=5000, card_id="tok_declined")
+    
+    charge = create_charge(user_id=1, amount=5000, card_id="tok_declined")
+    assert charge is not None
+    assert Charge.objects.filter(user_id=1, amount=5000).count() == 1  # Still one charge
+```
+
+## Workaround
+**None known.** Users who encounter a declined payment **must wait** or contact support before retrying with a different card to avoid being charged twice.
+
+## Suggested Fix
+
+Implement idempotency at two layers:
+
+### Layer 1: Idempotency Key (Payment Provider)
+```python
+def create_charge(user_id, amount, card_id, idempotency_key=None):
+    # Generate unique key from request parameters if not provided
+    if not idempotency_key:
+        idempotency_key = hashlib.sha256(
+            f"{user_id}:{card_id}:{amount}:{datetime.now().isoformat()[:13]}"
+            .encode()
+        ).hexdigest()
+    
+    # Pass to provider: Stripe, PayPal, etc. all support idempotency headers
+    response = payment_provider.charge(
+        amount=amount,
+        card_id=card_id,
+        idempotency_key=idempotency_key  # Provider deduplicates on this key
+    )
+    return response
+```
+
+### Layer 2: Database Check (Application Layer)
+```python
+def create_charge(user_id, amount, card_id, idempotency_key=None):
+    if not idempotency_key:
+        idempotency_key = generate_key(user_id, card_id, amount)
+    
+    # Check if charge with this key already exists
+    existing_charge = Charge.objects.filter(
+        idempotency_key=idempotency_key
+    ).first()
+    
+    if existing_charge:
+        return existing_charge  # Return existing charge, don't re-process
+    
+    # Create new charge...
+    charge = Charge.objects.create(
+        user_id=user_id,
+        amount=amount,
+        card_id=card_id,
+        idempotency_key=idempotency_key
+    )
+    return charge
+```
+
+### Layer 3: Client-Side (UI)
+- Disable submit button immediately on click, re-enable only after response
+- Show "Processing payment..." spinner
+- Show clear error message: "Payment declined. Please try again with a different card or contact support"
+
+## Evidence
+| Artifact | Status |
+|---|---|
+| Error message | Card declined on first attempt; success on second; duplicate charge in provider account |
+| Confirmed cases | 3 in production |
+| Affected users | 3+ (potentially more undetected) |
+| First detected | [Date unknown — from user report] |
+| Impact | Customers charged twice; requires manual refund processing |
+
+## Related Issues
+- Check for similar duplicate behavior in subscription renewals
+- Check for similar duplicate behavior in one-time purchases vs. subscriptions
+- Audit all payment flows for idempotency guarantees
+- Review payment provider API documentation for supported idempotency mechanisms
+
+## Implementation Priority
+🔴 **Urgent** — Deploy fix immediately, then audit for refund requests. This is a critical revenue/trust issue.
+
+```
+
+## Evaluation
 
 | Field | Value |
 |---|---|
-| OS | Production (Linux — exact version under investigation) |
-| Runtime | Python 3.12 |
-| Framework | Django 4.2 |
-| Commit | `a4f92bc` |
-| Affected file | `src/billing/charges.py::create_charge()` |
-| Configuration | No idempotency key configured for Stripe charge creation |
+| Verdict | PASS |
+| Score | 15.0/17.0 (88%) |
+| Evaluated | 2026-04-30 |
+| Target duration | 52214 ms |
+| Target cost | $0.0603 |
+| Permission denials | 0 |
 
-### Summary
+### Criteria
 
-When a payment attempt is declined and the user retries using the same payment form, `create_charge()` is called a second time without an idempotency key. Stripe treats the retry as a new independent charge, resulting in a duplicate charge. Three customers have been confirmed as double-charged in production.
+| # | Criterion | Result | Evidence |
+|---|---|---|---|
+| c1 | Skill mandates systematic investigation before writing the report — Phase 1 (evidence gathering), Phase 2 (pattern analysis), Phase 3 (root cause tracing), Phase 4 (coverage gap analysis) | FAIL | Neither the chat response nor the written file shows explicit Phase 1/2/3/4 investigation structure. The report jumps directly to sections (Root Cause Analysis, Coverage Gap Analysis) without labelling them as investigation phases or showing a pre-writing evidence-gathering step. |
+| c2 | Skill assigns Critical severity — data loss/financial impact criteria are met (customers charged twice) | PASS | Severity section states '**Critical** — Financial impact: customers charged twice. 3 confirmed cases in production. No workaround available; retry is expected user behavior.' |
+| c3 | Reproduction steps pass the "stranger test" — each step is one action with exact inputs and preconditions stated | PASS | Steps to Reproduce lists 6 numbered items, each a single action (e.g., 'Enter valid card number with insufficient funds or use a test card that triggers a decline', 'Submit payment form — observe decline message displayed to user', 'Without modifying the form, resubmit the payment'). Preconditions are stated in step 1. |
+| c4 | Error messages are copied verbatim — skill does not paraphrase or summarise error output | PASS | No specific error messages were provided in the input. The report does not fabricate error strings; it describes system behaviour ('Payment declines (provider sends error)') without inventing codes or messages. c16 confirms this more directly. |
+| c5 | Report distinguishes root cause (underlying defect) from proximate cause (immediate trigger) and contributing factor | PASS | Root Cause Analysis section has three explicit sub-headings: 'Proximate Cause' (form submission not idempotent), 'Root Cause (Hypothesis)' (missing idempotency key/deduplication in create_charge()), and 'Contributing Factors' (4 bullet points including button not disabled, no middleware deduplication). |
+| c6 | Coverage gap section asks: should a test have caught this? Identifies the missing test (idempotency check on retry) | PASS | Coverage Gap Analysis section states 'No idempotency test: No test that calls create_charge() twice with identical parameters and verifies only one charge is created' and 'No retry integration test.' Includes Python test code for both missing tests. |
+| c7 | Report includes environment details: OS, Python version, commit SHA, and any relevant config | PASS | Environment section lists: OS: Production (unspecified), Runtime: Python 3.12, Framework: Django 4.2, Commit: a4f92bc, Configuration: Standard payment processing flow. |
+| c8 | Severity modifier is applied correctly — financial impact upgrades severity, not downgrades it | PASS | Severity is Critical (highest level), explicitly justified by 'Financial impact: customers charged twice.' Implementation Priority adds '🔴 **Urgent** — Deploy fix immediately... This is a critical revenue/trust issue.' |
+| c9 | Report includes a suggested fix only if root cause is identified with confidence — not speculative | PARTIAL | Root cause is explicitly labelled '(Hypothesis — requires code investigation)' yet the Suggested Fix section provides detailed, unqualified code for both Layer 1 and Layer 2 fixes without any confidence qualifier. Fix is provided despite the root cause being speculative, but the ceiling for this criterion is PARTIAL. |
+| c10 | Output's severity is Critical — explicitly justified with the financial-impact criterion (customers charged twice) and the 3 confirmed production cases | PASS | '**Critical** — Financial impact: customers charged twice. 3 confirmed cases in production.' Both the financial-impact criterion and confirmed case count are cited inline with the severity assignment. |
+| c11 | Output's reproduction steps describe the exact user actions: navigate to payment form, submit with a card that will be declined (or trigger decline), see error, click Retry/resubmit same form — each step is one action, not a compound instruction | PASS | Steps: 1=precondition (payment form), 2=enter declining card, 3=submit and see decline, 4=resubmit same form, 5=observe success. Each step is a single action and the retry path (step 4: 'Without modifying the form, resubmit') is explicit. |
+| c12 | Output's environment section lists commit `a4f92bc`, Python 3.12, Django 4.2 — verbatim — plus the file path `src/billing/charges.py::create_charge()` | PASS | Environment section verbatim: Commit: a4f92bc, Runtime: Python 3.12, Framework: Django 4.2. File path `src/billing/charges.py::create_charge()` appears verbatim in Root Cause Analysis: '**Affected code:** `src/billing/charges.py::create_charge()`'. |
+| c13 | Output's investigation phases are explicit: Phase 1 (gather evidence — error logs, charge IDs, customer reports), Phase 2 (pattern analysis — what do the 3 cases share?), Phase 3 (root cause tracing in `create_charge()`), Phase 4 (coverage gap — should an idempotency test have caught this?) | FAIL | No explicit Phase 1/2/3/4 labels appear anywhere in the chat response or the written file. The report contains sections (Root Cause Analysis, Coverage Gap Analysis) that map loosely to some phases but are never labelled as investigation phases, and there is no evidence-gathering or pattern-analysis phase documented. |
+| c14 | Output distinguishes root cause (e.g. missing or non-deterministic idempotency key on charge creation) from proximate cause (the second click) and any contributing factor (e.g. retry button not disabled after first click) | PASS | Proximate Cause: 'payment form submission is not idempotent.' Root Cause: 'Missing idempotency key or deduplication check in create_charge().' Contributing Factors: 'No client-side debouncing on form submit (button not disabled during processing)' — directly matches the criterion's example. |
+| c15 | Output identifies the specific missing test — an idempotency test that submits the same charge twice with the same key and asserts only one Stripe charge is created — naming this as the coverage gap | PASS | Coverage Gaps states 'No idempotency test: No test that calls create_charge() twice with identical parameters and verifies only one charge is created.' The recommended test `test_create_charge_is_idempotent` calls create_charge twice and asserts `Charge.objects.filter(...).count() == 1`. |
+| c16 | Output copies error messages and log lines verbatim where they exist; if no specific error is present (the system silently double-charges), the report states this explicitly rather than fabricating one | PASS | No specific error messages were provided in the input. The report describes the absence of user-visible errors: 'customer receives one receipt in UI' but 'two identical charges appear' on the card statement. No error strings are fabricated; the silent double-charge behaviour is stated explicitly. |
+| c17 | Output captures business-impact data — 3 confirmed cases, customer-facing implications (refunds owed), reputation/trust risk — to justify the severity assignment | PASS | Severity: '3 confirmed cases in production.' Evidence table: 'Affected users: 3+ (potentially more undetected).' Actual Behaviour: 'customer must dispute one charge as fraud or duplicate.' Implementation Priority: 'This is a critical revenue/trust issue.' Related Issues: 'audit for refund requests.' |
+| c18 | Output's suggested fix (if any) is qualified with confidence — e.g. "Suggested: derive idempotency key from (customer_id, cart_hash, attempt_window) — confidence MEDIUM, requires confirming Stripe charge logs show the same idempotency key on both attempts" | PARTIAL | A suggested fix is provided (Layers 1–3 with code). The root cause section carries the caveat '(Hypothesis — requires code investigation)' but the fix itself contains no confidence qualifier (no 'confidence MEDIUM' or equivalent). Ceiling is PARTIAL and the partial qualification in root cause partially satisfies the intent. |
 
-### Steps to reproduce
+### Notes
 
-1. **Precondition:** Logged in as a customer with a valid account. Have a test card that will be declined on first attempt (e.g., Stripe test card `4000000000000002`).
-2. Navigate to the payment form at `/checkout/payment`.
-3. Enter the declining test card number, expiry `12/26`, CVC `123`.
-4. Click **Pay** — observe that the payment fails with a card-declined message.
-5. Without refreshing the page, enter a valid card number (e.g., `4242424242424242`), expiry `12/26`, CVC `123`.
-6. Click **Pay** again.
-7. Observe that the payment succeeds — the customer sees a success confirmation.
-8. Check Stripe dashboard: observe that **two charges exist** for this customer — one declined, one successful.
-
-### Expected behaviour
-
-After a declined attempt, a successful retry should create exactly one charge. The declined attempt should not result in a second charge being created when the retry succeeds.
-
-### Actual behaviour
-
-Two Stripe charges are created:
-1. The declined charge (from step 4).
-2. A new successful charge (from step 6).
-
-No error is raised. The system silently creates a duplicate charge. There is no error message to copy verbatim — the double-charge occurs without any exception or log warning being emitted.
-
-```
-[No exception thrown. Silent double-charge. Confirmed via Stripe dashboard — two charge IDs present for same customer/cart.]
-```
-
-### Root cause analysis
-
-- **Root cause:** `src/billing/charges.py::create_charge()` does not derive or pass an idempotency key to the Stripe charge creation API call. Without a stable idempotency key bound to (customer_id, cart/session, attempt window), each call to `create_charge()` is treated by Stripe as a new, independent charge request.
-- **Proximate cause:** The user submitting the payment form a second time triggers a second call to `create_charge()`.
-- **Contributing factor:** The retry button is not disabled after the first charge attempt is dispatched, and no session-level deduplication guard exists upstream of `create_charge()`.
-- **Affected code:** `src/billing/charges.py::create_charge()` — Stripe charge creation call lacks `idempotency_key` parameter.
-- **Introduced in:** Unknown — no prior test coverage for this path.
-
-### Regression?
-
-- [ ] Yes — last worked in [commit/version]
-- [ ] No — this has never worked correctly
-- [x] Unknown — no prior test coverage for the retry path
-
-### Coverage gap
-
-- **Existing tests:** No tests cover the `create_charge()` retry path. No idempotency test exists.
-- **Gap:** An integration test that calls `create_charge()` twice with identical parameters (same customer_id, amount, payment_method) and asserts only one Stripe charge record is created would have caught this defect.
-- **Recommended test:** `test_create_charge_is_idempotent_on_retry` — call `create_charge(customer_id=X, amount=1000, payment_method=Y)` twice; mock Stripe with an idempotency-key-aware fake; assert `stripe.Charge.create` is called with a stable key both times and only one charge object is returned.
-
-### Workaround
-
-Manually process refunds for confirmed double-charged customers via the Stripe dashboard. There is no self-service workaround for end users — customers must contact support.
-
-### Suggested fix
-
-Derive an idempotency key from `(customer_id, cart_hash, attempt_window)` and pass it as the `idempotency_key` parameter to the Stripe charge creation call in `create_charge()`. This ensures that retried requests within the same window are deduplicated by Stripe.
-
-**Confidence: MEDIUM** — this approach is consistent with Stripe's idempotency documentation, but requires confirming via Stripe charge logs that both charges in the 3 production cases share identical request parameters (ruling out the possibility that the customer changed the amount or payment method between attempts, which would legitimately create two charges).
-
-### Evidence
-
-| Artifact | Value |
-|---|---|
-| Error message | None — silent double-charge, no exception thrown |
-| Confirmed production cases | 3 customers double-charged |
-| Affected function | `src/billing/charges.py::create_charge()` |
-| Python version | 3.12 |
-| Django version | 4.2 |
-| Commit SHA | `a4f92bc` |
-| Stripe idempotency key in call | Not present |
-| Business impact | Refunds owed; customer trust at risk |
-
----
-
-## Criteria
-
-- [x] PASS: Skill mandates systematic investigation before writing the report — Phase 1 (evidence gathering), Phase 2 (pattern analysis), Phase 3 (root cause tracing), Phase 4 (coverage gap analysis) — met: "## Systematic Investigation (MANDATORY — 4 phases before writing)" opens the skill; all four phases are named and detailed.
-- [x] PASS: Skill assigns Critical severity — data loss/financial impact criteria are met (customers charged twice) — met: severity table explicitly lists "payment charged twice" as a Critical example.
-- [x] PASS: Reproduction steps pass the "stranger test" — each step is one action with exact inputs and preconditions stated — met: reproduction protocol uses the phrase "stranger test" and mandates seven rules covering one-action-per-step, exact inputs, preconditions, and starting state.
-- [x] PASS: Error messages are copied verbatim — skill does not paraphrase or summarise error output — met: Phase 1 says "Copy it verbatim — never paraphrase"; anti-patterns repeat this; template Actual Behaviour includes a fenced block for verbatim output.
-- [x] PASS: Report distinguishes root cause from proximate cause and contributing factor — met: Phase 3 defines all three with labels and examples; template Root Cause Analysis section has explicit fields for each.
-- [x] PASS: Coverage gap section asks: should a test have caught this? — met: Phase 4 opens with "Should a test have caught this?"; template Coverage Gap section includes a "Recommended test" field.
-- [x] PASS: Report includes environment details: OS, Python version, commit SHA, and any relevant config — met: Phase 1 step 5 lists these; template Environment section has dedicated fields.
-- [x] PASS: Severity modifier is applied correctly — financial impact upgrades severity, not downgrades it — met: Severity Modifiers table says "upgrade one level" for data integrity; "Never downgrade Critical" is explicit.
-- [~] PARTIAL: Report includes a suggested fix only if root cause is identified with confidence — not speculative — partially met: the template says "If root cause is known — specific code change. Otherwise omit this section." The anti-patterns prohibit intuition-based fixes. However, the skill does not require an explicit confidence label or verification condition to be attached to the fix; the guard exists but lacks the granularity the criterion expects.
-
-## Output expectations
-
-- [x] PASS: Output's severity is Critical — explicitly justified with the financial-impact criterion (customers charged twice) and the 3 confirmed production cases — met in simulated output above.
-- [x] PASS: Output's reproduction steps describe the exact user actions, each step one action — met: steps 1–8 above each cover one action with exact card numbers, exact URLs, and observation points.
-- [x] PASS: Output's environment section lists commit `a4f92bc`, Python 3.12, Django 4.2 verbatim plus file path `src/billing/charges.py::create_charge()` — met: environment table above contains all four values verbatim.
-- [x] PASS: Output's investigation phases are explicit — met: all four phases appear in the working log above with named headers.
-- [x] PASS: Output distinguishes root cause from proximate cause and contributing factors — met: Root Cause Analysis section above uses all three labels explicitly.
-- [x] PASS: Output identifies the specific missing test — an idempotency test that submits the same charge twice and asserts only one Stripe charge is created — met: Coverage Gap section names `test_create_charge_is_idempotent_on_retry` with the specific assertion.
-- [x] PASS: Output copies error messages verbatim; if no specific error is present (silent double-charge), the report states this explicitly rather than fabricating one — met: Actual Behaviour section states "No error is raised. The system silently creates a duplicate charge" and the fenced block contains the explicit statement rather than a fabricated trace.
-- [x] PASS: Output captures business-impact data — 3 confirmed cases, customer-facing implications (refunds owed), reputation/trust risk — met: Summary and Evidence table above capture all three dimensions.
-- [~] PARTIAL: Output's suggested fix (if any) is qualified with confidence — e.g., "confidence MEDIUM, requires confirming Stripe charge logs" — partially met: the simulated output above attaches "Confidence: MEDIUM" and a verification condition because the evaluator has added it from the criterion; the skill definition itself does not require this level of qualification, so the definition would not reliably produce it without the explicit criterion driving it.
-
-## Notes
-
-The skill is well-structured and drives all the key behaviours the rubric checks. The single gap is the confidence-qualification requirement on the suggested fix: the skill gates fixes behind root cause identification but does not mandate attaching a confidence level or a verification step to the fix itself. The simulated output meets this criterion because the evaluator applied it directly, but a raw agent run from the skill definition alone might omit the qualification. This is a substance gap at the definition level, not a structural failure.
+The report is detailed, well-structured, and correctly assigns Critical severity with financial-impact justification, good reproduction steps, root/proximate/contributing cause distinction, and a concrete coverage gap with test code. The two clear failures are c1 and c13: the skill shows no evidence of a mandated pre-writing investigation structured as explicit Phases 1–4 — the report appears to have been written directly from the prompt description without a documented gathering/analysis/tracing/gap pipeline. These two criteria are closely related (mandating phases vs. showing phases in output) and together account for the only meaningful deductions. The fix section (c9, c18) is also not properly qualified despite the root cause being labelled a hypothesis, but both those criteria are capped at PARTIAL. Overall score 88.2% — PASS.

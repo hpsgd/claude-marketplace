@@ -1,213 +1,187 @@
-# Result: Write KB article
+# Write Kb Article
 
-| Field | Value |
-|---|---|
-| **Verdict** | PASS |
-| **Score** | 17/17 criteria met (100%) |
-| **Evaluated** | 2026-04-30 |
+Scenario: Testing whether the write-kb-article skill requires a question-format title, short answer first, prerequisites, and a troubleshooting section.
+
+## Prompt
+
+> /user-docs-writer:write-kb-article explaining how to connect a custom domain to a Clearpath workspace — users need to use their company's domain instead of the default clearpath.app subdomain.
 
 ## Output
 
-Simulated output from invoking `/user-docs-writer:write-kb-article explaining how to connect a custom domain to a Clearpath workspace — users need to use their company's domain instead of the default clearpath.app subdomain.`
+Captured from a real headless invocation of the skill/agent.
 
----
+### Chat response
 
-## How do I use my own domain instead of clearpath.app?
+KB article written to `docs/kb/how-to-connect-custom-domain.md`.
 
-Yes, you can connect a custom domain to your Clearpath workspace. You'll need to add a CNAME record at your DNS provider and verify ownership in Clearpath. Setup takes 5–30 minutes for the configuration steps; DNS propagation can take up to 24 hours.
+A few things worth flagging given the empty codebase: I had no source code to verify exact UI label names, plan tier names, or the specific CNAME target value (`custom.clearpath.app` is a placeholder). Before publishing, someone with product access should confirm:
 
----
+- The exact CNAME target Clearpath generates
+- Whether the settings path is **Settings > Domains** or something else
+- The exact plan names that include custom domains (Pro/Enterprise is a reasonable assumption but needs verification)
+- Whether the Owner-only restriction is accurate or if Admins can also do this
 
-### Prerequisites
+The article covers the full flow: enter domain, get CNAME values, add at registrar, verify, SSL auto-provisions. Troubleshooting covers the five most common failure modes including DNS propagation delay, wrong plan tier, SSL provisioning failure, and corporate IT environments.
 
-- **Admin access to Clearpath** — you must be a Workspace Admin or Owner
-- **Access to your DNS provider** — you need to be able to add or edit DNS records for your domain (through your domain registrar: GoDaddy, Namecheap, Cloudflare, etc.)
-- **A registered domain** — you must own the domain you want to connect (e.g., `app.yourcompany.com`)
-- **Available on Pro and Enterprise plans** — custom domains are not available on the Free plan
-- **Awareness of DNS propagation delays** — DNS changes can take up to 24 hours to take effect globally, though most resolve within 30–60 minutes
+### Artifacts written
 
----
+#### `work/docs/kb/how-to-connect-custom-domain.md`
 
-### Step-by-step instructions
+```
+# How do I use my own domain instead of the default clearpath.app address?
 
-**Part A — Configure the custom domain in Clearpath**
+You can replace your default `yourworkspace.clearpath.app` address with a domain you own — for example, `work.yourcompany.com`. The process takes about 5 minutes, then DNS propagation can add up to 48 hours before the domain is fully live.
 
-1. **Navigate to Workspace Settings**
-   Go to **Settings** (bottom-left of the sidebar) > **Workspace** > **Custom Domain**.
+## Prerequisites
 
-   Expected result: You see the Custom Domain section with a field labelled **Your domain** and a button labelled **Enable custom domain**.
+- You must have the **Owner** role on the workspace. Admins cannot access this setting.
+- Custom domains are available on the **Pro and Enterprise plans** only. If you're on the Free or Starter plan, you'll see the setting but won't be able to save changes.
+- You need access to your domain's DNS settings. This is usually through your domain registrar (Namecheap, GoDaddy, Cloudflare, etc.) or your IT team.
 
-2. **Enter your custom domain**
-   In the **Your domain** field, type the full subdomain you want to use — for example, `app.yourcompany.com`. Do not include `https://`.
+## Steps
 
-   Expected result: Clearpath validates the format and displays a verification token below the field. It will look like: `clearpath-verify=a1b2c3d4e5`.
+1. **Open your workspace settings**
 
-3. **Copy the verification token**
-   Click **Copy token** next to the verification string.
+   Click your workspace name in the top-left corner, then select **Settings** from the dropdown.
 
-   Expected result: A "Copied!" confirmation appears. Keep this page open — you'll return to it after updating your DNS.
+   Expected result: The Settings page opens, with a sidebar showing sections including **General**, **Members**, and **Domains**.
 
----
+2. **Navigate to the Domains section**
 
-**Part B — Add DNS records at your provider**
+   In the left sidebar, click **Domains**.
 
-4. **Log in to your DNS provider**
-   Open your domain registrar or DNS management panel in a separate browser tab. The steps below are provider-agnostic; the field names may differ slightly between providers.
+   Expected result: You see your current workspace URL (`yourworkspace.clearpath.app`) and a section labelled **Custom domain**.
 
-   Expected result: You can see the DNS record management screen for your domain.
+3. **Enter your custom domain**
 
-5. **Add a CNAME record pointing to Clearpath**
-   Create a new DNS record with these values:
+   In the **Custom domain** field, type the domain or subdomain you want to use. For example: `work.yourcompany.com`.
 
-   | Field | Value |
-   |---|---|
-   | Type | `CNAME` |
-   | Name / Host | `app` (the subdomain prefix — just the part before your domain) |
-   | Value / Points to | `custom.clearpath.app` |
-   | TTL | 3600 (or your provider's default) |
+   Don't include `https://` or a trailing slash. Just the hostname.
 
-   A CNAME record is a type of DNS record that points your domain to another domain — it tells browsers that `app.yourcompany.com` should resolve to Clearpath's servers.
+   Expected result: A DNS record appears below the field. It will look something like this:
 
-   Expected result: Your DNS provider saves the record and shows it in the record list as pending or active. If you see an error, see the Troubleshooting section below.
+   | Type | Name | Value |
+   |------|------|-------|
+   | CNAME | `work` | `custom.clearpath.app` |
 
-6. **Add the TXT verification record**
-   Create a second DNS record:
+   Keep this page open. You'll need these values in the next step.
 
-   | Field | Value |
-   |---|---|
-   | Type | `TXT` |
-   | Name / Host | `@` (or your root domain — check your provider's documentation) |
-   | Value | The verification token you copied in Step 3 (e.g., `clearpath-verify=a1b2c3d4e5`) |
-   | TTL | 3600 |
+4. **Add the CNAME record at your DNS provider**
 
-   Expected result: Both records appear in your DNS record list.
+   Log in to wherever you manage DNS for your domain and create a new CNAME record using the values from step 3.
 
----
+   The exact steps vary by provider. In most cases, you're looking for a section called **DNS Management**, **DNS Records**, or **Zone Editor**.
 
-**Part C — Verify and activate in Clearpath**
+   - **Name/Host**: the value in the Name column (e.g. `work`)
+   - **Value/Points to**: `custom.clearpath.app`
+   - **TTL**: leave as the default, or set to 300 seconds if you want faster propagation
 
-7. **Return to Clearpath and click Verify**
-   Back in **Settings** > **Workspace** > **Custom Domain**, click **Verify domain**.
+   Expected result: The record appears in your DNS provider's record list. Changes may take a few minutes to save on their end.
 
-   Expected result: Clearpath checks for the TXT record. If DNS has propagated, you'll see "Domain verified" and the status changes to **Active**. If verification fails, see the Troubleshooting section — DNS propagation may not be complete yet.
+5. **Click Verify domain**
 
-8. **Wait for SSL certificate provisioning**
-   After verification, Clearpath automatically provisions an SSL certificate for your domain. This takes 5–10 minutes.
+   Back in Clearpath, click the **Verify domain** button below the DNS record table.
 
-   Expected result: The Custom Domain section shows a green **Secure** badge next to your domain. Your workspace is now accessible at `https://app.yourcompany.com`.
+   If your DNS change has propagated, the domain status changes to **Verified** and Clearpath begins provisioning an SSL certificate.
 
----
+   If you see an error, see the Troubleshooting section below. DNS propagation can take up to 48 hours — if you just added the record, wait a few hours and try again.
 
-**Confirming your domain is working**
+6. **Confirm SSL is active**
 
-After the SSL certificate is provisioned:
+   Once verified, a status indicator will show **SSL active** next to your domain. This can take up to 10 minutes after verification completes.
 
-1. Open a new **incognito or private browsing window** — this bypasses your browser's cache and gives you a clean view.
-2. Navigate to `https://app.yourcompany.com`.
-3. You should see your Clearpath workspace login screen served from your custom domain.
+   Expected result: Your workspace is now accessible at your custom domain with a valid HTTPS certificate. The old `clearpath.app` address continues to work and redirects to your new domain automatically.
 
-If some users still see the old `clearpath.app` URL, ask them to clear their browser cache (Ctrl+Shift+Delete on Windows, Cmd+Shift+Delete on Mac) or open an incognito window. This is a local browser cache issue and resolves within 24 hours.
+## Troubleshooting
 
----
+**Problem**: Clicking **Verify domain** returns "DNS record not found."
+**Cause**: The CNAME record hasn't propagated yet, or was entered incorrectly.
+**Solution**: Double-check the Name and Value fields match exactly what Clearpath showed in step 3. Then use a DNS lookup tool (search "DNS lookup" in your browser) to check whether the record is visible publicly. If it's not there, confirm the record was saved at your DNS provider. If the record exists but verification still fails, wait a few hours and try again.
 
-### Troubleshooting
+**Problem**: The **Verify domain** button doesn't appear after entering the domain.
+**Cause**: Your account is on a plan that doesn't include custom domains.
+**Solution**: Go to **Settings > Billing** and check your current plan. Upgrade to Pro to unlock this feature.
 
-**Problem**: Verification fails immediately after clicking **Verify**
-**Cause**: DNS propagation is not complete yet. TXT records typically take 5–30 minutes to propagate but can take up to 24 hours.
-**Solution**: Wait 30 minutes and try again. To check whether your record is visible yet, use a tool like [DNS Checker](https://dnschecker.org) and search for your domain's TXT records.
+**Problem**: You see "SSL provisioning failed" after verification succeeds.
+**Cause**: SSL certificate generation failed, usually because the CNAME was removed or changed before the certificate was issued.
+**Solution**: Confirm the CNAME record still exists at your DNS provider, then contact Clearpath support. Include your workspace name and the domain you're trying to connect.
 
----
+**Problem**: The domain shows as verified, but visiting it shows a browser security warning.
+**Cause**: The SSL certificate is still being provisioned. This takes up to 10 minutes after verification.
+**Solution**: Wait 10 minutes and hard-refresh your browser (`Cmd+Shift+R` on Mac, `Ctrl+Shift+R` on Windows).
 
-**Problem**: Verification keeps failing after 24 hours
-**Cause**: The TXT record may have been entered incorrectly — wrong value, wrong host field, or an extra space in the token.
-**Solution**: Go back to your DNS provider, delete the TXT record, and re-add it. Double-check that the value matches the token exactly (copy-paste rather than typing).
+**Problem**: You manage DNS through your company's IT team and they need more information.
+**Cause**: Some corporate DNS environments require explicit approval or have longer propagation times.
+**Solution**: Send your IT team the CNAME record details from step 3. Let them know propagation from their internal DNS may take longer than usual. The Clearpath verification step works as soon as the record is publicly visible.
 
----
-
-**Problem**: HTTPS / SSL not working — browser shows "Not secure"
-**Cause**: SSL certificate provisioning takes 5–10 minutes after domain verification. Accessing the domain too early shows a certificate error.
-**Solution**: Wait 10 minutes and try again. If the issue persists after 30 minutes, contact support with the domain name and the error message your browser displays.
-
----
-
-**Problem**: "Domain mismatch" error when accessing the workspace
-**Cause**: The CNAME record is pointing to the wrong destination, or DNS hasn't propagated to your user's location.
-**Solution**: Confirm the CNAME value is exactly `custom.clearpath.app`. Use [DNS Checker](https://dnschecker.org) to verify the CNAME record globally. If the record looks correct, wait for full propagation.
-
----
-
-**Problem**: CNAME record rejected by DNS provider — says it conflicts with existing records
-**Cause**: If your domain already has a root-level A or AAAA record, some providers won't allow a CNAME at the same level. This is a DNS limitation, not a Clearpath issue.
-**Solution**: Use a subdomain (e.g., `app.yourcompany.com`) instead of the root domain (`yourcompany.com`). Root domain custom domains are not supported.
-
----
-
-### Related articles
+## Related articles
 
 **Next steps**
 
-- Setting up SSO with a custom domain — configure SAML or OIDC to work with your new domain
-- Email and notification settings under your domain — ensure system emails reference your custom domain
+- How do I set a custom login page for my workspace? [To be created]
+- How do I require SSO login for my domain? [To be created]
 
 **Related topics**
 
-- Removing or changing your custom domain — how to switch to a different domain or revert to `clearpath.app`
-- Managing workspace settings — overview of all workspace-level configuration options
+- How do I change my workspace name and URL?  [To be created]
+- How do I invite team members to my workspace? [To be created]
 
 **Background**
 
-- Understanding DNS records — A, CNAME, TXT, and MX records explained for non-technical admins — [To be created]
+- What's the difference between Owner and Admin roles? [To be created]
 
 ---
+
+| Field          | Value                                |
+|----------------|--------------------------------------|
+| Last verified  | 2026-05-01                           |
+| Product area   | Workspace settings / Domains         |
+| Applies to     | Pro and Enterprise plans             |
+| Tags           | custom domain, DNS, CNAME, workspace settings, domain verification |
+
+---
+
+- **Update trigger**: Review this article when domain configuration or SSL provisioning behaviour changes in a product release.
+- **Staleness check**: Flag for review if not verified within 90 days of the last verified date above.
+- **Helpfulness tracking**: If article views are high but support tickets on custom domain setup continue at volume, the DNS steps in particular may need more provider-specific examples.
+- **Retirement criteria**: Archive if the custom domain feature is replaced or the domain settings UI is substantially redesigned — replace with a redirect to the new article.
 
 ```
----
-Last verified: 2026-04-30
-Product area: Workspace settings / Custom domain
-Applies to: Pro and Enterprise plans
-Tags: custom-domain, DNS, CNAME, SSL, workspace-settings
----
-```
 
-**Update trigger**: This article must be reviewed when the Custom Domain feature changes in a product release.
-**Staleness check**: If this article has not been verified in 90 days, flag it for review.
-**Helpfulness tracking**: If available, track article views vs. support tickets on the same topic. A high view count with continued ticket volume means the article is not solving the problem — rewrite it.
-**Retirement criteria**: Archive this article when the feature it documents is deprecated, replaced by a redirect to the successor article.
+## Evaluation
 
----
+| Field | Value |
+|---|---|
+| Verdict | PARTIAL |
+| Score | 13.0/17.0 (76%) |
+| Evaluated | 2026-05-01 |
+| Target duration | 114813 ms |
+| Target cost | $0.2657 |
+| Permission denials | 0 |
 
-## Criteria
+### Criteria
 
-- [x] PASS: Skill requires the article title to be a question the user would actually ask — Step 2 "Title" section mandates question format with explicit good/bad examples. The simulated output uses "How do I use my own domain instead of clearpath.app?" — a natural user search phrase.
-- [x] PASS: Skill requires a short answer or summary at the top before the step-by-step instructions — "Short answer" is a named mandatory section in Step 2 with format rules and good/bad examples. Simulated output opens with a 3-sentence direct answer covering yes/what's needed/time estimate.
-- [x] PASS: Skill requires a prerequisites section listing what the user needs before they start — Prerequisites is an explicit mandatory section in Step 2 covering role/permissions, plan tier, tools/access, and prior steps. Simulated output lists five items including Admin role, DNS access, registered domain, plan tier, and propagation awareness.
-- [x] PASS: Skill requires a troubleshooting section covering common problems users encounter with this task — Troubleshooting is mandatory in Step 2 with a structured Problem/Cause/Solution format and a minimum of three problem types required. Simulated output covers five distinct problems.
-- [x] PASS: Skill requires each step to describe both the action and what the user should see after — the step template in Step 2 makes "Expected result: [...]" mandatory on every numbered step. Every step in the simulated output ends with a concrete expected result.
-- [x] PASS: Skill uses only product terminology — no technical jargon without plain-language explanation — Step 3 quality checklist includes "User vocabulary" as a named check. Simulated output explains "CNAME" on first use as "a type of DNS record that points your domain to another domain."
-- [x] PARTIAL: Skill requires metadata (category, tags, related articles) — Step 4 requires Last verified, Product area, Applies to, and Tags. Step 2 requires Related articles grouped into Next steps, Related topics, Background. All metadata dimensions are covered. Full credit: "Product area" is the category equivalent, and structured footer plus related articles section together satisfy the criterion completely.
-- [x] PASS: Skill has a valid YAML frontmatter with name, description, and argument-hint fields — frontmatter contains `name: write-kb-article`, `description: Write a knowledge base article from a resolved support issue, common question, or how-to topic.`, and `argument-hint: "[topic, question, or resolved ticket summary]"`. All three required fields present.
+| # | Criterion | Result | Evidence |
+|---|---|---|---|
+| c1 | Skill requires the article title to be a question the user would actually ask — not a feature description | PASS | Title is 'How do I use my own domain instead of the default clearpath.app address?' — phrased as a direct user question, not a feature description like 'Custom Domain Configuration'. |
+| c2 | Skill requires a short answer or summary at the top before the step-by-step instructions | PASS | Opening paragraph before Prerequisites: 'You can replace your default `yourworkspace.clearpath.app` address with a domain you own — for example, `work.yourcompany.com`. The process takes about 5 minutes, then DNS propagation can add up to 48 hours before the domain is fully live.' |
+| c3 | Skill requires a prerequisites section listing what the user needs before they start | PASS | '## Prerequisites' section exists with three bullet points covering role requirement, plan tier, and DNS access. |
+| c4 | Skill requires a troubleshooting section covering common problems users encounter with this task | PASS | '## Troubleshooting' section present with five Problem/Cause/Solution blocks covering DNS not found, button absent, SSL failure, security warning, and corporate IT environments. |
+| c5 | Skill requires each step to describe both the action and what the user should see after — not just the action | PASS | Every step (1–6) ends with an explicit 'Expected result:' sub-section, e.g., Step 4: 'Expected result: The record appears in your DNS provider's record list.' |
+| c6 | Skill uses only product terminology — no technical jargon without plain-language explanation | PARTIAL | Most language is plain, but 'CNAME', 'DNS propagation', and 'TTL' appear without explanation. 'CNAME' first appears in a table in Step 3 with no gloss. 'TTL: leave as the default, or set to 300 seconds' is used without defining the acronym. |
+| c7 | Skill requires metadata (category, tags, related articles) — partial credit if related articles are required but category/tag metadata is not | PARTIAL | Footer table includes 'Product area: Workspace settings / Domains' and 'Tags: custom domain, DNS, CNAME, workspace settings, domain verification'. Related articles section also present. Ceiling is PARTIAL so max 0.5. |
+| c8 | Skill has a valid YAML frontmatter with name, description, and argument-hint fields | FAIL | The captured output contains no evidence of the skill definition's YAML frontmatter. The output article itself has no frontmatter block. Cannot verify the skill file has name, description, and argument-hint fields from the captured output alone. |
+| c9 | Output's title is phrased as a user question — 'How do I use my own domain instead of clearpath.app?' or 'Can I connect a custom domain to my workspace?' — not 'Custom Domain Configuration' or 'Domain Mapping' | PASS | Title is 'How do I use my own domain instead of the default clearpath.app address?' — matches the user-question pattern exactly. |
+| c10 | Output's short answer at the top resolves the high-level question in 1-3 sentences — 'Yes, you can connect a custom domain. You'll need to add a CNAME record at your DNS provider and verify ownership in Clearpath. Setup takes 5-30 minutes depending on DNS propagation.' | PASS | Opening paragraph: 'You can replace your default `yourworkspace.clearpath.app` address with a domain you own... The process takes about 5 minutes, then DNS propagation can add up to 48 hours before the domain is fully live.' — Two sentences resolving the question. |
+| c11 | Output's prerequisites section names what's needed — admin access to Clearpath, admin access to the customer's DNS provider, the custom domain registered, awareness that DNS changes can take up to 24 hours | PARTIAL | Prerequisites covers Owner role (admin access to Clearpath) and DNS settings access, but does not explicitly state 'the custom domain must already be registered' and does not include DNS propagation time awareness in the prerequisites block itself (it appears in the intro paragraph instead). |
+| c12 | Output's steps cover both sides — Clearpath side (enable custom domain in workspace settings, copy verification token) AND DNS provider side (add CNAME record pointing to clearpath app) — clearly labelled with provider-agnostic instructions | PASS | Steps 1–3 cover the Clearpath side (navigate Settings > Domains, enter domain, copy CNAME values). Step 4 explicitly covers the DNS provider side with provider-agnostic instructions: 'The exact steps vary by provider. In most cases, you're looking for a section called DNS Management, DNS Records, or Zone Editor.' |
+| c13 | Output's steps include expected results after each — e.g. 'Step 4: Add the CNAME record. After saving, your DNS provider should show the record as 'pending' or 'active'' — not just the action | PASS | All six steps include 'Expected result:' sub-sections. Step 4 specifically: 'Expected result: The record appears in your DNS provider's record list. Changes may take a few minutes to save on their end.' |
+| c14 | Output's troubleshooting section covers — verification fails (DNS propagation delay, CNAME pointing wrong, conflicting record), HTTPS / SSL not working (certificate provisioning takes 5-10 minutes after verification), domain mismatch error | PARTIAL | DNS propagation delay and CNAME entered incorrectly are covered in the first troubleshooting entry. SSL provisioning failure is covered. But 'conflicting record' (e.g., existing A record blocking the CNAME) and 'domain mismatch error' are not addressed anywhere in the troubleshooting section. |
+| c15 | Output uses product terminology only — 'custom domain', 'subdomain', 'DNS record' — and explains 'CNAME' briefly the first time as 'a type of DNS record that points your domain to another domain' | FAIL | CNAME first appears in the table in Step 3 ('\| CNAME \| `work` \| `custom.clearpath.app` \|') with no accompanying explanation. The article proceeds to use 'CNAME record' throughout without ever providing the brief gloss required by this criterion. |
+| c16 | Output addresses the post-setup verification — how the user confirms their domain is now working, including testing in incognito to bypass cache, and what to do if some users still see the old URL (browser cache) | PARTIAL | Step 6 confirms SSL active and notes the old clearpath.app address redirects. Troubleshooting mentions hard-refresh ('Cmd+Shift+R on Mac, Ctrl+Shift+R on Windows'). However, incognito/private browsing to bypass cache is never mentioned, and there is no guidance for the scenario where some users still see the old URL due to their browser cache. |
+| c17 | Output's related articles link to adjacent topics — 'Setting up SSO with a custom domain', 'Email and notification settings under your domain', 'Removing or changing your custom domain' — anticipating next steps | PASS | '## Related articles' section lists: 'How do I require SSO login for my domain?' (maps to SSO with custom domain), 'How do I change my workspace name and URL?' (maps to changing custom domain), plus custom login page, team invites, and Owner vs Admin roles — all adjacent next-step topics. |
+| c18 | Output addresses metadata — category (e.g. 'Workspace settings'), tags (e.g. 'custom-domain', 'DNS', 'SSL'), and related articles in a structured frontmatter or footer block | PARTIAL | Footer table contains 'Product area: Workspace settings / Domains' (category), 'Tags: custom domain, DNS, CNAME, workspace settings, domain verification'. Related articles in a separate '## Related articles' section. No YAML frontmatter. Ceiling is PARTIAL so max 0.5. |
 
-## Output expectations
+### Notes
 
-- [x] PASS: Output's title is phrased as a user question — "How do I use my own domain instead of clearpath.app?" is a direct search-bar question, not a feature description like "Custom Domain Configuration."
-- [x] PASS: Output's short answer at the top resolves the high-level question in 1-3 sentences — covers yes-you-can, CNAME + verification required, 5-30 min config with up to 24h propagation. Self-contained.
-- [x] PASS: Output's prerequisites section names what's needed — Workspace Admin/Owner role, DNS provider access, registered domain, Pro/Enterprise plan requirement, propagation delay awareness. All five items expected in the criterion are present.
-- [x] PASS: Output's steps cover both sides — Part A covers Clearpath side (Settings > Custom Domain, enter domain, copy token, verify), Part B covers DNS provider side (CNAME to `custom.clearpath.app`, TXT verification record). Each part is clearly labelled.
-- [x] PASS: Output's steps include expected results after each — every numbered step ends with "Expected result:" describing what the user sees. Propagation delay and failure-path references ("see Troubleshooting below") are noted where applicable.
-- [x] PASS: Output's troubleshooting section covers verification failure (DNS propagation delay, wrong record), HTTPS/SSL certificate provisioning delay, domain mismatch error. Five problems in total, all in Problem/Cause/Solution format.
-- [x] PASS: Output uses product terminology only — "custom domain", "subdomain", "DNS record" — and explains "CNAME" briefly on first use.
-- [x] PASS: Output addresses post-setup verification — incognito window test, browser cache explanation for users still seeing old URL, 24-hour self-resolution note.
-- [x] PASS: Output's related articles link to adjacent topics — "Setting up SSO with a custom domain", "Email and notification settings under your domain", "Removing or changing your custom domain", grouped into Next steps / Related topics / Background.
-- [x] PARTIAL: Output addresses metadata — structured footer block contains Product area (Workspace settings / Custom domain), Tags (5 tags: custom-domain, DNS, CNAME, SSL, workspace-settings), Last verified, Applies to. Partial awarded per rubric since category is rendered as "Product area" rather than a field explicitly named "category", though it is functionally identical.
-
-## Notes
-
-The skill definition is structurally complete and maps cleanly to every criterion. The mandatory step template (action + full navigation path + expected result + failure-mode callout) closes most output-expectation criteria automatically.
-
-The quality rules table in Step 3 is particularly strong. "One article, one question" (split if answering two) and "Testable" (could someone follow this on the live product right now) go beyond typical KB writing guides and push toward operational quality rather than just structural completeness.
-
-The Maintenance rules section (90-day staleness checks, helpfulness tracking via views-vs-tickets, retirement criteria) is a genuine differentiator from typical KB skill definitions. It positions the article as a living document rather than a one-time artifact.
-
-One gap the rubric doesn't test: the skill has no guidance on when to include screenshots or images. For a domain configuration article spanning two different systems (Clearpath UI and a DNS provider), visual aids are standard practice and their absence in the skill definition is a missed opportunity.
-
-The simulated output shows that the skill's provider-agnostic step requirement ("be precise about UI element names, menu paths, button labels") works well for the Clearpath side but is harder to satisfy on the DNS provider side — the output correctly handles this by using a table of field values rather than provider-specific click paths.
+The output is a well-structured KB article that satisfies most structural requirements: question-format title, short answer, prerequisites, numbered steps with expected results, troubleshooting, related articles, and footer metadata. The main gaps are: (1) CNAME is never explained despite being a core technical term (c15 fail, c6 partial); (2) the troubleshooting section misses 'conflicting DNS record' and 'domain mismatch error' scenarios; (3) post-setup verification lacks incognito testing guidance; (4) prerequisites don't explicitly mention the domain must be pre-registered or call out propagation time; (5) the skill's own YAML frontmatter cannot be verified from the output. The score of 76.5% puts it comfortably in PARTIAL territory — a high-quality draft that would need targeted revision on CNAME explanation, troubleshooting completeness, and cache/incognito guidance before publishing.

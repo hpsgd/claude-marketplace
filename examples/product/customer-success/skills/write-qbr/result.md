@@ -1,278 +1,274 @@
-# Result: Write QBR
+# Write Qbr
 
-| Field | Value |
-|---|---|
-| **Verdict** | PASS |
-| **Score** | 17/17 criteria met (100%) |
-| **Evaluated** | 2026-04-30 |
-| **Skill source** | `plugins/product/customer-success/skills/write-qbr/SKILL.md` |
-| **Prompt** | `/customer-success:write-qbr for Landermere Group — $210k ARR, mid-year QBR, 18 months as a customer. I need the QBR deck outline and talking points for the meeting next Thursday.` |
+Scenario: Testing whether the write-qbr skill requires gathering account data before writing, documents value delivered in customer terms, and includes forward-looking recommendations with risks.
 
----
+## Prompt
+
+> /customer-success:write-qbr for Landermere Group — $210k ARR, mid-year QBR, 18 months as a customer. I need the QBR deck outline and talking points for the meeting next Thursday.
 
 ## Output
 
-The skill would produce the following for Landermere Group.
+Captured from a real headless invocation of the skill/agent.
+
+### Chat response
+
+QBR brief saved to `landermere-group-qbr-2026-h1.md`.
+
+**One question before you prep this further:** You mentioned a "deck outline and talking points" — what I've produced is a structured brief (sections map 1:1 to slides) with talking points per section. If you need actual slide titles + 3-4 bullet talking points per slide (presentation-ready format rather than a reference doc), I can restructure it that way. Which format are you taking into the room?
+
+**What's in the doc now:**
+- 60-minute agenda with owner and purpose per segment
+- Goals scorecard template (pull from last QBR notes)
+- Win framing, challenge acknowledgement section with direct talking points
+- Health overview (flagged: run `/health-assessment` to populate it)
+- H2 goals table + expansion opportunity section (gated on account health)
+- Pre-meeting checklist — all `[DATA NEEDED]` fields must be filled before Thursday
+
+No metrics were fabricated. Every gap is explicitly labelled.
+
+### Artifacts written
+
+#### `work/landermere-group-qbr-2026-h1.md`
+
+```
+# Quarterly Business Review: Landermere Group
+
+**Period:** H1 2026 (January – April 2026)
+**Prepared by:** [CSM Name]
+**Date:** 2026-05-07
+**ARR:** $210,000
+**Tenure:** 18 months (customer since ~November 2024)
+**Next QBR:** [Q3 2026 — suggest scheduling now]
 
 ---
 
-### Step 1 — Data gathering checklist for Landermere Group
-
-Before writing anything, collect:
-
-| Data source | What to pull | Notes for Landermere |
-|---|---|---|
-| Health assessment | Composite score + dimension breakdown | Run `/customer-success:health-assessment` if no current score |
-| Usage metrics (last 6 months) | DAU/MAU, feature adoption rates, month-on-month trend | 18-month tenure means baseline exists — flag any decline |
-| Support ticket history | Volume, severity, resolution time, recurring themes | Note any P1/P2 incidents in the period |
-| Prior QBR goals | What we committed to, what Landermere committed to, status | Mid-year QBR — review from onboarding through month 18 |
-| Commercial context | $210k ARR, contract renewal date, billing status | Renewal likely ~month 24, meaning 6 months out from now |
-| Relationship signals | NPS/CSAT, executive sponsor attendance at prior reviews, champion status | 18-month tenure: initial excitement has settled, gauge depth of exec engagement |
-
-**Gap rule:** if data is unavailable for a dimension, state the gap explicitly. "Usage data unavailable — analytics integration pending" is acceptable. An invented metric is a trust-destroying liability.
+> **Data gaps flagged in this document.** Fields marked `[DATA NEEDED]` must be filled from CRM, product analytics, and support systems before the meeting. Do not present placeholders to the customer. Talking points are ready to use once numbers are filled in.
 
 ---
 
-### Step 2 — Value delivered analysis (illustrative — populate from data)
+## Executive Summary
 
-#### Goals scorecard
+Landermere Group is entering their second year as a customer at $210k ARR. [HEALTH STATUS — e.g., "The account is healthy with strong adoption in X, though Y remains an area to develop together."] This review covers [key wins — e.g., "the successful rollout to the operations team and a 30% reduction in manual reporting time"], acknowledges [key challenge — e.g., "slower-than-planned adoption of the analytics module"], and proposes a focused plan for H2 2026 including [top recommendation — e.g., "a structured onboarding sprint for the remaining 15 unlicensed users"].
 
-| Goal (from last QBR / onboarding) | Target | Actual | Status | Evidence |
+**Talking point (open the meeting with this):**
+> "We're at the 18-month mark — a good moment to step back, look at what's actually moved for your team, and make sure what we're building together is tracking to your goals for the rest of the year. I want to spend most of this time on where you want to go, not just looking backwards."
+
+---
+
+## 1. Value Delivered This Half
+
+### Goals Scorecard
+
+*Pull from last QBR or account plan. These are what both sides committed to in November 2025 or your H2 2025 review.*
+
+| Goal | Owner | Target | Actual | Status | Notes |
+|---|---|---|---|---|---|
+| [Goal 1 — e.g., Expand to ops team] | [Us / Customer] | [DATA NEEDED] | [DATA NEEDED] | Met / Partial / Missed | [Talking point if missed — own it, have a remediation] |
+| [Goal 2] | [Us / Customer] | [DATA NEEDED] | [DATA NEEDED] | Met / Partial / Missed | |
+| [Goal 3] | [Us / Customer] | [DATA NEEDED] | [DATA NEEDED] | Met / Partial / Missed | |
+
+**If a goal was missed:** Address it directly before the customer raises it.
+> "We committed to [X] by [date] and didn't deliver. Here's what got in the way, and here's what we're doing differently in H2."
+
+### Key Wins
+
+Replace placeholders with 2-3 specific, quantified wins before the meeting.
+
+1. **[Win 1 — quantified]** e.g., "Your team closed [X] more [tickets / cases / reports] per week in Q1 versus Q4 2024, using [feature] — an estimated saving of [Y hours / $Z] over the half."
+2. **[Win 2 — quantified]** e.g., "The [team / department] rollout in [month] brought active users from [N] to [N+X], giving [business outcome]."
+3. **[Win 3 — quantified]** e.g., "Response time for [customer's KPI] dropped from [X] to [Y] after the [workflow / integration] was implemented in [month]."
+
+**Talking point:**
+> "The number I want to draw your attention to is [most impressive metric]. That translates directly to [business outcome they care about] — [frame it in their language, not ours]."
+
+### Usage Trends
+
+| Metric | H2 2025 | H1 2026 | Change | What it means |
 |---|---|---|---|---|
-| Reduce report compilation time for ops team | From 4h to under 30min | 22 min average | Met | Usage logs: avg report generation Q2 2026 |
-| Expand adoption to finance team | 8 active users | 6 active users | Partial | MAU breakdown by department |
-| Resolve recurring data-sync delay | Closed, no recurrence in 90 days | 2 recurrences in 90 days | Missed | Tickets #4421, #4498 |
-
-#### Usage highlights
-
-| Metric | Q1 2026 | Q2 2026 | Change | Interpretation |
-|---|---|---|---|---|
-| Monthly active users | [value] | [value] | [+/- %] | [what the trend means for Landermere] |
-| Finance team active users | 4 | 6 | +50% | Growing but behind 8-user target |
-| Report generation (per week) | [value] | [value] | [delta] | [tie to time-saving outcome] |
-| Avg sessions per user | [value] | [value] | [delta] | [indicator of platform dependency] |
-
-#### Value narrative (year-2 framing)
-
-Landermere is past the first-year onboarding window. The value story at month 18 is not "look at all the features available" — it is "here is what this platform has materially changed about how the business operates."
-
-- Ops team has saved approximately 140 hours per quarter on report compilation — the equivalent of 3.5 weeks of analyst time annually. That is measurable ROI the ops lead can point to in their own reporting.
-- Finance team adoption is behind plan at 75% of the 8-user target. This is an honest signal to address in the QBR, not omit.
-- The recurring data-sync issue is unresolved after two recurrences. Acknowledge it directly with a remediation timeline.
+| Active users (DAU/MAU) | [DATA NEEDED] | [DATA NEEDED] | [+/- %] | [Interpretation] |
+| [Feature 1] adoption | [DATA NEEDED] | [DATA NEEDED] | [+/- %] | [Interpretation] |
+| [Feature 2] adoption | [DATA NEEDED] | [DATA NEEDED] | [+/- %] | [Interpretation] |
+| Seat utilisation | [DATA NEEDED] | [DATA NEEDED] | [+/- %] | [If <80% — flag as risk] |
 
 ---
 
-### Step 3 — Risks, expansion, and recommendations
+## 2. Challenges and Lessons Learned
 
-#### Risks
+*Be direct. Customers know when things went wrong — what they're watching for is whether you know, and what you're doing about it.*
 
-| Risk | Severity | Evidence | Recommended action |
+| Challenge | Business impact | Our response | Current status |
 |---|---|---|---|
-| Finance team adoption behind plan (6/8 target users) | Medium | MAU data: 6 of 8 target users active | Schedule 90-minute onboarding session for 2 remaining finance users by end of May |
-| Recurring data-sync delay (2 recurrences in 90 days) | High | Tickets #4421, #4498 | Engineering escalation — root cause fix committed by 2026-05-15 |
-| Executive sponsor engagement declining | Medium | Last 2 QBRs attended by ops manager, not VP | Account owner to request exec sponsor re-engagement this week |
+| [e.g., Support ticket spike in Feb] | [e.g., Delayed [workflow] for 2 weeks] | [e.g., Hot-fixed in 72h, root cause addressed in v[X]] | Resolved / In progress / Monitoring |
+| [e.g., Slow feature X adoption] | [e.g., [Team] still running manual process] | [e.g., Scheduled training for [date]] | In progress |
+| [e.g., P1 incident if applicable] | [DATA NEEDED] | [DATA NEEDED] | [DATA NEEDED] |
 
-#### Expansion opportunities (conditional on health)
-
-**Only present if account health score is Healthy.** If At Risk or Critical, replace this section with a stabilisation roadmap.
-
-| Opportunity | Signal | Estimated ARR impact | Timing |
-|---|---|---|---|
-| Advanced analytics module | Ops team has exhausted standard report types, 3 feature requests for custom views | +$28k ARR | Q3 2026 |
-| Additional seat tier (finance + procurement) | Finance adoption growing, procurement mentioned in month-12 discovery | +$18k ARR | Q4 2026 |
-
-#### Strategic recommendations for next quarter
-
-1. **Resolve data-sync root cause.** Engineering to deliver fix by 2026-05-15. CSM to confirm with Landermere ops lead that issue is closed. Owner: [Engineering lead]. Deadline: 2026-05-15.
-2. **Complete finance team onboarding.** 90-minute training session for 2 remaining finance users. CSM books with Landermere finance manager. Owner: [CSM name]. Deadline: 2026-05-10.
-3. **Re-engage executive sponsor.** Account owner sends personal note to VP requesting a 30-minute intro call ahead of Q3 QBR. Owner: [Account owner]. Deadline: 2026-05-07.
-4. **Co-author year-2 success plan.** Written 6-month success plan with Landermere — measurable goals, owned, tied to their fiscal year objectives. Owner: [CSM name] with Landermere ops lead. Deadline: 2026-06-01.
+**Talking point for any challenge:**
+> "I want to be direct about [issue]. It impacted [specific thing] and that wasn't acceptable. What we did was [response]. What we've changed so it doesn't happen again is [structural fix]. Do you have questions about that?"
 
 ---
 
-### Step 4 — QBR deck outline and talking points
+## 3. Health Overview
 
-**Format:** presentation deck, 12 slides. Talking points accompany each slide.
+*Run `/customer-success:health-assessment` to populate this section accurately. Do not estimate.*
 
----
-
-**Slide 1 — Title**
-
-*Landermere Group | Q2 2026 Quarterly Business Review*
-*Date: [Thursday] | Prepared by: [CSM name]*
-
-Talking points: Brief welcome. Set the agenda. Confirm attendees — note if exec sponsor is absent and address privately after.
-
----
-
-**Slide 2 — Agenda**
-
-1. 18-month partnership recap (2 min)
-2. Value delivered this quarter (8 min)
-3. Health summary and honest assessment (5 min)
-4. Open issues and remediation (5 min)
-5. Goals and recommendations for Q3 (8 min)
-6. Expansion conversation — if account is healthy (5 min)
-7. Next steps and commitments (5 min)
-
----
-
-**Slide 3 — 18-month partnership snapshot**
-
-Key stats: onboarding date, original goals agreed, how many have been met, current ARR, renewal timeline (~6 months out).
-
-Talking points: "We are now past the initial setup phase. The question for year two is not whether the platform works — it is whether it is delivering against your business priorities. That is what we want to review today."
-
----
-
-**Slide 4 — Health overview**
-
-*Composite score: [X/100] | Trend: [improving / stable / declining]*
+- **Composite score:** [DATA NEEDED — 0-100]
+- **Trend:** [Improving / Stable / Declining]
+- **Dimension breakdown:**
 
 | Dimension | Score | Signal |
 |---|---|---|
-| Product adoption | [score] | [summary] |
-| Relationship health | [score] | [summary] |
-| Support burden | [score] | [summary] |
-| Commercial alignment | [score] | [summary] |
+| Product adoption | [DATA NEEDED] | [Key observation] |
+| Engagement | [DATA NEEDED] | [Meeting attendance, responsiveness] |
+| Relationship | [DATA NEEDED] | [Sponsor strength, champion status] |
+| Value realisation | [DATA NEEDED] | [ROI indicators] |
+| Commercial | [DATA NEEDED] | [Renewal date, billing status] |
 
-Talking points: Be direct. If the score is declining, name it and pivot immediately to what we are doing about it. Do not soften a deteriorating signal with optimistic language.
-
----
-
-**Slide 5 — Goals scorecard**
-
-Use the goals table from Step 2.
-
-Talking points: Walk each goal. Call out missed goals before the customer does. "We did not hit this target. Here is why and here is what we are committing to." Honesty on a miss builds more trust than glossing over it.
+**Talking point (do not read scores aloud — translate them):**
+> "Overall we're in [good shape / a stable position / a place I want to improve with you]. The area I want us to focus on together in H2 is [lowest dimension], because that's where I think there's the most upside."
 
 ---
 
-**Slide 6 — Business outcomes delivered**
+## 4. Recommendations for H2 2026
 
-*Translate usage into outcomes. No raw login or click counts on this slide.*
+### Goals — Both Sides
 
-- Ops team report compilation: 4h → 22 minutes average. ~140 hours saved per quarter.
-- [Other quantified outcomes from data]
+*Each goal must be specific, owned, and time-bound. "Increase adoption" is not a goal.*
 
-Talking points: Ask Landermere to confirm these numbers resonate. "Do these outcomes match what your team is experiencing?" Surfaces gaps between our data and their perception.
-
----
-
-**Slide 7 — Usage trends**
-
-| Metric | Q1 2026 | Q2 2026 | Change |
-|---|---|---|---|
-| Monthly active users | [value] | [value] | [delta] |
-| Finance team active users | 4 | 6 | +50% (below 8 target) |
-| Report generation per week | [value] | [value] | [delta] |
-| Avg sessions per user | [value] | [value] | [delta] |
-
-Talking points: Finance adoption is growing but behind plan. Frame positively without hiding the gap.
-
----
-
-**Slide 8 — Open issues and challenges**
-
-*Do not bury this slide. It signals accountability.*
-
-| Issue | Impact | What we did | Status |
-|---|---|---|---|
-| Data-sync delay (recurred x2) | Delayed Landermere daily ops reports up to 3h | Temp workaround applied, root cause investigation open | Fix committed 2026-05-15 |
-| Finance team adoption behind plan | 2 of 8 target users not yet active | Training not yet scheduled | Session to be booked by 2026-05-10 |
-
-Talking points: "These are the two things we are not satisfied with. Here is exactly what we are committing to and by when."
-
----
-
-**Slide 9 — Q3 recommendations**
-
-| Recommendation | Owner | Deadline |
-|---|---|---|
-| Data-sync root cause fix | [Engineering lead] | 2026-05-15 |
-| Finance user onboarding session | [CSM name] | 2026-05-10 |
-| Executive sponsor re-engagement | [Account owner] | 2026-05-07 |
-| Year-2 success plan drafted | [CSM + Landermere ops lead] | 2026-06-01 |
-
-Talking points: "We want to agree these commitments today, not just present them. Are there other priorities on your side we should factor in?"
-
----
-
-**Slide 10 — Growth opportunities** *(include only if health score is Healthy)*
-
-| Opportunity | Why now | Business case | Estimated ARR |
-|---|---|---|---|
-| Advanced analytics module | Ops team has hit ceiling of standard reports | Custom views → faster insight cycles for leadership | +$28k |
-| Procurement seat expansion | Mentioned in month-12 discovery, adoption growing | Consolidated procurement workflow | +$18k |
-
-Talking points: "We are not proposing this as a sales conversation — we are raising it because the usage patterns suggest it would genuinely help your team. We can build a detailed business case if you want to explore it."
-
-*If At Risk: omit this slide. Replace with a stabilisation roadmap.*
-
----
-
-**Slide 11 — Next steps and commitments**
-
-| # | Owner | Action | Deadline | Success criteria |
+| Goal | How measured | Target | Owner | By when |
 |---|---|---|---|---|
-| 1 | [Engineering lead] | Data-sync root cause fix deployed | 2026-05-15 | Zero recurrences in 30-day monitoring window |
-| 2 | [CSM name] | Finance user onboarding session booked | 2026-05-10 | Calendar invite accepted by Landermere finance manager |
-| 3 | [Account owner] | Executive sponsor re-engagement call confirmed | 2026-05-07 | 30-minute call on calendar |
-| 4 | [CSM + Landermere ops lead] | Year-2 success plan drafted and agreed | 2026-06-01 | Written plan signed off by both sides |
-| 5 | [Landermere ops lead] | Confirm data-sync fix resolved in their environment | 2026-05-20 | Sign-off from Landermere ops lead |
+| [e.g., Train analytics team on reporting module] | Session held, [N] users active post-training | [N] users active within 30 days | Us | 2026-06-30 |
+| [e.g., Expand to [department/team]] | Seats activated | [N] seats | Customer (Champion: [name]) | 2026-07-31 |
+| [e.g., Integrate with [their tool]] | Integration live and in use | [usage metric] | Shared | 2026-08-31 |
+| [e.g., Achieve [business KPI]] | [metric] | [target] | Customer | End of Q3 |
 
-Talking points: "Before we close — are there any commitments on your side we have missed? Both sides need to be tracked."
+**Talking point:**
+> "I'd like us to end today with 3-4 goals that we're both accountable to. Not a wishlist — things with owners and dates, so when we sit down in [Q3 date] we can score ourselves honestly."
+
+### Expansion Opportunities
+
+*Only include this section if the account health supports it. If the account is At Risk or Critical, remove this section and focus on stabilisation.*
+
+| Opportunity | Signal | Business case | ARR impact | Proposed next step |
+|---|---|---|---|---|
+| [e.g., Additional seats] | [e.g., Seat utilisation at 95%, [N] requests from unlicensed users] | [Removes bottleneck for [team], enables [outcome]] | [+$X ARR] | [Pricing conversation with [sponsor] in [month]] |
+| [e.g., Add-on / module] | [e.g., Frequent feature requests for [X]] | [Would replace [current tool/process] saving [Y]] | [+$X ARR] | [Demo scheduled / offer a pilot] |
+
+**Talking point (frame expansion as enablement, not upsell):**
+> "One thing I noticed in the data is [signal]. A few of your colleagues have asked about [feature/seats] but don't have access. I'd like to understand if that's creating friction — not because I want to sell you more, but because if it's blocking [outcome], it's worth talking about."
 
 ---
 
-**Slide 12 — Next QBR**
+## 5. Commercial Context
+
+- **Renewal date:** [DATA NEEDED]
+- **Current tier:** [DATA NEEDED]
+- **Billing status:** [DATA NEEDED — any outstanding items?]
+- **Pricing discussions:** [DATA NEEDED — any active negotiations?]
+
+**If renewal is within 90 days:** Raise it directly in the meeting.
+> "Your renewal comes up in [month]. I want to make sure we're aligned on value well before then, so there are no surprises. What would need to be true for this to be an easy decision for you?"
+
+**If renewal is >90 days:** Do not lead with it. Let value drive the conversation.
+
+---
+
+## Agenda (60-minute meeting)
+
+| Time | Segment | Owner | Notes |
+|---|---|---|---|
+| 0:00–0:05 | Welcome + agenda | CSM | Set tone: strategic, not a demo |
+| 0:05–0:15 | Their update — business context | Customer | Ask: "What's changed for your team or business since we last spoke?" |
+| 0:15–0:30 | Value delivered + goals scorecard | CSM | Lead with wins; address misses directly |
+| 0:30–0:40 | Challenges + what we're doing | CSM | Be direct; have remediation ready |
+| 0:40–0:52 | H2 goals + expansion (if healthy) | CSM + Customer | Co-create goals; don't present a fait accompli |
+| 0:52–0:58 | Commit to next steps | Both | Assign owners and dates before leaving the room |
+| 0:58–1:00 | Close | CSM | Confirm next QBR date |
+
+**Opening question (get them talking first):**
+> "Before I run through anything — what's top of mind for you going into H2? What does success look like for your team by the end of the year?"
+
+**Closing question:**
+> "Is there anything we didn't cover today that would change how you're thinking about the next six months with us?"
+
+---
+
+## Appendix
+
+### A. Support Ticket Summary (H1 2026)
+
+| Category | Volume | Avg resolution | P1/P2 incidents | Trend vs H2 2025 |
+|---|---|---|---|---|
+| [Category 1] | [DATA NEEDED] | [DATA NEEDED] | [DATA NEEDED] | [Up/Down/Flat] |
+| [Category 2] | [DATA NEEDED] | [DATA NEEDED] | [DATA NEEDED] | [Up/Down/Flat] |
+| Total | [DATA NEEDED] | [DATA NEEDED] | [DATA NEEDED] | [Up/Down/Flat] |
+
+### B. Feature Adoption Breakdown
+
+| Feature | Users active | % of licensed seats | Trend |
+|---|---|---|---|
+| [Core feature 1] | [DATA NEEDED] | [DATA NEEDED] | [Up/Down/Flat] |
+| [Core feature 2] | [DATA NEEDED] | [DATA NEEDED] | [Up/Down/Flat] |
+| [Feature with low adoption] | [DATA NEEDED] | [DATA NEEDED] | Flag for training |
+
+### C. Product Updates Delivered (H1 2026)
+
+*List releases relevant to Landermere's use case only. Frame as outcomes, not changelog entries.*
+
+- [Release/feature] → [what it enabled for them]
+- [Release/feature] → [what it enabled for them]
+
+---
+
+## Pre-meeting checklist
+
+Before Thursday 2026-05-07:
+
+- [ ] Pull usage metrics from analytics for H1 2026 vs H2 2025
+- [ ] Pull support ticket summary and flag any P1/P2 incidents
+- [ ] Confirm goals from the last QBR (check CRM notes / previous deck)
+- [ ] Run `/customer-success:health-assessment` and fill Section 3
+- [ ] Fill all `[DATA NEEDED]` fields — do not present with gaps
+- [ ] Confirm attendees: executive sponsor attending? If not, reschedule or reset expectations
+- [ ] Send agenda to customer contact 48h before the meeting
+- [ ] If renewal is within 90 days, brief your manager before the meeting
+- [ ] Book the Q3 QBR slot before the H1 meeting ends
+
+```
+
+## Evaluation
 
 | Field | Value |
 |---|---|
-| Next QBR | Q3 2026 — [date, ~3 months out] |
-| Preparation | Updated health score, Q3 goal progress, data-sync incident closure confirmation |
-| Stakeholders to confirm | Exec sponsor attendance required |
+| Verdict | PARTIAL |
+| Score | 13.0/17.0 (76%) |
+| Evaluated | 2026-05-01 |
+| Target duration | 157767 ms |
+| Target cost | $0.4669 |
+| Permission denials | 0 |
 
-Talking points: Confirm the date now. Lock it before leaving the meeting.
+### Criteria
 
----
+| # | Criterion | Result | Evidence |
+|---|---|---|---|
+| c1 | Skill requires a data gathering step before writing — usage metrics, support history, health scores, business outcomes | PARTIAL | The skill wrote the document immediately with [DATA NEEDED] placeholders rather than pausing to gather data first. However, it integrates data gathering through a pre-meeting checklist ('Pull usage metrics from analytics for H1 2026 vs H2 2025', 'Pull support ticket summary', 'Run /customer-success:health-assessment') and a top-of-document note: 'Fields marked [DATA NEEDED] must be filled from CRM, product analytics, and support systems before the meeting.' Data gathering is flagged as required but is not a prerequisite step before writing. |
+| c2 | Skill documents value delivered in customer outcome terms — not product usage statistics alone (e.g. "reduced report time from 4h to 20min" not "used the reports feature 340 times") | PASS | Key Wins template explicitly frames outcomes in customer terms: 'an estimated saving of [Y hours / $Z] over the half', 'Response time for [customer's KPI] dropped from [X] to [Y]'. Talking point reinforces: 'That translates directly to [business outcome they care about] — [frame it in their language, not ours].' The template explicitly avoids raw usage statistics. |
+| c3 | Skill includes a forward-looking section — goals for the next quarter, not just a retrospective | PASS | Section 4 'Recommendations for H2 2026' is a full forward-looking section with a goals table (owner, measure, target, date) and an expansion opportunities table. Agenda also allocates 12 minutes to 'H2 goals + expansion (if healthy)' from 0:40–0:52. |
+| c4 | Skill identifies risks and open issues — the QBR is not only a celebration of success | PASS | Section 2 'Challenges and Lessons Learned' is dedicated to honest challenge disclosure: 'Be direct. Customers know when things went wrong.' Usage Trends table notes 'If <80% [seat utilisation] — flag as risk.' Expansion section says 'If the account is At Risk or Critical, remove this section and focus on stabilisation.' Challenge talking point: 'I want to be direct about [issue]. It impacted [specific thing] and that wasn't acceptable.' |
+| c5 | Skill produces a structured QBR document with distinct sections: value delivered, health summary, risks/recommendations, next steps | PASS | Document contains clearly delineated numbered sections: '1. Value Delivered This Half', '2. Challenges and Lessons Learned', '3. Health Overview', '4. Recommendations for H2 2026', '5. Commercial Context', plus a 60-minute Agenda with a 'Commit to next steps' segment. |
+| c6 | Skill includes expansion or growth conversation guidance — partial credit if upsell is mentioned but not conditioned on account health | PARTIAL | Section 4 'Expansion Opportunities' includes explicit guidance and a talking point: 'One thing I noticed in the data is [signal].' The section is explicitly conditioned on health: 'Only include this section if the account health supports it. If the account is At Risk or Critical, remove this section.' This exceeds the partial-credit bar but ceiling is capped at PARTIAL. |
+| c7 | Skill requires next steps with owners and dates — not a general "we'll follow up" | PASS | Goals table in Section 4 has explicit 'Owner' and 'By when' columns with example dates (2026-06-30, 2026-07-31, 2026-08-31). Talking point reinforces: 'Not a wishlist — things with owners and dates, so when we sit down in [Q3 date] we can score ourselves honestly.' Agenda allocates time to 'Commit to next steps — Assign owners and dates before leaving the room.' |
+| c8 | Skill has a valid YAML frontmatter with name, description, and argument-hint fields | FAIL | The captured output contains only the QBR document artifact and chat response. No YAML frontmatter with name, description, or argument-hint fields appears anywhere in the captured output. The skill definition file itself is not shown. |
+| c9 | Output's data gathering step lists the specific data sources needed for Landermere — usage metrics over the last 6 months, support ticket history, health scores, executive contacts attended/missed in prior QBRs, contract details ($210k ARR, 18-month tenure) | PARTIAL | Pre-meeting checklist covers: 'Pull usage metrics from analytics for H1 2026 vs H2 2025' ✓, 'Pull support ticket summary and flag any P1/P2 incidents' ✓, 'Run /customer-success:health-assessment' ✓, 'Confirm goals from the last QBR (check CRM notes / previous deck)' ✓, ARR/tenure in document header ✓. Missing: executive contacts attended/missed in prior QBRs is not listed as a data source to gather; only current meeting attendance is checked ('Confirm attendees: executive sponsor attending?'). |
+| c10 | Output's value-delivered section uses customer-outcome language — e.g. "saved 12 FTE hours per week on report generation", "reduced order-processing errors by 22%" — NOT "logged in 3,400 times" or "used the dashboard 47 times" | PASS | Key Wins section template examples use outcome language: 'an estimated saving of [Y hours / $Z] over the half', 'giving [business outcome]', 'Response time for [customer's KPI] dropped from [X] to [Y]'. Usage Trends table includes 'What it means' column requiring interpretation, not raw stats. Talking point: 'frame it in their language, not ours.' |
+| c11 | Output's value section quantifies outcomes with before/after metrics — not "improved efficiency", but "reduced report compilation from 4 hours to 20 minutes per report" | PASS | Win 1 example: 'Your team closed [X] more [tickets] per week in Q1 versus Q4 2024 — an estimated saving of [Y hours / $Z]'. Win 3: 'Response time...dropped from [X] to [Y] after [workflow]'. Usage Trends table has explicit 'H2 2025' vs 'H1 2026' comparison columns. The template is structurally designed for before/after quantification throughout. |
+| c12 | Output's forward-looking section sets goals for the next quarter — at least 2-3 specific, measurable customer outcomes Landermere wants to achieve, not "continue using the platform" | PARTIAL | Section 4 goals table has 4 example goals with measurable outcomes (e.g., '[N] users active within 30 days', 'Integration live and in use', 'Seats activated') and specific dates (2026-06-30, 2026-07-31, 2026-08-31, End Q3). However, all are generic template examples — none are Landermere-specific goals. The criterion asks for outcomes 'Landermere wants to achieve,' which requires account-specific data the skill did not gather. |
+| c13 | Output's risks/issues section is honest — flags any deteriorating signals (declining MAU, missed deadlines, executive sponsor changes) and presents them, not just successes | PARTIAL | Section 2 has a challenge table with columns for business impact, response, and status. Usage trends table notes 'If <80% [seat utilisation] — flag as risk.' Talking points instruct direct acknowledgement of misses. However, all Landermere-specific risks are [DATA NEEDED] placeholders — no actual deteriorating signals for Landermere are identified because no data was gathered. |
+| c14 | Output's structure follows the named sections — Value Delivered, Health Summary, Risks/Recommendations, Next Steps — visible in the deck outline, not buried | PASS | Sections are clearly numbered and titled at top level: '1. Value Delivered This Half', '3. Health Overview' (= Health Summary), '2. Challenges and Lessons Learned' + '4. Recommendations for H2 2026' (= Risks/Recommendations), and Next Steps appear in both the goals table and the agenda segment '0:52–0:58 Commit to next steps'. All are top-level headings, not buried. |
+| c15 | Output's expansion / growth conversation guidance is conditional on health — if Landermere is healthy, opportunities are surfaced; if not, expansion is held back with reasoning | PASS | Section 4 Expansion Opportunities contains an explicit conditional gate: 'Only include this section if the account health supports it. If the account is At Risk or Critical, remove this section and focus on stabilisation.' This directly conditions expansion guidance on health status. |
+| c16 | Output's next steps each have an owner (named person, not "the team") and a date — at minimum 3 actionable next steps, not "we'll follow up next quarter" | PARTIAL | Goals table has 4 rows with 'Owner' and 'By when' columns and specific dates. However, owners are generic: 'Us', 'Customer (Champion: [name])', 'Shared' — not named persons. The [name] placeholder is never filled. Pre-meeting checklist has 9 specific tasks with a Thursday deadline but no named individual owners. The structure requires named owners but the template doesn't enforce them. |
+| c17 | Output's deck outline is structured for a meeting (10-15 slides typical) with talking points per slide, not a Word document | PARTIAL | The chat response explicitly acknowledges the format gap: 'what I've produced is a structured brief (sections map 1:1 to slides) with talking points per section' and offers 'actual slide titles + 3-4 bullet talking points per slide (presentation-ready format rather than a reference doc)'. The output is a reference document with narrative sections, not a deck outline with numbered slides and title-plus-bullets format. Each section does include talking points, giving partial credit. |
+| c18 | Output addresses 18-month tenure context — Landermere is past first-year wow factor, so the QBR should focus on year-2 value-articulation and not just feature adoption | PARTIAL | Document header notes 'Tenure: 18 months (customer since ~November 2024)'. Executive summary says 'Landermere Group is entering their second year as a customer.' Opening talking point references '18-month mark — a good moment to step back, look at what's actually moved.' However, the QBR does not explicitly frame itself as a year-2 value-articulation review distinct from year-1 feature adoption framing; there's no explicit pivot away from feature adoption to deeper strategic value for a mature account. |
 
-## Criteria evaluation
+### Notes
 
-### Skill definition criteria
-
-- [x] PASS: Skill requires a data gathering step before writing — Step 1 explicitly gates all writing behind collecting health score, usage metrics, support history, prior QBR goals, commercial context, and relationship signals. The rule "do not fabricate metrics" enforces the gate.
-- [x] PASS: Skill documents value delivered in customer outcome terms — Step 2 value narrative instructs translating raw metrics into business language. The worked example ("Your team resolved 40% more support tickets" vs "Automation workflow usage increased 40%") is concrete. Rules state "Tie metrics to their goals, not ours."
-- [x] PASS: Skill includes a forward-looking section — Step 3 has strategic recommendations for next quarter. Step 4 template includes a "Recommendations for Next Quarter" section with a Goals table requiring metric, target, owner, and timeline columns.
-- [x] PASS: Skill identifies risks and open issues — Step 3 has a Risks table with severity, evidence, and recommended action. Rules state "Hiding problems from the customer destroys trust. Acknowledging them with a remediation plan builds it."
-- [x] PASS: Skill produces a structured QBR document with distinct sections — Step 4 template includes Executive Summary, Value Delivered This Quarter, Challenges and Lessons Learned, Health Overview, Recommendations for Next Quarter, Expansion Opportunities, Appendix. All four required section types present.
-- [x] PARTIAL (fully met): Skill includes expansion or growth conversation guidance conditioned on account health — Step 3 has an Expansion Opportunities table explicitly gated: "only recommend expansion for healthy accounts." Rules state "Do not propose expansion to unhealthy accounts." Condition is explicit, not implied.
-- [x] PASS: Skill requires next steps with owners and dates — Goals table in Step 4 template has Owner and Timeline columns. Strategic Recommendations require each to be "Owned" and "Time-bound." Rules state "Track commitments both ways."
-- [x] PASS: Skill has valid YAML frontmatter with name, description, and argument-hint fields — `name: write-qbr`, `description: "Prepare a Quarterly Business Review..."`, `argument-hint: "[customer name or account to prepare QBR for]"` all present in lines 1-7.
-
-**Skill criteria: 8/8 met**
-
-### Output expectations criteria
-
-- [x] PASS: Output's data gathering step lists specific data sources for Landermere — usage metrics over 6 months, support ticket history, health scores, executive sponsor attendance, contract details ($210k ARR, 18-month tenure) all included in the Step 1 table.
-- [x] PASS: Output's value-delivered section uses customer-outcome language — "140 hours saved per quarter", "report compilation from 4h to 22 minutes" — no raw login or click counts on the value slides.
-- [x] PASS: Output's value section quantifies outcomes with before/after metrics — "4h to 22 minutes average", "approximately 140 hours per quarter" with specific before/after framing.
-- [x] PASS: Output's forward-looking section sets at least 2-3 specific measurable goals for next quarter — four owned, time-bound recommendations with success criteria and deadlines set out in Slide 9 and the commitments table.
-- [x] PASS: Output's risks/issues section is honest — Slide 8 names the data-sync recurrence, finance adoption shortfall, and declining exec sponsor engagement, each with status and committed remediation.
-- [x] PASS: Output's structure follows the named sections — Value Delivered (slides 5-6), Health Summary (slide 4), Risks/Recommendations (slides 8-9), Next Steps (slide 11) all visible in the deck outline.
-- [x] PASS: Output's expansion/growth guidance is conditional on health — Slide 10 is explicitly marked "include only if health score is Healthy" with instruction to omit and replace with a stabilisation roadmap if At Risk.
-- [x] PASS: Output's next steps each have a named owner and a date — Slide 11 shows 5 action items with named roles, deadlines, and success criteria.
-- [x] PASS: Output's deck outline is structured for a meeting — 12 slides with talking points per slide, not a document format.
-- [x] PARTIAL (fully met): Output addresses 18-month tenure context — Slide 3 is explicitly framed as "18-month partnership snapshot" with talking points shifting the year-2 conversation from "does it work" to "is it delivering against your business priorities."
-
-**Output criteria: 10/10 met**
-
----
-
-## Notes
-
-The skill is well-constructed. The conditional expansion rule is explicit and clear — many QBR skills bury this or omit it entirely, which leads to upsell conversations with struggling accounts. That the skill surfaces it in both the process step and the rules section is good practice.
-
-One genuine observation: the skill's inline template in Step 4 and the standalone `templates/qbr.md` file diverge structurally. The template file includes a Roadmap Preview section and a more detailed Action Items table; the inline template omits both. A CSM following the skill gets one structure; a CSM who opens the template file gets another. Aligning them would reduce confusion.
-
-The skill does not give explicit tenure-stage guidance — a month-3 QBR and a month-18 QBR would follow the same steps. Adding a tenure-stage checkpoint in Step 1 ("note whether this is a first, second, or third-plus QBR and adjust value framing accordingly") would catch the year-2 nuance the test prompt is probing without adding significant complexity.
+The skill produces a well-structured QBR brief with strong customer-outcome framing, explicit risk acknowledgement, health-conditioned expansion guidance, and a comprehensive pre-meeting checklist. Its main weaknesses are: (1) it writes first with [DATA NEEDED] placeholders rather than requiring a data-gathering step before writing; (2) YAML frontmatter for the skill definition is not visible in the output; (3) the format is a reference document, not a presentation-ready deck outline — the chat response acknowledges this and offers to reformat; (4) forward-looking goals and risk signals are all generic templates, not Landermere-specific; (5) next-step owners use generic labels ('Us', 'Shared') rather than named persons. The 18-month tenure context is mentioned but not meaningfully developed as a year-2 strategic framing distinct from first-year onboarding. Overall the output is useful and professionally structured but falls short on data-first discipline and presentation format requirements.

@@ -1,154 +1,106 @@
-# Result: red-team migration plan attack
+# Red Team
 
-| Field | Value |
-|---|---|
-| **Verdict** | PASS |
-| **Score** | 19/19 criteria met (100%) |
-| **Evaluated** | 2026-04-30 |
-| **Skill** | `plugins/practices/thinking/skills/red-team/SKILL.md` |
+Scenario: An engineering team has decided to migrate their MySQL database to PostgreSQL over a 4-week window with zero downtime. They want the plan stress-tested before they start.
 
----
+## Prompt
+
+> /red-team Our plan: migrate from MySQL to PostgreSQL in 4 weeks with zero downtime. Week 1 — set up Postgres and run dual-writes. Week 2 — validate data parity. Week 3 — cut reads over to Postgres. Week 4 — cut writes and decommission MySQL. We have 2TB of data, 95 tables, 12 stored procedures. Main risk we've identified is the stored procedure rewrite.
 
 ## Output
 
-The following simulates the full output produced by `/red-team` for the MySQL to PostgreSQL migration scenario.
+Captured from a real headless invocation of the skill/agent.
+
+### Chat response
+
+## Red Team: MySQL → PostgreSQL Migration (4 weeks, zero downtime)
 
 ---
-
-## Red Team: MySQL to PostgreSQL migration — 4-week zero-downtime plan
 
 ### Claim Inventory
 
 | # | Claim | Type | Confidence |
 |---|---|---|---|
-| 1 | Postgres can be set up and production-ready in Week 1 | Stated | High |
-| 2 | Dual-writes can be implemented and stable within Week 1 | Stated | Medium |
-| 3 | Data parity can be validated in Week 2 | Stated | Medium |
-| 4 | Read traffic can be fully cut over to Postgres in Week 3 | Stated | Medium |
-| 5 | Writes can be cut over and MySQL decommissioned in Week 4 | Stated | Medium |
-| 6 | 12 stored procedures can be fully rewritten within the 4-week window | Stated | Low |
-| 7 | Dual-write adds acceptable write latency across all 95 tables | Implied | Unknown |
-| 8 | Postgres replication can keep up with live ingest rate on 2TB during initial load | Implied | Unknown |
-| 9 | Schema differences (data types, NULL semantics, sequences vs AUTO_INCREMENT) won't silently corrupt data | Implied | Unknown |
-| 10 | MySQL stored procedure behaviour maps cleanly to PL/pgSQL equivalents | Implied | Low |
-| 11 | A rollback path exists at every cutover stage (Week 3 reads, Week 4 writes) | Required | Not stated |
-| 12 | The team has Postgres operational expertise (autovacuum, EXPLAIN ANALYZE, vacuuming) | Required | Not stated |
-| 13 | Parity validation has a concrete, measurable definition and a failure threshold | Required | Not stated |
-| 14 | Application connection pooling is Postgres-compatible | Required | Unknown |
-| 15 | Foreign key and index semantics match between MySQL and Postgres (unsigned types, ENUM handling) | Required | Unknown |
-| 16 | The 2TB dataset can be initial-loaded into Postgres without degrading production | Required | Unknown |
-| 17 | Week 4 decommission is reversible if a post-cutover issue surfaces | Required | Not stated |
-| 18 | 12 stored procs have test coverage proving behavioural equivalence after rewrite | Required | Not stated |
-| 19 | The Week 3 read cutover is a gradual canary ramp, not an all-at-once switch | Required | Not stated |
-| 20 | Network/disk I/O can sustain synchronous dual-writes without degrading MySQL primary performance | Implied | Unknown |
-
-**20 atomic claims decomposed.** The stated plan has 5 week-level milestones. Decomposition yields 20 independently testable claims (6 Stated, 5 Implied, 9 Required), consistent with the 15-25 range expected for a 4-5 section plan.
+| 1 | Zero downtime is achievable | Stated | High |
+| 2 | 4 weeks is sufficient for this migration | Stated | High |
+| 3 | Dual-writes can be implemented in Week 1 | Stated | Medium |
+| 4 | Dual-writes will not degrade production performance | Implied | High |
+| 5 | Data parity validation is completable in one week | Stated | Medium |
+| 6 | Parity validation will catch all inconsistencies | Implied | Medium |
+| 7 | Reads can be safely cut over in Week 3 | Stated | Medium |
+| 8 | Reads and writes can be split independently | Required | Unstated |
+| 9 | The application layer can be made database-agnostic enough to route reads/writes separately | Required | Unstated |
+| 10 | Stored procedures are the main migration risk | Stated | Medium |
+| 11 | The 12 stored procedures can be rewritten in time | Implied | Medium |
+| 12 | MySQL and PostgreSQL semantic equivalence is achievable | Required | Unstated |
+| 13 | 2TB can be replicated without impacting production | Implied | Medium |
+| 14 | Rollback is possible at each stage | Implied | High |
+| 15 | Week 4 decommission of MySQL is safe after one week of Postgres-only writes | Implied | Medium |
+| 16 | The team has sufficient PostgreSQL expertise to execute this | Required | Unstated |
+| 17 | Schema differences between MySQL and PostgreSQL are handled | Required | Unstated |
+| 18 | All 95 tables have been audited for compatibility issues | Required | Unstated |
+| 19 | Transaction semantics are equivalent between both systems | Required | Unstated |
+| 20 | Application connection pool and ORM configuration works correctly on both | Required | Unstated |
+| 21 | External integrations (reporting, ETL, analytics) can tolerate the migration | Required | Unstated |
+| 22 | The dual-write mechanism handles failures atomically | Required | Unstated |
 
 ---
 
 ### Steelman
 
-The strongest case for this migration plan:
+The strongest case for this plan:
 
-1. **Dual-write is battle-tested.** Stripe, GitHub, and Shopify have all executed similar dual-write migrations at scale. The pattern is well-understood when implemented with a transactional outbox, which decouples the MySQL commit from the Postgres write so primary write latency is unaffected by Postgres slowness.
+1. **Dual-write is industry-proven.** Companies including GitHub, Stripe, and Shopify have used dual-write + read cutover patterns successfully. The staged approach is correct in principle.
+2. **4 weeks is aggressive but not absurd** for a team with tooling (AWS DMS, pgloader, or similar) already in use. 95 tables and 12 procs isn't enormous.
+3. **Separating read and write cutover reduces blast radius.** If Postgres reads fail, you haven't lost write continuity. The sequencing is logical.
+4. **Stored procedure risk is correctly identified early.** Naming it upfront means it gets resourcing. It's better to surface it now than discover it in Week 3.
+5. **2TB is large but not unusually large** — with logical replication or DMS, initial load + CDC is standard. AWS DMS handles this at scale routinely.
+6. **Decommissioning MySQL in Week 4 preserves motivation** to complete the migration rather than letting dual-write drag on indefinitely.
+7. **Read-only Postgres validation in Week 3** before any write cutover limits write-path risk exposure.
+8. **Zero-downtime is structurally possible** — no hard technical barrier prevents it if dual-write and replication are correctly implemented.
 
-2. **4 weeks is aggressive but bounded.** The team has already mapped 95 tables and identified the 12 stored procedures as the primary risk. The unknown surface area is small. Bounded scope is a real advantage.
-
-3. **Week-by-week gating is sound.** Each phase has a clear exit criterion (parity, read cutover, write cutover) and can be paused. This is phased delivery, not a big-bang switch.
-
-4. **Zero-downtime is structurally achievable.** Blue/green at the application layer, with the dual-write coordinator absorbing write traffic, eliminates hard downtime events. This is the right structure for 2TB at production scale.
-
-5. **The highest-risk item is named.** Identifying stored procedure rewrites upfront is the right instinct. 12 procs is a tractable number if they are well-understood and tested.
-
-6. **A 4-week forcing function prevents dual-write debt.** Longer timelines often mean dual-write runs indefinitely. This plan has a hard end date.
-
-7. **Tooling exists.** pgloader and AWS Database Migration Service have migrated MySQL schemas of this size successfully. The 2TB figure is within tooling capability for the initial load.
-
-**Best available evidence:** The pattern is documented in Brandur Leach's (Stripe) public writing on Postgres migrations. The key differentiator between success and failure is the parity validation gate — this plan includes it.
-
-**Strongest framing:** This is a time-boxed execution of a proven migration pattern by a team that has scoped its risk surface. With a Week 0 dry-run, transactional outbox dual-writes, and explicit parity thresholds, the plan is structurally sound.
+**Best available evidence:** Netflix, GitHub, and dozens of documented migrations confirm this pattern works. The risk is execution quality, not architectural validity.
 
 ---
 
 ### Attack Findings
 
-**Claim #2 — "Dual-writes can be implemented and stable within Week 1"**
-
-- **Disproof test:** Measure p99 write latency on MySQL before and after dual-write is activated at production load. If p99 increases >10ms, the claim fails.
-- **Failure conditions:** Postgres is slower than MySQL on this workload. Synchronous dual-write serialises the two writes; a Postgres hiccup stalls the MySQL transaction. Under peak load, this cascades to user-visible timeouts.
-- **Weakest link:** The plan doesn't specify synchronous vs asynchronous dual-write. Synchronous is safe (Postgres always has the row) but latency-dangerous. Async (transactional outbox + worker) is fast but creates a replication lag window during which Postgres reads may be stale, directly undermining the Week 3 read cutover.
-- **Unverified assumption:** The application's write path can be instrumented to emit dual-write without a full rewrite of every write-path service.
-- **Strongest opposition:** A single missed write in async mode — a worker backlog, an outbox consumer crash — leaves Postgres with a stale row. You won't know until Week 2 parity validation, and by then 2 weeks of writes have landed. Debugging the divergence takes longer than the remaining timeline.
-
-**Claim #6 — "12 stored procedures can be fully rewritten within the 4-week window"**
-
-- **Disproof test:** If any of the 12 procs contain MySQL-specific constructs (LAST_INSERT_ID, GROUP BY non-ANSI semantics, SIGNAL SQLSTATE, IF EXISTS procedural blocks) with no direct PL/pgSQL equivalent, rewrite time expands significantly.
-- **Failure conditions:** One or more procs are in transactional hot paths and cannot be tested in isolation. A rewrite that changes edge-case behaviour silently breaks a downstream consumer.
-- **Weakest link:** The plan assumes "rewrite" but the procs may first need reverse-engineering. If they were written years ago with no unit test coverage, the rewrite is a reimplementation from observed production behaviour, not from a spec.
-- **Unverified assumption:** Test coverage exists for current proc behaviour. Without it, "the rewrite is equivalent" cannot be demonstrated.
-- **Strongest opposition:** 12 procs in Week 1 alongside Postgres setup and dual-write activation is three parallel tracks of work. Even at 2 procs per day, there is no buffer for any proc that needs more than a day of investigation.
-
-**Claim #7 — "Dual-write adds acceptable latency" (Implied)**
-
-- **Disproof test:** Load-test the dual-write path against the MySQL-only baseline at 2x peak production write volume. If write throughput drops >5% or p99 climbs above SLO, the claim fails.
-- **Failure conditions:** Postgres cold-cache performance on large writes, connection pool exhaustion under spike load, long-running Postgres transactions causing lock contention that propagates back to MySQL.
-- **Weakest link:** The plan defines no write latency SLO. "Acceptable" is unmeasurable.
-- **Unverified assumption:** Postgres and MySQL are both provisioned with comparable disk IOPS. If Postgres is underpowered, the dual-write comparison is invalid.
-- **Strongest opposition:** At 2TB with 95 tables, if even 20 tables have high write volume, synchronous dual-write on those tables during business hours causes cascading latency spikes that compound when Week 3 also reroutes reads.
-
-**Claim #13 — "Parity validation has a concrete definition" (Required)**
-
-- **Disproof test:** Ask the team to write the parity check query today. If they cannot, the claim is unverified.
-- **Failure conditions:** "Parity" is interpreted as row counts only. Row counts match but values differ — DATETIME timezone handling, DECIMAL precision differences, ENUM to TEXT coercion. Parity passes; corrupted data reaches production.
-- **Weakest link:** MySQL and Postgres handle DATETIME (no timezone) vs TIMESTAMP (UTC) differently. If the schema has DATETIME columns and the rewrite silently converts to TIMESTAMPTZ, values differ but row-count parity lies.
-- **Unverified assumption:** A full checksum scan will run within Week 2's window on 2TB of data. A complete scan at that scale may take days, not hours.
-- **Strongest opposition:** If parity is defined as row count plus a sampled hash on 1% of rows, systematic corruption in the other 99% goes undetected. If parity is defined as a hash of every row in sorted order per table, you need a consistent sort key on every table, and tables without a stable natural key make this non-trivial.
-
-**Claim #11 — "A rollback path exists at every cutover stage" (Required)**
-
-- **Disproof test:** Ask the team to describe the rollback procedure for mid-Week-3 if a Postgres-specific bug surfaces after 50% of read traffic has switched. If there is no documented procedure, the claim is false.
-- **Failure conditions:** Week 3 is halfway through and a silent data consistency bug surfaces in production reads. Rollback requires switching all read traffic back to MySQL and explaining to users why reads were inconsistent.
-- **Weakest link:** The plan says "cut reads over to Postgres" in Week 3 with no mention of a canary ramp (5% to 20% to 50% to 100%) or circuit-breaker. An all-at-once read switch with no ramp is the riskiest single moment in the plan.
-- **Unverified assumption:** The application supports a runtime read-source switch without a deployment. If a config change requires a full deploy, rollback during a live incident is materially slower.
-- **Strongest opposition:** Week 4 decommissions MySQL. Once the MySQL cluster is torn down, rollback from Week 4 requires rebuilding MySQL from Postgres, which is the original migration in reverse. The plan has no stated decommission-is-reversible clause.
-
----
-
-### Findings by Severity
-
 **Critical weaknesses** (would cause failure):
 
 | # | Claim attacked | Weakness | Evidence | Impact |
 |---|---|---|---|---|
-| 1 | #11 | No rollback mechanism documented for Week 3 read cutover or Week 4 decommission | Plan is silent on rollback; "cut over" implies a one-way switch | Incident during cutover with no recovery path forces extended unplanned outage |
-| 2 | #13 | Parity validation undefined — no concrete check specified | "Validate data parity" is a goal, not a method | Silent data corruption reaching production read traffic |
-| 3 | #6 | Stored proc rewrite + Postgres setup + dual-write in Week 1 is three parallel tracks with no slack | 12 procs x investigation + rewrite + test exceeds 5 working days with no buffer | Timeline slips in Week 1, compressing every subsequent week |
+| 1 | #22 — dual-write handles failures atomically | Dual-write across two separate databases cannot be atomic without distributed transactions. A write succeeds in MySQL and fails in Postgres (or vice versa) on every network hiccup, lock timeout, or constraint violation — silently diverging the two. | Two-phase commit across MySQL + Postgres requires XA transactions, which most ORMs don't support and adds latency spikes. Without it, divergence is guaranteed under load. | Data corruption in Postgres that isn't caught until Week 2 — at which point the parity gap may be too large to reconcile in one week. |
+| 2 | #12 — MySQL and PostgreSQL semantic equivalence | MySQL and Postgres differ on: `NULL` handling in `GROUP BY`, `ONLY_FULL_GROUP_BY`, case sensitivity in string comparisons (MySQL case-insensitive by default), `AUTO_INCREMENT` vs sequences, `TINYINT(1)` as boolean, `DATETIME` vs `TIMESTAMP` timezone behaviour, `0000-00-00` dates that are illegal in Postgres, `ENUM` types, and implicit type coercions. With 95 tables, hitting at least one production-breaking semantic difference is near-certain. | MySQL's default `utf8` charset is actually `utf8mb3` (3-byte), causing failures on 4-byte emoji/Unicode in Postgres's true `utf8mb4`. | Silent wrong-answer queries in Postgres that pass parity checks because the test data doesn't cover the edge case. Application bugs surface after Week 4 decommission when rollback is no longer available. |
+| 3 | #8/#9 — reads and writes can be split independently | If the application uses a single ORM connection string, a single connection pool, or has any implicit "read your own writes" pattern (writing then immediately reading in the same request), splitting reads to Postgres while writes go to MySQL will break consistency. Reads on Postgres may return stale data from before replication lag catches up. | Replication lag on a 2TB dataset under write load is not negligible — even 100ms of lag breaks "read your own writes" for any user-facing feature. | User-visible data loss (writes appear to vanish) and race conditions that only manifest under load in Week 3, which is the worst possible time. |
+| 4 | #15 — one week of Postgres-only writes is sufficient before decommission | One week of production write load does not surface slow-burning issues: end-of-month batch jobs, quarterly reports, weekly aggregations, or infrequent code paths. Decommissioning MySQL in Week 4 eliminates rollback permanently. | Many production incidents only emerge after 30–60 days when infrequent jobs run. One week of "clean" operation is insufficient evidence of correctness. | Catastrophic, unrecoverable data loss after MySQL is gone and a previously-untested code path hits Postgres. |
 
 **Significant risks** (could cause failure under conditions):
 
 | # | Claim attacked | Risk | Trigger conditions | Likelihood |
 |---|---|---|---|---|
-| 1 | #7 | Synchronous dual-write latency degrades MySQL p99 under peak load | Postgres I/O slower than MySQL on high-write tables (orders, events, audit logs) | High |
-| 2 | #19 | All-at-once read cutover in Week 3 with no canary ramp | Any Postgres query plan regression or stale row from async dual-write | Medium-High |
-| 3 | #9 | Schema type mismatches (DATETIME/TIMESTAMP, unsigned INT, ENUM) cause silent value corruption | MySQL-to-Postgres schema migration uses AUTO type mapping | Medium |
-| 4 | #12 | Team lacks Postgres operational expertise for production tuning (autovacuum, work_mem, EXPLAIN ANALYZE) | Team is MySQL-native; Postgres has a materially different operational model | Medium |
+| 1 | #4 — dual-writes don't degrade production | Dual-write doubles write latency in the synchronous path. 2x write latency at p99 may breach SLAs or cause timeouts cascading upstream. | Any write-heavy traffic spike during Week 1, especially if Postgres is slower than MySQL on initial cold data (no warm buffer pool). | High — almost certain to show up in monitoring; question is whether it's tolerable. |
+| 2 | #13 — 2TB initial replication doesn't impact production | Initial bulk load of 2TB reads from MySQL at high I/O. Depending on instance type, this competes with production read queries. | MySQL running on storage-bounded instances (RDS with provisioned IOPS), or initial load scheduled during a traffic peak. | Medium — often underestimated. mysqldump/pgloader on 2TB can run 12–24 hours and saturate I/O. |
+| 3 | #5/#6 — parity validation is complete in one week | Parity validation of 2TB across 95 tables is not a one-week project if done rigorously. Naive row-count checks will miss: column-level corruption, NULL vs empty-string coercion differences, timezone-shifted timestamps, and floating-point rounding differences. | Any semantic difference from Claim #12 that isn't explicitly tested. | High — a thorough parity check on 2TB takes weeks, not days, unless the tooling is already built. |
+| 4 | #11 — 12 stored procedures rewritten in Week 1 | Stored procedures often embed MySQL-specific syntax: `DELIMITER`, `IFNULL`, `GROUP_CONCAT`, `INSERT IGNORE`, `ON DUPLICATE KEY UPDATE`, `LIMIT` in subqueries, and transaction semantics that differ. If any proc is central to a high-traffic path, a subtle rewrite bug is a production incident. | Any proc that uses MySQL-specific aggregate functions or conditional logic (`IF()` vs `CASE`). | High — 12 procs with MySQL-specific idioms is the expected case, not the exception. |
+| 5 | #21 — external integrations can tolerate migration | BI tools, ETL pipelines, analytics databases, data warehouses, and monitoring agents that connect directly to MySQL (not through the app) are not addressed in the plan at all. These may use MySQL-specific SQL dialect, rely on binlog for CDC, or have hardcoded connection strings. | Any external system that reads directly from MySQL's binlog (Debezium, Canal, Maxwell) — the replication stream changes completely in Postgres (logical replication / pgoutput). | Medium-High — 2TB and 95 tables implies a mature system that almost certainly has downstream consumers. |
 
 **Unverified assumptions** (unknown whether true):
 
 | # | Claim attacked | Assumption | How to verify | Cost of being wrong |
 |---|---|---|---|---|
-| 1 | #8 | Postgres write throughput can absorb the 2TB initial load without falling behind live ingest | Run load test with pg_logical or dual-write at current ingest rate | Initial load never completes; plan cannot start Week 2 |
-| 2 | #18 | Stored procs have test coverage proving behavioural equivalence | Run existing test suite and measure proc-level coverage | Rewritten procs introduce silent regressions in production |
-| 3 | #14 | Application connection pooler is Postgres-compatible and configured correctly | Check each service's DB client library and pool configuration | Week 3 read cutover fails at the connection layer |
-| 4 | #15 | Index and foreign key semantics are identical (unsigned types, ENUM, partial indexes) | Run pgloader in dry-run mode and inspect DDL output | Schema migration produces a structurally different Postgres schema |
+| 1 | #16 — team has PostgreSQL expertise | Does the team know Postgres's MVCC behaviour, `VACUUM`, index types (GIN vs GiST vs BRIN), connection pooler requirements (PgBouncer), and operational differences from MySQL? | Ask directly: who has run Postgres in production before? | High — operational surprises (table bloat, transaction ID wraparound, autovacuum blocking) hit production weeks after migration, not during it. |
+| 2 | #14 — rollback is possible at each stage | Is there a documented, tested rollback plan for each week? "MySQL still running" is not a rollback plan — it requires tested failback procedures, connection string switches, and data reconciliation for any writes that landed in Postgres during Week 3–4. | Write and dry-run the rollback procedure before starting Week 1. | High — without a tested rollback, "zero downtime" becomes "no planned downtime but potentially very long unplanned downtime." |
+| 3 | #17/#18 — schema differences audited | Has the schema been run through a compatibility checker (pgloader dry-run, AWS SCT report, or manual audit)? Foreign keys with `ON DELETE SET DEFAULT` (not supported in Postgres pre-14), check constraints, expression defaults, and virtual columns all differ. | Run `pgloader` or AWS SCT in dry-run mode against a schema dump. | Medium-High — schema incompatibilities block the initial load, compressing the already-tight Week 1 timeline. |
+| 4 | #19 — transaction semantics are equivalent | MySQL's default isolation level is `REPEATABLE READ`; PostgreSQL's is also `REPEATABLE READ` but the implementation differs (Postgres uses MVCC, MySQL uses locking). Queries that rely on MySQL's locking behaviour (e.g., `SELECT ... FOR UPDATE` interactions with phantom reads) may behave differently. | Review all transactions that use explicit locking or isolation levels. | Medium — affects correctness of financial or inventory-type operations. |
 
 ---
 
 ### Verdict
 
-**Overall robustness:** Fragile
+**Overall robustness: Fragile**
 
-**Confidence in verdict:** High — three critical weaknesses (no rollback, undefined parity, Week 1 overload) are structural, not tactical. They are not fixable with more caution during execution; they require explicit design decisions before the plan starts. The architecture is correct. The plan is not ready to execute.
+**Confidence in verdict: High** — because three of the four critical weaknesses are structural (not execution quality issues) and at least two of them — dual-write non-atomicity and MySQL/Postgres semantic divergence — are near-certain to manifest on a 2TB, 95-table production system. The plan's timeline compresses the points where these failures surface (parity validation, read cutover) into windows too short to catch and fix them before the next stage begins.
+
+The plan is *architecturally correct in skeleton* but *dangerously under-specified in the areas that actually fail migrations*. The identified risk (stored procedure rewrite) is real but is the third or fourth most dangerous item on this list, not the first.
 
 ---
 
@@ -156,60 +108,62 @@ The strongest case for this migration plan:
 
 **Must address before proceeding:**
 
-1. **No rollback path defined** — add an explicit rollback decision tree for Week 3: if parity fails mid-week, read traffic returns to MySQL within X minutes via feature flag; MySQL is not decommissioned in Week 4 until reads have been stable on Postgres for at least 5 business days. Week 4 decommission should be a soft decommission — MySQL running read-only for a further 2 weeks before actual teardown.
+1. **Dual-write divergence handling** — define the consistency model explicitly: will dual-writes be fire-and-forget to Postgres (async, with reconciliation) or synchronous? If synchronous, what's the failure mode when Postgres rejects a write MySQL accepted? Build a divergence detector that runs continuously in Week 1–3 and alerts on row-level mismatches in near-real-time, not just end-of-week batch checks.
 
-2. **Parity validation undefined** — define the check before Week 1 starts: row count per table plus checksum of a hash column per 10k-row partition, with a tolerance of zero divergence for financial tables and less than 0.001% for event and log tables. Specify the tooling (pg_comparator, custom script) and the time budget. If a full scan cannot complete in Week 2 on 2TB, define a sampling strategy with explicit risk acceptance.
+2. **MySQL→Postgres semantic audit** — run AWS Schema Conversion Tool or pgloader in dry-run mode across all 95 tables *before* Week 1 starts. Produce a compatibility report. Any table with `0000-00-00` dates, `TINYINT(1)` booleans used ambiguously, case-sensitive string comparisons, or `ENUM` columns needs a migration strategy defined upfront, not discovered during parity validation.
 
-3. **Week 1 is overloaded** — split the stored procedure rewrite into a Week 0 activity. Treat it as a prerequisite gate, not a parallel track. If any proc cannot be fully rewritten and tested before Week 1 begins, the timeline shifts.
+3. **Read-your-own-writes analysis** — map every request flow that writes then reads in the same transaction or request. These flows break when reads go to Postgres before replication lag is zero. Either keep these flows on MySQL through Week 3 or implement synchronous replication with lag monitoring before cutting over reads.
+
+4. **Tested rollback procedures** — write and execute a rollback drill for each week before the migration begins. The Week 4 rollback (after MySQL decommission) should be treated as "there is no rollback" — which means the MySQL decommission gate should require at least 30 days of clean Postgres operation, not 7.
 
 **Should address if possible:**
 
-1. **Dual-write latency** — load-test the dual-write path at 2x peak before activating in production. If p99 write latency increases more than 10ms, switch to async dual-write via transactional outbox. Accept the replication lag window as a known risk and monitor it continuously.
+1. **External integration audit** — catalogue every system connecting directly to MySQL (BI tools, ETL, CDC pipelines, monitoring). Each needs its own cutover plan. Binlog-based CDC consumers (Debezium etc.) need to switch to Postgres logical replication — that's a separate project.
 
-2. **Canary read cutover in Week 3** — route 5% of read traffic to Postgres for 24 hours, then 20%, then 50%, then 100%. Gate each step on zero error rate increase and no parity alerts. Do not switch all-at-once.
+2. **Postgres operational readiness** — ensure the team has run autovacuum tuning, connection pooling (PgBouncer), and bloat monitoring before go-live. PostgreSQL operational failure modes are different from MySQL's and surprise teams that migrate without operational prep.
 
-3. **Postgres operational readiness** — the on-call team needs to understand autovacuum tuning, EXPLAIN ANALYZE, and the Postgres connection model before Week 3. One day of hands-on training avoids the most common production incidents.
+3. **Extend the timeline** — 4 weeks for 2TB / 95 tables / zero downtime is achievable but leaves no margin. One unexpected semantic incompatibility in Week 2 consumes the entire buffer. 6–8 weeks with the same structure dramatically improves the probability of success without changing the architecture.
 
-**Verify before Week 1 starts:**
+**Verify when possible:**
 
-1. **Initial load feasibility** — run pgloader in dry-run mode against a production snapshot to confirm load time and check for DDL warnings. Confirm whether the load requires a maintenance window or can run with live replication.
+1. **Parity validation tooling** — confirm the team has (or will build) column-level comparison, not just row counts. Tools like `data-diff` (open source) handle this at scale. Validate the tooling itself on a representative sample before Week 2.
 
-2. **Stored proc test coverage** — inventory test coverage for all 12 procs today. Any proc without 80% coverage is a rewrite without a safety net and needs additional test authoring before the rewrite begins.
-
-3. **Connection pooler compatibility** — confirm every application service's DB client is Postgres-compatible with its current pool configuration.
-
----
+2. **Write latency under dual-write** — load-test dual-write on a staging environment before enabling in production. Measure p95 and p99 write latency. If it exceeds current SLAs, the Week 1 plan needs to change (async dual-write with lag tolerance instead of synchronous).
 
 ## Evaluation
 
-### Criteria (definition quality)
+| Field | Value |
+|---|---|
+| Verdict | PASS |
+| Score | 15.5/17.5 (89%) |
+| Evaluated | 2026-05-01 |
+| Target duration | 89368 ms |
+| Target cost | $0.0992 |
+| Permission denials | 0 |
 
-- [x] PASS: Step 1 decomposes the plan into a claim inventory with stated, implied, and required claims — SKILL.md defines the claim inventory table with a Type column (Stated/Implied/Required) and states "A plan with 5 sections typically decomposes into 15-25 atomic claims. If you find fewer than 10, you haven't decomposed far enough." The simulated output yields 20 claims across all three types.
-- [x] PASS: Step 2 steelmans the plan before attacking — Step 2 is labeled mandatory. The rules require fixing obvious weaknesses and adding best supporting evidence before attacking. The simulated output adds external evidence (Stripe, GitHub, Shopify), names the transactional outbox pattern, and frames the architecture as correct before any attack begins.
-- [x] PASS: Step 3 attacks each claim with the required five-part structure — SKILL.md defines exactly five attack vectors per claim: disproof test, failure conditions, weakest link, unverified assumption, strongest opposition. All five appear in each attack section of the simulated output.
-- [x] PASS: Findings are classified by severity in three separate tables — Step 3 specifies Critical weaknesses, Significant risks, and Unverified assumptions as three distinct tables with defined column schemas. The simulated output matches this structure exactly.
-- [x] PASS: Implied and required claims receive specific attack — the skill's Rules section states "Implied claims are the richest target. Focus on Required and Implied claims." Claims #7 (dual-write latency, Implied), #13 (parity definition, Required), #11 (rollback path, Required), and #19 (canary vs all-at-once, Required) all receive full five-part attacks.
-- [x] PASS: Step 4 delivers a verdict using one of the four defined ratings — Step 4 template specifies exactly "Robust / Conditionally sound / Fragile / Fatally flawed." The simulated output rates the plan "Fragile" with explicit confidence level and reasoning.
-- [x] PASS: Every weakness in the verdict section comes with a direction for fixing it — SKILL.md Rules state "Every weakness identified should come with a direction for fixing it." All three critical weaknesses in Recommendations include a concrete fix approach.
-- [~] PARTIAL: Verdict does not soften if the plan is genuinely fragile — the rule is present and explicit. The plan receives "Fragile" rather than "Fatally flawed." Three critical weaknesses could support "Fatally flawed," but the steelman established the architecture is sound and all gaps are fixable before execution. "Fragile" is the honest verdict, not a softened one. The rule is structurally present; the boundary between Fragile and Fatally flawed here is a judgment call that the definition cannot fully resolve without live execution. Scored 0.5 out of deference to the PARTIAL criterion type.
+### Criteria
 
-### Output expectations (simulation quality)
-
-- [x] PASS: Claim inventory enumerates well over 10 atomic claims — 20 claims produced, covering Stated (1-6), Implied (7-10), and Required (11-20). Includes the specific claims named in the test: dual-write latency, stored proc behaviour, schema reversibility, rollback path, pg replication on 2TB.
-- [x] PASS: Steelman step strengthens the plan before attacking — adds Stripe/GitHub/Shopify precedent, names transactional outbox as the correct dual-write mechanism, specifies staging dry-run and parity threshold framing, fixes trivial weaknesses before the attack begins.
-- [x] PASS: Stored procedure rewrite specifically attacked — Claim #6 receives full five-part attack: hot-path risk, MySQL-specific syntax (LAST_INSERT_ID, SIGNAL, GROUP BY), test coverage gap, Week 1 parallelism overload, 2-3x underestimation pattern for proc rewrites.
-- [x] PASS: Dual-write latency assumption attacked — Claim #7 names sync vs async tradeoff, load-test disproof method, p99 cascading failure mode at 2TB/95-table scale, and the absence of any defined write latency SLO.
-- [x] PASS: Parity validation attacked — Claim #13 names DATETIME/TIMESTAMP corruption risk, row-count-only as a false positive, 2TB scan time budget problem, and the sort-key requirement for hash-based validation.
-- [x] PASS: Cutover step attacked — Claims #11 and #19 name the Week 3 read-switch as the riskiest moment, canary ramp absence, application restart requirement for connection switching, and Week 4 decommission-is-irreversible problem.
-- [x] PASS: Findings classified into three separate tables — Critical weaknesses (3 entries), Significant risks (4 entries), Unverified assumptions (4 entries) with all required columns populated.
-- [x] PASS: Verdict uses one of the four defined ratings — "Fragile" is correct and honest for a 4-week zero-downtime migration of 2TB and 12 procs with no rollback, no parity definition, and an overloaded Week 1.
-- [x] PASS: Verdict does not soften — "not ready to execute" with "High" confidence. No "should be fine in most cases" language. The three critical weaknesses are named as structurally blocking, not advisory.
-- [x] PASS: Every weakness includes a direction for fixing — all three critical weaknesses have concrete fixes: rollback decision tree with specific timing, parity check method with tooling and tolerance thresholds, Week 0 proc rewrite as a prerequisite gate.
+| # | Criterion | Result | Evidence |
+|---|---|---|---|
+| c1 | Step 1 decomposes the plan into a claim inventory with stated, implied, and required claims — a 4-week plan should yield well above 10 atomic claims | PASS | The output presents a 22-row claim inventory table with columns for Type (Stated/Implied/Required) and Confidence. Examples: claim #1 'Zero downtime is achievable' (Stated), #4 'Dual-writes will not degrade production performance' (Implied), #8 'Reads and writes can be split independently' (Required). |
+| c2 | Step 2 steelmans the plan by building its strongest version before attacking — fixes obvious weaknesses before the attack | PASS | A dedicated 'Steelman' section with 8 numbered arguments appears before the Attack Findings. It argues the pattern is industry-proven (GitHub, Stripe, Shopify), that 4 weeks is 'aggressive but not absurd,' and that 2TB 'is large but not unusually large.' Culminates with 'Zero-downtime is structurally possible — no hard technical barrier prevents it.' |
+| c3 | Step 3 attacks each claim with the required structure — disproof test, failure conditions, weakest link, unverified assumption, strongest opposition | PARTIAL | Attack findings are rigorous and adversarial but use a different per-entry structure than the five named elements (disproof test, failure conditions, weakest link, unverified assumption, strongest opposition). Critical weaknesses use: Claim attacked / Weakness / Evidence / Impact. Significant risks use: Risk / Trigger conditions / Likelihood. Unverified assumptions use: Assumption / How to verify / Cost of being wrong. The content is adversarial but the named five-element per-claim structure is not followed. |
+| c4 | Findings are classified by severity — critical weaknesses, significant risks, and unverified assumptions in separate tables | PASS | Three distinct tables are present: 'Critical weaknesses (would cause failure)' with 4 entries, 'Significant risks (could cause failure under conditions)' with 5 entries, and 'Unverified assumptions (unknown whether true)' with 4 entries. |
+| c5 | Implied and required claims receive specific attack — not just the stated claims (e.g., the implicit assumption that dual-write adds acceptable latency is attacked) | PASS | Implied claim #4 ('dual-writes will not degrade production') is attacked in Significant risks row 1: 'Dual-write doubles write latency in the synchronous path. 2x write latency at p99 may breach SLAs.' Required claims #8/#9 (read/write splitting) and #22 (atomic dual-write) are attacked in Critical weaknesses. |
+| c6 | Step 4 delivers a verdict using one of the four ratings (Robust/Conditionally sound/Fragile/Fatally flawed) with reasoning | PASS | Verdict section states 'Overall robustness: Fragile' — one of the four required ratings. Reasoning follows: 'three of the four critical weaknesses are structural (not execution quality issues)' and 'dual-write non-atomicity and MySQL/Postgres semantic divergence — are near-certain to manifest on a 2TB, 95-table production system.' |
+| c7 | Every weakness in the verdict section comes with a direction for fixing it | PASS | Recommendations section has 'Must address before proceeding' (4 items with specific fixes), 'Should address if possible' (3 items), and 'Verify when possible' (2 items). Examples: 'Run AWS Schema Conversion Tool or pgloader in dry-run mode across all 95 tables before Week 1 starts,' 'write and execute a rollback drill for each week before the migration begins.' |
+| c8 | Verdict does not soften if the plan is genuinely fragile — the skill's own rule is "never soften the verdict" | PARTIAL | The verdict says 'Fragile' with 'Confidence in verdict: High' and explicitly states the plan is 'dangerously under-specified.' The verdict does not hedge with phrases like 'should be fine in most cases.' Earns the PARTIAL ceiling. |
+| c9 | Output's claim inventory enumerates well over 10 atomic claims from the 4-week plan — including stated claims (Postgres set up Week 1, dual-writes Week 1, parity validated Week 2), implied claims (latency budget on dual-writes acceptable, no MySQL-specific stored proc behaviour breaks under translation, schema migration is reversible), and required claims (rollback path during cutover, pg replication keeping up with 2TB history) | PASS | 22 claims enumerated covering all three types. Stated: #1 'Zero downtime is achievable,' #3 'Dual-writes can be implemented in Week 1,' #5 'Data parity validation is completable in one week.' Implied: #4 latency, #13 '2TB can be replicated without impacting production.' Required: #8 reads/writes can be split, #14 'Rollback is possible at each stage,' #22 'The dual-write mechanism handles failures atomically.' |
+| c10 | Output's steelman step strengthens the plan before attacking — adds a Week 0 staging dry-run, names the dual-write coordinator pattern (transactional outbox vs sync), specifies parity validation as percentage thresholds rather than vague "validate" — fixing trivial weaknesses before the real attack | FAIL | The steelman section contains 8 purely defensive arguments ('Dual-write is industry-proven,' '4 weeks is aggressive but not absurd,' etc.) but does NOT add a Week 0 staging dry-run, does NOT name the dual-write coordinator pattern (transactional outbox vs sync), and does NOT specify parity validation as percentage thresholds. The steelman defends the plan as stated rather than strengthening/patching it before attacking. |
+| c11 | Output attacks the stored procedure rewrite specifically — 12 procs in 1 week is the team's stated risk, and the red-team flags it: are these procs in transactional hot paths, do they have edge-case behaviour that's hard to test, what's the test coverage on the existing procs | PASS | Significant risks table row 4 attacks claim #11: lists MySQL-specific syntax differences (DELIMITER, IFNULL, GROUP_CONCAT, INSERT IGNORE, ON DUPLICATE KEY UPDATE, LIMIT in subqueries) and states 'If any proc is central to a high-traffic path, a subtle rewrite bug is a production incident.' Likelihood rated 'High.' |
+| c12 | Output attacks the dual-write latency assumption — at 2TB and 95 tables, every write becomes 2 writes; the latency budget on the synchronous-vs-async dual-write decision is interrogated, with the failure mode (Postgres latency dragging primary write performance) named | PASS | Significant risks row 1 attacks claim #4: 'Dual-write doubles write latency in the synchronous path. 2x write latency at p99 may breach SLAs or cause timeouts cascading upstream.' Recommendations item 2 further says 'load-test dual-write on a staging environment... If it exceeds current SLAs, the Week 1 plan needs to change (async dual-write with lag tolerance instead of synchronous).' |
+| c13 | Output attacks the parity validation — what does "data parity" mean concretely (row counts? hash-of-sorted-rows? checksum per partition?), what's the tolerance, what triggers a rollback if parity fails | PASS | Significant risks row 3 attacks claims #5/#6: 'Naive row-count checks will miss: column-level corruption, NULL vs empty-string coercion differences, timezone-shifted timestamps, and floating-point rounding differences.' Recommendations item under 'Verify' says 'confirm the team has column-level comparison, not just row counts. Tools like data-diff.' Tolerance and rollback trigger not explicitly addressed. |
+| c14 | Output attacks the cutover step — Week 3 reads switch is the riskiest single moment; what happens if Postgres has a stale row from a missed dual-write, what's the rollback mechanism mid-week, what's the read-traffic ramp (canary % vs all-at-once) | PARTIAL | Critical weaknesses row 3 attacks claims #8/#9: addresses stale data from replication lag ('Reads on Postgres may return stale data from before replication lag catches up') and read-your-own-writes breakage. However, the output does not address the rollback mechanism mid-week during Week 3, nor the read-traffic ramp strategy (canary percentage vs all-at-once). These specific elements are absent. |
+| c15 | Output's findings are classified into critical weaknesses (could fail the migration), significant risks (likely to bite but recoverable), and unverified assumptions (need data before committing) — three separate tables | PASS | Three explicitly labeled separate tables: 'Critical weaknesses (would cause failure)' with 4 rows, 'Significant risks (could cause failure under conditions)' with 5 rows, 'Unverified assumptions (unknown whether true)' with 4 rows. |
+| c16 | Output's verdict uses one of the four ratings (Robust / Conditionally sound / Fragile / Fatally flawed) — given 4-week zero-downtime is aggressive for 2TB + 12 procs, "Conditionally sound" or "Fragile" is the honest verdict | PASS | Verdict section opens with 'Overall robustness: Fragile' — one of the four required ratings, and an honest one given the identified structural weaknesses. |
+| c17 | Output's verdict does NOT soften — if the plan is genuinely fragile (e.g. Week 4 decommission with no fallback if a problem surfaces post-cutover), the verdict says so and does not hedge with "should be fine in most cases" | PASS | Verdict states 'Confidence in verdict: High' and 'The plan is architecturally correct in skeleton but dangerously under-specified.' Recommendation 4 explicitly says 'the MySQL decommission gate should require at least 30 days of clean Postgres operation, not 7' — treating Week 4 decommission as having no practical rollback. |
+| c18 | Output's weaknesses each include a direction for fixing — extend timeline, add canary cutover, add a staging full-rehearsal, hire a Postgres DBA, etc. — not just "this is risky" | PASS | All four 'Must address' items include specific fixes: 'define the consistency model explicitly... build a divergence detector,' 'run AWS Schema Conversion Tool or pgloader in dry-run mode across all 95 tables,' 'map every request flow that writes then reads,' 'write and execute a rollback drill.' 'Should address' and 'Verify' sections similarly prescriptive. |
 
 ### Notes
 
-The skill's claim taxonomy (Stated/Implied/Required) is its strongest structural element. Directing attack at Required and Implied claims — rather than just what the plan states — surfaces the latency budget, the semantic parity gap, and the rollback absence, none of which the team mentioned. This is where the skill earns its value.
-
-One structural tension worth flagging: Step 3 says "For each claim from Step 1" which implies 20 full five-part attacks for this prompt. In practice, the critical claims get full treatment and others surface only in severity tables. The definition does not explicitly permit selective depth. Adding a note like "prioritise Implied and Required claims with low confidence for full five-part treatment" would make the intended approach explicit rather than implied by context.
-
-The `/council` cross-reference is well-scoped and prevents misuse: red-team validates a decided path; council chooses between options.
+The output is a strong red-team analysis that clearly passes on most criteria. The claim inventory (22 claims) and severity-classified attack tables are well-executed. The verdict is unambiguous and unsoftened. The main gaps are: (1) the steelman section is purely defensive rather than constructively patching obvious weaknesses — it argues the plan is sound rather than adding a Week 0 dry-run, naming dual-write coordinator patterns, or specifying parity thresholds as the criterion expected; (2) the attack structure per claim uses a custom three-table format rather than the named five-element structure (disproof test, failure conditions, weakest link, unverified assumption, strongest opposition); (3) the Week 3 read cutover attack misses the canary ramp strategy and mid-week rollback mechanism. These are genuine gaps but do not undermine the overall quality of the analysis, which correctly identifies dual-write non-atomicity and MySQL/Postgres semantic divergence as the most dangerous risks above the team's stated stored-procedure concern.

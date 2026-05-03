@@ -4,8 +4,25 @@ Scenario: A support agent receives a ticket about a data export timing out, and 
 
 ## Prompt
 
+Triage and respond to this support ticket. Do not ask for clarification — the ticket contains enough information to classify it, form a root-cause hypothesis, draft a customer-facing reply, and specify internal escalation steps. Complete all of those steps now.
 
 New ticket just came in:
+
+**From:** marcus.chen@acme-corp.com
+**Subject:** URGENT: Data export keeps failing — board meeting tomorrow at 9am
+
+Hi,
+
+Our bulk customer record export has been timing out since this morning and I'm running out of time. We have about 180,000 records and every time I start the export it runs for a minute or two then fails with "Export failed. Please try again." No error code, nothing useful.
+
+I've tried four times now with the same result.
+
+Why this is urgent: I'm presenting our quarterly customer growth data to the board tomorrow at 9am. This export is the centrepiece of the whole presentation. Without it I'm standing up there with nothing.
+
+Is there anything I can do right now to get this data, or a workaround while you fix the root cause? I genuinely don't know what else to try.
+
+Marcus Chen
+Head of Operations, Acme Corp — Account #ACM-7842
 
 ## Criteria
 

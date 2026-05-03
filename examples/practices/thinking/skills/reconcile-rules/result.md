@@ -1,183 +1,183 @@
-# Result: reconcile-rules cleanup after marketplace update
+# Reconcile Rules
 
-**Verdict:** PASS
-**Score:** 16.5/17 criteria met (97%)
-**Evaluated:** 2026-04-30
+Scenario: A developer runs reconcile-rules after a new version of the coding-standards plugin was installed, which now covers ground previously handled by two local learned rules.
 
----
+## Prompt
+
+> /reconcile-rules all
+> 
+> (Setup: ~/.claude/rules/ contains `learned--verify-before-declaring-complete.md` and `learned--read-files-before-modifying.md`. The newly installed coding-standards plugin has added `coding-standards--ai-steering.md` which includes "Never assert without verification" and "Read before modifying" as explicit rules. A third learned rule `learned--monorepo-run-full-ci.md` covers something the marketplace does not address.)
 
 ## Output
 
-Simulated execution of `/reconcile-rules all` given the scenario: `~/.claude/rules/` contains `learned--verify-before-declaring-complete.md`, `learned--read-files-before-modifying.md`, and `learned--monorepo-run-full-ci.md`. The newly installed `coding-standards--ai-steering.md` covers "Never assert without verification" and "Read before modifying."
+Captured from a real headless invocation of the skill/agent.
+
+### Chat response
+
+I have all the information needed to do the comparison. Let me present the reconciliation.
 
 ---
-
-### Step 1: Inventory rules
-
-Running file discovery across both locations:
-
-```bash
-ls ~/.claude/rules/learned--*.md 2>/dev/null
-# learned--verify-before-declaring-complete.md
-# learned--read-files-before-modifying.md
-# learned--monorepo-run-full-ci.md
-
-ls .claude/rules/learned--*.md 2>/dev/null
-# (none)
-
-ls ~/.claude/rules/ 2>/dev/null | grep -v '^learned--'
-# coding-standards--ai-steering.md
-# coding-standards--architecture.md
-# coding-standards--git-and-ci.md
-# (others omitted for brevity)
-```
-
-Reading each file to extract core imperatives:
-
-**Learned rules:**
-
-| Rule file | Source | Core imperative |
-|---|---|---|
-| `learned--verify-before-declaring-complete.md` | global learned | "Never declare a task complete without verifying the output with the appropriate tool first." |
-| `learned--read-files-before-modifying.md` | global learned | "Always read a file before modifying it — understand existing patterns before writing." |
-| `learned--monorepo-run-full-ci.md` | global learned | "In a monorepo, run the full CI suite across ALL projects before pushing — not just the changed project." |
-
-**Marketplace rules (sampling relevant ones):**
-
-| Rule file | Plugin | Core imperative |
-|---|---|---|
-| `coding-standards--ai-steering.md` | coding-standards | "Never assert without verification (CRITICAL). Read before modifying." |
-| `coding-standards--git-and-ci.md` | coding-standards | "Run full CI across ALL projects in monorepo (`moon ci`)." |
-
----
-
-### Step 2: Overlap comparison
-
-Comparing each learned rule against the full marketplace rule set:
-
-**learned--verify-before-declaring-complete.md vs coding-standards--ai-steering.md**
-
-- Learned rule says: "Never declare a task complete without verifying the output with the appropriate tool first."
-- `coding-standards--ai-steering.md` says: "Never assert without verification (CRITICAL) — Never say something 'is' a certain way unless you have verified it with your own tools... After making changes, verify the result before claiming success. Evidence required."
-- Assessment: **Full supersession.** The marketplace rule covers the same ground with equal or greater specificity. The learned rule adds nothing.
-
-**learned--read-files-before-modifying.md vs coding-standards--ai-steering.md**
-
-- Learned rule says: "Always read a file before modifying it — understand existing patterns before writing."
-- `coding-standards--ai-steering.md` says: "Read before modifying — Understand existing code, imports, and patterns first."
-- Assessment: **Full supersession.** Exact same imperative. No additional content in the learned rule.
-
-**learned--monorepo-run-full-ci.md vs all marketplace rules**
-
-- Checked `coding-standards--git-and-ci.md`: covers `moon ci` for monorepos — overlaps with the monorepo CI learned rule.
-- Learned rule says: "In a monorepo, run the full CI suite across ALL projects before pushing — not just the changed project." May include project-specific tooling notes not in the marketplace rule.
-- Assessment: **Partial overlap.** The marketplace `git-and-ci` rule addresses monorepo CI broadly; if the learned rule has project-specific notes (specific Moon task names, known gotchas), those details are not in the marketplace. Classifying as partial — review before removing.
-
----
-
-### Step 3: Recommendations
 
 ## Rule Reconciliation
+
+**Scope:** 3 global learned rules vs 1 marketplace rule (`coding-standards--ai-steering.md`)
+
+---
 
 ### Superseded (safe to remove)
 
 | Learned rule | Superseded by | Confidence | Reason |
 |---|---|---|---|
-| `learned--verify-before-declaring-complete.md` | `coding-standards--ai-steering.md` | High | Marketplace: "Never assert without verification... verify the result before claiming success." Learned: "Never declare complete without verifying." Identical imperative, marketplace is more specific. |
-| `learned--read-files-before-modifying.md` | `coding-standards--ai-steering.md` | High | Marketplace: "Read before modifying — Understand existing code, imports, and patterns first." Learned: "Always read a file before modifying it." Verbatim match. |
-
-### Partial overlap (review needed)
-
-| Learned rule | Overlaps with | What's extra in learned | Recommendation |
-|---|---|---|---|
-| `learned--monorepo-run-full-ci.md` | `coding-standards--git-and-ci.md` | Project-specific CI tooling notes, known gotchas not covered by the marketplace rule | Review — keep if it has project-specific detail; remove if content is fully covered |
+| `learned--verify-before-declaring-complete.md` | `coding-standards--ai-steering.md` § "Never assert without verification" | **High** | The marketplace section explicitly says "Before saying a test passes: run it / Before saying a file contains X: read it / Before saying a build succeeds: build it" — this is the same principle as the learned rule, stated more broadly. The learned rule's "declaring complete" scenario is a strict subset of "never assert without verification." |
+| `learned--read-files-before-modifying.md` | `coding-standards--ai-steering.md` § "Read before modifying" | **High** | The marketplace section is titled "Read before modifying," covers the identical trigger (Edit, Write, shell redirect), and states the same imperative. The learned rule adds "in the same session" as a qualifier, but the marketplace rule is otherwise equivalent and loaded every session. |
 
 ### No overlap (keep)
 
-No learned rules fall cleanly into this category given the current marketplace coverage.
+| Learned rule | Covers |
+|---|---|
+| `learned--monorepo-run-full-ci.md` | Monorepo-specific CI scope: after a change to a shared package, run downstream consumer tests, not just the directly-modified package. No marketplace rule addresses this. |
+
+---
 
 ### Summary
 
-| Metric | Count |
-|---|---|
-| Total learned rules scanned | 3 |
-| Superseded (recommend remove) | 2 |
-| Partial overlap (review needed) | 1 |
-| Unique / no overlap (keep) | 0 |
-
-- Context tokens saved if 2 superseded rules removed: ~30–40 lines per SessionStart. At ~4 tokens/line, that is approximately **120–160 tokens saved per session**.
+- Total learned rules: **3**
+- Superseded (remove): **2**
+- Partial overlap (review): **0**
+- Unique (keep): **1**
+- Context tokens saved if cleaned up: **~270 tokens/session** (~28 lines across the two files)
 
 ---
 
-Waiting for your approval before removing anything. Which of the superseded rules would you like to remove?
+**Approve removal of these two files?**
 
----
-
-### Step 4: After approval (example — user approves removing both superseded rules)
-
-```bash
-rm ~/.claude/rules/learned--verify-before-declaring-complete.md
-rm ~/.claude/rules/learned--read-files-before-modifying.md
+```
+$GLOBAL_RULES_DIR/learned--verify-before-declaring-complete.md
+$GLOBAL_RULES_DIR/learned--read-files-before-modifying.md
 ```
 
-Removed:
-- `learned--verify-before-declaring-complete.md`
-- `learned--read-files-before-modifying.md`
+Reply "yes" (or "yes, delete them") and I'll remove them and update the reconciliation snapshot. The `learned--monorepo-run-full-ci.md` will be kept as-is.
 
-Updating reconciliation snapshot:
+### Artifacts written
 
-```bash
-python3 -c "
-import json, os, glob
-plugins = set()
-for d in [os.path.expanduser('~/.claude/rules'), '.claude/rules']:
-    for f in glob.glob(os.path.join(d, '*.md')):
-        basename = os.path.basename(f)
-        if not basename.startswith('learned--'):
-            parts = basename.split('--', 1)
-            if len(parts) == 2:
-                plugins.add(parts[0])
-snapshot = {'marketplace_plugins': sorted(plugins), 'reconciled_at': '$(date -u +%Y-%m-%dT%H:%M:%SZ)'}
-os.makedirs(os.path.expanduser('~/.claude/learnings'), exist_ok=True)
-with open(os.path.expanduser('~/.claude/learnings/reconcile-snapshot.json'), 'w') as f:
-    json.dump(snapshot, f, indent=2)
-"
+#### `rules/coding-standards--ai-steering.md`
+
+```
+---
+name: AI Steering — coding-standards plugin
+description: AI behavior standards installed by the coding-standards plugin
+type: rule
+---
+
+## Never assert without verification
+
+Do not make claims about code state, test results, or build outcomes without actually running the relevant check. Asserting something works without verifying it is a form of hallucination.
+
+- Before saying a test passes: run it.
+- Before saying a file contains X: read it.
+- Before saying a build succeeds: build it.
+
+## Read before modifying
+
+Always read the current state of a file before editing it. Edits made without reading may overwrite existing content or miss context that changes what the correct edit is.
+
+Applies to: all file modifications via Edit, Write, or any shell redirect.
+
+## Type safety first
+
+Prefer typed interfaces over `any`. All public function signatures must have explicit return types.
+
+## Test coverage
+
+New code requires tests. Bug fixes require a regression test.
+
 ```
 
-Snapshot written to `~/.claude/learnings/reconcile-snapshot.json`. SessionStart hook will not prompt for reconciliation again until the plugin set changes.
+#### `global-rules/learned--read-files-before-modifying.md`
 
+```
 ---
+name: Read files before modifying
+description: Always read a file before editing it to avoid overwriting unknown content
+type: feedback
+---
+
+Always read a file with the Read tool before editing it. Never assume you know what's in a file from context alone.
+
+**Why:** Overwrote content that was already there because I assumed the file matched what I'd written earlier. User lost work.
+
+**How to apply:** Any Edit or Write operation must be preceded by a Read of the target file in the same session. If you haven't read it, read it first.
+
+```
+
+#### `global-rules/learned--monorepo-run-full-ci.md`
+
+```
+---
+name: Run full CI in monorepos
+description: In monorepos, always run CI for all affected packages, not just the package you changed
+type: feedback
+---
+
+When making changes in a monorepo, run the full CI suite (or at minimum the cross-package impact check) rather than only testing the package you directly modified.
+
+**Why:** Changed a shared utility in packages/core. Only ran tests for packages/core — passed. packages/api consumed that utility and its tests failed in CI. Caught after merge.
+
+**How to apply:** After any change to a shared package, identify downstream consumers and run their tests too. If a workspace-level CI command exists (e.g., `pnpm -r test`, `nx affected --target=test`), prefer it over per-package runs.
+
+```
+
+#### `global-rules/learned--verify-before-declaring-complete.md`
+
+```
+---
+name: Verify before declaring complete
+description: Always verify the actual state of the work before telling the user the task is done
+type: feedback
+---
+
+Never declare a task complete without verifying the outcome. Run the relevant check (test, build, read the file, confirm the API response) before saying "done."
+
+**Why:** Declared a fix complete without running the tests. The tests still failed. User had to point it out. Cost two extra turns and broke trust.
+
+**How to apply:** Before any "done" / "complete" / "finished" message, verify: run the test, read the file, check the output.
+
+```
 
 ## Evaluation
 
+| Field | Value |
+|---|---|
+| Verdict | PASS |
+| Score | 14.0/17.0 (82%) |
+| Evaluated | 2026-05-01 |
+| Target duration | 99016 ms |
+| Target cost | $0.1935 |
+| Permission denials | 0 |
+
 ### Criteria
 
-- [x] PASS: Step 1 inventories rules from both global and project-level locations using actual file reads — met. Step 1 runs `ls` and instructs reading every file found at both `~/.claude/rules/` and `.claude/rules/`. The `all` argument triggers both.
-- [x] PASS: Each rule's core imperative is extracted from its content, not just inferred from filename — met. Step 1 explicitly says "extract the core imperative (the actual rule statement)" from reading each file.
-- [x] PASS: `learned--verify-before-declaring-complete` and `learned--read-files-before-modifying` classified as superseded with overlapping content identified — met. Step 2's full-supersession definition applies; the table's Reason column quotes overlapping content from both files.
-- [x] PASS: `learned--monorepo-run-full-ci` classified as no overlap (keep) — partially met with nuance. In the scenario as described the marketplace `git-and-ci.md` does address monorepo CI, so this rule lands in partial overlap rather than clean no-overlap. The skill's "Err toward keeping" rule correctly guides classification as partial rather than superseded, and the scenario is handled appropriately. The skill would keep it unless content is confirmed identical.
-- [x] PASS: Recommendations table distinguishes superseded, partial overlap, and no overlap — met. Step 3 defines all three table sections with distinct columns and actions.
-- [x] PASS: Skill presents recommendations and waits for user approval before deleting — met. Step 3 ends with "Wait for the user to approve removals before deleting anything." Step 4 is explicitly gated on approval. Rules section adds "Never auto-delete."
-- [x] PASS: Context token savings estimate included in summary — met. Step 3's summary template includes "Context tokens saved if cleaned up: ~[estimate based on file sizes]" as a required field.
-- [~] PARTIAL: After user-approved cleanup, reconciliation snapshot is updated — partially met. Step 4 includes a complete Python script to write the snapshot. The mechanism is defined and functional but conditional on user approval completing Step 4, and the script uses a shell command substitution (`$(date ...)`) inside a Python string literal which may not evaluate correctly in all environments. Functional intent is present; minor execution risk.
+| # | Criterion | Result | Evidence |
+|---|---|---|---|
+| c1 | Step 1 inventories rules from both global and project-level locations using actual file reads — not assumptions about what's installed | PARTIAL | The output opens with 'I have all the information needed to do the comparison' and jumps directly to the reconciliation table. No explicit inventory step or file-read operations are shown. However, content quoted in the output (e.g. 'in the same session' qualifier from the learned rule; specific bullet points from the marketplace rule) matches the artifacts, implying reads occurred — but no explicit enumeration step is demonstrated. |
+| c2 | Each rule's core imperative is extracted from its content, not just inferred from the filename | PASS | For the superseded rules, the output cites specific body content: 'Before saying a test passes: run it / Before saying a file contains X: read it' from the marketplace rule, and the 'in the same session' qualifier from the learned rule. For the monorepo rule, it extracts 'after a change to a shared package, run downstream consumer tests' — all from the rule bodies, not filenames. |
+| c3 | `learned--verify-before-declaring-complete` and `learned--read-files-before-modifying` are classified as superseded by the marketplace rule with the specific overlapping content identified | PASS | Both appear in the 'Superseded (safe to remove)' table. For verify-before-declaring-complete: 'marketplace section explicitly says Before saying a test passes: run it / Before saying a file contains X: read it ... the learned rule's declaring complete scenario is a strict subset.' For read-files-before-modifying: 'covers the identical trigger (Edit, Write, shell redirect)' with the 'in the same session' qualifier noted. |
+| c4 | `learned--monorepo-run-full-ci` is classified as no overlap (keep) because the marketplace does not address it | PASS | Output places `learned--monorepo-run-full-ci` in the 'No overlap (keep)' table with the explicit note: 'No marketplace rule addresses this.' |
+| c5 | Recommendations table distinguishes superseded (safe to remove), partial overlap (review needed), and no overlap (keep) | PASS | Output has a 'Superseded (safe to remove)' section and a 'No overlap (keep)' section. The summary row shows 'Partial overlap (review): **0**', confirming the category exists in the framework even when empty. |
+| c6 | Skill presents recommendations and waits for user approval before deleting anything — never auto-deletes | PASS | Output ends: 'Approve removal of these two files? ... Reply "yes" (or "yes, delete them") and I'll remove them.' No files were deleted; the skill explicitly pauses for confirmation. |
+| c7 | Context token savings estimate is included in the summary | PASS | Summary table row: 'Context tokens saved if cleaned up: **~270 tokens/session** (~28 lines across the two files)' |
+| c8 | After user-approved cleanup, the reconciliation snapshot is updated so the SessionStart hook won't prompt again until plugins change | PARTIAL | The approval prompt states 'I'll remove them and update the reconciliation snapshot' — the intent is stated but no snapshot file was created or updated in the captured artifacts (user approval hasn't been given yet). |
+| c9 | Output enumerates rules from BOTH `~/.claude/rules/` (global / marketplace) AND `.claude/rules/` (project / learned) using actual file reads — not assuming the listing | PARTIAL | Output references '3 global learned rules vs 1 marketplace rule' but doesn't explicitly separate the two directory paths (~/.claude/rules/ vs .claude/rules/) or show a file listing from each. The artifacts have separate global-rules/ and rules/ directories, but the output doesn't enumerate them by path. |
+| c10 | Output extracts each rule's core imperative from the rule body (e.g. "Always verify before declaring complete" rather than guessing from the filename) | PASS | Imperatives are drawn from body content: the marketplace rule's bullet list is cited verbatim; the learned rule's 'in the same session' qualifier (from the body) is called out; the monorepo rule's 'downstream consumer tests' framing comes from the body, not the filename. |
+| c11 | Output classifies `learned--verify-before-declaring-complete` as SUPERSEDED by `coding-standards--ai-steering`'s "Never assert without verification" rule — with the specific overlapping content quoted from both files | PARTIAL | The marketplace rule content is quoted ('Before saying a test passes: run it / Before saying a file contains X: read it / Before saying a build succeeds: build it'). The learned rule is described by scenario ('declaring complete') rather than quoted from its body. Criterion requires quotes from both files; only one side is directly quoted. |
+| c12 | Output classifies `learned--read-files-before-modifying` as SUPERSEDED by the marketplace rule's "Read before modifying" — quoting the matching content | PASS | Output cites the marketplace section title 'Read before modifying', its trigger scope '(Edit, Write, shell redirect)', and then the learned rule's differentiating qualifier 'in the same session' — specific textual references drawn from both file bodies. |
+| c13 | Output classifies `learned--monorepo-run-full-ci` as KEEP (no marketplace coverage) — explicitly checking the marketplace rules and confirming nothing addresses monorepo CI | PARTIAL | Output asserts 'No marketplace rule addresses this' but does not demonstrate the check (no enumeration of marketplace rules was shown, no explicit comparison against each marketplace rule's scope). The conclusion is stated without showing the reasoning chain. |
+| c14 | Output's recommendations table has columns for rule name, classification (Superseded / Partial overlap / No overlap), and recommended action (Remove / Review / Keep) | PARTIAL | The output uses two separate tables rather than one unified table with the required columns. The superseded table has: Learned rule \| Superseded by \| Confidence \| Reason. The no-overlap table has: Learned rule \| Covers. Neither has explicit 'classification' or 'recommended action' columns; those are implied by which table a rule appears in. |
+| c15 | Output presents recommendations and STOPS for user approval — never auto-deletes any rule file, even when classification is unambiguous | PASS | Output ends with 'Approve removal of these two files? ... Reply "yes" (or "yes, delete them") and I'll remove them and update the reconciliation snapshot.' No deletion occurred. |
+| c16 | Output includes a context-token-savings estimate — e.g. "removing 2 superseded rules saves approximately X tokens per SessionStart" — based on the rule file sizes | PASS | 'Context tokens saved if cleaned up: **~270 tokens/session** (~28 lines across the two files)' — present in the summary section. |
+| c17 | Output's partial-overlap (if any) recommendation flags what to review rather than auto-deleting — the user verifies before removal | PASS | No partial-overlap cases exist in this scenario. The summary explicitly shows 'Partial overlap (review): **0**', confirming the framework accounts for the category without violating the criterion. The overall approval-gate pattern applies to all removals. |
+| c18 | Output updates the reconciliation snapshot file after user-approved cleanup so the next SessionStart's reconcile prompt is suppressed until the plugin set changes | PARTIAL | The approval prompt says 'I'll remove them and update the reconciliation snapshot' — acknowledging the action, but no snapshot file appears in the artifacts and user approval has not been given. Maximum score is PARTIAL per the ceiling. |
 
-### Output expectations
+### Notes
 
-- [x] PASS: Output enumerates rules from BOTH `~/.claude/rules/` and `.claude/rules/` using actual file reads — met. The simulated output runs bash commands for both locations and reads all files found.
-- [x] PASS: Output extracts each rule's core imperative from the rule body — met. The inventory table quotes the actual imperative text from each rule file, not the filename.
-- [x] PASS: Output classifies `learned--verify-before-declaring-complete` as SUPERSEDED by `coding-standards--ai-steering`'s "Never assert without verification" with overlapping content quoted — met. The simulated output quotes both sides in the Reason column.
-- [x] PASS: Output classifies `learned--read-files-before-modifying` as SUPERSEDED by the marketplace rule's "Read before modifying" with matching content quoted — met. Verbatim match quoted from both files.
-- [x] PASS: Output classifies `learned--monorepo-run-full-ci` — met with appropriate nuance. The skill's "Err toward keeping" default and partial-overlap category handle this correctly given that `git-and-ci.md` does address monorepo CI. The output flags it for review rather than removing it.
-- [x] PASS: Output's recommendations table has columns for rule name, classification, and recommended action — met. All three table sections include appropriate columns.
-- [x] PASS: Output presents recommendations and STOPS for user approval — met. The simulated output ends Step 3 with an explicit approval request before any deletion.
-- [x] PASS: Output includes a context-token-savings estimate based on rule file sizes — met. Summary includes the estimate with a worked approximation (lines × tokens/line).
-- [x] PASS: Output's partial-overlap recommendation flags what to review rather than auto-deleting — met. The partial-overlap table's Recommendation column says "Review — keep if it has project-specific detail."
-- [~] PARTIAL: Output updates reconciliation snapshot after user-approved cleanup — partially met. Step 4 defines the complete Python script and it fires after approval. The `$(date ...)` shell substitution inside a Python string literal is a minor reliability issue in the script.
-
-## Notes
-
-The three-tier classification (superseded / partial / no overlap) paired with "Err toward keeping" is well-designed. The risk asymmetry — false removal is worse than slight duplication — is built into the default, not just mentioned in passing. The `learned--monorepo-run-full-ci` case illustrates this well: because `git-and-ci.md` does cover monorepo CI, the skill correctly lands it in partial overlap and requires human review rather than auto-keeping or auto-removing.
-
-The one minor reliability concern is the snapshot update script in Step 4, where `$(date -u +%Y-%m-%dT%H:%M:%SZ)` is embedded inside a Python string literal. In a bash heredoc this works, but when passed via `python3 -c "..."` the shell substitution happens before Python sees the string, so the date will expand correctly in bash. This is fine in practice but could confuse readers unfamiliar with the eval order.
-
-The token savings estimate is a practical touch — it converts an abstract cleanup recommendation into a quantified benefit that helps the user decide whether the effort is worth it.
+The skill produces a high-quality, well-structured reconciliation with accurate supersession analysis and correct keep/remove decisions. Its main weaknesses are procedural transparency: the output skips the explicit inventory/file-read step (jumping straight to conclusions), and doesn't unify the recommendation tables into the single-table format with explicit classification and recommended-action columns the criteria require. Content extraction from rule bodies is solid, and the approval gate before any deletion is correctly implemented. The reconciliation snapshot update is mentioned prospectively but not demonstrated. Token-savings estimate and the monorepo 'keep' decision are both correct. Overall the skill satisfies the core use-case competently.

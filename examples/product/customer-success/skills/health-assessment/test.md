@@ -4,6 +4,393 @@ Scenario: Testing whether the health-assessment skill scores all 5 dimensions wi
 
 ## Prompt
 
+First, create the account health data:
+
+```bash
+mkdir -p accounts
+```
+
+Write to `accounts/enterprise-portfolio.yaml`:
+
+```yaml
+accounts:
+  - name: Acme Corp
+    arr: 84000
+    renewal_date: 2025-03-15
+    plan: enterprise
+    adoption:
+      dau_mau_ratio: 0.62
+      features_used: [projects, tasks, reports, api, export]
+      recent_trend: stable
+    engagement:
+      logins_last_30d: 340
+      trend: increasing
+      support_tickets_last_30d: 2
+    relationship:
+      nps_score: 8
+      exec_sponsor: confirmed
+      last_meeting: 2024-11-10
+    value_realisation:
+      stated_goal: "Replace spreadsheet project tracking"
+      goal_status: achieved
+      roi_documented: true
+    commercial:
+      payment_status: current
+      contract_length_months: 24
+      months_remaining: 5
+
+  - name: BrightPath Solutions
+    arr: 62000
+    renewal_date: 2025-02-28
+    plan: enterprise
+    adoption:
+      dau_mau_ratio: 0.21
+      features_used: [projects, tasks]
+      recent_trend: declining
+    engagement:
+      logins_last_30d: 45
+      trend: declining_30pct
+      support_tickets_last_30d: 8
+    relationship:
+      nps_score: 4
+      exec_sponsor: "no sponsor identified"
+      last_meeting: 2024-09-03
+    value_realisation:
+      stated_goal: "Improve cross-team visibility"
+      goal_status: not_achieved
+      roi_documented: false
+    commercial:
+      payment_status: current
+      contract_length_months: 12
+      months_remaining: 2
+
+  - name: Meridian Financial
+    arr: 156000
+    renewal_date: 2025-06-30
+    plan: enterprise
+    adoption:
+      dau_mau_ratio: 0.71
+      features_used: [projects, tasks, reports, api, export, audit_log, sso]
+      recent_trend: stable
+    engagement:
+      logins_last_30d: 820
+      trend: stable
+      support_tickets_last_30d: 1
+    relationship:
+      nps_score: 9
+      exec_sponsor: confirmed
+      last_meeting: 2024-11-20
+    value_realisation:
+      stated_goal: "SOC 2 audit trail and project governance"
+      goal_status: achieved
+      roi_documented: true
+    commercial:
+      payment_status: current
+      contract_length_months: 36
+      months_remaining: 18
+
+  - name: Thunderstone Retail
+    arr: 48000
+    renewal_date: 2025-01-31
+    plan: enterprise
+    adoption:
+      dau_mau_ratio: 0.18
+      features_used: [projects]
+      recent_trend: declining
+    engagement:
+      logins_last_30d: 22
+      trend: declining_50pct
+      support_tickets_last_30d: 12
+    relationship:
+      nps_score: 3
+      exec_sponsor: "champion left company last month"
+      last_meeting: 2024-08-14
+    value_realisation:
+      stated_goal: "Replace project management tool for ops team"
+      goal_status: stalled
+      roi_documented: false
+    commercial:
+      payment_status: 30_days_overdue
+      contract_length_months: 12
+      months_remaining: 1
+
+  - name: CloudNine Logistics
+    arr: 72000
+    renewal_date: 2025-04-15
+    plan: enterprise
+    adoption:
+      dau_mau_ratio: 0.55
+      features_used: [projects, tasks, reports, export]
+      recent_trend: stable
+    engagement:
+      logins_last_30d: 210
+      trend: stable
+      support_tickets_last_30d: 3
+    relationship:
+      nps_score: 7
+      exec_sponsor: confirmed
+      last_meeting: 2024-11-01
+    value_realisation:
+      stated_goal: "Real-time shipment project visibility"
+      goal_status: partially_achieved
+      roi_documented: false
+    commercial:
+      payment_status: current
+      contract_length_months: 12
+      months_remaining: 5
+
+  - name: Pinnacle Healthcare
+    arr: 93000
+    renewal_date: 2025-05-31
+    plan: enterprise
+    adoption:
+      dau_mau_ratio: 0.44
+      features_used: [projects, tasks, reports, api]
+      recent_trend: stable
+    engagement:
+      logins_last_30d: 155
+      trend: stable
+      support_tickets_last_30d: 5
+    relationship:
+      nps_score: 6
+      exec_sponsor: confirmed
+      last_meeting: 2024-10-22
+    value_realisation:
+      stated_goal: "Compliance project tracking"
+      goal_status: on_track
+      roi_documented: false
+    commercial:
+      payment_status: current
+      contract_length_months: 24
+      months_remaining: 7
+
+  - name: Vertex Engineering
+    arr: 38000
+    renewal_date: 2025-03-01
+    plan: enterprise
+    adoption:
+      dau_mau_ratio: 0.12
+      features_used: [projects]
+      recent_trend: declining
+    engagement:
+      logins_last_30d: 18
+      trend: declining_40pct
+      support_tickets_last_30d: 14
+    relationship:
+      nps_score: 2
+      exec_sponsor: "no response in 60 days"
+      last_meeting: 2024-08-30
+    value_realisation:
+      stated_goal: "Engineering project portfolio"
+      goal_status: not_achieved
+      roi_documented: false
+    commercial:
+      payment_status: current
+      contract_length_months: 12
+      months_remaining: 3
+
+  - name: Cascade Media
+    arr: 55000
+    renewal_date: 2025-07-15
+    plan: enterprise
+    adoption:
+      dau_mau_ratio: 0.68
+      features_used: [projects, tasks, reports, export, api]
+      recent_trend: increasing
+    engagement:
+      logins_last_30d: 290
+      trend: increasing
+      support_tickets_last_30d: 1
+    relationship:
+      nps_score: 9
+      exec_sponsor: confirmed
+      last_meeting: 2024-11-18
+    value_realisation:
+      stated_goal: "Content production tracking"
+      goal_status: exceeded
+      roi_documented: true
+    commercial:
+      payment_status: current
+      contract_length_months: 24
+      months_remaining: 9
+
+  - name: Strata Property Group
+    arr: 41000
+    renewal_date: 2025-04-01
+    plan: enterprise
+    adoption:
+      dau_mau_ratio: 0.35
+      features_used: [projects, tasks]
+      recent_trend: stable
+    engagement:
+      logins_last_30d: 88
+      trend: stable
+      support_tickets_last_30d: 4
+    relationship:
+      nps_score: 6
+      exec_sponsor: confirmed
+      last_meeting: 2024-10-15
+    value_realisation:
+      stated_goal: "Property development project tracking"
+      goal_status: partially_achieved
+      roi_documented: false
+    commercial:
+      payment_status: current
+      contract_length_months: 12
+      months_remaining: 5
+
+  - name: NovaTech Systems
+    arr: 110000
+    renewal_date: 2025-08-31
+    plan: enterprise
+    adoption:
+      dau_mau_ratio: 0.59
+      features_used: [projects, tasks, reports, api, sso, export, audit_log]
+      recent_trend: increasing
+    engagement:
+      logins_last_30d: 480
+      trend: increasing
+      support_tickets_last_30d: 2
+    relationship:
+      nps_score: 8
+      exec_sponsor: confirmed
+      last_meeting: 2024-11-12
+    value_realisation:
+      stated_goal: "IT project portfolio management"
+      goal_status: achieved
+      roi_documented: true
+    commercial:
+      payment_status: current
+      contract_length_months: 24
+      months_remaining: 10
+
+  - name: Hargreaves Consulting
+    arr: 29000
+    renewal_date: 2025-02-01
+    plan: enterprise
+    adoption:
+      dau_mau_ratio: 0.09
+      features_used: [projects]
+      recent_trend: declining
+    engagement:
+      logins_last_30d: 8
+      trend: declining_70pct
+      support_tickets_last_30d: 0
+    relationship:
+      nps_score: null
+      exec_sponsor: "unknown — contact unresponsive"
+      last_meeting: 2024-07-05
+    value_realisation:
+      stated_goal: "unknown"
+      goal_status: unknown
+      roi_documented: false
+    commercial:
+      payment_status: current
+      contract_length_months: 12
+      months_remaining: 2
+
+  - name: Pacific Distribution
+    arr: 67000
+    renewal_date: 2025-05-15
+    plan: enterprise
+    adoption:
+      dau_mau_ratio: 0.47
+      features_used: [projects, tasks, reports, export]
+      recent_trend: stable
+    engagement:
+      logins_last_30d: 175
+      trend: stable
+      support_tickets_last_30d: 3
+    relationship:
+      nps_score: 7
+      exec_sponsor: confirmed
+      last_meeting: 2024-10-28
+    value_realisation:
+      stated_goal: "Warehouse and logistics project tracking"
+      goal_status: on_track
+      roi_documented: false
+    commercial:
+      payment_status: current
+      contract_length_months: 12
+      months_remaining: 6
+
+  - name: Streamline Insurance
+    arr: 88000
+    renewal_date: 2025-09-30
+    plan: enterprise
+    adoption:
+      dau_mau_ratio: 0.53
+      features_used: [projects, tasks, reports, api, audit_log]
+      recent_trend: stable
+    engagement:
+      logins_last_30d: 260
+      trend: stable
+      support_tickets_last_30d: 4
+    relationship:
+      nps_score: 7
+      exec_sponsor: confirmed
+      last_meeting: 2024-11-05
+    value_realisation:
+      stated_goal: "Claims project management and compliance tracking"
+      goal_status: on_track
+      roi_documented: false
+    commercial:
+      payment_status: current
+      contract_length_months: 24
+      months_remaining: 11
+
+  - name: Frontier Mining
+    arr: 45000
+    renewal_date: 2025-01-15
+    plan: enterprise
+    adoption:
+      dau_mau_ratio: 0.28
+      features_used: [projects, tasks]
+      recent_trend: declining
+    engagement:
+      logins_last_30d: 55
+      trend: declining_20pct
+      support_tickets_last_30d: 7
+    relationship:
+      nps_score: 5
+      exec_sponsor: "confirmed but low engagement"
+      last_meeting: 2024-09-20
+    value_realisation:
+      stated_goal: "Mine site project coordination"
+      goal_status: partially_achieved
+      roi_documented: false
+    commercial:
+      payment_status: current
+      contract_length_months: 12
+      months_remaining: 2
+
+  - name: Apex Legal
+    arr: 36000
+    renewal_date: 2025-06-01
+    plan: enterprise
+    adoption:
+      dau_mau_ratio: 0.41
+      features_used: [projects, tasks, reports]
+      recent_trend: stable
+    engagement:
+      logins_last_30d: 95
+      trend: stable
+      support_tickets_last_30d: 2
+    relationship:
+      nps_score: 7
+      exec_sponsor: confirmed
+      last_meeting: 2024-10-08
+    value_realisation:
+      stated_goal: "Matter and case project tracking"
+      goal_status: on_track
+      roi_documented: false
+    commercial:
+      payment_status: current
+      contract_length_months: 12
+      months_remaining: 7
+```
+
+Then run:
 
 /customer-success:health-assessment for our top 15 enterprise accounts ahead of our quarterly CS team review — we need to know which accounts need immediate attention.
 

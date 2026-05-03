@@ -1,169 +1,91 @@
-# Result: write-iac skill structure
+# Write Iac
 
-| Field | Value |
-|---|---|
-| **Verdict** | PASS |
-| **Score** | 17.5/18 criteria met (97%) |
-| **Evaluated** | 2026-04-30 |
-| **Source** | `plugins/engineering/devops/skills/write-iac/SKILL.md` |
+Scenario: Checking that the write-iac skill produces a complete, deployable module with resource graph, validated variables, remote state, consistent tagging, and documentation — not a skeleton or snippet.
+
+## Prompt
+
+> Review the write-iac skill definition and verify it enforces production-ready infrastructure-as-code standards rather than illustrative examples.
 
 ## Output
 
-Simulated response for: *Review the write-iac skill definition and verify it enforces production-ready infrastructure-as-code standards rather than illustrative examples.*
+Captured from a real headless invocation of the skill/agent.
 
----
+### Chat response
 
-### Verification: write-iac skill — production-ready IaC standards
+I've located and reviewed the write-iac skill definition. Here's my assessment:
 
-**Scope:** structural review of `plugins/engineering/devops/skills/write-iac/SKILL.md` against eight production-readiness requirements.
+## Production-Ready Strengths ✓
 
----
+The skill enforces several strong production standards:
 
-#### Requirement 1 — Reconnaissance before writing
+1. **Remote State Enforcement** (lines 154-155): Explicitly prohibits local state, requires remote backend with encryption and locking
+2. **Version Pinning** (lines 152): Pessimistic constraints (`~>`) to prevent breaking changes while allowing patches
+3. **Resource Validation** (lines 86-101): Every variable requires type, description, and validation rules
+4. **Naming Conventions** (lines 23, 37): Enforces consistent resource naming patterns
+5. **Comprehensive Tagging** (line 237): Mandates environment, team, service, managed-by tags
+6. **Secrets Management** (line 236): Explicitly forbids hardcoding secrets
+7. **Module Separation** (line 234): One resource type per module, composition at stack level
+8. **Verification Gates** (Step 6): Requires `terraform validate` / `pulumi preview`
 
-PASS. Step 1 requires detecting the IaC tool (scans for `*.tf`, `Pulumi.yaml`, `__main__.py`, `index.ts`), scanning `modules/` and `infra/` for reusable modules before creating new ones, identifying the provider and backend from existing config, checking naming conventions from existing resources, and identifying the existing tagging strategy. Tool detection includes a fallback: default to Terraform HCL if nothing is detected, with a confirmation prompt before using Pulumi.
+## Critical Gaps for Production Use ⚠️
 
----
+However, several production concerns are **missing**:
 
-#### Requirement 2 — Resource graph before code
+1. **Security Scanning** — No mention of tfsec, checkov, or Pulumi policy as code for compliance checks
+2. **Drift Detection** — No guidance on detecting/reconciling infrastructure drift
+3. **State File Protection** — Requires remote state but doesn't prescribe access controls, replication, or backup
+4. **Cost Estimation** — No `terraform cost` validation or budgeting before apply
+5. **Change Control** — No mention of required approvals or change windows
+6. **Testing** — Missing terratest, unit tests, or IaC test frameworks
+7. **Audit Logging** — No CloudTrail/audit trail strategy for tracking changes
+8. **Disaster Recovery** — No state file backup/recovery procedures
+9. **Multi-Environment Promotion** — Minimal guidance on dev→staging→prod pipelines
 
-PASS. Step 2 runs before Step 3. It requires listing every resource the module will create, mapping dependencies, identifying data sources, planning outputs, and documenting the full graph as a comment block at the top of the main file:
+## Recommendation
 
-```hcl
-# Resource Graph:
-# VPC → Subnets (public, private) → Route Tables → NAT Gateway
-#                                  → Security Groups
-#                                  → Load Balancer → Target Group
-```
+The skill is **solid for basic module creation** but lacks guardrails for regulated/large-scale environments. It should:
+- Add a security scanning requirement (Step 4.5)
+- Mandate audit logging configuration
+- Require cost estimation for non-dev environments
+- Document state backup/disaster recovery procedures
+- Reference approval gate patterns for prod deployments
 
-Code writing starts at Step 3, after the graph is documented.
+Would you like me to enhance the skill with these production-grade standards?
 
----
+## Evaluation
 
-#### Requirement 3 — Complete file structure for both tools
-
-PASS. Step 3 defines both:
-
-**Terraform:**
-
-```
-modules/{module-name}/
-├── main.tf
-├── variables.tf
-├── outputs.tf
-├── versions.tf
-├── data.tf          (optional)
-├── locals.tf        (optional)
-└── README.md
-```
-
-**Pulumi:**
-
-```
-infra/{stack-name}/
-├── Pulumi.yaml
-├── Pulumi.dev.yaml
-├── Pulumi.prod.yaml
-├── index.ts / __main__.py
-└── README.md
-```
-
-All four required Terraform files are present. Pulumi project metadata, per-stack config files, and program entry point are all defined.
-
----
-
-#### Requirement 4 — Variables with description, type, and validation
-
-PASS. Step 3 shows worked examples for both tools. For Terraform:
-
-```hcl
-variable "environment" {
-  description = "Deployment environment (dev, staging, prod)"
-  type        = string
-
-  validation {
-    condition     = contains(["dev", "staging", "prod"], var.environment)
-    error_message = "Environment must be one of: dev, staging, prod."
-  }
-}
-```
-
-The Rules section reinforces: *"Variables must have descriptions, types, and validation rules — undocumented variables are tech debt."* The Pulumi section shows `config.require()` and `config.get()` with typed accessors, though explicit validation logic is not shown (see Notes).
-
----
-
-#### Requirement 5 — Remote state required; local state prohibited
-
-PASS. Step 4 shows the full S3+DynamoDB backend config with `encrypt = true` and `dynamodb_table`. The Rules section is explicit: *"Never use local state (`terraform.tfstate` on disk) outside local development."* For Pulumi, Pulumi Cloud is the stated equivalent. Both named options are present.
-
----
-
-#### Requirement 6 — Consistent tagging on all resources
-
-PASS. The Rules section requires: *"every resource must have at minimum: `environment`, `team`, `service`, and `managed-by` tags."* All four minimum tags are named. The skill recommends applying them via a `locals` block or provider-level default tags to avoid repetition.
-
----
-
-#### Requirement 7 — README.md with usage example, input table, output table, prerequisites
-
-PASS. Step 5 provides a complete README template with all four required sections: a usage code block, an Inputs table (name, type, default, description columns), an Outputs table (name, description columns), and a Prerequisites section. The template is copy-pasteable.
-
----
-
-#### Requirement 8 — Pre-delivery validation and anti-pattern list
-
-PASS. Step 6 requires `terraform fmt -check -recursive`, `terraform validate`, and `terraform plan` before delivery for Terraform, and `pulumi preview` for Pulumi. The skill explicitly handles the case where credentials or tooling are unavailable: note the steps for the user to run manually. Anti-patterns listed in the Rules section include hardcoded secrets and `count` over `for_each` (with reasoning: index-based resources break when items are removed from the middle of a list).
-
----
-
-### Gaps identified
-
-Two genuine gaps not covered by the rubric criteria:
-
-1. **No drift-detection guidance.** The skill covers `terraform plan` as a pre-delivery dry-run but says nothing about detecting configuration drift in running infrastructure. A note about running `terraform plan` on a schedule in CI, or using `terraform refresh`, would close this for production operations teams.
-
-2. **No workspace or stack naming rules.** Resource naming conventions are defined (`{env}-{service}-{resource-type}`) but Terraform workspace names and Pulumi stack names are left unspecified. Teams commonly end up with inconsistent workspace names (`default`, `prod`, `production`) without a rule here.
-
-Provider version pinning is not a gap — the skill covers it explicitly in Step 4 and the Rules section (`~>` pessimistic constraint with rationale).
-
----
-
-## Results
+| Field | Value |
+|---|---|
+| Verdict | FAIL |
+| Score | 6.5/17.5 (37%) |
+| Evaluated | 2026-04-30 |
+| Target duration | 173364 ms |
+| Target cost | $0.0825 |
+| Permission denials | 0 |
 
 ### Criteria
 
-- [x] PASS: Reconnaissance first — Step 1 detects the IaC tool via file patterns (`*.tf`, `Pulumi.yaml`, `__main__.py`, `index.ts`), scans `modules/` and `infra/` for reusable modules, and checks naming conventions from existing resources before any code is written.
-- [x] PASS: Resource graph before code — Step 2 lists every resource, maps dependencies, identifies data sources, and requires a comment block documenting the graph at the top of the main file. Step 3 (code writing) follows.
-- [x] PASS: Complete file structure for both tools — Terraform (`main.tf`, `variables.tf`, `outputs.tf`, `versions.tf`, plus optional `data.tf` and `locals.tf`) and Pulumi (`Pulumi.yaml`, per-stack configs, program entry point) are both defined in Step 3.
-- [x] PASS: Variables must have description, type, and validation — worked examples with `validation` blocks in Step 3, reinforced by the Rules section which labels undocumented variables as tech debt.
-- [x] PASS: Local state prohibited, remote state required — Step 4 shows the S3+DynamoDB backend with `encrypt = true`; Rules section explicitly forbids local state outside local development. Pulumi Cloud named as equivalent.
-- [x] PASS: Consistent tagging on all resources — Rules section names the four minimum tags (`environment`, `team`, `service`, `managed-by`) and recommends applying via `locals` block or provider default tags.
-- [x] PASS: README.md with all required elements — Step 5 provides a complete template covering usage example, input table, output table, and prerequisites.
-- [x] PASS: Pre-delivery validation and anti-patterns — Step 6 requires `terraform validate` / `pulumi preview` before delivery. Anti-patterns include hardcoded secrets and `count` over `for_each`, both with explicit reasoning.
+| # | Criterion | Result | Evidence |
+|---|---|---|---|
+| c1 | Skill requires reconnaissance first — detecting the IaC tool in use (Terraform vs Pulumi), checking existing modules to reuse before creating, and identifying naming conventions | FAIL | The output mentions 'Naming Conventions (lines 23, 37)' as a strength, but never frames this as a reconnaissance phase. No mention of detecting Terraform vs Pulumi tool in use, or checking existing modules before creating new ones. |
+| c2 | Skill requires planning the resource graph before writing code — listing every resource and mapping dependencies | FAIL | No mention of resource graph planning or dependency mapping anywhere in the output. |
+| c3 | Skill defines the complete module file structure for both Terraform (main.tf, variables.tf, outputs.tf, versions.tf) and Pulumi | FAIL | No mention of module file structure, specific file names (main.tf, variables.tf, outputs.tf, versions.tf), or Pulumi equivalents anywhere in the output. |
+| c4 | Skill requires every variable to have a description, type, and validation rule — and marks undocumented variables as tech debt | PARTIAL | 'Resource Validation (lines 86-101): Every variable requires type, description, and validation rules' is explicitly confirmed. However, the tech-debt flagging for undocumented variables is not mentioned. |
+| c5 | Skill prohibits local state — requires remote state with encryption and locking (S3+DynamoDB or Pulumi Cloud) | PARTIAL | 'Remote State Enforcement (lines 154-155): Explicitly prohibits local state, requires remote backend with encryption and locking' confirms the prohibition and encryption+locking. However, the specific named options (S3+DynamoDB or Pulumi Cloud) are not mentioned. |
+| c6 | Skill requires consistent tagging on all resources — minimum tags: environment, team, service, managed-by | PASS | 'Comprehensive Tagging (line 237): Mandates environment, team, service, managed-by tags' — all four required tags are named explicitly. |
+| c7 | Skill requires a README.md with usage example, input/output tables, and prerequisites | FAIL | No mention of README.md requirements, usage examples, input/output tables, or prerequisites anywhere in the output. |
+| c8 | Skill requires running terraform validate or pulumi preview before delivering and listing anti-patterns including hardcoded secrets and use of count over for_each | PARTIAL | 'Verification Gates (Step 6): Requires terraform validate / pulumi preview' and 'Secrets Management (line 236): Explicitly forbids hardcoding secrets' are confirmed. However, the count-vs-for_each anti-pattern is not mentioned. |
+| c9 | Output is structured as a verification of the skill (verdict per requirement) rather than producing a sample IaC module | PASS | The entire output is a review assessment of the skill with 'Production-Ready Strengths' and 'Critical Gaps' sections — no sample IaC module or HCL code is produced. |
+| c10 | Output verifies the reconnaissance step — detect Terraform vs Pulumi, scan for existing reusable modules, and identify naming conventions before writing | FAIL | Naming conventions are mentioned (lines 23, 37) but not as a verification of a reconnaissance step. Detecting Terraform vs Pulumi as a pre-step, and scanning for existing reusable modules, are both absent. |
+| c11 | Output confirms the resource-graph-before-code rule — every resource and its dependencies enumerated before any HCL/code is written | FAIL | No mention of resource graph planning, dependency mapping, or a rule requiring this before writing code. |
+| c12 | Output verifies the file structure templates for both Terraform (main.tf, variables.tf, outputs.tf, versions.tf) and Pulumi | FAIL | No mention of specific file names, module structure templates, or Pulumi equivalents anywhere in the output. |
+| c13 | Output confirms every variable requires description, type, and validation — and that undocumented variables are flagged as tech debt | PARTIAL | 'Resource Validation (lines 86-101): Every variable requires type, description, and validation rules' confirms the first part. The tech-debt flagging for undocumented variables is not confirmed. |
+| c14 | Output verifies the prohibition on local state and the requirement for remote state with encryption + locking (S3+DynamoDB or Pulumi Cloud), naming both options | PARTIAL | Prohibition on local state and encryption+locking requirement are confirmed. However, neither 'S3+DynamoDB' nor 'Pulumi Cloud' are named as the specific required implementations. |
+| c15 | Output confirms tagging requirements — minimum tags environment, team, service, managed-by — applied to every taggable resource | PASS | 'Comprehensive Tagging (line 237): Mandates environment, team, service, managed-by tags' — all four tags named. 'Applied to every taggable resource' is implied by 'all resources' phrasing. |
+| c16 | Output verifies README.md requirements: usage example, input table, output table, prerequisites | FAIL | README.md is not mentioned anywhere in the output — neither as confirmed present nor as an identified gap. |
+| c17 | Output confirms the pre-delivery validation step (terraform validate / pulumi preview) and lists anti-patterns including hardcoded secrets and `count` instead of `for_each` | PARTIAL | 'Verification Gates (Step 6): Requires terraform validate / pulumi preview' and hardcoded secrets ('Secrets Management (line 236)') are confirmed. The `count` instead of `for_each` anti-pattern is never mentioned. |
+| c18 | Output identifies any genuine gaps — e.g. no policy on provider version pinning beyond versions.tf, no drift-detection guidance, no rule on workspace/stack naming | PARTIAL | The output identifies several gaps including 'Drift Detection — No guidance on detecting/reconciling infrastructure drift', matching one of the criterion's examples. Also lists security scanning, state backup, cost estimation, testing, audit logging, DR, and multi-environment pipelines as gaps. |
 
-### Output expectations
+### Notes
 
-- [x] PASS: Simulated output is structured as a verification of the skill — per-requirement verdicts rather than a sample IaC module.
-- [x] PASS: Reconnaissance step verified — detect Terraform vs Pulumi, scan for existing reusable modules, identify naming conventions before writing.
-- [x] PASS: Resource-graph-before-code rule confirmed — Step 2 enumerates resources and dependencies before Step 3, with a comment block documenting the graph in the main file.
-- [x] PASS: File structure templates for both tools verified — Terraform (main.tf, variables.tf, outputs.tf, versions.tf) and Pulumi (Pulumi.yaml, stack configs, entry point) both present in Step 3.
-- [x] PASS: Variable requirements confirmed — description, type, validation, and explicit labelling of undocumented variables as tech debt. Present in Step 3 and the Rules section with worked examples.
-- [x] PASS: Remote state prohibition verified — S3+DynamoDB for Terraform and Pulumi Cloud for Pulumi named explicitly. Local state prohibited outside local development.
-- [x] PASS: Tagging requirement confirmed — minimum tags `environment`, `team`, `service`, `managed-by` applied to every taggable resource via `locals` block or provider default tags.
-- [x] PASS: README.md requirements verified — usage example, input table, output table, prerequisites all present in Step 5 with a complete template.
-- [x] PASS: Pre-delivery validation step confirmed — `terraform validate` / `pulumi preview` required. Anti-patterns include hardcoded secrets and `count` over `for_each`.
-- [~] PARTIAL: Gaps identified — two genuine gaps found: (1) no drift-detection guidance beyond pre-delivery `terraform plan`; (2) no workspace or stack naming rules despite resource naming conventions being defined. Provider version pinning is not a gap.
-
-## Notes
-
-The skill is well-structured. The six-step progression (Reconnaissance → Resource Graph → Module → Provider/Backend → Documentation → Verify) maps cleanly to every rubric criterion, with each criterion traceable to a specific step or rule.
-
-Two genuine gaps worth flagging for a future revision:
-
-1. **No drift-detection guidance.** The skill covers `terraform plan` as a pre-delivery dry-run but does not address detecting configuration drift in running infrastructure — a common production operations concern.
-
-2. **No workspace or stack naming rules.** Resource naming conventions are defined but Terraform workspace names and Pulumi stack names are unspecified. Without a rule, teams default to inconsistent names (`default`, `prod`, `production`).
-
-The Pulumi variable validation section is lighter than the Terraform equivalent. The `pulumi.Config` example shows `require()` and `get()` but does not show explicit validation logic. This is a genuine asymmetry — Pulumi's config API is more limited here, but the skill could at minimum show a runtime guard for allowed values.
-
-The final line references `templates/terraform-module/` but whether that template exists in the plugin is unverified. Agents following the skill will reference a missing resource if the template directory is absent.
+The captured output reads as a surface-level review that references specific line numbers, suggesting the reviewer did access the skill file, but it focuses almost entirely on security/compliance/operational gaps rather than verifying the core structural requirements that define a production-ready IaC skill. Key structural requirements — reconnaissance step, resource graph planning before code, module file structure templates (main.tf/variables.tf/outputs.tf/versions.tf), and README.md requirements — are completely absent from the review. Partial credit is given for variable validation, remote state, tagging, verification gates, and hardcoded secrets, all of which are mentioned but with incomplete detail (missing tech-debt flagging, specific backend options like S3+DynamoDB, and the count-vs-for_each anti-pattern). The output format (skill verification) is appropriate, but the verification is too shallow and omits roughly half the structural criteria the skill should enforce.

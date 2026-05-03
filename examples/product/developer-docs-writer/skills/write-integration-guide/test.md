@@ -4,6 +4,61 @@ Scenario: Testing whether the write-integration-guide skill requires numbered st
 
 ## Prompt
 
+First, set up the project context:
+
+```bash
+mkdir -p docs/integrations src/integrations
+```
+
+Write to `docs/integrations/clearpath-api-overview.md`:
+
+```markdown
+# Clearpath API Overview
+
+Base URL: https://api.clearpath.io/v2
+
+### Authentication
+All requests require Bearer token authentication.
+- Header: `Authorization: Bearer <api_token>`
+- Tokens created in Settings → API → Personal Access Tokens
+- Scopes: `projects:read`, `projects:write`, `members:read`
+
+### Key Endpoints
+- `GET /projects` — list all projects
+- `POST /projects` — create a project
+- `PATCH /projects/{id}` — update project fields (title, status, owner)
+- `POST /webhooks` — register a webhook for project events
+- `DELETE /webhooks/{id}` — remove a webhook
+
+### Project Status Values
+`active` | `on_hold` | `completed` | `archived`
+
+### Webhook Events
+Fires on: `project.created`, `project.status_changed`
+Payload: `{ event, project_id, project_title, new_status, timestamp }`
+
+### Rate Limits
+100 requests/minute. Headers: `X-RateLimit-Remaining`, `X-RateLimit-Reset`
+```
+
+Write to `docs/integrations/salesforce-setup.md`:
+
+```markdown
+# Salesforce Connected App Setup
+
+1. Salesforce Setup → App Manager → New Connected App
+2. Enable OAuth: Callback URL `https://app.clearpath.io/integrations/salesforce/callback`, scopes: `api`, `refresh_token`
+3. Note Consumer Key (client_id) and Consumer Secret (client_secret)
+4. Clearpath Settings → Integrations → Salesforce: enter client_id and client_secret
+
+Salesforce Opportunity fields:
+- `Id` → Clearpath project `external_id`
+- `Name` → project title
+- `StageName` → Clearpath status: Closed Won → `completed`, Closed Lost → `archived`, all others → `active`
+- `OwnerId` → project owner
+```
+
+Then run:
 
 /developer-docs-writer:write-integration-guide for connecting Clearpath to Salesforce — syncing deal status from Salesforce opportunities to Clearpath projects automatically.
 

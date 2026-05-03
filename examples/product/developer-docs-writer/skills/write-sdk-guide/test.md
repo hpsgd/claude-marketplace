@@ -4,6 +4,152 @@ Scenario: Testing whether the write-sdk-guide skill requires a quickstart under 
 
 ## Prompt
 
+First, create the Python SDK source files:
+
+```bash
+mkdir -p clearpath_sdk/resources
+```
+
+Write to `clearpath_sdk/__init__.py`:
+
+```python
+from clearpath_sdk.client import ClearpathClient
+
+__version__ = "1.2.0"
+__all__ = ["ClearpathClient"]
+```
+
+Write to `clearpath_sdk/client.py`:
+
+```python
+from __future__ import annotations
+
+import os
+from typing import Any
+
+import requests
+
+from clearpath_sdk.exceptions import AuthenticationError, ClearpathAPIError, NotFoundError
+from clearpath_sdk.resources.projects import ProjectsResource
+
+
+class ClearpathClient:
+    """Clearpath API client."""
+
+    BASE_URL = "https://api.clearpath.io/v2"
+
+    def __init__(self, api_key: str | None = None, timeout: int = 30) -> None:
+        self._api_key = api_key or os.environ.get("CLEARPATH_API_KEY")
+        if not self._api_key:
+            raise AuthenticationError(
+                "No API key provided. Pass api_key= or set CLEARPATH_API_KEY."
+            )
+        self._timeout = timeout
+        self._session = requests.Session()
+        self._session.headers.update({"Authorization": f"Bearer {self._api_key}"})
+        self.projects = ProjectsResource(self)
+
+    def _request(self, method: str, path: str, **kwargs: Any) -> Any:
+        url = f"{self.BASE_URL}{path}"
+        resp = self._session.request(method, url, timeout=self._timeout, **kwargs)
+        if resp.status_code == 401:
+            raise AuthenticationError("Invalid or expired API key.")
+        if resp.status_code == 404:
+            raise NotFoundError(f"Resource not found: {path}")
+        if not resp.ok:
+            raise ClearpathAPIError(resp.status_code, resp.text)
+        return resp.json()
+```
+
+Write to `clearpath_sdk/exceptions.py`:
+
+```python
+class ClearpathAPIError(Exception):
+    def __init__(self, status_code: int, message: str) -> None:
+        self.status_code = status_code
+        super().__init__(f"API error {status_code}: {message}")
+
+class AuthenticationError(ClearpathAPIError):
+    def __init__(self, message: str) -> None:
+        super().__init__(401, message)
+
+class NotFoundError(ClearpathAPIError):
+    def __init__(self, message: str) -> None:
+        super().__init__(404, message)
+
+class RateLimitError(ClearpathAPIError):
+    def __init__(self) -> None:
+        super().__init__(429, "Rate limit exceeded. Retry after X-RateLimit-Reset.")
+```
+
+Write to `clearpath_sdk/resources/projects.py`:
+
+```python
+from __future__ import annotations
+
+from typing import Any, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from clearpath_sdk.client import ClearpathClient
+
+
+class Project:
+    def __init__(self, data: dict[str, Any]) -> None:
+        self.id: str = data["id"]
+        self.title: str = data["title"]
+        self.status: str = data["status"]
+        self.owner_id: str = data["owner_id"]
+        self.created_at: str = data["created_at"]
+
+    def __repr__(self) -> str:
+        return f"Project(id={self.id!r}, title={self.title!r}, status={self.status!r})"
+
+
+class ProjectsResource:
+    def __init__(self, client: ClearpathClient) -> None:
+        self._client = client
+
+    def list(self, page: int = 1, per_page: int = 50) -> list[Project]:
+        """List all projects. Paginates automatically if page/per_page specified."""
+        data = self._client._request("GET", "/projects", params={"page": page, "per_page": per_page})
+        return [Project(p) for p in data["projects"]]
+
+    def get(self, project_id: str) -> Project:
+        """Retrieve a single project by ID."""
+        data = self._client._request("GET", f"/projects/{project_id}")
+        return Project(data)
+
+    def create(self, title: str, status: str = "active", owner_id: str | None = None) -> Project:
+        """Create a new project."""
+        payload: dict[str, Any] = {"title": title, "status": status}
+        if owner_id:
+            payload["owner_id"] = owner_id
+        data = self._client._request("POST", "/projects", json=payload)
+        return Project(data)
+
+    def update(self, project_id: str, **fields: Any) -> Project:
+        """Update project fields. Accepts title, status, owner_id."""
+        data = self._client._request("PATCH", f"/projects/{project_id}", json=fields)
+        return Project(data)
+
+    def delete(self, project_id: str) -> None:
+        """Archive (soft-delete) a project."""
+        self._client._request("DELETE", f"/projects/{project_id}")
+```
+
+Write to `README.md`:
+
+```markdown
+# Clearpath Python SDK
+
+Python client for the Clearpath API.
+
+### Installation
+
+pip install clearpath-sdk
+```
+
+Then run:
 
 /developer-docs-writer:write-sdk-guide for our Python SDK — it wraps our REST API and currently has no documentation beyond the README installation instructions.
 

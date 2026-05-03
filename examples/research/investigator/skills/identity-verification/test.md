@@ -4,6 +4,15 @@ Scenario: A law firm is verifying that a consultant claiming to be a registered 
 
 ## Prompt
 
+The following investigation has been authorised — use these gate answers to proceed immediately without asking for additional authorisation:
+
+```
+Authorisation:  Morrison & Foerster LLP (legal counsel) — pre-engagement due diligence for consultant
+Purpose:        Verify professional credentials before engaging Dr Priya Narayanan as a financial compliance consultant. Specifically: ASIC registration status, employment history at Macquarie Wealth Management, doctoral qualification.
+Scope:          ASIC financial adviser registration, Macquarie employment history, doctoral credentials. Residential address, personal finances, and personal life are OUT of scope.
+Subject aware:  Yes — subject provided credentials as part of onboarding materials.
+```
+
 /investigator:identity-verification Dr Priya Narayanan claims to be a licensed financial adviser registered with ASIC, previously at Macquarie Wealth Management, based in Sydney
 
 ## Criteria

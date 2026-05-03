@@ -4,11 +4,7 @@ Scenario: Developer invokes the write-acceptance-criteria skill for a story: "As
 
 ## Prompt
 
-Write acceptance criteria for: "As an admin, I want to import users from a CSV file so I can onboard multiple users at once." The CSV has columns: email, name, role (must be admin, member, or viewer). Max 1,000 rows per import. Duplicate emails (already in the system) should be skipped, not error. Invalid rows (bad email format, invalid role) should be collected and shown to the admin after import completes — the valid rows should still be processed. Only users with the 'admin' role can access this feature.
-
-## Prompt
-
-Write acceptance criteria for the bulk user CSV import story above.
+/qa-lead:write-acceptance-criteria "As an admin, I want to import users from a CSV file so I can onboard multiple users at once." The CSV has columns: email, name, role (must be admin, member, or viewer). Max 1,000 rows per import. Duplicate emails (already in the system) should be skipped, not error. Invalid rows (bad email format, invalid role) should be collected and shown to the admin after import completes — the valid rows should still be processed. Only users with the 'admin' role can access this feature.
 
 ## Criteria
 

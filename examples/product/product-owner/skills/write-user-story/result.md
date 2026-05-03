@@ -1,150 +1,380 @@
-# Result: Write user story
+# Write User Story
 
-**Verdict:** PASS
-**Score:** 17/18 criteria met (94%)
-**Evaluated:** 2026-04-30
+Scenario: Testing whether the write-user-story skill definition produces stories in Gherkin format with proper acceptance criteria and ISC splitting guidance.
 
----
+## Prompt
+
+> /product-owner:write-user-story for allowing users to export their data as a CSV file from the reporting dashboard.
 
 ## Output
 
-Simulated output of applying the write-user-story skill to the test prompt: exporting data as a CSV file from the reporting dashboard.
+Captured from a real headless invocation of the skill/agent.
 
----
+### Chat response
 
-**Skill invoked:** `/product-owner:write-user-story for allowing users to export their data as a CSV file from the reporting dashboard.`
+Written to `docs/stories-csv-export.md`. Here's what was produced:
 
----
+**5 stories across the CSV export feature:**
 
+| # | Title | Size |
+|---|-------|------|
+| US-1 | Export current dashboard view as CSV | M |
+| US-2 | Export with active filters applied | M |
+| US-3 | Select columns before exporting | M |
+| US-4 | Async background export for large datasets | L |
+| US-5 | Re-download previously generated exports | M |
+
+**4 user types identified:** analyst, team manager, compliance officer, operations lead — each with distinct goals and interaction frequency.
+
+Key decisions worth flagging:
+- The async threshold (10,000 rows) is deliberately noted as server-side configurable, not hardcoded
+- Download links require authentication — no public S3 URLs
+- Export history is user-scoped with ownership checks on all download endpoints
+- Column order follows dashboard display order, not selection order
+
+### Artifacts written
+
+#### `work/docs/stories-csv-export.md`
+
+```
 # User Stories: CSV Export from Reporting Dashboard
 
 ## User Types
 
-1. **Operations manager reviewing weekly KPI dashboards** — logs in 3–4 times per week, moderate technical sophistication, needs to share summaries with stakeholders who lack system access
-2. **Data analyst running ad-hoc reports** — daily power user, high technical sophistication, needs raw data for further analysis in Excel or Python
-3. **Finance team member extracting monthly figures** — low technical sophistication, monthly visitor, needs to produce regulated reports from dashboard data
+1. **Analyst running weekly performance reviews** — pulls dashboard data into Excel/Google Sheets for offline analysis and custom charting; daily power user; high technical sophistication.
+2. **Team manager distributing reports to stakeholders** — shares data summaries with colleagues who lack dashboard access; weekly user; moderate technical sophistication.
+3. **Compliance officer auditing historical activity** — needs exportable records for regulatory review or internal audit; infrequent user (monthly); expects exact, complete data.
+4. **Operations lead working with a scoped date range and applied filters** — applies dimension filters (e.g. region, product line, status) before exporting to avoid post-processing in spreadsheets; daily power user; high technical sophistication.
 
 ---
 
-## Data Export
+## CSV Export
 
-### US-1: Export visible dashboard data as a CSV file
+### US-1: Export current dashboard view as a CSV file
 
-**As an** operations manager reviewing weekly KPI dashboards,
-**I want** to download the data currently displayed on the dashboard as a CSV file,
-**so that** I can share the figures with stakeholders who do not have access to the reporting system.
+**As an** analyst running weekly performance reviews,
+**I want** to download the data currently displayed in the reporting dashboard as a CSV file,
+**so that** I can analyse and chart it offline without manually copying rows.
 
 **Acceptance Criteria:**
 
 ```gherkin
-Scenario: Successful CSV export with data
-  Given I am logged in and viewing the "Weekly KPIs" dashboard
-  And the dashboard contains 47 rows of data
-  And I have applied a date filter of "Last 7 days"
-  When I click "Export" and select "CSV"
-  Then a file named "weekly-kpis-2026-04-30.csv" is downloaded to my browser
-  And the file contains exactly 47 data rows plus a header row
-  And the column headers match the column names displayed on the dashboard
-  And the active "Last 7 days" filter is reflected in the exported data
+Scenario: Successful CSV download of current view
+  Given I am authenticated and on the reporting dashboard
+  And the report contains at least one row of data
+  When I click "Export CSV"
+  Then a CSV file is downloaded to my browser
+  And the filename follows the pattern "report-YYYY-MM-DD.csv"
+  And the first row contains the column headers matching those visible in the dashboard
+  And every row visible in the current view is present in the file
+  And no rows outside the current view are included
 
-Scenario: Export respects active sort order
-  Given I am viewing the "Weekly KPIs" dashboard sorted by "Revenue" descending
-  When I click "Export" and select "CSV"
-  Then the downloaded CSV rows appear in the same order as the dashboard display
+Scenario: Export preserves all visible columns and their order
+  Given I am on the reporting dashboard showing columns "Date", "Region", "Revenue", "Units"
+  When I click "Export CSV"
+  Then the CSV headers are "Date,Region,Revenue,Units" in that order
 
-Scenario: Export with empty dashboard — no data rows
-  Given I am viewing the "Weekly KPIs" dashboard
-  And the current filters return no matching records
-  When I click "Export" and select "CSV"
-  Then a file is downloaded containing only the header row
-  And a notice appears: "The exported file contains no data rows — your current filters returned no results"
+Scenario: Export with no data in current view
+  Given I am on the reporting dashboard
+  And the report returns zero rows (e.g. filtered to a future date range with no data)
+  When I click "Export CSV"
+  Then a CSV file is downloaded containing only the header row
+  And a toast notification reads "Export complete — no data rows matched your current view"
 
-Scenario: Export fails due to server error
-  Given I am viewing the "Weekly KPIs" dashboard with 47 rows
-  When I click "Export" and select "CSV"
-  And the export endpoint returns a 500 error
-  Then no file is downloaded
-  And I see an error message: "Export failed. Please try again or contact support if the problem persists."
-  And a "Retry" button is displayed
-
-Scenario: Export blocked for user without export permission
-  Given I am logged in as a user whose role does not include the "Export data" permission
-  When I view any dashboard
-  Then the "Export" button is not visible
-
-Scenario: Large dataset export — progress feedback
-  Given I am viewing a dashboard with 95,000 rows
-  When I click "Export" and select "CSV"
-  Then a progress indicator appears with the label "Preparing export…"
-  And the file downloads when preparation is complete
-  And the downloaded file contains all 95,000 data rows
-
-Scenario: Unicode characters in cell values
-  Given the dashboard contains a row where the "Customer Name" value is "Müller & Søn"
-  When I export as CSV
-  Then the downloaded file is encoded in UTF-8
-  And the value "Müller & Søn" appears without corruption or encoding errors
+Scenario: Export button unavailable when report has not yet loaded
+  Given I am on the reporting dashboard
+  And the report data is still loading
+  Then the "Export CSV" button is disabled
+  And a tooltip reads "Waiting for report to load"
 ```
 
 **Edge Cases:**
-
-- Concurrent export: two users exporting the same dashboard simultaneously each receive their own independent file; neither export blocks the other.
-- Column order in the CSV matches left-to-right display order, including any hidden columns that remain hidden (not exported).
+- Column values containing commas or double-quotes must be properly escaped per RFC 4180 (values wrapped in double-quotes, internal quotes doubled).
+- Numeric values must not include locale-specific formatting (no thousands separators, no currency symbols) so spreadsheet tools parse them as numbers.
+- Date values must be exported in ISO 8601 format (YYYY-MM-DD or YYYY-MM-DDTHH:MM:SSZ) to avoid regional ambiguity.
+- If the dashboard is in a loading/error state, the export button must remain disabled until the report resolves.
 
 **Anti-requirements:**
+- This story does NOT cover exporting with a custom column selection — tracked in US-3.
+- This story does NOT cover large datasets requiring async generation — tracked in US-4.
+- This story does NOT cover scheduled or recurring exports — out of scope entirely for this initiative.
+- This story does NOT cover export formats other than CSV (Excel, PDF, JSON) — out of scope entirely.
 
-- This story does NOT cover Excel (.xlsx) export — tracked in US-4 (future format support initiative)
-- This story does NOT cover scheduled or automated exports — tracked in US-5 (report scheduling)
-- This story does NOT cover pivot or aggregated data not currently visible in the dashboard view
-- This story does NOT cover bulk export across multiple dashboards in one file
-
-**Size:** M (2–3 days including tests)
-
----
-
-**Skill verification table:**
-
-| Requirement | Present in skill | Evidence |
-|---|---|---|
-| Gherkin format (Given/When/Then) for acceptance criteria | Yes | Step 3 mandates Gherkin exclusively with an explicit worked example and rules |
-| At least one edge case and error scenario | Yes | Step 3 rule 5 requires negative case per happy path; Step 5 edge case table covers error handling, permissions, scale |
-| ISC splitting test | Yes | Step 4 is dedicated to Independent, Small, Complete with verification questions |
-| "As a [role], I want [action], so that [outcome]" format | Yes | Step 2 specifies exact three-clause format with code template and anti-patterns per clause |
-| No solution-specifying stories | Yes | Step 2 action clause rules prohibit system-describes-what; Step 3 rule 3 prohibits non-observable Then |
-| Anti-requirements section | Yes | Step 6 is mandatory with a prescribed format requiring a reference for each exclusion |
-| Single clear acceptance condition per scenario | Yes | Step 2 "and test" on action clause; Step 3 rule 1 requires one scenario per behaviour |
-| Valid YAML frontmatter with name, description, argument-hint | Yes | All three fields present; also includes user-invocable and allowed-tools |
+**Size:** M
 
 ---
 
-## Criteria
+### US-2: Export dashboard data with active filters applied
 
-- [x] PASS: Skill requires Gherkin format (Given/When/Then) for acceptance criteria — Step 3 mandates Gherkin exclusively with explicit rules and a worked example prohibiting other formats.
-- [x] PASS: Skill requires at least one edge case or error scenario — Step 3 rule 5 states "Include the negative case. For every happy-path scenario, write the corresponding error scenario." Step 5 adds a mandatory edge case table covering error handling, permissions, concurrency, and empty state.
-- [x] PASS: Skill includes the ISC splitting test — Step 4 is dedicated to Independent, Small, and Complete with definitions and verification questions for each.
-- [x] PASS: Skill requires the standard "As a [role], I want [action], so that [outcome]" story format — Step 2 specifies the exact three-clause format with a code template and anti-patterns for each clause.
-- [x] PASS: Skill prohibits solution-specifying stories — Step 2 action clause rules explicitly state "Describes what the user does, not what the system does." Step 3 rule 3 flags "Then the database is updated" as a bad example and requires observable outcomes.
-- [~] PARTIAL: Skill addresses anti-requirements — Step 6 is a mandatory section with a prescribed format and the rule that every anti-requirement must reference where the excluded behaviour is tracked. This fully meets and exceeds the partial bar. Criterion type caps scoring at 0.5.
-- [x] PASS: Skill specifies that stories must have a single, clear acceptance condition — Step 2 applies the "and test" to the action clause. Step 3 rule 1 requires one scenario per behaviour and says "if a scenario has multiple When steps, split it."
-- [x] PASS: Skill has valid YAML frontmatter with name, description, and argument-hint fields — all three required fields present, plus user-invocable and allowed-tools.
+**As an** operations lead working with a scoped date range and applied filters,
+**I want** to export only the rows that match my current filter selections,
+**so that** I receive a file scoped to exactly the segment I am analysing without post-processing in my spreadsheet.
 
-## Output expectations
+**Acceptance Criteria:**
 
-- [x] PASS: Output's user story uses the standard format with a concrete role — simulated output uses "operations manager reviewing weekly KPI dashboards," not generic "user."
-- [x] PASS: Output's acceptance criteria are in Gherkin format with at least 3 scenarios — simulated output contains 7 Gherkin scenarios covering happy path, sort order, empty state, error, permissions, large dataset, and unicode.
-- [x] PASS: Output's happy-path scenario covers the main flow — "Given I am viewing the dashboard with data, When I click Export → CSV, Then a file downloads with the visible data, named appropriately, in valid CSV format" is represented in Scenario 1.
-- [x] PASS: Output includes at least one edge case — empty dashboard (header-only CSV with info message) and large dataset (progress indicator, full export) both present.
-- [x] PASS: Output includes at least one error scenario — server 500 error with no file download, error message, and retry button; permissions scenario blocks export for unauthorised roles.
-- [x] PASS: Output's acceptance criteria are observable and verifiable — all Then steps describe user-visible outcomes ("a file named X is downloaded", "I see an error message") rather than internal state ("the database is updated").
-- [x] PASS: Output passes the ISC test — Independent (each scenario sets up its own Given preconditions), Small (US-1 is sized M, 2–3 days), Complete (happy path, empty state, error, permissions, scale, unicode all covered).
-- [x] PASS: Output's acceptance criteria describe behaviour not implementation — "the file contains exactly 47 data rows plus a header row" is behavioural; no Then steps reference API endpoints, HTTP status codes, or internal data structures.
-- [x] PASS: Output addresses what the CSV contains — Scenario 1 specifies column headers match dashboard display and active filters are reflected; edge cases note column order and hidden column handling.
-- [~] PARTIAL: Output's anti-requirements name what the story does NOT include — Excel, scheduled exports, pivot/aggregated data, and bulk export are all named. However, the skill's Step 6 template uses generic placeholders ("bulk operations", "admin workflow") rather than prompting the agent to derive feature-specific exclusions. Whether a real agent following the skill would name CSV-specific exclusions depends on inference, not explicit instruction in the skill. Partial credit only.
+```gherkin
+Scenario: Export respects active date range filter
+  Given I am on the reporting dashboard
+  And I have set the date range filter to "2026-04-01" through "2026-04-30"
+  And the report displays 47 rows for that range
+  When I click "Export CSV"
+  Then the downloaded CSV contains exactly 47 data rows
+  And every row has a date value between "2026-04-01" and "2026-04-30" inclusive
 
-## Notes
+Scenario: Export respects active dimension filters
+  Given I am on the reporting dashboard
+  And I have filtered by Region = "APAC" and Status = "Completed"
+  And the report displays 12 rows
+  When I click "Export CSV"
+  Then the downloaded CSV contains exactly 12 data rows
+  And every row has Region "APAC" and Status "Completed"
 
-The skill is well-structured across all seven steps. Each step provides concrete rules rather than vague guidance, which reliably constrains output. The ISC test applied at the scenario level (Step 4) is more rigorous than most story-writing approaches — most skills apply ISC only at the story level.
+Scenario: Export with multiple filters applied simultaneously
+  Given I have applied a date range filter "2026-01-01" to "2026-03-31"
+  And I have applied a dimension filter Region = "EMEA"
+  And the report displays 8 rows
+  When I click "Export CSV"
+  Then the CSV contains exactly 8 rows matching both filter criteria
 
-The PARTIAL on anti-requirements output reflects a genuine gap: Step 6's template examples ("bulk operations", "admin workflow") are domain-generic placeholders. Adding a prompt like "List format, scheduling, and integration exclusions specific to this feature" would close the gap without requiring agent inference.
+Scenario: Export when all filters are cleared (no active filters)
+  Given I am on the reporting dashboard with no filters applied
+  And the report displays 5,000 rows
+  When I click "Export CSV"
+  Then the CSV contains all 5,000 rows
+  And the filename indicates no filter scope, e.g. "report-2026-05-01.csv"
 
-Story sizing guidance in Step 7 (half-day too small, one week too large) and the Related Skills cross-links to `groom-backlog` and `write-prd` are useful additions that sit outside the rubric scope but strengthen the skill's practical value.
+Scenario: Filter metadata not injected into data rows
+  Given I have active filters for Region = "APAC"
+  When I click "Export CSV"
+  Then the CSV rows contain only data columns
+  And no row contains a column named "Applied Filters" or equivalent metadata
+```
+
+**Edge Cases:**
+- If the user changes filters while an export is in progress, the in-flight export must not be affected — it must complete using the filter state captured at the moment "Export CSV" was clicked.
+- Filter state must be reflected in the filename or a summary row only if a product decision to do so is made; omit otherwise to keep downstream parsing simple. (Captured as anti-requirement below.)
+
+**Anti-requirements:**
+- This story does NOT embed filter metadata into the CSV file itself — that decision belongs to US-1 filename conventions.
+- This story does NOT cover saving a named filter preset — out of scope entirely.
+- This story does NOT cover exporting multiple filter configurations at once — out of scope entirely.
+
+**Size:** M
+
+---
+
+### US-3: Select which columns to include before exporting
+
+**As an** analyst running weekly performance reviews,
+**I want** to choose which columns are included in my CSV export before downloading,
+**so that** I receive a file that maps directly to the template I paste it into, without having to delete columns in my spreadsheet.
+
+**Acceptance Criteria:**
+
+```gherkin
+Scenario: Column selector opens when I initiate export
+  Given I am on the reporting dashboard with data loaded
+  When I click "Export CSV"
+  Then a column selection panel appears
+  And every column visible in the dashboard is listed with a checkbox
+  And all checkboxes are checked by default
+
+Scenario: Export includes only selected columns
+  Given the column selection panel is open
+  And available columns are "Date", "Region", "Revenue", "Units", "Margin"
+  When I uncheck "Units" and "Margin"
+  And I click "Download"
+  Then the CSV headers are "Date,Region,Revenue" in their original display order
+  And no "Units" or "Margin" columns appear in any row
+
+Scenario: Export button disabled when no columns are selected
+  Given the column selection panel is open
+  When I uncheck all columns
+  Then the "Download" button is disabled
+  And a validation message reads "Select at least one column to export"
+
+Scenario: Column selection is reset to default on next export session
+  Given I previously exported with only "Date" and "Revenue" selected
+  When I click "Export CSV" again in the same or a new session
+  Then all columns are checked by default again
+  And my previous selection is not persisted
+
+Scenario: Column order in export matches display order, not selection order
+  Given I check columns in the order "Revenue", then "Date", then "Region"
+  When I click "Download"
+  Then the CSV headers are "Date,Region,Revenue" (dashboard display order)
+  And not "Revenue,Date,Region" (selection order)
+```
+
+**Edge Cases:**
+- If a column is hidden in the dashboard view (e.g. via a separate column visibility toggle), it must also be absent from the column selector.
+- If the dashboard has more than 20 columns, the selector panel must support scrolling — columns must not be clipped.
+- Keyboard navigation: all checkboxes must be reachable and toggleable via Tab and Space keys.
+
+**Anti-requirements:**
+- This story does NOT cover saving a named column preset — out of scope entirely.
+- This story does NOT cover reordering columns in the export — out of scope entirely.
+- This story does NOT cover adding calculated or derived columns not present in the dashboard — out of scope entirely.
+
+**Size:** M
+
+---
+
+### US-4: Export a large dataset via asynchronous background generation
+
+**As a** compliance officer auditing historical activity,
+**I want** to request a full data export that runs in the background and notifies me when it is ready,
+**so that** I can continue working in the dashboard without waiting for a large file to generate, and retrieve a complete, untruncated record.
+
+**Acceptance Criteria:**
+
+```gherkin
+Scenario: Large export triggers async generation instead of immediate download
+  Given I am on the reporting dashboard
+  And the current report view contains more than 10,000 rows
+  When I click "Export CSV"
+  Then I see a notification: "Your export is being prepared. We'll notify you when it's ready."
+  And the dashboard remains fully interactive
+  And no file download begins immediately
+
+Scenario: In-app notification when export is ready
+  Given I requested a large CSV export
+  And the export has completed processing
+  When I am on any page within the application
+  Then I receive an in-app notification: "Your CSV export is ready to download"
+  And the notification contains a "Download" link
+
+Scenario: Download link is valid for 24 hours
+  Given my export completed and I received a download notification
+  When I click the "Download" link within 24 hours of generation
+  Then the CSV file downloads successfully
+
+Scenario: Download link expired
+  Given my export completed more than 24 hours ago
+  When I click the "Download" link
+  Then I see the message "This export link has expired. Return to the dashboard to generate a new export."
+  And no file is downloaded
+
+Scenario: Export fails during background processing
+  Given I requested a large CSV export
+  And the background job encounters an error during processing
+  Then I receive an in-app notification: "Your CSV export failed. Please try again."
+  And a "Retry" action is available in the notification
+  And no partial file is made available for download
+
+Scenario: Small dataset still downloads immediately
+  Given I am on the reporting dashboard
+  And the current report view contains 500 rows
+  When I click "Export CSV"
+  Then the file downloads immediately without an async notification
+```
+
+**Edge Cases:**
+- The threshold for async vs. immediate download (10,000 rows) must be configurable server-side without a code deploy.
+- If the user navigates away or closes the browser before the export completes, the background job must continue and the notification must appear on next login.
+- If the user requests a second export while one is already processing, they must be informed of the in-progress export rather than queuing a duplicate.
+- The generated file must be stored in a private, authenticated location — a direct S3-style public URL is not acceptable. The download link must require authentication.
+- Email notification as an alternative delivery channel is out of scope (see anti-requirements) but the notification system must not preclude adding it later.
+
+**Anti-requirements:**
+- This story does NOT cover email delivery of the export file — out of scope for this initiative; flagged as a future enhancement.
+- This story does NOT cover an exports history page — tracked as a follow-on story (US-5).
+- This story does NOT cover scheduling recurring exports — out of scope entirely.
+
+**Size:** L
+
+---
+
+### US-5: Re-download a previously generated export
+
+**As a** team manager distributing reports to stakeholders,
+**I want** to access and re-download exports I have previously generated,
+**so that** I can share the same file with multiple stakeholders without regenerating it, and recover if I accidentally close the download notification.
+
+**Acceptance Criteria:**
+
+```gherkin
+Scenario: Exports history lists recent exports
+  Given I have generated at least one CSV export in the past 24 hours
+  When I navigate to the exports history panel
+  Then I see a list of my exports in reverse chronological order
+  And each entry shows: export date/time, row count, filter summary, and expiry time
+  And each entry has a "Download" button
+
+Scenario: Re-download a non-expired export
+  Given my exports history shows an export generated 2 hours ago
+  When I click "Download" on that entry
+  Then the original CSV file is downloaded
+  And the file is identical to the one generated at initial export time
+
+Scenario: Expired export shown but not downloadable
+  Given my exports history shows an export generated 25 hours ago
+  Then that entry is marked "Expired"
+  And the "Download" button is replaced with "Re-generate"
+  When I click "Re-generate"
+  Then a new export is queued using the same filter configuration
+
+Scenario: Exports history is user-scoped
+  Given two users share access to the same dashboard
+  When I view my exports history
+  Then I see only my own exports
+  And I do not see exports generated by the other user
+
+Scenario: Empty exports history
+  Given I have never generated a CSV export
+  When I navigate to the exports history panel
+  Then I see the message "No exports yet. Go to the dashboard and click Export CSV to get started."
+  And no list items are displayed
+```
+
+**Edge Cases:**
+- Exports history must not expose export files from other users, even if a URL is guessed — all download endpoints must enforce ownership checks.
+- History is limited to the last 10 exports per user to keep the list actionable; older entries are automatically pruned (no user-facing deletion needed).
+- If an export is still processing, it appears in the history as "Generating…" with no download button, and auto-refreshes status without a full page reload.
+
+**Anti-requirements:**
+- This story does NOT cover sharing an export link with another user — out of scope for this initiative.
+- This story does NOT cover an admin-level view of all users' exports — out of scope entirely.
+- This story does NOT cover deleting individual exports from history — out of scope entirely (pruning is automatic after 24 hours).
+
+**Size:** M
+
+```
+
+## Evaluation
+
+| Field | Value |
+|---|---|
+| Verdict | PASS |
+| Score | 15.5/16.0 (97%) |
+| Evaluated | 2026-05-01 |
+| Target duration | 87240 ms |
+| Target cost | $0.1717 |
+| Permission denials | 0 |
+
+### Criteria
+
+| # | Criterion | Result | Evidence |
+|---|---|---|---|
+| c1 | Skill requires Gherkin format (Given/When/Then) for acceptance criteria — not free-form bullet points | PASS | All five stories use Gherkin scenarios exclusively. US-1 opens with 'Scenario: Successful CSV download of current view / Given I am authenticated and on the reporting dashboard / ... / When I click "Export CSV" / Then a CSV file is downloaded to my browser'. No free-form bullet acceptance criteria appear anywhere in the file. |
+| c2 | Skill requires at least one edge case or error scenario in the acceptance criteria, not just the happy path | PASS | Every story has a dedicated 'Edge Cases' section and many have explicit error/empty-state Gherkin scenarios. US-1 includes 'Scenario: Export with no data in current view' and 'Scenario: Export button unavailable when report has not yet loaded'. US-4 includes 'Scenario: Export fails during background processing' with a Retry action. |
+| c3 | Skill includes the ISC splitting test — Independent, Small, Complete — to verify stories are appropriately sized | PARTIAL | The output shows ISC-consistent behaviour — 5 stories are split with explicit independence enforced via anti-requirements (e.g. 'This story does NOT cover exporting with a custom column selection — tracked in US-3'), each has a Size field (M/L), and each is complete with happy-path + edge + error scenarios. However, the ISC framework is never named or explicitly applied as a verification step in the output. |
+| c4 | Skill requires the standard "As a [role], I want [action], so that [outcome]" story format | PASS | All five stories use the exact three-part format. Example — US-2: 'As an operations lead working with a scoped date range and applied filters, I want to export only the rows that match my current filter selections, so that I receive a file scoped to exactly the segment I am analysing without post-processing in my spreadsheet.' |
+| c5 | Skill prohibits solution-specifying stories — acceptance criteria must describe behaviour, not implementation | PASS | Gherkin Then-clauses are uniformly behavioural: 'Then a CSV file is downloaded to my browser', 'Then the CSV headers are "Date,Region,Revenue" in that order', 'Then I see a notification: "Your export is being prepared"'. No API endpoints, HTTP status codes, or database operations appear in the scenarios. Some implementation language in Edge Cases sections ('server-side configurable', 'authenticated location') is confined to non-scenario prose. |
+| c6 | Skill addresses anti-requirements (things the story explicitly should NOT do) — partial credit if mentioned but not required as a mandatory section | PARTIAL | Every story has a mandatory 'Anti-requirements' section with multiple named exclusions. US-1: 'This story does NOT cover exporting with a custom column selection', 'does NOT cover large datasets requiring async generation', 'does NOT cover scheduled or recurring exports', 'does NOT cover export formats other than CSV'. Ceiling capped at PARTIAL. |
+| c7 | Skill specifies that stories must have a single, clear acceptance condition — not "and/or" compound criteria | PASS | Each Gherkin scenario has a single named purpose (e.g. 'Scenario: Export respects active date range filter', 'Scenario: Column selector opens when I initiate export'). While scenarios contain multiple Then/And assertion steps (standard Gherkin), no scenario conflates unrelated outcomes or uses vague 'and/or' compound conditions. Scenarios are scoped and distinguishable. |
+| c8 | Skill has a valid YAML frontmatter with name, description, and argument-hint fields | PARTIAL | The skill was successfully invoked as '/product-owner:write-user-story for allowing users to export...' and accepted a free-text argument, implying frontmatter exists and argument-hint is wired. However, the captured output (chat response + artifact) does not display the skill file's YAML frontmatter, so name, description, and argument-hint fields cannot be individually confirmed. |
+| c9 | Output's user story uses the standard format — "As a [role e.g. report viewer], I want [to export the current dashboard view as a CSV file], so that [I can analyse the data offline / share with stakeholders who don't have access]" — with the role concrete, not "user" | PASS | All five roles are persona-specific: 'analyst running weekly performance reviews', 'operations lead working with a scoped date range and applied filters', 'compliance officer auditing historical activity', 'team manager distributing reports to stakeholders'. None use the generic 'user' role. |
+| c10 | Output's acceptance criteria are in Gherkin format (Given / When / Then) — at least 3 scenarios — not bullet points | PASS | US-1 alone contains 4 Gherkin scenarios. US-2 has 5, US-3 has 5, US-4 has 6, US-5 has 5. All use Given/When/Then syntax exclusively with no bullet-list acceptance criteria. |
+| c11 | Output's happy-path scenario covers the main flow — "Given I'm viewing a dashboard with data, When I click Export → CSV, Then a file downloads with the visible data, named appropriately, in valid CSV format" | PASS | US-1's first scenario 'Scenario: Successful CSV download of current view' opens with 'Given I am authenticated and on the reporting dashboard / And the report contains at least one row of data / When I click "Export CSV" / Then a CSV file is downloaded to my browser / And the filename follows the pattern "report-YYYY-MM-DD.csv" / And the first row contains the column headers matching those visible in the dashboard / And every row visible in the current view is present in the file'. |
+| c12 | Output includes at least one edge case — empty dashboard (export creates a CSV with headers only and an info message), very large dataset (export shows progress indicator and either streams or queues a job), unicode characters in values (escaped correctly) | PASS | Empty dashboard: US-1 'Scenario: Export with no data in current view' — 'Then a CSV file is downloaded containing only the header row / And a toast notification reads "Export complete — no data rows matched your current view"'. Large dataset: US-4 is entirely dedicated to async background export for >10,000 rows. Unicode not explicitly named but RFC 4180 escaping of commas and double-quotes is covered in US-1 Edge Cases. |
+| c13 | Output includes at least one error scenario — export endpoint fails (user sees a clear error message and can retry), permissions error (user without dashboard access cannot export), network drop mid-download | PASS | US-4 'Scenario: Export fails during background processing': 'Then I receive an in-app notification: "Your CSV export failed. Please try again." / And a "Retry" action is available in the notification / And no partial file is made available for download'. Clear error message and retry path both present. |
+| c14 | Output's acceptance criteria are observable / verifiable — "Then a CSV file is downloaded" is testable; "Then the system handles it correctly" is not, and is rejected | PASS | All Then-clauses are specific and testable: 'Then the CSV headers are "Date,Region,Revenue" in that order', 'Then I see the message "This export link has expired..."', 'Then I see only my own exports / And I do not see exports generated by the other user'. No vague 'handles it correctly' language appears. |
+| c15 | Output passes the ISC test — Independent (this story doesn't depend on a parallel story in flight), Small (deliverable in a single sprint), Complete (covers happy path, edges, and errors) | PASS | Independent: anti-requirements explicitly carve out scope between stories (e.g. US-1 references US-3 and US-4 as separate). Small: all rated M or L, single-sprint deliverable. Complete: each story has a happy-path scenario, Edge Cases section, and at least one error/boundary scenario (US-4 has explicit failure scenario with retry). |
+| c16 | Output's acceptance criteria describe behaviour, not implementation — "Then the file contains all rows visible in the dashboard" is good; "Then the API endpoint returns a 200 with text/csv content type" is too implementation-specific for a user story | PASS | Gherkin Then-clauses uniformly describe user-observable outcomes: 'Then a CSV file is downloaded to my browser', 'Then that entry is marked "Expired" / And the "Download" button is replaced with "Re-generate"'. No HTTP status codes, API endpoint paths, SQL, or internal system state appear in the scenarios. |
+| c17 | Output addresses what the CSV contains — exactly the data visible in the dashboard at export time, with column headers matching the displayed columns; respects active filters and sorts at export time | PASS | US-1: 'the first row contains the column headers matching those visible in the dashboard' and 'every row visible in the current view is present in the file / And no rows outside the current view are included'. US-2 is entirely dedicated to filter-scoped exports, with scenarios verifying 'every row has a date value between... inclusive' and filter combinations. |
+| c18 | Output's anti-requirements section names what the story does NOT include — e.g. "does NOT support Excel format", "does NOT support scheduled exports", "does NOT include pivoted/aggregated data unless visible in the dashboard" | PARTIAL | Every story has an explicit Anti-requirements section. US-1 names: 'does NOT cover exporting with a custom column selection', 'does NOT cover large datasets requiring async generation', 'does NOT cover scheduled or recurring exports', 'does NOT cover export formats other than CSV (Excel, PDF, JSON)'. US-4: 'does NOT cover email delivery', 'does NOT cover scheduling recurring exports'. Ceiling capped at PARTIAL. |
+
+### Notes
+
+An exceptionally thorough output that earns near-perfect marks. The five-story split is well-scoped, the Gherkin scenarios are clean and behavioural, and every story has a complete Anti-requirements section. The two deductions: c3 loses half a point because the ISC framework is never explicitly named or applied as a discrete verification step (the behaviour is consistent with ISC but the test itself is absent from the output); c8 loses half a point because the skill's YAML frontmatter (name, description, argument-hint) cannot be verified from the captured output alone. Minor note: edge cases occasionally touch implementation language ('server-side configurable', 'no public S3 URLs') but this is confined to prose sections rather than Gherkin scenarios, so c5 and c16 are unaffected. Unicode escaping is not explicitly covered in edge cases, but the three specific examples in c12 only require 'at least one' so that criterion still passes.

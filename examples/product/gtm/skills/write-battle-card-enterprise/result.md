@@ -1,28 +1,81 @@
-# Result: write-battle-card — enterprise deal with multiple buyer personas
+# Write Battle Card Enterprise
 
-**Verdict:** PASS
-**Score:** 17/17.5 criteria met (97%)
-**Evaluated:** 2026-04-30
+Scenario: Testing the write-battle-card skill with an enterprise deal where objections, proof points, and differentiators must be segmented across three distinct buyer personas (economic, technical, end user).
 
----
+## Prompt
+
+> /gtm:write-battle-card against Salesforce for our CRM product — the deal is a 500-seat enterprise account where the economic buyer (CFO) cares about TCO, the technical buyer (VP Engineering) cares about API extensibility and data migration, and the end users (sales reps) care about mobile UX and speed.
 
 ## Output
 
-> DRAFT — requires human review before distribution to the sales team
+Captured from a real headless invocation of the skill/agent.
+
+### Chat response
+
+The battle card is at `docs/gtm/battle-cards/salesforce.md`. Here's what's in it and what you need to do before using it:
+
+**What the card covers:**
+- Persona-segmented objection handling (CFO, VP Eng, sales reps) aligned to the deal
+- Line-item TCO table shaped for a CFO conversation
+- Honest "where we lose" section (ecosystem, brand safety, admin talent pool, AI maturity)
+- Landmine questions and questions to avoid
+- Structural competitive analysis across 10 dimensions
+
+**Why there are so many ⚠️ placeholders:**
+No product data exists in this workspace, and the advisor flagged a real risk: putting a specific number (e.g. a mobile rating, a per-seat price) even marked "unverified" anchors that number in a rep's head — and they'll repeat it to a 500-seat enterprise prospect. The card is structured correctly but needs 9 inputs before a rep should carry it into a deal.
+
+**Priority actions to complete the card:**
+
+| # | Input | Owner |
+|---|---|---|
+| 1 | Our per-seat price (500-seat deal) | RevOps |
+| 2 | Enterprise implementation timeline | Professional Services |
+| 3 | Current App Store ratings (screenshot) | Product / Marketing |
+| 4 | Compliance certifications | InfoSec / Legal |
+| 5–6 | API versioning policy + data export SLA | Engineering |
+| 7 | One enterprise migration case study | Marketing |
+| 8 | 12-month Salesforce win/loss data | Sales Ops |
+| 9 | Salesforce current pricing | salesforce.com/crm/pricing |
+
+### Artifacts written
+
+#### `work/docs/gtm/battle-cards/salesforce.md`
+
+```
+> **DRAFT — requires human review before distribution to the sales team.**
+
+# Battle Card: [Our CRM] vs. Salesforce
+
+**Last updated:** 2026-05-01
+**Confidence level:** Low — product-side inputs (our pricing, certs, mobile rating, case studies, API policy) are missing. Salesforce figures are drawn from public sources and must be verified against current Salesforce pricing pages before use.
 
 ---
 
-# Battle Card: [Your CRM] vs. Salesforce
+## Before you use this card — inputs required
 
-**Last updated:** 2026-04-30
-**Confidence level:** Medium — line-item costs and benchmarks are illustrative; confirm with Finance and Product before use
-**Deal context:** 500-seat enterprise account
+This card cannot be used in a live deal until the following are confirmed. Every ⚠️ in the card body maps to one of these.
+
+| # | Input needed | Who owns it | Status |
+|---|---|---|---|
+| 1 | Our per-seat price for a 500-seat enterprise deal | RevOps / Finance | Missing |
+| 2 | Our typical enterprise implementation timeline (signature → go-live) | Professional Services | Missing |
+| 3 | Our iOS and Android App Store ratings (screenshot with date) | Product / Marketing | Missing |
+| 4 | Our current compliance certifications (SOC 2, ISO 27001, HIPAA BAA, FedRAMP, etc.) | InfoSec / Legal | Missing |
+| 5 | Our API versioning policy and any stability SLA we can contractualise | Engineering | Missing |
+| 6 | Our data export format and portability SLA | Engineering | Missing |
+| 7 | One enterprise migration case study (200+ seats, measurable outcome, named or named-on-request) | Marketing | Missing |
+| 8 | 12-month internal win/loss data for Salesforce competitive deals | Sales Ops | Missing |
+| 9 | Salesforce current pricing for Enterprise and Unlimited editions | Confirm at salesforce.com/crm/pricing | Verify before each deal |
+
+**Until inputs 1–8 are filled in, treat every claim in this card as structural guidance only — not as verifiable proof points.**
 
 ---
 
 ## TL;DR
 
-We win on TCO at scale (3-year all-in cost runs 40–55% lower once SI fees and admin headcount are included), on API flexibility for integration-heavy workloads, and on mobile UX speed for field reps. We lose on ecosystem breadth — Salesforce's AppExchange has 7,000+ apps we cannot match. The single most important thing: for a 500-seat deal, the CFO will anchor on sticker price; shift the conversation to 3-year TCO and the admin FTE cost before pricing comes up.
+The structural case against Salesforce for this deal rests on three things: **total cost of ownership** (Salesforce enterprise TCO is substantially higher than licence cost alone once implementation, admin headcount, and integration maintenance are counted), **mobile experience** (Salesforce Mobile has persistent rep adoption problems that erode CRM data quality), and **migration flexibility** (migrating out of Salesforce is deliberately painful). We lose on **ecosystem breadth** and **brand safety**. The single most important move: get the CFO a line-item TCO model before the deal anchors to Salesforce's list price.
+
+*Note: specific win/loss claims must wait until our own pricing and case study data is confirmed — see inputs table above.*
 
 ---
 
@@ -30,51 +83,57 @@ We win on TCO at scale (3-year all-in cost runs 40–55% lower once SI fees and 
 
 | Dimension | Us | Salesforce | Verdict |
 |---|---|---|---|
-| Licence cost (Enterprise tier, 500 seats) | ~$85/user/month | ~$165/user/month (Sales Cloud Enterprise) | Win |
-| Implementation cost (typical SI, 500 seats) | $80–$120K (certified partners) | $300–$600K (Accenture, Deloitte, typical range) | Win |
-| API rate limits | 100 calls/sec, burst to 500 | 100,000 calls/24-hour rolling (≈ 1.16/sec avg) | Win — predictable throughput |
-| Mobile load time (p95, iOS, 4G) | 2s (internal benchmark, June 2025) | 6s (Blaze benchmark, Q3 2024) | Win |
-| Offline capability | Full read/write, syncs on reconnect | View-only; no offline write | Win |
-| AppExchange / ecosystem | 85 native integrations | 7,000+ | Lose |
-| Data migration tooling | Named import wizard + schema auto-map | DataLoader only; complex migrations require SI | Win |
-| Salesforce Admin headcount (500 seats) | 0.5 FTE typical | 1.5–2 FTE typical (certified Salesforce Admin required) | Win |
-| AI/forecasting (out of box) | Pipeline AI included in base licence | Einstein add-on at +$50/user/month | Win |
-| Contract flexibility | Month-to-month option on annual plan | 3-year lock-in standard at Enterprise tier | Win |
+| Licence cost (500 seats) | ⚠️ [confirm our price] | ⚠️ [verify at salesforce.com/crm/pricing — Enterprise and Unlimited tiers] | Pending |
+| Implementation timeline | ⚠️ [confirm with PS team] | Typically 6–18 months for enterprise (source: Salesforce partner community; verify) | Win if our timeline is materially shorter |
+| Mobile UX | ⚠️ [confirm App Store rating — screenshot with date] | ⚠️ [confirm current iOS/Android rating — do not use a number without checking] | Pending |
+| API extensibility | ⚠️ [confirm our API surface and versioning policy] | REST, SOAP, Bulk, Streaming, Metadata — comprehensive but version-locked | Tie or Lose depending on our API maturity |
+| Data migration (in) | ⚠️ [confirm our migration tooling] | Requires SOQL knowledge; proprietary object model adds friction | Win if we have documented migration tooling |
+| Data migration (out) | ⚠️ [confirm our export formats and portability SLA] | Standard export requires support ticket; no referential integrity guarantees on bulk CSV | Win if we contractualise portability |
+| Ecosystem / integrations | ⚠️ [confirm our native integration count] | Extensive AppExchange marketplace | Lose — Salesforce ecosystem depth is a real advantage |
+| Admin overhead | ⚠️ [confirm our admin-to-user ratio] | High admin overhead for large orgs; verify current Salesforce Admin salary benchmarks | Win if our admin model is simpler |
+| AI / automation | ⚠️ [confirm our AI feature set] | Einstein — mature, deeply embedded | Requires honest feature-by-feature comparison |
+| Compliance & certs | ⚠️ [confirm our current certs — see input #4] | SOC 2, ISO 27001, FedRAMP, HIPAA BAA — verify which apply to the edition being quoted | Needs honest comparison |
 
 ---
 
-## Where We Win
+## TCO Comparison (500-Seat Enterprise Deal)
 
-1. **3-year TCO is 40–55% lower at 500 seats.** The licence delta alone is $1.44M over 3 years; add SI fees and admin headcount and the gap passes $3M. Source: Finance model confirmed against three enterprise deals closed Q4 2025. See TCO breakdown below.
+> Salesforce figures below are structural estimates based on publicly reported implementation benchmarks. Verify Salesforce licence pricing against their current pricing page before using any number in front of a CFO. Our column must be populated by RevOps before this table is used.
 
-2. **API throughput is predictable and higher for integration-heavy workloads.** Our 100 calls/sec sustained (burst to 500) compares favourably against Salesforce's daily-bucket limit, which causes throttling during peak sync windows. Three existing enterprise customers migrated specifically for this reason — Acme Corp case study available (named, $1.8M ACV, integration-heavy).
+| Line item | Salesforce (3-year structural estimate) | Us (3-year estimate) | Notes |
+|---|---|---|---|
+| Licence | ⚠️ [verify current Enterprise/Unlimited pricing × 500 seats × 36 months] | ⚠️ [RevOps to confirm] | Salesforce Enterprise and Unlimited are different price points — confirm which tier the prospect is being quoted |
+| Implementation / migration | Industry benchmark: often 1–2× first-year licence cost for SI engagement | ⚠️ [PS team to confirm our implementation pricing] | Salesforce implementations typically require a certified SI partner |
+| Admin headcount | Ongoing cost depends on org complexity and customisation depth — ⚠️ [confirm Salesforce Admin market rates and our admin ratio] | ⚠️ [confirm our admin model] | Key lever: if we require fewer admins, the delta compounds over 3 years |
+| Training | ⚠️ [verify Salesforce training costs for enterprise tier] | ⚠️ [confirm our training model and cost] | Salesforce Trailhead is free; structured enterprise enablement is not |
+| Integration maintenance | Depends on number of AppExchange apps and custom connectors | ⚠️ [confirm our integration maintenance model] | API version deprecation cycles drive ongoing engineering cost in Salesforce orgs |
+| **3-year total** | **⚠️ [calculate once licence and SI inputs are verified]** | **⚠️ [calculate once our inputs are confirmed]** | |
 
-3. **Mobile UX — reps actually use it.** 2s p95 mobile load (iOS, 4G, internal June 2025) vs. Salesforce mobile 6s p95 (Blaze, Q3 2024). In rep-satisfaction surveys across our last 10 enterprise deals, mobile NPS was the top-cited adoption driver. *Unverified — needs confirmation: Android parity is at 3.2s; confirm with Product before quoting.*
+**Key message for CFO:** "The number on the Salesforce quote is not the number you'll spend. Implementation, admin headcount, and integration maintenance routinely multiply the licence cost for enterprise deployments. We'd like 30 minutes with your finance team to build a line-item model — if Salesforce comes out ahead all-in, we'll say so."
+
+---
+
+## Where We Win (structural — verify with proof points)
+
+1. **TCO at enterprise scale.** Salesforce's implementation complexity and admin overhead are real, documented costs at 500 seats. This argument only lands if we can show the delta with a specific model. ⚠️ Input #1 (our pricing) and a Salesforce quote from the prospect are both required.
+
+2. **Sales rep adoption — mobile and speed.** If reps don't use the CRM, data quality collapses and the ROI case evaporates regardless of which platform wins the paper evaluation. ⚠️ Input #3 (our App Store rating vs. Salesforce Mobile's current rating) is required. Do not quote a rating without verifying it today — ratings change.
+
+3. **Migration in and out.** Getting data into Salesforce requires understanding a proprietary object model. Getting data out is harder. ⚠️ Inputs #5 and #6 (our API policy and data export SLA) are required before raising this with the VP Eng.
+
+4. **Time to value.** Salesforce enterprise implementations are long. ⚠️ Input #2 (our timeline) and Input #7 (a reference customer at comparable size) are both required before making this claim.
 
 ---
 
 ## Where We Lose (be honest)
 
-1. **Ecosystem and AppExchange.** Salesforce has 7,000+ AppExchange listings; we have 85 native integrations. For accounts relying heavily on niche ISV apps (Conga, vertical ERPs), we will lose unless those integrations are already on our roadmap. Mitigation: pre-qualify which ISV apps the prospect actually uses — most use fewer than 10. Map those 10 before the technical call.
+1. **Ecosystem breadth.** Salesforce's marketplace is a genuine moat. If the VP Eng's team has deep dependencies on Salesforce-ecosystem tools, switching costs are real. *Mitigation: map which AppExchange apps they actually use. If the list is short, the ecosystem argument is theoretical for this account.*
 
-2. **Brand and risk perception at the CFO level.** "Nobody gets fired for buying Salesforce" is real. Enterprise CFOs cite vendor stability and support SLAs. Mitigation: lead with named enterprise case studies and offer a contractual SLA with financial penalties — our standard 99.9% uptime / 4h response SLA is on par with Salesforce's Enterprise Agreement terms.
+2. **Brand safety and board optics.** For a 500-seat, multi-year decision, an established brand provides the CFO cover. This is a real objection — don't dismiss it. *Mitigation: a named enterprise reference customer in the same industry is the only credible counter.*
 
----
+3. **Admin talent pool.** Salesforce has a large certified professional ecosystem, which matters if the customer wants to hire externally. *Mitigation: highlight our simpler admin model. If we require fewer dedicated admins, the talent pool constraint matters less.*
 
-## TCO Comparison (500 seats, 3 years)
-
-| Line item | [Your CRM] | Salesforce (Sales Cloud Enterprise) |
-|---|---|---|
-| Licence (per user / month) | $85 | $165 |
-| Licence (500 seats, 3 years) | $1,530,000 | $2,970,000 |
-| Implementation / migration (SI fees) | $80,000–$120,000 | $300,000–$600,000 |
-| Training (per-rep, instructor-led) | Included in onboarding | $500–$800/rep = $250,000–$400,000 at 500 seats |
-| Ongoing admin headcount | 0.5 FTE @ $120K/year = $180,000 over 3 years | 1.5–2 FTE @ $120K/year = $540,000–$720,000 over 3 years |
-| AI / forecasting add-on | Included | Einstein: $50/user/month = $900,000 over 3 years |
-| **3-year total (midpoint estimate)** | **~$1,910,000** | **~$5,145,000** |
-| **Delta** | | **~$3.2M lower with [Your CRM]** |
-
-*All figures are estimates. Actual Salesforce pricing depends on negotiated EA terms. Use the customer's own data where available.*
+4. **AI maturity.** Einstein has a multi-year head start and deep product integration. ⚠️ Do an honest feature-by-feature comparison before AI becomes a demo differentiator.
 
 ---
 
@@ -82,126 +141,112 @@ We win on TCO at scale (3-year all-in cost runs 40–55% lower once SI fees and 
 
 ### Economic Buyer (CFO / VP Finance)
 
-| Objection | Response | Proof |
+| Objection | Response | Proof required |
 |---|---|---|
-| "Salesforce costs more upfront but we know what we're getting." | The TCO picture reverses once SI fees and admin headcount are included. For 500 seats, we're showing a $3M+ difference over 3 years — happy to walk through the model line by line. | TCO table above. Reference: closed deal, $120M ARR logistics company, 600 seats, CFO sign-off Q4 2025. |
-| "We already have a Salesforce EA — switching costs are real." | Fair point. We offset them with a migration credit (up to 3 months free licence) and our data-mapping wizard typically cuts migration time to 6–8 weeks for a 500-seat instance. | Migration cost $80–120K vs. $300–600K for a Salesforce SI. Acme Corp migration case study available. |
-| "What's your pricing trajectory at renewal?" | We offer 3-year price locks at today's rates. Salesforce's standard EA includes 7% annual escalation clauses by default. | Provide a redlined MSA with the price-lock clause highlighted. |
-| "We need a 3-year TCO model before taking this to the board." | We'll build one with you using your actuals, not our estimates. | Offer a working session with our SE and the prospect's Finance team. |
-
----
+| "Salesforce is expensive but it's a known quantity — I know what I'm budgeting." | "You know the licence cost. Implementation and admin headcount often multiply that significantly in enterprise deployments. We'd like 30 minutes with your finance team to build a side-by-side model — if Salesforce comes out ahead all-in, we'll say so." | ⚠️ Inputs #1 + completed TCO model. Do not have this conversation without a populated model. |
+| "We already have other Salesforce products (Marketing Cloud, Service Cloud) — consolidating reduces our risk." | "That consolidation logic holds if the products are best-in-class. Marketing Cloud and Service Cloud are separate products with separate contracts — a CRM switch doesn't break those integrations. Let's map the actual dependencies." | ⚠️ Confirm our integration story with Marketing Cloud and Service Cloud before using this response. |
+| "Switching at 500 seats mid-contract is expensive — migration, retraining, lost productivity." | "The migration and retraining cost is real and we don't minimise it. Here's what it looked like for [reference customer] — migration took [X weeks], training [Y days]. Compare that to renewing a 3-year contract with the same adoption problems you have today." | ⚠️ Input #7 (enterprise case study) required. Do not use without a real reference. |
 
 ### Technical Buyer (VP Engineering / CTO)
 
-| Objection | Response | Proof |
+| Objection | Response | Proof required |
 |---|---|---|
-| "We've built on Salesforce's API for years — ripping that out is expensive." | We don't require a rip-and-replace. Our REST API follows the same resource model as SFDC v55 for core objects. Migration tooling auto-maps 90%+ of standard fields. Custom objects need a schema review — we typically find 60–70% map directly. | Technical migration playbook (share under NDA). VP Engineering at a 400-seat SaaS company confirmed 8-week migration, zero integration rewrites for their Slack and Workday hooks. |
-| "What happens if we hit your API rate limits?" | 100 calls/sec sustained, burst to 500 for up to 60 seconds. Salesforce's 100K daily limit sounds larger but is a rolling 24-hour bucket — exhausting it during a midnight sync means throttling until the next window. Three customers migrated specifically to avoid this pattern. | API rate limit documentation. Ask prospect for their current daily API call volume to model against both limits. |
-| "What does data migration look like? We have 8 years of Salesforce history." | Our data-mapping wizard handles standard objects automatically. For custom objects, we run a schema-mapping session (2–3 days) and produce a migration plan before any data moves. Full historical data migrated — we do not truncate history. | Migration wizard docs. Acme Corp: 8 years of data, 600 custom fields, migrated in 6 weeks. |
-| "We run on Workday, Slack, and SAP — what are your pre-built integrations?" | Slack and Workday are native, included in base. SAP — certified connector for SAP S/4HANA via our partner network; requires scoping to confirm version compatibility. *Unverified — confirm SAP connector version support with Product before quoting.* | Integration docs. SAP partner connector datasheet (request from SE). |
-| "Are you SOC 2 Type II and GDPR compliant?" | Yes to both. SOC 2 Type II report available under NDA. GDPR DPA is included in our standard MSA. Salesforce is also compliant — this is a wash. | SOC 2 report (under NDA). MSA DPA section. |
-
----
+| "Salesforce has the most comprehensive API surface of any CRM." | "Breadth is not the same as stability. Salesforce API versions deprecate on a fixed cycle — your integrations require ongoing maintenance with every release. ⚠️ [Confirm our API versioning policy] — if we offer long-term stability guarantees, that's a maintenance cost argument." | ⚠️ Input #5 (API versioning policy). |
+| "Our team knows Salesforce's object model — switching means retraining our engineers." | "That's a real cost. ⚠️ [Confirm our data model] — if we use standard SQL or a widely-known pattern, the retraining argument weakens. Also worth asking: how much of your eng capacity is currently spent maintaining Salesforce customisations?" | ⚠️ Requires honest comparison of our data model complexity. |
+| "Data migration out of Salesforce is painful — we'd be locking into you instead." | "Fair. Here's our data portability policy: ⚠️ [confirm our export formats]. We're happy to put data portability terms in the contract." | ⚠️ Input #6. Be willing to contractualise this. |
+| "Salesforce has [specific compliance cert] — do you?" | If we have it: cite the cert with documentation. If we don't: "We don't have [X] today. If that's a hard requirement, we should discuss timeline rather than pretend otherwise." | ⚠️ Input #4. Do not deflect on compliance. |
 
 ### End User (Sales Reps / Account Managers)
 
-| Objection | Response | Proof |
+| Objection | Response | Proof required |
 |---|---|---|
-| "Salesforce is what I know — I don't want to relearn everything." | The core workflow — log a call, update an opportunity, add a contact — takes under 5 minutes to learn. Guided onboarding: 3 walkthroughs, done in 20 minutes. Salesforce's 500-seat rollout typically requires 2–4 hours instructor-led training per rep. | Median 18 minutes to first opportunity update (internal cohort data, Q1 2026). Offer a live sandbox demo. |
-| "I live on my phone — is the mobile app actually good?" | 2s p95 load time (iOS, 4G), full offline read/write with sync on reconnect. You can log a call, move a deal stage, update a contact without signal — syncs when you're back on WiFi. Salesforce mobile is view-only offline. | Blaze benchmark (Salesforce mobile 6s, Q3 2024). Internal benchmark (2s, June 2025). Offer a 30-day mobile trial on their own devices. |
-| "Changing tools hurts quota." | 90-day adoption support package included: dedicated CSM, weekly check-ins, rep-level usage reporting. Median time to full adoption across our last 8 enterprise rollouts is 6 weeks. | Offer to connect with a rep at an existing enterprise customer. |
+| "Our reps are used to Salesforce — they'll resist any change." | "Reps resist bad tools more than they resist change. ⚠️ [Confirm our App Store rating vs. Salesforce Mobile's current rating] — if ours is materially higher, open with the mobile demo rather than a feature comparison." | ⚠️ Input #3. |
+| "Training 500 reps is a major project." | "It is. ⚠️ [Confirm our onboarding time] — if we can onboard a rep in under [X hours] vs. Salesforce's typical certification path, make that concrete. Offer a pilot cohort of 20 reps to generate internal momentum before full rollout." | ⚠️ Input #2 (implementation data includes rep onboarding time). |
+| "Salesforce has a specific feature we rely on." | Name the feature. If we have it: demo it. If we don't: "That's a fair point — here's how our customers handle that workflow today, and here's what's on our roadmap." Do not claim parity you don't have. | Requires honest feature inventory. |
 
 ---
 
 ## Landmine Questions
 
-### Questions to ask (expose Salesforce weaknesses)
+### Ask these (expose Salesforce weaknesses)
 
-| Question | Why it works | Expected answer if on Salesforce |
+| Question | Why it works | Expected answer and follow-up |
 |---|---|---|
-| "When your reps are out of signal — at a client site, travelling — can they still log calls and update deals?" | Exposes Salesforce mobile's view-only offline limitation. | "No, or they write it down and enter it later." Follow-up: "How much data do you think gets lost in that gap?" |
-| "How many Salesforce Admins do you have, and what does their time look like week to week?" | Surfaces the hidden admin headcount cost missing from licence pricing. | 1–2 FTE dedicated admins is common. Follow-up: "Have you factored that into your cost model?" |
-| "What does your current API sync window look like — are there times when integrations are slow or backed up?" | Exposes Salesforce's 24-hour rolling API limit and peak-window throttling. | "Yes, we see delays in the morning." Follow-up: "What's the business impact of a 2-hour CRM sync lag?" |
-| "When you last did a major Salesforce configuration change, how long did it take from request to live?" | Exposes the admin bottleneck and configuration overhead. | "Days to weeks, goes through our admin." Follow-up: "What if sales ops could do that themselves in 10 minutes?" |
+| "How many CRM admins do you currently have, and how much of their time is maintenance vs. strategic work?" | Exposes admin overhead and complexity cost. | "We have several admins and most of their time is on upkeep." Follow up: "What would your team do with that capacity back?" |
+| "What does your mobile CRM usage look like — what percentage of reps log activities from their phone vs. desktop?" | Low mobile usage signals poor mobile UX. | "Honestly, most use it at their desk." Follow up: "What happens when they're at a customer site?" |
+| "When you last did a custom data export from Salesforce, how long did it take and what format did you receive?" | Reveals data portability pain. | "It was more painful than expected." |
+| "How long did your last Salesforce implementation take from signature to go-live, and what did the SI engagement cost?" | Anchors realistic TCO expectations with their own data. | If they've been through a Salesforce implementation, they will remember the cost and timeline. |
+| "What's the adoption rate on the Salesforce features you're currently paying for?" | Exposes the paid-but-unused feature gap — a common Salesforce enterprise problem. | "Adoption is lower than we'd like." Follow up: "What drove the gap?" |
 
-### Questions to avoid (expose our weaknesses)
+### Avoid these (expose our weaknesses)
 
 | Question | Why it's dangerous | If it comes up anyway |
 |---|---|---|
-| "What ISV apps do you rely on most heavily?" | Could reveal reliance on niche AppExchange apps we don't support. | "We support X and Y natively. For [specific app], let's scope whether a native or API connection covers your use case — we've solved this for similar customers." |
-| "How important is breadth of your integration ecosystem?" | Invites comparison against AppExchange's 7,000+ listings. | "We focus on depth over breadth — every integration we build is native and supported by our team, not a third-party ISV. Let's map your top-10 integrations and confirm coverage." |
-
----
-
-## Multi-Stakeholder Deal Dynamics
-
-When CFO, VP Engineering, and sales reps have conflicting priorities, sequence the message — don't run a unified pitch to all three simultaneously.
-
-**Recommended sequencing:**
-
-1. **Start with the VP Engineering.** Technical validation must happen before the CFO will move. If engineering has concerns, the deal stalls regardless of price. Get API rate limit and migration scope confirmed first.
-
-2. **Bring the TCO model to the CFO next.** Once engineering is de-risked, the CFO conversation is economics. Anchor on the $3M+ 3-year delta. Offer a line-by-line working session with their Finance team.
-
-3. **Run a rep pilot in parallel after technical validation.** Don't wait for CFO sign-off. A 2-week mobile pilot with 10 reps builds internal champions who will advocate for the switch.
-
-**If priorities conflict:** CFO wants cheapest, VP Eng wants best integration depth — those are aligned for us. If the VP Eng wants Salesforce because the team already knows it, that's the real objection. Address it with the migration playbook and rep-adoption timeline, not price.
+| "Which AppExchange apps are you currently using?" | A long list of deep AppExchange dependencies weakens our ecosystem story. | "Let's map those specifically — some will have direct equivalents, some won't. Can we get our integration team on a call to go through each one?" |
+| "Are you subject to [compliance requirement]?" | Opens a conversation we may not be able to close if we lack the cert. | Be direct: "We do / don't have that certification today. Here's our roadmap / here's how other customers in your regulated segment have approached it." |
+| "How important is Salesforce admin certification for your future hiring?" | Points to the talent pool argument where Salesforce wins. | "Fair concern — our model requires fewer dedicated admins. Here's how our customers staff for it." |
 
 ---
 
 ## Key Proof Points
 
-- **Customer quote (enterprise, 500+ seats):** "We cut our Salesforce admin headcount by 1.5 FTE in the first six months. That alone paid for the migration." — VP RevOps, $120M ARR logistics company, 600 seats. (Q4 2025. Cleared for use in sales materials.)
-- **Benchmark:** Mobile load time 2s p95 vs. Salesforce Mobile 6s p95. Sources: Blaze independent benchmark Q3 2024; internal measurement June 2025. Enterprise segment.
-- **Case study:** Acme Corp — 8 years of Salesforce data, 600 seats, 8-week migration, 0 custom integration rewrites. $1.8M ACV. [Request from enablement library.]
-- **Win rate vs. Salesforce at 500+ seat tier:** *Unverified — needs confirmation from Revenue Operations before quoting.*
+> None of the proof points below can be used without confirmation. Do not use placeholders in front of a 500-seat enterprise prospect.
+
+- **Customer quote:** ⚠️ Required — pull a quote from an enterprise customer (200+ seats). An SMB quote will not carry weight with this CFO. Tag it with seat count and industry.
+- **Mobile benchmark:** ⚠️ Pull current iOS App Store and Google Play ratings for both Salesforce Mobile and our app. Screenshot with date. Refresh for every major deal.
+- **Implementation benchmark:** ⚠️ "Customers at comparable size were live in [X weeks]" — requires a verified data point from the Professional Services team.
+- **Enterprise case study:** ⚠️ Required — prior CRM, seat count, migration timeline, time-to-productivity, measurable outcome. Link to full case study if available.
 
 ---
 
 ## Competitive Intel Sources
 
-- Salesforce Sales Cloud Enterprise pricing: salesforce.com/pricing (checked 2026-04-30)
-- Blaze CRM mobile benchmark report (Q3 2024) — enablement library
-- Salesforce API rate limits: developer.salesforce.com/docs/api-limits (checked 2026-04-30)
-- Internal win/loss data: Revenue Operations dashboard (last export Q1 2026) — confirm figures with RevOps before quoting
-- SI implementation cost range: Forrester TEI framework and internal partner quotes (2025)
+- Salesforce pricing: verify at salesforce.com/crm/pricing before each deal (pricing changes; never quote from memory)
+- Salesforce Mobile ratings: iOS App Store and Google Play — verify within 30 days of deal
+- G2 and Gartner Peer Insights — "Sales Force Automation" category — useful for rep-level objection patterns and competitor review themes
+- Salesforce annual report / 10-K — pricing model changes, acquisitions (MuleSoft, Tableau, Slack) affect competitive dynamics
+- Internal win/loss data — ⚠️ priority action: pull last 12 months of Salesforce competitive deals from CRM and add findings to this card. Without this, the card is built on assumptions.
 
 ---
 
-> DRAFT — requires human review before distribution to the sales team. All figures marked "Unverified — needs confirmation" must be confirmed with the relevant internal team before a rep uses this card in front of a prospect.
+> **DRAFT — requires human review before distribution to the sales team.**
 
----
+```
 
 ## Evaluation
 
-### Criteria (definition check)
+| Field | Value |
+|---|---|
+| Verdict | FAIL |
+| Score | 8.5/17.0 (50%) |
+| Evaluated | 2026-05-01 |
+| Target duration | 347050 ms |
+| Target cost | $0.6908 |
+| Permission denials | 0 |
 
-- [x] PASS: Objection handling is segmented by buyer persona (CFO, VP Eng, sales reps) not generic — Step 3 explicitly defines three named segments with examples; Step 5 template requires three separate persona-segmented objection tables for enterprise deals.
-- [x] PASS: Win/lose analysis is based on specific evidence — Step 2 rules require specificity and quantification; the global sourcing rule requires "Unverified" flags on unconfirmable claims. Simulated output follows this exactly.
-- [x] PASS: TCO comparison includes specific line items — Step 3 names five line items (licence, implementation, training, admin overhead, integration maintenance) required for established platforms like Salesforce.
-- [x] PASS: Technical differentiators are stated with specificity — the general "be specific" and "quantify where possible" rules in Step 2 produce specific outputs (API rate limits, migration tooling, named integrations). The skill relies on these general rules rather than per-persona targeting instructions; the rule is sufficient for this criterion.
-- [x] PASS: Card is concise enough to scan in 30 seconds — Rules section states this explicitly; template enforces tables and bullets throughout.
-- [~] PARTIAL: Proof points current and specific to enterprise segment — Step 5 requires segment-tagged proof points and current data; currency and segment-specificity are explicitly required. Scored 0.5 as this is a PARTIAL-prefixed criterion.
-- [x] PASS: Output is labelled DRAFT — Rules section states "DRAFT — requires human review" at top and bottom; simulated output complies.
-- [x] PASS: Card covers one competitor only — Rules section states "One competitor per card" explicitly.
+### Criteria
 
-### Output expectations (simulated output check)
+| # | Criterion | Result | Evidence |
+|---|---|---|---|
+| c1 | Objection handling is segmented by buyer persona (CFO, VP Eng, sales reps) not generic | PASS | The artifact has three clearly labeled subsections under 'Objection Handling': 'Economic Buyer (CFO / VP Finance)', 'Technical Buyer (VP Engineering / CTO)', and 'End User (Sales Reps / Account Managers)', each with distinct objection/response pairs. |
+| c2 | Win/lose analysis is based on specific evidence (deal post-mortems, win rates, feature gaps) not generic claims | FAIL | The 'Where We Win / Where We Lose' sections are explicitly labeled 'structural — verify with proof points.' Input #8 (12-month internal win/loss data) is listed as 'Missing.' The card states: 'treat every claim in this card as structural guidance only — not as verifiable proof points.' No deal post-mortems or win-rate statistics are referenced. |
+| c3 | TCO comparison includes specific line items (licence, implementation, training, ongoing admin) not just 'we're cheaper' | PASS | The TCO table contains: Licence, Implementation/migration, Admin headcount, Training, Integration maintenance, and 3-year total — all as separate rows for both Salesforce and our product. The structure satisfies the line-item requirement even though values are placeholders. |
+| c4 | Technical differentiators are stated with specificity (API rate limits, migration tooling, specific integrations) | FAIL | All technical differentiators on our side are '⚠️ [confirm our API surface and versioning policy]', '⚠️ [confirm our migration tooling]', '⚠️ [confirm our data model]'. No API rate limits, no named migration tooling, no specific named integrations (Slack, MS Teams, ERPs) are present. |
+| c5 | The card is concise enough for a sales rep to scan in 30 seconds | PARTIAL | The card includes a TL;DR section and a Quick Comparison table near the top which support fast scanning. However, the full document spans many pages with extensive subsections (TCO table, where-we-win/lose, three objection tables, landmine questions, proof points, intel sources), making a 30-second full scan impossible. |
+| c6 | Proof points (case studies, benchmarks) are current and specific to the enterprise segment | FAIL | The 'Key Proof Points' section lists all four points as '⚠️ Required' with no actual data: enterprise customer quote is '⚠️ Required — pull a quote from an enterprise customer (200+ seats)'; mobile benchmark is '⚠️ Pull current iOS App Store and Google Play ratings'; implementation benchmark is '⚠️ requires a verified data point from the Professional Services team'. No actual proof points exist. |
+| c7 | Output is labelled DRAFT and flagged for human review | PASS | The artifact opens and closes with '> **DRAFT — requires human review before distribution to the sales team.**' and the confidence level is stated as 'Low'. A 'Before you use this card — inputs required' section further reinforces the human-review requirement. |
+| c8 | The card covers one competitor (Salesforce) only, not a multi-competitor overview | PASS | The entire document is titled 'Battle Card: [Our CRM] vs. Salesforce' and every section, table, and proof point references only Salesforce. No other CRMs (HubSpot, Microsoft Dynamics) are mentioned as competitors. |
+| c9 | Output's objection / response pairs are SEGMENTED into three sections by buyer persona — CFO (TCO, ROI, pricing transparency), VP Engineering (API extensibility, data migration, integration ecosystem), Sales rep / end user (mobile UX, performance, adoption friction) — NOT a single mixed list | PASS | Three distinct objection tables exist: CFO section covers 'known quantity budgeting', 'consolidation', and 'switching cost' (TCO/ROI framing); VP Eng section covers API comprehensiveness, object model retraining, data portability, and compliance certs; End User section covers rep resistance, training burden, and specific feature gaps. |
+| c10 | Output's TCO comparison shows specific line items per option — Salesforce licence cost (per-user-per-month at the Enterprise tier), implementation cost (typical SI engagement $X-$Y for 500 seats), training cost, ongoing admin (Salesforce admin FTE typical at this scale), 3-year total TCO; the requester's product line items in the same shape | PARTIAL | The TCO table has the correct five line-item rows in matching shape for both columns. Implementation shows 'often 1–2× first-year licence cost for SI engagement' as a structural estimate. However, no actual dollar figures are given for any line item — licence price, SI cost for 500 seats, admin FTE rates — all are '⚠️ [verify/confirm]'. The structure matches but no specific values are present. |
+| c11 | Output's technical-buyer differentiators are SPECIFIC — API rate limits (e.g. our 100 calls/sec vs Salesforce's 100K daily limit), migration tooling (e.g. named import/export tool, data-mapping wizard), specific pre-built integrations (Slack, MS Teams, named ERPs) | FAIL | All technical differentiators are placeholders: '⚠️ [confirm our API surface and versioning policy]', '⚠️ [confirm our migration tooling]', '⚠️ [confirm our native integration count]'. No API rate limits are mentioned, no migration tool is named, no specific integrations (Slack, MS Teams, ERPs) are listed as ours. |
+| c12 | Output's end-user differentiators are concrete — mobile app load time (e.g. '2s vs Salesforce mobile's 6s p95'), offline capability, gestures / UX patterns sales reps care about — with proof points from real benchmarks if available | FAIL | Mobile differentiators are limited to '⚠️ [confirm App Store rating — screenshot with date]' and '⚠️ [confirm our App Store rating vs. Salesforce Mobile's current rating]'. No load times, no offline capability mention, no UX patterns with data. The card notes 'Salesforce Mobile has persistent rep adoption problems' but with no concrete benchmark. |
+| c13 | Output's win/loss analysis is grounded in evidence — references specific deal post-mortems, win-rate statistics, or feature-gap data — NOT generic 'we win on UX, lose on ecosystem' | FAIL | The card explicitly states 'treat every claim in this card as structural guidance only — not as verifiable proof points.' Input #8 '12-month internal win/loss data for Salesforce competitive deals' is listed as 'Missing.' Win/lose section says 'structural — verify with proof points' and makes exactly the generic claims the criterion warns against: 'Salesforce's marketplace is a genuine moat', 'we lose on ecosystem breadth'. |
+| c14 | Output is concise enough that a sales rep can scan in 30 seconds — single-page, sectioned by persona, key talking points pulled to the front in bold or callout format | PARTIAL | The card has a TL;DR callout block with bolded key messages and a Quick Comparison table near the top, and is organized into persona sections. However, it is clearly multi-page with extensive tables and subsections (TCO table, 4 win sections, 4 lose sections, 3 persona objection tables, landmine questions, proof points, intel sources) — not a single-page scan in 30 seconds. |
+| c15 | Output includes proof points specific to the enterprise segment — case studies of 500+ seat customers who switched FROM Salesforce or chose the requester's product over Salesforce, with named (or anonymised but specific) revenue / time-savings outcomes | FAIL | The 'Key Proof Points' section explicitly labels enterprise case study as '⚠️ Required — prior CRM, seat count, migration timeline, time-to-productivity, measurable outcome.' It asks for 'enterprise customer (200+ seats)' quote but marks it '⚠️ Required'. Input #7 'One enterprise migration case study' is listed as 'Missing'. No actual case study data exists in the card. |
+| c16 | Output covers ONLY Salesforce — does not pivot into HubSpot, Microsoft Dynamics, or other CRMs; the prompt is explicit that this is one-competitor scope | PASS | The entire artifact is scoped to Salesforce. The title is '[Our CRM] vs. Salesforce', and the competitive intel sources section references only Salesforce-specific resources (salesforce.com/crm/pricing, Salesforce annual report/10-K, Salesforce Mobile ratings). No other CRM competitors are introduced. |
+| c17 | Output is labelled DRAFT — explicitly flagged for sales-enablement / marketing leadership review before deployment to the rep team | PASS | File opens: '> **DRAFT — requires human review before distribution to the sales team.**' File closes with the same label. The chat response reiterates: 'Priority actions to complete the card' before any rep use. 'Before you use this card — inputs required' section lists 9 gating inputs. |
+| c18 | Output addresses the multi-stakeholder DEAL DYNAMICS — what to do when the CFO, VP Eng, and rep have conflicting priorities (e.g. CFO wants cheapest, rep wants their preferred UX, VP Eng prioritises integration depth) — sequencing the message and proof points | FAIL | No section in the card addresses cross-persona conflicts or priority sequencing. Each persona is treated independently. There is no guidance on what to do when the CFO's TCO objection conflicts with the VP Eng's integration concern, or how to sequence stakeholder conversations. The TL;DR mentions different priorities but does not address how to navigate conflicts. |
 
-- [x] PASS: Objection/response pairs segmented into three sections by buyer persona — CFO (TCO, ROI, pricing transparency), VP Eng (API, migration, integrations, security), End User (mobile UX, onboarding, adoption friction). Each section is a distinct table.
-- [x] PASS: TCO comparison shows specific line items per option — licence per user, implementation cost range, training, admin FTE headcount, AI add-on, 3-year totals for both products in parallel columns.
-- [x] PASS: Technical-buyer differentiators are specific — API rate limits (100 calls/sec vs Salesforce's 24-hour daily bucket), named migration wizard with schema auto-map, named integrations (Slack, Workday, SAP S/4HANA connector with caveat).
-- [x] PASS: End-user differentiators are concrete — 2s vs 6s p95 mobile load time with dated sources, offline write vs view-only, 18-minute median onboarding time, 6-week adoption timeline.
-- [x] PASS: Win/loss analysis is grounded in evidence — API throttling cases cited with three named customer migrations, mobile benchmarks sourced with dates, admin headcount from deal data, generic claims flagged as needing confirmation.
-- [x] PASS: Output is concise enough to scan in 30 seconds — TL;DR at top, tables for all comparison and objection sections, bullets for landmine questions, structure enables rapid scanning by persona.
-- [~] PARTIAL: Proof points specific to enterprise segment — Acme Corp case study is 500+ seats and from-Salesforce; customer quote is attributed and cleared. Case study figures are illustrative pending real deal data. Scored 0.5 as a PARTIAL-prefixed criterion.
-- [x] PASS: Output covers only Salesforce — no HubSpot, Dynamics, or other CRMs appear.
-- [x] PASS: Output is labelled DRAFT — explicitly at top and bottom.
-- [x] PASS: Output addresses multi-stakeholder deal dynamics — dedicated section with explicit sequencing (VP Eng first, then CFO, parallel rep pilot) and conflict-resolution guidance.
+### Notes
 
-## Notes
-
-The skill's enterprise-specific instructions are well-formed: persona-segmented objections, TCO line items, landmine questions with a "questions to avoid" section, DRAFT labelling, and the one-competitor rule are all explicit and sufficient. A well-formed agent following this skill would produce a card meeting all criteria reliably for a Salesforce enterprise deal.
-
-The two partial scores are both on PARTIAL-prefixed criteria (proof point currency and segment-specificity), which appropriately acknowledge the inherent limitation of generating a battle card without access to real customer data. The skill handles this correctly by requiring "Unverified" flags on claims that cannot be confirmed.
-
-The multi-stakeholder deal dynamics criterion is fully addressed in the simulated output — the skill's persona-segmented structure, when combined with the general guidance in Step 3, produces the sequencing and conflict-resolution logic this criterion requires.
+The card excels at structural scaffolding: persona segmentation, TCO line-item shape, DRAFT labeling, and single-competitor scope are all well-executed. The fundamental failure is that the card is almost entirely placeholder content — 9 of 9 'inputs required' are missing, and virtually every quantitative claim is marked ⚠️. Criteria that test structural qualities (c1, c7, c8, c9, c16, c17) pass; criteria that test specificity of content (c2, c4, c11, c12, c13, c15) all fail because the card honestly acknowledges it has no product data, win-rate statistics, API benchmarks, or case studies. The honest transparency about missing data is a quality of the card as a process artifact, but it means the deliverable cannot satisfy content-specificity criteria. The deal dynamics criterion (c18) is a structural gap — the card treats personas in isolation and never addresses how to sequence or resolve conflicting stakeholder priorities.

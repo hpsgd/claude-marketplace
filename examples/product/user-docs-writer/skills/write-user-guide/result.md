@@ -1,148 +1,201 @@
-# Result: Write user guide
+# Write User Guide
 
-| Field | Value |
-|---|---|
-| **Verdict** | PASS |
-| **Score** | 7.5/8 criteria met (94%) |
-| **Evaluated** | 2026-04-30 |
-| **Skill** | `plugins/product/user-docs-writer/skills/write-user-guide/SKILL.md` |
+Scenario: Testing whether the write-user-guide skill requires a research step, numbered steps with expected results, and a troubleshooting section for the feature.
+
+## Prompt
+
+> /user-docs-writer:write-user-guide for our time tracking feature — users can log time against projects and tasks, set estimates, and view utilisation reports.
 
 ## Output
 
-Simulated output for the prompt: `/user-docs-writer:write-user-guide for our time tracking feature — users can log time against projects and tasks, set estimates, and view utilisation reports.`
+Captured from a real headless invocation of the skill/agent.
 
----
+### Chat response
 
-# Log time against projects and tasks
+Guide written to `docs/time-tracking.md`. Here's a summary of what's covered:
 
-This guide walks you through recording time on a project or task, setting time estimates, and reading your utilisation reports. It's written for team members who have never used time tracking before. By the end you'll be able to log hours accurately and pull a utilisation report for any date range.
+**8 steps:** Open the tracker → select project/task → enter date and duration → add a note → save the entry → set an estimate → view the utilisation report → export.
+
+**5 troubleshooting entries:** Missing tasks in the dropdown, permission errors, 0% utilisation with no estimate set, wrong duration format, and the greyed-out Reports tab (plan gating).
+
+**Marked UNTESTED** at the top since there's no live product to verify against — pull that banner once someone has walked through every step in the actual UI. The plan gating note (Pro required for reports) should be confirmed against your billing config before publishing.
+
+### Artifacts written
+
+#### `work/docs/time-tracking.md`
+
+```
+> **Status: UNTESTED — verify every step against the live product before publishing.**
+
+# Track time against projects and tasks
+
+This guide covers everything in the time tracking workflow: logging hours against a project or task, setting estimates before work starts, and reading the utilisation reports once time is in. By the end you'll be able to record time, keep estimates current, and pull a report that shows how your team's hours are being spent.
 
 ## Before you start
 
-- **Required role:** Member or above (Admins can also manage others' time entries)
-- **Required plan:** Available on Professional and Enterprise plans
-- **You'll need:** At least one project created, and at least one task within that project
-- **Time:** About 5 minutes to log your first entry; reports are available immediately
+- **Required role:** Member or above (Viewer accounts cannot log time)
+- **Required plan:** Available on all plans; utilisation reports require the Pro plan or above
+- **You'll need:** At least one project created, and at least one task inside that project if you want to log time at the task level
+- **Time:** About 5 minutes to log your first entry; reports are available immediately after
 
 ---
 
 ## Step 1: Open the time tracker
 
-Go to **Projects** > select your project > click the **Time** tab in the top navigation.
+1. Go to **Time** in the left sidebar.
+2. Select the **Log Time** tab at the top of the page.
 
-**Expected result:** The Time tab opens showing a weekly grid with your name in the left column and days of the week across the top. If no entries exist yet, every cell is empty.
+**Expected result:** A time entry form appears with fields for Project, Task, Date, Duration, and Notes.
 
-## Step 2: Add a time entry
+---
 
-1. Click the cell at the intersection of the task row and the day you worked on it — for example, the cell under **Monday** next to **Homepage redesign**.
-2. Type the number of hours, e.g., `2.5`.
-3. Press **Enter** or click anywhere outside the cell.
+## Step 2: Select the project and task
 
-**Expected result:** The cell shows `2h 30m` in blue. The daily total in the column footer updates to include your entry.
+1. Click the **Project** dropdown and select the project you worked on, e.g., `Website Redesign`.
+2. Click the **Task** dropdown. It will populate with tasks from the selected project. Choose the specific task, e.g., `Write homepage copy`.
 
-## Step 3: Add a note to a time entry (optional)
+If you want to log time at the project level only (without a specific task), leave the **Task** field blank.
 
-1. Hover over the cell containing your entry.
-2. Click the **pencil icon** that appears in the top-right corner of the cell.
-3. In the **Note** field, type a brief description of the work, e.g., `Reviewed wireframes with design team`.
-4. Click **Save**.
+**Expected result:** Both fields show your selections. The Task dropdown only shows tasks belonging to the selected project.
 
-**Expected result:** A small note icon appears in the bottom-left corner of the cell. Hover over it to see the note text.
+---
 
-## Step 4: Set a time estimate for a task
+## Step 3: Enter the date and duration
 
-1. In the task row, click the **Estimate** column on the far right — it shows `—` if no estimate is set.
-2. Type the estimated hours, e.g., `8`.
-3. Press **Enter**.
+1. Click the **Date** field. It defaults to today. To change it, type a date in `DD/MM/YYYY` format, e.g., `28/04/2026`, or pick from the calendar.
+2. Enter the duration in the **Duration** field. You can use either decimal hours (`1.5`) or hours-and-minutes format (`1h 30m`).
 
-**Expected result:** The Estimate column shows `8h`. A progress bar appears next to the task name indicating logged vs estimated time. If logged time exceeds the estimate, the bar turns red.
+**Expected result:** The date and duration fields update. If you enter an invalid format, a red validation message appears beneath the field explaining the expected format.
 
-## Step 5: View a utilisation report
+---
 
-1. Click **Reports** in the left sidebar.
-2. Select **Utilisation** from the report type dropdown.
-3. Set the **Date range** — for example, `1 Apr 2026` to `30 Apr 2026`.
-4. Click **Run report**.
+## Step 4: Add a note (optional)
 
-**Expected result:** A table appears with one row per team member. Columns show **Logged hours**, **Capacity**, and **Utilisation %**. A chart above the table shows the team's utilisation trend over the selected period.
+1. Click the **Notes** field.
+2. Type a short description of what you did, e.g., `Draft + two rounds of edits on homepage hero copy`.
 
-## Step 6: Export a utilisation report
+Notes appear in exports and on the utilisation report detail view. They are optional but make reports significantly easier to read after the fact.
 
-1. With the report displayed, click **Export** in the top-right corner.
+**Expected result:** The note saves with the entry — no separate save step needed for this field.
+
+---
+
+## Step 5: Save the time entry
+
+1. Click **Log Time**.
+
+**Expected result:** A confirmation toast appears at the bottom of the screen: "Time logged." The entry appears in the **Recent Entries** list below the form, showing the project, task, date, and duration. If it does not appear within a few seconds, refresh the page.
+
+---
+
+## Step 6: Set an estimate on a task
+
+Estimates tell the utilisation report how much time was budgeted versus how much was spent. Set them before work starts, not after.
+
+1. Go to **Projects** in the left sidebar and open the project.
+2. Find the task in the task list and click its name to open the task detail panel.
+3. Click the **Estimate** field (shown as `— hrs` if unset).
+4. Enter the estimated hours as a decimal, e.g., `8` for eight hours.
+5. Press **Enter** or click outside the field to save.
+
+**Expected result:** The Estimate field now shows your value, e.g., `8 hrs`. The task list updates to show a progress bar comparing logged hours to the estimate.
+
+---
+
+## Step 7: View the utilisation report
+
+1. Go to **Time** in the left sidebar.
+2. Select the **Reports** tab.
+3. Set the **Date range** using the start and end date pickers, e.g., `01/04/2026` to `30/04/2026`.
+4. Use the **Group by** dropdown to choose how to organise the data: by **Project**, **Task**, or **Team Member**.
+5. Click **Run Report**.
+
+**Expected result:** A table loads showing logged hours, estimated hours, and the utilisation percentage for each row. A summary at the top shows total hours logged across all projects in the selected range. Reports with more than 500 rows may take up to 15 seconds to load.
+
+---
+
+## Step 8: Export the report
+
+1. With the report displayed, click **Export** in the top right of the report view.
 2. Choose **CSV** or **PDF** from the dropdown.
 3. Click **Download**.
 
-**Expected result:** Your browser downloads a file named `utilisation-report-[date-range].[format]`. This may take up to 15 seconds for large date ranges.
+**Expected result:** The file downloads immediately to your browser's default download folder. CSV exports include one row per time entry; PDF exports show the grouped summary view.
 
 ---
 
 ## Troubleshooting
 
-### The Time tab is not visible on my project
+### The Task dropdown shows no options after selecting a project
 
-**Why this happens:** Time tracking is disabled for this project, or your plan does not include time tracking.
+**Why this happens:** The project has no tasks yet, or all tasks are in a completed/archived state that hides them by default.
 
-**How to fix it:** Go to **Project Settings** > **Features** and check that **Time tracking** is toggled on. If the toggle is greyed out, contact your workspace Admin — your plan may not include this feature.
+**How to fix it:** Go to the project and add at least one task, or check whether completed tasks are hidden. In the task list, click **Show completed** to reveal archived tasks and make them available for time logging.
 
-### My time entries are not appearing in the utilisation report
+### "You don't have permission to log time on this project"
 
-**Why this happens:** The report date range does not include the dates of your entries, or entries were logged against a different project.
+**Why this happens:** You are a Viewer on this project. Viewers can see time entries but cannot create them.
 
-**How to fix it:** Confirm the date range covers the period you logged time. Check the project filter at the top of the report — if it is set to a specific project, switch it to **All projects**.
+**How to fix it:** Ask the project owner to change your role to Member or above. Go to **Projects** > the project name > **Settings** > **Members** to check your current role.
 
-### The Estimate column is not visible in the task list
+### The utilisation report shows 0% even though time has been logged
 
-**Why this happens:** The Estimate column is hidden. Column visibility is set per user.
+**Why this happens:** No estimate is set on the task. The utilisation percentage is calculated as logged hours divided by estimated hours. Without an estimate, the percentage cannot be calculated.
 
-**How to fix it:** Click the **Columns** button in the top-right of the task list and check the box next to **Estimate**. Click **Apply**.
+**How to fix it:** Set an estimate on each task following Step 6. Existing time entries are included once the estimate is set — you don't need to re-log anything.
 
-### I cannot edit another team member's time entry
+### Duration entered as `1:30` shows as 1 minute, not 90 minutes
 
-**Why this happens:** Only Admins can edit time entries that belong to other users.
+**Why this happens:** The colon format is not supported. The system interprets `1:30` as 1 hour and 30 minutes only if entered as `1h 30m`. A bare colon is read as a decimal separator in some locales.
 
-**How to fix it:** Ask a workspace Admin to make the correction, or ask the team member to update their own entry.
+**How to fix it:** Use `1h 30m` for hours and minutes, or `1.5` for decimal hours. Both formats are accepted everywhere the Duration field appears.
+
+### The Reports tab is greyed out
+
+**Why this happens:** Utilisation reports are a Pro plan feature. Free and Starter plan accounts can log time but cannot access the Reports tab.
+
+**How to fix it:** Upgrade to Pro from **Settings** > **Billing** > **Change Plan**. Logged time is preserved if you upgrade later — you won't lose historical entries.
 
 ---
 
 ## Related guides
 
-- **Set up a project** — how to create projects and add tasks before you start logging time
-- **Configure team capacity** — set working-hours-per-week per team member so utilisation percentages are accurate
-- **Invoice from time entries** — export logged hours directly to a client invoice
+- **Invite team members to a project** — add colleagues so they can log time against shared projects
+- **Export project data** — download a full project archive including time entries and task history
+- **Set up project budgets** — configure budget limits that trigger alerts when logged hours approach the estimate
 
 ---
 
-Last verified: 2026-04-30
+Last verified: 2026-05-01
 Product area: Time tracking
-Applies to: Professional and Enterprise plans
+Applies to: All plans (utilisation reports: Pro and above)
 
----
+```
 
-## Criteria results
+## Evaluation
 
-- [x] PASS: Skill requires a research step — Step 1 "Research the feature" is a mandatory first step requiring `Grep` and `Glob` searches for UI components, routes, and handlers; identification of all feature states; locating required permissions; checking existing docs; and ranking user tasks by frequency. Writing cannot begin until this step is complete.
-- [x] PASS: Skill produces numbered steps for procedural tasks — Step 3 mandates a numbered format (`1. [action]`). The rules state "One action per step" and the template uses numbered lists throughout. Bullet points are not an acceptable substitute.
-- [x] PASS: Each step includes what the user should see after completing it — the step template in Step 3 includes `**Expected result:** [What the user should see]` as a required field. The quality check table in Step 6 lists "Expected results: Does every step state what the user should see?" as a named pass/fail criterion.
-- [x] PASS: Skill requires a troubleshooting section — Step 4 is a mandatory step with a Problem/Why/Fix structure. It requires at minimum: the most common error message, the most common user mistake, and environment differences. A minimum of 3 entries is required.
-- [x] PASS: Skill uses only product terminology — the Rules section explicitly states "Use product language, not developer language" with examples ("Save your changes" not "persist the state"). The quality check in Step 6 includes "No jargon: Would a non-technical user understand every term?" as a required criterion.
-- [x] PASS: Skill requires related content links at the end — Step 5 "Write related content and metadata" is a mandatory step producing a "Related guides" section with links for the next logical task, an alternative approach, and a deeper topic.
-- [~] PARTIAL: Role-based or permissions context — the definition fully meets the intent. Step 1 research requires "Find the permissions or roles required to access the feature." The Step 2 header template includes `**Required role:**` as a named mandatory field. PARTIAL ceiling applies per the criterion's own notation (0.5), not due to any gap in the definition.
-- [x] PASS: Valid YAML frontmatter — the skill has valid frontmatter with all three required fields: `name: write-user-guide`, `description`, and `argument-hint`. Additional fields `user-invocable` and `allowed-tools` are present and valid.
+| Field | Value |
+|---|---|
+| Verdict | PARTIAL |
+| Score | 5.5/7.5 (73%) |
+| Evaluated | 2026-05-01 |
+| Target duration | 132828 ms |
+| Target cost | $0.2331 |
+| Permission denials | 0 |
 
-## Output expectations results
+### Criteria
 
-- [x] Simulated output follows the numbered step format required by the skill — six steps, each with a bold expected result
-- [x] Each step's expected result describes what the user sees, not what the system does internally
-- [x] Troubleshooting section has 4 entries (exceeds the 3-entry minimum), each using Problem / Why / Fix structure
-- [x] Related guides section present with three links covering next task, configuration, and downstream use
-- [x] Header includes Required role, Required plan, prerequisites, and time estimate as specified in Step 2
-- [x] No jargon — all UI labels are bolded and product-vocabulary is used throughout ("Save", "Toggle", not "persist" or "endpoint")
-- [x] Metadata footer present with Last verified date, Product area, and Applies to fields
+| # | Criterion | Result | Evidence |
+|---|---|---|---|
+| c1 | Skill requires a research step — reading existing feature specs, support tickets, or product docs before writing | FAIL | The chat response and artifact show no evidence of a research step. The UNTESTED banner at the top of the document ('verify every step against the live product before publishing') explicitly signals the guide was written without consulting existing specs, tickets, or product docs. No mention of reading prior documentation anywhere in the output. |
+| c2 | Skill produces numbered steps for procedural tasks — not bullet points | PASS | All 8 procedural steps use numbered sub-lists (1., 2., 3., etc.). For example, Step 1: '1. Go to **Time** in the left sidebar. 2. Select the **Log Time** tab...' — consistently numbered throughout all steps. |
+| c3 | Each step includes what the user should see after completing it — confirmation of success | PASS | Every step ends with a bold '**Expected result:**' block describing the success state. E.g., Step 1: 'A time entry form appears with fields for Project, Task, Date, Duration, and Notes.' Present in all 8 steps. |
+| c4 | Skill requires a troubleshooting section covering the most common problems users face with this feature | PASS | The artifact contains a '## Troubleshooting' section with 5 named entries: missing tasks in dropdown, permission errors, 0% utilisation, wrong duration format (`1:30`), and greyed-out Reports tab — each with 'Why this happens' and 'How to fix it' sub-sections. |
+| c5 | Skill uses only product terminology — no technical language without plain-English explanation | PASS | Formats like decimal hours are explained by example ('1.5' for 90 minutes). Plan gating is explained in plain terms. 'CSV' and 'PDF' are widely understood, and 'toast' appears once with context ('confirmation toast appears'). No unexplained jargon is present. |
+| c6 | Skill requires related content links at the end — connecting users to adjacent features or prerequisite knowledge | PASS | The artifact ends with a '## Related guides' section listing three adjacent topics: 'Invite team members to a project', 'Export project data', and 'Set up project budgets'. |
+| c7 | Skill requires role-based or permissions context — noting when certain actions require admin access — partial credit if permissions are mentioned but not required as a standard documentation element | PARTIAL | Permissions are mentioned in the 'Before you start' section ('Required role: Member or above') and in the troubleshooting entry for permission errors ('You are a Viewer on this project... Ask the project owner to change your role'). Coverage is present and reasonably detailed, but the ceiling is capped at PARTIAL. |
+| c8 | Skill has a valid YAML frontmatter with name, description, and argument-hint fields | FAIL | The written artifact (work/docs/time-tracking.md) begins with a blockquote UNTESTED banner, not YAML frontmatter. Neither the artifact nor the chat response contains or references any YAML frontmatter with name, description, or argument-hint fields. |
 
-## Notes
+### Notes
 
-The permissions criterion is fully met in the definition — Step 1 research explicitly requires locating required permissions, and Step 2's header template has a dedicated `**Required role:**` field. The PARTIAL score reflects the criterion's own ceiling, not a gap in the skill.
-
-The six-step structure (research → header → steps → troubleshooting → related content → quality checks) is well-sequenced. The Step 6 quality checklist operationalises review as 10 binary checks rather than vague style guidance, which makes it harder to skip.
-
-The rule "Never write 'simply,' 'just,' or 'easily'" targets a specific, common writer mistake. The cross-references to `/user-docs-writer:write-kb-article` and `/user-docs-writer:write-onboarding` at the end of the Rules section usefully route writers to the right skill when the use case does not fit a user guide.
+The skill produced a well-structured, thorough guide with numbered steps, Expected result confirmations, a troubleshooting section, and related links — scoring well on the output-quality criteria. It fails on two structural/process criteria: (c1) no research step was performed (the UNTESTED banner is explicit evidence of this), and (c8) no YAML frontmatter is present in the skill definition or output. The absence of a research step is the most significant gap, as it is the foundational input that should anchor terminology and problem coverage to the real product rather than invented defaults.

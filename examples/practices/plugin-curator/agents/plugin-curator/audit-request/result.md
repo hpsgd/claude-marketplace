@@ -1,119 +1,121 @@
-# Result: plugin-curator audit request
+# Audit Request
 
-**Verdict:** PASS
-**Score:** 16.5/17 criteria met (97%)
-**Evaluated:** 2026-04-30
+Scenario: User asks the plugin-curator agent to audit an existing agent definition for structural consistency, expecting a structured report against the template criteria.
 
----
+## Prompt
+
+> Can you audit the `qa` agent for me? I want to know if it's structurally consistent with the template — whether it's got all the required sections, the right model, no private references, that kind of thing. Just give me the full breakdown.
 
 ## Output
 
-The following is a simulated output from the plugin-curator agent responding to: "Can you audit the `qa` agent for me? I want to know if it's structurally consistent with the template — whether it's got all the required sections, the right model, no private references, that kind of thing. Just give me the full breakdown."
+Captured from a real headless invocation of the skill/agent.
+
+### Chat response
+
+I found two QA agents: `qa-lead` and `qa-engineer`. Auditing both.
 
 ---
 
-**Pre-flight**
+## Agent Audit: qa-lead
 
-```
-Reading CLAUDE.md... ✓
-Reading .claude-plugin/marketplace.json... ✓
-Reading plugins/practices/plugin-curator/templates/agent-template.md... ✓
-Reading plugins/practices/plugin-curator/templates/skill-template.md... ✓
-```
+### Summary
+- **Lines:** 207 (target: 150–300)
+- **Quality score:** 12/15 criteria met (3 partial, 0 N/A)
+- **Model:** sonnet (correct)
 
-Target agent resolved: the `qa` agent maps to `plugins/engineering/qa-engineer/agents/qa-engineer.md` (marketplace.json entry: `qa-engineer`). Reading definition...
+### Criteria
 
-```
-Reading plugins/engineering/qa-engineer/agents/qa-engineer.md... ✓ (348 lines)
-```
+| # | Criterion | Status | Evidence |
+|---|---|---|---|
+| 1 | Line count (150–300) | ✅ | 207 lines |
+| 2 | Core statement | ✅ | "You define what quality means for each piece of work BEFORE development starts…" — second person, clear ownership, line 10 |
+| 3 | Non-negotiable rules | ✅ | "Acceptance criteria are defined before development starts. Edge cases are identified before the happy path is built." — specific and falsifiable, line 12 |
+| 4 | Pre-Flight | ✅ | "Read CLAUDE.md and .claude/CLAUDE.md. Check for installed rules in `.claude/rules/`" — line 18 |
+| 5 | Mandatory methodology | ✅ | "Every acceptance criterion uses Gherkin format" and numbered mandatory steps across both 3 Amigos and Acceptance Criteria sections |
+| 6 | Output format | ✅ | Acceptance Test Plan template at lines 91–115; second Output Format block at lines 153–172 |
+| 7 | Failure caps | ✅ | 3 caps present at lines 175–178 |
+| 8 | Decision checkpoints | ✅ | 5 triggers in table at lines 185–190 |
+| 9 | Collaboration table | ✅ | 5 roles at lines 196–200 |
+| 10 | Principles | ✅ | 5 domain-specific principles at lines 130–134: Shift left, behaviour not implementation, absence of evidence, edge cases, testability |
+| 11 | What You Don't Do | ⚠️ | Section present (lines 202–207), but only 1/4 items names an owner: "that's the QA Engineer." The other three ("Make product decisions", "Make architecture decisions", "Skip the 3 amigos") drop the exclusion without naming who DOES own it |
+| 12 | No private refs | ✅ | No private company names, internal packages, or project-specific references |
+| 13 | Tool links | ⚠️ | Line 142: `[Playwright](https://playwright.dev)/Cypress` — Playwright is linked, Cypress is not. First and only mention of Cypress in this agent |
+| 14 | Correct model | ✅ | `sonnet` — correct for specialist |
+| 15 | Description precision | ⚠️ | Description covers role and domain but lacks the required "Use when {trigger conditions}" clause. Template format: "{Role} — {domain}. Use when {triggers}." |
+
+### Recommended Actions
+1. **What You Don't Do (Criterion 11):** Add owners to the three unattributed exclusions — e.g., "Make product decisions — that's the product-owner", "Make architecture decisions — that's the architect", "Skip the 3 amigos — if the QA Lead wasn't in the session, acceptance criteria are incomplete"
+2. **Frontmatter description (Criterion 15):** Add an explicit "Use when…" clause, e.g., "Use when starting a new feature, running a 3 amigos session, or defining acceptance criteria for a sprint"
+3. **Tool links (Criterion 13):** Link Cypress on first mention at line 142 — `[Cypress](https://www.cypress.io)`
 
 ---
 
 ## Agent Audit: qa-engineer
 
 ### Summary
+- **Lines:** 347 (target: 150–300)
+- **Quality score:** 12/15 criteria met (3 partial, 0 N/A)
+- **Model:** sonnet (correct)
+
+### Criteria
+
+| # | Criterion | Status | Evidence |
+|---|---|---|---|
+| 1 | Line count (150–300) | ⚠️ | 347 lines — 47 over the upper target. Bug Investigation (lines 233–263), E2E Acceptance Testing (lines 154–229), and Review Process (lines 96–121) are candidates to extract to dedicated skills |
+| 2 | Core statement | ✅ | "You own product quality — not just 'does it work?' but 'does it work correctly, reliably, and as specified under all conditions?'" — second person, clear ownership, line 10 |
+| 3 | Non-negotiable rules | ✅ | "No test passes without evidence. No approval without independent verification… You trust exit codes, not narratives." — specific and falsifiable, line 12 |
+| 4 | Pre-Flight | ✅ | "Read CLAUDE.md and .claude/CLAUDE.md. Check for installed rules in `.claude/rules/`" — line 18 |
+| 5 | Mandatory methodology | ✅ | "CRITICAL", "MANDATORY", "The Iron Law", "This is not a suggestion" — mandatory framing throughout |
+| 6 | Output format | ✅ | Evidence Output Format at lines 264–291 with Evidence, Scenarios Verified, and Quality Score tables |
+| 7 | Failure caps | ✅ | 3 caps at lines 305–307 |
+| 8 | Decision checkpoints | ✅ | 5 triggers in table at lines 313–319 |
+| 9 | Collaboration table | ✅ | 6 roles at lines 323–329 |
+| 10 | Principles | ✅ | 7 domain-specific principles at lines 334–340: exit codes, behaviour not implementation, real over mocked, one assertion, deterministic, RED before GREEN, criteria immutable |
+| 11 | What You Don't Do | ⚠️ | Lines 342–347: "Make product decisions — escalate to product-owner" ✅, "Make architecture decisions — escalate to architect" ✅, "Approve your own code — request review from another specialist" ⚠️ (vague — no specific agent named), "Skip tests under time pressure" ❌ (no owner named at all) |
+| 12 | No private refs | ✅ | No private company names, internal packages, or project-specific references |
+| 13 | Tool links | ⚠️ | Line 22 lists Vitest, Jest, pytest, Playwright, Cypress in prose without any hyperlinks — this is the first mention of all five. Vitest and Playwright are linked later (lines 42 and 172), but Jest and pytest are never linked at all |
+| 14 | Correct model | ✅ | `sonnet` — correct for specialist |
+| 15 | Description precision | ✅ | "QA engineer — test automation, E2E acceptance tests, quality gates, coverage analysis. Use for writing test suites, implementing acceptance tests, browser-based E2E tests, analysing failures, or assessing release readiness." — role, domain, and trigger conditions all present |
+
+### Recommended Actions
+1. **Line count (Criterion 1):** Agent is 47 lines over target. The Bug Investigation section (lines 233–263) is the strongest candidate to extract to a `write-bug-report` skill — it's a self-contained methodology. The Review Process (lines 96–121) could become a `code-review` companion skill. Extracting either would bring the agent within range
+2. **Tool links (Criterion 13):** Line 22 should link on first mention — add `[Vitest](https://vitest.dev)`, `[Jest](https://jestjs.io)`, `[pytest](https://pytest.org)`, `[Playwright](https://playwright.dev)`, `[Cypress](https://www.cypress.io)`. Alternatively, convert the enumeration in Step 2 Pre-Flight to a table where links appear there instead
+3. **What You Don't Do (Criterion 11):** Fix the last two entries — "Approve your own code — request review from the qa-lead or a senior developer" (name a specific agent), and "Skip tests under time pressure — quality gates are owned by the QA Lead and CTO" (name owners)
+
+## Evaluation
 
 | Field | Value |
 |---|---|
-| File | `plugins/engineering/qa-engineer/agents/qa-engineer.md` |
-| Lines | 348 (target: 150–300) |
-| Quality score | 13/15 criteria met |
-| Model | `sonnet` (correct — qa-engineer is a specialist) |
+| Verdict | PARTIAL |
+| Score | 12.5/16.5 (76%) |
+| Evaluated | 2026-05-01 |
+| Target duration | 148192 ms |
+| Target cost | $0.3008 |
+| Permission denials | 0 |
 
-### Criteria Status
+### Criteria
 
-| Criterion | Status | Notes |
-|---|---|---|
-| Core statement | ✅ | Lines 10–11: clear ownership statement — "You own product quality … last line of defence before code reaches users." |
-| Non-negotiable | ✅ | Lines 13–14: three specific, falsifiable rules — "No test passes without evidence. No approval without independent verification. No 'looks good' without running the tests yourself." |
-| Pre-Flight | ✅ | Lines 14–35: three-step Pre-Flight reads CLAUDE.md, `.claude/CLAUDE.md`, and scans `.claude/rules/`. Classifies work before acting. |
-| Domain methodology | ✅ | Lines 37–261: Test Process Discipline, TDD Methodology, E2E Acceptance Testing, Bug Investigation — all with MANDATORY markers and sequential steps. |
-| Output format | ✅ | Lines 264–291: structured Evidence Output Format with evidence table, scenarios table, and quality score table. |
-| Failure caps | ✅ | Lines 303–307: three-strike cap on test attempts, lint/build loop cap, 10-minute escalation cap. |
-| Decision checkpoints | ✅ | Lines 309–320: checkpoint table with 5 triggers, reasoning, and escalation targets. |
-| Collaboration table | ✅ | Lines 322–331: six-row collaboration table naming QA Lead, Developers, Architect, Product Owner, Security Engineer, Release Manager. |
-| Principles | ✅ | Lines 333–340: seven opinionated principles with rationale ("Exit codes over narratives", "RED before GREEN", etc.). |
-| What You Don't Do | ✅ | Lines 342–347: four exclusions each naming the role that owns the excluded activity. |
-| No private refs | ✅ | No company names, internal package names, or private domain strings found. |
-| Tool links | ⚠️ | Line 46: `Vitest` mentioned without a hyperlink. Line 46: `Jest` mentioned without a hyperlink. Line 170: `Playwright` and `Cypress` hyperlinked correctly in the tools table — but the same tools are mentioned bare at line 22 ("Vitest, Jest, pytest, dotnet test, Playwright, Cypress") with no links on first mention in prose. First mention rule applies to the Pre-Flight text, not the table. |
-| Correct model | ✅ | Frontmatter line 5: `model: sonnet`. Correct — qa-engineer is a specialist, not a leadership agent. |
-| Description precision | ✅ | Frontmatter lines 3–4: description names specific capabilities (test automation, E2E acceptance tests, quality gates, coverage analysis) and specific trigger conditions. Sufficient for Claude to decide whether to load. |
-| Line count | ❌ | 348 lines. Target is 150–300. Over by 48 lines (~16%). The definition is comprehensive but overshoots the target band. Candidates for trimming: the Test Organisation directory tree (lines 207–219), the detailed smoke test checklist (lines 197–204), and the inline code examples in TDD Methodology (lines 161–167) which restate the table above. |
+| # | Criterion | Result | Evidence |
+|---|---|---|---|
+| c1 | Agent reads CLAUDE.md and marketplace.json as part of its mandatory pre-flight before beginning the audit | FAIL | The captured output contains no pre-flight step at all. It opens with 'I found two QA agents: qa-lead and qa-engineer. Auditing both.' and proceeds directly to tables. No mention of reading CLAUDE.md or marketplace.json. |
+| c2 | Agent reads the agent template file before evaluating the qa agent definition | FAIL | No mention of reading an agent template file appears anywhere in the output. The 15-criterion table implies template knowledge was used, but no explicit read step is shown or referenced. |
+| c3 | Audit output includes a criteria table covering all 15 quality criteria from the template | PASS | Both qa-lead and qa-engineer tables contain exactly 15 numbered rows (Line count, Core statement, Non-negotiable rules, Pre-Flight, Mandatory methodology, Output format, Failure caps, Decision checkpoints, Collaboration table, Principles, What You Don't Do, No private refs, Tool links, Correct model, Description precision). |
+| c4 | Each criterion is scored as met, partially met, or missing — not left blank or assumed | PASS | Every row in both tables has a status symbol — either ✅ (met) or ⚠️ (partially met). No row is blank or marked 'N/A' without explanation. All 30 criterion rows across both audits are scored. |
+| c5 | Non-passing criteria include specific evidence (file reference, line number, or exact quote) rather than vague descriptions | PASS | All ⚠️ rows cite specific lines: criterion 11 qa-lead 'Section present (lines 202–207), but only 1/4 items names an owner'; criterion 13 qa-lead 'Line 142: [Playwright]…/Cypress'; criterion 1 qa-engineer '347 lines — 47 over the upper target'; criterion 13 qa-engineer 'Line 22 lists Vitest, Jest, pytest, Playwright, Cypress in prose without any hyperlinks'. |
+| c6 | Audit output includes a quality score (X/15 format) and line count | PASS | qa-lead summary: 'Lines: 207' and 'Quality score: 12/15 criteria met'. qa-engineer summary: 'Lines: 347' and 'Quality score: 12/15 criteria met'. Both numeric and exact. |
+| c7 | Audit includes recommended actions prioritised by impact | PARTIAL | Recommended actions exist for both agents (3 each) and are numbered, implying an ordering. However, no explicit impact labels or severity tiers are stated. For qa-engineer, line count (a size issue) appears as #1 while a content gap (What You Don't Do) is #3, which inverts structural-before-style priority. |
+| c8 | Boundary check — agent does not audit itself (plugin-curator is explicitly excluded from 'all' audits per the skill's anti-patterns) | PARTIAL | The output audits only qa-lead and qa-engineer; plugin-curator does not appear in the audit. The boundary is respected, earning the ceiling. |
+| c9 | Output's audit table covers all 15 quality criteria from the agent template — not a subset, not a generic checklist | PASS | Both tables have 15 rows matching named template sections (Core statement, Pre-Flight, Failure caps, Decision checkpoints, Collaboration table, Principles, What You Don't Do, Description precision, etc.) — not a generic quality checklist. |
+| c10 | Output scores each criterion as MET / PARTIALLY MET / MISSING (or equivalent ternary) — never blank, never 'assumed met' | PASS | ✅ and ⚠️ cover all 30 rows across both audits. No row is left blank or skipped. The ternary's third state (MISSING/❌) is not needed because no criterion is entirely absent in either agent, but the ternary capacity is demonstrated within criterion 11's evidence sub-items (✅, ⚠️, ❌). |
+| c11 | Output's non-passing criteria each include specific evidence — file reference, line number, or exact quote from the qa agent definition — not vague descriptions like 'frontmatter could be better' | PASS | All partial-credit rows cite line numbers or exact quotes: criterion 15 qa-lead includes exact template format 'Use when {trigger conditions}'; criterion 11 qa-engineer quotes each 'What You Don't Do' entry individually with ✅/⚠️/❌ inline; criterion 13 qa-engineer lists all five tool names from line 22 and distinguishes which were eventually linked vs. never linked. |
+| c12 | Output reports the quality score as `X/15` and the line count of the audited agent — both numeric, not approximate | PASS | qa-lead: '12/15 criteria met' and '207 lines'. qa-engineer: '12/15 criteria met' and '347 lines'. Both are exact integers, not ranges or approximations. |
+| c13 | Output checks model correctness — qa is a specialist agent that should use `sonnet`, not `opus` — and flags as a finding if mismatched | PASS | Criterion 14 in both tables: qa-lead 'sonnet — correct for specialist' ✅; qa-engineer 'sonnet — correct for specialist' ✅. Model check is present and confirms the correct expected value. |
+| c14 | Output's recommended actions are prioritised — structural gaps (missing required sections) before content gaps (sparse rules) before style issues (line length, banned words) — with severity per action | FAIL | No severity labels appear on any recommended action. For qa-engineer, action #1 is line count (a size/style issue), which should rank below structural or content gaps. No action carries a 'high/medium/low' or equivalent severity marker; the numbered list implies sequential priority but the ordering does not follow structural → content → style. |
+| c15 | Output reads CLAUDE.md, marketplace.json, and the agent template before evaluating the qa agent — pre-flight is shown explicitly as a step or evidence in the output | FAIL | The output opens immediately with 'I found two QA agents' and presents audit tables. There is no explicit pre-flight step, no mention of reading CLAUDE.md, marketplace.json, or the agent template anywhere in the captured text. |
+| c16 | Output checks for private references / company names that shouldn't appear in a public marketplace plugin definition | PASS | Criterion 12 appears in both tables labeled 'No private refs': qa-lead 'No private company names, internal packages, or project-specific references' ✅; qa-engineer identical finding ✅. |
+| c17 | Output checks tool-link conventions — third-party tools mentioned in prose have markdown hyperlinks on first mention | PASS | Criterion 13 in both tables explicitly checks this: qa-lead flags Cypress unlinked on first mention at line 142; qa-engineer flags Jest and pytest as never linked, with specific line references and recommended URL fixes. |
+| c18 | Output's recommendations are concrete — each action specifies what to add or change, not 'improve this section' | PARTIAL | Actions are highly concrete: qa-lead #3 specifies exact markdown '[Cypress](https://www.cypress.io)' at line 142; qa-engineer #2 gives full URLs for all five tools; qa-lead #2 provides the exact 'Use when…' clause wording. Ceiling is PARTIAL; the content meets the standard well. |
 
-### Recommended Actions
+### Notes
 
-1. **[Structural] Fix line count** — at 348 lines, the definition is 16% over target. Trim the Test Organisation directory tree (lines 207–219, 13 lines), consolidate the smoke test checklist (lines 197–204, ~8 lines), and fold the acceptance test implementation code block (lines 162–167) into the prose — the table above it already conveys the mapping. Target: bring under 300 lines while keeping all sections.
-
-2. **[Content] Add hyperlinks on first prose mention** — `Vitest`, `Jest`, `pytest`, and `Cypress` appear at line 22 in a parenthetical list without links. Per tool-link convention, the first mention in prose (not in a table) requires a markdown hyperlink. Add:
-   - `[Vitest](https://vitest.dev)` — first mention line 22
-   - `[Jest](https://jestjs.io)` — first mention line 22
-   - `[pytest](https://pytest.org)` — first mention line 22
-   - `[Cypress](https://www.cypress.io)` is linked at line 173 in the table but appears bare at line 22 — add link there too
-
-3. **[Style] Consolidate duplicate failure caps** — the TDD Failure Cap (lines 143–146) and Build/Lint Loop Cap (lines 149–152) duplicate the Failure Caps section (lines 303–307). Both state the same three-strike rule. Move the specifics to the canonical Failure Caps section and replace the inline duplicates with a back-reference ("See Failure Caps") to reduce repetition and line count.
-
----
-
-## Criteria
-
-- [x] PASS: Agent reads CLAUDE.md and marketplace.json as part of its mandatory pre-flight — Pre-Flight Step 1 (lines 19–21) defines both reads explicitly as the first MANDATORY action, before any creation or auditing work begins.
-
-- [x] PASS: Agent reads the agent template file before evaluating — Pre-Flight Step 2 (lines 34–38) reads `${CLAUDE_PLUGIN_ROOT}/templates/agent-template.md` and `${CLAUDE_PLUGIN_ROOT}/templates/skill-template.md`. The step description states "These templates define the MANDATORY structure for all agents and skills."
-
-- [x] PASS: Audit output includes a criteria table covering all 15 quality criteria — the Audit Output Format (lines 162–194) contains a Criteria Status table with exactly 15 named rows: Core statement, Non-negotiable, Pre-Flight, Domain methodology, Output format, Failure caps, Decision checkpoints, Collaboration table, Principles, What You Don't Do, No private refs, Tool links, Correct model, Description precision, Line count.
-
-- [x] PASS: Each criterion scored as met, partially met, or missing — the Audit Output Format uses `✅/⚠️/❌` symbols in the Status column for every row. No criterion can be left blank; the template provides no blank-status option.
-
-- [x] PASS: Non-passing criteria include specific evidence — Audit Process Step 3 (lines 142–143) states every non-passing criterion must cite the file path and line number. The definition embeds a counter-example: "'Missing Pre-Flight' is not a finding. 'No Pre-Flight section found in `agents/devops.md` (expected after line 12)' is a finding." The simulated output follows this: Tool links ⚠️ cites line 46 and line 22 specifically; Line count ❌ cites 348 lines and names the specific passages to trim.
-
-- [x] PASS: Audit output includes a quality score (X/15 format) and line count — the Audit Output Format Summary block (lines 167–168) specifies `Quality score: {X}/{15} criteria met` and `Lines: {count} (target: 150-300)` as required fields. The simulated output shows `13/15` and `348`.
-
-- [x] PASS: Audit includes recommended actions prioritised by impact — Audit Process Step 4 (line 144) states "Prioritise fixes — structural gaps > content gaps > style issues." The simulated output follows this ordering: (1) line count — structural, (2) tool links — content, (3) duplicate failure caps — style.
-
-- [~] PARTIAL: Boundary check — "What You Don't Do" (lines 278–279) states: "Audit yourself — skip the plugin-curator agent in 'all' audits. You follow your own meta-structure, not the standard agent template." The self-exclusion rule is present and explicit. This criterion is PARTIAL by test design; credit is 0.5.
-
-## Output expectations
-
-- [x] PASS: Output's audit table covers all 15 quality criteria from the agent template — simulated output includes all 15 rows matching the names in the Audit Output Format template exactly. No row omitted, no extra rows added.
-
-- [x] PASS: Output scores each criterion as MET / PARTIALLY MET / MISSING — the `✅/⚠️/❌` ternary is baked into the Audit Output Format. Every row in the simulated output carries one of these three symbols; none are blank or assumed.
-
-- [x] PASS: Non-passing criteria each include specific evidence — Tool links ⚠️ cites "line 46: `Vitest` mentioned without a hyperlink" and "line 22: bare list of six tools"; Line count ❌ cites "348 lines" and names three specific passages to trim with line ranges. Both non-passing rows include file path and line numbers.
-
-- [x] PASS: Output reports quality score as X/15 and line count of audited agent — simulated output shows `Quality score: 13/15` and `Lines: 348`. Both are numeric and exact.
-
-- [x] PASS: Output checks model correctness — simulated output Summary table shows `Model: sonnet (correct — qa-engineer is a specialist)`, and the Correct model criterion row shows `✅`. The agent definition at lines 155–159 maps leadership roles to opus and specialist roles to sonnet, making this check explicit.
-
-- [x] PASS: Output's recommended actions are prioritised — structural (line count overage) before content (missing tool links) before style (duplicate failure caps). Severity is encoded in the ordering and in the `[Structural]`, `[Content]`, `[Style]` tags in each action header.
-
-- [x] PASS: Output reads CLAUDE.md, marketplace.json, and the agent template before evaluating — the simulated output shows an explicit pre-flight block with four confirmed reads before the audit begins: CLAUDE.md, marketplace.json, agent-template.md, skill-template.md.
-
-- [x] PASS: Output checks for private references — No private refs criterion row is present in the simulated output (`✅ No company names, internal package names, or private domain strings found`). The agent definition's Registry Maintenance section (lines 253–255) also includes a bash grep command targeting known private domain strings.
-
-- [x] PASS: Output checks tool-link conventions — Tool links is one of the 15 criteria and is the `⚠️` finding in the simulated output, citing specific line numbers and naming the tools that lack links. The Common Issues table (line 158) defines the pattern: "Tool names without hyperlinks — Add markdown links on first mention."
-
-- [~] PARTIAL: Output's recommendations are concrete — recommendations 1 and 2 are specific: recommendation 1 names the passages to trim with line ranges; recommendation 2 names each unlinked tool with its target URL and the line number. Recommendation 3 ("move specifics to the canonical Failure Caps section and replace inline duplicates with a back-reference") is directive but does not provide the exact text to add. Most recommendations are fully concrete; one falls short of specifying exact content.
-
-## Notes
-
-The agent definition is structurally well-formed. The mandatory pre-flight, the 15-criterion Audit Output Format, and the evidence-specificity counter-example ("'Missing Pre-Flight' is not a finding...") are all clearly designed. The self-exclusion rule in "What You Don't Do" is explicit. The main gap the simulated audit surfaces — 348 lines against a 150–300 target — is a real finding in the qa-engineer definition, not a manufactured one: the definition is genuinely over-length due to inline duplication of failure cap logic and a directory tree that restates what the prose already describes. The auditor's recommended trim paths are specific enough to action without further clarification.
+The output delivers a genuinely strong audit on criteria content — 15-item tables, line-specific evidence, X/15 scoring, model checks, private-ref checks, and tool-link checks are all present and well-executed for both qa-lead and qa-engineer. The critical failure is the complete absence of any pre-flight documentation: there is no indication that CLAUDE.md, marketplace.json, or the agent template were read before the audit began (c1, c2, c15 all fail). Recommended actions also lack explicit severity labels and do not follow the structural → content → style priority order required by c14. These four FAIL criteria drag the score into PARTIAL territory despite an otherwise detailed and specific audit.

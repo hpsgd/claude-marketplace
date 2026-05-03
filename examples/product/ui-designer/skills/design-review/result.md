@@ -1,136 +1,584 @@
-# Result: Design review
+# Design Review
 
-**Verdict:** PASS
-**Score:** 14.5/16 criteria met (91%)
-**Evaluated:** 2026-04-30
+Scenario: Testing whether the design-review skill definition covers all six review dimensions and requires severity ratings for issues found.
+
+## Prompt
+
+> First, set up the project by creating these files. Use Bash for mkdir, then Write for each file.
+> 
+> ```bash
+> mkdir -p src/components
+> ```
+> 
+> ```javascript
+> // tailwind.config.js
+> module.exports = {
+>   content: ['./src/**/*.{tsx,ts}'],
+>   theme: {
+>     extend: {
+>       colors: {
+>         brand: {
+>           50: '#eef2ff',
+>           100: '#e0e7ff',
+>           200: '#c7d2fe',
+>           500: '#6366f1',
+>           600: '#4f46e5',
+>           700: '#4338ca',
+>         },
+>         surface: {
+>           DEFAULT: '#ffffff',
+>           subtle: '#f8fafc',
+>           muted: '#f1f5f9',
+>         },
+>       },
+>       spacing: {
+>         // 4px base grid — approved values: 1,2,3,4,5,6,8,10,12,16,20,24
+>       },
+>     },
+>   },
+> };
+> ```
+> 
+> ```tsx
+> // src/components/NotificationPanel.tsx
+> import React, { useState } from 'react';
+> 
+> interface Notification {
+>   id: string;
+>   title: string;
+>   body: string;
+>   timestamp: string;
+>   read: boolean;
+>   type: 'mention' | 'system' | 'billing';
+> }
+> 
+> interface NotificationPanelProps {
+>   notifications: Notification[];
+>   onClose: () => void;
+>   onMarkAllRead: () => void;
+>   onMarkRead: (id: string) => void;
+>   onBulkDelete: (ids: string[]) => void;
+> }
+> 
+> export function NotificationPanel({
+>   notifications,
+>   onClose,
+>   onMarkAllRead,
+>   onMarkRead,
+>   onBulkDelete,
+> }: NotificationPanelProps) {
+>   const [filter, setFilter] = useState<'all' | 'unread'>('all');
+>   const [selected, setSelected] = useState<Set<string>>(new Set());
+> 
+>   const filtered = filter === 'unread'
+>     ? notifications.filter(n => !n.read)
+>     : notifications;
+> 
+>   const toggleSelect = (id: string) => {
+>     setSelected(prev => {
+>       const next = new Set(prev);
+>       next.has(id) ? next.delete(id) : next.add(id);
+>       return next;
+>     });
+>   };
+> 
+>   return (
+>     <div className="fixed right-0 top-0 h-full w-96 bg-white shadow-xl z-50 flex flex-col">
+>       {/* Header */}
+>       <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200">
+>         <h2 className="text-base font-semibold text-gray-900">Notifications</h2>
+>         <button
+>           onClick={onClose}
+>           className="text-gray-400 hover:text-gray-600 p-1 rounded"
+>         >
+>           ✕
+>         </button>
+>       </div>
+> 
+>       {/* Filter bar */}
+>       <div className="flex items-center gap-2 px-4 py-2" style={{ borderBottom: '1px solid #e5e7eb' }}>
+>         <button
+>           onClick={() => setFilter('all')}
+>           className={`px-3 py-1.5 rounded-full text-sm font-medium ${
+>             filter === 'all'
+>               ? 'bg-indigo-600 text-white'
+>               : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+>           }`}
+>         >
+>           All
+>         </button>
+>         <button
+>           onClick={() => setFilter('unread')}
+>           className={`px-3 py-1.5 rounded-full text-sm font-medium ${
+>             filter === 'unread'
+>               ? 'bg-indigo-600 text-white'
+>               : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+>           }`}
+>         >
+>           Unread
+>         </button>
+>         <div className="ml-auto flex items-center gap-2">
+>           {selected.size > 0 && (
+>             <button
+>               onClick={() => { onBulkDelete(Array.from(selected)); setSelected(new Set()); }}
+>               className="text-sm text-red-600 hover:text-red-800"
+>             >
+>               Delete ({selected.size})
+>             </button>
+>           )}
+>           <button
+>             onClick={onMarkAllRead}
+>             className="text-sm text-indigo-600 hover:text-indigo-800"
+>           >
+>             Mark all read
+>           </button>
+>         </div>
+>       </div>
+> 
+>       {/* Notification list */}
+>       <div className="flex-1 overflow-y-auto divide-y divide-gray-100">
+>         {filtered.map(notification => (
+>           <div
+>             key={notification.id}
+>             onClick={() => onMarkRead(notification.id)}
+>             className={`flex items-start gap-3 px-4 py-3 cursor-pointer hover:bg-gray-50 ${
+>               !notification.read ? 'bg-blue-50' : 'bg-white'
+>             }`}
+>           >
+>             <input
+>               type="checkbox"
+>               checked={selected.has(notification.id)}
+>               onChange={e => { e.stopPropagation(); toggleSelect(notification.id); }}
+>               className="mt-1 flex-shrink-0"
+>             />
+>             <div className="flex-shrink-0 mt-2">
+>               {!notification.read && (
+>                 <div className="w-2 h-2 rounded-full" style={{ backgroundColor: '#6366f1' }} />
+>               )}
+>             </div>
+>             <div className="flex-1 min-w-0">
+>               <p className={`text-sm ${!notification.read ? 'font-semibold text-gray-900' : 'font-normal text-gray-500'}`}>
+>                 {notification.title}
+>               </p>
+>               <p className="text-sm text-gray-500 mt-0.5 line-clamp-2">{notification.body}</p>
+>               <p className="text-xs text-gray-400 mt-1">{notification.timestamp}</p>
+>             </div>
+>           </div>
+>         ))}
+>       </div>
+>     </div>
+>   );
+> }
+> ```
+> 
+> Now:
+> 
+> /ui-designer:design-review of the new notification centre designs — a slide-out panel showing all user notifications with read/unread states, filtering, and bulk actions.
 
 ## Output
 
-Simulated execution of `/ui-designer:design-review` on the notification centre designs — a slide-out panel showing all user notifications with read/unread states, filtering, and bulk actions.
+Captured from a real headless invocation of the skill/agent.
 
----
+### Chat response
 
-# Design Review: Notification Centre Panel
+# Design Review: NotificationPanel.tsx
 
-**Reviewed:** `components/NotificationPanel.tsx`, `components/NotificationItem.tsx`, `components/NotificationFilter.tsx`, `components/BulkActions.tsx`
-**Design system:** `tailwind.config.ts` + `components/ui/` primitives
+**Reviewed:** `src/components/NotificationPanel.tsx` (128 lines)
+**Design system:** Tailwind 4x with custom brand colors, surface tokens
 
 ---
 
 ## Blockers (must fix before merge)
 
-### Missing Focus state on notification rows
-- **File:** `components/NotificationItem.tsx:34`
-- **Issue:** Notification rows are clickable (`onClick`) but have no `focus-visible:` class. Keyboard users tabbing through the panel see no visible focus indicator, violating WCAG 2.4.7 (Focus Visible, AA).
-- **Fix:** Add `focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-none` to the row wrapper.
+### Missing Focus Indicators on All Interactive Elements
+- **File:** `NotificationPanel.tsx:47–91`
+- **Issue:** All buttons (close, filter, delete, mark-all-read) lack `focus:` or `focus-visible:` classes. This breaks keyboard navigation visibility for all users and fails WCAG 2.4.7 (Focus Visible).
+- **Fix:** Add `focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600` to all `<button>` elements. Example:
+  ```tsx
+  className="... hover:text-gray-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600 p-1 rounded"
+  ```
 
-### Read/unread distinction relies on colour alone
-- **File:** `components/NotificationItem.tsx:52`
-- **Issue:** Unread notifications are distinguished only by a blue dot and a lighter background. No typographic weight difference or icon exists to communicate the state without colour, violating WCAG 1.4.1 (Use of Color, A).
-- **Fix:** Add `font-semibold` to the notification title for unread items, or add a textual `sr-only` label ("Unread") alongside the blue dot.
+### Close Button is Icon-Only Without Accessible Label
+- **File:** `NotificationPanel.tsx:47–52`
+- **Issue:** The `✕` button has no `aria-label`. Screen readers cannot announce its purpose. WCAG 1.3.1 violation.
+- **Fix:** Add `aria-label="Close notifications"` to the close button:
+  ```tsx
+  <button
+    onClick={onClose}
+    aria-label="Close notifications"
+    className="..."
+  >
+    ✕
+  </button>
+  ```
 
-### Loading state missing on panel mount
-- **File:** `components/NotificationPanel.tsx:18`
-- **Issue:** `useSWR('/api/notifications')` is called with no skeleton or spinner while `isLoading` is true. The panel renders an empty container until data arrives — no visual feedback, no accessible `aria-busy` attribute.
-- **Fix:** Check `isLoading` before rendering list. Show `<NotificationSkeleton />` with `aria-busy="true"` on the container.
+### Notification Rows Are Clickable Divs, Not Keyboard Accessible
+- **File:** `NotificationPanel.tsx:98–124`
+- **Issue:** Notification items use `<div>` with `onClick`, making them unreachable via keyboard. Not semantic. WCAG 2.1.1 violation (keyboard access).
+- **Fix:** Convert to `<button>` or add `role="button"`, `tabIndex={0}`, and keyboard handler (`onKeyDown` for Enter/Space):
+  ```tsx
+  <button
+    key={notification.id}
+    onClick={() => onMarkRead(notification.id)}
+    className={`flex items-start gap-3 px-4 py-3 hover:bg-gray-50 text-left ${
+      !notification.read ? 'bg-blue-50' : 'bg-white'
+    }`}
+  >
+    {/* content */}
+  </button>
+  ```
 
-### Error state missing
-- **File:** `components/NotificationPanel.tsx:22`
-- **Issue:** `isError` from `useSWR` is not handled. If the fetch fails, the panel is silent — no error message, no retry action.
-- **Fix:** Add an error state with a short message ("Couldn't load notifications") and a Retry button that calls `mutate()`.
+### Hardcoded Colours in Inline Styles (Two Instances)
+- **File:** `NotificationPanel.tsx:56, 113`
+- **Issue:** Two hardcoded hex values in `style=` attributes break the design system, prevent dark mode, and create maintenance debt:
+  - Line 56: `style={{ borderBottom: '1px solid #e5e7eb' }}` — should use Tailwind class
+  - Line 113: `style={{ backgroundColor: '#6366f1' }}` — should use brand color token
+- **Fix:**
+  - Line 56: Replace with `border-b border-gray-200`
+  - Line 113: Use `className="bg-brand-500"` or create a dedicated `.read-indicator` class
 
-### Icon-only bulk-action buttons have no accessible label
-- **File:** `components/BulkActions.tsx:41`
-- **Issue:** "Mark all read" and "Delete selected" are rendered as icon-only `<Button>` elements with no `aria-label` or `sr-only` text. Screen readers announce nothing useful.
-- **Fix:** Add `aria-label="Mark all notifications as read"` and `aria-label="Delete selected notifications"`, or wrap the icon with `<span className="sr-only">` label text.
+### Missing Semantic Labeling for Filter Buttons
+- **File:** `NotificationPanel.tsx:57–76`
+- **Issue:** Filter buttons don't indicate which is active to screen readers. Users cannot tell if they're viewing "All" or "Unread" without visual inspection.
+- **Fix:** Add `aria-current="page"` to the active filter button:
+  ```tsx
+  <button
+    onClick={() => setFilter('all')}
+    aria-current={filter === 'all' ? 'page' : undefined}
+    className={...}
+  >
+    All
+  </button>
+  ```
 
-### Hardcoded hex in notification dot
-- **File:** `components/NotificationItem.tsx:61`
-- **Issue:** `style={{ backgroundColor: '#3B82F6' }}` — hardcoded blue. This will not update with theme changes or dark mode.
-- **Fix:** Replace with `bg-brand-500` (or whichever token maps to this blue in `tailwind.config.ts`).
+### Fixed Width Panel Breaks on Mobile
+- **File:** `NotificationPanel.tsx:43`
+- **Issue:** `w-96` (384px) is too wide for phones. The panel will overflow or clip. Not responsive.
+- **Fix:** Use responsive width: `w-full sm:w-96` and ensure mobile padding is applied when full-width.
+
+### Checkboxes Lack Labels or ARIA
+- **File:** `NotificationPanel.tsx:105–110`
+- **Issue:** Checkboxes have no associated label or `aria-label`. Screen readers cannot announce their state. There's no text explaining what selecting a checkbox does.
+- **Fix:** Add `aria-label` and consider grouping checkboxes with a selection description:
+  ```tsx
+  <input
+    type="checkbox"
+    checked={selected.has(notification.id)}
+    onChange={e => { e.stopPropagation(); toggleSelect(notification.id); }}
+    aria-label={`Select notification: ${notification.title}`}
+    className="mt-1 flex-shrink-0"
+  />
+  ```
 
 ---
 
 ## Suggestions (should fix, not blocking)
 
-### Active (Disabled) state not designed for bulk-action buttons
-- **File:** `components/BulkActions.tsx:38`
-- **Issue:** When no notifications are selected, bulk-action buttons are hidden entirely rather than shown as disabled. This removes the affordance — users don't know the actions exist until they select something.
-- **Fix:** Keep buttons visible with `disabled` attribute and `disabled:opacity-50 cursor-not-allowed` styling.
+### Use `clsx` for Conditional Classes
+- **File:** `NotificationPanel.tsx:59–63, 69–73, 101–103, 117`
+- **Issue:** Ternary operators inline with string concatenation produce hard-to-read class strings and don't handle falsy values cleanly. Tailwind class purging can also struggle.
+- **Fix:** Install `clsx` and refactor:
+  ```tsx
+  import clsx from 'clsx';
+  
+  className={clsx(
+    'px-3 py-1.5 rounded-full text-sm font-medium',
+    filter === 'all'
+      ? 'bg-indigo-600 text-white'
+      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+  )}
+  ```
 
-### Filter bar has no empty-filtered-state
-- **File:** `components/NotificationFilter.tsx`
-- **Issue:** When a filter is active and no notifications match, the panel shows the loading skeleton (from `isLoading` being briefly true on re-fetch). No dedicated empty-filtered-state message is shown.
-- **Fix:** After data resolves with an active filter and zero results, render "No [type] notifications" with a "Clear filter" link.
+### Add Dark Mode Support
+- **File:** `NotificationPanel.tsx` (entire component)
+- **Issue:** No `dark:` variants present. The component is unusable in dark mode — white background stays white, text becomes invisible.
+- **Fix:** Add dark mode classes:
+  ```tsx
+  <div className="... dark:bg-slate-900">
+    <div className="... dark:border-gray-700">
+    <h2 className="... dark:text-gray-100">
+    {/* etc. */}
+  </div>
+  ```
 
-### Fixed width on slide-out panel overflows on small viewports
-- **File:** `components/NotificationPanel.tsx:8`
-- **Issue:** Panel has `w-[420px]` — a fixed pixel width. On viewports narrower than 420px the panel overflows horizontally.
-- **Fix:** Replace with `w-full sm:w-[420px]` or `max-w-[420px] w-full`.
+### Colour Contrast on Secondary Text
+- **File:** `NotificationPanel.tsx:121`
+- **Issue:** `text-gray-400` on white (or `dark:bg-slate-900` on unread items) may not meet 4.5:1 contrast for normal text. Reads as 3.6:1.
+- **Fix:** Use `text-gray-500` for better contrast (4.6:1), or ensure timestamp text is truly supplementary and use `aria-label` to convey critical info.
 
-### Notification rows use raw `<button>` instead of Button primitive
-- **File:** `components/NotificationItem.tsx:30`
-- **Issue:** Each row is a raw `<button>` element styled manually, bypassing the shared `<Button>` component and its built-in state classes and accessible defaults.
-- **Fix:** Refactor to `<Button variant="ghost" asChild>` wrapping the row content, or extract a `<NotificationRow>` that composes the design system primitive.
+### Missing Empty State
+- **File:** `NotificationPanel.tsx:96–125`
+- **Issue:** If `filtered.length === 0`, users see a blank empty scroll area with no guidance. Unclear if notifications are loading, disabled, or just absent.
+- **Fix:** Add:
+  ```tsx
+  {filtered.length === 0 ? (
+    <div className="flex items-center justify-center h-32 text-gray-400">
+      <p className="text-sm">No notifications yet</p>
+    </div>
+  ) : (
+    filtered.map(/* ... */)
+  )}
+  ```
+
+### Unread Indicator Lacks Semantic Meaning
+- **File:** `NotificationPanel.tsx:111–114`
+- **Issue:** A blue dot `•` appears next to unread messages but is never announced. Users with colour blindness cannot distinguish it from read state. Not WCAG 1.4.1 compliant (state is colour-only).
+- **Fix:** Combine with text or icon:
+  ```tsx
+  {!notification.read && (
+    <>
+      <div className="w-2 h-2 rounded-full bg-brand-500 flex-shrink-0" />
+      <span className="sr-only">unread</span>
+    </>
+  )}
+  ```
 
 ---
 
 ## Nits (minor, fix if touching this code)
 
-### Conditional className uses template literals instead of `cn()`
-- **File:** `components/NotificationItem.tsx:35`
-- **Issue:** `className={\`notification-row ${isUnread ? 'bg-blue-50' : ''}\`}` — template literal with a potentially empty string.
-- **Fix:** Use `cn('notification-row', isUnread && 'bg-blue-50')` for cleaner output.
+### Close Button Icon Could Be More Accessible
+- **File:** `NotificationPanel.tsx:50`
+- **Issue:** A literal `✕` character is fine, but an SVG or dedicated icon component would be more scalable and allow for hover effects.
+- **Fix:** Consider using an `X` icon from a component library or SVG with `aria-hidden="true"` to avoid redundancy with the aria-label.
 
-### Active press feedback missing on rows
-- **File:** `components/NotificationItem.tsx:34`
-- **Issue:** No `active:` class on notification rows. Minor UX gap — press feedback helps confirm the tap on mobile.
-- **Fix:** Add `active:bg-gray-100`.
+### Filter Buttons Could Accept a `disabled` State
+- **File:** `NotificationPanel.tsx:57–76`
+- **Issue:** No way to disable filters (e.g., if "Unread" has no items). Button still appears clickable.
+- **Fix:** Add optional `disabled` prop and `disabled:` Tailwind classes for visual feedback.
+
+### Type Union for Filter Could Be More Extensible
+- **File:** `NotificationPanel.tsx:27`
+- **Issue:** `'all' | 'unread'` is a string literal union. If more filters are added later (e.g., by type), this will require refactoring multiple places.
+- **Fix:** Consider an enum or const assertion for reusability:
+  ```tsx
+  const FILTER_OPTIONS = ['all', 'unread'] as const;
+  type FilterType = (typeof FILTER_OPTIONS)[number];
+  ```
+
+### Component Does Not Accept `className` Prop
+- **File:** `NotificationPanel.tsx:20–26`
+- **Issue:** Cannot customize the panel's styling from parent (e.g., different positioning, animation). Breaks composition patterns.
+- **Fix:** Add optional `className` prop and merge with base classes using clsx.
 
 ---
 
 ## Summary
+- **Blockers:** 7
+- **Suggestions:** 6
+- **Nits:** 4
+- **Verdict:** **Request changes**
 
-| Dimension | Finding |
+The component has critical accessibility deficits (missing focus indicators, keyboard navigation, ARIA labels) and hardcoded design system violations (inline hex values). These must be fixed before merge. Once blockers are addressed, the suggestions (clsx, dark mode, empty state) are highly recommended but can be tracked as follow-up work.
+
+**Priority order for fixes:**
+1. Add focus indicators to all buttons
+2. Add `aria-label` to close button
+3. Convert notification rows to `<button>`
+4. Remove hardcoded colours; use Tailwind classes
+5. Add `aria-current` to active filter button
+6. Make panel responsive on mobile
+7. Add `aria-label` to checkboxes
+
+### Artifacts written
+
+#### `work/tailwind.config.js`
+
+```
+module.exports = {
+  content: ['./src/**/*.{tsx,ts}'],
+  theme: {
+    extend: {
+      colors: {
+        brand: {
+          50: '#eef2ff',
+          100: '#e0e7ff',
+          200: '#c7d2fe',
+          500: '#6366f1',
+          600: '#4f46e5',
+          700: '#4338ca',
+        },
+        surface: {
+          DEFAULT: '#ffffff',
+          subtle: '#f8fafc',
+          muted: '#f1f5f9',
+        },
+      },
+      spacing: {
+        // 4px base grid — approved values: 1,2,3,4,5,6,8,10,12,16,20,24
+      },
+    },
+  },
+};
+
+```
+
+#### `work/src/components/NotificationPanel.tsx`
+
+```
+import React, { useState } from 'react';
+
+interface Notification {
+  id: string;
+  title: string;
+  body: string;
+  timestamp: string;
+  read: boolean;
+  type: 'mention' | 'system' | 'billing';
+}
+
+interface NotificationPanelProps {
+  notifications: Notification[];
+  onClose: () => void;
+  onMarkAllRead: () => void;
+  onMarkRead: (id: string) => void;
+  onBulkDelete: (ids: string[]) => void;
+}
+
+export function NotificationPanel({
+  notifications,
+  onClose,
+  onMarkAllRead,
+  onMarkRead,
+  onBulkDelete,
+}: NotificationPanelProps) {
+  const [filter, setFilter] = useState<'all' | 'unread'>('all');
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+
+  const filtered = filter === 'unread'
+    ? notifications.filter(n => !n.read)
+    : notifications;
+
+  const toggleSelect = (id: string) => {
+    setSelected(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  };
+
+  return (
+    <div className="fixed right-0 top-0 h-full w-96 bg-white shadow-xl z-50 flex flex-col">
+      {/* Header */}
+      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200">
+        <h2 className="text-base font-semibold text-gray-900">Notifications</h2>
+        <button
+          onClick={onClose}
+          className="text-gray-400 hover:text-gray-600 p-1 rounded"
+        >
+          ✕
+        </button>
+      </div>
+
+      {/* Filter bar */}
+      <div className="flex items-center gap-2 px-4 py-2" style={{ borderBottom: '1px solid #e5e7eb' }}>
+        <button
+          onClick={() => setFilter('all')}
+          className={`px-3 py-1.5 rounded-full text-sm font-medium ${
+            filter === 'all'
+              ? 'bg-indigo-600 text-white'
+              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+          }`}
+        >
+          All
+        </button>
+        <button
+          onClick={() => setFilter('unread')}
+          className={`px-3 py-1.5 rounded-full text-sm font-medium ${
+            filter === 'unread'
+              ? 'bg-indigo-600 text-white'
+              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+          }`}
+        >
+          Unread
+        </button>
+        <div className="ml-auto flex items-center gap-2">
+          {selected.size > 0 && (
+            <button
+              onClick={() => { onBulkDelete(Array.from(selected)); setSelected(new Set()); }}
+              className="text-sm text-red-600 hover:text-red-800"
+            >
+              Delete ({selected.size})
+            </button>
+          )}
+          <button
+            onClick={onMarkAllRead}
+            className="text-sm text-indigo-600 hover:text-indigo-800"
+          >
+            Mark all read
+          </button>
+        </div>
+      </div>
+
+      {/* Notification list */}
+      <div className="flex-1 overflow-y-auto divide-y divide-gray-100">
+        {filtered.map(notification => (
+          <div
+            key={notification.id}
+            onClick={() => onMarkRead(notification.id)}
+            className={`flex items-start gap-3 px-4 py-3 cursor-pointer hover:bg-gray-50 ${
+              !notification.read ? 'bg-blue-50' : 'bg-white'
+            }`}
+          >
+            <input
+              type="checkbox"
+              checked={selected.has(notification.id)}
+              onChange={e => { e.stopPropagation(); toggleSelect(notification.id); }}
+              className="mt-1 flex-shrink-0"
+            />
+            <div className="flex-shrink-0 mt-2">
+              {!notification.read && (
+                <div className="w-2 h-2 rounded-full" style={{ backgroundColor: '#6366f1' }} />
+              )}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className={`text-sm ${!notification.read ? 'font-semibold text-gray-900' : 'font-normal text-gray-500'}`}>
+                {notification.title}
+              </p>
+              <p className="text-sm text-gray-500 mt-0.5 line-clamp-2">{notification.body}</p>
+              <p className="text-xs text-gray-400 mt-1">{notification.timestamp}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+```
+
+## Evaluation
+
+| Field | Value |
 |---|---|
-| Design system consistency | Hardcoded hex on notification dot — 1 Blocker |
-| Component patterns | Raw `<button>` bypassing primitive — 1 Suggestion, template literal — 1 Nit |
-| State coverage | Loading missing, Error missing, Disabled (bulk) not designed — 2 Blockers, 1 Suggestion |
-| Accessibility | Focus state missing, colour-only read/unread, unlabelled icon buttons — 3 Blockers |
-| Responsive behaviour | Fixed `w-[420px]` overflow on mobile — 1 Suggestion |
-| Code quality / handoff | `aria-busy` missing, redlines appear complete in Figma but spacing tokens not annotated for `NotificationItem` padding |
+| Verdict | PARTIAL |
+| Score | 9.5/14.5 (66%) |
+| Evaluated | 2026-05-02 |
+| Target duration | 56652 ms |
+| Target cost | $0.1031 |
+| Permission denials | 0 |
 
-- **Blockers:** 6
-- **Suggestions:** 4
-- **Nits:** 2
-- **Verdict:** Request changes — address all 6 blockers before merge. Suggestions recommended before ship; nits optional.
+### Criteria
 
----
+| # | Criterion | Result | Evidence |
+|---|---|---|---|
+| c1 | Skill reviews across all 6 dimensions: design system consistency, component patterns, state coverage, accessibility, responsive behaviour, and code handoff quality | PASS | Design system: hardcoded hex values (lines 56, 113). Component patterns: clsx suggestion, className prop missing. State coverage: empty state. Accessibility: 5+ WCAG blockers. Responsive: fixed w-96 on mobile. Code handoff: type union, composability nits. All 6 touched, though not explicitly labelled by dimension. |
+| c2 | Skill requires checking all 8 component states are designed — missing states are a reviewable defect, not a follow-up item | FAIL | Only the Empty state is mentioned ('Missing Empty State' in Suggestions). Loading, Error, Active, Disabled, Default, and Hover states are entirely absent from the review. The Empty state is placed in Suggestions rather than as a blocking defect. No systematic 8-state checklist is present. |
+| c3 | Skill requires accessibility to be reviewed as a constraint — WCAG failures are blocking issues, not suggestions | PARTIAL | Most WCAG failures are correctly placed in 'Blockers (must fix before merge)' — focus indicators (WCAG 2.4.7), aria-label on close (WCAG 1.3.1), keyboard access (WCAG 2.1.1). However, 'Unread Indicator Lacks Semantic Meaning' (explicitly cited as WCAG 1.4.1) and 'Colour Contrast on Secondary Text' (potential WCAG AA failure) are placed in Suggestions rather than Blockers, inconsistent with the constraint requirement. |
+| c4 | Skill produces findings with severity classifications (e.g. Critical/Major/Minor, Blocking/Non-blocking, or Blockers/Suggestions/Nits) — not a flat list of comments | PASS | Output is explicitly structured into three severity tiers: 'Blockers (must fix before merge)', 'Suggestions (should fix, not blocking)', and 'Nits (minor, fix if touching this code)'. Summary counts each: 7 blockers, 6 suggestions, 4 nits. |
+| c5 | Skill checks for design system consistency — components that deviate without justification are flagged | PASS | 'Hardcoded Colours in Inline Styles (Two Instances)' is a Blocker: line 56 uses `style={{ borderBottom: '1px solid #e5e7eb' }}` and line 113 uses `style={{ backgroundColor: '#6366f1' }}` — both flagged as breaking design system tokens. Fix correctly references brand color tokens. |
+| c6 | Skill reviews responsive behaviour across breakpoints — partial credit if responsiveness is listed as a dimension but specific breakpoints are not required to be checked | PARTIAL | 'Fixed Width Panel Breaks on Mobile' is a Blocker at NotificationPanel.tsx:43, identifying `w-96` (384px) overflow on phones and suggesting `w-full sm:w-96`. One specific breakpoint (sm:) is addressed. No comprehensive multi-breakpoint audit performed. |
+| c7 | Skill produces a prioritised list of required changes before approval, not just observations | PASS | Output ends with 'Priority order for fixes' numbered 1–7 covering all blockers in order. Verdict is 'Request changes' — approval is explicitly conditional on blockers being addressed. The Blockers section is clearly labelled 'must fix before merge'. |
+| c8 | Skill has a valid YAML frontmatter with name, description, and argument-hint fields | FAIL | Neither the captured chat output nor the written artifacts (tailwind.config.js, NotificationPanel.tsx) contain any YAML frontmatter with name, description, or argument-hint fields. The skill definition file itself is not surfaced in the output or artifacts. |
+| c9 | Output reviews the slide-out notification panel across all 6 dimensions explicitly — design system consistency, component patterns, state coverage, accessibility, responsive behaviour, code handoff quality — with at least one finding or "no issues" per dimension | PARTIAL | Dimensions are covered implicitly but not explicitly labelled. State coverage only finds the Empty state — Loading, Error, Hover, Active, Disabled, Focus-as-state are absent. Code handoff quality appears only in Nits (type union, className prop) without framing it as a handoff-quality dimension. No 'no issues' statements for clean dimensions. |
+| c10 | Output verifies all 8 component states are designed for the panel and notification items — Default, Hover (on a notification row), Focus (keyboard focus), Active (clicking), Disabled, Loading (notifications fetching), Error (fetch failed), Empty (no notifications) — flagging any missing state as a blocking/major finding | FAIL | Only the Empty state is addressed ('Missing Empty State' in Suggestions). Loading and Error states are completely absent. Focus is addressed only as an accessibility concern (missing ring), not as a designed interaction state. Active, Disabled, Default, and Hover states are unverified. Empty state is a Suggestion, not a blocking finding. |
+| c11 | Output reviews the read/unread state contrast — unread notifications must be distinguishable from read ones with sufficient contrast (not just colour, also typography weight or icon), per WCAG 1.4.1 (not relying on colour alone) | PASS | 'Unread Indicator Lacks Semantic Meaning' explicitly cites WCAG 1.4.1: 'Users with colour blindness cannot distinguish it from read state. Not WCAG 1.4.1 compliant (state is colour-only).' Fix suggests `<span className="sr-only">unread</span>` — non-colour mechanism. The existing `font-semibold` / `font-normal` differentiation in the code is implicitly part of the analysis context. |
+| c12 | Output reviews the filtering interaction — partial credit if live regions or screen reader announcement mechanisms are covered generally; full credit if the active filter visibility and empty filtered states are addressed specifically | PARTIAL | Active filter visibility is specifically addressed: 'Missing Semantic Labeling for Filter Buttons' (Blocker) suggests `aria-current={filter === 'all' ? 'page' : undefined}`. Empty filtered state is addressed in 'Missing Empty State' (Suggestion). Live region announcements on filter change are not mentioned. |
+| c13 | Output's findings each have a severity classification (Critical / Major / Minor, Blocking / Non-blocking, or Blockers / Suggestions / Nits) — top tier includes WCAG failures and broken state coverage; bottom tier includes spacing or visual nits | PARTIAL | Three-tier classification exists and is used throughout. However, WCAG 1.4.1 violation ('Unread Indicator Lacks Semantic Meaning') and a contrast issue are in Suggestions rather than Blockers. Broken state coverage (Empty) is also in Suggestions. The top tier doesn't consistently capture all WCAG failures as required. |
+| c14 | Output flags any deviation from the design system — components that look custom but aren't documented as new primitives, colour values not in the token system, spacing not on the grid | PARTIAL | Inline hex values `#e5e7eb` and `#6366f1` are correctly flagged as Blockers. However, `bg-indigo-600` used in filter buttons is not flagged — the design system defines `brand-600: '#4f46e5'` (not Tailwind's `indigo-600`). `bg-blue-50` for unread background and spacing values against the 4px grid are not checked. |
+| c15 | Output's required-changes list is prioritised — Critical findings (WCAG or broken state) listed first as blockers, Major (UX issue or system inconsistency) next, Minor (polish) last — and approval is conditional on Critical+Major being addressed | PASS | Blockers section lists 7 items including all WCAG failures first. Verdict states 'Request changes' and summary says 'These must be fixed before merge.' Priority order for fixes 1–7 is explicitly listed. Suggestions can be tracked as 'follow-up work.' Approval is clearly conditional. |
+| c16 | Output addresses code handoff quality — does the design include redlines / specs that engineers can implement without ambiguity, or are spacing values implied rather than measured | PARTIAL | The Nits section raises 'Component Does Not Accept `className` Prop' (composability/handoff concern) and 'Type Union for Filter Could Be More Extensible' (implementation clarity). However, there is no review of whether design redlines exist, whether spacing values are measured vs implied, or whether the design-to-code specification is unambiguous. |
 
-## Criteria results
+### Notes
 
-### Criteria (skill definition)
-
-- [x] PASS: Skill reviews across all 6 dimensions: design system consistency, component patterns, state coverage, accessibility, responsive behaviour, and code handoff quality — all six named dimensions present in the SKILL.md
-- [x] PASS: Skill requires checking all 8 component states — Dimension 3 explicitly lists Default, Hover, Focus, Active, Disabled, Loading, Error, Empty and routes missing states to Blockers
-- [x] PASS: Skill requires accessibility to be reviewed as a constraint — Dimension 4 opens with "WCAG failures are blocking issues, not suggestions" as an explicit policy statement
-- [x] PASS: Skill produces findings with severity classifications — three-tier output format: Blockers / Suggestions / Nits
-- [x] PASS: Skill checks for design system consistency — Dimension 1 covers colour tokens, type scale, spacing scale, and border radius with grep checks flagging deviations
-- [~] PARTIAL: Skill reviews responsive behaviour across breakpoints — Dimension 5 references Tailwind breakpoint prefixes (sm/md/lg/xl) and common responsive issues, but does not require specific named breakpoints to be checked as mandatory; partial credit per criterion
-- [x] PASS: Skill produces a prioritised list of required changes before approval — Blockers section is listed first in the output format and the Verdict is gated on blockers being resolved
-- [x] PASS: Skill has valid YAML frontmatter with name, description, and argument-hint fields — all three fields present
-
-### Output expectations (simulated output)
-
-- [x] PASS: Output reviews the slide-out notification panel across all 6 dimensions explicitly — Summary table covers design system consistency, component patterns, state coverage, accessibility, responsive behaviour, and code handoff quality with at least one finding per dimension
-- [x] PASS: Output verifies all 8 component states for the panel and notification items — Loading (Blocker), Error (Blocker), Empty-filtered (Suggestion), Focus (Blocker), Active (Nit), Disabled (Suggestion), Default and Hover covered; missing states flagged as Blockers
-- [x] PASS: Output reviews read/unread contrast per WCAG 1.4.1 — the read/unread colour-only distinction is a named Blocker with a specific fix referencing WCAG 1.4.1
-- [~] PARTIAL: Output reviews the filtering interaction including live regions and empty filtered states — empty filtered state is covered (Suggestion); live region/screen reader announcement for filter changes is not addressed explicitly; partial credit
-- [x] PASS: Output findings each have a severity classification — every finding appears under Blockers, Suggestions, or Nits; top tier holds WCAG failures and broken state coverage as required
-- [x] PASS: Output flags any deviation from the design system — hardcoded hex colour on notification dot is a named Blocker; raw `<button>` bypassing the primitive is a named Suggestion
-- [x] PASS: Output's required-changes list is prioritised — Blockers listed first, Suggestions next, Nits last, approval conditional on all Blockers being addressed
-- [~] PARTIAL: Output addresses code handoff quality — Dimension 6 is labelled "Code Quality" and covers TypeScript types, props API, component structure, and performance; the simulated output notes a token-annotation gap in Figma handoff but the skill definition frames this dimension around code quality rather than design-file handoff readiness; partial credit
-
-## Notes
-
-The skill is oriented toward reviewing code against a design system, not reviewing Figma files for design-handoff readiness. The last output criterion asks about redlines and implied spacing from a design perspective — Dimension 6 covers code implementation quality rather than whether the Figma file has accurate annotations. That scope mismatch accounts for the partial. Everything else is well-grounded: WCAG 1.4.1 is called out explicitly in the skill definition, the eight-state requirement is clear with missing states routed to Blockers by policy, and the three-tier severity system is consistently applied throughout the simulated output.
+The output demonstrates a strong accessibility review and solid severity classification (Blockers/Suggestions/Nits) but has two critical gaps: (1) state coverage — only the Empty state is identified, with Loading, Error, Active, Disabled, and explicit Hover/Focus interaction states entirely absent, and none flagged as blocking defects; (2) the skill definition's YAML frontmatter (name, description, argument-hint) is not evidenced in any artifact. The design system consistency check catches inline hex violations but misses Tailwind token mismatches (bg-indigo-600 vs bg-brand-600). Several WCAG failures (unread indicator 1.4.1, colour contrast) are misclassified as Suggestions rather than Blockers, undermining the stated principle that accessibility is a constraint. The code handoff quality dimension is implicitly present in the Nits but never framed as a handoff review. Overall, the review is useful and well-structured but incomplete against the full rubric dimensions.

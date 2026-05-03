@@ -188,10 +188,41 @@ def env_for_run(workspace: Path, extra: dict[str, str], isolate_config: bool) ->
     return env
 
 
+def _resolve_plugin_dirs(cfg: RunConfig, test: TestCase) -> list[Path]:
+    """Return the list of --plugin-dir paths to pass to claude.
+
+    When cfg.plugin_dir is a root directory (no plugin.json), try to derive
+    the specific plugin directory from the test path:
+      examples/<category>/<plugin>/... -> cfg.plugin_dir/<category>/<plugin>
+
+    Keeps the root as a fallback so marketplace.json / settings-based plugins
+    still apply alongside the derived specific plugin.
+    """
+    plugin_json = cfg.plugin_dir / ".claude-plugin" / "plugin.json"
+    if plugin_json.exists():
+        return [cfg.plugin_dir]
+
+    # Root-style path: try to find the specific plugin from test path
+    parts = test.test_dir.parts
+    for i, part in enumerate(parts):
+        if part == "examples" and i + 2 < len(parts):
+            candidate = cfg.plugin_dir / parts[i + 1] / parts[i + 2]
+            if (candidate / ".claude-plugin" / "plugin.json").exists():
+                return [cfg.plugin_dir, candidate]
+            break
+
+    return [cfg.plugin_dir]
+
+
 def run_target(cfg: RunConfig, test: TestCase, workspace: Path) -> TargetRun:
+    plugin_dirs = _resolve_plugin_dirs(cfg, test)
+    plugin_dir_args: list[str] = []
+    for pd in plugin_dirs:
+        plugin_dir_args += ["--plugin-dir", str(pd)]
+
     cmd = [
         "claude", "-p",
-        "--plugin-dir", str(cfg.plugin_dir),
+        *plugin_dir_args,
         "--output-format", "json",
         "--dangerously-skip-permissions",
         "--add-dir", str(workspace / "handoff"),
@@ -316,7 +347,6 @@ def run_judge(cfg: RunConfig, test: TestCase, target: TargetRun, workspace: Path
         "--append-system-prompt", judge_system,
         "--output-format", "json",
         "--model", cfg.judge_model,
-        user_msg,
     ]
     judge_workspace = workspace / "judge"
     judge_workspace.mkdir(exist_ok=True)
@@ -326,6 +356,7 @@ def run_judge(cfg: RunConfig, test: TestCase, target: TargetRun, workspace: Path
 
     proc = subprocess.run(
         cmd, cwd=judge_workspace, env=judge_env,
+        input=user_msg,
         capture_output=True, text=True, timeout=cfg.timeout_sec,
     )
     if proc.returncode != 0:

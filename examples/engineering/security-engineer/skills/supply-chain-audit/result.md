@@ -1,238 +1,153 @@
-# Result: supply-chain-audit skill structure
+# Supply Chain Audit
 
-| Field | Value |
-|---|---|
-| **Verdict** | PASS |
-| **Score** | 15.5/16 criteria met (97%) |
-| **Evaluated** | 2026-04-30 |
+Scenario: Checking that the supply-chain-audit skill assesses all four supply chain layers (source, build, dependency, artifact), maps findings to SLSA levels, and requires specific evidence rather than generic checklist completion.
+
+## Prompt
+
+> Review the supply-chain-audit skill definition and verify it produces a SLSA-aligned assessment with specific findings that can drive a hardening roadmap.
 
 ## Output
 
-The following simulates the output a developer receives when this skill runs against a real Node.js/GitHub Actions repository (`acme-corp/payments-service`).
+Captured from a real headless invocation of the skill/agent.
+
+### Chat response
+
+Here is the assessment:
 
 ---
 
-# Supply Chain Security Audit: acme-corp/payments-service
+## Supply Chain Audit Skill Review
 
-**Date:** 2026-04-30
-**Auditor:** Claude (automated assessment)
-**SLSA Level Achieved:** 1
-
-## Executive Summary
-
-The payments-service repository has a basic build pipeline with committed lockfiles and CI-defined builds, placing it at SLSA Level 1. The primary blockers to Level 2 are the absence of build provenance generation and the use of mutable GitHub Actions tags (`@v3`, `@v4`) instead of pinned SHAs. Three HIGH findings require remediation before this service should be considered supply-chain hardened.
-
-## Assessment by Area
-
-### Source Integrity
-
-| Control | Status | Evidence |
-|---------|--------|----------|
-| Signed commits | FAIL | `git log --format="%H %G?" -10` shows `N` for all 10 recent commits. No `.gitsign` config found. |
-| Branch protection | PARTIAL | `.github/rulesets/main.json` exists but requires only 1 reviewer; force-push not explicitly disabled |
-| Code review requirement | PASS | `"required_approving_review_count": 1` found in `.github/rulesets/main.json` |
-| CODEOWNERS file | FAIL | `find . -name "CODEOWNERS" -type f` returned no results |
-| Force push disabled | FAIL | No `allow_force_pushes: false` found in branch protection config |
-| Commit signing policy | FAIL | No `commit.gpgSign` enforcement in CI or pre-commit hooks |
-
-**Evidence commands run:**
-
-```bash
-# Check for CODEOWNERS
-find . -name "CODEOWNERS" -type f
-# (no output)
-
-# Check for signed commits
-git log --format="%H %G?" -10
-# abc1234 N
-# def5678 N
-# (all unsigned)
-
-# Check branch protection config
-find . -path "*/.github/*" -name "*.yml" | head -20
-# .github/workflows/ci.yml
-# .github/workflows/release.yml
-```
-
-### Build Integrity
-
-| Control | Status | Evidence |
-|---------|--------|----------|
-| Build runs on hosted infrastructure | PASS | `runs-on: ubuntu-latest` throughout `.github/workflows/ci.yml`; no `self-hosted` runners found |
-| Build is defined in code | PASS | All pipeline config in `.github/workflows/` — no UI-only steps |
-| Build is hermetic | FAIL | No `--network=none` or hermetic build flags in any workflow |
-| Build is reproducible | PARTIAL | `package-lock.json` present but `npm install` used in CI — `npm ci` would be stricter |
-| Build provenance generated | FAIL | No `slsa`, `provenance`, `attest`, `sigstore`, or `cosign` references in any workflow |
-| Build logs retained | PASS | GitHub Actions default 90-day log retention applies; no override found |
-
-**Evidence commands run:**
-
-```bash
-# Check for self-hosted runners
-grep -r "self-hosted" .github/workflows/ --include="*.yml"
-# (no output — good)
-
-# Check for build provenance
-grep -r "slsa\|provenance\|attest\|sigstore\|cosign" .github/workflows/ --include="*.yml"
-# (no output — build provenance missing)
-
-# Check for hermetic build flags
-grep -r "network.*none\|--network=none\|hermetic" .github/workflows/ --include="*.yml"
-# (no output)
-```
-
-### Dependency Integrity
-
-| Control | Status | Evidence |
-|---------|--------|----------|
-| Lockfiles present and committed | PASS | `package-lock.json` found at root; not listed in `.gitignore` |
-| Lockfiles not gitignored | PASS | `grep -r "lock" .gitignore` — no lockfile entries |
-| Dependencies pinned to exact versions | FAIL | 14 `^`-prefixed ranges found in `package.json` (e.g. `"express": "^4.18.2"`) |
-| Dependency review on PRs | FAIL | No `.github/workflows/dependency-review.yml` and no `actions/dependency-review-action` reference |
-| Private registry configured | FAIL | No `.npmrc` found at root or in `.github/` |
-| Typosquat check | FAIL | No typosquat tooling referenced in any workflow |
-| Vulnerability scanning | PARTIAL | Dependabot config present for `github-actions` ecosystem only — not for `npm` |
-| License compliance | FAIL | No license-checker step in any workflow |
-
-**Evidence commands run:**
-
-```bash
-# Find lockfiles
-find . -maxdepth 3 \( -name "package-lock.json" -o -name "yarn.lock" -o -name "pnpm-lock.yaml" \) -type f
-# ./package-lock.json
-
-# Check for floating versions
-grep -E '"[~^*]' package.json | head -10
-# "express": "^4.18.2",
-# "zod": "^3.22.4",
-# ...
-
-# Check for dependency scanning in CI
-grep -r "dependabot\|renovate\|snyk\|npm audit\|pip-audit" .github/ --include="*.yml" -l 2>/dev/null
-# .github/dependabot.yml
-```
-
-### Artifact Integrity
-
-| Control | Status | Evidence |
-|---------|--------|----------|
-| Container images signed | FAIL | No `cosign`, `notation`, or `sigstore` in any workflow |
-| SBOMs generated | FAIL | No `sbom`, `spdx`, `cyclonedx`, `syft`, or `trivy --sbom` references found |
-| Deployment requires verified signature | FAIL | No admission controller (Kyverno, OPA Gatekeeper) config found |
-| Artifact in trusted registry | PASS | `release.yml` pushes to `ghcr.io/acme-corp/payments-service` |
-| Image tags are immutable | FAIL | `docker push acme-corp/payments-service:latest` in release workflow — mutable tag |
-| Attestation published | FAIL | No in-toto or SLSA attestation generation found |
-
-**Evidence commands run:**
-
-```bash
-# Check for image signing
-grep -r "cosign\|notation\|sigstore" .github/workflows/ --include="*.yml" 2>/dev/null
-# (no output)
-
-# Check for SBOM generation
-grep -r "sbom\|spdx\|cyclonedx\|syft\|trivy.*sbom" .github/workflows/ --include="*.yml" 2>/dev/null
-# (no output)
-
-# Check registry push config
-grep -r "docker push\|docker/build-push\|ecr\|gcr\|acr" .github/workflows/ --include="*.yml" 2>/dev/null
-# docker push acme-corp/payments-service:latest
-```
-
-## SLSA Level Assessment
-
-| Level | Status | Blocking Gaps |
-|-------|--------|---------------|
-| Level 1 | MET | Build defined in code, lockfile present |
-| Level 2 | NOT MET | Build provenance not generated; CI actions use mutable tags, not SHAs |
-| Level 3 | NOT MET | Build not hermetic; provenance non-falsifiability not established; build environment not isolated |
-| Level 4 | NOT MET | No reproducible builds verified; no two-party review enforced in branch protection |
-
-**Current level: 1** — the highest level where ALL requirements are met.
-
-## Findings
-
-### SC-001: CI/CD actions pinned to mutable tags, not SHAs
-
-- **Severity:** HIGH
-- **Category:** Build
-- **Current state:** `.github/workflows/ci.yml` uses `actions/checkout@v4`, `actions/setup-node@v4`, `docker/build-push-action@v5` — all mutable tags. Tags can be moved by a malicious actor without changing the workflow reference.
-- **Risk:** An attacker who compromises an upstream action org can redirect a mutable tag to malicious code silently (as demonstrated in the tj-actions/changed-files incident, March 2025).
-- **Recommendation:** Pin every action to its full 40-character commit SHA. Example: `actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11` not `actions/checkout@v4`. Use [pin-github-action](https://github.com/mheap/pin-github-action) to automate initial pinning. Reference the [GitHub Actions security hardening guide](https://docs.github.com/en/actions/security-for-github-actions/security-guides/security-hardening-for-github-actions).
-- **Effort:** S
-- **SLSA impact:** Blocks Level 2
-
-### SC-002: No build provenance generated
-
-- **Severity:** HIGH
-- **Category:** Build
-- **Current state:** No SLSA provenance, in-toto attestation, or Sigstore signing step found in `.github/workflows/ci.yml` or `.github/workflows/release.yml`.
-- **Risk:** Without build provenance, there is no verifiable record of how or where an artifact was built. A compromised build environment could produce a tampered artifact with no audit trail.
-- **Recommendation:** Add `slsa-framework/slsa-github-generator` to the release workflow. For container images, add a `cosign attest` step post-push. See [Sigstore](https://www.sigstore.dev/) for keyless signing on GitHub Actions.
-- **Effort:** M
-- **SLSA impact:** Blocks Level 2
-
-### SC-003: No SBOM generated for release artifacts
-
-- **Severity:** HIGH
-- **Category:** Artifact
-- **Current state:** No Syft, Trivy SBOM, or CycloneDX generation found in any workflow.
-- **Risk:** Without an SBOM, the team cannot determine exposure to a newly disclosed vulnerability. Incident response time increases from hours to days.
-- **Recommendation:** Add [Syft](https://github.com/anchore/syft) to the release workflow: `syft packages . -o cyclonedx-json > sbom.json` and attach to the GitHub Release. For container images: `syft ghcr.io/acme-corp/payments-service:1.4.2 -o spdx-json > image-sbom.json`.
-- **Effort:** S
-- **SLSA impact:** Required for complete Level 2 artifact integrity posture
-
-### SC-004: npm vulnerability scanning absent from CI
-
-- **Severity:** HIGH
-- **Category:** Dependency
-- **Current state:** Dependabot configured for `github-actions` ecosystem only — not `npm`. No `npm audit`, Snyk, or `actions/dependency-review-action` found in any workflow file.
-- **Risk:** A newly published vulnerable version of a floating-range dependency (e.g. `"express": "^4.18.2"`) would not trigger an alert. The next `npm install` could silently install a vulnerable patch.
-- **Recommendation:** (1) Add `npm: "/"` to `.github/dependabot.yml`. (2) Add `actions/dependency-review-action` to the PR workflow. (3) Replace `npm install` with `npm ci` in CI.
-- **Effort:** S
-- **SLSA impact:** Closes dependency integrity gap
-
-## Remediation Roadmap
-
-| Priority | Finding | Effort | SLSA Impact |
-|----------|---------|--------|-------------|
-| 1 | SC-001: Pin CI actions to full SHAs | S | Blocks L2 |
-| 2 | SC-003: Add SBOM generation (Syft) | S | L2 artifact integrity |
-| 3 | SC-004: Enable npm vulnerability scanning | S | Dependency integrity |
-| 4 | SC-002: Generate SLSA build provenance | M | Blocks L2 |
+**File:** `/Users/martin/.claude/plugins/cache/turtlestack/security-engineer/1.7.6/skills/supply-chain-audit/SKILL.md`
 
 ---
 
-## Criteria
+### What works well
 
-- [x] PASS: Skill assesses source integrity controls — signed commits, branch protection, code review requirements, CODEOWNERS, and force push prevention — all six controls present as named rows in the Step 1 check table with verification method and severity rating
-- [x] PASS: Skill assesses build integrity — hosted vs self-hosted runners, build defined in code, build provenance generation, and log retention — all four covered as named rows in the Step 2 check table
-- [x] PASS: Skill assesses dependency integrity — lockfiles present and committed, no floating version ranges, dependency review on PRs, and vulnerability scanning in CI — all covered as named rows in the Step 3 check table
-- [x] PASS: Skill assesses artifact integrity — container image signing, SBOM generation, and immutable image tags — all three present in the Step 4 check table
-- [x] PASS: Skill maps evidence to SLSA levels 0-4 and determines the current level as the highest where ALL requirements are met — Step 5 defines the full 0-4 table and explicitly states "Current level — the highest level where ALL requirements are met"
-- [x] PASS: Skill provides specific bash commands to collect evidence — Steps 1-4 each contain a fenced bash Evidence Collection block with runnable commands
-- [x] PASS: Skill requires lockfiles to be present and committed, assigns automatic CRITICAL finding if absent — Rules section states "any project without committed lockfiles gets an automatic CRITICAL finding. No exceptions." Step 3 marks the lockfile check CRITICAL in the severity column
-- [x] PASS: Skill requires CI/CD actions to be pinned to full SHAs not tags, citing the GitHub Actions security hardening guide — Rules section states the requirement with a concrete 40-char SHA example and a direct hyperlink to the guide
+- Finding format is solid: ID, severity, evidence, risk, recommendation, effort, and SLSA impact — enough structure to translate directly to a backlog.
+- Rules section is unusually concrete: lockfile non-negotiable CRITICAL, SHA-pinning mandate, SBOM-per-release, and the "findings must cite specific evidence" rule guards against generic output.
+- Prioritisation logic (CRITICAL → SLSA-blocking → quick wins) produces an actionable roadmap order.
+- Step 3 dependency evidence commands are detailed and cover all major ecosystems.
 
-## Output expectations
+---
 
-- [x] PASS: Output is structured as a verification of the skill (verdict per requirement) rather than running an actual supply-chain audit
-- [x] PASS: Output verifies all four supply chain layers are covered — source, build, dependency, artifact — and that none can be skipped; each is a mandatory numbered step in the skill with no conditional branching
-- [x] PASS: Output confirms source-integrity controls with concrete bash commands — `git log --format="%H %G?" -10` for signed commits, `find . -name "CODEOWNERS"` for CODEOWNERS, grep for merge policy. Note: the exact `gh api repos/X/branches/main/protection` command from the expected criterion is absent, but equivalent find/grep commands serve the same evidence-collection purpose
-- [x] PASS: Output confirms build-integrity coverage — `grep -r "self-hosted"` for runner type, build-as-code verified by CI config presence, `grep -r "slsa\|provenance\|attest\|sigstore\|cosign"` for provenance, log retention addressed
-- [x] PASS: Output verifies dependency-integrity coverage — lockfile find commands, `grep -E '"[~^*]'` for floating ranges, `grep -r "dependabot\|renovate\|snyk"` for dependency review and vulnerability scanning
-- [x] PASS: Output confirms artifact-integrity coverage — `grep -r "cosign\|notation\|sigstore"` for image signing, `grep -r "sbom\|spdx\|cyclonedx\|syft"` for SBOM, immutable tag check via grep on push commands
-- [x] PASS: Output verifies SLSA level mapping — levels 0-4 defined in Step 5 table; the rule that assessed level is the highest where ALL requirements are met is explicitly stated and applied
-- [x] PASS: Output confirms specific bash commands are provided for evidence collection at each layer — each of Steps 1-4 has a dedicated Evidence Collection bash block with targeted commands
-- [x] PASS: Output confirms missing lockfiles trigger automatic CRITICAL finding (Rules section, "No exceptions") and CI/CD action pinning to full 40-char SHAs is required with a concrete example SHA
-- [~] PARTIAL: Output identifies genuine gaps — the skill has no guidance on package registry mirror/proxy hardening (it checks whether `.npmrc` exists but not whether the registry endpoint is hardened against cache-poisoning or SSRF). Third-party GitHub Apps installed on the org are not assessed as a supply-chain entry point. Both are meaningful vectors absent from the skill.
+### Gap 1 — SLSA spec is outdated (blocker)
 
-## Notes
+The level table maps to **SLSA v0.1 (draft)**, not **SLSA v1.0 (ratified 2023)**. Differences:
 
-The skill is well-constructed across all eight structural criteria. The bash evidence commands are concrete and immediately executable. The finding format rules in the Rules section actively prevent vague findings — the explicit contrast ("dependency scanning is missing" is not a finding vs naming specific tools and file paths) is a notable quality signal.
+| Skill (v0.1) | SLSA v1.0 |
+|---|---|
+| Level 0 — No guarantees | Not a level in v1.0 |
+| Level 1 — Build defined in code | L1 — Provenance exists |
+| Level 2 — Hosted runners, signed provenance | L2 — Hosted build, signed provenance |
+| Level 3 — Hardened, non-falsifiable provenance | L3 — Hardened build, non-falsifiable provenance |
+| Level 4 — Reproducible, two-party review | **Removed in v1.0** |
 
-The SHA-pinning rule in the Rules section includes a real 40-character SHA example, which makes the requirement unambiguous rather than abstract.
+A team using this output to target a SLSA level will be working from an obsolete map. The skill should reference the v1.0 Build Track (L1–L3) only, and note that Source Track is a separate ladder.
 
-One minor inconsistency: the SLSA level table in Step 5 defines Level 0 in the definition table but the per-level assessment template rows start at Level 1. The output format shows `Level 1 / Level 2 / Level 3 / Level 4` rows only, so Level 0 has no documentation row. In practice a Level 0 project would fall below Level 1 in the table, which is clear enough, but an explicit Level 0 row would tighten it.
+**Fix:** Replace the level table with SLSA v1.0 Build Track L1–L3 requirements. Remove L4. Distinguish Build Track from Source Track.
 
-The related-skills links at the foot (`/security-engineer:dependency-audit`, `/devops:write-pipeline`) provide a clear escalation path for the most common gaps the audit surfaces.
+---
+
+### Gap 2 — Several Step 1 controls are structurally unverifiable
+
+`allowed-tools` is `Read, Bash, Glob, Grep` — no `WebFetch`. Branch protection rules, required reviewers, default token permissions, and force-push policy live in the **GitHub API**, not in repo files. The evidence commands in Step 1 can only find `CODEOWNERS` and CI YAML; they cannot verify the controls they claim to check.
+
+Affected controls that will silently produce wrong results:
+
+- Branch protection (no file to read — lives in GitHub settings)
+- Code review requirement (same)
+- Force push disabled (same)
+
+**Fix:** Mark these controls as "requires GitHub API or manual verification" and note the tool limitation in the output format. Don't produce PASS/FAIL for controls the skill cannot actually observe.
+
+---
+
+### Gap 3 — SHA-pinning rule has no detection command
+
+The Rules section (line 205) mandates that every CI action must be pinned to a SHA, not a tag — this is the single most-cited supply chain hardening control. But no bash command in Step 2 actually detects `uses: actions/checkout@v4` vs `uses: actions/checkout@b4ffde6...`.
+
+This means a repo with dozens of floating tag references will produce no finding.
+
+**Fix:** Add to Step 2 evidence collection:
+
+```bash
+# Detect CI actions pinned to tags instead of SHAs
+grep -rn "uses:.*@" .github/workflows/ --include="*.yml" | grep -v "@[a-f0-9]\{40\}"
+```
+
+---
+
+### Gap 4 — Platform monoculture
+
+Every evidence command targets `.github/workflows/`. GitLab CI, Jenkins, Azure DevOps, and CircleCI repos will silently return empty results, and every Build/Artifact control will appear as FAIL rather than "not applicable." A multi-platform audit will misclassify posture.
+
+**Fix:** Detect the CI platform early and branch evidence collection:
+
+```bash
+# Detect CI platform
+ls .github/workflows/ 2>/dev/null && echo "GitHub Actions"
+ls .gitlab-ci.yml 2>/dev/null && echo "GitLab CI"
+ls Jenkinsfile 2>/dev/null && echo "Jenkins"
+ls azure-pipelines.yml 2>/dev/null && echo "Azure DevOps"
+```
+
+---
+
+### Gap 5 — Self-hosted runners incorrectly classified as HIGH
+
+The Build Integrity table marks self-hosted runners as a HIGH finding regardless of configuration. SLSA v1.0 does not prohibit self-hosted runners — it requires tamper-resistance. A properly isolated, ephemeral self-hosted runner can satisfy L2 and potentially L3. Marking all self-hosted as HIGH will generate false positives and erode trust in findings.
+
+**Fix:** Change to "Self-hosted runners without ephemeral/isolated configuration" as HIGH. A self-hosted runner with ephemeral instances and no persistent state is not a gap.
+
+---
+
+### Summary
+
+| Issue | Impact on stated purpose |
+|---|---|
+| SLSA v0.1 level table | Blocker — hardening roadmap targets wrong spec |
+| Unverifiable Step 1 controls | Structural gap — produces false confidence |
+| Missing SHA-pin detection | Missing the most important finding in practice |
+| GitHub-only evidence commands | Wrong findings on non-GitHub repos |
+| Self-hosted = HIGH (unconditional) | False positives erode roadmap credibility |
+
+The skill produces well-structured output and the finding/roadmap format is genuinely good. The two changes that most directly affect whether the output drives real hardening: update the SLSA level table to v1.0, and add the SHA-pinning grep.
+
+## Evaluation
+
+| Field | Value |
+|---|---|
+| Verdict | PARTIAL |
+| Score | 11.0/17.5 (63%) |
+| Evaluated | 2026-05-01 |
+| Target duration | 128436 ms |
+| Target cost | $0.4587 |
+| Permission denials | 0 |
+
+### Criteria
+
+| # | Criterion | Result | Evidence |
+|---|---|---|---|
+| c1 | Skill assesses source integrity controls — signed commits, branch protection, code review requirements, CODEOWNERS, and force push prevention | PASS | Gap 2 explicitly lists 'Branch protection rules, required reviewers, default token permissions, and force-push policy' as controls Step 1 attempts to assess, along with 'CODEOWNERS and CI YAML' as findable artifacts. |
+| c2 | Skill assesses build integrity — hosted vs self-hosted runners, build defined in code, build provenance generation, and log retention | PARTIAL | Gap 5 confirms self-hosted runners are in the Build Integrity table. The SLSA comparison table in Gap 1 shows 'Hosted runners, signed provenance' and 'Build defined in code' as mapped concepts. Log retention is never mentioned anywhere in the output. |
+| c3 | Skill assesses dependency integrity — lockfiles present and committed, no floating version ranges, dependency review on PRs, and vulnerability scanning in CI | PARTIAL | 'lockfile non-negotiable CRITICAL' and 'Step 3 dependency evidence commands are detailed and cover all major ecosystems' confirm lockfile and broad dependency coverage. Floating version ranges (^, ~, *), Dependabot/PR dependency review, and CI vulnerability scanning are not explicitly verified. |
+| c4 | Skill assesses artifact integrity — container image signing, SBOM generation, and immutable image tags | PARTIAL | 'SBOM-per-release' is cited in 'What works well.' Container image signing (cosign/sigstore) and immutable image tags (no :latest) are not mentioned anywhere in the output. |
+| c5 | Skill maps evidence to SLSA levels 0-4 and determines the current level as the highest where ALL requirements are met | PARTIAL | Gap 1 shows the level table L0–L4 exists in the skill. The 'all requirements met (not the average)' assessment rule is never mentioned or verified in the output. |
+| c6 | Skill provides specific bash commands to collect evidence — not just a description of what to look for | PASS | 'Step 3 dependency evidence commands are detailed and cover all major ecosystems.' Gap 3 notes a specific missing bash command for SHA-pinning detection, implying the reviewer verified command presence vs absence across the skill. |
+| c7 | Skill requires lockfiles to be present and committed — assigns automatic CRITICAL finding if absent | PASS | Explicitly stated in 'What works well': 'lockfile non-negotiable CRITICAL' directly confirms an automatic CRITICAL finding is assigned when lockfiles are absent. |
+| c8 | Skill requires CI/CD actions to be pinned to full SHAs not tags, citing the GitHub Actions security hardening guide | PARTIAL | Gap 3 confirms 'The Rules section (line 205) mandates that every CI action must be pinned to a SHA, not a tag.' The GitHub Actions security hardening guide is not mentioned as the citation source. |
+| c9 | Output is structured as a verification of the skill (verdict per requirement) rather than running an actual supply-chain audit | PASS | The output is titled 'Supply Chain Audit Skill Review,' reads the skill file at a specific path, and discusses gaps in the skill definition itself — not findings from a real repository audit. |
+| c10 | Output verifies all four supply chain layers are covered — source, build, dependency, artifact — and that none can be skipped | PARTIAL | All four layers are touched implicitly: source (Gap 2), build (Gaps 4–5), dependency (Step 3, lockfiles), artifact (SBOM). However, the output never explicitly states all four layers are present in the skill or that none can be skipped. |
+| c11 | Output confirms source-integrity controls — signed commits, branch protection, code review requirements, CODEOWNERS, and force-push prevention — are checked with concrete bash commands (e.g. `gh api repos/X/branches/main/protection`) | FAIL | Gap 2 explicitly states the opposite: 'allowed-tools is Read, Bash, Glob, Grep — no WebFetch. Branch protection rules, required reviewers… live in the GitHub API, not in repo files. The evidence commands in Step 1 can only find CODEOWNERS and CI YAML; they cannot verify the controls they claim to check.' The `gh api` approach is never mentioned as a solution the skill uses. |
+| c12 | Output confirms build-integrity coverage — hosted vs self-hosted runners, build-as-code, build provenance generation (SLSA attestations), and log retention | PARTIAL | Gap 5 confirms self-hosted runners in Build Integrity table. SLSA v0.1 table in Gap 1 references 'Build defined in code' and 'signed provenance.' Log retention is absent from the output entirely. |
+| c13 | Output verifies dependency-integrity coverage — lockfiles committed, no floating ranges (^, ~, *), Dependabot or equivalent dependency review on PRs, and CI vulnerability scanning | PARTIAL | 'lockfile non-negotiable CRITICAL' and 'Step 3 dependency evidence commands are detailed and cover all major ecosystems' confirm lockfile coverage. Floating ranges (^, ~, *), Dependabot/PR review, and CI vulnerability scanning are not explicitly verified in the output. |
+| c14 | Output confirms artifact-integrity coverage — container image signing (cosign / sigstore), SBOM generation (Syft / cyclonedx), and immutable image tags (no `:latest`) | PARTIAL | 'SBOM-per-release' confirmed in 'What works well.' Container image signing tools (cosign/sigstore/Syft/cyclonedx) and immutable image tags (no :latest) are not mentioned anywhere in the output. |
+| c15 | Output verifies SLSA level mapping — finds level 0 through 4 explicitly defined and the rule that the assessed level is the highest where ALL requirements are met (not the average) | PARTIAL | Gap 1 explicitly shows the L0–L4 table from the skill. The criterion requirement that 'assessed level = highest where ALL requirements are met (not the average)' is not verified or even mentioned in the output. |
+| c16 | Output confirms specific bash commands are provided for evidence collection at each layer — not just descriptive text of what to look for | PARTIAL | Step 3 (dependency layer) confirmed to have 'detailed' bash commands. Gap 3 reveals the build layer is missing a SHA-pinning detection command. Gap 2 reveals source-layer commands cannot verify what they claim. Not all layers confirmed to have working bash commands. |
+| c17 | Output confirms missing lockfiles trigger an automatic CRITICAL finding, and CI/CD action pinning to full 40-char SHAs (not tags) is required | PASS | 'lockfile non-negotiable CRITICAL' confirms automatic CRITICAL for missing lockfiles. Gap 3 confirms 'The Rules section (line 205) mandates that every CI action must be pinned to a SHA, not a tag' and provides a regex for 40-char SHAs in the fix command. |
+| c18 | Output identifies any genuine gaps — e.g. no rule on package registry mirror / proxy hardening, no guidance on assessing third-party GitHub Apps as supply-chain entry points | PARTIAL | Five genuine gaps identified: SLSA v0.1 vs v1.0 (blocker), unverifiable Step 1 controls, missing SHA-pinning detection command, GitHub-only evidence commands (platform monoculture), and self-hosted runner misclassification. None match the specific examples in the criterion (package registry, GitHub Apps), but they are real and actionable. |
+
+### Notes
+
+The output is a thoughtful skill review that correctly identifies several real structural weaknesses (SLSA version drift, tool-limitation blind spots, missing SHA-pin grep, platform monoculture, self-hosted false positives). Its strongest contributions are on build and tooling gaps. However, it falls short on the verification criteria that require confirming all four supply-chain layers have working bash commands at each layer — critically, c11 fails because Gap 2 reveals source-integrity controls are structurally unverifiable with available tools rather than confirmed as working. Artifact-integrity coverage is thin (only SBOM mentioned; image signing and immutable tags absent). The 'all requirements met' SLSA assessment rule is never confirmed. These gaps push the score to PARTIAL territory at 62.9%.

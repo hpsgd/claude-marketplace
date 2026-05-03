@@ -1,168 +1,82 @@
-# Result: write-adr skill structure
+# Write Adr
 
-**Verdict:** PASS
-**Score:** 16.5/17 criteria met (97%)
-**Evaluated:** 2026-04-30
+Scenario: Checking that the write-adr skill produces ADRs that follow the MADR format with all required sections, honest trade-offs, and measurable confirmation criteria.
 
----
+## Prompt
+
+> Review the write-adr skill definition and verify it produces complete, honest ADR documents rather than decision justifications written after the fact.
 
 ## Output
 
-Simulated output of applying the write-adr skill to a realistic scenario: deciding how to store binary content (images, PDFs, attachments) in the system.
+Captured from a real headless invocation of the skill/agent.
+
+### Chat response
+
+Here's the full assessment:
+
+## Verdict: Aspires to honesty but under-enforces it
+
+The skill has the right instincts — the anti-pattern list names "Retroactive ADR", the quality checklist has an honesty check, and the template is genuinely well-structured. But there are gaps between intention and enforcement.
+
+### Critical gap: SKILL.md and template are mismatched
+
+The template has two sections specifically designed to catch retroactive justification that **never appear** in SKILL.md's "Key sections (none optional)" list or the Quality Checklist:
+
+- **Assumptions table** (`proven_by_code` / `inferred` / `needs_confirmation`) — this is the single best honesty mechanism in the whole document
+- **Change Impact table** (Direct / Indirect / Unaffected) — forces the author to think through consequences honestly
+
+An agent running this skill will likely skip both because they're not enforced.
+
+### Other gaps relevant to "honest vs retroactive"
+
+| Gap | Why it matters |
+|---|---|
+| "Retroactive ADR" anti-pattern has no operational defence | Says "write during the process" but gives no way to verify that happened — no required trigger artifact (incident, meeting, issue link) |
+| Decision drivers can be reverse-engineered | No requirement to link drivers to evidence (existing ADRs, stakeholder constraints, NFRs) |
+| Confirmation can degrade to a calendar date | "A review date" (line 92) is the weakest possible form — should require a metric or observable condition |
+| Status starts "proposed" but nothing gates "accepted" | No consulted/informed sign-off check before the decision is closed |
+
+### What's working well
+
+The anti-pattern table and "at least one negative consequence" honesty check are genuinely strong. The `evaluate-technology` cross-reference is the right call — evaluate first, then record.
 
 ---
 
-**Skill invoked:** `/architect:write-adr use PostgreSQL BYTEA vs object storage for binary content`
+**Recommendation:** The Assumptions table in the template is the most valuable honesty mechanism and should be promoted to a required section in SKILL.md. Do you want me to propose specific edits to the skill, or is this review the deliverable?
 
-**Step 1 — existing ADR scan:**
+## Evaluation
 
-```bash
-find . -path '*/adr*' -name '*.md' | sort
-# docs/adr/0001-use-postgresql-as-primary-database.md
-# docs/adr/0002-adopt-event-sourcing-with-marten.md
-# docs/adr/0003-use-github-actions-for-ci.md
-# docs/adr/0004-use-openrouter-as-llm-gateway.md
-```
+| Field | Value |
+|---|---|
+| Verdict | FAIL |
+| Score | 7.0/16.5 (42%) |
+| Evaluated | 2026-04-30 |
+| Target duration | 75147 ms |
+| Target cost | $0.3719 |
+| Permission denials | 0 |
 
-Next number: `0005`
+### Criteria
 
-**Step 2 — file written to:** `docs/adr/0005-use-object-storage-for-binary-content.md`
+| # | Criterion | Result | Evidence |
+|---|---|---|---|
+| c1 | Skill uses the MADR format and requires all key sections: frontmatter (status, date, decision-makers), context, decision drivers, considered options, decision outcome, consequences, confirmation, and pros/cons per option | PARTIAL | Output references 'Key sections (none optional)' list in SKILL.md and calls the template 'genuinely well-structured', but never enumerates all required sections by name. Mentions assumptions table and change impact table as gaps but does not confirm the full MADR section list (frontmatter fields, decision drivers, considered options, etc.). |
+| c2 | Skill requires the ADR title to describe both the problem and the solution — not just the technology chosen | FAIL | The title rule is not mentioned anywhere in the captured output. |
+| c3 | Skill mandates at least two options including 'do nothing / status quo' where applicable | FAIL | The at-least-two-options rule and 'do nothing/status quo' requirement are not mentioned in the captured output. |
+| c4 | Skill requires consequences to include at least one negative — with an explicit honesty check that every decision has downsides | PASS | Output explicitly states: 'The anti-pattern table and "at least one negative consequence" honesty check are genuinely strong.' This directly confirms the rule and the honesty check exist. |
+| c5 | Skill requires measurable or observable confirmation criteria — a review date, metric, automated test, or reconsideration trigger | PARTIAL | Output references 'A review date (line 92)' showing confirmation criteria exist, but frames it as a gap: 'is the weakest possible form — should require a metric or observable condition.' Confirms existence but flags that measurability is under-enforced. |
+| c6 | Skill provides a quality checklist before declaring the ADR complete | PASS | Output states 'the Quality Checklist has an honesty check', confirming a quality checklist exists in the skill. |
+| c7 | Skill lists anti-patterns including retroactive ADR, no alternatives, strawman options, and orphaned ADR with no confirmation criteria | PARTIAL | Output explicitly names 'Retroactive ADR' as present in the anti-pattern list. Strawman options are referenced indirectly. 'No alternatives' and 'orphaned ADR without confirmation criteria' are not confirmed as being in the anti-pattern list. |
+| c8 | Skill specifies file naming convention (NNNN-kebab-case-title.md) and target directory (docs/adr/ or similar) | FAIL | No mention of file naming convention, four-digit prefix, kebab-case format, or target directory anywhere in the captured output. |
+| c9 | Output is structured as a verification of the skill (verdict per requirement) rather than producing a sample ADR | PASS | Output opens with '## Verdict: Aspires to honesty but under-enforces it' and proceeds to assess the skill definition through structured analysis. It explicitly reviews the skill rather than producing a sample ADR. |
+| c10 | Output confirms the MADR sections are all named explicitly: status/date/decision-makers frontmatter, context, decision drivers, considered options, decision outcome, consequences, confirmation, and per-option pros/cons | FAIL | Output does not enumerate or confirm all MADR sections by name. It references 'Key sections (none optional)' list generally and mentions assumptions/change-impact tables as gaps, but never lists status/date/decision-makers frontmatter, context, decision drivers, considered options, decision outcome, etc. |
+| c11 | Output verifies the title rule — title must describe both problem and solution, not just the chosen technology | FAIL | The title rule is not mentioned or verified in the captured output. |
+| c12 | Output confirms the at-least-two-options rule, including 'do nothing / status quo' where applicable, and that strawman alternatives are flagged as an anti-pattern | FAIL | The at-least-two-options rule and 'do nothing/status quo' are not confirmed. Strawman options appear in a gap table row but the output does not confirm they are explicitly flagged as an anti-pattern in the skill. |
+| c13 | Output verifies the negative-consequences honesty rule — every decision must list at least one negative | PASS | Output explicitly states: 'The anti-pattern table and "at least one negative consequence" honesty check are genuinely strong.' This directly verifies the rule exists in the skill. |
+| c14 | Output confirms confirmation criteria must be measurable/observable (review date, metric, automated test, or reconsideration trigger) — not aspirational text | PARTIAL | Output identifies this as a gap: '"A review date" (line 92) is the weakest possible form — should require a metric or observable condition.' This confirms the skill has confirmation criteria but flags that the skill allows non-measurable forms, meaning the requirement is not fully enforced. |
+| c15 | Output verifies the file naming convention (NNNN-kebab-case-title.md) and target directory (docs/adr/) are stated, with the four-digit prefix and kebab-case explicit | FAIL | File naming convention and target directory are not mentioned anywhere in the captured output. |
+| c16 | Output verifies the anti-patterns list includes retroactive ADR, no alternatives, strawman options, and orphaned ADRs without confirmation criteria | PARTIAL | Output explicitly names 'Retroactive ADR' as being in the anti-pattern list. 'No alternatives', 'strawman options', and 'orphaned ADRs without confirmation criteria' are not confirmed as being present in the skill's anti-pattern list. |
+| c17 | Output identifies any gaps — e.g. no guidance on superseded ADR linkage, no template for revision notes when an ADR is updated, or no explicit author/reviewer field | PARTIAL | Output identifies several gaps: assumptions table not in enforced key sections list, change impact table not enforced, 'Retroactive ADR anti-pattern has no operational defence', confirmation can degrade to a calendar date, no sign-off check before status moves to accepted. These are substantive gaps beyond the examples listed in the criterion. |
 
----
+### Notes
 
-```markdown
----
-status: "proposed"
-date: 2026-04-30
-decision-makers: [CTO, Architect]
-consulted: [Data Engineer, DevOps Lead]
-informed: [Engineering team, Product Owner]
----
-
-# ADR-0005: Use object storage (S3-compatible) for binary content instead of PostgreSQL BYTEA
-
-## Context and Problem Statement
-
-The system stores user-uploaded files (images, PDFs, CSV exports) as part of several workflows.
-We need to decide whether to store binary content inline in PostgreSQL BYTEA columns or in a
-dedicated object storage service. Uploads are currently small (<5 MB each) but volume is
-expected to grow 10x over the next 12 months. The decision affects backup size, query performance,
-and hosting cost.
-
-## Decision Drivers
-
-- Database backup size and restore time should stay under 30 minutes
-- Binary content reads must not contend with transactional query load
-- CDN-friendly delivery for end-user downloads (direct URL, no proxy)
-- Team has no existing S3 operational experience — learning curve is a constraint
-- Hosting is on Fly.io; egress costs matter
-
-## Considered Options
-
-1. PostgreSQL BYTEA — store binary content inline in the database
-2. S3-compatible object storage (Tigris, Cloudflare R2, AWS S3) — store in dedicated service, keep reference URL in database
-3. Do nothing / status quo — keep files on the application server's local disk (current approach)
-
-## Decision Outcome
-
-Chosen option: **S3-compatible object storage (Option 2)**, because it satisfies the CDN-delivery
-and backup-size drivers that BYTEA and local disk cannot. The team's learning curve is real but
-bounded — Tigris provides an S3-compatible API co-located with Fly.io, reducing the operational
-footprint.
-
-## Consequences
-
-**Positive:**
-- Database backups remain fast; binary content is excluded from pg_dump
-- Direct CDN URLs for downloads — no application proxy required
-- Binary content scales independently of transactional data
-
-**Negative:**
-- Introduces a new infrastructure dependency (object storage service)
-- Local development requires either a mocked S3 (MinIO) or real credentials — adds friction
-- Deleting a record no longer automatically deletes the binary — orphan cleanup logic required
-
-**Risks:**
-- If the team does not implement orphan cleanup, storage costs will grow silently
-- Tigris is a newer service; if it has reliability issues we will need to migrate to R2 or S3
-
-## Confirmation
-
-- Review backup size and restore time after 30 days — target: full restore under 30 minutes
-- CI check: integration test verifies file upload, reference URL stored in DB, and file retrievable
-- Review egress costs at 3-month mark; reconsider if egress exceeds $50/month
-- Trigger for revisiting: any production data loss event traced to object storage
-
-## Pros and Cons of Options
-
-### Option 1: PostgreSQL BYTEA
-
-- Good, because no new infrastructure — simpler operational model
-- Good, because transactional consistency between record and binary is automatic
-- Bad, because database backup/restore time grows with binary volume
-- Bad, because binary reads contend with OLTP queries on the same connection pool
-- Neutral, because existing team expertise covers this
-
-### Option 2: S3-compatible object storage (chosen)
-
-- Good, because binary content is CDN-deliverable with direct URLs
-- Good, because database stays lean — fast backups, no contention
-- Bad, because local dev requires MinIO or real credentials
-- Bad, because orphan cleanup must be built explicitly
-- Neutral, because S3 API is industry standard — knowledge transfers across providers
-
-### Option 3: Local disk (status quo)
-
-- Good, because zero setup — works today
-- Bad, because files are lost on machine restart / Fly.io volume failure
-- Bad, because no CDN path — all downloads proxy through application
-- Bad, because horizontal scaling requires shared volume or replication
-```
-
----
-
-**Skill verification table** (criteria checked against SKILL.md):
-
-| Requirement | Present in skill | Evidence |
-|---|---|---|
-| MADR format with all sections | Yes | Step 3 names all sections as "(none optional)" |
-| Title describes problem AND solution | Yes | Explicit rule with good/bad examples |
-| At least 2 options, including "do nothing" | Yes | "Always include 'do nothing / status quo' if applicable" |
-| At least one negative consequence | Yes | "Every decision has downsides — if you can't name one, you haven't thought hard enough" |
-| Measurable confirmation criteria | Yes | Four concrete forms listed: review date, metric, CI check, reconsideration trigger |
-| Quality checklist | Yes | Nine-item checklist before declaring complete |
-| Anti-patterns list | Yes | Table with 7 anti-patterns including all four required ones |
-| File naming convention + target directory | Yes | `NNNN-kebab-case-title.md` in `docs/adr/` with fallback detection |
-
----
-
-## Criteria
-
-- [x] PASS: Skill uses the MADR format and requires all key sections: frontmatter (status, date, decision-makers), context, decision drivers, considered options, decision outcome, consequences, confirmation, and pros/cons per option — all sections named explicitly under Step 3, labelled "(none optional)"
-- [x] PASS: Skill requires the ADR title to describe both the problem and the solution — stated directly with three concrete examples: one good, two bad
-- [x] PASS: Skill mandates at least two options including "do nothing / status quo" where applicable — "At least 2 options. Always include 'do nothing / status quo' if applicable"
-- [x] PASS: Skill requires consequences to include at least one negative with an explicit honesty check — "every decision has downsides — if you can't name one, you haven't thought hard enough" reinforced in the quality checklist
-- [x] PASS: Skill requires measurable or observable confirmation criteria — four concrete forms: review date, metric to watch, automated test or CI check, conditions that trigger revisiting
-- [x] PASS: Skill provides a quality checklist before declaring the ADR complete — nine-item checklist covering title, context, options, decision drivers, consequences, risks, confirmation, rejected option fairness, and related ADR linkage
-- [x] PASS: Skill lists anti-patterns including retroactive ADR, no alternatives, strawman options, and orphaned ADR with no confirmation criteria — all four present in the anti-patterns table with problem and fix columns
-- [x] PASS: Skill specifies file naming convention (NNNN-kebab-case-title.md) and target directory (docs/adr/) — four-digit prefix, kebab-case, `.md` extension, and `docs/adr/` as primary target with fallback detection and creation instructions
-
-## Output expectations
-
-- [x] PASS: Output is structured as a verification of the skill (verdict per requirement) rather than producing a sample ADR — the verification table summarises findings; the sample ADR in the Output section demonstrates the skill in use
-- [x] PASS: Output confirms the MADR sections are all named explicitly — status/date/decision-makers frontmatter (skill also includes consulted and informed), context and problem statement, decision drivers, considered options, decision outcome, consequences with three sub-categories (positive/negative/risks), confirmation, and per-option pros/cons using Good/Bad/Neutral structure
-- [x] PASS: Output verifies the title rule — skill states the title must describe both problem and solution, with explicit good/bad examples showing vague-title and solution-only-title as failures
-- [x] PASS: Output confirms the at-least-two-options rule including "do nothing / status quo" where applicable, and that strawman alternatives are flagged as an anti-pattern in the skill's anti-patterns table
-- [x] PASS: Output verifies the negative-consequences honesty rule — skill's "every decision has downsides" phrasing appears in two places: the Consequences section and the quality checklist
-- [x] PASS: Output confirms confirmation criteria must be measurable/observable — skill lists four concrete mechanism types rather than aspirational language, and the quality checklist item explicitly uses "measurable or observable"
-- [x] PASS: Output verifies file naming convention (NNNN-kebab-case-title.md) and target directory (docs/adr/) with four-digit prefix and kebab-case explicit — confirmed in the verification table and the simulated output uses `0005-use-object-storage-for-binary-content.md`
-- [x] PASS: Output verifies anti-patterns list includes all four: retroactive ADR, no alternatives, strawman options, and orphaned ADRs without confirmation criteria — all present in the anti-patterns table
-- [~] PARTIAL: Output identifies gaps — the skill references "Related ADRs are linked (supersedes, builds on, relates to)" in the quality checklist but provides no convention for updating a superseded ADR's own status field (e.g., setting it to "superseded by ADR-NNNN"). There is no guidance on revision notes if an ADR's status changes after acceptance. The frontmatter includes `decision-makers`, `consulted`, and `informed` but no separate `author` field — relevant when the author differs from the decision-makers.
-
-## Notes
-
-The skill is well-structured. The honesty-forcing mechanisms — mandatory negative consequences with "if you can't name one, you haven't thought hard enough," the anti-strawman rule, and the orphaned ADR anti-pattern — are specific enough to catch the most common ADR failure modes in practice.
-
-The template reference (`${CLAUDE_PLUGIN_ROOT}/templates/adr-template.md`) delegates some structure to an external file not evaluated here. The inline section instructions in SKILL.md are detailed enough to stand alone if that template is absent.
-
-The quality checklist item "Rejected options have fair representation (not strawmen)" overlaps with but extends the anti-patterns table — it catches cases where options were described accurately but were never genuinely considered, which the anti-pattern label alone doesn't cover.
+The captured output is a genuine critique of the write-adr skill's honesty enforcement, but it operates at too high a level of abstraction to satisfy most verification criteria. It confirms the quality checklist exists, the negative-consequences honesty check is present, and the anti-pattern table includes Retroactive ADR. However, it completely omits verification of: the title rule (problem+solution framing), the at-least-two-options rule including do-nothing, and the file naming/directory convention. It also fails to enumerate all MADR sections by name. The output is strongest where it identifies enforcement gaps (assumptions table, confirmation strength, sign-off gates) but weakest as a systematic checklist-style verification — it reads more as an expert critique than a structured pass/fail review against the skill's stated requirements.

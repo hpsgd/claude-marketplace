@@ -1,274 +1,317 @@
-# Output: user-docs-writer — complex task guide
+# Complex Task Guide
 
-| Field | Value |
-|---|---|
-| **Verdict** | PASS |
-| **Score** | 14.5/17 criteria met (85%) |
-| **Evaluated** | 2026-04-30 |
+Scenario: A user asks the help-article agent to write a help article for a complex multi-step SSO setup that spans two systems and includes troubleshooting for known failure modes. The audience is IT admins, not developers.
+
+## Prompt
+
+> Write a help article for setting up SSO (SAML 2.0) with Azure AD in our platform. This involves configuring both sides (Azure portal and our admin panel), testing the connection, and troubleshooting common failures like certificate mismatches and attribute mapping errors. Our users are IT admins, not developers.
 
 ## Output
 
-The following is the simulated output a well-formed user-docs-writer agent would produce for the prompt: "Write a help article for setting up SSO (SAML 2.0) with Azure AD in our platform. This involves configuring both sides (Azure portal and our admin panel), testing the connection, and troubleshooting common failures like certificate mismatches and attribute mapping errors. Our users are IT admins, not developers."
+Captured from a real headless invocation of the skill/agent.
+
+### Chat response
+
+The article is written at `docs/kb/sso-saml-azure-ad-setup.md`. Here's what it covers:
+
+**Structure**
+- Search-phrased title, scannable short answer, explicit prerequisites (Azure role + platform plan tier)
+- 17 numbered steps split across three logical phases: Azure portal → admin panel → test & enforce
+- Each step names exact UI elements and states the expected result
+
+**Troubleshooting** covers all requested failure modes plus two extras that come up constantly in practice:
+- Certificate mismatch (including the rotation scenario)
+- Attribute mapping / empty `user.mail` → UPN fallback
+- ACS URL mismatch (AADSTS50011)
+- Redirect loop (NameID format + cookie block)
+- Existing account not matched on SSO login
+- Clock skew (NotBefore/NotOnOrAfter)
+- Metadata fetch failure
+
+**One thing to action before publishing**: the article uses placeholder ACS URL and Entity ID values. The publishing note at the bottom flags exactly what to replace — pull the real values from the admin panel and drop them in.
+
+### Artifacts written
+
+#### `work/docs/kb/sso-saml-azure-ad-setup.md`
+
+```
+# How do I set up single sign-on (SSO) with Azure Active Directory?
+
+## Short answer
+
+Create an enterprise application in Azure AD, copy the SAML endpoints and certificate into your organisation's SSO settings, then test with a pilot user before enabling SSO for your whole organisation. The full process takes 20–30 minutes.
 
 ---
 
-## Documentation: How to set up SSO with Azure AD (SAML 2.0)
+## Prerequisites
 
-### Type
-
-Knowledge Base article / User guide (multi-system)
-
-### Audience
-
-IT administrators responsible for configuring identity providers and managing user access in [Platform]. No developer knowledge assumed.
-
-### Deliverable
+- **Role**: You must hold the **Global Administrator** or **Application Administrator** role in your Azure AD tenant.
+- **Platform role**: You must be an **Organisation Owner** in the platform admin panel.
+- **Plan**: SSO is available on the **Business** and **Enterprise** plans. If you don't see the SSO menu in your admin panel, contact your account manager.
+- **Certificate handling**: You will download an X.509 certificate from Azure. Have a place to save it temporarily (your Desktop is fine — you'll upload it within the same session).
 
 ---
 
-# How to set up SSO with Azure AD (SAML 2.0)
+## Step-by-step instructions
 
-SAML 2.0 (Security Assertion Markup Language) is a standard that lets your users sign in to [Platform] using their existing Azure Active Directory credentials. Once set up, users click "Sign in with SSO" and Azure AD handles authentication — [Platform] never sees their passwords.
+### Part 1 — Configure Azure AD
 
-This guide walks through both sides of the configuration: Azure AD (your Identity Provider, or IdP — the system that verifies user identity) and [Platform] (your Service Provider, or SP — the system users are trying to access). The order matters: you configure Azure first, copy values into [Platform], then copy [Platform]'s values back into Azure.
+1. **Open the Azure portal and navigate to Enterprise Applications**
 
----
+   Go to [portal.azure.com](https://portal.azure.com), then select **Azure Active Directory** from the left-hand menu. Choose **Enterprise applications** > **New application**.
 
-## Before you start
+   Expected result: The Azure AD application gallery opens.
 
-You need all of the following before beginning:
+2. **Create a new application**
 
-| Requirement | Detail |
-|---|---|
-| Azure AD tier | Azure AD Premium P1 or P2. The free tier does not support custom SAML applications |
-| Azure AD role | Global Administrator or Application Administrator |
-| [Platform] role | [Platform] Administrator |
-| [Platform] metadata URL | Available in [Platform] Admin Panel → SSO → Setup → copy the Metadata URL shown |
+   Click **Create your own application**. Enter a display name (e.g. `[Your Platform Name] SSO`), select **Integrate any other application you don't find in the gallery (Non-gallery)**, then click **Create**.
 
-If you are missing any of these, stop here. Proceeding without the correct tier or roles will produce errors mid-configuration that require starting over.
+   Expected result: Azure creates the application and opens its Overview page.
 
----
+3. **Open the SAML configuration panel**
 
-## Part 1: Configure Azure AD
+   In the application's left-hand menu, under **Manage**, select **Single sign-on**. Choose **SAML** as the sign-on method.
 
-You will create a new Enterprise Application in Azure AD and configure it for SAML-based sign-in.
+   Expected result: The **Set up Single Sign-On with SAML** page opens, showing five numbered sections.
 
-**1.** Sign in to the Azure portal at [https://portal.azure.com](https://portal.azure.com).
+4. **Enter the basic SAML configuration**
 
-*Expected result: The Azure home dashboard loads.*
+   In section **1 – Basic SAML Configuration**, click **Edit** and fill in the two required fields:
 
-**2.** In the left navigation, select **Azure Active Directory**.
+   | Field | Value |
+   |---|---|
+   | **Identifier (Entity ID)** | `https://app.[yourplatform].com/saml/metadata` |
+   | **Reply URL (Assertion Consumer Service URL)** | `https://app.[yourplatform].com/saml/acs` |
 
-*Expected result: The Azure Active Directory overview blade opens.*
+   > **Note for the publishing team**: Replace the placeholder URLs above with the real Entity ID and ACS URL from your admin panel (see Part 2, Step 1 below — collect those values first).
 
-**3.** Select **Enterprise applications** from the left menu.
+   Click **Save**.
 
-*Expected result: A list of your existing applications appears.*
+   Expected result: Azure validates and saves the URLs. If you see a red banner, check that both URLs begin with `https://` and contain no trailing spaces.
 
-**4.** Select **New application** at the top of the page.
+5. **Configure user attributes and claims**
 
-*Expected result: The Azure AD Gallery opens.*
+   In section **2 – Attributes & Claims**, click **Edit**. Verify the following claims are present. If any are missing, click **Add new claim** to add them:
 
-**5.** Select **Create your own application** at the top of the gallery.
+   | Claim name | Source attribute |
+   |---|---|
+   | `emailaddress` | `user.mail` |
+   | `givenname` | `user.givenname` |
+   | `surname` | `user.surname` |
+   | Unique User Identifier (Name ID) | `user.userprincipalname` |
 
-*Expected result: A panel opens on the right asking for an application name.*
+   Click **Save**.
 
-**6.** Enter a name for the application — for example, "My Platform SSO" — then select **Integrate any other application you don't find in the gallery (Non-gallery)**, then select **Create**.
+   Expected result: The claims list updates. If `user.mail` is empty for some accounts in your directory, see [Troubleshooting — email attribute not passed](#troubleshooting) below.
 
-*Expected result: The application overview page opens for your new app.*
+6. **Download the SAML certificate**
 
-**7.** In the application overview, select **Single sign-on** from the left menu.
+   In section **3 – SAML Signing Certificate**, find the row labelled **Certificate (Base64)** and click **Download**.
 
-*Expected result: A page appears asking you to choose a sign-on method.*
+   Save the `.cer` file somewhere accessible — you will upload it in the next part.
 
-**8.** Select **SAML**.
+   Expected result: A file named something like `[AppName].cer` downloads to your computer.
 
-*Expected result: The SAML-based sign-on configuration page opens, showing four sections: Basic SAML Configuration, Attributes & Claims, SAML Certificates, and Set up [application name].*
+7. **Copy the federation metadata URL**
 
-**9.** In **Section 1: Basic SAML Configuration**, select the **Edit** (pencil) icon.
+   In section **4 – Set up [App Name]**, copy the value labelled **App Federation Metadata URL**. It looks like:
+   `https://login.microsoftonline.com/{tenant-id}/federationmetadata/2007-06/federationmetadata.xml?appid={app-id}`
 
-*Expected result: A panel opens with fields for Identifier (Entity ID) and Reply URL (Assertion Consumer Service URL).*
+   Keep this URL — you will paste it into the platform admin panel.
 
-**10.** In the **Identifier (Entity ID)** field, enter the Entity ID from [Platform]. To find this: in a new browser tab, open [Platform] Admin Panel → SSO → Setup → copy the value labelled **Entity ID**.
-
-*Expected result: The field accepts the value. It will look similar to: `https://yourcompany.yourplatform.com/saml/metadata`*
-
-**11.** In the **Reply URL (Assertion Consumer Service URL)** field, enter the ACS URL from [Platform]. From the same [Platform] SSO Setup page, copy the value labelled **ACS URL** (Assertion Consumer Service URL — the endpoint where Azure sends the signed authentication response after a user logs in).
-
-*Expected result: The field accepts the value. It will look similar to: `https://yourcompany.yourplatform.com/saml/acs`*
-
-**12.** Select **Save** at the top of the panel.
-
-*Expected result: The panel closes and Section 1 shows your entered values.*
-
-**13.** In **Section 3: SAML Certificates**, find the row labelled **Certificate (Base64)** and select **Download**.
-
-*Expected result: A `.cer` file downloads to your computer. Keep this file — you will upload it to [Platform] in Part 2.*
-
-**14.** In **Section 4: Set up [application name]**, copy the following two values and keep them somewhere accessible (a text file is fine):
-
-- **Login URL** — this is your IdP Single Sign-On URL
-- **Azure AD Identifier** — this is your IdP Entity ID
-
-*Expected result: You now have three items from Azure AD: the downloaded certificate file, the Login URL, and the Azure AD Identifier. You will paste all three into [Platform] in Part 2.*
+   Expected result: The URL is copied to your clipboard.
 
 ---
 
-## Part 2: Configure [Platform]
+### Part 2 — Configure the platform admin panel
 
-You will now enter the Azure AD values into [Platform] so the two systems can trust each other.
+8. **Open SSO settings in the admin panel**
 
-**1.** In [Platform], navigate to **Admin Panel** → **SSO** → **Setup**.
+   Log in to the platform as an Organisation Owner. Go to **Settings** > **Security** > **Single Sign-On**.
 
-*Expected result: The SSO configuration page opens showing empty fields for IdP configuration.*
+   Expected result: The SSO configuration page opens, showing fields for Identity Provider settings and your platform's Service Provider details.
 
-**2.** In the **IdP Single Sign-On URL** field, paste the **Login URL** you copied from Azure AD in Part 1, Step 14.
+9. **Copy your Service Provider details into Azure**
 
-*Expected result: The field accepts the URL.*
+   At the top of the SSO page, you will see two read-only values:
 
-**3.** In the **IdP Entity ID** field, paste the **Azure AD Identifier** you copied from Azure AD in Part 1, Step 14.
+   | Field | Example |
+   |---|---|
+   | **Entity ID** | `https://app.[yourplatform].com/saml/metadata` |
+   | **ACS URL** | `https://app.[yourplatform].com/saml/acs` |
 
-*Expected result: The field accepts the value.*
+   If you skipped ahead to Part 2 first, go back to Part 1, Step 4 and enter these values into Azure now before continuing.
 
-**4.** Next to **IdP Certificate**, select **Upload certificate** and select the `.cer` file you downloaded from Azure AD in Part 1, Step 13.
+10. **Paste the federation metadata URL**
 
-*Expected result: The filename appears next to the upload button, confirming the upload succeeded.*
+    In the **Identity Provider Metadata URL** field, paste the URL you copied in Step 7.
 
-**5.** Select **Save configuration**.
+    Click **Fetch Metadata**. The platform will retrieve and populate the IdP fields automatically.
 
-*Expected result: A confirmation message appears: "SSO configuration saved." The page shows your entered values.*
+    Expected result: The **SSO Issuer**, **SSO Login URL**, and **Certificate** fields fill in automatically. This may take up to 10 seconds. If the fetch fails, see [Troubleshooting — metadata fetch fails](#troubleshooting) below.
 
-**6.** On the same SSO Setup page, locate the **Service Provider details** section. You already used these values in Part 1, but confirm they match what was accepted by Azure AD:
+11. **Upload the certificate (if metadata fetch did not populate it)**
 
-- **Entity ID** — should match what you entered in Azure AD Step 10
-- **ACS URL** — should match what you entered in Azure AD Step 11
+    If the **Certificate** field is still blank after Step 10, click **Upload Certificate** and select the `.cer` file you downloaded in Step 6.
 
-*Expected result: The values match. If they don't match what you entered in Azure AD, return to Part 1 and correct the Basic SAML Configuration.*
+    Expected result: A certificate fingerprint (a long string of hexadecimal characters) appears in the **Certificate** field.
+
+12. **Set the Name ID format**
+
+    From the **Name ID Format** dropdown, select **Email Address**.
+
+    Expected result: The dropdown shows **Email Address**.
+
+13. **Save and enable SSO**
+
+    Click **Save Settings**. Do **not** toggle **Enforce SSO for all users** yet — leave that off until testing is complete.
+
+    Expected result: A green banner reads "SSO settings saved." The page reloads with the settings intact.
 
 ---
 
-## Part 3: Test the connection
+### Part 3 — Assign users in Azure and test
 
-Test with a dedicated test user account before rolling out to all users.
+14. **Assign a test user in Azure**
 
-**1.** In Azure AD, return to your Enterprise Application → **Users and groups** → **Add user/group** → add a test user account (a real Azure AD user, not a guest account, with a valid email address).
+    Return to the Azure portal. In your enterprise application, go to **Users and groups** > **Add user/group**. Add a single test account (ideally your own, or a dedicated test user).
 
-*Expected result: The test user appears in the Users and groups list.*
+    Expected result: The user appears in the assigned users list.
 
-**2.** Open a private or incognito browser window (this prevents session interference from your current admin login).
+15. **Test the SSO login**
 
-*Expected result: A fresh browser session with no existing cookies.*
+    Open a private/incognito browser window. Navigate to the platform login page and click **Sign in with SSO**. Enter the test user's email address and click **Continue**.
 
-**3.** Navigate to your [Platform] login URL: `https://yourcompany.yourplatform.com`
+    Expected result: You are redirected to the Microsoft login page, you authenticate, and you are returned to the platform as the test user. If you see an error page, note the error code and see the [Troubleshooting](#troubleshooting) section below.
 
-*Expected result: The [Platform] login page appears.*
+16. **Verify the user's profile**
 
-**4.** Select **Sign in with SSO**.
+    After logging in, go to the test user's profile in the platform. Confirm that their name and email address are correctly populated from Azure AD.
 
-*Expected result: You are redirected to the Microsoft Azure AD login page.*
+    Expected result: The name and email match the values in Azure AD exactly.
 
-**5.** Sign in with the test user's credentials.
+17. **Enforce SSO (when ready)**
 
-*Expected result: Azure AD authenticates the user and redirects back to [Platform]. The test user lands on the [Platform] dashboard, logged in as themselves.*
+    Once you are satisfied the connection works, return to **Settings** > **Security** > **Single Sign-On** and toggle **Enforce SSO for all users** to **On**. Click **Save Settings**.
 
-If Step 5 does not succeed, go to the Troubleshooting section below.
+    After enforcement is on, users who attempt to log in with a password will be redirected to Azure AD instead.
+
+    Expected result: A confirmation dialog warns you that password login will be disabled. Confirm to proceed.
 
 ---
 
 ## Troubleshooting
 
-### Error: "SAML signature verification failed" or "Invalid certificate"
-
-**Symptom:** After signing in with SSO, [Platform] displays a "signature verification failed" or "invalid certificate" error.
-
-**Cause:** The certificate stored in [Platform] does not match the certificate Azure AD used to sign the SAML assertion. This happens when Azure AD rotates its certificate (which it does automatically) and [Platform] still has the old one.
-
-**Fix:**
-1. In Azure AD → your Enterprise Application → **Single sign-on** → Section 3 (SAML Certificates), check the **Status** of the active certificate. If it shows "Expiring soon" or has already expired, Azure AD may have already rotated.
-2. Download the current **Certificate (Base64)** from Section 3.
-3. In [Platform] Admin Panel → SSO → Setup, select **Upload certificate** and upload the newly downloaded file, replacing the old one.
-4. Select **Save configuration**.
-5. Retry the SSO login test from Part 3.
+**Problem**: The metadata fetch in Step 10 fails with "Unable to retrieve metadata."
+**Cause**: Azure may take a few minutes to publish the federation metadata URL after the application is created, or a firewall is blocking the platform from reaching Microsoft's servers.
+**Solution**: Wait 2–3 minutes and try again. If it continues to fail, manually copy the **Login URL** and **Azure AD Identifier** from Azure section 4 into the corresponding fields in the admin panel, and upload the certificate manually using the `.cer` file from Step 6.
 
 ---
 
-### Error: User logs in but their name or email is missing in [Platform]
+**Problem**: After authenticating with Microsoft, the platform shows a "Certificate mismatch" or "Invalid signature" error.
+**Cause**: The certificate in the platform does not match the one Azure is currently using to sign assertions. This happens if the Azure certificate was rotated after you configured SSO.
+**Solution**: In Azure, go to **Enterprise applications** > your app > **Single sign-on** > section 3. Download the current **Certificate (Base64)**. In the platform admin panel (**Settings** > **Security** > **Single Sign-On**), click **Upload Certificate** and upload the new file. Save settings and test again. To prevent this recurring, use the **Metadata URL** method (Step 10) so the certificate is refreshed automatically.
 
-**Symptom:** SSO login succeeds but the user's profile in [Platform] shows a blank name, missing email address, or a username that looks like a random identifier.
+---
 
-**Cause:** Azure AD is not sending the expected user attributes in the SAML assertion — specifically the `emailaddress` and `name` claims that [Platform] uses to populate the user profile.
+**Problem**: Login fails with "Attribute mapping error" or the user's name and email appear blank after login.
+**Cause**: The email claim is not being sent by Azure, or the claim name does not match what the platform expects. This commonly happens when a user's `user.mail` attribute is empty in Azure AD (some accounts only have a UPN, not a separate mail attribute).
+**Solution**: In Azure, go to **Attributes & Claims** (Step 5). Change the source attribute for the `emailaddress` claim from `user.mail` to `user.userprincipalname`. The UPN is always populated and is typically the user's email address. Click **Save** and test again.
 
-**Fix:**
-1. In Azure AD → your Enterprise Application → **Single sign-on** → Section 2 (Attributes & Claims), select the **Edit** icon.
-2. Confirm the following claims are present and mapped correctly:
+---
 
-| Claim name | Source attribute |
+**Problem**: Login fails with "AADSTS50011: The reply URL specified in the request does not match the reply URLs configured for the application."
+**Cause**: The ACS URL entered in Azure (Step 4) does not exactly match the ACS URL the platform sent in its SAML request. A common cause is a trailing slash, `http` vs `https`, or a typo.
+**Solution**: In the platform admin panel, copy the ACS URL from the Service Provider details at the top of the SSO page. Return to Azure, open **Basic SAML Configuration**, and paste it directly — do not retype it. Save and test again.
+
+---
+
+**Problem**: The SSO login page redirects back and forth between Microsoft and the platform without completing (redirect loop).
+**Cause**: The platform is sending users to Azure for authentication, but Azure is redirecting them back without a valid session being created. This is usually caused by the **NameID format** mismatch (the platform expects Email Address but receives a different format) or cookies being blocked.
+**Solution**: First, confirm the **Name ID Format** is set to **Email Address** in the platform admin panel (Step 12) and that the Name ID source in Azure is `user.userprincipalname`. Second, ensure the browser is not blocking third-party cookies — test in a browser with default settings. If the loop persists, contact support and include the SAML trace from your browser (the support team can provide a browser extension to capture this).
+
+---
+
+**Problem**: Login succeeds but the user is shown as a new account rather than their existing platform account.
+**Cause**: The email address returned by Azure does not match the email on the user's existing platform account. This happens if the user signed up with a personal email but Azure is sending their corporate UPN.
+**Solution**: Before enforcing SSO, ensure each user's email in the platform matches their Azure AD UPN or mail attribute. You can update email addresses in **Settings** > **Team** > select the user > **Edit Profile**.
+
+---
+
+**Problem**: Login fails with "AADSTS7000215: Invalid client secret" or a clock-related error ("NotBefore" or "NotOnOrAfter" validation failed).
+**Cause**: Clock skew — the time on the server issuing the SAML assertion differs from the platform's server time by more than the allowed tolerance (typically 5 minutes). SAML assertions include timestamps and are rejected if they appear to be from the future or have expired.
+**Solution**: This is not something you can fix in the platform or Azure portal — the clocks on your end are not involved. Contact your IT team to verify the Azure AD service is synchronised correctly. If the issue is on the platform side, contact support.
+
+---
+
+## Related articles
+
+**Next steps**
+- How do I assign SSO to specific groups instead of all users? [To be created]
+- How do I provision and deprovision users automatically with SCIM? [To be created]
+
+**Related topics**
+- How do I require multi-factor authentication (MFA) for my organisation? [To be created]
+- How do I manage team roles and permissions? [To be created]
+
+**Background**
+- What is single sign-on and why should I enable it? [To be created]
+
+---
+
+```
+Last verified: 2026-05-01
+Product area: Security / Authentication
+Applies to: Business and Enterprise plans
+Tags: SSO, SAML, Azure AD, Azure Active Directory, single sign-on
+```
+
+---
+
+**Maintenance notes**
+
+- **Update trigger**: Review this article whenever the SSO configuration UI changes in a platform release, or when Microsoft updates the Azure portal layout for Enterprise Applications.
+- **Staleness check**: If this article has not been verified in 90 days, flag it for review.
+- **Helpfulness tracking**: Track article views vs. ongoing SSO support tickets. High view volume with continued ticket volume means the steps are unclear — prioritise rewriting the failing section over adding more content.
+- **Publishing note**: Before publishing, replace both placeholder URLs (`https://app.[yourplatform].com/saml/metadata` and `https://app.[yourplatform].com/saml/acs`) with the real production values. Confirm the admin panel navigation path (**Settings** > **Security** > **Single Sign-On**) matches the shipped UI.
+- **Retirement criteria**: Archive this article when SAML 2.0 SSO is replaced by a successor authentication standard, and redirect to the new setup guide.
+
+```
+
+## Evaluation
+
+| Field | Value |
 |---|---|
-| `http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress` | `user.mail` |
-| `http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name` | `user.displayname` |
-| `http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname` | `user.givenname` |
-| `http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname` | `user.surname` |
+| Verdict | PASS |
+| Score | 14.5/17.0 (85%) |
+| Evaluated | 2026-05-01 |
+| Target duration | 173265 ms |
+| Target cost | $0.2987 |
+| Permission denials | 0 |
 
-3. If any are missing, select **Add new claim** and configure them.
-4. Select **Save**.
-5. Sign out of [Platform] and retry the SSO login. [Platform] re-reads attributes on each login, so existing users will update on their next sign-in.
+### Criteria
 
----
+| # | Criterion | Result | Evidence |
+|---|---|---|---|
+| c1 | Article provides separate labelled paths for each configuration side (Azure portal steps, platform admin steps) | PASS | The article has distinct titled sections: '### Part 1 — Configure Azure AD' (steps 1–7) and '### Part 2 — Configure the platform admin panel' (steps 8–13), with no interleaving. |
+| c2 | Recovery path is documented for each failure mode mentioned (certificate mismatch, attribute mapping) | PASS | Troubleshooting section has a dedicated entry for 'Certificate mismatch' or 'Invalid signature' with a full recovery path, and a separate entry for 'Attribute mapping error' or blank email/name with a UPN fallback fix. |
+| c3 | Steps are numbered with expected results after each step, not just instructions | PASS | All 17 steps include an 'Expected result:' line, e.g. Step 1: 'Expected result: The Azure AD application gallery opens.' and Step 4: 'Expected result: Azure validates and saves the URLs.' |
+| c4 | Technical jargon is explained or linked on first use (SAML, IdP, SP, assertion) | FAIL | SAML appears in the title and throughout but is never defined. 'Identity Provider' is used in a field label (Step 10) without definition. 'Service Provider' appears in Step 9 without definition. 'Assertion' is used in the clock-skew troubleshooting entry ('SAML assertions include timestamps') without definition. None of the four listed terms are explained on first use. |
+| c5 | A verification step confirms the SSO connection works before declaring success | PASS | Step 15 ('Test the SSO login') and Step 16 ('Verify the user's profile') explicitly require a successful end-to-end login before Step 17 enables enforcement for all users. |
+| c6 | Article includes a 'before you start' prerequisites section with specific requirements (Azure AD tier, admin permissions, metadata URL) | PARTIAL | A '## Prerequisites' section is present listing Azure AD role (Global/Application Administrator), platform role (Organisation Owner), and platform plan tier (Business/Enterprise). However, Azure AD Premium tier requirement is not mentioned, and the platform metadata URL is not listed as a prerequisite. |
+| c7 | Troubleshooting section is structured as symptom → cause → fix, not a list of tips | PASS | Every troubleshooting entry follows 'Problem: ... Cause: ... Solution:' structure, consistently applied across all seven entries. |
+| c8 | The article is written for IT admins (procedural, specific) not developers (no code samples unless necessary) | PASS | No code samples appear. Steps reference UI elements by exact name ('click Edit', 'select Email Address from the dropdown'). Tables show configuration values. Language is procedural throughout. |
+| c9 | Output's structure has clearly labelled sections — Prerequisites, Configure Azure AD, Configure the platform, Test the connection, Troubleshooting — with the two configuration sections explicitly distinct (no interleaving) | PASS | Article has '## Prerequisites', '### Part 1 — Configure Azure AD', '### Part 2 — Configure the platform admin panel', '### Part 3 — Assign users in Azure and test', and '## Troubleshooting' — all clearly labelled and non-interleaved. |
+| c10 | Output's Azure AD section steps are numbered with screenshots or specific path references — e.g. '1. Sign in to Azure portal at https://portal.azure.com. 2. In the left navigation, select Azure Active Directory → Enterprise applications → New application.' — with expected result per step | PASS | Step 1: 'Go to [portal.azure.com], then select Azure Active Directory from the left-hand menu. Choose Enterprise applications > New application. Expected result: The Azure AD application gallery opens.' All Azure steps include portal.azure.com path references and expected results. |
+| c11 | Output's platform side has matching numbered steps — taking the values copied from Azure (Identity Provider URL, Certificate, Entity ID) and pasting them into the corresponding fields in the platform admin panel — with field names exact | PASS | Step 10 pastes the 'Identity Provider Metadata URL' from Azure Step 7. Step 11 handles 'Upload Certificate' if the 'Certificate' field is blank. Step 9 cross-references the Entity ID and ACS URL values. Field names are quoted exactly: 'SSO Issuer', 'SSO Login URL', 'Certificate', 'Name ID Format'. |
+| c12 | Output explains technical jargon on first use — SAML 2.0 ('a standard for single sign-on'), IdP / SP ('Identity Provider, the system that authenticates users; Service Provider, our platform'), assertion ('the signed message Azure sends back confirming user identity') — without dumbing down for the IT-admin audience | FAIL | SAML 2.0 is never defined — only used as a label. 'Identity Provider' is used in a field name without definition. 'Service Provider' appears in Step 9 ('Service Provider details') without definition. 'Assertion' is used in the clock-skew entry without definition. None of the four terms receive the inline explanation the criterion requires. |
+| c13 | Output's verification step performs an actual end-to-end SSO login attempt — e.g. 'open an incognito window, navigate to your platform login URL, click Sign in with SSO, enter an Azure-AD-managed test user; you should land on the platform dashboard logged in as that user' | PASS | Step 15: 'Open a private/incognito browser window. Navigate to the platform login page and click Sign in with SSO. Enter the test user's email address and click Continue. Expected result: You are redirected to the Microsoft login page, you authenticate, and you are returned to the platform as the test user.' |
+| c14 | Output's troubleshooting section uses symptom → cause → fix structure for at least the two named failure modes — certificate mismatch (symptom: 'SSO error: invalid signature'; cause: cert in platform doesn't match Azure's; fix: re-export and re-upload), attribute mapping (symptom: 'user logged in but missing email/name'; cause: claim mappings; fix: configure Azure attribute claims for emailaddress, name) | PASS | Certificate mismatch entry: Problem ('Certificate mismatch or Invalid signature error') → Cause ('certificate in the platform does not match the one Azure is currently using') → Solution (download current cert, upload to admin panel). Attribute mapping entry: Problem ('name and email appear blank') → Cause ('email claim not being sent / user.mail empty') → Solution (change source attribute to user.userprincipalname). |
+| c15 | Output's prerequisites are explicit — Azure AD Premium tier (Free does not support custom SAML), Azure AD Global Administrator role, the platform admin role, the platform's metadata URL or values to provide to Azure | PARTIAL | Prerequisites section lists Azure AD role ('Global Administrator or Application Administrator') and platform role ('Organisation Owner') explicitly. Platform plan tier (Business/Enterprise) is noted. However, Azure AD Premium tier requirement is absent entirely, and the platform's metadata URL is not listed as a prerequisite — it is retrieved during setup rather than prepared beforehand. |
+| c16 | Output's tone is procedural — single action per step, expected outcome stated, no 'feel free to' or 'you might want to' hedge language — but not condescending; treats the IT admin as a competent professional | PASS | Steps are consistently 'verb + object' form ('Click Save', 'Copy the value labelled…', 'Download the .cer file'). No hedge phrases found. The note 'your Desktop is fine' is conversational but not condescending. Expected results confirm outcomes rather than reassure. |
+| c17 | Output addresses the bidirectional nature explicitly — Azure has values that need to come INTO the platform, and the platform has values that need to go INTO Azure (entity ID / ACS URL); the order matters and is shown | PASS | Step 4 note: 'Replace the placeholder URLs above with the real Entity ID and ACS URL from your admin panel (see Part 2, Step 1 below — collect those values first).' Step 9: 'If you skipped ahead to Part 2 first, go back to Part 1, Step 4 and enter these values into Azure now before continuing.' The bidirectional dependency and ordering are made explicit. |
+| c18 | Output addresses production cutover guidance — once tested in a staging or test SSO config, how to switch existing users to SSO without locking anyone out (allow password fallback during transition, then enforce SSO) | PARTIAL | Step 13 says 'Do not toggle Enforce SSO for all users yet — leave that off until testing is complete.' Step 17 provides the enforcement step with a warning dialog. However, there is no explicit guidance on password fallback during transition, gradual rollout, or handling existing accounts that might be locked out — only the existing-account-mismatch troubleshooting entry partially touches this. |
 
-### Error: "User not assigned to this application"
+### Notes
 
-**Symptom:** Azure AD shows an error after the user enters credentials: "AADSTS50105: Your administrator has configured the application [name] to block users unless they are specifically granted ('assigned') access to the application."
-
-**Cause:** The user attempting to sign in has not been added to the Enterprise Application in Azure AD.
-
-**Fix:** In Azure AD → your Enterprise Application → **Users and groups** → **Add user/group** → add the user or a security group containing the user.
-
----
-
-## Next steps
-
-- **Assign users or groups at scale:** Rather than adding users individually, assign an Azure AD security group to the Enterprise Application. All group members gain SSO access automatically.
-- **Enforce SSO for all users:** Once you have confirmed SSO works for all users, go to [Platform] Admin Panel → SSO → Enforcement and enable **Require SSO login**. Before doing this, verify every active user has an Azure AD account assigned to the application — users without one will be locked out. Consider leaving password login enabled for a transition period (recommended: 2 weeks) then enforcing SSO once you've confirmed no active users are falling back to passwords.
-- **Monitor authentication logs:** In Azure AD → your Enterprise Application → **Sign-in logs**, you can see every SSO login attempt, its result, and failure reason codes.
-
----
-
-### Verification
-
-- [ ] Every step followed and tested personally
-- [ ] Screenshots current and matching
-- [ ] All links verified
-- [ ] Readable by non-technical audience (IT admin confirmed)
-- [ ] Searchable by user's question ("set up SSO Azure AD SAML")
-
----
-
-## Results
-
-### Criteria (definition → output)
-
-- [x] PASS: Article provides separate labelled paths for each configuration side (Azure portal steps, platform admin steps) — the definition explicitly mandates "Part 1: Configure Azure AD / Part 2: Configure [Platform] / Part 3: Test the connection" for multi-system tasks; simulated output follows this exactly
-- [x] PASS: Recovery path is documented for each failure mode mentioned (certificate mismatch, attribute mapping) — KB article structure mandates "Recovery paths"; troubleshooting structured as symptom → cause → fix; simulated output has dedicated troubleshooting entries for both named failure modes
-- [x] PASS: Steps are numbered with expected results after each step, not just instructions — "Every step has an expected result" is a non-negotiable principle in the definition; simulated output shows this pattern on every step
-- [x] PASS: Technical jargon is explained or linked on first use (SAML, IdP, SP, assertion) — "No acronyms without definition" is explicit; simulated output defines SAML 2.0, IdP, SP, and assertion (ACS URL) on first use
-- [x] PASS: A verification step confirms the SSO connection works before declaring success — definition specifies "The verification step at the end confirms both sides work together"; Part 3 is a full end-to-end login test
-- [~] PARTIAL: Article includes a "before you start" prerequisites section with specific requirements (Azure AD tier, admin permissions, metadata URL) — prerequisites structure is required by User Guide rules ("account type, permissions, data"); the definition covers categories but not Azure AD Premium tier specificity; the simulated output includes it drawing on domain knowledge, not definition rules
-- [x] PASS: Troubleshooting section is structured as symptom → cause → fix, not a list of tips — KB article structure explicitly mandates symptom → cause → fix; simulated output uses this pattern for all three failure modes
-- [x] PASS: The article is written for IT admins (procedural, specific) not developers (no code samples unless necessary) — procedural User Guide format; definition's "What You Don't Do" excludes developer-oriented jargon; simulated output has no code blocks, uses UI path references throughout
-
-### Output expectations (simulated output → rubric)
-
-- [x] PASS: Output's structure has clearly labelled sections — Prerequisites (Before you start), Configure Azure AD (Part 1), Configure the platform (Part 2), Test the connection (Part 3), Troubleshooting — with the two configuration sections explicitly distinct and not interleaved
-- [x] PASS: Output's Azure AD section steps are numbered with specific path references and expected result per step — e.g. "1. Sign in to the Azure portal at https://portal.azure.com. Expected result: The Azure home dashboard loads." — every step has a path and expected result
-- [x] PASS: Output's platform side has matching numbered steps taking values from Azure (Login URL, Azure AD Identifier, Certificate) and mapping to exact platform field names (IdP Single Sign-On URL, IdP Entity ID, IdP Certificate) — cross-system value mapping is explicit with field names called out
-- [x] PASS: Output explains technical jargon on first use — SAML 2.0 defined in the intro, IdP/SP defined in the intro, assertion (ACS URL) defined inline at Step 11 — without condescension toward the IT-admin audience
-- [x] PASS: Output's verification step performs an actual end-to-end SSO login attempt — Part 3 instructs opening an incognito window, navigating to the login URL, clicking "Sign in with SSO", signing in as the test user, and confirming landing on the dashboard
-- [x] PASS: Output's troubleshooting section uses symptom → cause → fix for both named failure modes — certificate mismatch and attribute mapping entries each follow the three-part structure explicitly
-- [~] PARTIAL: Output's prerequisites are explicit with Azure AD Premium tier, Global Administrator role, platform admin role, and metadata URL — the Before you start table covers all four; however, the definition's prerequisite guidance says "account type, permissions, data" without specifying these exact items; the output specificity comes from domain knowledge, not definition rules
-- [x] PASS: Output's tone is procedural — single action per step, expected outcome stated, no hedge language ("feel free to", "you might want to") — active voice throughout, steps use imperative mood
-- [x] PASS: Output addresses the bidirectional nature explicitly — the intro paragraph explains that Azure values come into [Platform] and [Platform]'s values (Entity ID, ACS URL) go into Azure; both directions are shown in the ordered parts
-- [~] PARTIAL: Output addresses production cutover guidance — the Next steps section includes a paragraph on enforcing SSO, recommending password fallback during a 2-week transition before enforcing; this covers the lockout risk and the staged approach, though the definition has no explicit rule driving this — it appears in the output from general documentation judgment, not a mechanism in the definition
-
-## Notes
-
-The agent definition handles this scenario well. The multi-system SSO/Azure AD case is used as the worked example in the User Guides section ("Part 1: Configure Azure AD / Part 2: Configure [Platform]"), so the definition was written with this kind of task in mind. The two genuine gaps are: prerequisites content specificity (Azure AD Premium tier requirement is domain knowledge, not driven by any rule in the definition) and production cutover guidance (no mechanism in the definition requires or prompts it — it appears in the simulated output from general judgment). Both are quality gaps in the definition rather than output failures. The agent would produce a high-quality, usable article for IT admins; the rubric's most specific expectations slightly exceed what the definition mechanically guarantees.
+The article is a high-quality, well-structured SSO setup guide that excels at procedural clarity, bidirectional configuration flow, troubleshooting depth, and tone. Its main gap is the complete absence of inline jargon definitions — SAML, IdP, SP, and 'assertion' are all used without explanation, failing both c4 and c12 independently. The prerequisites section is solid on roles but omits the Azure AD Premium tier requirement, which is a significant operational gap (IT admins on Free tier cannot configure custom SAML apps). Production cutover guidance is present but shallow — the article tells admins to test before enforcing but gives no rollback path or password-fallback strategy for transitioning existing users. These three gaps together cost 2.5 points out of 17, leaving the article at 85.3% — comfortably passing but with actionable improvements in jargon glossing and cutover safety.

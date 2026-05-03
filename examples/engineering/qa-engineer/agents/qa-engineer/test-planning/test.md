@@ -4,7 +4,177 @@ Scenario: User asks the QA engineer to write tests for a payment processing modu
 
 ## Prompt
 
-We've just finished the payment processing module for our SaaS app. It handles three things: creating Stripe charges (with idempotency keys), processing refunds (full and partial), and verifying incoming Stripe webhooks using signature validation. There are currently zero tests. The module is in `src/payments/` and uses our Django Ninja API. Can you write a comprehensive test suite for it? We use pytest.
+We've just finished the payment processing module for our SaaS app. It handles three things: creating Stripe charges (with idempotency keys), processing refunds (full and partial), and verifying incoming Stripe webhooks using signature validation. There are currently zero tests. The module code is provided below as the specification — **treat it as code to implement via TDD, not code already on disk.**
+
+Follow TDD in two phases:
+1. **Phase 1 (RED):** Write ALL test files first, then run: `python3 -m venv .venv && .venv/bin/pip install -r requirements.txt -q && .venv/bin/pytest tests/ -v 2>&1 | tail -20` — confirm exit code 1 (import errors expected)
+2. **Phase 2 (GREEN):** Write ALL source files, then run: `.venv/bin/pytest tests/ -v 2>&1 | tail -30` — confirm exit code 0
+
+Create the project structure (`requirements.txt`, `config.py`, `src/__init__.py`, `src/payments/__init__.py`, `tests/__init__.py`, `tests/payments/__init__.py`) before writing tests.
+
+```
+# requirements.txt
+stripe>=7.0.0
+Django>=5.0.0
+django-ninja>=1.3.0
+pytest>=8.0.0
+pytest-mock>=3.14.0
+```
+
+```python
+# config.py
+class _Settings:
+    STRIPE_SECRET_KEY = "sk_test_fake_key_for_testing"
+    STRIPE_WEBHOOK_SECRET = "whsec_test_secret_for_testing"
+
+settings = _Settings()
+```
+
+Here is the module code to implement (write to disk in Phase 2, AFTER tests are written):
+
+```python
+# src/payments/charges.py
+from __future__ import annotations
+
+import stripe
+from dataclasses import dataclass
+from config import settings
+
+
+@dataclass(frozen=True)
+class ChargeResult:
+    charge_id: str
+    amount: int
+    currency: str
+    status: str
+
+
+class ChargeError(Exception):
+    pass
+
+
+def create_charge(
+    amount: int,
+    currency: str,
+    source: str,
+    idempotency_key: str,
+) -> ChargeResult:
+    if amount <= 0:
+        raise ChargeError(f"Amount must be positive, got {amount}")
+    if not idempotency_key:
+        raise ChargeError("idempotency_key is required")
+
+    try:
+        charge = stripe.Charge.create(
+            amount=amount,
+            currency=currency,
+            source=source,
+            idempotency_key=idempotency_key,
+            api_key=settings.STRIPE_SECRET_KEY,
+        )
+    except stripe.error.CardError as exc:
+        raise ChargeError(str(exc)) from exc
+
+    return ChargeResult(
+        charge_id=charge["id"],
+        amount=charge["amount"],
+        currency=charge["currency"],
+        status=charge["status"],
+    )
+```
+
+```python
+# src/payments/refunds.py
+from __future__ import annotations
+
+import stripe
+from dataclasses import dataclass
+from config import settings
+
+
+@dataclass(frozen=True)
+class RefundResult:
+    refund_id: str
+    charge_id: str
+    amount: int
+    status: str
+
+
+class RefundError(Exception):
+    pass
+
+
+def create_refund(charge_id: str, amount: int | None = None) -> RefundResult:
+    """Create a refund. amount=None means full refund."""
+    if amount is not None and amount <= 0:
+        raise RefundError(f"Refund amount must be positive, got {amount}")
+
+    params: dict = {"charge": charge_id}
+    if amount is not None:
+        params["amount"] = amount
+
+    try:
+        refund = stripe.Refund.create(
+            **params,
+            api_key=settings.STRIPE_SECRET_KEY,
+        )
+    except stripe.error.InvalidRequestError as exc:
+        raise RefundError(str(exc)) from exc
+
+    return RefundResult(
+        refund_id=refund["id"],
+        charge_id=refund["charge"],
+        amount=refund["amount"],
+        status=refund["status"],
+    )
+```
+
+```python
+# src/payments/webhooks.py
+from __future__ import annotations
+
+import stripe
+from ninja import Router
+from ninja.errors import HttpError
+from config import settings
+
+router = Router()
+
+
+def verify_webhook_signature(payload: bytes, sig_header: str, secret: str) -> dict:
+    """Verify Stripe webhook signature and return the event dict."""
+    try:
+        event = stripe.Webhook.construct_event(
+            payload=payload,
+            sig_header=sig_header,
+            secret=secret,
+        )
+    except stripe.error.SignatureVerificationError as exc:
+        raise ValueError("Invalid webhook signature") from exc
+
+    return dict(event)
+
+
+@router.post("/webhooks/stripe")
+def stripe_webhook(request) -> dict:
+    payload = request.body
+    sig_header = request.headers.get("Stripe-Signature", "")
+
+    try:
+        event = verify_webhook_signature(
+            payload, sig_header, settings.STRIPE_WEBHOOK_SECRET
+        )
+    except ValueError:
+        raise HttpError(400, "Invalid signature")
+
+    event_type = event.get("type", "")
+    if event_type == "charge.succeeded":
+        pass  # TODO: handle
+    elif event_type == "charge.refunded":
+        pass  # TODO: handle
+
+    return {"received": True}
+```
 
 ## Criteria
 

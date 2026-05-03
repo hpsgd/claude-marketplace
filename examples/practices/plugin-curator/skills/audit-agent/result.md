@@ -1,21 +1,24 @@
-# Result: audit-agent single agent full evaluation
+# Audit Agent
 
-**Verdict:** PASS
-**Score:** 16/18 criteria met (89%)
-**Evaluated:** 2026-04-30
+Scenario: A contributor asks for a full audit of the `devops` agent to check structural consistency before proposing it for the marketplace.
+
+## Prompt
+
+> /audit-agent devops
 
 ## Output
 
-The following is the simulated output of `/audit-agent devops` — what this skill would produce when run against `plugins/engineering/devops/agents/devops.md`.
+Captured from a real headless invocation of the skill/agent.
 
----
+### Chat response
+
+Now I have everything I need to produce the audit report.
 
 ## Agent Audit: devops
 
 ### Summary
-
-- **Lines:** 264 (target: 150–300) ✅
-- **Quality score:** 11/15 criteria met (1 N/A)
+- **Lines:** 264 (target: 150–300)
+- **Quality score:** 12/15 criteria met (0 N/A)
 - **Model:** sonnet (correct)
 
 ### Criteria
@@ -23,68 +26,66 @@ The following is the simulated output of `/audit-agent devops` — what this ski
 | # | Criterion | Status | Evidence |
 |---|---|---|---|
 | 1 | Line count (150–300) | ✅ | 264 lines |
-| 2 | Core statement | ✅ | Line 10: "You own the runtime environment — how code gets to production and stays running." Second person, one paragraph |
-| 3 | Non-negotiable rules | ✅ | Lines 12–13: "All infrastructure is code. No manual console changes. Every change is reviewable, versionable, and reproducible." Specific and falsifiable |
-| 4 | Pre-Flight | ⚠️ | Step 1 (line 18) says "Check for installed rules" but does NOT read `CLAUDE.md` or `.claude/CLAUDE.md` — the mandatory template requirement. Installed-rules check only is partial |
-| 5 | Mandatory methodology | ✅ | Step 3 (line 30) classifies work into explicit approach paths; downstream sections (IaC, CI/CD, Containers, etc.) use enforced language ("ENFORCED", "Standards", numbered sequential steps) |
-| 6 | Output format | ✅ | Lines 224–244: full template with `## Infrastructure`, Evidence table, Resources Changed, Verification, and Runbook sections |
-| 7 | Failure caps | ✅ | Lines 206–208: 3-failure rule for deployments and IaC apply; flaky pipeline rule. Section present at line 204 |
-| 8 | Decision checkpoints | ✅ | Lines 210–220: 5 triggers in a table — budget, network topology, database config, secrets, deployment strategy |
-| 9 | Collaboration table | ✅ | Lines 248–256: 7 roles listed with how devops works with each |
-| 10 | Principles | ⚠️ | Lines 198–202: 5 principles present but count is at the minimum. Each is domain-specific (cattle/pets, shift left, least privilege, automate toil, cost awareness). At 5/10 — borderline depth |
-| 11 | What You Don't Do | ✅ | Lines 259–263: 4 exclusions, each naming the owner role |
-| 12 | No private refs | ⚠️ | Line 60: "Weasel `ExtendedSchemaObjects`" — Weasel is a .NET library but appears without context or link, reads as internal jargon to an unfamiliar reader. Line 79: "Neon Postgres" mentioned as example without hyperlink. Minor but present |
-| 13 | Tool links | ⚠️ | Pulumi linked at line 40 ✅. Testcontainers linked at line 69 ✅. Moon linked at line 85 ✅. Storybook linked at line 86 ✅. NOT linked: "Marten" line 59 (no hyperlink on first mention), "Weasel" line 60 (no hyperlink), "Celery" line 150 (no hyperlink), "GitHub Actions" line 79 (mentioned in prose, not linked) |
-| 14 | Correct model | ✅ | Frontmatter: `model: sonnet` — correct for specialist agent |
-| 15 | Description precision | ✅ | "DevOps / platform engineer — infrastructure-as-code, CI/CD, deployment, monitoring, incident response. Use for infrastructure work, pipeline configuration, deployment issues, or observability setup." Role ✅, domain summary ✅, trigger conditions ✅ |
+| 2 | Core statement | ✅ | Line 10: "You own the runtime environment — how code gets to production and stays running." Second person, clear ownership |
+| 3 | Non-negotiable rules | ✅ | Line 12: "All infrastructure is code. No manual console changes." Specific and falsifiable |
+| 4 | Pre-Flight | ⚠️ | Line 17–18: Step 1 reads installed rules only — does not mention reading `CLAUDE.md` or `.claude/CLAUDE.md` as required by template |
+| 5 | Mandatory methodology | ✅ | IaC section labelled "(ENFORCED)", incident response labelled "(sequential, blocking)", deployment rules framed as requirements not suggestions |
+| 6 | Output format | ✅ | Lines 222–244: structured template with Evidence table, Resources Changed, Verification, and Runbook fields |
+| 7 | Failure caps | ✅ | Lines 206–208: 3-failure rule on deployments and IaC applies; flaky pipeline rule present |
+| 8 | Decision checkpoints | ✅ | Lines 210–220: 5 triggers with rationale (budget, security impact, data safety, secrets, risk profile) |
+| 9 | Collaboration table | ✅ | Lines 248–257: 7 roles (CTO, Architect, Developers, Release Manager, Performance Engineer, Security Engineer, Internal Docs Writer) |
+| 10 | Principles | ✅ | Lines 197–202: 5 principles (cattle not pets, shift left, least privilege, automate the toil, cost awareness) — domain-specific and opinionated |
+| 11 | What You Don't Do | ✅ | Lines 259–263: 4 boundaries, each names the owning role (architect, release manager, developers, security engineer / GRC lead) |
+| 12 | No private refs | ⚠️ | Lines 58–61: Schema Naming section references `Marten` and `Weasel ExtendedSchemaObjects` — open-source but .NET-stack-specific tools that imply a particular project's technology choices, not generic devops guidance |
+| 13 | Tool links | ❌ | Line 59: `Marten` mentioned without hyperlink; line 61: `Weasel` mentioned without hyperlink; line 86: `CSharpier` mentioned without hyperlink. (Pulumi, Testcontainers, Moon, Storybook are correctly linked) |
+| 14 | Correct model | ✅ | `model: sonnet` — correct for a specialist agent |
+| 15 | Description precision | ✅ | Line 3: includes role ("DevOps / platform engineer"), domain ("infrastructure-as-code, CI/CD, deployment, monitoring, incident response"), and triggers ("Use for infrastructure work, pipeline configuration, deployment issues, or observability setup") |
 
 ### Recommended Actions
 
-**Structural gaps**
+1. **Pre-Flight Step 1 (criterion 4):** Add explicit reads of `CLAUDE.md` and `.claude/CLAUDE.md` before the installed-rules check. Current text skips to rules only, which means the agent may miss project-level conventions entirely.
 
-1. **Pre-Flight incomplete (Criterion 4):** Step 1 does not read `CLAUDE.md` or `.claude/CLAUDE.md`. Add explicit reads: `Read(file_path="CLAUDE.md")` and `Read(file_path=".claude/CLAUDE.md")` at the start of Step 1, alongside the installed-rules check.
+2. **Tool links (criterion 13):** Add hyperlinks on first mention for three unlinked tools:
+   - Line 59: `[Marten](https://martendb.io)`
+   - Line 61: `[Weasel](https://github.com/JasperFx/weasel)`
+   - Line 86: `[CSharpier](https://csharpier.com)`
 
-**Content gaps**
+3. **Schema Naming section (criterion 12):** The Schema Naming subsection (lines 57–61) is .NET/Marten-specific and reads as project-level convention rather than generic devops guidance. Either move it to a project rule file (e.g., `devops--database-schema.md`) and reference it by name, or generalise it to "dedicate a schema per service; use whatever migration tooling your stack provides."
 
-2. **Tool links missing (Criterion 13):** Add hyperlinks on first mention for Marten (line 59), Weasel (line 60), Celery (line 150), and GitHub Actions (line 79 — mention it inline with a link or rely on the linked-section context). Suggested: `[Marten](https://martendb.io)`, `[Weasel](https://github.com/JasperFx/weasel)`, `[Celery](https://docs.celeryq.dev)`, `[GitHub Actions](https://docs.github.com/en/actions)`.
-3. **Private/internal references (Criterion 12):** "Weasel `ExtendedSchemaObjects`" at line 60 is a .NET library with no introduction — readers unfamiliar with Marten/Weasel will not know what this is. Add a brief inline link or remove it to a domain-specific rule file.
+## Evaluation
 
-**Style / depth**
+| Field | Value |
+|---|---|
+| Verdict | PASS |
+| Score | 16.5/17.0 (97%) |
+| Evaluated | 2026-05-01 |
+| Target duration | 90924 ms |
+| Target cost | $0.1600 |
+| Permission denials | 0 |
 
-4. **Principles at minimum count (Criterion 10):** 5 principles is the floor. Consider adding 2–3 more domain-specific principles (e.g., immutable infrastructure, observability-first, runbook-driven incident response) to bring depth up toward the 8–10 range.
+### Criteria
 
----
+| # | Criterion | Result | Evidence |
+|---|---|---|---|
+| c1 | Step 1 reads the agent template file before evaluating the devops agent — uses the template criteria as the audit checklist | PASS | Opening line 'Now I have everything I need to produce the audit report' implies prior file reading; the 15-criteria table structure (Pre-Flight, Failure Caps, Decision Checkpoints, Collaboration, etc.) matches a defined template format, confirming template was consulted. |
+| c2 | All 15 criteria are evaluated and scored (met, partially met, or missing) — none left blank | PASS | The table lists exactly 15 numbered rows, each with a ✅, ⚠️, or ❌ status. No row is blank or marked N/A. |
+| c3 | Every non-passing criterion includes specific evidence: what was looked for, what was found or not found, and where (file location or line number) | PASS | Criterion 4 (⚠️): 'Line 17–18: Step 1 reads installed rules only — does not mention reading CLAUDE.md'; criterion 12 (⚠️): 'Lines 58–61: Schema Naming section references Marten and Weasel ExtendedSchemaObjects'; criterion 13 (❌): 'Line 59: Marten mentioned without hyperlink; line 61: Weasel mentioned without hyperlink; line 86: CSharpier mentioned without hyperlink.' All non-passing entries cite specific lines. |
+| c4 | Output includes quality score in X/15 format and line count with the 150-300 line target | PASS | Summary section states 'Quality score: 12/15 criteria met (0 N/A)' and 'Lines: 264 (target: 150–300)'. |
+| c5 | Model correctness is checked — devops is a specialist agent and should use sonnet, not opus | PASS | Criterion 14 row: 'Correct model ✅ \| `model: sonnet` — correct for a specialist agent'. Explicitly verified sonnet and gave the justification. |
+| c6 | Tool links criterion checks that external tools mentioned in prose have markdown hyperlinks on first mention | PASS | Criterion 13 Evidence column names tools missing links (Marten, Weasel, CSharpier) and also confirms correctly linked tools: 'Pulumi, Testcontainers, Moon, Storybook are correctly linked'. |
+| c7 | Recommended actions are prioritised — structural gaps listed before content gaps before style issues | PASS | Recommended Actions: #1 Pre-Flight Step 1 (structural gap), #2 Tool links (content gap — missing hyperlinks), #3 Schema Naming section (content/style — over-specific project convention). Structural first, then content, then style. |
+| c8 | Frontmatter description precision criterion checks that the description includes role, domain summary, and trigger conditions in the required format | PARTIAL | Criterion 15 Evidence: 'Line 3: includes role ("DevOps / platform engineer"), domain ("infrastructure-as-code, CI/CD, deployment, monitoring, incident response"), and triggers ("Use for infrastructure work, pipeline configuration, deployment issues, or observability setup")'. All three elements checked and quoted. Ceiling capped at PARTIAL. |
+| c9 | Output evaluates all 15 template criteria for the devops agent — none skipped, none assumed | PASS | Table rows 1–15 are all present with explicit status values (✅/⚠️/❌). No criterion is left unevaluated. |
+| c10 | Output scores each criterion as MET / PARTIALLY MET / MISSING with a specific evidence reference (file path, line number, or quoted text) for non-MET findings | PASS | Each table row has an Evidence column. Non-passing entries (criteria 4, 12, 13) all cite line numbers (Lines 17–18, Lines 58–61, Lines 59/61/86). Passing entries cite line ranges confirming presence. |
+| c11 | Output reports the quality score as `X/15` and the actual line count of the devops agent file, with the 150-300 line target band stated | PASS | 'Quality score: 12/15 criteria met (0 N/A)' and 'Lines: 264 (target: 150–300)' both appear in the Summary section. |
+| c12 | Output verifies the model is `sonnet` (specialist agent) — flags as MISSING / wrong if it's `opus` or absent from the frontmatter | PASS | Criterion 14: '✅ \| `model: sonnet` — correct for a specialist agent'. Confirmed present and correct model value. |
+| c13 | Output's tool-links criterion checks the agent body for third-party tool mentions (e.g. Terraform, Docker, GitHub Actions) and confirms each has a markdown hyperlink on first mention | PASS | Criterion 13 Evidence: lists Marten (line 59), Weasel (line 61), CSharpier (line 86) as missing links, and confirms 'Pulumi, Testcontainers, Moon, Storybook are correctly linked'. Both missing and present tool links are checked. |
+| c14 | Output's frontmatter description check verifies the description includes the role, domain summary, and trigger conditions — quoting the actual description and flagging missing elements | PASS | Criterion 15 Evidence quotes the actual content: role 'DevOps / platform engineer', domain 'infrastructure-as-code, CI/CD, deployment, monitoring, incident response', triggers 'Use for infrastructure work, pipeline configuration, deployment issues, or observability setup'. No elements are flagged as missing, which is consistent with a ✅ rating. |
+| c15 | Output's recommended actions are prioritised — structural gaps (missing Pre-Flight, missing Failure Caps, missing Decision Checkpoints) before content gaps (sparse domain methodology) before style (line-count outside band, banned words) | PASS | Recommended Actions: #1 Pre-Flight Step 1 (structural gap), #2 Tool links (content gap), #3 Schema Naming section (generalization/style). Pre-Flight is the only structural failing criterion and it is first. Failure Caps and Decision Checkpoints both passed so correctly absent from recommendations. |
+| c16 | Output checks for private references / company names that shouldn't appear in a marketplace plugin | PASS | Criterion 12 (No private refs ⚠️): 'Lines 58–61: Schema Naming section references `Marten` and `Weasel ExtendedSchemaObjects` — open-source but .NET-stack-specific tools that imply a particular project's technology choices, not generic devops guidance'. Criterion and Recommended Action #3 both address this. |
+| c17 | Output verifies all mandatory sections per template are present — Core, Non-negotiable, Pre-Flight, Output Format, Failure Caps, Decision Checkpoints, Collaboration, Principles, What You Don't Do | PASS | All nine mandatory sections are verified: Core statement (c2 ✅), Non-negotiable rules (c3 ✅), Pre-Flight (c4 ⚠️), Output format (c6 ✅), Failure caps (c7 ✅), Decision checkpoints (c8 ✅), Collaboration table (c9 ✅), Principles (c10 ✅), What You Don't Do (c11 ✅). Each maps to a numbered criterion row. |
+| c18 | Output identifies any genuine gaps relative to peer specialist agents (e.g. compares devops sections against architect or ai-engineer for parity in depth) | FAIL | The audit report contains no mention of peer agents (architect, ai-engineer, or any other specialist). No cross-agent comparison appears anywhere in the output — not in the criteria table, not in the recommended actions, and not in any summary text. |
 
-## Criteria
+### Notes
 
-- [x] PASS: Step 1 reads the agent template file before evaluating — `Read(file_path="${CLAUDE_PLUGIN_ROOT}/templates/agent-template.md")` is the literal first instruction in Step 1; the template's quality criteria are named as the audit checklist
-- [x] PASS: All 15 criteria are evaluated and scored — Criterion 1 through Criterion 15 are explicitly enumerated in Step 3 with scoring guidance for each; none left blank
-- [x] PASS: Every non-passing criterion includes specific evidence — Step 4 mandates what was looked for, what was found or not found, and where; the Anti-Patterns section reinforces with a concrete counter-example ("Line 91: 'k6' mentioned without hyperlink")
-- [x] PASS: Output includes quality score in X/15 format and line count with the 150–300 target — the output format template shows `**Lines:** {count} (target: 150–300)` and `**Quality score:** {X}/15 criteria met ({Y} N/A)` in the Summary block
-- [x] PASS: Model correctness is checked for sonnet — Criterion 14 table maps specialists to sonnet; devops is a specialist so sonnet is expected
-- [x] PASS: Tool links criterion checks external tools in prose for markdown hyperlinks on first mention — Criterion 13 covers this; Anti-Patterns require citing the specific unlinked tool and line number
-- [x] PASS: Recommended actions are prioritised — Step 5 mandates structural gaps first, then content gaps, then style issues
-- [~] PARTIAL: Frontmatter description precision criterion checks role, domain summary, and trigger conditions — Criterion 15 specifies all three elements, but the output format evidence column only says `{includes role + domain + triggers?}` rather than requiring the actual description text to be quoted; the check is defined but quoting is implicit, not mandatory
-
-## Output expectations
-
-- [x] PASS: Output evaluates all 15 template criteria for the devops agent — all 15 rows present in the criteria table; none skipped
-- [x] PASS: Output scores each criterion with specific evidence reference for non-MET findings — every ⚠️ row in the simulated output cites a line number and quotes the relevant text; ✅ rows also cite line ranges
-- [x] PASS: Output reports quality score as X/15 and actual line count with 150–300 target band — Summary block states "264 lines (target: 150–300)" and "11/15 criteria met"
-- [x] PASS: Output verifies model is sonnet for specialist agents — Criterion 14 row explicitly states `model: sonnet — correct for specialist agent`
-- [x] PASS: Output's tool-links criterion checks agent body for third-party tool mentions and confirms markdown hyperlinks — Criterion 13 row lists Marten (line 59), Weasel (line 60), Celery (line 150), GitHub Actions (line 79) as unlinked; Recommended Actions item 2 provides suggested link targets
-- [~] PARTIAL: Output's frontmatter description check verifies description includes role, domain summary, and trigger conditions, quoting the actual description — Criterion 15 row does quote the full description and confirms all three elements present; the skill's output template only says `{includes role + domain + triggers?}` without mandating a quote, so this was done as best practice, not as a required output element
-- [x] PASS: Output's recommended actions are prioritised — Recommended Actions section separates structural gaps (Pre-Flight) → content gaps (tool links, private refs) → style/depth (principles count)
-- [x] PASS: Output checks for private references / company names — Criterion 12 row flags "Weasel `ExtendedSchemaObjects`" at line 60 and "Neon Postgres" at line 79
-- [x] PASS: Output verifies all mandatory sections per template are present — criteria table covers Pre-Flight (4), Output Format (6), Failure Caps (7), Decision Checkpoints (8), Collaboration (9), Principles (10), What You Don't Do (11) individually with line references
-- [~] PARTIAL: Output identifies genuine gaps relative to peer specialist agents — the skill has no step for cross-agent comparison; the simulated output does not compare devops against architect or ai-engineer for depth parity because the skill's process does not include that step. The expectation is real and unmet
-
-## Notes
-
-The skill is well-structured with Anti-Patterns doing heavy lifting — naming failure modes with concrete counter-examples meaningfully constrains vague output. The evidence mandate in Step 4 is specific enough to produce consistent results.
-
-Two real gaps surfaced in the simulated output that the existing result.md didn't surface: Pre-Flight on the devops agent is incomplete (reads rules but not CLAUDE.md), and four tools are unlinked. These are genuine findings, not edge cases.
-
-The quoting requirement on Criterion 15 is scored PARTIAL on both sides consistently. In practice a model following this skill would likely quote the description because the output template implies it, but explicit is better than implicit.
-
-The peer comparison criterion is genuinely unmet. The skill has no cross-agent comparison step and the simulated output reflects that. Scored PARTIAL (not SKIP) because the condition applies and the gap is real — it is an aspirational criterion the skill does not address.
+The audit output is thorough and well-structured, passing 16 of 18 criteria. It correctly evaluates all 15 template criteria with line-level evidence for non-passing items, prioritises recommended actions from structural to content to style, verifies model correctness, and flags both missing tool hyperlinks and private/project-specific references. The one genuine gap is c18: no cross-agent peer comparison is present anywhere in the output. The PARTIAL ceiling on c18 means this contributes 0 to the total but only 0.5 to the max, limiting the score impact. The output is otherwise very complete for a template-driven audit.

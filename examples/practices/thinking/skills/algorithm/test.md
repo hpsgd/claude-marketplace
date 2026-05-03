@@ -4,7 +4,114 @@ Scenario: A developer invokes the algorithm skill to refactor a payment processi
 
 ## Prompt
 
+First, set up the project by creating these files. Use Bash for mkdir, then Write for each file.
+
+```bash
+mkdir -p src/billing src/services src/orders src/api tests
+```
+
+```typescript
+// src/billing/gateway.ts
+export interface PaymentOptions {
+  currency: string;
+  idempotencyKey: string;
+}
+
+export interface ProcessPaymentResult {
+  transactionId: string;
+  status: 'success' | 'declined' | 'error';
+  amount: number;
+}
+
+export type PaymentStatus = 'pending' | 'completed' | 'failed' | 'refunded';
+
+export class PaymentGateway {
+  constructor(private readonly apiKey: string) {}
+
+  async processPayment(amount: number, opts: PaymentOptions): Promise<ProcessPaymentResult> {
+    return { transactionId: `txn_${Date.now()}`, status: 'success', amount };
+  }
+
+  async refund(transactionId: string): Promise<boolean> {
+    return true;
+  }
+}
+```
+
+```typescript
+// src/billing/invoice.ts  — 3 import statements from gateway (imports split intentionally for tree-shaking audit)
+import { PaymentGateway } from './gateway';
+import { ProcessPaymentResult } from './gateway';
+import { PaymentOptions } from './gateway';
+
+export class InvoiceService {
+  constructor(private readonly gateway: PaymentGateway) {}
+
+  async chargeInvoice(invoiceId: string, amount: number, opts: PaymentOptions): Promise<ProcessPaymentResult> {
+    return this.gateway.processPayment(amount, opts);
+  }
+}
+```
+
+```typescript
+// src/orders/checkout.ts  — 2 import statements from gateway
+import { PaymentGateway } from '../billing/gateway';
+import { PaymentOptions } from '../billing/gateway';
+
+export class CheckoutService {
+  constructor(private readonly gateway: PaymentGateway) {}
+
+  async completeOrder(orderId: string, amount: number, opts: PaymentOptions): Promise<void> {
+    await this.gateway.processPayment(amount, opts);
+  }
+}
+```
+
+```typescript
+// src/api/payments.ts  — 2 import statements from gateway
+import { PaymentGateway } from '../billing/gateway';
+import { PaymentStatus } from '../billing/gateway';
+
+export function createPaymentRouter(gateway: PaymentGateway) {
+  return {
+    getStatus: async (txnId: string): Promise<PaymentStatus> => {
+      return 'completed';
+    },
+  };
+}
+```
+
+```bash
+#!/bin/bash
+# tests/run.sh — verifies PaymentGateway is in the expected location
+set -e
+echo "=== Payment Gateway refactor tests ==="
+
+echo "Test 1: gateway.ts exists at original location..."
+test -f src/billing/gateway.ts && echo "PASS" || (echo "FAIL" && exit 1)
+
+echo "Test 2: counting import references across target files..."
+COUNT=$(grep -r "billing/gateway" src/billing/invoice.ts src/orders/checkout.ts src/api/payments.ts 2>/dev/null | wc -l | tr -d ' ')
+echo "Found $COUNT import references (expected 7)"
+
+echo "=== Done ==="
+```
+
+```json
+{
+  "name": "payment-module",
+  "version": "1.0.0",
+  "scripts": {
+    "test": "bash tests/run.sh"
+  }
+}
+```
+
+Now:
+
 /algorithm Refactor the payment processing module. Move `PaymentGateway` from `src/billing/gateway.ts` into its own service at `src/services/payment-gateway.ts`, update all 7 import references across `src/billing/invoice.ts`, `src/orders/checkout.ts`, and `src/api/payments.ts`, and make sure the existing tests still pass after the move.
+
+As you work through each phase, write your full phase-by-phase execution log to `handoff/algorithm-execution.md` — one section per phase — so the complete methodology is documented and reviewable.
 
 ## Criteria
 

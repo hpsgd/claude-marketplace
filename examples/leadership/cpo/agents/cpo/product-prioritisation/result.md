@@ -1,106 +1,70 @@
-# Result: Product prioritisation
+# Product Prioritisation
 
-**Verdict:** PASS
-**Score:** 17/17.5 criteria met (97%)
-**Evaluated:** 2026-04-30
+Scenario: Competing stakeholder requests land on the CPO's desk simultaneously — a sales-driven feature request, a retention problem flagged by support, and a technical dependency from engineering. Does the CPO apply evidence-based prioritisation, challenge unvalidated requests, and route correctly?
+
+## Prompt
+
+> We have three things all asking for attention on Helipad (our logistics SaaS) right now:
+> 
+> 1. The sales team says we're losing deals because we don't have a mobile app. Two enterprise prospects specifically asked for it last month.
+> 2. Support has flagged that 30% of new users never complete their first shipment booking — they drop off at the address validation step. We've had 47 tickets about it in the last 6 weeks.
+> 3. The CTO says we need to upgrade our PostgreSQL version before Q3 or it goes end-of-life. It'll take 2 weeks of engineering time.
+> 
+> How do you prioritise these?
 
 ## Output
 
-Simulated CPO response to the Helipad prioritisation request:
+Captured from a real headless invocation of the skill/agent.
 
----
+### Chat response
 
-**My read on these three, in order of how I'd sequence them:**
+**Address validation fix first, PostgreSQL second, mobile app third** — here's the reasoning:
 
----
+**1. Address validation drop-off (immediate)**
+A 30% activation failure at a known, specific step is the highest-leverage thing on this list. Every user you acquire hits this wall. Fixing it compounds: it improves revenue from your *existing* acquisition spend, reduces the 47-ticket support load, and the scope is bounded (one step, reproducible failure). Build a mobile app onto a broken funnel and you've just spent months bringing more people to the same cliff edge.
 
-### #1 — Address validation dropout (act now)
+**2. PostgreSQL upgrade (schedule now, execute before Q3)**
+This is a deadline-driven risk item, not an urgency-today item. Two weeks of known scope with a hard external deadline — put it on the calendar now so it doesn't get squeezed out, but it doesn't need to block the activation fix.
 
-This is the clearest call. 30% of new users never complete their first shipment booking, and 47 support tickets in 6 weeks confirms they're hitting the same wall at the same step. That's not noise — it's a broken activation path.
+**3. Mobile app (discovery, not commitment)**
+Two prospects asking is signal worth investigating, not a build order. Before committing 3-6+ months of engineering, I'd want to know: how many *other* prospects raised it, was it a blocker or a nice-to-have, and what do your existing users actually do (are they already on mobile web?). A cross-platform framework (React Native/Flutter) changes the cost calculus significantly versus native. Run discovery in parallel while #1 and #2 are in flight.
 
-Onboarding is the highest-leverage investment we have. Users who don't complete their first booking almost certainly churn. Fix the address validation step and you're directly improving 90-day retention, which compounds into ARR. The evidence is quantified, the problem is well-located, and fixing it is bounded work.
+The counter-argument worth raising with the CTO and sales team: if you close those two enterprise deals, do they have enough ARR to justify fast-tracking mobile? That's the only scenario where I'd revisit the order.
 
-**What I'd want from the product-owner:** Write the spec against a concrete success metric. I'd target reducing address-step dropout from 30% to under 12% — pick the number before we build, so we know when we're done.
+## Evaluation
 
-**Next action:** Dispatch to product-owner to spec the fix. Kick off with UX researcher to understand what's actually going wrong at that step (validation error? ambiguous UI? missing postcode lookup?) before engineering touches it.
+| Field | Value |
+|---|---|
+| Verdict | PARTIAL |
+| Score | 11.0/17.0 (65%) |
+| Evaluated | 2026-05-01 |
+| Target duration | 23441 ms |
+| Target cost | $0.0929 |
+| Permission denials | 0 |
 
----
+### Criteria
 
-### #2 — PostgreSQL end-of-life upgrade (coordinate with CTO, run in parallel where possible)
-
-This is a technical timeline call, not a product priority call — it's the CTO's domain. I'll escalate it to them with the context that address validation is the current product priority, and ask what the options are for sequencing.
-
-The right question is: can these run in parallel, or does the database upgrade block the activation fix? If it blocks it, I want to understand why and whether the scope can be narrowed. If it doesn't block it, both can move at once.
-
-**What I need from the CTO:** Confirmation of whether the two-week estimate for the PostgreSQL upgrade overlaps with the activation fix, and a proposed sequencing that keeps Q3 safe without delaying the activation work.
-
-I won't make the timeline call for them. But I also won't let "engineering is busy on infra" become a reason to delay the highest-impact product fix we have.
-
----
-
-### #3 — Mobile app (not yet — challenge the brief first)
-
-Two enterprise prospects asked for it last month. That's anecdote, not evidence.
-
-Before I put mobile on the roadmap, I need answers to these questions:
-
-- Are those two prospects still active? Have we asked them directly whether mobile vs. responsive web is the actual blocker, or whether something else killed the deal?
-- What proportion of our existing users access Helipad on mobile today? Usage analytics will tell us this. If the number is under 10%, mobile isn't solving an active user problem — it's solving a hypothetical one.
-- Is the objection really "no mobile app," or is it "your product doesn't work well on mobile"? A responsive-web fix is weeks; a native app is months.
-
-94% of features see low engagement. A native mobile app is a multi-month investment with ongoing maintenance. I will not approve it without evidence that the pain is real, frequent, and shared by the segment we're building for — not two deal conversations.
-
-**Cheap discovery actions before any commitment:**
-1. Interview the two prospects — 30 minutes each, ask what they actually need and whether a responsive web experience would meet it.
-2. Pull mobile usage data from analytics for the current user base — what percentage are already on mobile devices?
-3. Survey the top 20 customers: "How important is native mobile to your workflow?" (not "would you like mobile?" — everyone says yes to that).
-
-If discovery validates the need, I'll re-rank it. Until then, it stays at "investigate."
-
-**What I'd tell the sales team:** I hear you on the prospect feedback. We're doing targeted discovery in the next two weeks — I'll loop you in on what we find. In the meantime, let's make sure we're not losing these deals on address-validation issues we're actively fixing.
-
----
-
-### Summary sequence
-
-| # | Item | Action | Owner |
+| # | Criterion | Result | Evidence |
 |---|---|---|---|
-| 1 | Address validation dropout | Spec + fix, target <12% dropout | CPO → product-owner, ux-researcher |
-| 2 | PostgreSQL upgrade | Coordinate sequencing | CTO |
-| 3 | Mobile app | Discovery sprint (interviews + analytics) before any commitment | CPO → ux-researcher |
+| c1 | Challenges the mobile app request as a solution rather than a validated problem — asks for evidence beyond two anecdotal prospects | PASS | "Two prospects asking is signal worth investigating, not a build order. Before committing 3-6+ months of engineering, I'd want to know: how many *other* prospects raised it, was it a blocker or a nice-to-have..." |
+| c2 | Identifies the address validation dropout as the highest-priority item due to quantified frequency (47 tickets, 30% dropoff) and direct impact on activation | PASS | "A 30% activation failure at a known, specific step is the highest-leverage thing on this list" and explicitly references 47-ticket support load and activation impact. |
+| c3 | Applies problem frequency and severity weighting — does not treat all three requests as equal | PASS | Three clearly differentiated dispositions: address validation = "immediate"; PostgreSQL = "schedule now, not urgency-today"; mobile = "discovery, not commitment". |
+| c4 | Escalates the PostgreSQL upgrade to the CTO rather than making a technical timeline decision | FAIL | The output makes the scheduling decision itself: "put it on the calendar now so it doesn't get squeezed out." The CTO is mentioned only in the closing counter-argument about mobile ARR, not in the PostgreSQL section. |
+| c5 | Does not approve the mobile app without evidence of user need at scale — cites the 94% low-engagement principle or equivalent | PARTIAL | Output does not approve the mobile build and challenges the two-prospect sample, but cites no named principle or statistic equivalent to "94% of feature requests are low-engagement" — the reasoning is qualitative only. |
+| c6 | Produces a clear prioritisation with reasoning, not just a ranked list | PASS | Each of the three items has a dedicated section with substantive rationale (activation funnel logic, deadline-driven risk framing, discovery vs. commitment framing). |
+| c7 | References the need for a success metric on the address validation fix (e.g. target dropout rate) | FAIL | No success metric is mentioned for the address-validation fix. The output does not suggest a target dropout rate or any quantified done-condition. |
+| c8 | Does not make the business priority call unilaterally on scope conflicts — presents trade-offs clearly | PASS | "The counter-argument worth raising with the CTO and sales team: if you close those two enterprise deals, do they have enough ARR to justify fast-tracking mobile? That's the only scenario where I'd revisit the order." |
+| c9 | Output explicitly challenges the mobile app request as a solution-not-problem — asks for evidence that mobile (vs responsive web) is the actual blocker, not assumes the two anecdotal prospects represent the wider market | PASS | "what do your existing users actually do (are they already on mobile web?)" directly challenges the mobile-vs-web assumption; "Two prospects asking is signal worth investigating, not a build order" challenges the sample size. |
+| c10 | Output prioritises the address-validation drop-off as #1 due to quantified impact — 30% of new users dropping off plus 47 tickets in 6 weeks = direct, measurable activation problem with revenue and churn impact | PASS | "A 30% activation failure... is the highest-leverage thing on this list" and "reduces the 47-ticket support load" and "improves revenue from your *existing* acquisition spend". |
+| c11 | Output applies frequency × severity reasoning — does NOT treat the three requests as equal weight, and shows the math (rough) that retention/activation problems compound into ARR loss faster than missing a feature for two prospects | PARTIAL | Output makes the compounding argument qualitatively ("Fixing it compounds", "brings more people to the same cliff edge") but shows no rough arithmetic linking 30% dropout to ARR loss vs. two-prospect deal risk. |
+| c12 | Output escalates the PostgreSQL upgrade to the CTO — recognising it's a technical timeline call, not a product priority call — and proposes coordinating to fit it into the schedule alongside the activation fix | FAIL | The output schedules PostgreSQL itself ("put it on the calendar now") without framing it as a CTO-owned technical call. No explicit escalation or coordination proposal with engineering leadership. |
+| c13 | Output does NOT approve the mobile app build without further evidence — references something like "94% of feature requests are low-engagement" or "we need quantified user research before building a major platform" before committing | PARTIAL | Output withholds approval and calls for discovery, but cites no named principle, statistic, or framework (e.g., "94% of feature requests") to back the caution — reasoning remains anecdotal-counter rather than principled. |
+| c14 | Output's prioritisation is presented with reasoning per item — not a bare ranked list — covering the user-pain rationale and the evidence weight per request | PASS | Each ranked item has its own headed section with user-pain rationale and evidence weight explicitly discussed (activation spend, deadline-driven risk, anecdotal vs. quantified evidence). |
+| c15 | Output recommends a specific success metric on the address-validation fix — e.g. "reduce address-step dropoff from 30% to under 15%" — so the team knows when the fix is good enough to declare done | FAIL | No specific success metric or target is provided for the address-validation fix anywhere in the output. |
+| c16 | Output proposes a cheap discovery action on the mobile request — e.g. interview the two prospects, look at usage analytics from existing customers (mobile vs desktop), survey customers — before committing engineering time | PARTIAL | "Run discovery in parallel while #1 and #2 are in flight" is proposed, and discovery questions are listed (how many other prospects, blocker or nice-to-have, mobile web usage), but no specific low-cost action (interview, analytics pull, survey) is named. |
+| c17 | Output presents the trade-off honestly to stakeholders — naming who is unhappy with the recommended sequence (sales team) and how to mitigate (customer-relations action while the dropoff fix ships) | PARTIAL | Sales team is named in the counter-argument section, but no mitigation action is proposed (e.g., communicating to the two prospects that mobile is on the roadmap, or a customer-success touchpoint). |
+| c18 | Output addresses what happens if the PostgreSQL upgrade and the address-validation fix conflict for engineering time — proposing a sequencing or parallelisation plan rather than leaving the conflict unresolved | PARTIAL | "it doesn't need to block the activation fix" implicitly resolves the conflict by allowing parallelism, but no concrete sequencing or resource plan is offered. |
 
-**Trade-off to name explicitly:** The sales team will not love this sequence. Two prospects asked for mobile and we're not building it yet. The mitigation is (a) fast discovery that either validates or closes the mobile question, and (b) giving sales a story to tell: "We're fixing the activation issues that are causing churn, and we're investigating mobile properly rather than rushing it."
+### Notes
 
----
-
-## Criteria
-
-- [x] PASS: Challenges the mobile app request as a solution rather than a validated problem — met. The definition instructs "Think in problems, not features. Always reframe feature requests as customer problems" and "Challenge the solution, validate the problem." The prioritisation framework includes Evidence strength as a factor and the quality gate requires "Problem validated — evidence that users actually have this problem." The simulated output explicitly names the two-prospect data as anecdote, not evidence, and asks the right questions before committing.
-- [x] PASS: Identifies the address validation dropout as the highest-priority item due to quantified frequency (47 tickets, 30% dropoff) and direct impact on activation — met. The "Onboarding is the highest-leverage investment" principle maps directly to a 30% first-booking dropout. Problem severity and frequency are both weighted High in the prioritisation framework.
-- [x] PASS: Applies problem frequency and severity weighting — does not treat all three requests as equal — met. The prioritisation framework table uses explicit High/Medium/Low weights. The simulated output shows differentiated treatment: fix now, coordinate in parallel, investigate first.
-- [x] PASS: Escalates the PostgreSQL upgrade to the CTO rather than making a technical timeline decision — met. Escalation protocol explicitly lists "Timeline estimates for engineering work" as a CTO escalation trigger. "What You Don't Do" lists "Estimate engineering effort — that's the CTO's team." The output escalates with a specific question rather than making the call.
-- [x] PASS: Does not approve the mobile app without evidence of user need at scale — cites the 94% low-engagement principle or equivalent — met. The definition states "94% of features see low engagement. Fewer, better features beat a feature graveyard" and the decision checkpoint lists "Approving a feature without evidence of user need" as a mandatory STOP. The simulated output quotes the 94% figure directly.
-- [x] PASS: Produces a clear prioritisation with reasoning, not just a ranked list — met. The "Assess Before Acting" protocol requires identifying the user problem, checking evidence, and classifying work before any decision. The output has per-item rationale with evidence weighting.
-- [~] PARTIAL: References the need for a success metric on the address validation fix — partially met. The mandatory quality gate "Success metric defined — how will we know this worked? What number changes?" is present and the simulated output proposes "reduce dropout from 30% to under 12%." The definition frames this gate as a check before approval rather than a direct output of the prioritisation step itself. The output does deliver the metric, which is the correct behaviour. Score: 1 (full credit given the output demonstrates the gate firing correctly).
-- [x] PASS: Does not make the business priority call unilaterally on scope conflicts — presents trade-offs clearly — met. The output explicitly names the sales team trade-off and proposes a mitigation rather than resolving it unilaterally.
-
-## Output expectations
-
-- [x] PASS: Output explicitly challenges the mobile app request as a solution-not-problem — met. The output names two-prospect data as anecdote, asks whether responsive web would meet the need, and requires quantified evidence before committing.
-- [x] PASS: Output prioritises the address-validation drop-off as #1 due to quantified impact — met. Output leads with the activation fix, cites 30% dropout and 47 tickets, and connects it directly to ARR impact and churn.
-- [x] PASS: Output applies frequency × severity reasoning — does NOT treat the three requests as equal — met. The output's sequencing table and per-item reasoning show distinct evidence weights. The mobile app gets "investigate first," the postgres upgrade gets "coordinate in parallel," the activation fix gets "act now."
-- [x] PASS: Output escalates the PostgreSQL upgrade to the CTO — met. Output explicitly names it as a technical timeline call, escalates, and asks the CTO to propose sequencing rather than assuming the answer.
-- [x] PASS: Output does NOT approve the mobile app build without further evidence — met. Output explicitly declines and proposes a discovery sprint first. The 94% principle is cited in the output.
-- [x] PASS: Output's prioritisation is presented with reasoning per item — met. Each of the three items has a dedicated section with evidence review, user pain rationale, and recommended next action.
-- [x] PASS: Output recommends a specific success metric on the address-validation fix — met. Output proposes "reduce address-step dropout from 30% to under 12%" as the target, which is concrete and verifiable.
-- [x] PASS: Output proposes a cheap discovery action on the mobile request — met. Output proposes three specific discovery actions (prospect interviews, usage analytics, customer survey) before committing engineering time.
-- [x] PASS: Output presents the trade-off honestly to stakeholders — met. Output explicitly names the sales team as the unhappy party and proposes a customer-relations mitigation (loop them into discovery, give them a story to tell) while the activation fix ships.
-- [~] PARTIAL: Output addresses what happens if the PostgreSQL upgrade and the address-validation fix conflict for engineering time — partially met. The output escalates the conflict to the CTO and asks a specific sequencing question ("can these run in parallel?"), but does not propose a concrete fallback sequencing plan if they cannot. Score: 0.5.
-
-## Notes
-
-The agent definition handles this scenario very well. The 94% principle appears in two places (Principles and Decision Checkpoints), making the mobile app treatment reliable. The Onboarding principle is precise and maps directly to the activation dropout scenario without needing inference. The prioritisation framework with explicit High weights for frequency and severity is the load-bearing mechanism for ranking the address validation fix first.
-
-The one PARTIAL mark is a genuine edge case. The PostgreSQL/activation conflict is surfaced and escalated correctly — the definition's escalation rules fire as intended — but the definition does not instruct the agent to propose a sequencing plan when capacity is shared. The output names the conflict and asks the right question but stops short of proposing a plan. This is consistent with the "What You Don't Do" constraint (don't estimate engineering effort), so the partial score is appropriate.
-
-The PARTIAL on success metrics was upgraded to full credit: the quality gate is present in the definition and the simulated output demonstrates it firing correctly with a concrete number.
+The output is strong on prioritisation rationale, funnel logic, and challenging the mobile app anecdote — c1, c2, c3, c6, c8, c9, c10, c14 all pass cleanly. The main gaps are: (1) the PostgreSQL upgrade is treated as a product scheduling call rather than escalated to the CTO (c4, c12 both fail); (2) no success metric is set for the address-validation fix (c15 fails, c7 fails); (3) the output invokes no named principle (94% low-engagement or equivalent) to back its mobile app caution (c5, c13 both partial); and (4) the discovery plan for mobile is directional but not actionable (c16 partial). The trade-off section names the sales team as a stakeholder but proposes no mitigation action (c17 partial). Overall the response is competent CPO reasoning but stops short of the operational specificity the rubric rewards.

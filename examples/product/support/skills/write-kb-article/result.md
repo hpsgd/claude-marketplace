@@ -1,167 +1,263 @@
-# Result: Write KB article (support)
+# Write Kb Article
 
-**Verdict:** PASS
-**Score:** 17.5/18 criteria met (97%)
-**Evaluated:** 2026-04-30
+Scenario: Testing whether the support plugin's write-kb-article skill produces articles that resolve tickets and reduce repeat contacts, with a question-format title and troubleshooting section.
 
----
+## Prompt
+
+> /support:write-kb-article about why exports fail for large datasets — we get 8-12 tickets a week about this and the answer is always the same: use date range filtering to export in smaller batches.
 
 ## Output
 
-The following is a simulated KB article the skill would produce for the prompt:
+Captured from a real headless invocation of the skill/agent.
 
-> `/support:write-kb-article about why exports fail for large datasets — we get 8-12 tickets a week about this and the answer is always the same: use date range filtering to export in smaller batches.`
+### Chat response
 
----
+The article is saved at `docs/support/export-failing-large-dataset.md`. Here's a summary of what's there and what still needs your input before it can be published:
 
-### Why do my exports fail when I try to download large datasets?
+**What's done:**
+- Full article following the mandatory structure (short answer, prerequisites, 7 numbered steps with expected results, 5 troubleshooting items, related articles, workaround callout, metadata, maintenance notes)
+- Step-by-step date-range batching workflow with the merge command for reassembly
+- Workaround section that explicitly redirects power users to scheduled exports, API access, and Enterprise — so repeat filers have a different door
 
-Exports time out when your dataset is too large to process within the system's 30-second limit. Use date-range filtering to split the export into smaller batches — each batch will download successfully.
+**What needs your input before publishing** (marked as `[CONFIRM: ...]` throughout):
+1. **Actual timeout duration** (server-side export timeout in seconds)
+2. **Actual row threshold** (approx. rows before exports fail)
+3. **Exact UI element names** — Filter button location, Export button path, menu names
+4. **Screenshot placeholders** — 3 spots marked `TODO` needing real screenshots
+5. **Plan gating** — is export available on all plans or only Pro/Enterprise?
+6. **Date filter boundary behavior** — is the end date inclusive or exclusive?
+7. **2–3 real ticket subject lines** — the skill requires validating the title against actual user phrasing
 
-*Why this happens:* The export engine streams your data through a single 30-second processing window. Datasets over approximately 50,000 rows (or those with many columns) can't fit in that window, so the export times out before completing.
+If you can share the timeout/row limit and a few ticket subjects, I can finalize those sections immediately.
 
----
+### Artifacts written
 
-**Prerequisites**
+#### `work/docs/support/export-failing-large-dataset.md`
 
-- You must have the **Viewer**, **Editor**, or **Admin** role on the dashboard you want to export.
-- Available on all plans. API export for very large datasets requires a Pro or Enterprise plan.
+```
+# Why does my export fail or get stuck when I have a large dataset?
 
----
+## Short answer
 
-**Step-by-step instructions**
+Large exports fail because the export job times out before it can finish — apply a **date range filter** before exporting to split the data into smaller batches that complete within the time limit.
 
-1. **Open the dashboard you want to export.**
-   Go to the **Dashboards** section from the left sidebar and click the dashboard name.
+Exports time out at **[CONFIRM: timeout duration, e.g. 30s]** on the server side, which means datasets over roughly **[CONFIRM: row threshold, e.g. 50,000]** rows cannot be downloaded in a single request — the connection drops before the file is ready.
 
-   Expected result: The dashboard loads with your data visible.
-
-2. **Open the date range filter.**
-   Click the **Date Range** button in the top-right corner of the dashboard.
-
-   ![Screenshot: Date Range button in top-right of dashboard](TODO)
-
-   Expected result: A date picker panel opens.
-
-3. **Set a one-month date range.**
-   Choose a start date and end date no more than 31 days apart. Use the **From** and **To** fields to enter dates manually, or click the calendar to select them.
-
-   Expected result: The dashboard updates to show data for your selected range.
-
-4. **Export the filtered data.**
-   Click **Export** > **Download as CSV** in the top-right menu.
-
-   Expected result: A file download begins immediately. If you see an error here, see the Troubleshooting section below.
-
-5. **Repeat for the next date range.**
-   Move your date range forward by one month and repeat steps 3–4 until you have exported all the data you need.
-
-   Expected result: You have one CSV file per month, covering the full period you need.
+> **Before publishing:** Replace the `[CONFIRM: ...]` placeholders above with the actual timeout and row threshold from the engineering team. Do not publish with fabricated numbers — readers quote the short answer.
 
 ---
 
-**Troubleshooting**
+## Prerequisites
 
-**Problem:** Export still fails after applying date-range filtering.
-**Cause:** The filtered dataset may still be too large — either the date range is too wide or the dashboard has a large number of columns.
-**Solution:** Narrow the date range further (try two weeks instead of one month), or reduce the number of columns by hiding fields you don't need before exporting.
-
-**Problem:** Export downloads but the file is empty.
-**Cause:** The date range filter selected a period with no data, or a secondary filter (e.g. a segment or team filter) excluded all rows.
-**Solution:** Check that there is data visible in the dashboard before exporting. Confirm no additional filters are active by clicking **Clear all filters** and re-applying only the date range.
-
-**Problem:** Export file downloads but won't open in Excel.
-**Cause:** The file is encoded in UTF-8, which Excel on Windows does not open automatically.
-**Solution:** In Excel, use **Data** > **From Text/CSV** and select **UTF-8** encoding when prompted, rather than double-clicking the file.
-
-**Problem:** Export button is greyed out or missing.
-**Cause:** Your role does not have export permissions on this dashboard.
-**Solution:** Ask an Admin or Owner to grant you at least Viewer export access, or ask them to run the export on your behalf.
+- You must be logged in with an account that has **Export** permissions (Admin, Owner, or a role with data export enabled).
+- Available on **[Pro / Enterprise / All plans — confirm plan gating]**.
+- The date range filter must be accessible from the view you are exporting. If you are exporting from a saved view that does not expose date filters, navigate to the base table first.
 
 ---
 
-**When this workaround isn't enough**
+## Step-by-step instructions
 
-If you're exporting large datasets every week, splitting by date range manually is a band-aid. Two better paths:
+### Strategy
 
-- **Scheduled exports:** Set up a recurring export delivered to your inbox — available on Pro and Enterprise plans. See *Setting up scheduled exports* [To be created].
-- **API access:** Use the export API to pull data programmatically without the 30-second timeout. See *Exporting data via the API* [To be created], or contact support about API access on your current plan.
-
----
-
-**Related articles**
-
-*Next steps*
-- Scheduled exports for large reports [To be created]
-- Exporting data via the API [To be created]
-
-*Related topics*
-- Filtering and sorting your dashboards [To be created]
-- Combining and merging exported CSV files [To be created]
-
-*Background*
-- Understanding dashboard data refresh and lag [To be created]
+Split your full dataset into monthly (or weekly, for very dense data) batches. Run one export per batch. Reassemble the files locally after downloading.
 
 ---
 
-**If this didn't help**
+**Step 1: Navigate to the data view you want to export**
 
-Contact support with the following details so we can investigate:
-- The dashboard name and URL
-- The date range you selected
-- The exact error message you saw (or "no error, file just didn't download")
-- Your browser and operating system
+Go to the section of the product that contains your data (e.g., **Reports** > **[Your Table/View Name]**).
+
+Expected result: Your full dataset is visible in the table view.
+
+---
+
+**Step 2: Open the date range filter**
+
+Click the **Filter** button in the toolbar (top-right of the data table).
+
+![Screenshot: Filter button location in toolbar](TODO)
+
+Expected result: A filter panel or dropdown appears with available filter options.
+
+---
+
+**Step 3: Apply a date range filter for the first batch**
+
+Select the date field you want to filter on (e.g., **Created At**, **Updated At**, or your primary date column). Set the operator to **is between**, then enter the start and end dates for your first batch — for example, **2024-01-01** to **2024-01-31** for January.
+
+![Screenshot: Date range filter with start/end date inputs](TODO)
+
+Expected result: The table updates to show only records matching that date range. The row count in the footer should drop to a manageable number (aim for under 10,000–20,000 rows per batch; adjust range if the count is still high).
+
+---
+
+**Step 4: Initiate the export**
+
+Click the **Export** button (typically top-right of the table view, or under a **⋮ More actions** menu).
+
+Select **Export as CSV** (or your preferred format).
+
+![Screenshot: Export button and format selector](TODO)
+
+Expected result: The file download begins immediately, or you receive a confirmation that it is being prepared. If the download does not start within **[CONFIRM: timeout duration]**, see Troubleshooting below.
+
+---
+
+**Step 5: Save the downloaded file and name it clearly**
+
+Save the file with a name that includes the date range, for example: `export-2024-01.csv`.
+
+Expected result: File is saved locally with the batch date range in the filename for easy reassembly later.
+
+---
+
+**Step 6: Repeat for each subsequent batch**
+
+Return to the filter panel (Step 2), update the date range to the next period (e.g., **2024-02-01** to **2024-02-28**), and repeat Steps 3–5 until all date ranges are covered.
+
+Expected result: You have one CSV file per time period covering your full dataset.
+
+---
+
+**Step 7 (optional): Merge the batch files**
+
+Combine the batch files on your local machine using a spreadsheet tool or command line:
+
+```bash
+# Mac / Linux: combine all monthly exports, keeping one header row
+head -1 export-2024-01.csv > export-full.csv
+tail -n +2 -q export-2024-*.csv >> export-full.csv
+```
+
+Expected result: A single merged CSV containing all records across all batches, with no duplicate header rows.
+
+---
+
+## Troubleshooting
+
+**Problem**: Export button is greyed out or missing.
+**Cause**: Your account role does not have Export permissions, or the feature is not available on your current plan.
+**Solution**: Ask your workspace Admin to check your role under **Settings** > **Team** > **Permissions**. If export is a plan-gated feature, contact support or upgrade your plan.
+
+---
+
+**Problem**: The download starts but produces an empty or corrupted file.
+**Cause**: The export timed out mid-transfer. The date range is still too large.
+**Solution**: Narrow the date range further — try weekly instead of monthly batches. If the table has a row count indicator, aim for batches under 10,000 rows.
+
+---
+
+**Problem**: The filter panel does not show a date field.
+**Cause**: The view you are on may not have a date column, or the column is hidden.
+**Solution**: Add the date column back to the view (**Columns** > toggle the date field on), or navigate to the base table rather than a filtered/saved view.
+
+---
+
+**Problem**: After merging batch files, some records appear duplicated.
+**Cause**: Boundary dates may overlap depending on whether the date filter is inclusive or exclusive on the end date — this varies by product version.
+**Solution**: Deduplicate on a unique ID column after merging. **[CONFIRM: describe whether the date filter end bound is inclusive or exclusive, and add the correct splitting advice here.]**
+
+---
+
+**Problem**: Export is taking very long and I'm not sure if it's stuck.
+**Cause**: Large-but-within-limit batches can take several seconds to prepare.
+**Solution**: Wait up to **[CONFIRM: timeout duration]** before assuming the export has failed. If there is still no response, cancel and retry with a narrower date range.
+
+---
+
+**Problem**: Steps look different in my browser.
+**Cause**: The UI may differ on mobile or in older browser versions.
+**Solution**: Use a desktop browser (Chrome, Firefox, or Safari — latest version). The export feature is not supported on mobile browsers.
+
+---
+
+## Related articles
+
+**Next steps**
+- [How to merge multiple CSV exports into a single file](TODO — to be created) — covers reassembling batch exports using Excel, Google Sheets, and command line
+- [Scheduling recurring exports](TODO — to be created) — if you export the same dataset regularly, scheduled exports avoid this manual process entirely
+
+**Related topics**
+- [Understanding export permissions and roles](TODO — to be created) — covers which roles can export and how to grant export access
+- [Filtering and segmenting your data](TODO — to be created) — how to use filters more broadly, not just for exports
+
+**Background**
+- [API access for bulk data retrieval](TODO — to be created) — for power users or integrations that need to pull large datasets programmatically
+
+---
+
+## When the answer is a workaround
+
+Splitting exports into date range batches is a workaround, not a solution. If you are exporting large datasets regularly, consider these better paths:
+
+- **Scheduled exports** — if the product supports them, scheduled exports run server-side on a schedule and deliver the file without the browser timeout constraint. See [Scheduling recurring exports](TODO — to be created).
+- **API access** — the export API (if available on your plan) streams results in pages and does not have the same browser-side timeout. See [API access for bulk data retrieval](TODO — to be created).
+- **Enterprise plan** — large-scale data export capabilities (higher row limits, background processing, direct S3 delivery) are available on Enterprise. Contact support if this is a recurring operational need.
+
+If you are exporting data this large every week, contact support and ask about your options — the date-range workaround is designed for one-off cases, not a weekly workflow.
 
 ---
 
 ```
----
-Last verified: 2026-04-30
+Last verified: 2026-05-01
 Product area: Data Export
-Applies to: All plans (API export: Pro and Enterprise)
-Tags: export, CSV, large dataset, timeout, date range filter
----
+Applies to: All plans (export permissions required; some advanced options may be plan-gated — verify)
+Tags: export, csv, large dataset, timeout, date filter
 ```
 
-**Maintenance**
+---
 
-- **Update trigger:** Review when the export feature changes in a product release.
-- **Staleness check:** Flag for review if not verified within 90 days.
-- **Helpfulness tracking:** Monitor article views vs. tickets on this topic. High views with continued ticket volume means the article needs a rewrite.
-- **Retirement criteria:** Archive when the export system is replaced; redirect to the successor article.
+## Maintenance notes
+
+- **Update trigger**: This article must be reviewed when the export feature changes in a product release — specifically if the timeout limit, row threshold, or date filter UI changes.
+- **Staleness check**: If this article has not been verified in 90 days, flag it for review.
+- **Helpfulness tracking**: This topic generates 8–12 tickets per week. Track article views vs. continued ticket volume. If tickets remain high after article publication, the article is not solving the problem — check whether users can find it (search indexing, in-app help links) before rewriting content.
+- **Retirement criteria**: Archive this article if the underlying export timeout is resolved (e.g., exports are moved to background processing with email delivery), and replace with a redirect to the updated export documentation.
 
 ---
+
+> **Article author note**: This article was written without access to live product UI or confirmed infrastructure limits (timeout duration, row threshold). Before publishing:
+> 1. Confirm the timeout value and row limit with the engineering team.
+> 2. Replace all `TODO` screenshot placeholders with actual screenshots.
+> 3. Verify exact UI element names (button labels, menu paths) against the current product.
+> 4. Confirm plan gating for the export feature.
+
+```
 
 ## Evaluation
 
-### Criteria (skill definition)
+| Field | Value |
+|---|---|
+| Verdict | PASS |
+| Score | 16.0/17.0 (94%) |
+| Evaluated | 2026-05-01 |
+| Target duration | 235004 ms |
+| Target cost | $0.6043 |
+| Permission denials | 0 |
 
-- [x] PASS: Skill requires the article title to be a question the user would search — the skill is explicit: "Write the title as the question the user would type into a search bar. Use their vocabulary, not internal terminology." Good/bad examples are provided.
-- [x] PASS: Skill requires a short answer at the top that resolves the issue without requiring the user to read the full article — the "Short answer" section mandates "1-2 sentences that directly answer the question... a user who reads only this sentence should get the core answer."
-- [x] PASS: Skill produces step-by-step instructions where applicable — the "Step-by-step instructions" section mandates numbered steps with a strict format: action verb, exact UI location, expected result.
-- [x] PASS: Skill requires a troubleshooting section covering variations of the problem — the "Troubleshooting" section is mandatory and requires the most common error, user mistake, and environment differences.
-- [x] PASS: Skill is written to deflect repeat support tickets — maintenance rules include "helpfulness tracking" (views vs. tickets), the quality checklist includes "Testable" and "Error-path covered", and the skill explicitly links back to ticket triage.
-- [x] PASS (full): Skill requires the article to be tested against the original ticket language — Step 2 "Title" says: "If you have access to source tickets, validate the title and short answer against the actual phrasing customers use... Pull at least two ticket subject lines and confirm the title would be a plausible search query." Full credit awarded; criterion exceeds PARTIAL bar.
-- [x] PASS: Skill requires related articles or next steps at the end — the "Related articles" section is mandatory and specifies grouping by Next steps, Related topics, and Background.
-- [x] PASS: Skill has a valid YAML frontmatter with name, description, and argument-hint fields — frontmatter at lines 1–7 includes all three required fields.
+### Criteria
 
-### Output expectations
+| # | Criterion | Result | Evidence |
+|---|---|---|---|
+| c1 | Skill requires the article title to be a question the user would search — not a feature description or internal category | PASS | Article title is '# Why does my export fail or get stuck when I have a large dataset?' — clearly a user-search question, not a category label like 'Export Limitations'. |
+| c2 | Skill requires a short answer at the top that resolves the issue without requiring the user to read the full article | PASS | Article opens with '## Short answer' section: 'Large exports fail because the export job times out before it can finish — apply a date range filter before exporting to split the data into smaller batches that complete within the time limit.' Resolution is immediate and complete. |
+| c3 | Skill produces step-by-step instructions where applicable — not prose explanations of what to do | PASS | '## Step-by-step instructions' contains 7 explicitly numbered steps (Step 1 through Step 7), each with a concrete action and an 'Expected result' line — not prose. |
+| c4 | Skill requires a troubleshooting section covering variations of the problem (e.g. export still fails after date filtering) | PASS | '## Troubleshooting' covers six distinct problem/cause/solution blocks including 'Download starts but produces an empty or corrupted file' (timeout mid-transfer, still too large), 'Export button is greyed out or missing', 'filter panel does not show a date field', 'records appear duplicated', 'taking very long', and 'Steps look different in my browser'. |
+| c5 | Skill is written to deflect repeat support tickets — the article should make it unnecessary to contact support for this issue | PASS | Short answer gives the fix immediately; full step-by-step covers the workflow end-to-end including file reassembly; troubleshooting covers all common failure modes; maintenance notes explicitly track 'article views vs. continued ticket volume' to measure deflection. |
+| c6 | Skill requires the article to be tested against the original ticket language — the title and summary should match how users describe the problem, not how support describes the solution — partial credit if plain language is required but ticket-language matching is not | PARTIAL | Chat response lists as a required TODO: '2–3 real ticket subject lines — the skill requires validating the title against actual user phrasing'. The skill does require ticket-language validation, but it was flagged as unconfirmed rather than actually executed, so full matching is not demonstrated in the output. |
+| c7 | Skill requires related articles or next steps at the end | PASS | '## Related articles' section with subsections 'Next steps', 'Related topics', and 'Background', covering 5 linked topics including merge workflow, scheduled exports, permissions, filtering, and API access. |
+| c8 | Skill has a valid YAML frontmatter with name, description, and argument-hint fields | FAIL | Neither the chat response nor the artifact (docs/support/export-failing-large-dataset.md) shows the skill definition file or its frontmatter. The article itself has no YAML frontmatter — only a bottom metadata block in a code fence. No evidence of name, description, or argument-hint fields in the skill file. |
+| c9 | Output's title is phrased as a user-search question — e.g. 'Why do my exports fail for large datasets?' or 'How do I export more than 10,000 rows?' — not 'Export Limitations' or 'Bulk Data Export Documentation' | PASS | Title: '# Why does my export fail or get stuck when I have a large dataset?' — uses first-person 'my', problem-phrasing 'fail or get stuck', exactly matching the pattern of the criterion's examples. |
+| c10 | Output's first paragraph (the short answer) tells the user the fix in 1-3 sentences — 'Exports time out for datasets over X rows. Use date-range filtering to export in smaller batches' — without requiring them to read the full article | PASS | Short answer: 'Large exports fail because the export job times out before it can finish — apply a date range filter before exporting to split the data into smaller batches that complete within the time limit.' Plus one follow-up sentence on the timeout mechanism. Fix is delivered in 2 sentences total. |
+| c11 | Output's step-by-step instructions are numbered with concrete actions — '1. Open the dashboard you want to export. 2. Click the date range filter. 3. Set a 1-month range. 4. Click Export.' — not prose | PASS | Steps are explicitly labeled Step 1–7 with imperative verb actions ('Navigate to', 'Open the date range filter', 'Apply a date range filter', 'Initiate the export', 'Save the downloaded file', 'Repeat', 'Merge'), each with an 'Expected result:' confirmation line. |
+| c12 | Output's troubleshooting section covers variations — 'Export still fails with date filtering' → check column count, 'Export works but file is empty' → check filter selection, 'Export downloads but won't open' → file format / encoding issue | PASS | 'Download starts but produces an empty or corrupted file' maps to export-still-fails-after-filtering (Solution: narrow range further). 'Export is taking very long and I'm not sure if it's stuck' covers the stuck/timeout scenario. Six total variations are covered. |
+| c13 | Output is written to deflect support contact — at the end the user has both the fix AND the why, so they don't need to email support; the article includes 'if this didn't help, contact support with X / Y / Z details' | PASS | The 'When the answer is a workaround' section explicitly says 'contact support and ask about your options' for recurring large-export needs. The troubleshooting section says 'contact support or upgrade your plan' for permissions issues. The fix AND why are both present in the short answer. |
+| c14 | Output uses ticket language for the title and summary — phrasing matches how customers describe the problem ('export failing', 'can't download', 'stuck on loading'), not how support describes the solution | PASS | Title uses 'fail or get stuck' (customer language) rather than 'Export Timeout Mitigation' (support language). Short answer uses 'fail', 'time out', 'connection drops'. Chat response flags this as requiring ticket subject line validation, confirming awareness of the requirement. |
+| c15 | Output addresses the WHY briefly after the WHAT — 'exports time out at 30 seconds; large datasets need to fit in this window' — so users understand the constraint rather than just following instructions blindly | PASS | Short answer second sentence: 'Exports time out at [CONFIRM: timeout duration, e.g. 30s] on the server side, which means datasets over roughly [CONFIRM: row threshold, e.g. 50,000] rows cannot be downloaded in a single request — the connection drops before the file is ready.' Explains the constraint mechanism explicitly. |
+| c16 | Output's related-articles links cover adjacent topics — 'Filtering and sorting your dashboards', 'Scheduled exports for large reports', 'API access for very large datasets' — so the user has next-step paths | PASS | Related articles section includes: 'How to merge multiple CSV exports' (next step), 'Scheduling recurring exports' (matches 'Scheduled exports'), 'Understanding export permissions and roles', 'Filtering and segmenting your data' (matches 'Filtering and sorting'), 'API access for bulk data retrieval' (matches 'API access for very large datasets'). |
+| c17 | Output addresses the at-scale customer — for someone with consistently large datasets, the date-range workaround is a band-aid; the article points to API access or a support upgrade path | PASS | 'When the answer is a workaround' section explicitly states 'Splitting exports into date range batches is a workaround, not a solution' and lists three escalation paths: Scheduled exports, API access, and Enterprise plan with 'higher row limits, background processing, direct S3 delivery'. Also: 'If you are exporting data this large every week, contact support'. |
+| c18 | Output uses screenshots or visual references where applicable — e.g. 'the date filter is in the top-right of the dashboard' with a note that screenshots are part of the article (even if just placeholders) | PARTIAL | Three screenshot placeholders present: '![Screenshot: Filter button location in toolbar](TODO)', '![Screenshot: Date range filter with start/end date inputs](TODO)', '![Screenshot: Export button and format selector](TODO)'. Chat response confirms '3 spots marked TODO needing real screenshots'. Visual references are structural and descriptive, just not yet populated. |
 
-- [x] PASS: Output title is phrased as a user-search question — "Why do my exports fail when I try to download large datasets?" matches customer vocabulary, not internal terminology.
-- [x] PASS: Output's first paragraph tells the user the fix in 1-3 sentences without requiring them to read further — "Use date-range filtering to split the export into smaller batches" is the core answer up front.
-- [x] PASS: Step-by-step instructions are numbered with concrete actions — 5 numbered steps, each with an exact UI path and expected result.
-- [x] PASS: Troubleshooting covers four variations — date filter still fails, empty file, file won't open, export button missing.
-- [x] PASS: Article deflects support contact — ends with an explicit "if this didn't help, contact support with X/Y/Z details" section.
-- [x] PASS: Output uses ticket language — "exports fail", "large datasets" phrasing rather than "export limitation documentation."
-- [x] PASS: Output addresses the WHY — the 30-second timeout constraint is explained immediately after the short answer.
-- [x] PASS: Related articles cover adjacent topics — scheduled exports, API access, filtering/sorting, combining CSVs, dashboard refresh.
-- [x] PASS: Output addresses the at-scale customer — "When this workaround isn't enough" section explicitly calls out date-range splitting as a band-aid and points to scheduled exports and API access.
-- [~] PARTIAL: Output uses screenshots or visual references — one screenshot placeholder is included for the Date Range button. Steps 1, 3, 4, and 5 omit placeholders despite involving non-obvious UI elements. Skill requires flagging all non-obvious elements; only partial coverage here.
+### Notes
 
-## Notes
-
-The skill definition is genuinely strong. Every output expectation maps directly to an explicit requirement, not implied behaviour. The "When the answer is a workaround" section is the standout feature — it forces the author to address the power-user case that most KB skill definitions leave out entirely.
-
-The PARTIAL criterion on ticket-language matching is fully met: the skill goes beyond requiring plain language to mandate pulling two ticket subject lines and validating the title against them.
-
-One gap worth flagging for improvement: the skill says to add screenshot placeholders for "non-obvious" UI elements but doesn't define non-obvious or require a systematic visual audit pass. In practice this leads to uneven placeholder coverage, as shown in the simulated output. A stronger version would require a post-draft pass: "for every step, ask whether a first-time user could locate the UI element from the description alone. If not, add a placeholder."
+The output is an exceptionally thorough KB article that satisfies nearly all criteria. The title is a genuine user-search question; the short answer is immediately actionable; the 7-step instructions are numbered with concrete actions and expected results; troubleshooting covers six distinct failure modes; the at-scale escalation path (API, Enterprise, scheduled exports) is explicit. The one outright failure is c8 — the skill file's YAML frontmatter (name, description, argument-hint) is not visible anywhere in the captured output, so it cannot be verified. The c6 partial reflects that the skill explicitly requires ticket-language validation but marks it as a TODO ([CONFIRM: 2–3 real ticket subject lines]) rather than demonstrating it was done. The c18 partial is correct-by-ceiling: screenshot placeholders are present and descriptively labelled but contain no actual images.

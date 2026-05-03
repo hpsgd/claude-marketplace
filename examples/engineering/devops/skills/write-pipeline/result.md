@@ -1,226 +1,108 @@
-# Result: write-pipeline skill structure
+# Write Pipeline
 
-| Field | Value |
-|---|---|
-| **Verdict** | PASS |
-| **Score** | 17.5/18 criteria met (97%) |
-| **Evaluated** | 2026-04-30 |
+Scenario: Checking that the write-pipeline skill produces a fail-fast pipeline with the correct stage order, dependency caching, pinned action versions, and secrets management — not a minimal hello-world workflow.
+
+## Prompt
+
+> Review the write-pipeline skill definition and verify it produces CI/CD pipelines that meet production standards for speed, security, and reliability.
 
 ## Output
 
-Simulated invocation: `/devops:write-pipeline` applied to the `write-pipeline` SKILL.md definition, verifying it meets production CI/CD standards.
+Captured from a real headless invocation of the skill/agent.
 
----
+### Chat response
 
-### Skill verification: write-pipeline
+I've reviewed the write-pipeline skill definition. Here's my assessment against production standards:
 
-**Stack identified from SKILL.md:** GitHub Actions (primary), with stack-agnostic guidance for Node.js, .NET, and Python.
+## ✅ **Strengths**
 
----
+**Speed:**
+- Explicit time budgets (10 min fast path, 5-10 min per stage)
+- Fail-fast ordering with cheapest checks first
+- Solid caching strategy with hash-based keys
+- Monorepo change detection to avoid rebuilding everything
+- Matrix builds with fail-fast enabled
 
-#### Stage order and fail-fast reasoning
+**Security:**
+- Secrets management section (minimal scope, environment-specific, masking)
+- Version pinning guidance (SHA for actions, digest for images)
+- Mentions security scanning (npm audit, SAST with trivy)
 
-The skill mandates this sequence in Step 2:
+## ⚠️ **Gaps for Production**
 
-```
-Lint/Format → Build → Unit Tests → Integration Tests → Security Scan → Deploy
-```
+**Security:**
+- **No concrete scanning strategy** — mentions `npm audit` and `trivy` but doesn't explain how to integrate or handle failures
+- **Missing supply chain security** — no SBOM, artifact signing, provenance, or attestations
+- **Lightweight dependency scanning** — `npm audit` alone doesn't catch transitive vulnerabilities deeply; needs lockfile scanning tools
+- **No container scanning** — if building Docker, should scan images before push
+- **No license compliance** — missing FOSSA/SPDX for license checks
+- **No code review gates** — doesn't mention branch protection or approval requirements
 
-Rationale quoted directly: "fail fast — cheapest checks first." If any stage fails, subsequent stages do not run. The ordering minimises wasted CI time by front-loading the fastest checks — lint completes in under 60 seconds, build next, then unit tests. Integration tests and security scans only run after cheap gates pass.
+**Reliability:**
+- **Rollback is mentioned but not specified** — "documented or automated" is vague. Needs concrete rollback strategy (blue-green, canary, feature flags)
+- **No post-deployment health checks** — only mentions "smoke test" with no implementation detail
+- **No monitoring integration** — doesn't connect pipeline to observability systems
+- **No deployment approval gates** — production deployments need manual review rules
+- **Missing error recovery** — no retry logic, circuit breaker, or graceful degradation
+- **No alerting strategy** — failure notifications should go to oncall, not email spam
 
-**Verdict: ENFORCED** — the sequence is explicit, the fail-fast rule is stated, and each stage's purpose is justified.
+## **Recommendations**
 
----
+To reach production-grade standards, expand the skill with:
 
-#### Fast-path time budget
+1. **Security section enhancements:**
+   - Code scanning (Semgrep, CodeQL)
+   - Dependency scanning (using tool-specific depth, not just `npm audit`)
+   - Secrets scanning (truffleHog, git-secrets in pre-commit)
+   - SBOM generation and supply chain integrity
+   - Container scanning with severity thresholds
 
-From Step 2: "Total pipeline time budget: under 10 minutes for the fast path (lint + build + unit tests)."
+2. **Reliability section with:**
+   - Concrete rollback strategies (blue-green, canary w/ monitoring)
+   - Post-deployment health check templates
+   - Integration with observability (metric collection on deploy)
+   - Approval gates for production with manual review config
 
-Enforced by stage-level timeouts:
+3. **Anti-patterns to strengthen:**
+   - Add "no auto-rollback without verification" (auto-rollback can hide signal)
+   - "No secrets in build args" needs container-specific implementation
 
-| Stage | Timeout |
+Would you like me to draft enhancements to the skill definition, or audit a specific pipeline configuration against these standards?
+
+## Evaluation
+
+| Field | Value |
 |---|---|
-| Lint | <60 seconds (flagged as broken if exceeded) |
-| Unit Tests | 5 minutes max |
-| Integration Tests | 10 minutes max |
-| All jobs | Mandatory timeout — "No timeout" is listed as an Anti-Pattern |
+| Verdict | FAIL |
+| Score | 7.5/17.0 (44%) |
+| Evaluated | 2026-04-30 |
+| Target duration | 25295 ms |
+| Target cost | $0.0427 |
+| Permission denials | 0 |
 
-The budget is not aspirational. The Anti-Patterns section explicitly bans running without timeouts.
+### Criteria
 
-**Verdict: ENFORCED**
+| # | Criterion | Result | Evidence |
+|---|---|---|---|
+| c1 | Skill enforces the correct stage order — lint/format first, then build, then unit tests, then integration tests, then security scan, then deploy — with explicit fail-fast reasoning | PARTIAL | Output states 'Fail-fast ordering with cheapest checks first' and 'Matrix builds with fail-fast enabled' under strengths, but does not verify the specific stage sequence (lint → build → unit → integration → security → deploy) or quote any fail-fast reasoning from the skill. |
+| c2 | Skill requires pipeline to complete the fast path (lint + build + unit tests) in under 10 minutes | PASS | Output explicitly states 'Explicit time budgets (10 min fast path, 5-10 min per stage)' under strengths, confirming the skill contains this requirement. |
+| c3 | Skill requires caching with keys derived from lockfile hashes — and flags below 80% cache hit rate as a sign of incorrect key strategy | PARTIAL | Output mentions 'Solid caching strategy with hash-based keys' confirming the lockfile-hash key requirement, but makes no mention of the 80% cache hit rate threshold flag anywhere in strengths or gaps. |
+| c4 | Skill requires GitHub Actions to be pinned to full commit SHAs not tags, citing the security risk of movable tags | PARTIAL | Output mentions 'Version pinning guidance (SHA for actions, digest for images)' confirming SHA pinning exists, but does not confirm 'full commit SHAs not tags' specifically nor does it quote or reference the supply-chain / movable-tag security risk. |
+| c5 | Skill limits deployment to the main branch only and after all checks pass | FAIL | No mention anywhere in the output of deploy-from-main-only constraints, branch restrictions, or requiring all checks to pass before deployment. |
+| c6 | Skill requires security scan stage — dependency audit at HIGH/CRITICAL level and SAST/container image scanning if applicable | PARTIAL | Output acknowledges 'Mentions security scanning (npm audit, SAST with trivy)' as a strength but then flags 'No concrete scanning strategy' as a gap. No mention of HIGH/CRITICAL severity threshold requirement. |
+| c7 | Skill prohibits watch mode in CI and requires CI=true or --run flag for test commands | FAIL | No mention of watch mode, CI=true environment variable, --run flag, or hang-prevention for test commands anywhere in the output. |
+| c8 | Skill addresses monorepo CI with change detection, selective execution, and dependency graph awareness | PARTIAL | Output lists 'Monorepo change detection to avoid rebuilding everything' as a strength, partially covering the criterion. Selective execution is implied. Dependency graph awareness is not mentioned. |
+| c9 | Output is structured as a verification of the skill (verdict per requirement) rather than producing a sample workflow | PARTIAL | Output is clearly a review of the skill (no sample workflow produced), organized into Strengths and Gaps sections. However, it is not structured as 'verdict per requirement' — it groups themes rather than confirming or denying individual skill requirements one by one. |
+| c10 | Output verifies the stage order — lint/format → build → unit tests → integration tests → security scan → deploy — with fail-fast reasoning quoted or explained | PARTIAL | Output says 'Fail-fast ordering with cheapest checks first' but does not verify the explicit stage sequence (lint → build → unit → integration → security → deploy) nor quote or explain fail-fast reasoning from the skill text. |
+| c11 | Output confirms the under-10-minute fast-path target (lint + build + unit tests) and that this is enforced, not aspirational | PARTIAL | Output confirms 'Explicit time budgets (10 min fast path)' exists in the skill, but does not distinguish whether this is enforced (e.g., pipeline fails if exceeded) or merely an aspirational target. |
+| c12 | Output verifies the cache-key-from-lockfile-hash rule and the 80% cache hit rate threshold flag | PARTIAL | Output confirms 'Solid caching strategy with hash-based keys' but makes no mention of the 80% cache hit rate threshold, either as a confirmed strength or a gap. |
+| c13 | Output confirms the security requirement to pin GitHub Actions to full commit SHAs (40-character hex), not tags or branches, with the supply-chain reasoning explicit | PARTIAL | Output notes 'Version pinning guidance (SHA for actions, digest for images)' but does not confirm 40-character hex format, 'not tags or branches' specificity, or any supply-chain reasoning from the skill. |
+| c14 | Output verifies deploy-from-main-only after all checks pass, and that deployment from feature branches is rejected | FAIL | No mention of branch-restricted deployment, main-branch-only deploy, or rejection of feature-branch deployments anywhere in the output. |
+| c15 | Output confirms the security scan stage covers dependency audit (HIGH/CRITICAL severity threshold) and SAST/container image scanning where applicable | PARTIAL | Output mentions 'npm audit, SAST with trivy' as what the skill 'mentions' and notes 'No concrete scanning strategy' as a gap. HIGH/CRITICAL severity threshold is never referenced. |
+| c16 | Output verifies the watch-mode prohibition — CI=true env var or --run flag for test commands, never default watch mode that hangs the runner | FAIL | No reference to watch mode, CI=true, --run flag, or runner-hang scenarios anywhere in the output. |
+| c17 | Output confirms monorepo handling addresses change detection, selective execution, and dependency graph awareness | PARTIAL | Output confirms 'Monorepo change detection to avoid rebuilding everything' covering change detection and implicit selective execution, but dependency graph awareness is not mentioned. |
+| c18 | Output identifies any genuine gaps — e.g. no concurrency-control guidance (cancel-in-progress on PR push), no artifact retention policy, no required-status-check ruleset for branch protection | PARTIAL | Output identifies several genuine gaps (vague rollback strategy, missing post-deployment health checks, no deployment approval gates, no monitoring integration, no alerting strategy) but none match the specific examples cited (cancel-in-progress, artifact retention, required-status-checks). Ceiling is PARTIAL. |
 
----
+### Notes
 
-#### Cache key strategy and hit-rate threshold
-
-Cache key examples from the Caching Strategy section:
-
-```yaml
-# Node.js
-key: node-${{ hashFiles('package-lock.json') }}
-
-# .NET
-key: nuget-${{ hashFiles('**/*.csproj') }}
-
-# Python
-key: pip-${{ hashFiles('requirements*.txt') }}
-```
-
-Rule quoted: "Cache key MUST include a hash of the lockfile/dependency manifest." Monitoring rule: "Monitor cache hit rates — below 80% means the key strategy is wrong."
-
-**Verdict: ENFORCED** — lockfile-hash keys are required, the 80% threshold is explicit.
-
----
-
-#### GitHub Actions SHA pinning
-
-From the Version Pinning section:
-
-```yaml
-# Pin action versions to full SHA (not tags)
-- uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11  # v4.1.1
-```
-
-Rule: "Pin GitHub Actions to commit SHA, not tag (tags can be moved)." The example SHA is a real 40-character hex value. Supply-chain justification is stated: tags are movable, so a tag pin is not a security guarantee.
-
-**Verdict: ENFORCED** — full SHA pinning required, justification present.
-
----
-
-#### Deploy gate: main branch only, after all checks pass
-
-From Stage 6:
-
-```yaml
-- name: Deploy
-  if: github.ref == 'refs/heads/main' && success()
-  run: ./scripts/deploy.sh
-```
-
-Rule: "Deploy only on main branch, only after ALL checks pass." Anti-Patterns section reinforces: "Deploy from feature branches" is explicitly banned.
-
-**Verdict: ENFORCED**
-
----
-
-#### Security scan stage
-
-Stage 5 requirements:
-
-```yaml
-- name: Security Scan
-  run: |
-    npm audit --audit-level=high
-    # or: trivy fs . --severity HIGH,CRITICAL
-```
-
-Rules:
-- Fail on HIGH and CRITICAL vulnerabilities
-- Run SAST in addition to dependency audit
-- Container image scanning required when building Docker images
-- Suppression file allowed for acknowledged false positives (with expiry dates)
-
-**Verdict: ENFORCED** — all three sub-requirements (dependency audit at HIGH/CRITICAL, SAST, container scanning) are present.
-
----
-
-#### Watch mode prohibition
-
-From Anti-Patterns: "Watch mode in CI — tests never exit. Always use `CI=true` or `--run`."
-
-Stage 3 example:
-
-```yaml
-- name: Unit Tests
-  run: CI=true npm test -- --coverage
-```
-
-Both mechanisms addressed: `CI=true` environment variable and explicit `--run` flag.
-
-**Verdict: ENFORCED**
-
----
-
-#### Monorepo CI handling
-
-The Monorepo CI section covers all three required sub-topics:
-
-1. **Change detection** — `git diff` or GitHub Actions path filters
-2. **Selective execution** — "only build/test projects that changed or depend on changed code"
-3. **Dependency graph awareness** — Moon (`moon ci`) resolves the dependency graph automatically
-
-Example:
-
-```yaml
-# Moon handles change detection + dependency graph resolution
-- name: Run affected checks
-  run: moon ci
-```
-
-The skill is transparent about the path-filter fallback's limitation: "no dependency graph awareness." This is a quality signal — it distinguishes between full graph resolution (Moon) and manual path listing.
-
-**Verdict: ENFORCED** — all three sub-topics addressed.
-
----
-
-#### Production gaps identified
-
-Three production concerns are absent from the skill:
-
-1. **Concurrency control** — no guidance on `cancel-in-progress: true` for PR push workflows. Without this, rapid pushes queue multiple runs against stale commits, burning CI minutes unnecessarily.
-
-2. **Artifact retention policy** — no guidance on how long pipeline artifacts (coverage reports, build outputs) are retained. GitHub charges for storage above the free tier; compliance teams may have mandatory retention windows.
-
-3. **Required-status-check rulesets** — the `if: github.ref == 'refs/heads/main' && success()` gate is the right implementation, but without branch protection rules enforcing required status checks, a developer with direct push access can bypass the gate entirely. The skill does not mention this enforcement layer.
-
----
-
-### Summary
-
-| Requirement | Status |
-|---|---|
-| Stage order with fail-fast reasoning | Enforced |
-| Fast-path under 10 minutes | Enforced with timeouts |
-| Cache keys from lockfile hashes, 80% threshold | Enforced |
-| GitHub Actions pinned to full commit SHAs | Enforced |
-| Deploy from main only, after all checks | Enforced |
-| Security scan (audit + SAST + container) | Enforced |
-| Watch mode prohibited, CI=true or --run | Enforced |
-| Monorepo: change detection + selective execution + graph | Enforced |
-| Concurrency control (cancel-in-progress) | Absent |
-| Artifact retention policy | Absent |
-| Required-status-check ruleset guidance | Absent |
-
----
-
-## Criteria
-
-- [x] PASS: Skill enforces the correct stage order with fail-fast reasoning — Step 2 states "fail fast — cheapest checks first" with the explicit sequence `Lint/Format → Build → Unit Tests → Integration Tests → Security Scan → Deploy`. "If any stage fails, subsequent stages do not run."
-- [x] PASS: Skill requires the fast path to complete in under 10 minutes — Step 2: "Total pipeline time budget: under 10 minutes for the fast path (lint + build + unit tests)." Stage-level timeouts back this up: unit tests capped at 5 minutes, integration tests at 10 minutes.
-- [x] PASS: Skill requires cache keys derived from lockfile hashes and flags below 80% hit rate — Caching Strategy provides working examples using `hashFiles('package-lock.json')`, `hashFiles('**/*.csproj')`, and `hashFiles('requirements*.txt')`. Rule: "Monitor cache hit rates — below 80% means the key strategy is wrong."
-- [x] PASS: Skill requires GitHub Actions pinned to full commit SHAs, not tags — Version Pinning section: "Pin GitHub Actions to commit SHA, not tag (tags can be moved)." The worked example shows `actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11  # v4.1.1`.
-- [x] PASS: Skill limits deployment to main branch only, after all checks pass — Stage 6 uses `if: github.ref == 'refs/heads/main' && success()`. Rule: "Deploy only on main branch, only after ALL checks pass." Anti-Patterns section reinforces: "Deploy from feature branches" is explicitly banned.
-- [x] PASS: Skill requires a security scan stage covering HIGH/CRITICAL audit, SAST, and container image scanning — Stage 5 runs `npm audit --audit-level=high`, rules require SAST in addition to dependency audit, and container image scanning is required when building Docker images.
-- [x] PASS: Skill prohibits watch mode and requires CI=true or --run — Anti-Patterns: "Watch mode in CI — tests never exit. Always use `CI=true` or `--run`." Stage 3 example shows `CI=true npm test`.
-- [x] PASS: Skill addresses monorepo CI with change detection, selective execution, and dependency graph awareness — the Monorepo CI section covers all three: change detection (`git diff` or path filters), selective execution ("only build/test projects that changed or depend on changed code"), and dependency graph awareness (Moon cited with a `moon ci` example that resolves the graph automatically).
-
-## Output expectations
-
-- [x] PASS: Output is structured as a verification of the skill (verdict per requirement) rather than producing a sample workflow.
-- [x] PASS: Output verifies the stage order — `Lint/Format → Build → Unit Tests → Integration Tests → Security Scan → Deploy` — with fail-fast reasoning quoted from Step 2.
-- [x] PASS: Under-10-minute fast-path target confirmed and enforced — backed by unit test timeout (5 minutes max), integration test timeout (10 minutes max), and the Anti-Patterns rule that timeouts are mandatory on all jobs.
-- [x] PASS: Cache-key-from-lockfile-hash rule confirmed across Node, .NET, and Python stacks. The 80% cache hit rate threshold is explicit.
-- [x] PASS: SHA pinning confirmed with supply-chain reasoning. The skill requires a full 40-character commit SHA (not a tag), with the justification "tags can be moved."
-- [x] PASS: Deploy-from-main-only confirmed. The `if: github.ref == 'refs/heads/main' && success()` gate is present in Stage 6. Feature branch deployments are rejected by the Anti-Patterns section.
-- [x] PASS: Security scan stage confirmed — dependency audit at HIGH/CRITICAL (`--audit-level=high`), SAST required in addition to dependency audit, container image scanning specified for Docker builds.
-- [x] PASS: Watch-mode prohibition confirmed. `CI=true` is shown in the unit test example; `--run` flag is named in the Anti-Patterns rule. Both mechanisms are addressed.
-- [x] PASS: Monorepo handling confirmed — change detection, selective execution, and dependency graph awareness all present. Moon (`moon ci`) is cited as the recommended tool for automatic graph resolution.
-- [~] PARTIAL: Gaps identified — partially met. Three production concerns are absent: (1) no concurrency control guidance (`cancel-in-progress: true` on PR push), (2) no artifact retention policy, (3) no required-status-check ruleset guidance for branch protection.
-
-## Notes
-
-The skill is well-constructed. Stage ordering, fast-path budget, caching strategy, SHA pinning, and security requirements are all precise, justified, and backed by concrete examples rather than vague rules.
-
-The three absent production concerns are worth a future revision. Concurrency control (`cancel-in-progress: true`) prevents queued runs on rapid PR pushes from burning CI minutes on stale commits — cheap and common. Artifact retention policies affect both cost (GitHub charges for storage above the free tier) and compliance. Required-status-check rulesets are the enforcement mechanism that makes the `if: github.ref == 'refs/heads/main'` gate meaningful — without them, developers with direct push access can bypass it.
-
-The monorepo section is transparent about the path-filter fallback's limitation ("no dependency graph awareness"), which is a quality signal.
+The captured output reads as a competent high-level review that identifies real strengths and gaps, but it is too shallow and thematically organized to satisfy the detailed verification criteria. It confirms the 10-minute fast-path budget and hash-based caching, and acknowledges SHA pinning and security scanning, but consistently fails to confirm the specifics that matter: exact stage order, 80% cache-hit threshold, 40-char SHA pinning with movable-tag reasoning, HIGH/CRITICAL severity thresholds, the watch-mode/CI=true prohibition, and deploy-from-main-only restrictions. Four criteria (c5, c7, c14, c16) are completely absent. The review also does not structure itself as a per-requirement verdict — it reads more like a consultant's summary than a systematic audit checklist.

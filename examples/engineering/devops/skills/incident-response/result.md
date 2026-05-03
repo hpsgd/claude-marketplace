@@ -1,206 +1,69 @@
-# Result: incident-response skill structure
+# Incident Response
 
-**Verdict:** PASS
-**Score:** 19.5/20 criteria met (97.5%)
-**Evaluated:** 2026-04-30
+Scenario: Checking that the incident-response skill enforces a sequential five-phase process with mitigation before root cause analysis, mandatory timeline, and blameless post-mortem for high-severity incidents.
 
----
+## Prompt
+
+> Review the incident-response skill definition and verify it provides a structured process that prevents common incident response failures (root-causing before mitigating, simultaneous changes, no timeline).
 
 ## Output
 
-The following is a simulated evaluation response the skill would produce when invoked against the prompt: "Review the incident-response skill definition and verify it provides a structured process that prevents common incident response failures (root-causing before mitigating, simultaneous changes, no timeline)."
+Captured from a real headless invocation of the skill/agent.
 
----
+### Chat response
 
-### Skill Evaluation: incident-response
+The skill directly addresses all three failure modes. Here's the verdict:
 
-**Skill:** `plugins/engineering/devops/skills/incident-response/SKILL.md`
-**Test focus:** Structural verification — does the definition prevent three named failure modes?
+**Root-causing before mitigating** — Explicitly prevented. The cardinal rule is declared at the top ("mitigate first, root-cause second"), Phase 4 is gated with "Only after mitigation is confirmed effective", and it's called out in the Anti-Patterns section. No ambiguity.
 
----
+**Simultaneous changes** — Covered in two places: Phase 3 rules ("Do not change multiple things at once... you don't know which helped") and Phase 4 step 5 ("Test the hypothesis with one change"). Anti-Patterns reinforces it. Solid.
 
-#### Phase structure
+**No timeline** — Mandatory from Phase 2 onward. Concrete format provided (`HH:MM UTC — [Event] — [Source]`), described as "the single most important artifact", Phase 3 requires logging every mitigation action to it, and the Anti-Patterns section calls out its absence explicitly.
 
-The skill defines five sequential phases, explicitly labelled and ordered:
+**Minor gaps worth noting:**
 
-| # | Phase | Key constraint |
-|---|---|---|
-| 1 | Detect and Classify | Classify severity; when in doubt, classify up |
-| 2 | Assess Impact | Build mandatory timeline before taking action |
-| 3 | Mitigate | STOP THE BLEEDING — speed over elegance |
-| 4 | Root Cause Analysis | Only after mitigation is confirmed effective |
-| 5 | Prevent Recurrence | Concrete actions with owner and deadline |
+- No incident commander / roles assignment — for SEV-1, who owns the timeline vs. who executes mitigations isn't defined. Parallel work during an incident needs coordination.
+- The "Output" section references `templates/runbook.md` (line 229) — if that file doesn't exist, the reference is dead weight.
+- No shift-change protocol for long-running SEV-1s (handoff procedure).
 
-The cardinal rule is stated at the top of the process section: "mitigate first, root-cause second. Never spend 30 minutes investigating while users are down." Phase 4 opens with "Only after mitigation is confirmed effective" — making the sequencing a hard gate, not a suggestion.
+The core structure is sound and the three failure modes you called out are all explicitly guarded against. The gaps are real but secondary — they matter at scale/team size, not for the skill's primary purpose.
 
----
+## Evaluation
 
-#### Severity classification table
+| Field | Value |
+|---|---|
+| Verdict | FAIL |
+| Score | 6.0/18.5 (32%) |
+| Evaluated | 2026-04-30 |
+| Target duration | 46717 ms |
+| Target cost | $0.1329 |
+| Permission denials | 0 |
 
-| Severity | Criteria | Response time | Communication cadence |
+### Criteria
+
+| # | Criterion | Result | Evidence |
 |---|---|---|---|
-| SEV-1 (Critical) | Service down, data loss, security breach, revenue impact | Immediate | Every 15 minutes |
-| SEV-2 (High) | Major feature degraded, affecting many users, no workaround | < 30 min | Every 30 minutes |
-| SEV-3 (Medium) | Feature degraded, workaround exists, limited user impact | < 2 hours | Every 2 hours |
-| SEV-4 (Low) | Minor issue, cosmetic, single user affected | Next business day | Resolution only |
+| c1 | Skill defines five sequential phases — Detect, Assess Impact, Mitigate, Root Cause, Prevent Recurrence — and states that mitigation must precede root cause analysis | PARTIAL | Output confirms mitigation precedes root cause ('mitigate first, root-cause second' as cardinal rule, Phase 4 gated with 'Only after mitigation is confirmed effective') but never enumerates all five phases by name. |
+| c2 | Skill provides a severity classification table (SEV-1 through SEV-4) with criteria, response time, and communication cadence for each level | FAIL | Output only mentions 'SEV-1' once (in the context of shift-change handoff). No severity table, no SEV-2 through SEV-4, no response times, no communication cadences described. |
+| c3 | Skill requires building a mandatory timeline with timestamps and sources — and states the timeline is the single most important artifact | PASS | Output states the timeline is 'described as the single most important artifact', 'Concrete format provided (HH:MM UTC — [Event] — [Source])', and 'Phase 3 requires logging every mitigation action to it'. |
+| c4 | Skill's mitigation phase lists options in order of preference (feature flag, rollback, scale, redirect, config change, hotfix) with risk assessment for each | FAIL | Output makes no mention of ordered mitigation options, feature flags, rollbacks, or risk assessments for each option. |
+| c5 | Skill prohibits changing multiple things simultaneously during mitigation — one change at a time to know what worked | PASS | Output quotes Phase 3 rule: 'Do not change multiple things at once... you don't know which helped' and Phase 4 step 5: 'Test the hypothesis with one change'. |
+| c6 | Skill's root cause section requires forming a specific, falsifiable hypothesis before testing — distinguishes bad ("database is slow") from good ("query X has sequential scan because index dropped in migration Z") | FAIL | Output does not mention falsifiable hypotheses or the contrasting bad/good examples anywhere. |
+| c7 | Skill mandates a post-mortem for SEV-1 and SEV-2 incidents using the provided template | FAIL | Output mentions 'post-mortem' only in the minor gaps section (no shift-change protocol for 'long-running SEV-1s'). Never confirms post-mortem is mandatory for SEV-1 and SEV-2, and does not reference any template. |
+| c8 | Skill lists anti-patterns including root-cause before mitigate, multiple simultaneous changes, blame individuals, and "be more careful" as prevention | PARTIAL | Output confirms an 'Anti-Patterns section' exists and references it reinforcing the no-simultaneous-changes and root-cause-before-mitigate rules. However, it never enumerates 'blame individuals' or 'be more careful' as specific anti-patterns. |
+| c9 | Output confirms the skill enforces "mitigate before root-cause" as a cardinal rule, citing the specific guidance that users should not be left suffering while investigation proceeds | PARTIAL | Output confirms 'cardinal rule is declared at the top (mitigate first, root-cause second)' but does not cite any 'users should not be left suffering while investigation proceeds' guidance. |
+| c10 | Output names all five phases in order (Detect and Classify, Assess Impact, Mitigate, Root Cause Analysis, Prevent Recurrence) and confirms they are sequential | FAIL | Output refers to 'Phase 3' and 'Phase 4' by number but never names all five phases in order. The phase names Detect and Classify, Assess Impact, and Prevent Recurrence do not appear. |
+| c11 | Output verifies the severity table includes all four levels (SEV-1 through SEV-4) with response times and communication cadences, and notes the "classify up when in doubt" rule | FAIL | Output never mentions a severity table, does not reference SEV-2, SEV-3, or SEV-4, and does not mention 'classify up when in doubt'. |
+| c12 | Output confirms the timeline requirement uses HH:MM UTC format with event and source columns, and is described as the single most important artifact | PASS | Output explicitly states: 'Concrete format provided (HH:MM UTC — [Event] — [Source])' and 'described as the single most important artifact'. |
+| c13 | Output verifies mitigation options are ranked by speed/risk (feature flag fastest at seconds, hotfix slowest at 10-30 min) and includes the rule that mitigation buys time but is not the fix | FAIL | Output does not mention feature flags, hotfixes, speed rankings, or the rule that mitigation buys time but is not the fix. |
+| c14 | Output confirms the root cause section requires falsifiable hypotheses with the contrasting bad/good examples (vague "database is slow" vs specific "query X sequential scan because index dropped in migration Z") | FAIL | Output does not mention falsifiable hypotheses or any contrasting examples. |
+| c15 | Output confirms post-mortem is mandatory for SEV-1 and SEV-2 and references the template's required sections (timeline, impact, root cause, contributing factors, action items, lessons learned) | FAIL | Output does not confirm a post-mortem mandate for any severity level and does not reference any template sections. |
+| c16 | Output identifies the prevention taxonomy (immediate / short-term / long-term) with required owner and deadline for each action item | FAIL | Output makes no mention of a prevention taxonomy, immediate/short-term/long-term categories, or owner and deadline requirements. |
+| c17 | Output assesses whether the skill prevents the three failure modes named in the prompt — root-causing before mitigating, simultaneous changes, and missing timeline — and points to the specific skill content addressing each | PASS | Output has a dedicated section for each of the three failure modes with specific skill content cited: cardinal rule + Phase 4 gate for root-cause-before-mitigate; Phase 3 and Phase 4 rules for simultaneous changes; mandatory format and Phase 2 onward for timeline. |
+| c18 | Output mentions the communication protocol (status update template, distinguishing "mitigated" from "resolved", "still investigating" being a valid update) | FAIL | Output does not mention communication protocols, status update templates, or the distinction between 'mitigated' and 'resolved'. |
+| c19 | Output notes the blameless framing of post-mortems ("what system allowed this?" not "who did this?") | FAIL | Output does not mention blameless framing, 'what system allowed this?', or any related post-mortem philosophy. |
+| c20 | Output flags the runbook template reference for in-incident use | PARTIAL | Output explicitly flags: 'The Output section references templates/runbook.md (line 229) — if that file doesn't exist, the reference is dead weight.' This addresses the runbook reference, though framed as a gap rather than confirming its in-incident use. |
 
-The skill includes a "classify up" rule: when in doubt, elevate one level and downgrade later if warranted. Classification decisions must be logged with reasoning — silent reclassification is prohibited.
+### Notes
 
----
-
-#### Timeline requirement
-
-The skill marks the timeline **MANDATORY** in Phase 2, before any mitigation action is taken. The format is prescriptive:
-
-```
-HH:MM UTC — [Event] — [Source of information]
-14:23 UTC — Error rate spike to 15% (normal: <1%) — Datadog alert
-14:25 UTC — Deployment abc123 completed — GitHub Actions
-14:27 UTC — First customer report via support — Zendesk ticket #4521
-```
-
-The skill states: "The timeline is the single most important artifact. Update it continuously." Every mitigation action must also be documented in the timeline.
-
----
-
-#### Mitigation options (ranked)
-
-| Option | Speed | Risk | When to use |
-|---|---|---|---|
-| Feature flag off | Seconds | Low | Feature is behind a flag |
-| Rollback deployment | 1-5 min | Low | Recent deployment is the likely cause |
-| Scale up/out | 1-5 min | Low | Load-related, capacity issue |
-| Traffic redirect | 1-5 min | Medium | Regional issue, failover available |
-| Configuration change | 1-10 min | Medium | Bad config deployed |
-| Hotfix deploy | 10-30 min | Higher | Root cause identified and fix is small |
-| Service isolation | 1-5 min | Medium | Cascade prevention, circuit breaker |
-
-Feature flag is fastest (seconds, low risk); hotfix is slowest (10-30 min, higher risk). The skill includes the rule: "Mitigation is not the fix. It buys time." A rollback that stops the bleeding is explicitly preferred over a hotfix that takes 30 minutes.
-
----
-
-#### Root cause analysis — hypothesis discipline
-
-The skill requires a specific, falsifiable hypothesis before testing. The contrasting examples are verbatim in the definition:
-
-- BAD: "The database is slow"
-- GOOD: "Query X on table Y has a sequential scan because the index was dropped in migration Z"
-
-The process requires: form the hypothesis, test with one change, confirm or refute before moving to the next. This prevents scatter-shot debugging during an active incident.
-
----
-
-#### Post-mortem
-
-Marked **MANDATORY for SEV-1 and SEV-2**. The template includes six required sections:
-
-1. Timeline
-2. Impact (users, duration, data, financial, SLA)
-3. Root Cause
-4. Contributing Factors
-5. Action Items (with owner, deadline, and type: Prevent / Detect / Mitigate)
-6. Lessons Learned (what went well, what went poorly, where we got lucky)
-
-The Root Cause field is explicitly framed as blameless: "Not 'human error' — what system allowed this to happen?" This framing appears in the template itself, not just in the Anti-Patterns section, which means it's present at the point of use.
-
----
-
-#### Prevention taxonomy
-
-Phase 5 uses a three-tier taxonomy with required owner and deadline for every action:
-
-| Prevention type | Example | Timeline |
-|---|---|---|
-| Immediate | Add missing validation, fix the bug | This sprint |
-| Short-term | Add test, add monitoring alert, add circuit breaker | Next sprint |
-| Long-term | Architecture change, process improvement, training | Next quarter |
-
-"Be more careful" is explicitly rejected as a prevention measure in both Phase 5 and the Anti-Patterns section.
-
----
-
-#### Anti-patterns
-
-The skill names seven anti-patterns. The four required by the test criteria are all present:
-
-- Root-cause before mitigate: "users are suffering while you investigate. Stop the bleeding first"
-- Multiple simultaneous changes: "if you change 3 things and it resolves, you don't know which fixed it"
-- Blame individuals: "post-mortems are blameless. Ask 'what system allowed this?' not 'who did this?'"
-- "Be more careful" as prevention: "human vigilance fails. Automate, validate, monitor"
-
-Additional anti-patterns: no timeline, silent incidents, skipping the post-mortem.
-
----
-
-#### Communication protocol
-
-Status update template (used during the incident):
-
-```
-**Incident: [title]**
-**Severity:** SEV-[1/2/3/4]
-**Status:** [Investigating / Mitigating / Monitoring / Resolved]
-**Impact:** [who is affected and how]
-**Current action:** [what is being done right now]
-**Next update:** [time]
-```
-
-Key rules: updates at the cadence defined by severity; "still investigating" is a valid update — silence is not; "mitigated" (bleeding stopped) is distinguished from "resolved" (fix deployed and verified); no speculation on root cause in customer-facing communications.
-
----
-
-#### Failure mode assessment
-
-| Failure mode | Addressed? | Where |
-|---|---|---|
-| Root-causing before mitigating | Yes — hard gate | Cardinal rule on line 13; Phase 4 gated by "only after mitigation confirmed"; Anti-Patterns |
-| Simultaneous changes | Yes — explicit prohibition | Phase 3 rule: "Do not change multiple things at once during mitigation"; Anti-Patterns |
-| No timeline | Yes — mandatory artifact | Phase 2: MANDATORY timeline, HH:MM UTC format; "single most important artifact"; Anti-Patterns |
-
-All three failure modes named in the prompt are addressed with specific, verifiable content in the skill definition.
-
----
-
-#### Runbook reference
-
-The final line of the skill references `templates/runbook.md` for creating runbooks during incidents. This is a brief closing note rather than an integrated instruction — whether the template exists is not verifiable from this skill file alone.
-
----
-
-## Criteria
-
-### Definition criteria
-
-- [x] PASS: Skill defines five sequential phases — Detect, Assess Impact, Mitigate, Root Cause, Prevent Recurrence — and states that mitigation must precede root cause analysis — met: phases are labelled and ordered; "mitigate first, root-cause second" is declared the cardinal rule; Phase 4 opens with "Only after mitigation is confirmed effective"
-- [x] PASS: Skill provides a severity classification table (SEV-1 through SEV-4) with criteria, response time, and communication cadence for each level — met: table present with all four levels and all three columns
-- [x] PASS: Skill requires building a mandatory timeline with timestamps and sources — and states the timeline is the single most important artifact — met: marked MANDATORY, HH:MM UTC format shown with Event and Source columns, stated "the single most important artifact"
-- [x] PASS: Skill's mitigation phase lists options in order of preference (feature flag, rollback, scale, redirect, config change, hotfix) with risk assessment for each — met: table lists all six options (plus service isolation) with Speed and Risk columns in that order
-- [x] PASS: Skill prohibits changing multiple things simultaneously during mitigation — met: "Do not change multiple things at once during mitigation. If you roll back AND change config, you don't know which helped."
-- [x] PASS: Skill's root cause section requires forming a specific, falsifiable hypothesis before testing — met: verbatim bad/good examples present ("database is slow" vs "query X sequential scan because index dropped in migration Z")
-- [x] PASS: Skill mandates a post-mortem for SEV-1 and SEV-2 incidents using the provided template — met: header reads "MANDATORY for SEV-1 and SEV-2" with full template included
-- [x] PASS: Skill lists anti-patterns including root-cause before mitigate, multiple simultaneous changes, blame individuals, and "be more careful" as prevention — met: all four appear in the Anti-Patterns section
-
-### Output expectations
-
-- [x] PASS: Output confirms the skill enforces "mitigate before root-cause" as a cardinal rule, citing the specific guidance that users should not be left suffering — met: cardinal rule stated with direct quote, Phase 4 gate noted
-- [x] PASS: Output names all five phases in order and confirms they are sequential — met: table enumerates all five phases with constraints
-- [x] PASS: Output verifies the severity table includes all four levels with response times and communication cadences, and notes the "classify up when in doubt" rule — met: full table reproduced, classify-up rule noted
-- [x] PASS: Output confirms the timeline requirement uses HH:MM UTC format with event and source columns, and is described as the single most important artifact — met: format shown, "single most important artifact" quoted
-- [x] PASS: Output verifies mitigation options are ranked by speed/risk (feature flag fastest at seconds, hotfix slowest at 10-30 min) and includes the rule that mitigation buys time but is not the fix — met: table reproduced with speed values, "buys time" rule quoted
-- [x] PASS: Output confirms the root cause section requires falsifiable hypotheses with the contrasting bad/good examples — met: both examples quoted verbatim
-- [x] PASS: Output confirms post-mortem is mandatory for SEV-1 and SEV-2 and references the template's required sections — met: all six sections enumerated
-- [x] PASS: Output identifies the prevention taxonomy (immediate / short-term / long-term) with required owner and deadline — met: table reproduced with all three tiers
-- [x] PASS: Output assesses whether the skill prevents the three failure modes — met: failure mode table maps each to specific content
-- [x] PASS: Output mentions the communication protocol (status update template, "mitigated" vs "resolved", "still investigating" valid) — met: all three sub-points covered
-- [x] PASS: Output notes the blameless framing of post-mortems — met: Root Cause field quote included; Anti-Patterns reference
-- [~] PARTIAL: Output flags the runbook template reference for in-incident use — partially met: mentioned as a closing note but not integrated as an actionable instruction; whether `templates/runbook.md` exists cannot be confirmed from the skill alone
-
-## Notes
-
-The skill is well-constructed. All eight structural criteria are met cleanly. The three failure modes named in the prompt (root-cause before mitigate, simultaneous changes, missing timeline) are each addressed with specific language — not just in the Anti-Patterns section but within the phases themselves, which is better design.
-
-One observation: the mitigation table lists seven options (including service isolation), while the criterion names six. Service isolation is a genuine addition for cascade-prevention scenarios — not a gap, and not counted against the criterion.
-
-The blameless framing appears in two places: the Anti-Patterns section and the Root Cause field of the post-mortem template itself. Embedding it at the point of use (the template) is better than relying on general guidance alone.
-
-The runbook reference at line 229 is a closing sentence rather than an integrated instruction. Whether `templates/runbook.md` exists in the plugin is an external dependency not verifiable from this skill file.
+The captured output is tightly focused on the three failure modes explicitly named in the prompt (root-cause before mitigate, simultaneous changes, no timeline) and performs well on those (c3, c5, c12, c17). However, it entirely skips large portions of the skill's content: no severity classification table (c2, c11), no ordered mitigation options with risk assessment (c4, c13), no falsifiable hypothesis requirement with examples (c6, c14), no post-mortem mandate or template sections (c7, c15), no prevention taxonomy (c16), no communication protocol (c18), and no blameless framing (c19). The response answers the prompt's narrow question competently but fails to verify the breadth of structured process that the criteria require.

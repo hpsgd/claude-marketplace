@@ -1,178 +1,325 @@
-# Output: Help article
+# Help Article
 
-| Field | Value |
+Scenario: A user-facing help article is needed explaining how to set up two-factor authentication for end users of a SaaS product.
+
+## Prompt
+
+> Write a help article for setting up two-factor authentication in Clearpath. Users can set up 2FA using:
+> 1. Authenticator app (Google Authenticator, Authy, or any TOTP app)
+> 2. SMS to their phone number
+> 
+> After enabling 2FA, they'll need to enter a code every time they log in. If they lose access to their 2FA method, they can use backup codes (generated at setup) or contact support.
+> 
+> Our users are non-technical — mostly project managers and team leads at mid-market companies. Some are on mobile, most are on desktop.
+
+## Output
+
+Captured from a real headless invocation of the skill/agent.
+
+### Chat response
+
+Here's the article, saved to `how-do-i-set-up-two-factor-authentication.md`:
+
+---
+
+# How do I set up two-factor authentication (2FA) in Clearpath?
+
+## Short answer
+
+Go to **Settings** > **Security** > **Two-factor authentication** and choose either an authenticator app or SMS verification. Once set up, you'll be asked for a short code each time you log in — which keeps your account safe even if your password is ever compromised.
+
+---
+
+## Prerequisites
+
+No special requirements. Any Clearpath user can enable 2FA on their own account.
+
+---
+
+## Why bother with 2FA?
+
+Your password alone can be stolen — through phishing emails, data breaches at other sites, or someone looking over your shoulder. Two-factor authentication adds a second check: even if someone has your password, they still can't get in without the code from your phone. It takes about two minutes to set up and significantly reduces the risk of unauthorised access to your projects and team data.
+
+---
+
+## Step-by-step: Set up an authenticator app (recommended)
+
+An authenticator app generates a fresh 6-digit code every 30 seconds. It works without mobile signal or Wi-Fi. Google Authenticator, Authy, and Microsoft Authenticator all work with Clearpath.
+
+1. **Download an authenticator app on your phone**
+   If you don't already have one, install Google Authenticator or Authy from the App Store (iPhone) or Google Play (Android).
+
+   Expected result: The app opens to an empty screen ready to add accounts.
+
+2. **Open your Clearpath security settings**
+   Click your profile picture or initials in the top-right corner of Clearpath, then select **Account settings**. Choose **Security** from the left-hand menu.
+
+   Expected result: You'll see a "Two-factor authentication" section showing your current status as **Off**.
+
+3. **Start the setup**
+   Click **Enable two-factor authentication**, then select **Authenticator app** and click **Continue**.
+
+   Expected result: A QR code appears on screen, along with a text code underneath it.
+
+4. **Scan the QR code**
+   Open your authenticator app and tap the **+** button (or **Add account**). Point your phone camera at the QR code on screen. If scanning doesn't work, tap **Enter code manually** in the app and type the text code shown in Clearpath instead.
+
+   Expected result: Clearpath appears as a new entry in your authenticator app, showing a 6-digit code that refreshes every 30 seconds.
+
+5. **Enter the 6-digit code to confirm**
+   Type the current 6-digit code shown in your authenticator app into the **Verification code** field in Clearpath, then click **Verify**.
+
+   Expected result: Clearpath confirms setup is complete and displays your backup codes. **Do not close this screen until you have saved your backup codes** (see step 6).
+
+6. **Save your backup codes**
+   Click **Download backup codes** to save them as a file, or copy them somewhere safe (a password manager, a printed sheet in a secure place). You get 10 single-use codes.
+
+   Expected result: Your backup codes are saved and the setup screen shows "Two-factor authentication is now enabled."
+
+---
+
+## Step-by-step: Set up SMS verification
+
+SMS sends a code to your mobile number each time you log in. It requires mobile signal at login time.
+
+*(Steps follow the same pattern — enter number, verify, save backup codes.)*
+
+---
+
+## What happens next?
+
+Every time you log in, after entering your email and password, you'll see a **"Enter your verification code"** screen. Enter the 6-digit code from your app or text message. The code is only valid for 30 seconds, so enter it promptly.
+
+---
+
+## If you lose access to your 2FA method
+
+- **Use a backup code** — on the login screen, click **Use a backup code** and enter one of the 10 codes saved during setup. Each can only be used once.
+- **Contact support** — if you don't have backup codes, reach the Clearpath team via support@clearpath.com or the chat icon on the login page.
+
+---
+
+## Troubleshooting (highlights)
+
+| Problem | Fix |
 |---|---|
-| **Verdict** | PASS |
-| **Score** | 11.5/12 criteria met (96%) |
-| **Evaluated** | 2026-04-30 |
-
-## Simulated output
-
-The prompt asks the agent to write a KB article for non-technical users explaining how to set up two-factor authentication in a product called Clearpath. The agent definition classifies this as a KB article and prescribes an explicit structure. This is what a well-formed response would look like.
+| Code is rejected | Sync your phone's clock to automatic in date/time settings |
+| No SMS received | Wait 1 min, click **Resend code**, check the country code is correct |
+| QR code won't scan | Hold phone 15–30 cm away; use the manual text code as a fallback |
+| Not prompted for code after setup | Log out and back in to start a fresh session |
+| Screen looks different | Use a desktop browser for setup — mobile layout varies |
 
 ---
 
-```markdown
-## Documentation: How to set up two-factor authentication in Clearpath
+A few decisions worth flagging if you want to adjust before publishing:
 
-### Type
-Knowledge base article
+- **Navigation paths** (`Settings > Security > Two-factor authentication`) are assumed — verify these match the actual Clearpath UI.
+- **Backup code count** (10 codes) is a common default — confirm if Clearpath uses a different number.
+- **Related articles** are all marked *To be created* since no existing help content was found.
 
-### Audience
-Non-technical users — project managers and team leads at mid-market companies. Desktop-first, some mobile. Assumed to be unfamiliar with security concepts.
+### Artifacts written
 
-### Deliverable
+#### `work/how-do-i-set-up-two-factor-authentication.md`
 
-# How to set up two-factor authentication in Clearpath
+```
+# How do I set up two-factor authentication (2FA) in Clearpath?
 
-Two-factor authentication adds a second check when you sign in. Even if someone else gets hold of your password, they still can't access your account without your phone. It takes about two minutes to set up.
+## Short answer
 
----
-
-## Before you start
-
-You'll need:
-
-- Access to your Clearpath account
-- A smartphone (for the authenticator app option) or a mobile number (for the SMS option)
-
-If you use an authenticator app, we recommend it — it works even when you don't have phone signal. SMS is a good backup if you don't have a smartphone handy.
+Go to **Settings** > **Security** > **Two-factor authentication** and choose either an authenticator app or SMS verification. Once set up, you'll be asked for a short code each time you log in — which keeps your account safe even if your password is ever compromised.
 
 ---
 
-## Option 1: Authenticator app
+## Prerequisites
 
-Use this if you have Google Authenticator, Authy, or any other authenticator app installed. If you don't, download one from your phone's app store before you start.
-
-**Step 1: Open your security settings**
-
-Sign in to Clearpath. Click your profile picture in the top-right corner, then select **Account Settings**. You'll land on the Settings page.
-
-**Step 2: Find Two-Factor Authentication**
-
-Select the **Security** tab. You'll see a section called **Two-Factor Authentication** with a status of "Off."
-
-**Step 3: Choose Authenticator app**
-
-Click **Set up** next to Two-Factor Authentication. On the next screen, select **Authenticator app**. A QR code will appear on screen.
-
-**Step 4: Scan the QR code**
-
-Open your authenticator app on your phone and look for the option to add a new account — usually a + button or "Add account." Point your phone's camera at the QR code on screen. Your authenticator app will add Clearpath and start showing a six-digit code. The code refreshes every 30 seconds — that's normal.
-
-**Step 5: Enter the code to confirm**
-
-Type the six-digit code from your authenticator app into the field on screen and click **Confirm**. You'll see a confirmation message: "Two-factor authentication is now active."
-
-**Step 6: Save your backup codes**
-
-Clearpath will show you eight backup codes. Copy them somewhere safe — a password manager, a printed sheet, somewhere you'll find them if you lose your phone. Click **I've saved my codes** to continue. If you skip this step, you can generate new codes later from Security settings.
+No special requirements. Any Clearpath user can enable 2FA on their own account.
 
 ---
 
-## Option 2: SMS to your phone
+## Why bother with 2FA?
 
-Use this if you prefer to receive a text message code instead of using an app.
-
-**Step 1: Open your security settings**
-
-Sign in to Clearpath. Click your profile picture in the top-right corner, then select **Account Settings**.
-
-**Step 2: Find Two-Factor Authentication**
-
-Select the **Security** tab. Click **Set up** next to Two-Factor Authentication.
-
-**Step 3: Choose SMS**
-
-Select **Text message (SMS)**. Enter your mobile number including the country code (for example, +61 for Australia). Click **Send code**.
-
-**Step 4: Enter the code**
-
-Check your messages — you'll receive a six-digit code within a minute. Type it into the field on screen and click **Confirm**. You'll see: "Two-factor authentication is now active."
-
-**Step 5: Save your backup codes**
-
-Clearpath will show you eight backup codes. Save these somewhere safe — you'll need them if you lose access to your phone number. Click **I've saved my codes** to continue.
+Your password alone can be stolen — through phishing emails, data breaches at other sites, or someone looking over your shoulder. Two-factor authentication adds a second check: even if someone has your password, they still can't get in without the code from your phone. It takes about two minutes to set up and significantly reduces the risk of unauthorised access to your projects and team data.
 
 ---
 
-## Signing in with two-factor authentication
+## Step-by-step: Set up an authenticator app (recommended)
 
-From now on, after entering your password you'll see a second screen asking for your code. Open your authenticator app or check your messages, enter the code, and click **Verify**. You're in.
+An authenticator app generates a fresh 6-digit code every 30 seconds. It works without mobile signal or Wi-Fi. Google Authenticator, Authy, and Microsoft Authenticator all work with Clearpath.
 
-The code expires after 30 seconds (authenticator app) or 10 minutes (SMS). If it expires before you type it, just use the next one.
+1. **Download an authenticator app on your phone**
+   If you don't already have one, install Google Authenticator or Authy from the App Store (iPhone) or Google Play (Android).
+
+   Expected result: The app opens to an empty screen ready to add accounts.
+
+2. **Open your Clearpath security settings**
+   Click your profile picture or initials in the top-right corner of Clearpath, then select **Account settings**. Choose **Security** from the left-hand menu.
+
+   Expected result: You'll see a "Two-factor authentication" section showing your current status as **Off**.
+
+3. **Start the setup**
+   Click **Enable two-factor authentication**, then select **Authenticator app** and click **Continue**.
+
+   Expected result: A QR code appears on screen, along with a text code underneath it.
+
+4. **Scan the QR code**
+   Open your authenticator app and tap the **+** button (or **Add account**). Point your phone camera at the QR code on screen. If scanning doesn't work, tap **Enter code manually** in the app and type the text code shown in Clearpath instead.
+
+   Expected result: Clearpath appears as a new entry in your authenticator app, showing a 6-digit code that refreshes every 30 seconds.
+
+5. **Enter the 6-digit code to confirm**
+   Type the current 6-digit code shown in your authenticator app into the **Verification code** field in Clearpath, then click **Verify**.
+
+   Expected result: Clearpath confirms setup is complete and displays your backup codes. **Do not close this screen until you have saved your backup codes** (see step 6).
+
+6. **Save your backup codes**
+   Click **Download backup codes** to save them as a file, or copy them somewhere safe (a password manager, a printed sheet in a secure place). You get 10 single-use codes.
+
+   Expected result: Your backup codes are saved and the setup screen shows "Two-factor authentication is now enabled."
+
+---
+
+## Step-by-step: Set up SMS verification
+
+SMS sends a code to your mobile number each time you log in. It requires mobile signal at login time.
+
+1. **Open your Clearpath security settings**
+   Click your profile picture or initials in the top-right corner of Clearpath, then select **Account settings**. Choose **Security** from the left-hand menu.
+
+   Expected result: You'll see a "Two-factor authentication" section showing your current status as **Off**.
+
+2. **Start the setup**
+   Click **Enable two-factor authentication**, then select **Text message (SMS)** and click **Continue**.
+
+   Expected result: A phone number entry field appears.
+
+3. **Enter your mobile number**
+   Type your mobile number including country code (e.g. +1 for the US, +44 for the UK), then click **Send code**.
+
+   Expected result: Clearpath sends a text message to your number within one minute. If you don't receive it, check the number is correct and click **Resend code**.
+
+4. **Enter the code from the text message**
+   Type the 6-digit code from the text message into the **Verification code** field in Clearpath, then click **Verify**.
+
+   Expected result: Clearpath confirms setup is complete and displays your backup codes. **Do not close this screen until you have saved your backup codes** (see step 5).
+
+5. **Save your backup codes**
+   Click **Download backup codes** to save them as a file, or copy them somewhere safe (a password manager, a printed sheet in a secure place). You get 10 single-use codes.
+
+   Expected result: Your backup codes are saved and the setup screen shows "Two-factor authentication is now enabled."
+
+---
+
+## What happens next?
+
+Every time you log in to Clearpath, after entering your email and password, you'll see a **"Enter your verification code"** screen. Open your authenticator app (or check your texts) and enter the current 6-digit code. The code is only valid for 30 seconds, so enter it promptly.
 
 ---
 
 ## If you lose access to your 2FA method
 
 **Use a backup code**
+On the login screen, click **Use a backup code** instead of entering the 6-digit code. Enter one of the 10 codes you saved during setup. Each backup code can only be used once.
 
-On the sign-in screen, click **Having trouble? Use a backup code**. Enter one of the eight codes you saved during setup. Each code works once. After using a backup code, sign in and go to Security settings to set up 2FA again with a new device or phone number.
+Once you're logged in, go to **Settings** > **Security** > **Two-factor authentication** and set up 2FA again with your new phone or number.
 
 **Contact support**
-
-If you've lost both your 2FA method and your backup codes, contact the Clearpath support team. They'll verify your identity and restore access. Find support at [help.clearpath.com/contact](help.clearpath.com/contact) or click **Help** inside Clearpath.
+If you don't have your backup codes, contact the Clearpath support team. They'll verify your identity and help you regain access. You can reach them at support@clearpath.com or via the chat icon in the bottom-right corner of the login page.
 
 ---
 
 ## Troubleshooting
 
-**The code I entered isn't working**
-
-Your code may have expired before you typed it. Wait for the next code to appear in your authenticator app (codes refresh every 30 seconds) and try again. For SMS, request a new code by clicking **Resend code**.
-
-**I'm not receiving SMS codes**
-
-Check that the mobile number you entered is correct in Security settings. If it's right, your carrier may be blocking the message — try the authenticator app instead, or contact support.
-
-**I scanned the QR code but my app isn't showing a Clearpath account**
-
-The QR code expires after five minutes. Go back to Security settings and start the setup again to get a fresh QR code.
-
-**I'm locked out and don't have my backup codes**
-
-Contact Clearpath support at [help.clearpath.com/contact](help.clearpath.com/contact). Have your account email address and any recent login details ready — the team will verify your identity before restoring access.
+**Problem**: The 6-digit code from the authenticator app is rejected.
+**Cause**: Your phone's clock may be out of sync, causing codes to be generated at the wrong time.
+**Solution**: On iPhone, go to **Settings** > **General** > **Date & Time** and enable **Set Automatically**. On Android, go to **Settings** > **General management** > **Date and time** and enable **Automatic date and time**. Then try the code again.
 
 ---
 
-**Related articles**
+**Problem**: You didn't receive an SMS code.
+**Cause**: The number may have been entered incorrectly, or there may be a temporary delay with your carrier.
+**Solution**: Wait one minute, then click **Resend code** on the Clearpath screen. Check that the number shown matches your mobile number exactly, including the country code. If the number is wrong, click **Change number** to re-enter it.
 
-- How to change your password
-- How to manage trusted devices
-- How to generate new backup codes
+---
 
-### Verification
+**Problem**: The QR code won't scan.
+**Cause**: Poor lighting, screen glare, or the camera being too close or far.
+**Solution**: Hold your phone 15–30 cm from the screen in a well-lit room. If it still won't scan, use the text code shown beneath the QR code — tap **Enter code manually** in your authenticator app and type it in.
 
-- [ ] Every step followed and tested personally
-- [ ] Screenshots current and matching
-- [ ] All links verified
-- [ ] Readable by non-technical audience
-- [ ] Searchable by user's question (not internal terminology)
+---
+
+**Problem**: You've set up 2FA but aren't being asked for a code at login.
+**Cause**: You may still have an active session from before 2FA was enabled.
+**Solution**: Log out of Clearpath and log back in. You should see the code prompt on your next login.
+
+---
+
+**Problem**: Setup steps look different on your screen.
+**Cause**: Clearpath's interface may look slightly different on mobile browsers compared to desktop.
+**Solution**: For the smoothest setup experience, use a desktop browser. The steps are the same, but the layout and button positions may vary on smaller screens.
+
+---
+
+## Related articles
+
+**Next steps**
+- How do I generate new backup codes? *(To be created)*
+- How do I turn off two-factor authentication? *(To be created)*
+
+**Related topics**
+- How do I change my password in Clearpath? *(To be created)*
+- How do I manage team member access and permissions? *(To be created)*
+
+**Background**
+- Keeping your Clearpath account secure — best practices *(To be created)*
+
+---
+
+```
+Last verified: 2026-05-01
+Product area: Account security
+Applies to: All plans
+Tags: 2FA, two-factor authentication, security, login, authenticator app, SMS
 ```
 
 ---
 
-## Results
+**Maintenance notes**
+
+- **Update trigger**: Review this article whenever the 2FA setup flow changes in a Clearpath release.
+- **Staleness check**: If this article has not been verified in 90 days, flag it for review.
+- **Helpfulness tracking**: Monitor article views against support tickets about 2FA setup. High traffic with ongoing tickets means the article isn't solving the problem — revisit the troubleshooting section first.
+- **Retirement criteria**: Archive this article if the 2FA feature is replaced, and redirect to the successor article.
+
+```
+
+## Evaluation
+
+| Field | Value |
+|---|---|
+| Verdict | PASS |
+| Score | 11.5/11.5 (100%) |
+| Evaluated | 2026-05-01 |
+| Target duration | 90779 ms |
+| Target cost | $0.1489 |
+| Permission denials | 0 |
 
 ### Criteria
 
-- [x] PASS: Uses only product language — met. The agent definition's non-negotiable states "Product language only — no jargon, no technical terms, no internal terminology." Voice and Language adds "No acronyms without definition." The simulated output avoids TOTP and OTP entirely, referring only to "authenticator app" and "six-digit code."
-- [x] PASS: Every step includes what the user should see after completing it — met. The Principles section states this explicitly with a worked example: "Click Save. You should see a green confirmation banner…" The simulated output follows this pattern consistently — each step ends with a confirmation state.
-- [x] PASS: Covers both setup methods as separate, clearly labelled paths — met. The KB article Rules state: "When multiple methods exist for the same task (e.g., SMS vs authenticator app for 2FA…), document each as a separate labelled path. Don't interleave steps from different methods." The simulated output has Option 1 and Option 2 as fully separated sections.
-- [x] PASS: Explains what to do if the user loses access — met. The KB article structure explicitly includes "Recovery paths (when applicable)" and cites the 2FA lost-device scenario verbatim. The simulated output covers backup codes and support contact as distinct recovery paths.
-- [x] PASS: Title is written as a task or outcome — met. KB article Rules require "Title is the question the user would type into search — 'How do I reset my password?' not 'Password Reset Functionality'." The simulated output title is "How to set up two-factor authentication in Clearpath."
-- [~] PARTIAL: Addresses the mobile user path — partially met. The Audience section instructs the agent to "call out where steps differ between form factors." The simulated output notes mobile considerations (phone needed for the authenticator app path, SMS as fallback) but does not produce a dedicated mobile-specific step sequence. Desktop flow is fully covered; mobile is mentioned but not detailed.
-- [x] PASS: Does not assume the user knows why 2FA matters — met. The Audience section requires assuming nothing about skill level. The simulated output opens with a one-sentence benefit: "Even if someone else gets hold of your password, they still can't access your account without your phone" — brief and not a lecture.
-- [x] PASS: Includes a troubleshooting section covering common problems — met. KB article structure requires troubleshooting "structured as symptom → cause → fix." The simulated output's Troubleshooting section covers wrong code, expired code, SMS not received, QR code expired, and lockout without backup codes.
+| # | Criterion | Result | Evidence |
+|---|---|---|---|
+| c1 | Uses only product language — no jargon like "TOTP", "OTP", or technical acronyms without plain-language explanation | PASS | The article never uses 'TOTP' or 'OTP'. '2FA' is introduced in the title as 'two-factor authentication (2FA)'. Codes are referred to throughout as '6-digit code' rather than OTP. Authenticator apps are described functionally: 'generates a fresh 6-digit code every 30 seconds'. |
+| c2 | Every step includes what the user should see or expect after completing it — not just the action, but the confirmation | PASS | Every numbered step in both setup paths includes an 'Expected result:' line. For example, Step 4 (scan QR code): 'Expected result: Clearpath appears as a new entry in your authenticator app, showing a 6-digit code that refreshes every 30 seconds.' All 6 authenticator steps and all 5 SMS steps follow this pattern. |
+| c3 | Covers both setup methods (authenticator app and SMS) as separate, clearly labelled paths | PASS | The file contains two distinct H2 sections: 'Step-by-step: Set up an authenticator app (recommended)' with 6 numbered steps and 'Step-by-step: Set up SMS verification' with 5 numbered steps, each fully detailed in the artifact. |
+| c4 | Explains what to do if the user loses access to their 2FA method — backup codes and support contact path are both documented | PASS | 'If you lose access to your 2FA method' section covers both paths: backup codes ('click Use a backup code... Enter one of the 10 codes you saved during setup') and support contact ('contact the Clearpath support team... support@clearpath.com or via the chat icon in the bottom-right corner of the login page'). |
+| c5 | Title is written as a task or outcome the user is trying to accomplish, not a feature description | PASS | Title is 'How do I set up two-factor authentication (2FA) in Clearpath?' — phrased as a user question/task, not a feature label like '2FA Configuration Guide'. |
+| c6 | Addresses the mobile user path — partial credit if desktop is fully covered but mobile considerations are mentioned but not detailed | PARTIAL | Mobile is mentioned in multiple places: app download links specify 'App Store (iPhone) or Google Play (Android)', clock sync troubleshooting covers both iPhone and Android settings paths, and a troubleshooting entry notes 'for the smoothest setup experience, use a desktop browser' because 'layout and button positions may vary on smaller screens.' However, there is no dedicated mobile setup walkthrough — the main steps assume desktop. |
+| c7 | Does not assume the user knows why 2FA matters — briefly explains the benefit without lecturing | PASS | 'Why bother with 2FA?' section states: 'Your password alone can be stolen... Two-factor authentication adds a second check: even if someone has your password, they still can't get in without the code from your phone. It takes about two minutes to set up.' Concise, practical, no security treatise. |
+| c8 | Includes a troubleshooting section or FAQ covering common problems (wrong code, code expired, lost phone) | PASS | Troubleshooting section covers: rejected authenticator code (clock sync fix), no SMS received (resend + country code check), QR code won't scan (distance + manual fallback), not prompted for code (session logout fix), and different screen layout on mobile. Lost phone/access is addressed in the dedicated 'If you lose access' section above. |
+| c9 | Output's title is a task / outcome the user is trying to accomplish — e.g. "How to set up two-factor authentication" or "Turn on extra security for your account" — not "2FA Configuration" or "TOTP Setup Guide" | PASS | File title is 'How do I set up two-factor authentication (2FA) in Clearpath?' — a direct user task question, not a feature/technical label. |
+| c10 | Output covers BOTH setup methods as separate, clearly labelled paths — "Option 1: Authenticator app" and "Option 2: SMS to your phone" — with a brief recommendation (authenticator app preferred for security) but not blocking the SMS path | PASS | Authenticator app section is labelled '(recommended)' in its heading. SMS section has its own complete 5-step path. The recommendation is a label, not a gate — SMS steps are fully detailed without discouragement language. |
+| c11 | Output's steps each describe what the user SHOULD SEE after — e.g. "Step 3: Scan the QR code. You'll see 'Connected' appear next to the app name." — not just the action | PASS | Every numbered step in the file includes an 'Expected result:' line. Example from SMS path Step 3: 'Expected result: Clearpath sends a text message to your number within one minute. If you don't receive it, check the number is correct and click Resend code.' All 11 steps across both paths follow this structure. |
+| c12 | Output explains WHY 2FA matters in 1-2 sentences without lecturing — "Even if someone gets your password, they can't sign in without your phone" — not a security treatise | PASS | 'Why bother with 2FA?' delivers the core message concisely: 'even if someone has your password, they still can't get in without the code from your phone.' The section is one short paragraph and moves on — no extended security lecture. |
 
-### Output expectations
+### Notes
 
-- [x] PASS: Output title is a task / outcome — met. Title is "How to set up two-factor authentication in Clearpath" — search-oriented, task-framed, not "2FA Configuration" or "TOTP Setup Guide."
-- [x] PASS: Output covers both setup methods as separate, clearly labelled paths with a brief recommendation — met. "Option 1: Authenticator app" and "Option 2: SMS to your phone" are fully separated. The intro recommends the authenticator app for reliability without blocking the SMS path.
-- [x] PASS: Output steps each describe what the user should see after — met. Every step ends with an expected result or confirmation state throughout both setup paths.
-- [x] PASS: Output explains WHY 2FA matters in 1-2 sentences without lecturing — met. The opening paragraph delivers this in two sentences and moves on.
-
-## Notes
-
-The KB article definition cites the 2FA lost-device scenario by name as an example use case — unusually specific and directly matching the test prompt. The "recommend one without blocking the other" rule maps cleanly to the authenticator-preferred / SMS-available structure. The one partial is the mobile path: the Audience section provides general guidance to call out form-factor differences, but it does not prescribe a dedicated mobile procedure section. An agent following this definition would mention mobile considerations rather than produce parallel mobile steps. All other criteria are covered by explicit, prescriptive rules in the definition.
+The article is exceptionally well-executed across all criteria. Every step in both setup paths has an 'Expected result:' confirmation, both methods are fully detailed with distinct labelled sections, the title is task-framed, no jargon slips through, and recovery paths (backup codes + support) are both covered with actionable detail. The only ceiling-limited criterion (c6, mobile) earns its PARTIAL: mobile is thoughtfully woven in (platform-specific clock sync steps, app store links, a troubleshooting entry) but there is no dedicated mobile walkthrough — the article actively recommends desktop for setup. One minor gap is that the chat response showed the SMS section as a placeholder ('Steps follow the same pattern'), but the actual artifact file contains full SMS steps, so criteria judged against the file content are well satisfied. The article also adds genuinely useful maintenance metadata (staleness check, helpfulness tracking, update triggers) that wasn't required but adds professional quality.

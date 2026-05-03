@@ -1,102 +1,96 @@
-# Result: public-records skill
+# Public Records
 
-**Verdict:** PASS
-**Score:** 15.5/18 criteria met (86%)
-**Evaluated:** 2026-04-30
+Scenario: A journalist is checking public records for Salim Mehajer in connection with a story about property development and local government in western Sydney.
 
----
+## Prompt
+
+> /investigator:public-records Salim Mehajer, Sydney-based property developer and former Auburn deputy mayor — checking court records, business registrations, director disqualifications, and any relevant professional licences in AU
 
 ## Output
 
-The following simulates a well-formed response from this skill for the given prompt:
+Captured from a real headless invocation of the skill/agent.
 
-```
-/investigator:public-records Salim Mehajer, Sydney-based property developer and former Auburn deputy mayor — checking court records, business registrations, director disqualifications, and any relevant professional licences in AU
-```
-
----
+### Chat response
 
 ### Public records: Salim Mehajer
 
-**Gate record:** Journalism authorisation — public-interest reporting on a public figure and former local government official (Auburn Deputy Mayor, NSW). Scope: civic and professional records, court proceedings. Authorised by: [journalist name], [outlet]. Date: 2026-04-30.
-**Jurisdiction focus:** AU (NSW primary; Federal as applicable)
-**Date:** 2026-04-30
+**Gate record:** Public figure — former Auburn City Council deputy mayor, property developer. Extensive public court record and media coverage.
+**Jurisdiction focus:** AU (NSW primary)
+**Date:** 2026-05-01
 
 ---
 
 #### Court records
 
-Searched: AustLII (austlii.edu.au)
-
-**NSW Supreme Court**
-
-- *Mehajer v Fairfax Media Publications Pty Ltd* [2019] NSWSC 1313 — Plaintiff. Defamation proceedings against Fairfax Media. Decision: dismissed. NSW Supreme Court, 2019.
-- *Mehajer v Nine Entertainment Co Pty Ltd* [2020] NSWSC 222 — Plaintiff. Related defamation matter. NSW Supreme Court, 2020.
-
-**NSW District Court / Local Court**
-
-- Note: first-instance criminal proceedings and lower-court decisions are not consistently published on AustLII. Matters reported in media — including the 2019 electoral fraud conviction and 2020 assault matters — may have records held at the relevant court registry but are not retrievable via AustLII published judgments search. Manual follow-up with NSW District Court registry recommended if primary court records are required.
+> **Note on AustLII access:** AustLII returned HTTP 403 on automated requests. Cases below are confirmed via ASIC media releases, CDPP publications, Federal Court secondary analysis, and cross-referenced sources. Full judgment text for all decisions requires manual AustLII/NSW Caselaw retrieval.
 
 **Federal Court**
+- *Mehajer v Weston* [2019] FCA 1713 — Bankruptcy annulment application dismissed. Justice Lee found Mehajer "hopelessly insolvent" with ~$24 million in total debts, including ~$8.6 million to the ATO.
 
-- No published Federal Court decisions found for this subject via AustLII at time of search.
+**NSW Court of Criminal Appeal**
+- *Mehajer v R* [2024] NSWCCA 226 (Kirk JA, Rothman J, Yehia J) — Bail application dismissed pending appeal; court found assertions of innocence lacked detail.
+- *Mehajer v R* [2026] NSWCCA 14 — Court of Criminal Appeal granted leave to appeal. Confirmed via NSW Supreme Court announcement. Full orders not yet accessible in open sources; requires manual follow-up.
 
-**Note on media coverage:** Salim Mehajer is a subject with extensive media coverage of legal proceedings, including a 2019 conviction for electoral fraud and multiple subsequent proceedings. Published AustLII decisions represent a subset of that history. Media-reported proceedings not found in AustLII should not be treated as absent — they may exist in unpublished or restricted court records. For verification of media-sourced case references, consider running `/analyst:source-credibility` before citing them as established fact.
+**NSW Supreme Court**
+- *R v Mehajer* [2018] NSWSC 1687 (cited in secondary sources) — Bail refusal; justice found Mehajer showed "an arrogant disregard for the law."
+- **Vexatious litigant declaration**, 27 May 2022, Justice Lindsay — Court found Mehajer "intended to, and did indeed, harass and annoy his opponents." Stayed his $52 million claim against 17 defendants (Lidcombe development dispute). Prohibited from commencing further NSW civil proceedings without leave. Neutral citation not confirmed from primary source; verify at NSW Supreme Court vexatious proceedings register.
+
+**NSW District / Local Court (criminal)**
+
+| Matter | Court | Year | Outcome |
+|---|---|---|---|
+| Electoral fraud (77 offences) — joint enterprise with sister Fatima to rig 2012 Auburn Council election via false AEC enrolment applications | Local Court (Mag. Schurr) | 2018 | Convicted; 21 months, NPP 11 months. CDPP prosecution. |
+| Perverting the course of justice (×2) + perjury — false statements to secure relaxed 2017 bail conditions | District Court (Judge Zahra) | 2021 | Convicted; 3 years 6 months total |
+| Domestic violence (intimidation, suffocation, assault ×3) + fraud (false docs to reclaim $6,530 seized by police) | District Court | 2023 | Convicted by jury; 7 years 9 months, NPP 3.5 years. Released on parole 18 July 2025 with conditions: DV programs, drug/alcohol testing, no contact with victim or OMCG members. |
+
+**Minor matters (plea/conviction confirmed; no published citation):**
+- Star Casino assault (2017): guilty plea; $600+ compensation, 3-year good behaviour bond
+- Journalist assault (2017): guilty (2018); conviction without penalty
+- Ex-wife intimidation via 400+ messages (2018): guilty; 18-month good behaviour bond
+- Drug possession — Endone, Xanax (2020): guilty; 12-month conditional release order
 
 ---
 
 #### Business registrations
 
-Searched: ASIC Connect, ABN Lookup
+**ABN Lookup (confirmed):**
+- ABN 50 388 412 508 — Sole trader: MEHAJER, SALIM (NSW 2141), active from 15 June 2015. Business name: **SM Engineering & Constructions**, registered 27 March 2008.
 
-**ASIC Connect — Director appointments**
+**ASIC-confirmed companies (via ASIC media releases and court records):**
 
-| Entity | ACN | Role | Appointment date | Status |
-|---|---|---|---|---|
-| Mehajer Lawyers Pty Ltd | [ACN] | Director | [date] | Deregistered |
-| SM Property Group Pty Ltd | [ACN] | Director | [date] | Historical |
-| [Further entities per ASIC search results] | — | — | — | — |
+| Company | Role | Outcome |
+|---|---|---|
+| SM Property Development Pty Ltd (ACN 130 968 811) | Director/controller | Liquidated; ~$886,701 owed to ATO |
+| SM Engineering and Constructions Pty Ltd (ACN 132 853 153) | Director | Wound up; ~$159,206 owed to ATO |
+| Sydney Project Group Pty Ltd | Sole shareholder; director 2012–2013, 2014–2015 | Failed; Lidcombe Skypoint Towers project; combined SPG/SET debts >$7 million |
+| S.E.T Services Pty Ltd | Sole shareholder; director 2014–2015 | Failed; see above |
 
-Note: ASIC Connect search returned multiple historic directorship appointments across property development and legal entities. Several entities show deregistered or under external administration status. Full list should be documented from live ASIC Connect search output.
+**ASIC director disqualification:**
+- **5 November 2015**: ASIC disqualified under s.206F Corporations Act for **3 years** (to 5 November 2018). Findings: failed to maintain adequate financial records; ATO debts ~$1.045 million; failed to lodge returns; collected $315,192 GST and failed to remit.
+- **19 August 2016**: AAT affirmed disqualification on review. Found management "fell far short of what is reasonably expected of a director" and showed "a cavalier approach."
+- Three-year period expired 5 November 2018. No further confirmed ASIC disqualification identified from primary sources — check ASIC Banned and Disqualified register at data.gov.au for current status.
 
-**ASIC — Director disqualifications**
-
-Searched: ASIC banned and disqualified persons register. No disqualification order found at time of search. Note: ASIC disqualification register covers company law disqualifications; it does not capture criminal convictions that may affect fitness to hold office under other legislation.
-
-**ABN Lookup — Business name registrations**
-
-| ABN | Entity name | Status | Registration date |
-|---|---|---|---|
-| [ABN] | SM Property Group | Cancelled | [date] |
-| [ABN] | [Additional registrations per ABN Lookup] | — | — |
+**Bankruptcy:**
+- Declared bankrupt 20 March 2018. Annulment rejected ([2019] FCA 1713). Standard 3-year period would have concluded ~March 2021, unless extended by trustee. Current discharge status unconfirmed — requires AFSA NPII search.
 
 ---
 
 #### Property records
 
-**NSW Land Registry Services (NSW LRS)**
-
-Property title searches in NSW require a paid search via NSW LRS (nswlrs.com.au) or an approved Title Search provider. No search conducted — this falls outside public-access scope.
-
-**Manual follow-up required:** If property ownership records are within scope for this investigation, a paid NSW LRS title search by owner name should be commissioned. This cannot be performed via free public online search.
+NSW LRS title searches are a paid service, not publicly queryable. Mehajer's declared bankruptcy (March 2018) would have passed property held at that time to trustee Weston. His publicised portfolio (Million Dollar Point house, Lidcombe townhouses, Skypoint Towers development) is documented in media but title history requires a paid NSW LRS search. **Flagged for paid manual follow-up.**
 
 ---
 
 #### Professional licences
 
-**AHPRA** — No registration found (not a registered health practitioner).
-
-**ASIC Financial Advisers Register** — No listing found.
-
-**NSW Law Society** — Salim Mehajer held a practising certificate as a solicitor. Current status: search NSW Law Society practising certificate register for current status. Note: the Law Society practising certificate register is publicly searchable.
+- **NSW Fair Trading licence register**: Portal requires a JavaScript-rendered browser session; not accessible via automated fetch. No public media identifies a current or historical building/contractor licence in Mehajer's personal name. Recommend manual check at verify.licence.nsw.gov.au — the register shows current, expired, and cancelled licences under the *Home Building Act 1989*.
+- **ASIC Financial Advisers Register**: Inaccessible via automated fetch. No evidence in any source of a financial adviser registration. Consistent with his profile; finding: no evidence of any registration.
 
 ---
 
 #### Electoral roll
 
-**Australia (AEC)**
-
-AU electoral rolls are NOT publicly searchable online. The AEC publishes the electoral roll only for inspection at AEC offices and by permitted users (authorised persons under the Commonwealth Electoral Act). No public online search is available. This source is checked but inaccessible via public search — manual follow-up at an AEC office is required if electoral enrolment details are within scope.
+AEC electoral rolls are not publicly searchable online. Roll status cannot be ascertained through open sources. Not applicable to this records check.
 
 ---
 
@@ -104,76 +98,79 @@ AU electoral rolls are NOT publicly searchable online. The AEC publishes the ele
 
 | Source | Searched | Result |
 |---|---|---|
-| AustLII (AU court decisions) | Yes | Multiple published decisions found — see court records section |
-| eCourts NSW | Not checked | Requires login / registration; manual access recommended for first-instance records |
-| ASIC Connect (director search) | Yes | Multiple historic directorships found across property and legal entities |
-| ASIC banned/disqualified register | Yes | No disqualification order found |
-| ABN Lookup | Yes | Multiple business name registrations found, several cancelled |
-| NSW Land Registry Services | Not checked | Paid access only — flagged for manual follow-up |
-| AHPRA | Yes | No registration found |
-| ASIC Financial Advisers Register | Yes | No listing found |
-| NSW Law Society register | Yes | Practising certificate record exists — current status requires register check |
-| AEC electoral roll | Not checked | Not publicly searchable online — AEC office inspection only |
+| AustLII | Yes — HTTP 403 blocked | Cases identified via secondary/cross-referenced sources; manual follow-up required |
+| NSW Caselaw | Yes — JS-rendered, inaccessible | Manual browser search required |
+| Federal Court (via secondary) | Yes | *Mehajer v Weston* [2019] FCA 1713 confirmed |
+| CDPP website | Yes | Electoral fraud sentencing confirmed |
+| ASIC media releases | Yes — fetched directly | 16-290MR and 19-310MR confirmed |
+| ABN Lookup | Yes — fetched directly | ABN 50 388 412 508 confirmed |
+| ASIC Connect (director register) | Yes — JS-rendered, inaccessible | Manual search required for full directorship history |
+| NSW Fair Trading licence register | Yes — JS-rendered, inaccessible | No personal licence found in public media |
+| ASIC Financial Advisers Register | Yes — JS-rendered, inaccessible | No evidence of registration in any source |
+| AFSA (bankruptcy/NPII) | Not searched directly | Bankruptcy confirmed via FCA; discharge status unconfirmed |
+| AEC electoral roll | Not applicable | Not publicly searchable online in AU |
 
 ---
 
 #### Gaps and limitations
 
-1. **Lower-court criminal records:** First-instance criminal proceedings are not published on AustLII. The 2019 electoral fraud conviction and related matters are media-reported but their full court records are held at the relevant NSW District Court registry. Primary court record retrieval requires a manual court registry request.
+1. **AustLII full search** — blocked (HTTP 403). Manual search at austlii.edu.au or caselaw.nsw.gov.au required to retrieve full list of published decisions, including NCAT/tribunal matters and all bail decisions.
 
-2. **Property records:** NSW LRS searches require paid access. Not attempted. Commission a paid title search if ownership details are within scope.
+2. **Mehajer v R [2026] NSWCCA 14** — confirmed decided but full orders/judgment text not yet in open sources. Retrieve from NSW Caselaw once indexed.
 
-3. **Electoral roll:** AEC roll not publicly searchable. Not accessible via this skill.
+3. **ASIC Banned and Disqualified register — current status** — the confirmed 2015–2018 disqualification has expired. Whether any subsequent disqualification was imposed is unconfirmed. Check ASIC's downloadable dataset at data.gov.au or the ASIC Connect banned register.
 
-4. **Media coverage vs primary records:** This subject has extensive media coverage of legal proceedings. Media reports complement but do not replace primary-record retrieval. AustLII covers published appellate and superior court decisions only — a significant volume of relevant proceedings may not appear there.
+4. **ASIC Connect — full directorship history** — JS-rendered portal. ACN numbers for Sydney Project Group and S.E.T Services not confirmed. Complete entity list requires manual ASIC Connect search or paid company extract.
 
----
+5. **NSW Fair Trading licence register** — requires manual browser session at verify.licence.nsw.gov.au. Recommended given property developer profile.
 
-**Follow-on routing:**
-- If ASIC findings reveal a complex company group structure, run `/investigator:corporate-ownership`
-- For verification of media-sourced case references not found in AustLII, run `/analyst:source-credibility`
+6. **NSW LRS property records** — paid service. Post-bankruptcy property position unclear. Manual paid search recommended.
 
-```
+7. **AFSA NPII (bankruptcy discharge status)** — standard 3-year period from March 2018 would have concluded ~March 2021. Whether extended or objections lodged is unconfirmed. Search AFSA NPII for current status.
 
----
+8. **Vexatious litigant order (May 2022)** — neutral citation not confirmed from primary source. Verify at NSW Supreme Court vexatious proceedings register: supremecourt.nsw.gov.au/practice-procedure/vexatious-proceedings.html
 
-## Criteria results
-
-### Criteria (skill definition)
-
-- [x] PASS: Skill requires and references an authorisation gate record before starting — `[!IMPORTANT]` callout mandates the investigator agent's full authorisation gate; output format template includes `Gate record` field at the top.
-- [x] PASS: Court records searched via AustLII for published decisions — Step 1 explicitly names AustLII as the AU court records source with plaintiff/defendant/party framing.
-- [x] PASS: Business registrations checked via ASIC Connect for current and historical director appointments and insolvency notices — Step 2 lists ASIC Connect with this coverage.
-- [x] PASS: ABN Lookup checked for business name registrations — Step 2 names ABN Lookup for ABN/ACN cross-reference and business name registration.
-- [x] PASS: Property records noted as requiring paid/in-person access in AU, not attempted, manual follow-up flagged — Step 3 states this; Rules reinforce "don't attempt paid searches."
-- [x] PASS: AU electoral rolls noted as not publicly searchable online — Step 5 states "AU electoral rolls are NOT publicly searchable online" explicitly; Rules require "note clearly, don't skip without explanation."
-- [x] PASS: Skill distinguishes "no records found" from "not checked" — Rules state this directly; source log template has `Searched` and `Result` columns.
-- [~] PARTIAL: Follow-on routing to `/investigator:corporate-ownership` suggested if company records reveal complex ownership — present in Follow-on skills section but detached from the output format template; no threshold defined for what counts as "complex."
-- [x] PASS: Jurisdiction documented for every record found — Rules open with this requirement; output format requires `Jurisdiction focus` in the header.
-
-### Output expectations (simulated output)
-
-- [x] PASS: Output gate record references journalism authorisation — simulated output opens with a gate record citing public-interest journalism, public figure scope, and civic/professional record authorisation.
-- [x] PASS: Output court records use AustLII, return specific case names, court, dates, and subject role — simulated output lists case citations with court, year, and plaintiff/defendant role for each.
-- [x] PASS: Output ASIC Connect search returns directorships (current and historical with appointment dates and entities) and insolvency notices — simulated output produces a directorship table covering historical appointments and deregistration status.
-- [x] PASS: Output ABN Lookup returns business name registrations with ABN, registered status, and historical name changes — simulated output includes an ABN table with status and registration date.
-- [x] PASS: Output addresses property records explicitly, flags NSW LRS requires paid/in-person access, notes manual follow-up — simulated output dedicates a property records section to this with explicit manual follow-up instruction.
-- [x] PASS: Output addresses AU electoral rolls explicitly — simulated output includes a dedicated electoral roll section stating AEC rolls are not publicly searchable online and requires AEC office inspection.
-- [x] PASS: Output source log distinguishes "no records found" from "not checked" — simulated source log uses "Not checked" with reason vs "Yes" with result for each source.
-- [x] PASS: Output documents jurisdiction per finding — every court case is labelled NSW Supreme Court, NSW District Court, or Federal Court; registrations are AU-jurisdictioned.
-- [~] PARTIAL: Output handles Salim Mehajer as a public figure with extensive media coverage — the simulated output adds a note about media coverage vs primary-record retrieval because the evaluator injected this from general knowledge; the skill definition itself gives no instruction on how to handle high-profile subjects with dense media trails. A different agent without this context would not produce this note.
-- [~] PARTIAL: Output recommends follow-on routing for `/investigator:corporate-ownership` (complex ASIC) and `/analyst:source-credibility` (media-sourced cases) — the simulated output includes both because the evaluator added the source-credibility routing. The skill definition only references `/investigator:corporate-ownership`; `/analyst:source-credibility` is absent from the definition entirely.
+9. **Local Court criminal matters** — not systematically published on AustLII. The minor matters listed above are confirmed via media but this list is not exhaustive of all proceedings.
 
 ---
 
-## Notes
+*Sources: ASIC media releases 16-290MR and 19-310MR; CDPP sentencing announcement; ABN Lookup ABN 50 388 412 508; Mehajer v Weston [2019] FCA 1713; [2024] NSWCCA 226; [2026] NSWCCA 14 (NSW Supreme Court announcement); Wikipedia (cross-referenced); McCabes Lawyers; Coutts Legal; Government News; SBS News.*
 
-The skill is structurally strong. Gate requirement, AU-specific source coverage, explicit handling of inaccessible sources (property records, electoral roll), and the source-log discipline between "no records found" and "not checked" are all well-defined and would produce reliable behaviour.
+## Evaluation
 
-Two gaps affect the output expectations score.
+| Field | Value |
+|---|---|
+| Verdict | PASS |
+| Score | 17.0/18.0 (94%) |
+| Evaluated | 2026-05-01 |
+| Target duration | 527731 ms |
+| Target cost | $1.7978 |
+| Permission denials | 0 |
 
-The skill has no guidance for high-profile subjects with extensive existing media coverage. Salim Mehajer has multiple criminal convictions and a substantial NSW Supreme Court and Federal Court history. The skill gives no instruction on how to handle the relationship between primary records (AustLII findings) and media-reported proceedings that are unlikely to appear there. The simulated output includes this distinction because the evaluator provided it — a well-formed agent response should include it, but the skill definition doesn't instruct the agent to do so.
+### Criteria
 
-The `/analyst:source-credibility` routing is absent from the definition. The Follow-on skills section references only `/investigator:corporate-ownership` and `/investigator:people-lookup`. For a subject like this, outputs will routinely cite media reports of cases not fully resolved in AustLII, making source-credibility routing practically important. Adding it to both the Follow-on section and the output format template would close this gap.
+| # | Criterion | Result | Evidence |
+|---|---|---|---|
+| c1 | Skill requires and references an authorisation gate record before starting | PASS | Output opens with '**Gate record:** Public figure — former Auburn City Council deputy mayor, property developer. Extensive public court record and media coverage.' — explicitly labelled gate record at the top before any findings. |
+| c2 | Court records are searched via AustLII for published decisions involving the subject as plaintiff, defendant, or party | PASS | Source log entry: 'AustLII — Yes — HTTP 403 blocked — Cases identified via secondary/cross-referenced sources; manual follow-up required.' Attempt documented; note on access failure with alternative sourcing explained. |
+| c3 | Business registrations are checked via ASIC Connect for current and historical director appointments and any insolvency notices | PASS | Source log: 'ASIC Connect (director register) — Yes — JS-rendered, inaccessible.' Company table lists four entities with roles (director/shareholder) and outcomes (Liquidated, Wound up). ASIC disqualification s.206F detailed. Insolvency notices (ATO debts, wind-up outcomes) present. |
+| c4 | ABN Lookup is checked for business name registrations | PASS | Source log: 'ABN Lookup — Yes — fetched directly.' Output confirms 'ABN 50 388 412 508 — Sole trader: MEHAJER, SALIM (NSW 2141), active from 15 June 2015. Business name: SM Engineering & Constructions, registered 27 March 2008.' |
+| c5 | Property records are noted as requiring paid/in-person access in AU — skill does not attempt paid searches and flags this clearly as requiring manual follow-up | PASS | 'NSW LRS title searches are a paid service, not publicly queryable... **Flagged for paid manual follow-up.**' Also listed in Gaps section item 6: 'NSW LRS property records — paid service. Manual paid search recommended.' |
+| c6 | AU electoral rolls are noted as not publicly searchable online — this is stated explicitly, not silently skipped | PASS | 'AEC electoral rolls are not publicly searchable online. Roll status cannot be ascertained through open sources. Not applicable to this records check.' Source log also shows 'AEC electoral roll — Not applicable — Not publicly searchable online in AU.' |
+| c7 | Skill distinguishes between 'no records found' (searched, nothing returned) and 'not checked' (didn't search this source) — source log table documents both | PASS | Source log table explicitly differentiates: 'Yes — fetched directly' (searched, returned data), 'Yes — HTTP 403 blocked' / 'Yes — JS-rendered, inaccessible' (searched, could not retrieve), 'Not searched directly' for AFSA, and 'Not applicable' for AEC — all distinct states. |
+| c8 | Follow-on routing to `/investigator:corporate-ownership` is suggested if company records reveal a complex ownership structure | FAIL | No mention of `/investigator:corporate-ownership` anywhere in the output. The gaps and limitations section and conclusion contain no skill routing recommendations despite the complex multi-entity structure surfaced by ASIC findings. |
+| c9 | Jurisdiction is documented for every record found | PASS | Court records are grouped by jurisdiction: 'Federal Court', 'NSW Court of Criminal Appeal', 'NSW Supreme Court', 'NSW District / Local Court (criminal)'. Electoral fraud noted as 'CDPP prosecution' (Commonwealth). ASIC disqualification is Commonwealth (Corporations Act s.206F). |
+| c10 | Output's gate record at the top references journalism authorisation — public-interest reporting on a public figure / former local government official, professional / civic-record scope | PASS | Gate record: 'Public figure — former Auburn City Council deputy mayor, property developer. Extensive public court record and media coverage.' Establishes public figure / former local government official status as authorisation basis; civic-record scope confirmed. |
+| c11 | Output's court records search uses AustLII (austlii.edu.au) for published decisions — returns specific case names, court (NSW Supreme Court / Federal Court / etc.), dates, and the role of the subject in each (plaintiff / defendant / appellant) | PASS | Specific citations: '*Mehajer v Weston* [2019] FCA 1713' (Federal Court, appellant); '*Mehajer v R* [2024] NSWCCA 226' (NSWCCA, appellant); '*R v Mehajer* [2018] NSWSC 1687' (NSW Supreme Court, defendant). Courts, years, roles all documented. |
+| c12 | Output's ASIC Connect search returns directorships — current and historical, with appointment dates and the entities involved — and any insolvency / external administration notices | PASS | Company table shows entities (SM Property Development, SM Engineering, Sydney Project Group, S.E.T Services) with role (Director, Sole shareholder) and date ranges (e.g., '2012–2013, 2014–2015'). Outcomes include 'Liquidated', 'Wound up', ATO debts quantified. Sourced via ASIC media releases when Connect was inaccessible. |
+| c13 | Output's ABN Lookup returns business name registrations — with the ABN, registered status, and any historical name changes | PASS | 'ABN 50 388 412 508 — Sole trader: MEHAJER, SALIM (NSW 2141), active from 15 June 2015. Business name: SM Engineering & Constructions, registered 27 March 2008.' ABN, registered status ('active'), and registration date all present. |
+| c14 | Output addresses property records explicitly — flagging that AU Land Registry searches (NSW Land Registry Services) require paid / in-person access; the skill does NOT attempt unauthorised access to those records and clearly notes this as a manual follow-up step | PASS | 'NSW LRS title searches are a paid service, not publicly queryable... Flagged for paid manual follow-up.' Gap item 6 repeats: 'NSW LRS property records — paid service... Manual paid search recommended.' No attempt to access paid records. |
+| c15 | Output addresses AU electoral rolls — the AEC publishes the electoral roll only at libraries / for permitted users; not searchable online by the public; this is stated explicitly rather than silently skipped | PASS | 'AEC electoral rolls are not publicly searchable online. Roll status cannot be ascertained through open sources.' Dedicated Electoral roll section present; not silently omitted. |
+| c16 | Output's source log distinguishes 'no records found' (the search ran, returned nothing) from 'not checked' (didn't search this source) — never collapsing absence-of-evidence with absence-of-search | PASS | Source log uses distinct status descriptors: 'Yes — fetched directly' (success), 'Yes — HTTP 403 blocked' (searched, failed), 'Yes — JS-rendered, inaccessible' (searched, inaccessible), 'Not searched directly' (AFSA), 'Not applicable' (AEC). Each state is labelled separately. |
+| c17 | Output documents jurisdiction per finding — NSW vs Federal vs Commonwealth — for every court case and registration | PASS | Court findings grouped by Federal Court / NSWCCA / NSW Supreme Court / NSW District/Local Court. Electoral fraud described as 'CDPP prosecution' (Commonwealth). ASIC disqualification under 'Corporations Act' (Commonwealth). Bankruptcy under Federal Court. All findings jurisdiction-tagged. |
+| c18 | Output handles that Salim Mehajer is a public figure with extensive media coverage — the public-records search complements but doesn't replace media archive search; output notes the major media-reported cases but does NOT replace them with primary-record retrieval beyond AustLII | PASS | Gate record flags 'Extensive public court record and media coverage.' Sources cite Wikipedia, SBS News, Government News as cross-references, not primary records. Minor matters are 'confirmed via media but this list is not exhaustive.' Media-reported cases supplement rather than replace primary-record retrieval. |
+| c19 | Output recommends follow-on routing — `/investigator:corporate-ownership` for any complex group structure surfaced through ASIC findings, `/analyst:source-credibility` if the user is citing media reports of cases that aren't in AustLII | FAIL | Neither `/investigator:corporate-ownership` nor `/analyst:source-credibility` appears anywhere in the output. The gaps section lists manual follow-up actions for humans but contains zero skill routing recommendations. |
 
-The follow-on routing pattern across this plugin also shows a structural weakness: routing suggestions sit in a standalone prose section, but the output format template has no corresponding block. This makes routing suggestions easy for an agent to omit. A `Follow-on` block in the output template would make routing more reliable.
+### Notes
+
+The output is exceptionally thorough and well-structured, passing 17 of 17 PASS-ceiling criteria. It correctly handles AustLII access failure by documenting the attempt and sourcing from ASIC media releases/secondary court documents; it clearly labels property records and electoral rolls as requiring paid/manual access; and its source log table meaningfully distinguishes searched-but-blocked from not-searched-at-all. The two failures are both on PARTIAL-ceiling criteria (c8, c19) — neither `/investigator:corporate-ownership` nor `/analyst:source-credibility` skill routing is suggested anywhere in the output, despite a complex multi-entity corporate structure being surfaced and multiple findings coming from media rather than AustLII primary sources. These omissions cost only 1.0 point from the maximum of 18.0, yielding 94.4%.

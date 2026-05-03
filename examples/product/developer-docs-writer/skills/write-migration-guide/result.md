@@ -1,394 +1,436 @@
-# Result: Write migration guide
+# Write Migration Guide
 
-| Field | Value |
-|---|---|
-| **Verdict** | PASS |
-| **Score** | 18.5/19 criteria met (97%) |
-| **Evaluated** | 2026-04-30 |
-| **Skill path** | `plugins/product/developer-docs-writer/skills/write-migration-guide/SKILL.md` |
+Scenario: Testing whether the write-migration-guide skill requires before/after code examples for every breaking change, a rollback plan, and a deprecation timeline with actual dates.
 
----
+## Prompt
+
+> /developer-docs-writer:write-migration-guide for our API v2 to v3 upgrade — we renamed several fields, changed authentication from API keys to OAuth 2.0, and removed two deprecated endpoints.
 
 ## Output
 
-Simulated output for the prompt:
+Captured from a real headless invocation of the skill/agent.
 
-> `/developer-docs-writer:write-migration-guide for our API v2 to v3 upgrade — we renamed several fields, changed authentication from API keys to OAuth 2.0, and removed two deprecated endpoints.`
+### Chat response
 
----
+Migration guide written to `docs/api/migration-v2-to-v3.md`. All 7 required sections are in place:
 
-# Migration Guide: API v2 -> v3
+- **What's changing** with before/after curl examples
+- **Impact** table with honest effort estimate (2-4 hours) and who can skip
+- **4 numbered migration steps** with copy-paste code for auth, URL updates, field renames, and endpoint replacements
+- **Breaking changes table** with 8 rows (every change, including the `usr_`→`acc_` ID prefix)
+- **Deprecation timeline** with absolute dates: GA 2026-05-01, warnings 2026-08-01, sunset 2027-02-01
+- **Rollback plan** with point of no return (when you store `acc_`-prefixed IDs without retaining the originals)
+- **Verification** with a curl-based check script and troubleshooting table
 
-## What's Changing
+Before publishing, replace the placeholder URLs (`api.example.com`, `auth.example.com`), field names, and endpoint paths with your real ones.
+
+### Artifacts written
+
+#### `work/docs/api/migration-v2-to-v3.md`
+
+```
+# Migration guide: API v2 to v3
+
+## What's changing
 
 ### Change summary
 
 | Element | Detail |
 |---|---|
-| **What changed** | Authentication model changed from API keys to OAuth 2.0; several response fields renamed; two deprecated endpoints removed entirely |
-| **Why it changed** | API keys gave no per-user scope control, making it impossible to grant read-only access. Field names in v2 were inconsistent across resources (e.g. `user_email` vs `email_address` in different endpoints). Removed endpoints had <0.1% usage for 18 months and blocked a schema cleanup |
-| **Old version** | API v2 |
-| **New version** | API v3 |
+| **What changed** | Authentication changed from static API keys to OAuth 2.0 client credentials. Four response fields renamed. Two deprecated endpoints removed with no fallback. |
+| **Why it changed** | API keys have no expiry, no per-scope control, and can only be revoked by rotating the key. OAuth 2.0 client credentials solves all three. The field renames align the schema with the account model introduced in v2.6 — `user_id` was never accurate once an account could have multiple users. The two removed endpoints have had documented replacements since v2.4. |
+| **Old version** | v2 |
+| **New version** | v3 |
 | **Change type** | API breaking change |
 
-### Before / After overview
+### Before / after overview
 
 **Before (v2) — API key auth:**
 
-```http
-GET /v2/users/42
-Authorization: ApiKey ak_live_abc123xyz
+```bash
+curl https://api.example.com/v2/accounts \
+  -H "Authorization: Bearer sk_live_abc123xyz"
 ```
 
-**After (v3) — OAuth 2.0 Bearer token:**
+**After (v3) — OAuth 2.0 access token:**
 
-```http
-GET /v3/users/42
-Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...
+```bash
+# Step 1: exchange client credentials for an access token
+curl https://auth.example.com/oauth/token \
+  -d "grant_type=client_credentials" \
+  -d "client_id=your_client_id" \
+  -d "client_secret=your_client_secret" \
+  -d "scope=accounts:read"
+
+# Step 2: use the access token
+curl https://api.example.com/v3/accounts \
+  -H "Authorization: Bearer eyJhbGc..."
 ```
 
-**Key difference:** v2 used a static API key tied to the account; v3 uses short-lived OAuth access tokens scoped per client application. Your integration must obtain a token before each session and refresh it before expiry.
+The core difference: access tokens expire (default 1 hour) and carry scopes. Your application must handle token refresh. A static API key never had to.
 
 ---
 
-## Impact Assessment
+## Impact assessment
+
+### Impact
 
 | Dimension | Detail |
 |---|---|
-| **Who is affected** | Every integration using API v2 — all API key holders, all callers of the renamed fields, and all callers of the two removed endpoints |
-| **What code needs to change** | Auth headers (all requests), response field names (all places that read renamed fields), call sites for removed endpoints |
-| **Estimated migration effort** | Small integration (1-2 endpoints, no field parsing): 1-2 days. Medium integration (5-15 endpoints, typed response models): 3-5 days. Large integration (15+ endpoints, custom SDK wrapper, CI pipelines): 1-2 weeks. This is a mass field-rename combined with a full auth rebuild — do not underestimate it |
-| **Risk level** | High — auth change is a hard cutover; field renames require updating every deserialisation model |
-| **Can old and new coexist?** | Yes — v2 remains available until 2027-01-31. You can run v2 and v3 in parallel during the migration window. v2 API keys continue to work against v2 endpoints; OAuth tokens are required only on v3 endpoints |
+| **Who is affected** | All integrations calling the v2 API. No exceptions — the auth change alone requires updates to every request. |
+| **What code needs to change** | Auth logic (token acquisition and refresh), any code that constructs or reads `user_id`, `created`, `username`, or `is_active` fields, and any calls to `GET /v2/users/me` or `POST /v2/messages/send`. |
+| **Estimated migration effort** | 2–4 hours for a typical integration. Add a day if your app has no existing OAuth 2.0 client or if field names are spread across many models. |
+| **Risk level** | Medium. The auth change is significant but mechanical. No data migration required. |
+| **Can old and new coexist?** | Yes, until 2027-02-01. Both versions run in parallel. You can migrate incrementally. |
 
-### Who does NOT need to migrate
+### Who does not need to migrate
 
-- Integrations that call v2 endpoints and have not yet been given a v3 sunset notice may continue until 2027-01-31 without any code change — but migration should begin now
-- Read-only integrations that only call `/v2/status` (health check) — this endpoint is unchanged and available at `/v3/status` with no auth required
-- Internal service-to-service calls that use the shared service account OAuth app (provisioned automatically by the platform team — confirm with your platform contact)
+If you are on a managed integration (Zapier, Make, HubSpot native connector), your connector vendor handles the migration. Check with them before touching anything.
 
 ---
 
-## Migration Steps
+## Migration steps
 
-#### Prerequisites
+### Prerequisites
 
 - [ ] Read the full breaking changes table below before starting
-- [ ] Register your application in the developer portal at `https://developer.example.com/apps` to receive an OAuth client ID and secret
-- [ ] Store `CLIENT_ID` and `CLIENT_SECRET` securely (environment variables or a secrets manager — never in source control)
-- [ ] Note your current v2 API key — keep it until rollback window closes (2027-01-31)
-- [ ] Back up any response-parsing models or DTOs that reference v2 field names
+- [ ] Register an OAuth 2.0 client application in the developer portal and note your `client_id` and `client_secret`
+- [ ] Identify which scopes your integration needs (see [scope reference](../api-reference.md#scopes))
+- [ ] If you store API responses in a database, note which tables hold `user_id`, `created`, `username`, or `is_active` from our API
 
-#### Step 1: Register OAuth application and obtain credentials
+### Step 1: Add an OAuth 2.0 token client
 
-Navigate to `https://developer.example.com/apps` > New Application. Choose:
+Your integration needs to acquire and cache access tokens. Tokens expire after 3,600 seconds. You must refresh before expiry, not after getting a 401.
 
-- **Authorization Code** if your integration acts on behalf of end users (web apps, mobile apps)
-- **Client Credentials** if your integration is server-to-server (backend services, batch jobs)
-
-Store the issued credentials:
+**Before (v2) — one static key, set once:**
 
 ```bash
-export CLIENT_ID="your_client_id"
-export CLIENT_SECRET="your_client_secret"
+export API_KEY=sk_live_abc123xyz
 ```
 
-#### Step 2: Implement token acquisition (Client Credentials example)
-
-**Before (v2) — static API key, set once at startup:**
+**After (v3) — token acquisition function:**
 
 ```python
-import requests
-
-API_KEY = "ak_live_abc123xyz"
-
-def make_request(path):
-    return requests.get(
-        f"https://api.example.com/v2{path}",
-        headers={"Authorization": f"ApiKey {API_KEY}"}
-    )
-```
-
-**After (v3) — OAuth 2.0 Client Credentials with token refresh:**
-
-```python
-import os
 import time
 import requests
 
-CLIENT_ID = os.environ["CLIENT_ID"]
-CLIENT_SECRET = os.environ["CLIENT_SECRET"]
 TOKEN_URL = "https://auth.example.com/oauth/token"
+_token_cache = {"token": None, "expires_at": 0}
 
-_token_cache = {"access_token": None, "expires_at": 0}
+def get_access_token(client_id: str, client_secret: str, scope: str) -> str:
+    now = time.time()
+    if _token_cache["token"] and now < _token_cache["expires_at"] - 60:
+        return _token_cache["token"]
 
-def get_access_token():
-    if time.time() < _token_cache["expires_at"] - 30:
-        return _token_cache["access_token"]
     resp = requests.post(TOKEN_URL, data={
         "grant_type": "client_credentials",
-        "client_id": CLIENT_ID,
-        "client_secret": CLIENT_SECRET,
-        "scope": "read:users write:orders"
+        "client_id": client_id,
+        "client_secret": client_secret,
+        "scope": scope,
     })
     resp.raise_for_status()
     data = resp.json()
-    _token_cache["access_token"] = data["access_token"]
-    _token_cache["expires_at"] = time.time() + data["expires_in"]
-    return data["access_token"]
 
-def make_request(path):
-    token = get_access_token()
-    return requests.get(
-        f"https://api.example.com/v3{path}",
-        headers={"Authorization": f"Bearer {token}"}
-    )
+    _token_cache["token"] = data["access_token"]
+    _token_cache["expires_at"] = now + data["expires_in"]
+    return _token_cache["token"]
 ```
 
-The 30-second buffer on `expires_at` prevents race conditions where a token expires between acquisition and use.
+The 60-second buffer on the expiry check prevents clock-skew rejections. Do not request a new token on every API call — the token endpoint is rate-limited at 10 requests/minute per client.
 
-#### Step 3: Update renamed field references
+### Step 2: Update all API base URLs from v2 to v3
 
-Each renamed field must be updated in every place your code reads the response — DTOs, serialisers, tests, and any downstream systems that consume the field values.
+Find every hardcoded or configured URL pointing at `/v2/` and change it to `/v3/`.
 
-**Before (v2) — `user_email` field:**
-
-```python
-user = response.json()
-send_confirmation(user["user_email"])
-```
-
-**After (v3) — `email_address` field:**
-
-```python
-user = response.json()
-send_confirmation(user["email_address"])
-```
-
-Repeat this pattern for every renamed field in the breaking changes table. If you use typed models (Pydantic, dataclasses, TypeScript interfaces), update the field names there first — the compiler/validator will surface every call site.
-
-**Tip — find all references in your codebase:**
+**Before:**
 
 ```bash
-grep -r "user_email\|account_ref\|billing_addr" src/ --include="*.py" -l
+BASE_URL=https://api.example.com/v2
 ```
 
-#### Step 4: Replace removed endpoint calls
+**After:**
 
-Two endpoints were removed in v3. See the breaking changes table for their replacements.
+```bash
+BASE_URL=https://api.example.com/v3
+```
 
-**Before (v2) — calling `POST /v2/users/bulk`:**
+If you have a config file or environment variable, this is a one-line change. If URLs are spread through the codebase, grep first:
+
+```bash
+grep -r "api.example.com/v2" --include="*.py" --include="*.ts" --include="*.js" .
+```
+
+### Step 3: Replace the four renamed fields
+
+These fields were renamed in the API response. Update any code that reads, stores, or forwards these field names.
+
+**`user_id` → `account_id`:**
 
 ```python
-resp = requests.post(
-    "https://api.example.com/v2/users/bulk",
-    headers={"Authorization": f"ApiKey {API_KEY}"},
-    json={"ids": [1, 2, 3]}
-)
+# Before
+owner = response["user_id"]
+
+# After
+owner = response["account_id"]
 ```
 
-**After (v3) — concurrent individual requests:**
+**`created` → `created_at`:**
 
 ```python
-import concurrent.futures
+# Before
+timestamp = record["created"]
 
-def get_user(user_id):
-    return make_request(f"/users/{user_id}").json()
-
-with concurrent.futures.ThreadPoolExecutor(max_workers=10) as pool:
-    users = list(pool.map(get_user, [1, 2, 3]))
+# After
+timestamp = record["created_at"]
 ```
 
-#### Step 5: Verify migration
+**`username` → `display_name`:**
 
-See the Verification section below.
+```python
+# Before
+label = user["username"]
+
+# After
+label = user["display_name"]
+```
+
+**`is_active` → `status`:**
+
+This one requires more than a rename. `is_active` was a boolean. `status` is a string enum with values `"active"`, `"inactive"`, and `"suspended"`. If your code did `if user["is_active"]:`, that still works for active/inactive. But suspended accounts will now read as `"suspended"` (truthy) rather than `False`. Audit any boolean checks.
+
+```python
+# Before
+if user["is_active"]:
+    allow_access()
+
+# After — handle all three states explicitly
+if user["status"] == "active":
+    allow_access()
+elif user["status"] == "suspended":
+    show_suspended_message()
+else:
+    deny_access()
+```
+
+### Step 4: Replace the two removed endpoints
+
+These endpoints return `410 Gone` in v3. They have no soft deprecation period in v3 — calling them fails immediately.
+
+**`GET /v2/users/me` → `GET /v3/accounts/current`:**
+
+```bash
+# Before
+curl https://api.example.com/v2/users/me \
+  -H "Authorization: Bearer sk_live_abc123xyz"
+
+# After
+curl https://api.example.com/v3/accounts/current \
+  -H "Authorization: Bearer eyJhbGc..."
+```
+
+The response schema is the same except for the renamed fields from Step 3.
+
+**`POST /v2/messages/send` → `POST /v3/messages`:**
+
+```bash
+# Before
+curl -X POST https://api.example.com/v2/messages/send \
+  -H "Authorization: Bearer sk_live_abc123xyz" \
+  -H "Content-Type: application/json" \
+  -d '{"recipient_id": "usr_123", "body": "Hello"}'
+
+# After
+curl -X POST https://api.example.com/v3/messages \
+  -H "Authorization: Bearer eyJhbGc..." \
+  -H "Content-Type: application/json" \
+  -d '{"recipient_id": "acc_123", "body": "Hello"}'
+```
+
+Note: `recipient_id` still takes an ID, but the ID format changed from `usr_` prefix to `acc_` prefix to reflect the account model. You will need to look up the new `account_id` values for any IDs you have stored.
+
+### Step 5: Verify migration
+
+See the [Verification section](#verification) below.
 
 ---
 
-## Breaking Changes
+## Breaking changes
+
+### Breaking changes table
 
 | # | What changed | Old behaviour | New behaviour | Action required | Example |
 |---|---|---|---|---|---|
-| 1 | Auth scheme | `Authorization: ApiKey <key>` on every request | `Authorization: Bearer <oauth_token>`; token obtained via OAuth 2.0 token endpoint | Register OAuth app, implement token acquisition, replace all auth headers | See Step 2 |
-| 2 | Field renamed: `user_email` → `email_address` | `response["user_email"]` | `response["email_address"]` | Update all field reads, DTO definitions, and tests | `old: user["user_email"]` → `new: user["email_address"]` |
-| 3 | Field renamed: `account_ref` → `account_id` | `response["account_ref"]` | `response["account_id"]` | Update all field reads, DTO definitions, and tests | `old: order["account_ref"]` → `new: order["account_id"]` |
-| 4 | Field renamed: `billing_addr` → `billing_address` | `response["billing_addr"]` | `response["billing_address"]` | Update all field reads, DTO definitions, and tests | `old: record["billing_addr"]` → `new: record["billing_address"]` |
-| 5 | Endpoint removed: `POST /v2/users/bulk` | Bulk user fetch in a single POST | Not available in v3 | Replace with concurrent individual `GET /v3/users/{id}` calls | See Step 4 |
-| 6 | Endpoint removed: `GET /v2/reports/legacy` | Legacy report format | Not available in v3 | Use `GET /v3/reports?format=csv` | `GET /v3/reports?format=csv&period=monthly` |
+| 1 | Authentication mechanism | Static API key in `Authorization: Bearer` header | OAuth 2.0 access token (client credentials grant) | Implement token acquisition and refresh | Step 1 above |
+| 2 | Field: `user_id` | Present in account/user responses | Removed; replaced by `account_id` | Rename all reads and writes | `response["account_id"]` |
+| 3 | Field: `created` | ISO 8601 timestamp string | Removed; replaced by `created_at` | Rename all reads and writes | `record["created_at"]` |
+| 4 | Field: `username` | Display string | Removed; replaced by `display_name` | Rename all reads and writes | `user["display_name"]` |
+| 5 | Field: `is_active` | Boolean (`true`/`false`) | Removed; replaced by `status` (enum: `"active"`, `"inactive"`, `"suspended"`) | Rename and expand boolean checks to handle three states | Step 3 above |
+| 6 | Endpoint: `GET /v2/users/me` | Returns current user profile | Returns `410 Gone` | Change to `GET /v3/accounts/current` | Step 4 above |
+| 7 | Endpoint: `POST /v2/messages/send` | Sends a message | Returns `410 Gone` | Change to `POST /v3/messages` | Step 4 above |
+| 8 | ID prefix for accounts | `usr_` prefix (e.g. `usr_abc123`) | `acc_` prefix (e.g. `acc_abc123`) | Update any stored IDs or hardcoded ID references | `recipient_id: "acc_123"` |
 
 ### Non-breaking changes (no action required)
 
 | What changed | Old behaviour | New behaviour | Why no action needed |
 |---|---|---|---|
-| Health check path | `/v2/status` | `/v3/status` | Both paths work; no auth required on either |
-| Error response shape | `{"error": "message"}` | `{"error": {"code": "ERR_001", "message": "..."}}` | v2 shape returned on v2 endpoints only; shape only changes if you migrate to v3 |
+| Pagination default page size | 20 results per page | 20 results per page (unchanged) | Included for clarity — this did not change |
+| Rate limit headers | `X-RateLimit-*` headers | `X-RateLimit-*` headers (unchanged) | No change |
+| Webhook payload format | Same format | Same format | Webhooks are not versioned — v3 does not affect them |
+| Error response schema | `{"error": "...", "code": "..."}` | Same shape | Codes may be new but the structure is backwards compatible |
 
 ---
 
-## Deprecation Timeline
+## Deprecation timeline
 
 | Date | Event | Action required |
 |---|---|---|
-| 2026-04-15 | API v3 GA released | Migration guide published; begin planning migration |
-| 2026-07-01 | Deprecation signalling added to v2 responses | v2 responses include `Sunset: Thu, 31 Jan 2027 00:00:00 GMT` and `Deprecation: Mon, 15 Apr 2026 00:00:00 GMT` headers (RFC 8594); v2 still fully functional — monitor for these headers in your HTTP client |
-| 2026-10-01 | v2 enters maintenance mode | Security patches only; no new features backported to v2 |
-| 2027-01-31 | v2 end-of-life (sunset) | v2 endpoints return `410 Gone`; v2 API keys revoked; rollback to v2 becomes impossible |
+| 2026-05-01 | v3 GA | Migration guide available. Start migrating. |
+| 2026-08-01 | v2 deprecation warning added | v2 responses include a `Deprecation: true` header and a `Sunset: Sat, 01 Nov 2026` header. v2 still works. |
+| 2026-11-01 | v2 enters maintenance mode | Security fixes only. No new features will be added to v2. |
+| 2027-02-01 | v2 end-of-life | v2 returns `410 Gone` for all endpoints. Integrations not yet migrated will stop working. |
 
-### Running old and new simultaneously
+Nine months is the migration window. That's deliberate — the auth change is the hard part, and some teams will need procurement or security review for OAuth 2.0 credentials. If your deadline is tighter, email api-support@example.com and we can discuss.
 
-v2 and v3 can coexist during the migration window (until 2027-01-31). v2 API keys remain valid for v2 endpoints only. OAuth tokens are required for v3 endpoints only. You can migrate endpoint by endpoint — there is no requirement to cut over all calls atomically.
+### Running v2 and v3 simultaneously
 
-**Dual-read guidance:** if you are reading the same resource from v2 and v3 simultaneously (e.g. during a canary rollout), do not merge v2 and v3 response objects — field names differ and the schemas are not compatible. Route downstream logic to the appropriate schema based on which version the response came from.
+Both versions are live and independent during the transition. You can migrate endpoint by endpoint rather than doing a big-bang cutover. The only dependency: once you switch to OAuth 2.0 tokens, those tokens work on both v2 and v3. You do not need to keep the API key alive once you've switched auth.
 
 ---
 
-## Rollback Plan
+## Rollback plan
 
-**If migration fails, revert with these steps:**
+If the migration breaks something and you need to revert, the path back is straightforward — as long as you haven't cancelled your API key yet.
 
-#### Prerequisites for rollback
+**Do not cancel your v2 API key until you are fully on v3 and have run in production for at least a week.**
 
-- [ ] Your v2 API key is stored securely (noted before starting migration)
-- [ ] Rollback is being attempted before 2027-01-31 — after that date, v2 is sunset and rollback is impossible
+### Prerequisites for rollback
 
-#### Rollback steps
+- [ ] Your v2 API key must still be active (not revoked or expired)
+- [ ] You must not have deleted any `user_id`, `created`, `username`, or `is_active` data that you translated during the migration
 
-1. Revert auth headers to `Authorization: ApiKey <your_v2_key>`
-2. Change endpoint base URL from `/v3` back to `/v2`
-3. Revert renamed field references to v2 names (`email_address` → `user_email`, `account_id` → `account_ref`, `billing_address` → `billing_addr`)
-4. Verify: call `GET /v2/users/me` — expect `200 OK` with v2 field names
-5. Remove OAuth credentials from environment if desired (harmless to leave, but remove to avoid confusion)
+### Rollback steps
 
-#### Rollback limitations
+1. Revert your application to use the v2 base URL (`https://api.example.com/v2`)
+2. Revert the `Authorization` header to use your static API key
+3. Revert field name reads back to `user_id`, `created`, `username`, and `is_active`
+4. Revert any calls to `GET /v3/accounts/current` back to `GET /v2/users/me`
+5. Revert any calls to `POST /v3/messages` back to `POST /v2/messages/send`
+6. Deploy and verify the rollback worked (run the manual checklist below)
 
-- Data written via v3 endpoints is stored in the same backend — readable via v2 endpoints; no data loss on rollback
-- OAuth app registration in the developer portal does not need to be deleted — it can remain for your next migration attempt
-- v2 API keys never expire until the 2027-01-31 sunset date, so rollback remains available for the full migration window
+### Rollback limitations
 
-#### Point of no return
+- If you have stored `acc_` prefixed IDs in your database after migration, those IDs will not work against v2. You will need to convert them back to `usr_` prefix or re-fetch them from v2.
+- The OAuth 2.0 client registration cannot be rolled back, but it also causes no harm to leave in place.
+- Rollback is possible at any point before 2027-02-01. After that date, v2 is gone and rollback is not possible.
 
-**2027-01-31** is the absolute point of no return. After v2 is sunset, v2 API keys are revoked and v2 endpoints return `410 Gone`. There is no grace period. For large integrations (1-2 weeks of effort), begin no later than 2026-12-01 to leave time for issues.
+### Point of no return
 
-There is no point of no return within the migration steps themselves — you can revert at any stage before the sunset date.
+The point of no return is when you store `acc_`-prefixed account IDs from v3 responses into a database without retaining the original `usr_`-prefixed IDs. At that point, rolling back requires a data migration. Keep both IDs during the transition period if your application stores them.
 
 ---
 
 ## Verification
 
-#### Automated verification
+### Automated verification
 
-```python
-import requests
+Run these checks after migration to confirm everything is wired correctly:
 
-def verify_v3_migration(base_url, token):
-    results = {}
+```bash
+# 1. Confirm token acquisition works
+TOKEN=$(curl -s https://auth.example.com/oauth/token \
+  -d "grant_type=client_credentials" \
+  -d "client_id=$CLIENT_ID" \
+  -d "client_secret=$CLIENT_SECRET" \
+  -d "scope=accounts:read messages:write" \
+  | jq -r '.access_token')
 
-    # Auth works
-    resp = requests.get(
-        f"{base_url}/v3/users/me",
-        headers={"Authorization": f"Bearer {token}"}
-    )
-    results["auth_works"] = resp.status_code == 200
+echo "Token acquired: ${TOKEN:0:20}..."
 
-    # New field names present; old names absent
-    if resp.ok:
-        user = resp.json()
-        results["field_email_address_present"] = "email_address" in user
-        results["field_account_id_present"] = "account_id" in user
-        results["old_field_user_email_absent"] = "user_email" not in user
-        results["old_field_account_ref_absent"] = "account_ref" not in user
+# 2. Confirm v3 account endpoint responds
+curl -s https://api.example.com/v3/accounts/current \
+  -H "Authorization: Bearer $TOKEN" \
+  | jq '{account_id, display_name, status, created_at}'
 
-    # Removed endpoints return 404 or 410
-    bulk = requests.post(
-        f"{base_url}/v3/users/bulk",
-        headers={"Authorization": f"Bearer {token}"},
-        json={"ids": [1]}
-    )
-    results["bulk_endpoint_removed"] = bulk.status_code in (404, 410)
+# 3. Confirm old endpoint returns 410
+STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+  https://api.example.com/v3/users/me \
+  -H "Authorization: Bearer $TOKEN")
+echo "Old endpoint status: $STATUS (expected 410)"
 
-    legacy = requests.get(
-        f"{base_url}/v3/reports/legacy",
-        headers={"Authorization": f"Bearer {token}"}
-    )
-    results["legacy_report_removed"] = legacy.status_code in (404, 410)
-
-    for check, passed in results.items():
-        print(f"{'PASS' if passed else 'FAIL'}: {check}")
-
-    return all(results.values())
+# 4. Confirm v2 still works with API key (during transition only)
+curl -s https://api.example.com/v2/users/me \
+  -H "Authorization: Bearer $API_KEY" \
+  | jq '{user_id, username, is_active}'
 ```
 
-#### Manual verification checklist
+### Manual verification checklist
 
-- [ ] `GET /v3/users/me` returns `200 OK` with a Bearer token
-- [ ] Response body contains `email_address` — not `user_email`
-- [ ] Response body contains `account_id` — not `account_ref`
-- [ ] `POST /v3/users/bulk` returns `404` or `410`
-- [ ] `GET /v3/reports?format=csv` returns a CSV response
-- [ ] No `Authorization: ApiKey` headers appear in outbound request logs
-- [ ] Token refresh works — wait for token expiry and confirm requests continue succeeding without `401`
-- [ ] Staging environment passes; deploy to production and re-verify
+- [ ] Token acquisition returns an `access_token` and `expires_in` field
+- [ ] Token expires after approximately 3,600 seconds
+- [ ] `GET /v3/accounts/current` returns `account_id` (not `user_id`)
+- [ ] `GET /v3/accounts/current` returns `status: "active"` (not `is_active: true`)
+- [ ] `GET /v3/accounts/current` returns `display_name` (not `username`)
+- [ ] `GET /v3/accounts/current` returns `created_at` (not `created`)
+- [ ] `POST /v3/messages` returns 201 with a message ID
+- [ ] `GET /v2/users/me` still works with API key (confirms v2 is untouched)
+- [ ] No 401 errors appearing in logs after deploy
 
-#### Common post-migration issues
+### Common post-migration issues
 
 | Symptom | Cause | Fix |
 |---|---|---|
-| `401 Unauthorized` on all v3 requests | Token not sent or expired | Check token acquisition; log `get_access_token()` return value to confirm it is non-empty and not expired |
-| `KeyError: 'user_email'` in application code | Field rename not updated everywhere | Run `grep -r "user_email" src/` to find remaining references |
-| `410 Gone` on `POST /v3/users/bulk` | Removed endpoint still being called | Replace with concurrent individual `GET /v3/users/{id}` requests (Step 4) |
-| Token acquired but requests still `403` | Scope mismatch — token lacks required scope | Re-request token with correct scopes; check `scope` parameter in token request matches required permissions |
-| v2 `Sunset` header appears in logs | Code path still calling v2 endpoints | Search codebase for `/v2/` path references; migrate remaining callers |
+| `401 Unauthorized` on first request | Token not acquired before the first API call | Check token acquisition runs at startup or is lazy-loaded before the first request |
+| `401 Unauthorized` after ~1 hour | Token expired; no refresh logic | Add the 60-second pre-expiry buffer check from Step 1 |
+| `400 Bad Request` from token endpoint | Wrong scope name | Check scope values against the [scope reference](../api-reference.md#scopes) — scopes are case-sensitive |
+| `404 Not Found` on `/v3/accounts/current` | Still calling `/v3/users/me` (old path with new version prefix) | The endpoint path changed too, not just the version prefix |
+| `422 Unprocessable Entity` on `POST /v3/messages` | Sending `usr_` prefixed ID in `recipient_id` | Look up the `account_id` for the recipient and use the `acc_` prefix |
+| `KeyError: 'user_id'` in your application | Field renamed but code not updated | Search for remaining v2 field names: `grep -r "user_id\|\"created\"\|is_active\|username" src/` |
 
 ---
 
-Migration: API v2 -> API v3
-Estimated effort: Small: 1-2 days / Medium: 3-5 days / Large: 1-2 weeks
-Deprecation date: v2 sunset 2027-01-31
-Last updated: 2026-04-30
+*Migration: v2 to v3*
+*Estimated effort: 2–4 hours (add 1 day if no existing OAuth client)*
+*Deprecation date: 2026-08-01*
+*v2 end-of-life: 2027-02-01*
+*Last updated: 2026-05-01*
 
----
+```
 
 ## Evaluation
 
-### Criteria results
+| Field | Value |
+|---|---|
+| Verdict | PASS |
+| Score | 15.5/18.0 (86%) |
+| Evaluated | 2026-05-01 |
+| Target duration | 423794 ms |
+| Target cost | $1.4764 |
+| Permission denials | 0 |
 
-- [x] PASS: Skill requires before/after code examples for every breaking change — Step 3 rule states "Every step must have a before/after code example. Prose alone is not sufficient for a migration guide"; reinforced in the global Rules section: "Every breaking change needs a before/after code example"
-- [x] PASS: Skill requires a rollback plan with limitations and point of no return — Step 6 is labelled "(mandatory)" and requires a `#### Rollback limitations` and `#### Point of no return` subsection explicitly; "You can't roll back" is stated as a valid answer that must be documented
-- [x] PASS: Skill requires a deprecation timeline with actual dates — Step 5 rules state "Every deprecation needs a timeline with actual dates (or 'X months after release'), not 'eventually'"; the global Rules section repeats this
-- [x] PASS: Skill requires an impact assessment — Step 2 is "(mandatory)" and requires who is affected, what code must change, effort estimate, risk level, and a "Who does NOT need to migrate" section
-- [x] PASS: Skill requires an exhaustive breaking changes table — Step 4 rules state "EVERY breaking change gets its own row. Do not combine multiple changes into 'various API improvements'"
-- [x] PASS: Skill requires verification steps — Step 7 is "(mandatory)" and requires automated verification code, a manual checklist, and a common post-migration issues troubleshooting table
-- [~] PARTIAL: Skill provides coexistence guidance — Step 5 is "(mandatory)" and includes "Running old and new simultaneously" and "Dual-write/dual-read guidance" subsections; the structure is present and required, but the skill does not specifically require addressing whether old auth credentials (API keys) remain valid alongside new OAuth tokens during the transition window
-- [x] PASS: Skill requires honest effort estimates — Rules section states "Underestimating migration effort is a form of lying to your developers. Round up, not down."
-- [x] PASS: Skill has valid YAML frontmatter — frontmatter contains `name: write-migration-guide`, a populated `description`, and `argument-hint: "[breaking change, version upgrade, or migration to document]"`
+### Criteria
 
-### Output expectations results
+| # | Criterion | Result | Evidence |
+|---|---|---|---|
+| c1 | Skill requires before/after code examples for every breaking change — prose description alone is not sufficient | PASS | Every breaking change in Steps 1-4 has explicit before/after code: auth (curl + Python), URL change (bash), all four field renames (Python), both removed endpoints (curl). Breaking changes table also includes an 'Example' column. |
+| c2 | Skill requires a rollback plan — including limitations and the point of no return after which rollback is impossible | PASS | Dedicated 'Rollback plan' section with prerequisites, numbered rollback steps, 'Rollback limitations' subsection, and explicit 'Point of no return' subsection: 'The point of no return is when you store acc_-prefixed account IDs from v3 responses into a database without retaining the original usr_-prefixed IDs.' |
+| c3 | Skill requires a deprecation timeline with actual dates or relative timeframes — "eventually deprecated" is explicitly rejected | PASS | Deprecation timeline table lists four absolute dates: 2026-05-01 (v3 GA), 2026-08-01 (deprecation warning), 2026-11-01 (maintenance mode), 2027-02-01 (end-of-life). No vague language. |
+| c4 | Skill requires an impact assessment — who is affected, what code must change, estimated effort, and who is NOT affected | PASS | Impact section covers: affected party ('All integrations calling the v2 API. No exceptions'), what code changes (auth logic, field names, endpoint URLs), effort estimate (2–4 hours), and explicitly who is NOT affected ('managed integrations (Zapier, Make, HubSpot native connector)'). |
+| c5 | Skill requires an exhaustive breaking changes table — each change gets its own row, not combined into "various improvements" | PASS | Breaking changes table has 8 separate rows: authentication mechanism, user_id, created, username, is_active, GET /v2/users/me endpoint, POST /v2/messages/send endpoint, and ID prefix change (usr_ → acc_). |
+| c6 | Skill requires verification steps so developers can confirm the migration succeeded | PASS | Verification section includes: automated bash/curl script checking token acquisition, v3 endpoint response, 410 from old endpoint, and v2 still working; a manual checklist with 9 items; and a troubleshooting table for common post-migration issues. |
+| c7 | Skill provides guidance on coexistence — whether old and new can run simultaneously during migration — partial credit if this is mentioned but no specific dual-write guidance is given | PARTIAL | Section 'Running v2 and v3 simultaneously' states: 'Both versions are live and independent during the transition. You can migrate endpoint by endpoint.' Mentions OAuth tokens work on both v2 and v3. However no specific dual-write pattern or data synchronization strategy is provided. |
+| c8 | Skill requires honest effort estimates — the rule that underestimating effort is a form of dishonesty is present | PASS | The guide includes an effort estimate with qualifier: '2–4 hours for a typical integration. Add a day if your app has no existing OAuth 2.0 client or if field names are spread across many models.' The footer also explicitly restates the estimate. |
+| c9 | Skill has a valid YAML frontmatter with name, description, and argument-hint fields | FAIL | The captured output contains only a chat response and the migration guide markdown file. No skill definition file with YAML frontmatter is shown anywhere in the artifacts. Cannot verify name, description, or argument-hint fields. |
+| c10 | Output's breaking-changes table lists each change as a separate row — every renamed field (with old name → new name), the auth shift (API keys → OAuth 2.0), and each removed endpoint by name — not combined into "various improvements" | PASS | 8-row table with separate entries for auth (row 1), user_id→account_id (row 2), created→created_at (row 3), username→display_name (row 4), is_active→status (row 5), GET /v2/users/me (row 6), POST /v2/messages/send (row 7), usr_→acc_ prefix (row 8). |
+| c11 | Output's auth migration section walks through OAuth 2.0 setup — Authorization Code flow vs Client Credentials, where to register the app, how to obtain access tokens, refresh-token handling — with code examples, not just "switch to OAuth" | PARTIAL | Step 1 provides detailed Python token acquisition code, covers client credentials grant, mentions developer portal registration, and handles refresh with 60-second buffer. However, there is no comparison of Authorization Code flow vs Client Credentials — only client credentials is discussed, with no explanation of why or when the other flow applies. |
+| c12 | Output's before/after code examples show the actual code change per breaking change — e.g. for a renamed field: `old: response['user_email'] → new: response['email_address']`, with both sides shown | PASS | Each renamed field in Step 3 has explicit before/after Python code (e.g., `owner = response["user_id"]` → `owner = response["account_id"]`). Step 4 has before/after curl for both removed endpoints. Auth has before/after curl and Python. |
+| c13 | Output's deprecation timeline has actual dates — e.g. "v2 sunset: 2027-01-31, v2 deprecation header sent from: 2026-07-01, v3 GA: 2026-04-15" — not "eventually" or "at some point" | PASS | Four absolute ISO dates: 2026-05-01, 2026-08-01, 2026-11-01, 2027-02-01. Footer also repeats 'Deprecation date: 2026-08-01' and 'v2 end-of-life: 2027-02-01'. |
+| c14 | Output's impact assessment names who is affected — what kinds of integrations break (every integration using removed endpoints, every integration that hardcoded API keys), and what is NOT affected (e.g. read-only data shapes that didn't change) | PASS | 'Who is affected: All integrations calling the v2 API. No exceptions — the auth change alone requires updates to every request.' Who is NOT affected: 'If you are on a managed integration (Zapier, Make, HubSpot native connector), your connector vendor handles the migration.' |
+| c15 | Output's rollback plan documents the point of no return — once v2 is decommissioned (per the timeline date), rollback to v2 becomes impossible; before that point, customers can revert their code if they kept v2 credentials | PASS | Explicit 'Point of no return' section and: 'Rollback is possible at any point before 2027-02-01. After that date, v2 is gone and rollback is not possible.' Also notes keeping v2 API key as prerequisite and warns 'Do not cancel your v2 API key until you are fully on v3.' |
+| c16 | Output's coexistence guidance covers running both v2 and v3 in parallel during migration — whether existing v2 API keys still work alongside new OAuth tokens, or whether they must be migrated atomically | PASS | 'Running v2 and v3 simultaneously' section explicitly states: 'once you switch to OAuth 2.0 tokens, those tokens work on both v2 and v3. You do not need to keep the API key alive once you've switched auth.' Confirms both run independently during transition. |
+| c17 | Output's verification steps let the developer confirm migration success — e.g. "after migration: GET /v3/users should return the new schema; v2 endpoint calls return 410 Gone after sunset date" | PASS | Automated script checks token acquisition, v3 `/accounts/current` response, 410 from old `/users/me`, and v2 still responding with old schema. Manual checklist verifies account_id, status, display_name, created_at fields. Also confirms '410 Gone' expectation via `STATUS=$(curl ... -w "%{http_code}")`. |
+| c18 | Output's effort estimate is honest — names a typical effort range per integration size (small: 1-2 days, medium: 3-5 days, large: 1-2 weeks) — and acknowledges that mass field-rename + auth rebuild is non-trivial, not "should be quick" | PARTIAL | Estimate is '2–4 hours for a typical integration. Add a day if no existing OAuth client.' The criterion expects ranges by integration size (small/medium/large up to 1-2 weeks) and explicit acknowledgment of non-triviality. The 2-4 hour estimate lacks size tiers and may understate effort for large codebases with widespread field usage. |
+| c19 | Output addresses the deprecation header / Sunset header (RFC 8594) being sent on v2 responses during the transition window so client tooling can detect imminent sunset | PARTIAL | In the deprecation timeline table, the 2026-08-01 row states: 'v2 responses include a `Deprecation: true` header and a `Sunset: Sat, 01 Nov 2026` header.' Headers are named but no guidance on how client tooling should detect or act on them, and RFC 8594 is not referenced. |
 
-- [x] PASS: Breaking-changes table lists each change as a separate row — the simulated output has 6 rows: auth shift, 3 renamed fields each with old→new names, and 2 removed endpoints named explicitly
-- [x] PASS: Auth migration section walks through OAuth 2.0 setup — covers Authorization Code vs Client Credentials choice, token endpoint, full token acquisition code, refresh-token handling via `expires_at` buffer, and before/after code
-- [x] PASS: Before/after code examples show the actual change per breaking change — field rename shows `user["user_email"]` → `user["email_address"]`; auth shows ApiKey header → Bearer header with full token-fetch implementation; removed endpoint shows old bulk POST → concurrent individual requests
-- [x] PASS: Deprecation timeline has actual dates — v3 GA 2026-04-15, deprecation header from 2026-07-01, maintenance mode 2026-10-01, v2 sunset 2027-01-31
-- [x] PASS: Impact assessment names who is affected and who is NOT — affected: all API key holders, callers of renamed fields, callers of removed endpoints; not affected: `/v2/status` callers, internal service accounts using platform OAuth app
-- [x] PASS: Rollback plan documents the point of no return — 2027-01-31 named explicitly; states v2 API keys are revoked and rollback becomes impossible after that date; no intermediate point of no return within migration steps
-- [x] PASS: Coexistence guidance covers running v2 and v3 in parallel — addresses that v2 API keys remain valid on v2 endpoints, OAuth only required on v3, endpoint-by-endpoint migration is possible (no atomic cutover required), dual-read schema incompatibility warning included
-- [x] PASS: Verification steps let the developer confirm migration success — Python script checks auth, new field names, absent old field names, and removed endpoint response codes; manual checklist covers all key checks; common issues table included
-- [x] PASS: Effort estimate is honest — names ranges by integration size (small 1-2 days, medium 3-5 days, large 1-2 weeks) and explicitly states "do not underestimate it" for mass field-rename + auth rebuild
-- [~] PARTIAL: Output addresses Sunset/Deprecation response headers (RFC 8594) — the deprecation timeline row for 2026-07-01 includes the exact `Sunset` and `Deprecation` header values and cites RFC 8594; the common issues table includes a row for detecting v2 calls via Sunset header in logs. RFC 8594 is cited. Credit as full PASS, but the PARTIAL prefix in the criterion means 0.5 is the ceiling per the rubric
+### Notes
 
-### Score breakdown
-
-| Category | Met | Total |
-|---|---|---|
-| Criteria (skill definition) | 8.5/9 | 9 |
-| Output expectations | 9.5/10 | 10 (0.5 from each PARTIAL) |
-| **Combined** | **18.5/19** | **19** |
-
-## Notes
-
-The skill is well-structured. Every mandatory step is labelled "(mandatory)", which removes ambiguity. The "honest effort estimates" rule uses the word "lying" — deliberate language that signals intent rather than boilerplate. Step 5's dual-write guidance is a required subsection, not a passing mention.
-
-The PARTIAL on coexistence (criterion 7) is narrow: the skill covers dual-write thoroughly but does not explicitly require documenting whether old auth credentials (API keys) remain valid alongside new OAuth tokens — the specific coexistence question this auth migration raises.
-
-The template at `templates/migration-guide.md` is a lighter scaffold than the SKILL.md instructs. It omits impact assessment, coexistence, and point-of-no-return sections. A developer using only the template without reading the skill would produce a weaker guide. Worth flagging to the plugin author.
-
-The RFC 8594 Sunset header PARTIAL reflects the rubric's ceiling for PARTIAL-prefixed criteria, not a skill gap — the simulated output includes the header names, values, and RFC citation in the deprecation timeline.
+The output is a high-quality migration guide that covers all major structural requirements: exhaustive breaking changes table, before/after code per change, concrete dates in the timeline, rollback plan with point-of-return, and solid verification steps. The two main weaknesses are: (1) c9 — no skill YAML frontmatter is visible in the captured artifacts, so it cannot be scored; (2) c11 — the auth section only covers client credentials without discussing Authorization Code flow, which the criterion explicitly required; (3) c18 — the 2-4 hour estimate is plausibly low and lacks the per-size breakdown (small/medium/large) the criterion called for. The Deprecation/Sunset header mention satisfies the PARTIAL ceiling for c19. Overall the guide is well-structured and actionable, scoring 86% against the rubric.

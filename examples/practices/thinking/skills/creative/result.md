@@ -1,302 +1,252 @@
-# Result: creative onboarding flow ideation
+# Creative
 
-| Field | Value |
-|---|---|
-| **Verdict** | PASS |
-| **Score** | 17/18 criteria met (94%) |
-| **Evaluated** | 2026-04-30 |
+Scenario: A product team wants fresh ideas for reducing drop-off during user onboarding. They're stuck on a linear wizard approach and want genuinely different alternatives.
+
+## Prompt
+
+> /creative We're losing 60% of new users before they complete our 7-step onboarding wizard for Nexus, our project management tool. The current flow is: account setup → invite team → create first project → add tasks → connect integrations → set notifications → take a tour. Most users drop off at step 3. What are some genuinely different approaches?
 
 ## Output
 
-The skill was invoked with: `/creative We're losing 60% of new users before they complete our 7-step onboarding wizard for Nexus, our project management tool. The current flow is: account setup → invite team → create first project → add tasks → connect integrations → set notifications → take a tour. Most users drop off at step 3. What are some genuinely different approaches?`
+Captured from a real headless invocation of the skill/agent.
 
-Below is the simulated output a well-formed execution of this skill would produce.
+### Chat response
 
----
+## Problem Reframing
 
-# Creative brainstorm: Nexus onboarding drop-off
+**Problem as stated:** 60% of users abandon a 7-step onboarding wizard before completing it; most drop at step 3 (create first project).
 
-## Step 1 — Problem analysis
+**Who has this problem:** A team lead or solo PM who signed up to evaluate whether Nexus can replace their current tool — they're time-poor, skeptical, and need to see value before they commit mental energy to setup.
 
-```
-Problem as stated: 60% of users abandon a 7-step onboarding wizard before completing it.
-                   Drop-off is concentrated at step 3 (create first project).
+**Why it matters:** Users who don't activate don't retain. Every dropped user is wasted acquisition spend and a missed chance at word-of-mouth.
 
-Who has this problem: New sign-ups — individual contributors or team leads who just created
-                      an account. They are motivated enough to start but hit a wall before
-                      seeing any value.
+**What's been tried:** A linear, sequential wizard that gates the product behind 7 completion steps.
 
-Why it matters: Users who don't complete onboarding almost never convert to paid plans.
-                60% pre-step-3 abandonment means most users never experience Nexus's
-                core value loop. CAC is wasted on users who never activate.
-
-What's been tried: A linear 7-step wizard. No information on whether tooltips,
-                   skip buttons, or progress bars have been tested.
-
-Constraints: Product is a project management SaaS. Steps 1–2 are account-level setup
-             (email, name, invite teammates). Step 3 requires creating a real project —
-             this is the first moment users must invent something, not just fill in
-             a field. Steps 5 and 6 (integrations, notifications) are value-add but
-             not core to first-run success. Technical constraints unknown but assumed
-             standard SaaS stack.
-```
-
-**Drop-off hypothesis:** Step 3 is where users hit the blank-canvas problem. Steps 1 and 2 are mechanical (fill in your name, invite a colleague from your contacts). Step 3 asks: "What's your project?" This is cognitive work. The user hasn't seen any value yet, has no template to scaffold from, and is being asked to commit a project name to a tool they don't trust yet. The drop is not because the step is hard — it's because it asks for creative investment before delivering any reward.
+**Constraint inventory:** Team-based product, current 7-step sequence, drop-off specifically at the first step requiring real creative/cognitive investment (naming and scoping a project).
 
 ---
 
-## Step 2 — Problem reframes
+## 1. Problem Reframing
 
 ### Reframe 1 — As a user story
-
-"A team lead who needs to see their team's work in one place because their projects are scattered across Slack and spreadsheets, but currently can't get past naming a project when they haven't yet decided if Nexus is worth it."
+"A team lead who needs to know if Nexus will work for their team, because they're evaluating tools under time pressure, but currently must invent a project from scratch on a blank canvas before they've seen a single thing the tool actually does."
 
 ### Reframe 2 — As a constraint
-
-"We can't run a wizard, so what other shape could first-run take?"
+"We can't ask users to create something valuable from scratch before showing them what valuable looks like — so what else could work?"
 
 ### Reframe 3 — As an analogy
+"This is like a cooking class that makes you buy all the ingredients, chop the vegetables, and heat the pan before you've tasted a single bite. The class might be wonderful, but you've already lost half the students before the food appears."
 
-"This is like a restaurant that asks you to write the menu before seating you. The act of being seated, handed a physical menu with real options, and shown to a table is what makes ordering easy — not the reverse."
-
-**Selected framing: Reframe 1 (user story).** It surfaces the real tension — the user doesn't lack willingness, they lack trust and a scaffold. Every option should be evaluated against whether it lowers the cost of first commitment rather than reducing the number of wizard steps.
-
----
-
-## Step 3 — Options
-
-### Option 1: The Inversion — Pre-built Sample Project on Signup
-
-**Technique: Inversion**
-
-Skip the wizard entirely. On signup, Nexus creates a pre-populated sample project using the user's email domain to infer their industry (e.g. `@agency.com` → "Website Redesign" project with 8 template tasks, 3 invite placeholders, and pre-set notification defaults). The user's first view is a live, functional project board — not a blank form.
-
-Immediate action is "add a real task" or "invite someone," both of which are low-commitment. The sample project can be renamed or deleted at any time.
-
-### Option 2: The Extreme Scale — Onboarding for One
-
-**Technique: Extreme scale (0.1x — solo user)**
-
-At 1-million concurrent signups, the wizard makes sense: it's consistent and automatable. But Nexus's real problem is the solo evaluator — one person signing up to trial the tool before pitching it to their team. They have no colleagues to invite (step 2) and no clear project to name (step 3). Re-designing for the single-user case: collapse steps 2 and 3 into an optional branch. "Are you evaluating solo or onboarding a team?" If solo, skip team invite entirely and default to a personal task board. Team invites become an in-app prompt on day 3, after the user has seen value.
-
-The insight this scale reveals: the wizard was designed for team onboarding, but most individual sign-ups are solo evaluators. These are different products of the same first run.
-
-### Option 3: The Remove-Constraints — Drop Integrations and Notifications from Week 1
-
-**Technique: Remove constraints**
-
-Steps 5 (connect integrations) and 6 (set notifications) exist because product thought they were necessary for "activation." Remove both from first run entirely. Ship them as in-app prompts on day 7, triggered when the user has at least one completed task. The 7-step wizard becomes a 4-step flow: account → invite → create project → add tasks. The one integration worth including at signup (e.g. Slack or Google Calendar) becomes a single opt-in card on the project page, not a wizard step.
-
-Reasoning: integrations and notifications are value amplifiers, not value creators. No user has ever converted because they set their notification preferences in the first session. They set them when they are already committed.
-
-### Option 4: The Cross-Domain Transfer — Duolingo's First-Lesson Model
-
-**Technique: Cross-domain transfer (Games — progressive disclosure)**
-
-Duolingo doesn't ask "what language goal do you have?" before showing you a lesson. It shows you a lesson. You feel competence in 3 minutes, then it asks for your goal. Translated to Nexus: before asking the user to create a project, give them a 90-second interactive tour that looks and behaves exactly like a real project. They drag a task to "Done." They @mention a teammate (fictional). They see a comment thread. Only after they've felt the product does it say: "Ready to start a real project? Here's a blank board pre-named from your email domain — rename it anytime." The act of using the product first makes the blank-canvas fear disappear.
-
-### Option 5: The Hybrid — Contextual Resume
-
-**Technique: Derived from worst-idea analysis + inversion**
-
-Worst idea: force users to complete all 7 steps before letting them into the product. Failure mode: users quit. What it reveals: the problem isn't the number of steps, it's the lack of amnesty. If a user quits mid-wizard, they lose their progress and re-enter at step 1. The good idea inside the bad idea: save state, resume anywhere, and allow partial completion with full product access. A user who completes steps 1–3 is given full access to Nexus with a persistent "finish setup" bar at the top showing 3 remaining optional steps. Integrations can be added during first use when they feel relevant, not as a gate. Completion rates in tools like this typically improve 30–40% just from removing the all-or-nothing constraint.
+**Selected framing: Reframe 2.** It directly attacks the core assumption hidden in the current flow — that users are willing to invest creative energy before experiencing value. Reframes 1 and 3 are consistent with it, but Reframe 2 produces the widest solution space because it forces the question: *what else could work instead of blank-canvas creation?*
 
 ---
 
-## Step 4 — Evaluation
+## 2. Options
 
-### Option 1: Pre-built Sample Project on Signup
+---
+
+### Option 1: Delete to Fit
+
+**Description:** Users arrive at a fully-configured workspace — not a wizard, not an empty canvas. A sample project is already created with realistic tasks, fake team members, connected integrations, and configured notifications. Onboarding becomes: "Does this look right? Keep what fits, delete or rename what doesn't." The first interaction is *editing* not *creating*.
 
 **What's genuinely good about it:**
-- Removes the blank-canvas problem entirely — the user's first view is a working product, not a form
-- Reduces time-to-value to zero: the user experiences Nexus before inputting anything
-- Industry inference via email domain is achievable with a small lookup table; fallback is a generic "Product Launch" template
+- Deletion and modification require less cognitive load than creation from scratch — this is well-established in UX research
+- It shows users what a well-configured Nexus workspace *looks like*, teaching by example
+- Every user immediately sees a populated, functional-looking product — the value proposition is visible in seconds
 
 **Biggest risk:**
-- Users who get a sample project they don't relate to (bad domain inference) may disengage faster than before
-- Requires maintaining a library of meaningful templates per vertical, which is ongoing content work
+- If the sample project feels irrelevant to the user's domain (a software team sees a marketing campaign project), they disengage faster than a blank canvas
+- Requires multiple high-quality templates segmented by role/industry, or a way to select the right one upfront
 
-**Effort:** Medium — 3–5 weeks of engineering for domain inference + template system; templates need product/content input
+**Effort:** Medium — building 5–8 industry-specific sample workspaces and the "edit to claim" UX pattern
 
-**Reversibility:** Easy — can be A/B tested against current wizard with feature flag
+**Reversibility:** Easy — A/B testable against the current wizard
 
-**Combinability:** Pairs well with Option 4 (Duolingo tour) as the initial frame; pairs with Option 5 (resume state) for users who want to customise the sample
+**Combinability:** Strong pairing with Option 2 (AI selects the right template) and Option 5 (user's stated goal shapes which template is shown)
 
 ---
 
-### Option 2: Solo vs. Team Branching
+### Option 2: Concierge AI Setup
+
+**Description:** Replace the wizard with a 3-question conversational intake: "What's your team size? What kind of work do you manage — software, marketing, operations, something else? Describe one project you're working on right now." A language model uses the answers to generate a pre-configured workspace: the project is already named, tasks are pre-seeded based on the described work, the team structure reflects their size, and the notification defaults match their role type. No blank canvas, no arbitrary naming, no structural decisions.
 
 **What's genuinely good about it:**
-- Solves the mismatch between wizard design (for teams) and actual sign-up population (solo evaluators)
-- Steps 2 and 3 friction disappears for the majority use case; team sign-ups still get the full flow
+- Eliminates the blank canvas problem entirely — the workspace reflects the user's own words back at them
+- Aligns with user expectations in 2025; conversational setup no longer feels novel
+- Reduces "step 3 drop-off" to zero because the project is created *for* the user, not *by* the user
 
 **Biggest risk:**
-- "Are you solo or team?" is itself a decision the user may not have made yet — a second question before value is another gate
-- Product analytics may currently not distinguish solo from team sign-ups, making baseline measurement harder
+- A poorly generated workspace creates distrust early — the first impression is "this tool got me wrong"
+- Requires prompt engineering, workspace generation logic, and extensive testing across diverse inputs; the failure mode is visible and immediately harmful
 
-**Effort:** Low-medium — branching logic added to existing wizard; no new UI required beyond a routing card
+**Effort:** High — LLM integration, prompt design, output validation, fallback handling, and multi-domain testing
 
-**Reversibility:** Easy
+**Reversibility:** Moderate — can be disabled if quality is inconsistent, but the investment is substantial
 
-**Combinability:** Compatible with all other options; most users could be routed to Option 1 or 4 after branch selection
+**Combinability:** Works as a smarter front-end for Option 1 (AI picks the right template from a curated library rather than generating from scratch — lower risk, lower effort)
 
 ---
 
-### Option 3: Drop Integrations and Notifications from Week 1
+### Option 3: Progressive Disclosure Setup (No Wizard at All)
+
+**Description:** Abolish the wizard entirely. On account creation, the user lands directly in a functional — though sparse — Nexus workspace. A persistent "setup score" lives in the sidebar: a progress bar showing what's been configured (0/7) with contextual prompts that appear when relevant ("Your team doesn't know about Nexus yet — invite them in 30 seconds"). Each prompt triggers only when the user is in a context where it makes sense — not as a blocking gate. The product is fully usable from minute one.
 
 **What's genuinely good about it:**
-- Removes two steps that almost certainly do not cause the step-3 drop-off but add cognitive load and create a sense of a longer wizard
-- Day-7 prompts have higher conversion than day-0 prompts for integrations (user has invested, trust is established)
+- Eliminates the gating that creates drop-off — users who would have abandoned the wizard now stay in the product
+- Respects different user readiness levels; power users who already know what they're doing aren't forced through steps they don't need
+- Setup prompts are contextually relevant (you see "connect your Jira" when you're in the integrations area, not as step 5 of a linear flow)
 
 **Biggest risk:**
-- Power users who want to connect Slack on day 1 will be frustrated and look for the setting themselves; this is solvable with a visible settings link but needs handling
+- Without gates, the majority of users never complete setup and miss features that would have retained them — especially integrations and notifications, which drive daily-use habits
+- Requires sophisticated behavioral tracking to know *when* to surface each prompt without becoming annoying
 
-**Effort:** Low — removing steps from a wizard is simpler than adding; day-7 prompts require a basic email/in-app trigger
+**Effort:** Medium-High — the wizard redesign is relatively simple, but building contextual prompt logic and measuring downstream activation is genuinely complex
 
-**Reversibility:** Easy — both removable and addable with a flag
+**Reversibility:** Hard — this changes the onboarding philosophy; hard to go back once shipped
 
-**Combinability:** Stackable with any other option; this is a prerequisite change rather than a standalone solution
+**Combinability:** This is a long-term architectural target that most other options could feed into as a later phase
 
 ---
 
-### Option 4: Duolingo First-Lesson Model (Interactive Preview)
+### Option 4: Real Work, First Day (Game Tutorial Pattern)
+
+**Description:** The onboarding wizard and the product merge into one. On sign-up, the user is dropped into a pre-created "Getting Started" project with a task list that *is* the onboarding. "Add your first team member" is a Nexus task. Clicking it opens the real invite flow — not a modal overlaid on a wizard. "Connect your first integration" is a task in the project board. Users complete onboarding by using Nexus to manage their onboarding — the medium *is* the message.
+
+This is how Portal teaches you to play Portal: the tutorial is indistinguishable from the game.
 
 **What's genuinely good about it:**
-- Delivers product value before asking for investment; changes the emotional context of "create your project" from commitment to continuation
-- Interactive tours that feel like real product use (not slideshows) reduce perceived onboarding effort
+- Users are inside the real product from the first click — no context switch between "wizard mode" and "real mode"
+- Every completed onboarding task demonstrates a feature of Nexus through actual use, not explanation
+- Creates an early win: the user ends their first session with a completed project (even if it's a meta-project about setup)
 
 **Biggest risk:**
-- Building an interactive demo environment that does not pollute real user data requires a sandboxed state — non-trivial engineering
-- If the demo doesn't match the real product closely enough, it creates false expectations
+- The "Getting Started" project might feel contrived or patronising to users who signed up because they have real work to migrate immediately
+- Task-based onboarding only works if the tasks map clearly to real product features — badly designed tasks teach nothing and feel like busywork
 
-**Effort:** High — sandboxed interactive demo with real UI components; 6–10 weeks minimum
+**Effort:** Medium — requires careful task design, click-to-execute task interactions, and completion tracking
 
-**Reversibility:** Medium — demo layer is separate from core product but requires ongoing maintenance as product evolves
+**Reversibility:** Easy — can A/B test as an alternative to the current wizard
 
-**Combinability:** Works as a pre-wizard layer with any of the other options; most impactful when combined with Option 1 (lands the user in a real pre-built project after the demo)
+**Combinability:** Strong with Option 5 — the guided project is built around the user's stated goal, not a generic "Getting Started" project
 
 ---
 
-### Option 5: Contextual Resume with Partial Access
+### Option 5: Goal-First Onboarding (Commitment Device)
+
+**Description:** Before the wizard starts, ask one question: "What do you want to have running in Nexus in the next 30 days?" The answer (two sentences, free text) is stored and used to personalise every subsequent step. "Create your first project" becomes "Create the [user's stated initiative] project." The invite step becomes "Invite the team working on [user's stated initiative]." Every step references their commitment — it's no longer abstract setup, it's investment toward something they said they wanted.
 
 **What's genuinely good about it:**
-- Removes the all-or-nothing constraint that causes abandonment; users can get value immediately and return to setup tasks later
-- Completion rates for partial-save flows in B2B SaaS typically improve 20–40% vs hard gates
+- Transforms "create first project" from a blank-canvas problem into a named, motivated task — the project already has meaning before the user types anything
+- No AI required, no additional infrastructure — it's a UX and copy change that injects a personalisation token throughout the wizard
+- Users who state a goal have a reason to finish; the commitment creates mild accountability
 
 **Biggest risk:**
-- Users with partial setup may hit features that break without full configuration (e.g. notification step not completed → no emails → user thinks product is broken)
-- The "finish setup" bar needs careful UX to feel helpful, not nagging
+- The goal-setting question itself could become a new drop-off point if it feels like work or feels vague ("I don't know how to answer this")
+- Requires careful prompt design to make the question feel lightweight and to handle edge cases ("I just want to try it")
 
-**Effort:** Medium — state persistence is likely already in place; surfacing it as a persistent nudge is new UI work
+**Effort:** Low — primarily UX writing and token injection, with a fallback for users who skip the question
 
-**Reversibility:** Easy
+**Reversibility:** Very easy — toggle it on or off, A/B testable trivially
 
-**Combinability:** Works as a catch-all alongside any primary change; recommended as a baseline regardless of which other option is chosen
-
----
-
-## Step 5 — Synthesis
-
-The strongest combination: **Option 1 + Option 3 + Option 5.**
-
-- Option 3 (drop integrations/notifications) is a prerequisite — it should ship first and costs the least. Removes 2 steps with near-zero downside.
-- Option 1 (pre-built sample project) targets the step-3 blank-canvas problem directly. Combined with Option 3, the wizard becomes 2 steps (account + invite or skip) before landing on a real project board.
-- Option 5 (resume state) is a catch-all for users who don't engage with the sample project immediately. Ship as part of Option 1.
-
-This three-part combination addresses the root cause (blank canvas at step 3), removes the clutter steps, and adds a safety net — with a combined effort of ~4 weeks, all reversible.
+**Combinability:** Pairs with almost everything; Option 1, Option 4, and the hybrid below all benefit from knowing the user's goal upfront
 
 ---
 
-## Step 6 — Output
+### Option 6: Unlock Economics (Value-First Milestones)
 
-### Recommended path
+**Description:** Each completed onboarding step immediately unlocks a concrete product capability rather than just "moving forward." Completing step 3 (create first project) unlocks access to 50 project templates. Completing step 4 (add tasks) unlocks the AI task generator. Completing step 5 (connect integrations) grants 90 days free on the premium integration tier. The wizard becomes a progression system with visible, immediate payoffs — not a hoop to jump through.
 
-```
-Recommendation: Option 3 + Option 1 (stacked, Option 3 first)
+**What's genuinely good about it:**
+- Each step has a clear "why" — users who hesitate now have an immediate reason to proceed
+- Frames Nexus as a product that rewards engagement, creating a positive association from the first session
 
-Why this one:
-- Option 3 ships in under 1 week and removes the two steps most distal from step-3 drop-off.
-  It is the lowest-risk change with clear upside and no new engineering.
-- Option 1 directly attacks the diagnosed root cause (blank canvas problem at step 3).
-  Pre-populated sample project means users see a working board, not a form.
+**Biggest risk:**
+- Users may feel the features are being held hostage — "why do I have to do this to access something I paid for?"
+- The unlocks need to be genuinely valuable; if the reward is weak, the commitment device backfires
 
-What to do first:
-- Ship Option 3 as a flag flip this sprint: remove steps 5 and 6 from first run,
-  add "Connect integrations" card to the project page sidebar.
-  Measure step-3 completion rate after 1 week against the current baseline.
-- If step-3 completion improves but remains below 60%, begin Option 1 build:
-  domain inference lookup table + 3 vertical templates (generic, agency, software).
-  Ship as A/B test: sample project vs. current wizard (Option-3-reduced).
-  Target metric: step-3 completion ≥ 60% in the sample project arm within 2 weeks.
+**Effort:** Medium — requires designing unlock mechanics, possibly building premium feature gates, and careful communication of the value exchange
 
-What to watch for:
-- If step-3 drop-off persists after Option 3 ships, the root cause is blank canvas (confirms Option 1)
-- If step-3 drop-off improves significantly after Option 3 alone, the problem was wizard length, not step 3 content
-- Watch for "sample project never renamed/used" as a signal that domain inference is off
-```
+**Reversibility:** Medium — changes how features are gated; unwinding requires care
 
-### Wild card
-
-```
-Wild card: Async Loom Walkthrough Instead of a Wizard
-
-Why it seems wrong: You can't A/B test a video. It's not scalable at 10,000 sign-ups per day.
-                    It can't update automatically when the product changes.
-
-Why it might be right: The wizard's job is to establish trust and teach a mental model.
-                       A 3-minute Loom from the founder or head of product, showing exactly how
-                       to set up a project for a real use case ("here's how we use Nexus internally
-                       for a sprint"), does both better than any wizard. Notion's early growth
-                       was partly attributable to founder videos explaining the product.
-                       "Skip video / start setup" keeps it optional. Completion rates for
-                       short founder videos in early-stage SaaS are often 40–60%.
-
-When to revisit: If Nexus is pre-product-market-fit or in a segment where
-                 trust is the primary barrier (enterprise, regulated industries),
-                 a video with a human face outperforms any flow redesign.
-                 Test it if quantitative changes don't move the needle.
-```
+**Combinability:** Works as a complementary layer over Option 4 or Option 5
 
 ---
+
+## 3. Recommended Path
+
+### Hybrid: "Drop-In and Grow" (Options 5 + 1 + 4)
+
+Phase 1 (low effort, high signal — ship in weeks):
+
+> Apply Option 5 immediately. Add a single question before the wizard: "What's the first project or initiative you want to manage in Nexus?" Use the answer to pre-fill the project name in step 3 and to personalise step-copy throughout. This directly attacks the blank-canvas drop-off at step 3 with minimal engineering.
+
+Phase 2 (medium effort, validated by phase 1 data):
+
+> Replace the wizard with Option 4. Convert the "Getting Started" project into a task-based onboarding that uses the goal from step 1 as its title. Users complete onboarding by doing real Nexus actions in a real project, not by clicking "Next" through a wizard.
+
+Phase 3 (if phase 2 data supports it):
+
+> Introduce Option 1-style template seeding. Based on the user's stated goal and any role/industry signal collected at signup, pre-populate the project with realistic tasks rather than leaving it empty.
+
+**Why this combination:**
+- Phase 1 is a low-risk, high-leverage copy/UX change that directly addresses step 3 drop-off
+- Phase 2 eliminates the wizard/product context switch that makes onboarding feel like a tax
+- Phase 3 solves the blank canvas problem that drives step 3 abandonment without requiring AI infrastructure upfront
+
+**What to do first:**
+Run the goal-collection question as an A/B test on 50% of new signups. Track step 3 completion rate. If completion lifts by more than 10 percentage points, the personalisation signal is real and you have a mandate for Phase 2.
+
+**What to watch for:**
+- Does adding the goal question reduce overall wizard starts (new drop-off before step 1)?
+- Does step 3 completion lift when the project name is pre-filled?
+- Do users who state a goal complete more of the wizard than users who skip the question?
+
+---
+
+## 4. Wild Card
+
+**Wild card: Abandon onboarding entirely — let the first email do it instead**
+
+**Why it seems wrong:** If users are dropping off in the product, the obvious fix is to fix the product. Delegating to email feels like giving up.
+
+**Why it might be right:** The 60% who drop at step 3 are not refusing to learn Nexus — they're refusing to learn it *right now*, in this format, when they're in exploration mode and haven't committed. Email reaches them at a different time, in a different mental state, with zero competitive context. A well-crafted drip sequence — "Here's how to create your first project (takes 2 minutes)" sent 24 hours after signup — catches the user when they're actually ready to use the tool, not when they're in evaluation mode. Calendly's early growth was largely driven by users who signed up, left, came back from an email, and *then* completed setup. The wizard completion rate is measuring the wrong thing: what matters is whether the user activates, not whether they finish the wizard in one session.
+
+**When to revisit:** If A/B tests on the wizard show diminishing returns and you find that a significant share of users who dropped off step 3 come back to the product within 7 days — that's evidence that the timing problem is real, and email-driven re-activation is worth a serious test.
 
 ## Evaluation
 
+| Field | Value |
+|---|---|
+| Verdict | PASS |
+| Score | 14.0/17.0 (82%) |
+| Evaluated | 2026-05-01 |
+| Target duration | 147420 ms |
+| Target cost | $0.1413 |
+| Permission denials | 0 |
+
 ### Criteria
 
-| # | Type | Criterion | Result | Evidence |
-|---|---|---|---|---|
-| 1 | PASS | Step 1 analyses the problem before generating ideas — identifies who has the problem, consequences, and constraints | met | Skill Step 1 template requires "Who has this problem", "Why it matters", and "Constraints". Explicit rule: "Do not skip this step. The most common failure mode in brainstorming is solving the wrong problem creatively." Simulated output provides all three. |
-| 2 | PASS | Step 2 produces all three reframes (user story, constraint, analogy) and states which was selected and why | met | Skill Step 2 defines all three reframe types with templates. Final instruction: "After all three reframes, pick the framing that opens the most creative space. State which one and why." Simulated output shows all three plus a stated selection with reasoning. |
-| 3 | PASS | Step 3 applies all five mandatory diversity techniques producing at least one option from each | met | Skill Step 3 "Mandatory diversity techniques" lists all five, each ending with "Generate one option from [technique]." Simulated output assigns a technique to each option and produces five distinct options from five techniques. |
-| 4 | PASS | At least 5 options pass all three quality tests — distinct, feasible, and specific enough to act on | met | Skill Step 3 quality bar requires all three tests. Five options are produced, each with a named mechanism specific enough to act on, tied to real constraints. |
-| 5 | PASS | Step 4 evaluates each option with genuine pros, biggest risk, effort estimate, and reversibility | met | Skill Step 4 template includes all four fields. Simulated output provides each field for all five options with concrete values (e.g. "3–5 weeks of engineering", "30–40% improvement") rather than generics. |
-| 6 | PASS | A wild card option is included — unconventional but argued seriously | met | Skill Step 6 output item 4 mandates the wild card with a structured three-field template. Simulated output includes the Loom walkthrough wild card with all three fields completed and a credible argument for a specific condition where it outperforms any flow redesign. |
-| 7 | PASS | Recommended path specifies what to do first as a concrete immediate action | met | Skill Step 6 output item 3 template: "**What to do first:** [Immediate next step — make it concrete]." Simulated output specifies a flag-flip this sprint and a named A/B test target metric within 2 weeks. |
-| 8 | PARTIAL | Options named with descriptive memorable names (not "Option 1", "Option 2") | partial | Skill rules state "Names should be descriptive and memorable." Simulated output uses hybrid format ("Option 1: Pre-built Sample Project on Signup") which the Step 4 template (`### Option [N]: [Descriptive name]`) permits. The numbers are present but every option also carries a distinct descriptive name. Intent is clear; the template structure encourages numbered labels alongside names rather than pure names. |
+| # | Criterion | Result | Evidence |
+|---|---|---|---|
+| c1 | Step 1 analyses the problem before generating ideas — identifies who has the problem, consequences, and constraints | PASS | Problem Reframing section identifies who: 'A team lead or solo PM who signed up to evaluate whether Nexus can replace their current tool — they're time-poor, skeptical'; consequences: 'Users who don't activate don't retain. Every dropped user is wasted acquisition spend'; constraints: 'Team-based product, current 7-step sequence, drop-off specifically at the first step requiring real creative/cognitive investment' |
+| c2 | Step 2 produces all three reframes (user story, constraint, analogy) and states which was selected for ideation and why | PASS | Reframe 1 is a user story ('A team lead who needs to know if Nexus will work...'), Reframe 2 is a constraint ('We can't ask users to create something valuable from scratch...'), Reframe 3 is an analogy (the cooking class). Output explicitly states 'Selected framing: Reframe 2' with reasoning that 'it produces the widest solution space because it forces the question: what else could work instead of blank-canvas creation?' |
+| c3 | Step 3 applies all five mandatory diversity techniques (inversion, extreme scale, remove constraints, cross-domain transfer, worst idea first) producing at least one option from each | FAIL | Inversion is present (Option 1 'Delete to Fit', Option 3 'No Wizard At All'), remove constraints is present (Option 3), cross-domain transfer is present (Option 4 borrows from Portal). However, no option applies extreme scale thinking (10x/0.1x users surfacing different implications) and no option is explicitly framed as 'worst idea first' — a genuinely bad idea whose failure mode reveals insight. Two of the five mandatory techniques are absent. |
+| c4 | At least 5 options pass all three quality tests — distinct, feasible, and specific enough to act on | PASS | Six options are presented — Delete to Fit, Concierge AI Setup, Progressive Disclosure Setup, Real Work First Day, Goal-First Onboarding, Unlock Economics — each with a specific mechanism, distinct from one another, and feasible (effort estimates provided). All six are specific enough to act on. |
+| c5 | Step 4 evaluates each option with genuine pros, biggest risk, effort estimate, and reversibility | PASS | Every one of the six options contains 'What's genuinely good about it', 'Biggest risk', 'Effort' (with level e.g. 'Low', 'Medium', 'High'), and 'Reversibility' (e.g. 'Very easy', 'Hard', 'Medium'). All four components present across all options. |
+| c6 | A wild card option is included in the output — unconventional but argued seriously | PASS | Section '4. Wild Card' presents 'Abandon onboarding entirely — let the first email do it instead', argued seriously with references to Calendly's growth strategy, user mental state during evaluation vs. readiness modes, and specific trigger conditions ('if A/B tests on the wizard show diminishing returns and you find that a significant share of users who dropped off step 3 come back within 7 days'). |
+| c7 | Recommended path specifies what to do first as a concrete immediate action | PASS | 'Run the goal-collection question as an A/B test on 50% of new signups. Track step 3 completion rate. If completion lifts by more than 10 percentage points, the personalisation signal is real and you have a mandate for Phase 2.' Also: 'Apply Option 5 immediately. Add a single question before the wizard: What's the first project or initiative you want to manage in Nexus?' |
+| c8 | Options named with descriptive memorable names (not "Option 1", "Option 2") | PARTIAL | Each option has a descriptive name ('Delete to Fit', 'Concierge AI Setup', 'Progressive Disclosure Setup', 'Real Work, First Day', 'Goal-First Onboarding', 'Unlock Economics'). However, these names are prefaced with 'Option 1', 'Option 2' etc. throughout — the criterion explicitly flags this numbering as what to avoid. Names are memorable but the numbered labeling persists. |
+| c9 | Output addresses step 3 (create first project) explicitly as the dropoff hotspot — at least 2 of the generated options target reducing friction at that specific step, not generic onboarding ideas | PASS | Problem Reframing explicitly identifies step 3 as 'the first step requiring real creative/cognitive investment (naming and scoping a project)'. Option 1 (users arrive at pre-populated workspace, edit instead of create), Option 2 (AI creates the project for the user), and Option 5 ('Create your first project' becomes 'Create the [user's stated initiative] project' with pre-filled name) all directly target step 3 friction. |
+| c10 | Output's inversion option flips the wizard premise (e.g. "no onboarding wizard at all — drop the user into a sample project pre-populated with their email contacts") rather than a slight tweak | PASS | Option 1 'Delete to Fit': 'Users arrive at a fully-configured workspace — not a wizard, not an empty canvas. A sample project is already created with realistic tasks, fake team members, connected integrations... Onboarding becomes: Does this look right? Keep what fits, delete or rename what doesn't.' This directly matches the criterion's example pattern. Option 3 further abolishes the wizard entirely. |
+| c11 | Output's extreme-scale option imagines onboarding for 10x or 0.1x users (e.g. "1,000 simultaneous account-creators in a workshop" or "single user, no team yet") and surfaces a different design implication | FAIL | No option in the output considers extreme scale scenarios — neither 1,000 simultaneous users (e.g. a corporate rollout or workshop) nor a single solo user with no team (which would surface different implications for the 'invite team' step). All six options address a generic individual user scenario. The extreme scale diversity technique is entirely absent. |
+| c12 | Output's remove-constraints option drops one of the 7 steps as non-essential (e.g. "skip integrations and notifications for week 1, prompt later in-app") with reasoning | PASS | Option 3 'Progressive Disclosure Setup (No Wizard at All)' abolishes the mandatory gating of all 7 steps: 'contextual prompts that appear when relevant — not as a blocking gate... connect your Jira when you're in the integrations area, not as step 5 of a linear flow. The product is fully usable from minute one.' This removes the constraint of sequential step completion and defers steps (including integrations/notifications) to contextually appropriate moments. |
+| c13 | Output's cross-domain transfer option borrows a pattern from outside SaaS onboarding — e.g. how Duolingo's progressive disclosure works, how IKEA furniture instructions order steps, how a Mario tutorial level introduces mechanics | PASS | Option 4 'Real Work, First Day (Game Tutorial Pattern)' explicitly names Portal as the source: 'This is how Portal teaches you to play Portal: the tutorial is indistinguishable from the game.' The cross-domain transfer from video game tutorial design to SaaS onboarding is explicit and specific. |
+| c14 | Output's worst-idea option is genuinely bad (e.g. "force users to invite 5 colleagues before they can do anything") and explains what the failure mode reveals — not a softened "it could work in some scenarios" | FAIL | No option in the output is framed as a deliberately bad idea whose failure mode reveals insight. Option 6 'Unlock Economics' mentions a risk that 'users may feel the features are being held hostage' but is presented as a viable option, not a worst idea. The Wild Card ('abandon onboarding for email') is argued as potentially correct, not as a bad idea. The worst-idea-first diversity technique is entirely absent. |
+| c15 | Output produces at least 5 distinct, feasible, specific options — each has a memorable name (not "Option 1, 2, 3"), a specific mechanism, a primary risk, and an effort estimate | PASS | Six options present, each with: a descriptive name ('Delete to Fit', 'Concierge AI Setup', etc.), a specific mechanism (e.g. 'A language model uses the answers to generate a pre-configured workspace'), a primary risk ('A poorly generated workspace creates distrust early'), and an effort estimate ('High — LLM integration, prompt design, output validation...'). All four components are present for all options. |
+| c16 | Output's wild-card option is non-obvious but argued seriously — e.g. "make onboarding optional, run a Loom walkthrough instead of a wizard" — not a joke entry | PASS | 'Abandon onboarding entirely — let the first email do it instead' is non-obvious (counter to the implicit brief to fix the wizard) and argued seriously: cites Calendly's growth, distinguishes exploration vs. readiness mental states, specifies the data trigger ('if a significant share of users who dropped off step 3 come back within 7 days'), and explains why wizard completion rate may be the wrong metric. |
+| c17 | Output's recommended path names a concrete first action — "ship the sample-project-on-signup version as a 1-week experiment, measure step-3 completion against control" — not "consider trying X" | PASS | 'Run the goal-collection question as an A/B test on 50% of new signups. Track step 3 completion rate. If completion lifts by more than 10 percentage points, the personalisation signal is real and you have a mandate for Phase 2.' Specific rollout percentage, specific metric to track, and specific threshold for action are all stated. |
+| c18 | Output addresses the 60% dropoff with a hypothesis about WHY users abandon at step 3 — is creating-a-project blocked by team-not-set-up-yet, or is it the cognitive load of a real first project — and matches options to that hypothesis | PARTIAL | The output identifies one hypothesis — cognitive load / blank canvas: 'the first step requiring real creative/cognitive investment (naming and scoping a project)' and Reframe 2 ('We can't ask users to create something valuable from scratch before showing them what valuable looks like'). Options 1, 2, and 5 are explicitly matched to this hypothesis. However, the criterion asks about distinguishing between competing hypotheses (team-not-set-up blocking vs. cognitive load of project creation); the output only pursues one explanation without considering or ruling out the alternative. |
 
-### Output expectations
+### Notes
 
-| # | Type | Criterion | Result | Evidence |
-|---|---|---|---|---|
-| 9 | PASS | Output addresses step 3 as the dropoff hotspot — at least 2 options target reducing friction at that specific step | met | Drop-off hypothesis in Step 1 explicitly diagnoses step 3 as the blank-canvas problem. Option 1 (pre-built sample project) and Option 4 (Duolingo tour) both directly target step-3 friction. |
-| 10 | PASS | Inversion option flips the wizard premise rather than a slight tweak | met | Option 1 removes the wizard entirely, dropping the user into a pre-populated project board. This is the full inversion: no form, no blank canvas, no wizard sequence. |
-| 11 | PASS | Extreme-scale option imagines 10x or 0.1x users and surfaces a different design implication | met | Option 2 uses the 0.1x framing (solo evaluator vs. team onboarding) explicitly and names the design implication: the wizard was built for teams but most sign-ups are solo, making steps 2 and 3 wrong for the majority use case. |
-| 12 | PASS | Remove-constraints option drops one of the 7 steps as non-essential with reasoning | met | Option 3 removes steps 5 and 6 (integrations and notifications) and gives explicit reasoning: "integrations and notifications are value amplifiers, not value creators." Day-7 prompts are offered as the replacement mechanism. |
-| 13 | PASS | Cross-domain transfer borrows a pattern from outside SaaS onboarding | met | Option 4 explicitly borrows Duolingo's progressive disclosure model (games domain). The structural similarity is named: show competence before asking for commitment. |
-| 14 | PASS | Worst-idea option is genuinely bad and explains what the failure mode reveals | met | The worst-idea analysis within Option 5 explicitly names "force users to complete all 7 steps before letting them in." It then extracts the kernel: the problem is not step count but lack of amnesty (all-or-nothing constraint). |
-| 15 | PASS | At least 5 distinct, feasible, specific options with memorable names, specific mechanism, primary risk, and effort estimate | met | Five options are produced. Each has: a descriptive name, a specific mechanism (e.g. domain inference + template system), a named primary risk, and a calibrated effort estimate (Low / Medium / High with reasoning). |
-| 16 | PASS | Wild-card option is non-obvious but argued seriously | met | Async Loom walkthrough is non-obvious (can't A/B test, not scalable). The argument for it is specific: Notion's founder video precedent, 40–60% completion rates for short founder videos in early-stage SaaS, and a precise "when to revisit" condition (pre-PMF or trust-barrier segments). |
-| 17 | PASS | Recommended path names a concrete first action | met | "Ship Option 3 as a flag flip this sprint: remove steps 5 and 6 from first run, add 'Connect integrations' card to the project page sidebar. Measure step-3 completion rate after 1 week against the current baseline." This is a named action with a measurement plan and a time horizon. |
-| 18 | PARTIAL | Output addresses the 60% dropoff with a hypothesis about WHY users abandon at step 3 | partial | The simulated output includes a drop-off hypothesis (blank-canvas problem, cognitive investment before reward). However, the skill's Step 1 template does not explicitly require a diagnostic hypothesis as a named deliverable — it requires problem analysis, consequences, and constraints. A minimal-compliant execution could omit the hypothesis and still be structurally correct. The simulated output includes it, but the skill cannot guarantee it. |
-
-## Notes
-
-The skill definition is thorough and well-engineered. Every output expectation criterion that can be mechanically enforced by the skill is enforced — through explicit template fields, mandatory technique lists, or named rules. Almost nothing relies on the model remembering to do the right thing.
-
-Two structural observations not captured in the rubric:
-
-1. **Step 5 synthesis and Step 6 output are loosely connected.** Step 5 asks for hybrid options when combinations emerge. The Step 6 output format does not mandate a hybrid section — combinations surface in the recommended path only if the model includes them. The simulated output includes a synthesis section, but a minimal-compliant execution could skip it without violating any named criterion.
-
-2. **The diagnostic hypothesis gap** (criterion 18) is the only substantive miss. A single sub-question added to Step 1 — "Why now: what specifically causes users to stall at [identified hotspot]?" — would make hypothesis formation a named deliverable rather than an emergent one. This is the one place where the skill relies on the model's judgment rather than a template field.
-
-The PARTIAL on criterion 8 (naming convention) reflects a template-level ambiguity rather than a genuine quality gap. The descriptive names are present; the number prefixes are an artefact of the Step 4 template structure.
+The output is a strong creative response that excels at problem framing (clear who/consequences/constraints analysis), producing three structured reframes with explicit selection reasoning, evaluating all options with pros/risks/effort/reversibility, and delivering a concrete phased recommended path with a specific A/B test. The wild card (defer to email re-activation) is non-obvious and argued with genuine evidence. Where the output falls short is in applying all five mandatory diversity techniques: extreme scale (imagining 1,000-user workshop vs. solo user scenarios) and worst-idea-first (a genuinely bad idea whose failure reveals something) are entirely absent — the six options are all earnest, feasible proposals rather than including one deliberately bad idea to learn from. Options also carry 'Option 1/2/3' numbering alongside their descriptive names, which the criterion flags as undesirable. The hypothesis about step 3 abandonment is single-threaded (blank canvas cognitive load) without explicitly considering or ruling out the competing hypothesis (team not yet set up blocking meaningful project creation).

@@ -1,86 +1,88 @@
-# Result: style-guide review of documentation with multiple violations
+# Style Guide
 
-**Verdict:** PASS
-**Score:** 15.5/18.5 criteria met (84%)
-**Evaluated:** 2026-04-30
+Scenario: A developer asks for a style review of a newly written API documentation section before publishing. The text contains banned words, passive voice, overly long sentences, and missing Oxford commas.
+
+## Prompt
+
+> /style-guide Review this API documentation section: "The endpoint leverages a comprehensive authentication paradigm that facilitates robust access control. It's important to note that the request payload is validated by the middleware layer prior to being processed. Tokens are utilized to ensure that only authorized, authenticated and verified users can access the endpoint. Moving forward, we will be adding support for OAuth 2.0, SAML and API key authentication mechanisms."
 
 ## Output
 
-The following is a simulated invocation of `/style-guide` against the API documentation snippet from the prompt.
+Captured from a real headless invocation of the skill/agent.
 
----
+### Chat response
 
-## Style Review: API documentation snippet
+## Style Review: API documentation section
 
 ### Findings
 
 | # | Rule violated | Original text | Rewrite |
 |---|---|---|---|
-| 1 | Banned word — `leverage` | "The endpoint leverages a comprehensive authentication paradigm" | "The endpoint uses a full authentication model" |
-| 2 | Banned word — `comprehensive` | "a comprehensive authentication paradigm" | "a full authentication model" (already covered in #1 rewrite) |
-| 3 | Banned word — `paradigm` | "authentication paradigm" | "authentication model" |
-| 4 | Banned word — `facilitates` | "that facilitates robust access control" | "that provides strong access control" |
-| 5 | Banned word — `robust` | "robust access control" | "strong access control" |
-| 6 | Banned phrase — "It's important to note that" | "It's important to note that the request payload is validated" | "The middleware validates the request payload before processing." |
-| 7 | Passive voice | "the request payload is validated by the middleware layer" | "The middleware layer validates the request payload" |
-| 8 | Passive voice + banned word | "Tokens are utilized to ensure that" | "Tokens restrict access to authorized users." |
-| 9 | Banned word — `utilized` | "are utilized" | "are used" |
-| 10 | Missing Oxford comma | "authorized, authenticated and verified users" | "authorized, authenticated, and verified users" |
-| 11 | Banned phrase — "Moving forward" | "Moving forward, we will be adding support for" | "Next, we will add support for" |
-| 12 | Missing Oxford comma | "OAuth 2.0, SAML and API key authentication mechanisms" | "OAuth 2.0, SAML, and API key authentication mechanisms" |
+| 1 | Banned word: `leverage` | "The endpoint leverages" | "The endpoint uses" |
+| 2 | Banned word: `comprehensive` | "a comprehensive authentication paradigm" | "an authentication model" |
+| 3 | Banned word: `paradigm` | "authentication paradigm" | "authentication model" |
+| 4 | Banned word: `facilitate` | "that facilitates robust access control" | "for access control" |
+| 5 | Banned word: `robust` | "robust access control" | "reliable access control" (or just "access control") |
+| 6 | Banned phrase: "It's important to note" | "It's important to note that the request payload..." | Cut the preamble: "The middleware validates the request payload before processing it." |
+| 7 | Banned word: `utilize` | "Tokens are utilized" | "Tokens verify" |
+| 8 | Passive voice | "the request payload is validated by the middleware layer" | "The middleware validates the request payload" |
+| 9 | Redundant list | "authorized, authenticated and verified users" | "authenticated users" — these three words mean the same thing |
+| 10 | Banned phrase: "Moving forward" | "Moving forward, we will be adding" | "OAuth 2.0, SAML, and API key authentication are planned." |
+| 11 | Missing Oxford comma | "OAuth 2.0, SAML and API key" | "OAuth 2.0, SAML, and API key" |
+| 12 | Context-specific (API docs) | Entire section | Missing: what the endpoint actually does, parameter names/types, example request/response |
+
+**Proposed rewrite:**
+
+> This endpoint authenticates requests using token-based access control. The middleware validates the request payload before processing. Only authenticated users can access it.
+>
+> OAuth 2.0, SAML, and API key authentication are planned.
+
+---
 
 ### Summary
-
-- Total findings: 12
-- Banned words: 5 (leverage, comprehensive, paradigm, facilitates/facilitate, robust, utilized)
-- Structure issues: 2 (passive voice × 2)
-- Formatting issues: 2 (missing Oxford commas × 2)
-- Context-specific: 1 (API docs: endpoint description buries lead; no parameters, example request, or example response present)
+- **Total findings:** 12
+- **Banned words:** 5 (`leverage`, `comprehensive`, `paradigm`, `facilitate`, `robust`, `utilize`)
+- **Structure issues:** 3 (passive voice, redundant list, "Moving forward")
+- **Formatting issues:** 1 (missing Oxford comma)
+- **Context-specific:** 1 (API docs missing required elements)
 
 ### Overall assessment
-
-This text needs a revision pass before publishing — it contains six banned word violations, two passive constructions, two missing Oxford commas, and a banned phrase, and the API documentation context requires additions (parameters table, example request/response) that are entirely absent.
-
----
-
-**Cleaned rewrite for reference:**
-
-> The endpoint uses a full authentication model that provides strong access control. The middleware layer validates the request payload before processing it. Tokens restrict access to authorized, authenticated, and verified users. Next, we will add support for OAuth 2.0, SAML, and API key authentication mechanisms.
-
----
+Needs a revision pass — dense with banned words and passive voice, and missing the structural elements required for API documentation (parameters, example request/response).
 
 ## Evaluation
 
-### Criteria (skill definition)
+| Field | Value |
+|---|---|
+| Verdict | PASS |
+| Score | 14.5/16.5 (88%) |
+| Evaluated | 2026-05-01 |
+| Target duration | 9977 ms |
+| Target cost | $0.0525 |
+| Permission denials | 0 |
 
-- [x] PASS: Step 2 identifies all banned words present — leverage, comprehensive, paradigm, facilitates, robust, utilized — each flagged with the exact occurrence. All six map directly to the substitution table; Step 2 is mandatory with instruction to flag exact locations.
-- [x] PASS: Each banned word finding includes the exact original text and a specific rewrite. The skill states "Every finding needs the exact text, the violated rule, and a specific rewrite. No exceptions."
-- [x] PASS: "It's important to note that" is flagged as a banned phrase and removed in the rewrite. Explicitly listed under Banned phrases — hard stops.
-- [x] PASS: Passive voice constructions ("is validated by", "are utilized") are identified in Step 3 and rewritten to active voice. Step 3 mandates active voice checking with the pattern "The service loads the configuration."
-- [x] PASS: "Moving forward" is flagged as a banned phrase. "going forward / moving forward → from now on, next" is in the substitution table.
-- [x] PASS: Missing Oxford commas flagged in Step 4. Oxford comma is listed as a mandatory rule under Step 4 with explicit wrong/right examples.
-- [x] PASS: Output uses the defined findings table format with rule violated, original text, and specific rewrite for each finding. Output Format specifies `| # | Rule violated | Original text | Rewrite |` exactly.
-- [~] PARTIAL: Overall assessment states whether text is ready to publish or needs revision. The Output Format mandates a `### Overall assessment` block, so the verdict will appear, but the skill defines no threshold for what finding count or severity tips the verdict — the assessment is produced but its content is under-specified.
+### Criteria
 
-### Output expectations (simulated output)
+| # | Criterion | Result | Evidence |
+|---|---|---|---|
+| c1 | Step 2 identifies all banned words present — leverage, comprehensive, paradigm, facilitates, robust, utilized — each flagged with the exact occurrence | PASS | Rows 1–5 and 7 in the findings table explicitly flag leverage, comprehensive, paradigm, facilitate, robust, and utilize (as 'Banned word: leverage', 'Banned word: comprehensive', etc.) with exact occurrences quoted. |
+| c2 | Each banned word finding includes the exact original text and a specific rewrite, not just identification | PASS | All six banned-word rows include an 'Original text' column with exact quoted phrases and a 'Rewrite' column with specific substitutions (e.g., 'The endpoint leverages' → 'The endpoint uses'). |
+| c3 | "It's important to note that" is flagged as a banned phrase and removed in the rewrite | PASS | Row 6: rule 'Banned phrase: "It's important to note"', original text quoted in full, rewrite: 'Cut the preamble: "The middleware validates the request payload before processing it."' |
+| c4 | Passive voice constructions ("is validated by", "are utilized") are identified in Step 3 and rewritten to active voice | PASS | Row 8 explicitly labels 'Passive voice' and rewrites 'the request payload is validated by the middleware layer' → 'The middleware validates the request payload'. Row 7 identifies 'Tokens are utilized' as a banned-word issue and rewrites to active 'Tokens verify'. Both passive constructions end up rewritten to active voice. |
+| c5 | "Moving forward" is flagged as a banned phrase with a suggested rewrite ("From [date]," or "Next,") | PARTIAL | Row 10 correctly flags 'Banned phrase: "Moving forward"'. However the rewrite is 'OAuth 2.0, SAML, and API key authentication are planned.' — it does not use the prescribed substitutions 'From [date],' or 'Next,'; instead it restructures the sentence entirely. |
+| c6 | Missing Oxford commas ("authorized, authenticated and verified", "OAuth 2.0, SAML and API key") are flagged in Step 4 | PARTIAL | Row 11 explicitly flags the Oxford comma in 'OAuth 2.0, SAML and API key'. However 'authorized, authenticated and verified' is addressed only as 'Redundant list' in row 9 (collapsed to 'authenticated users'), not explicitly flagged as a missing Oxford comma. |
+| c7 | Output uses the defined findings table format with rule violated, original text, and specific rewrite for each finding | PASS | Table header is '\| # \| Rule violated \| Original text \| Rewrite \|' with all 12 rows populated across all four columns. |
+| c8 | Overall assessment states whether the text is ready to publish or needs a revision pass — not left implicit | PARTIAL | '### Overall assessment' section explicitly states 'Needs a revision pass — dense with banned words and passive voice, and missing the structural elements required for API documentation.' |
+| c9 | Output begins with a "## Style Review:" heading naming what was reviewed (the API documentation snippet), not generic prose | PASS | Opening heading is '## Style Review: API documentation section' — matches the required format exactly. |
+| c10 | Output's findings table uses exactly four columns in order: number, rule violated, original text, rewrite — matching the format defined in the skill | PASS | Table header '\| # \| Rule violated \| Original text \| Rewrite \|' is exactly four columns in the specified order. |
+| c11 | Each rewrite preserves the technical meaning of the original (authentication, validation, token use, future protocol support) without inventing new requirements | PASS | Proposed rewrite retains: token-based auth, middleware validation, access restriction to authenticated users, and planned OAuth 2.0/SAML/API key support. No new technical requirements introduced. |
+| c12 | Rewrites for banned-word substitutions follow the skill's substitution table (leverage→use, comprehensive→complete/thorough/full, facilitate→help/enable, robust→strong/reliable/solid, utilized→used) | PARTIAL | leverage→'uses' ✓; robust→'reliable' ✓; but comprehensive→'an authentication model' (not complete/thorough/full); facilitate→removed entirely ('for access control', not help/enable); utilized→'verify' (not 'used'). Three of five substitutions deviate from the prescribed table. |
+| c13 | At least one rewrite turns a passive construction into a clear active-voice sentence with an explicit subject (e.g., "the middleware validates the request payload") | PASS | Row 8 rewrite: 'The middleware validates the request payload' — explicit subject 'The middleware', active verb 'validates'. |
+| c14 | Output produces a Summary block with numeric counts for total findings, banned words, structure issues, formatting issues, and context-specific issues — counts are consistent with the findings table | PARTIAL | Summary block exists with all required categories. However counts are inconsistent: 'Banned words: 5' but six words are listed in parentheses and six rows cover banned words in the table; category subtotals (5+3+1+1=10) do not sum to the stated total of 12. |
+| c15 | Findings include specific line/quote anchors (the exact original text in quotes) so a reader can locate each issue in the source without re-reading the whole snippet | PASS | Every row in the 'Original text' column contains an exact verbatim quote from the source (e.g., '"The endpoint leverages"', '"that facilitates robust access control"', '"OAuth 2.0, SAML and API key"'). |
+| c16 | Output does not introduce any new banned words from the skill's hard-stop list in its own rewrites or commentary | PASS | Rewrites and proposed rewrite block use plain language: 'uses', 'authentication model', 'validates', 'reliable access control', 'authenticated users', 'are planned'. No banned words (leverage, utilize, paradigm, facilitate, robust, comprehensive, etc.) appear in the output's own prose. |
+| c17 | Output groups or orders findings by step (Step 2 banned words, Step 3 structure, Step 4 formatting) rather than mixing them randomly | PARTIAL | Findings are in a single flat table with no explicit step grouping or section headers separating banned words, structure, and formatting. There is rough ordering (banned words/phrases at rows 1–7, passive at 8, structure at 9–10, formatting at 11, context at 12) but no explicit step labels or group headings. |
+| c18 | Output flags the API-documentation context (this is API docs) and notes whether the rewritten version meets the README/API doc context-specific rules from Step 5 | PARTIAL | Row 12 labels 'Context-specific (API docs)' and lists missing elements: 'what the endpoint actually does, parameter names/types, example request/response'. This flags the context and identifies gaps against API doc standards. |
 
-- [x] PASS: Output begins with `## Style Review:` heading naming what was reviewed. Mandated verbatim by the Output Format section.
-- [x] PASS: Findings table uses exactly four columns in order: number, rule violated, original text, rewrite. The format template is unambiguous.
-- [x] PASS: Each rewrite preserves technical meaning. The skill instructs "Preserve the author's voice. Fix violations without rewriting the entire personality out of the text." Substitution table provides meaning-equivalent replacements.
-- [x] PASS: Rewrites follow the skill's substitution table. leverage→use, comprehensive→complete/thorough/full, facilitate→help/enable, robust→strong/reliable/solid, utilize→use are all mapped directly.
-- [x] PASS: At least one rewrite turns a passive construction into an active-voice sentence with an explicit subject. "the request payload is validated by the middleware layer" → "The middleware layer validates the request payload."
-- [x] PASS: Output produces a Summary block with numeric counts for all five categories. The Output Format specifies all five count lines by name.
-- [x] PASS: Findings include specific quote anchors. The "Original text" column holds the exact quoted text from the source.
-- [x] PASS: Output does not introduce any new banned words in its own rewrites or commentary. The substitution table and core principles apply to all text the skill produces.
-- [~] PARTIAL: Output groups findings by step rather than mixing randomly. The skill defines three distinct mandatory steps each with an "Output:" instruction, but the Output Format collapses everything into one undivided findings table with no grouping sub-headings. Findings in the simulated output are ordered by source position, not step — conforming responses will likely vary.
-- [~] PARTIAL: Output flags the API-documentation context and notes whether rewritten version meets Step 5 rules. Step 5 is mandatory and covers API docs ("Start with what the endpoint does"), and "Context-specific: [count]" appears in the Summary. However the Output Format provides no dedicated block for a context-type declaration or a pass/fail verdict on context rules — the context finding (missing parameters, example request/response) appears only as a count and note, not a structured verdict.
+### Notes
 
-## Notes
-
-The skill is well-constructed. The substitution table covers every banned word in the prompt directly, and the Output Format template is specific enough that a conforming response would satisfy most criteria.
-
-Two genuine gaps: the Output Format collapses all findings into a single table with no step grouping, so there is no structural guarantee that banned-word findings appear before structure findings before formatting findings. And Step 5 (context-specific rules) produces findings that land in the same table as everything else, with "Context-specific: [count]" in the Summary as the only marker — there is no block that explicitly identifies the content type and delivers a context verdict.
-
-One minor tension: each step ends with its own "Output:" instruction that implies step-level output, but the Output Format assumes a single consolidated pass. A reviewer following step instructions literally would produce four intermediate outputs before rolling up; one following the template would produce one output. This ambiguity could produce inconsistent structure across invocations.
-
-The `comprehensive` and `paradigm` violations share their rewrite row in row 1, which is a minor presentation quirk — the skill does not prohibit this but also does not endorse combined rows.
+The output is a strong style review that correctly identifies all six banned words, the two banned phrases, passive voice, Oxford comma, and API-doc context gaps in a well-formatted four-column table. Its main weaknesses are: (1) three banned-word substitutions deviate from the prescribed substitution table (comprehensive, facilitate, utilize); (2) 'Moving forward' is correctly flagged but the prescribed replacement pattern ('From [date],' or 'Next,') is not used; (3) only one of the two Oxford-comma instances is explicitly labeled as such; (4) the Summary block has an arithmetic inconsistency (5 banned words listed but 6 enumerated, subtotals don't sum to total 12); and (5) findings are not grouped by skill step. Despite these gaps, coverage is broad and the core deliverables — findings table, proposed rewrite, and overall verdict — are all present and accurate.

@@ -4,6 +4,198 @@ Scenario: Testing whether the write-architecture-doc skill requires Mermaid diag
 
 ## Prompt
 
+First, create the notification system source files:
+
+```bash
+mkdir -p src/notifications src/notifications/channels src/notifications/queue docs
+```
+
+Write to `src/notifications/__init__.py`:
+
+```python
+from notifications.service import NotificationService
+from notifications.models import Notification, NotificationPreference
+
+__all__ = ["NotificationService", "Notification", "NotificationPreference"]
+```
+
+Write to `src/notifications/models.py`:
+
+```python
+from __future__ import annotations
+from dataclasses import dataclass, field
+from enum import Enum
+from typing import Any
+
+
+class NotificationChannel(str, Enum):
+    IN_APP = "in_app"
+    EMAIL = "email"
+    PUSH = "push"
+
+
+class NotificationPriority(str, Enum):
+    HIGH = "high"      # Immediate delivery, bypasses quiet hours
+    NORMAL = "normal"  # Standard delivery with quiet hours applied
+    LOW = "low"        # Batched delivery (digest mode)
+
+
+@dataclass(frozen=True)
+class Notification:
+    id: str
+    user_id: str
+    type: str           # e.g. "project.status_changed", "task.assigned", "comment.mention"
+    title: str
+    body: str
+    priority: NotificationPriority
+    channels: list[NotificationChannel]
+    data: dict[str, Any] = field(default_factory=dict)
+    created_at: str = ""
+
+
+@dataclass(frozen=True)
+class NotificationPreference:
+    user_id: str
+    channel: NotificationChannel
+    enabled: bool
+    quiet_hours_start: str | None = None  # e.g. "22:00"
+    quiet_hours_end: str | None = None    # e.g. "08:00"
+    digest_mode: bool = False             # LOW priority: batch into daily digest
+```
+
+Write to `src/notifications/service.py`:
+
+```python
+from __future__ import annotations
+
+from notifications.models import Notification, NotificationChannel
+from notifications.queue import NotificationQueue
+from notifications.channels.inapp import InAppChannel
+from notifications.channels.email import EmailChannel
+from notifications.channels.push import PushChannel
+
+
+class NotificationService:
+    """Entry point for dispatching notifications across all channels."""
+
+    def __init__(self, queue: NotificationQueue) -> None:
+        self._queue = queue
+        self._channels = {
+            NotificationChannel.IN_APP: InAppChannel(),
+            NotificationChannel.EMAIL: EmailChannel(),
+            NotificationChannel.PUSH: PushChannel(),
+        }
+
+    def send(self, notification: Notification) -> None:
+        """Enqueue a notification for delivery. Applies preference filtering."""
+        self._queue.enqueue(notification)
+
+    def deliver(self, notification: Notification) -> dict[str, bool]:
+        """Deliver a notification directly (called by queue worker)."""
+        results = {}
+        for channel in notification.channels:
+            handler = self._channels.get(channel)
+            if handler:
+                results[channel] = handler.deliver(notification)
+        return results
+```
+
+Write to `src/notifications/queue.py`:
+
+```python
+from __future__ import annotations
+
+from collections import deque
+from notifications.models import Notification
+
+
+class NotificationQueue:
+    """
+    In-memory queue for development. Production uses Redis + Celery workers.
+    Queue workers call NotificationService.deliver() for each dequeued notification.
+    Dead-letter queue (DLQ) for failed deliveries after 3 retries.
+    """
+
+    def __init__(self) -> None:
+        self._queue: deque[Notification] = deque()
+        self._dlq: list[Notification] = []
+
+    def enqueue(self, notification: Notification) -> None:
+        self._queue.append(notification)
+
+    def dequeue(self) -> Notification | None:
+        return self._queue.popleft() if self._queue else None
+
+    def move_to_dlq(self, notification: Notification) -> None:
+        self._dlq.append(notification)
+```
+
+Write to `src/notifications/channels/email.py`:
+
+```python
+from __future__ import annotations
+
+from notifications.models import Notification
+
+
+class EmailChannel:
+    """Sends notifications via email using SendGrid."""
+
+    SENDGRID_TEMPLATE_MAP = {
+        "project.status_changed": "d-abc123",
+        "task.assigned": "d-def456",
+        "comment.mention": "d-ghi789",
+    }
+
+    def deliver(self, notification: Notification) -> bool:
+        template_id = self.SENDGRID_TEMPLATE_MAP.get(notification.type)
+        if not template_id:
+            return False
+        # SendGrid API call here
+        return True
+```
+
+Write to `src/notifications/channels/push.py`:
+
+```python
+from __future__ import annotations
+
+from notifications.models import Notification
+
+
+class PushChannel:
+    """
+    Sends push notifications via FCM (Android) and APNs (iOS).
+    Device tokens stored in user_devices table.
+    Silent push for LOW priority — updates badge count only.
+    """
+
+    def deliver(self, notification: Notification) -> bool:
+        # FCM/APNs dispatch here
+        return True
+```
+
+Write to `src/notifications/channels/inapp.py`:
+
+```python
+from __future__ import annotations
+
+from notifications.models import Notification
+
+
+class InAppChannel:
+    """
+    Stores in-app notifications in the notifications table.
+    Frontend polls /api/notifications every 30s or subscribes via WebSocket.
+    Unread count cached in Redis with TTL 5min.
+    """
+
+    def deliver(self, notification: Notification) -> bool:
+        # DB insert here
+        return True
+```
+
+Then run:
 
 /internal-docs-writer:write-architecture-doc for our notification system — it handles in-app, email, and push notifications, with a queue-based delivery system and user preference management.
 

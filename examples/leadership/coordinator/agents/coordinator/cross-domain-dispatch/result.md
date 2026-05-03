@@ -1,260 +1,232 @@
-# Result: cross-domain dispatch
+# Cross Domain Dispatch
 
-**Verdict:** PASS
-**Score:** 18.5/20 criteria met (92.5%)
-**Evaluated:** 2026-04-30
+Scenario: A user brings a multi-domain feature launch request requiring product, design, engineering, and launch work. Does the coordinator decompose it correctly and produce a structured dispatch plan without making unilateral decisions?
+
+## Prompt
+
+> We need to ship a new "Team Workspaces" feature for Flowbase before the end of the quarter. It lets multiple users collaborate inside a shared workspace — they can invite members, assign roles (admin/editor/viewer), and work on the same projects together. We need the whole thing: specs, designs, backend, frontend, tests, deployment, and launch content. Can you coordinate this?
+> 
+> Do not ask for clarification — proceed based on the information provided. Produce the dispatch plan now, noting any assumptions you make.
 
 ## Output
 
-The following is the simulated coordinator response to the Team Workspaces launch request. This represents what a well-formed coordinator agent, operating from its definition, would produce.
+Captured from a real headless invocation of the skill/agent.
+
+### Chat response
+
+I'll work through the mandatory decomposition process systematically.
 
 ---
 
-### Pre-flight check (MANDATORY — running now)
+# Initiative Decomposition: Team Workspaces for Flowbase
 
-Reading `CLAUDE.md`, `.claude/CLAUDE.md`, and `.claude/rules/` for project constraints...
-Reading `.claude-plugin/marketplace.json` to map available agents...
-Reading `.claude/settings.json` and `~/.claude/settings.json` to confirm which plugins are enabled...
+## Step 1: Initiative Context
 
-Pre-flight complete. Proceeding with decomposition.
-
----
-
-### Clarifying questions — before I commit to a plan
-
-Before I structure a dispatch plan, I need to resolve a few things that will significantly constrain scope and timeline:
-
-1. **Outcome vs output.** "Ship Team Workspaces" is the task. What's the business result you're targeting? Activation rate lift? Enterprise contract unblocked? Churn reduction for teams using workarounds? The answer changes what "done" means and which workstreams matter most.
-
-2. **Appetite.** How much time and effort are you prepared to invest? A minimal invite-only workspace with no role granularity is 4–6 weeks. Full role hierarchy with granular permissions, audit logs, and SSO hooks is 12–16 weeks. These are genuinely different products.
-
-3. **"Before end of quarter" — hard or soft?** If this is tied to a contract, a board commitment, or a customer demo, that is a hard constraint and changes how I sequence security vs speed trade-offs. If it's aspirational, we can be more deliberate.
-
-4. **Commercial signals.** Is there an enterprise deal or ARR milestone riding on this? A $400k contract with a workspace-requirement demo next month is a different urgency tier from a roadmap nice-to-have.
-
-5. **Existing work.** Is there a PRD draft, a design spike, or any prior architectural investigation already in flight? I don't want to re-discover decisions already made.
-
-I can proceed with a provisional plan while you answer these — but flag if any assumptions below are wrong.
-
----
-
-### Provisional dispatch plan — Team Workspaces
-
-**Assumed context:** No prior PRD. Greenfield feature. End-of-quarter target is soft. Full scope as described (invites, roles, collaborative projects).
-
----
-
-#### Critical path
-
-```
-Product requirements → Architecture → QA acceptance criteria
-→ QA acceptance tests → Development → QA execution → Release
-```
-
-Minimum timeline: **8–12 weeks** (assuming no prior work and full scope). The roles/permissions surface adds security review complexity that cannot be parallelised with development — that extends the critical path relative to a simpler feature.
-
-Workstreams not on the critical path (GTM, content, support prep, design detail passes) can absorb delay without moving launch.
-
----
-
-#### Phase 1: 3 amigos alignment (weeks 1–2)
-
-Work runs in parallel across CPO and CTO sides, but both must complete before development starts.
-
-**Dispatch 1 — `cpo:cpo`**
-
-> Team Workspaces needs a PRD. Scope: multi-user shared workspace, invite by email, role model (admin/editor/viewer), and shared project access. We need user stories with Given/When/Then acceptance criteria, success metrics (activation target, collaboration rate), and explicit anti-requirements — what we are NOT building this quarter (e.g., SSO, billing per seat, workspace templates). QA Lead must participate in acceptance criteria review (3 amigos). Target: draft PRD ready for architecture review by end of week 1.
-
-**Dispatch 2 — `cto:cto`**
-
-> In parallel with the PRD: we need a system design for Team Workspaces. Scope includes: data model for workspace/member/role, API contracts for invite flow and permission checks, ADR for any significant decisions (e.g., RBAC approach, invite token strategy), and a security threat model for the auth/roles surface. This is a multi-tenancy concern — flag any existing auth surface that this feature touches. QA Lead joins the architecture review for the 3 amigos. Target: architecture ready to block development by end of week 1, threat model ready by week 2.
-
-**Dispatch 3 — `qa-lead:qa-lead`**
-
-> Participate in 3 amigos for Team Workspaces alongside the product owner and architect. Your output: acceptance criteria reviewed for completeness, edge cases documented. Required edge cases to address before this gate clears:
-> - Last admin removal — can the final admin leave or downgrade their own role?
-> - Role downgrade behaviour — what happens to in-progress work owned by a demoted editor?
-> - Invite expiry — how long is an invite link valid? What happens after expiry?
-> - Viewer write-attempt — what error state does a viewer see if they attempt an edit action?
-> - Workspace with zero members after creator leaves — is this state reachable?
-> - Concurrent role change — two admins change the same member's role simultaneously.
->
-> Anti-requirements to confirm with product: no SSO this quarter, no billing per seat, no workspace deletion with active members.
-
-**⚠ Agent availability check:**
-- `qa-lead:qa-lead` — confirm enabled in `.claude/settings.json`
-- `security-engineer:security-engineer` — required for threat model; enable with `"security-engineer@hpsgd": true` if not present
-- `data-engineer:data-engineer` — required for event tracking plan; enable with `"data-engineer@hpsgd": true` if not present
-
----
-
-#### Phase 2: design + security (weeks 2–3, parallel with phase 1 tail)
-
-**Dispatch 4 — `cpo:cpo` → `ui-designer:designer`**
-
-> Design workstream starts once PRD draft exists (not waiting for final). UX flows for: invite flow, role assignment, workspace switcher, permission-denied states. Accessibility baseline required. Component specs must be ready before development starts — they are a Definition of Ready gate.
-
-**Dispatch 5 — `security-engineer:security-engineer`**
-
-> Threat model for Team Workspaces. Focus areas: invite token entropy and expiry, role elevation paths, cross-workspace data isolation, privilege escalation via API. Output: threat model document with CVSS scores for any identified vulnerabilities. If any CVSS 7+ vulnerabilities exist in the current auth surface that this feature exposes new attack vectors to, flag immediately — those become non-negotiable constraints on sequencing, not tradable priorities.
-
----
-
-#### Phase 3: QA acceptance tests → development (weeks 3–7)
-
-**TDD gate: development does NOT start until acceptance tests exist.**
-
-**Dispatch 6 — `qa-engineer:qa-engineer`**
-
-> Write acceptance tests from the QA Lead's criteria and the architecture contracts. Tests must fail before development starts (red phase). Cover: invite flow happy path, role enforcement at API layer, permission-denied responses, edge cases from QA Lead list above. Output: failing test suite checked in to a feature branch.
-
-**Dispatch 7 — `cto:cto` → development team**
-
-> Development starts after acceptance tests are green-red. Stack: confirm with CTO which developers own this (backend/.NET or python-developer for API layer; react-developer for frontend). Frame at lead level — CTO decides staffing and internal sequencing.
-
----
-
-#### Phase 4: QA execution + DevOps (weeks 7–9)
-
-**Dispatch 8 — `qa-engineer:qa-engineer`**
-
-> Integration and e2e tests against staging environment. Bug triage with development. No release until all acceptance criteria verified with evidence.
-
-**Dispatch 9 — `devops:devops`**
-
-> Infrastructure and deployment prep for Team Workspaces. Includes: any new DB tables or migrations, environment variable additions, monitoring hooks for workspace creation and invite acceptance events, rollback plan. Coordinate with data engineer on analytics events.
-
----
-
-#### Phase 5: content, GTM, support preparation (weeks 6–9, parallel with QA execution)
-
-This workstream does not block development but must complete before launch. It is NOT part of Definition of Done — it is a separate launch gate.
-
-**Dispatch 10 — `cpo:cpo`**
-
-> GTM and content workstream. Coordinate: `gtm:gtm` for positioning and launch plan; `user-docs-writer:user-docs-writer` for help centre articles (invite flow, roles explained, workspace management); `support:support` for FAQ preparation and known-issue documentation. None of this waits for development — draft from the PRD and update at staging sign-off.
-
----
-
-#### Phase 6: analytics and event tracking (weeks 2–5, in parallel)
-
-**⚠ This workstream is commonly treated as implicit. It is not.**
-
-**Dispatch 11 — `data-engineer:data-engineer`**
-
-> Event tracking plan for Team Workspaces. Required events: workspace created, invite sent, invite accepted, invite expired, role assigned, role changed, role downgrade, member removed, workspace activated (first collaborative action), viewer permission denied. Coordinate with product owner on what signals feed activation and collaboration metrics. Tracking must be implemented before launch — post-launch data backfill is painful and often impossible.
-
----
-
-#### Definition of Ready gate (before development starts)
-
-Work is not ready until ALL of the following are true:
-
-| Criterion | Owner | Status |
-|---|---|---|
-| Problem validated — evidence users need this | Product Owner | Pending |
-| User stories written with Given/When/Then criteria | Product Owner | Pending |
-| Acceptance criteria reviewed by QA Lead (3 amigos) | QA Lead | Pending |
-| Edge cases documented (last-admin, role downgrade, invite expiry, etc.) | QA Lead | Pending |
-| Design complete — UX flows and component specs | UI Designer | Pending |
-| Architecture agreed — ADR written for RBAC approach and invite token strategy | Architect | Pending |
-| Dependencies identified — data migrations, API changes, external email for invites | Architect | Pending |
-| Scope bounded — IN/OUT explicit | Product Owner + Coordinator | Pending |
-| Anti-requirements stated | Product Owner | Pending |
-
-**If any row above is not DONE, work does not start. Send back to the responsible lead.**
-
----
-
-#### Definition of Done gate (before release decision)
-
-| Criterion | Owner |
+| Question | Answer |
 |---|---|
-| Code complete — acceptance criteria all met | Development team |
-| Tests pass — unit, integration, acceptance, e2e all green | QA Engineer |
-| Code reviewed | Code Reviewer |
-| Security reviewed — threat model resolved, no open CVSS 7+ on this surface | Security Engineer |
-| No lint/type errors | Development team |
-| Documentation updated — user docs, API docs, changelog | Docs writers |
-| Acceptance criteria verified with evidence | QA Engineer |
-| Deployed to staging, verification tests pass | DevOps + QA Engineer |
-| No regressions | QA Engineer |
-
-**"Done" is not launch.** Production deployment, GTM activation, and customer communication happen separately.
+| **User problem** | Flowbase teams (2–10 person groups) need to collaborate on shared projects but lack workspace-level organization, member management, and role-based access control. Currently, projects are owned by individuals with no built-in sharing or permission delegation. |
+| **Target user** | Mid-size teams (3–8 members) working on shared projects in Flowbase who need to invite collaborators and control permissions without sharing account credentials. |
+| **Success criteria** | • 30% of monthly active users create a team workspace within 60 days of launch<br>• Average team workspace has 3+ members<br>• 70% of team workspaces show collaborative activity (2+ members editing weekly)<br>• Feature launches with sub-100ms latency on member list / role update operations<br>• Zero security regressions (no unintended permission leaks)<br>• 95% of support tickets are FAQ-addressable (permissioning questions) |
+| **Appetite** | **Hard deadline: June 30, 2026 (end of Q2)**<br>Calendar: 29 days remaining. Working time: ~20 days at 5-day weeks. Requires heavy parallelization to compress 6–8 weeks of work into this window. |
+| **Constraints** | • Hard launch deadline (quarter-end)<br>• Must preserve backward compatibility (existing individual project ownership)<br>• Requires core schema changes (workspaces, members, role assignments)<br>• Must support zero-downtime migration of existing projects<br>• RBAC enforcement must be pervasive (every API endpoint checks permissions)<br>• No scope creep into "teams" beyond workspaces (sub-teams, hierarchies out of scope) |
 
 ---
 
-#### Release and launch gate (separate from Done)
+## Step 2: Identify Workstreams
 
-**Dispatch 12 — `release-manager:release-manager`**
+### CPO Team Workstreams
 
-> Go/no-go decision for Team Workspaces launch. Inputs required: QA Engineer sign-off, security engineer sign-off, GTM content readiness confirmation from CPO team, support FAQ readiness. Produce a go/no-go checklist with explicit criteria. This is the final gate before production deployment.
+| Workstream | Owner role | Initiative-specific deliverables | Relevant? | Why |
+|---|---|---|---|---|
+| **Product** | product-owner | PRD: workspace creation UX, member invite flow, role permission matrix (admin/editor/viewer), acceptance criteria for each role, project ownership transfer rules, backward-compat strategy | **YES** | Core blocker for all other teams. Must define permission semantics upfront. |
+| **Design** | ui-designer | UX flows: workspace setup wizard, member management UI (invite/remove/role change), project sharing dialog, permission error states; accessibility audit; component specs for role selector | **YES** | Development and GTM both need finalized designs; directly impacts frontend velocity. |
+| **Content** | user-docs-writer | Docs: workspace onboarding guide, permission model explanation, inviting members, role responsibilities, troubleshooting permission denials, FAQ on shared project behavior | **YES** | Launch blocker. Customers need clear docs on unfamiliar permission model. Support will reference extensively. |
+| **GTM** | gtm-lead | Positioning: "Collaborate with your team" messaging, launch announcement (email, product blog, in-app banner), pricing implications if any (free tier workspace limits?), launch timeline communication | **YES** | Launch coordination. Must be ready to announce on June 30. |
+| **Support** | support-lead | FAQ preparation, support runbook for permission troubleshooting, known issues list, training on new workspace features, escalation paths for permission disputes | **YES** | Post-launch operational readiness. Team must handle surge of permission-related tickets. |
+| **Research** | ux-researcher | Quick validation: usability testing on permission model (do customers understand admin/editor/viewer?), validation of role semantics with target users | **NO** | Time-constrained. Assume roles are correct based on product team expertise; post-launch feedback will validate. Research can iterate post-launch. |
+
+### CTO Team Workstreams
+
+| Workstream | Owner role | Initiative-specific deliverables | Relevant? | Why |
+|---|---|---|---|---|
+| **Architecture** | architect | System design doc: workspace and member entities, RBAC enforcement patterns, API contracts (CreateWorkspace, InviteMember, UpdateRole, ListMembers), data model + migrations, permission check placement (middleware vs. per-endpoint) | **YES** | Blocks development and DevOps. Must define schema and API boundaries upfront. |
+| **Development (Backend)** | backend-lead | Workspace CRUD APIs, member management (invite/remove/role change), RBAC checks on all project/resource endpoints, permission enforcement, audit logging for permission changes | **YES** | Core feature. 40–50% of effort. |
+| **Development (Frontend)** | frontend-lead | Workspace selector UI, settings page (manage members, roles, workspace name), invite link handling, permission error UX, updated project sharing dialogs, role badges | **YES** | User-facing feature. 30–40% of effort. Must be intuitive. |
+| **QA Planning** | qa-lead | Test strategy: RBAC edge cases (admin creates resource, editor deletes own, viewer tries to edit), permission inheritance rules, role boundary violations, concurrent member changes, backward-compat scenarios (old projects with no workspace) | **YES** | RBAC is high-risk; must have comprehensive test coverage. |
+| **QA Execution** | qa-engineer | Automated tests: permission enforcement (unit + integration), role isolation, API boundary tests, backward-compat smoke tests, performance tests on member list / role update | **YES** | Launch blocker. Can't ship with permission bypass bugs. |
+| **DevOps** | devops-lead | Database migration strategy (zero-downtime), deployment plan (feature flag for new endpoints, gradual rollout?), monitoring for permission denials, rollback plan if issues surface, performance baselines | **YES** | Deployment blocker. Schema migration on live database is risky. |
+| **Security** | security-engineer | Threat model: workspace isolation (can user A see user B's workspace?), permission bypass risks, audit trail for access changes, data exfiltration via roles, RBAC collision edge cases (same email invited twice?) | **YES** | High-risk feature. Permission bugs are security bugs. Must review before launch. |
+| **Data** | data-engineer | Workspace adoption tracking, member invite success rate, role distribution (how many admins vs. editors vs. viewers), feature usage dashboards, analytics events for key user flows | **YES** | Post-launch metrics needed for success evaluation. Instrumentation must ship with feature. |
 
 ---
 
-#### Trade-offs to watch for
+## Step 3: Dependency Map
 
-I am not picking a side on any of these — flagging them so you can decide if and when they surface:
-
-- **Build vs buy — invite email delivery.** Sending invite emails requires either an email provider integration or a transactional email service. If none exists in the codebase already, this is a build-vs-buy call. The CTO will surface this during architecture; it has lead time implications.
-- **Security review timing vs deadline.** If the threat model surfaces a CVSS 7+ vulnerability on the existing auth surface, sequencing the fix before this feature becomes a non-negotiable constraint — not a priority trade-off. If the deadline is soft this is manageable. If it's hard, this is a conflict to escalate.
-- **Scope vs deadline.** Full role hierarchy (admin/editor/viewer with per-resource permissions) is materially more complex than a flat admin/member model. If the quarter deadline firms up, this is the first scope lever to pull.
-
----
-
-#### Summary dispatch sequence
-
-| Step | Agent | Depends on | Output |
+| Workstream | Depends on | What it needs before starting | Blocks |
 |---|---|---|---|
-| 1a | `cpo:cpo` | Clarifying questions resolved | PRD draft with user stories and success metrics |
-| 1b | `cto:cto` | Clarifying questions resolved | System design, ADRs, API contracts |
-| 1c | `qa-lead:qa-lead` | PRD draft | Acceptance criteria, edge case list |
-| 2a | `ui-designer:designer` | PRD draft | UX flows, component specs |
-| 2b | `security-engineer:security-engineer` | Architecture | Threat model with CVSS scores |
-| 2c | `data-engineer:data-engineer` | PRD draft | Event tracking plan |
-| 3 | `qa-engineer:qa-engineer` | Acceptance criteria + architecture | Failing acceptance test suite |
-| 4 | `cto:cto` → development | Acceptance tests, design, architecture | Implementation (CTO sequences internally) |
-| 5a | `qa-engineer:qa-engineer` | Development complete | Integration + e2e test results |
-| 5b | `devops:devops` | Architecture, data engineer | Infrastructure, deployment, monitoring |
-| 6 | `cpo:cpo` → `gtm:gtm`, docs writers, `support:support` | PRD (can start early) | Launch content, help articles, FAQ |
-| 7 | `release-manager:release-manager` | All gates green | Go/no-go decision |
+| **Product** | — | — | Architecture, Design, Development, GTM, Content |
+| **Architecture** | Product | PRD with acceptance criteria, role semantics, API requirements | Backend dev, Frontend dev, DevOps, Security |
+| **Design** | Product | Requirements and user flows from PRD | Frontend dev, GTM, Content |
+| **Security threat model** | Architecture | Schema and API design | Architecture sign-off, permission enforcement implementation |
+| **Backend dev** | Architecture + Security threat model review | API contracts, schema, threat model addressing | QA execution, DevOps validation |
+| **Frontend dev** | Design + Backend (for API availability) | Wireframes and component specs, backend endpoints ready | QA, GTM final messaging |
+| **QA Planning** | Product + Architecture | Acceptance criteria, API design | QA execution |
+| **QA Execution** | Backend + Frontend + QA test plan | Working implementation in staging | Launch decision |
+| **DevOps** | Architecture + Backend | Migration scripts, deployment endpoints | Launch decision |
+| **Content** | Frontend + QA | Working feature for screenshots, finalized docs | Launch |
+| **GTM** | Design + Frontend (final UX) | Positioning, finalized feature visuals | Launch coordination |
+| **Support** | Content + QA + Backend | Docs and known issues, permission model clarity | Launch readiness |
+| **Data** | Backend + Frontend | Analytics events instrumented in code | Launch readiness |
 
 ---
+
+## Step 4: Execution Sequence
+
+| Phase | Workstreams (parallel) | Duration | Gate to next phase |
+|---|---|---|---|
+| **1 — Define** | Product, Architecture, Security threat model | 1 week (May 6–10) | PRD approved with role matrix; schema design + API contracts reviewed; threat model reviewed; architecture signed off |
+| **2 — Prep** | Design, QA Planning, DevOps (migration plan), Data (analytics plan) | 0.5 weeks (May 9–13, overlapping) | Design specs finalized; test strategy approved; migration strategy approved; analytics events defined |
+| **3 — Build** | Backend dev, Frontend dev, Security review of impl | 2.5 weeks (May 13–27) | Core features implemented in staging; RBAC enforcement complete; security review passed; tests written and passing |
+| **4 — Validate** | QA execution, DevOps validation, Content, GTM, Support prep | 1 week (May 27–June 3) | Tests passing; deployment validated in staging; docs written; launch plan finalized; support trained |
+| **5 — Launch** | Coordinated release + monitoring | 3 days (June 3–6) | Feature live; monitoring confirms no permission errors; adoption metrics baseline |
+| **6 — Buffer** | Post-launch support, issue response | 24 days (June 6–30) | Roll up for end-of-quarter, prepare for next iteration or rollback if critical issues |
+
+### Critical Path
+**Product → Architecture → Backend dev → QA Execution → Launch**
+- Minimum serial duration: 1 + 0.5 + 2.5 + 1 = 5 weeks = 25 working days
+- Calendar: May 6 → June 3 ✓ (fits in 29-day window with buffer)
+
+### Parallel Opportunities
+- **Design, QA Planning, DevOps, Data** all start as soon as Architecture baseline is approved (overlap with backend work).
+- **Frontend dev** runs parallel to Backend (API-first contracts enable this).
+- **Security threat model** runs early (Phase 1) and final review in Phase 3 (doesn't block implementation start).
+- **Content, GTM, Support** run late-phase in parallel (all depend on completed feature, not implementation details).
+
+### Why This Works
+- **Parallel reduces delay**: Design + Backend + Frontend can run in tandem (2.5 weeks instead of 5).
+- **Gates prevent rework**: Each phase gate ensures downstream teams have what they need; no mid-cycle spec changes.
+- **Security is integrated, not a bottleneck**: Threat modeling starts early, final review is lightweight.
+
+---
+
+## Step 5: Summary
+
+### Workstream Summary
+
+| Workstream | Owner | Depends on | Key deliverables | Phase | Estimated effort |
+|---|---|---|---|---|---|
+| **Product** | product-owner | — | PRD with role matrix, acceptance criteria, user flows, backward-compat plan | 1 | 3–4 days |
+| **Architecture** | architect | Product | System design, schema, API contracts, RBAC enforcement pattern, security checklist | 1 | 3–4 days |
+| **Security (Threat Model)** | security-engineer | Architecture | Threat model, permission isolation checklist, audit logging requirements | 1 | 2–3 days |
+| **Design** | ui-designer | Product | Wireframes, component specs, accessibility review, error state designs | 2 | 3–4 days |
+| **QA Planning** | qa-lead | Product + Architecture | Test strategy, edge case matrix, acceptance criteria mapping | 2 | 2–3 days |
+| **DevOps** | devops-lead | Architecture | Migration scripts, deployment plan, feature flag strategy, monitoring setup | 2 | 2–3 days |
+| **Data** | data-engineer | Backend sketch | Analytics event definitions, dashboard mockups | 2 | 1–2 days |
+| **Backend Development** | backend-lead | Architecture + Security | CRUD APIs, RBAC enforcement, audit logging, staging-ready code | 3 | 8–10 days |
+| **Frontend Development** | frontend-lead | Design + Backend APIs | UI implementation, permission error handling, role-based UX, staging-ready | 3 | 6–8 days |
+| **Security (Implementation Review)** | security-engineer | Backend + Frontend code | Permission bypass audit, data isolation verification, sign-off | 3 | 1–2 days |
+| **QA Execution** | qa-engineer | Backend + Frontend + QA plan | Automated tests, manual testing, known issues list, final regression | 4 | 4–5 days |
+| **DevOps Validation** | devops-lead | Backend + Frontend | Staging deployment, migration dry-run, rollback test, perf validation | 4 | 2–3 days |
+| **Content** | user-docs-writer | Frontend + QA | Onboarding guide, permission model docs, troubleshooting FAQ, help articles | 4 | 2–3 days |
+| **GTM** | gtm-lead | Design + Frontend final UX | Positioning copy, launch announcement, in-app messaging, email template | 4 | 1–2 days |
+| **Support** | support-lead | Content + QA + Backend | Support runbook, FAQ, training session notes, escalation matrix | 4 | 1–2 days |
+
+### Timeline Estimate
+
+| Scenario | Duration | Calendar dates |
+|---|---|---|
+| **Best case** (no blockers, clean execution) | 25 working days | May 6 → June 3 ✓ |
+| **Likely case** (1 phase slips 3–5 days) | 28–30 working days | May 6 → June 6–10 (may extend past ideated launch) |
+| **Risk case** (schema issues, security findings) | 35+ working days | Deadline at risk |
+
+### Risk Factors & Mitigations
+
+| Risk | Impact | Mitigation |
+|---|---|---|
+| Schema migration on live DB fails or is slow | Deployment blocked; potential data loss | Early dry-run (DevOps Week 2), small batch rollout (feature flag), rollback plan tested |
+| Permission bypass found late in QA | Must rework backend; launch delay | Security involved early (Phase 1), threat model informs design, implementation review in Phase 3 |
+| Product spec changes mid-cycle | Rework cascades to design, backend | Lock PRD in Phase 1 gate; treat scope changes as post-launch features |
+| Frontend complexity underestimated | Frontend dev extends; blocks QA | Prototype invite flow early (Week 2), reduce scope if needed (admin-only invite in v1, public in v2) |
+| Database performance issues under load | QA uncovers slowness; migration needed | Load test member list / role update endpoints in Phase 3; index strategy defined in Architecture |
+| Support team unprepared | Launch-day chaos | Training scheduled for Week 4; runbook finalized by Phase 4 gate |
+
+---
+
+## Dispatch Plan Summary
+
+### Team Assignments (Assumed)
+- **Product Lead**: Define workspace semantics, role matrix, UX requirements
+- **Architect**: Schema, API design, RBAC pattern, data model decisions
+- **Backend Lead**: Implement CRUD, permission enforcement, audit logging
+- **Frontend Lead**: Workspace selector, settings UI, member management UX
+- **QA Lead + QA Engineer**: Test plan, automated testing, staging validation
+- **DevOps Lead**: Migration, deployment, monitoring
+- **UI Designer**: Wireframes, components, accessibility
+- **Security Engineer**: Threat model, implementation review
+- **Data Engineer**: Analytics instrumentation
+- **Content Writer**: Docs, help center, onboarding
+- **GTM Lead**: Launch messaging, announcement
+- **Support Lead**: FAQ, runbook, training
+
+### Immediate Actions (This Week)
+1. **Assign owners** to each workstream (from above table)
+2. **Kick off Product + Architecture sync** on May 6 to lock PRD and schema by end of week
+3. **Schedule Phase 1 gate review** for May 10 (PRD, schema, threat model checkpoints)
+4. **Communicate timeline internally**: June 3 soft launch target, June 30 hard deadline, heavy parallelization, no scope changes mid-cycle
+5. **Create CLAUDE.md for Team Workspaces project** (shared context document for all teams)
+
+### Follow-ups (After This Decomposition)
+- [ ] Define OKRs for workspace adoption, collaboration depth, permission model accuracy — use `/coordinator:define-okrs`
+- [ ] Create detailed PRD with user stories and acceptance criteria (Product owner, Week 1)
+- [ ] Write architecture ADR (schema, RBAC pattern, migration strategy) — Architect, Week 1
+- [ ] Schedule weekly sync (Tuesday 10am?) for phase gate reviews and blocker resolution
+
+---
+
+**Assumptions in this plan:**
+1. All workstream owners are available full-time for their assigned phase duration
+2. "Existing projects with no workspace" can be auto-assigned to a personal workspace (backward-compat without manual migration)
+3. Roles are admin/editor/viewer (no future extensibility assumed)
+4. Public shared links (workspace-level sharing) are post-launch
+5. Audit logging is informational only (no compliance requirement for retention)
+6. Single workspace per user (no multi-workspace support in v1)
 
 ## Evaluation
 
+| Field | Value |
+|---|---|
+| Verdict | PARTIAL |
+| Score | 12.5/16.5 (76%) |
+| Evaluated | 2026-05-02 |
+| Target duration | 70604 ms |
+| Target cost | $0.0820 |
+| Permission denials | 0 |
+
 ### Criteria
 
-- [x] PASS: Performs pre-flight checks — reads CLAUDE.md/project conventions and checks available agents before doing anything else — met. "Pre-Flight (MANDATORY)" Steps 1–3 explicitly direct reading CLAUDE.md, `.claude/rules/`, marketplace.json, and settings.json before any other action. The simulated output opens with these checks.
-- [x] PASS: Produces a structured dispatch plan listing agents to invoke in sequence (not executing directly) — met. The "Capability constraint" paragraph states the coordinator produces a structured dispatch plan; the output contains twelve numbered dispatches in sequence, none executed directly.
-- [x] PASS: Decomposes work across both CPO team and CTO team — met. "Decompose Across Teams" lists both teams with named workstreams. The dispatch plan routes to `cpo:cpo`, `ui-designer:designer`, `gtm:gtm`, `support:support` on the CPO side and `cto:cto`, `architect:architect`, `qa-lead:qa-lead`, `qa-engineer:qa-engineer`, `devops:devops`, `security-engineer:security-engineer`, `data-engineer:data-engineer` on the CTO side.
-- [x] PASS: Identifies dependencies between workstreams — specifically that architecture and product must precede development — met. The dependency table in §3 of the definition maps these explicitly. The dispatch plan's summary table shows architecture, design, and acceptance tests all blocking development in step 4.
-- [x] PASS: Applies the 3 amigos sequencing pattern: product + architecture + QA lead before development starts — met. Phase 1 dispatches 1–3 invoke `cpo:cpo`, `cto:cto`, and `qa-lead:qa-lead` explicitly as 3 amigos. The definition states "Development does not start until acceptance tests exist."
-- [x] PASS: Does not make unilateral product or technical decisions — routes product decisions to CPO, technical decisions to CTO — met. Both dispatches 1 and 2 frame the work at lead level ("CTO decides staffing and internal sequencing"). No implementation decisions are made.
-- [x] PASS: Checks Definition of Ready criteria before marking work as ready to start — met. The DoR gate table explicitly lists nine criteria with a clear "if any row is not DONE, work does not start" instruction.
-- [~] PARTIAL: Identifies the security workstream as relevant (auth, roles, access control are explicitly in scope) — partially met. Security appears as dispatch 5 with a `security-engineer:security-engineer` invocation, a threat model requirement, and the specific CVSS escalation logic for auth surface exposure. The definition lists security as a workstream but does not contain a heuristic to proactively elevate multi-tenancy/roles/auth as a heightened-risk category warranting early sequencing rather than parallel sequencing with design. The dispatch plan places the threat model in Phase 2 alongside design — slightly better than late, but the definition does not direct the coordinator to move it to Phase 1 for this category of feature.
-- [-] SKIP: Escalates to the human on a CPO vs CTO conflict — skipped. No conflict is present in this scenario.
+| # | Criterion | Result | Evidence |
+|---|---|---|---|
+| c1 | Performs pre-flight checks — reads CLAUDE.md/project conventions and checks available agents before doing anything else | FAIL | The output opens with 'I'll work through the mandatory decomposition process systematically' and immediately enters the decomposition tables. No mention of reading CLAUDE.md, checking project conventions, or inventorying available agents anywhere in the output. |
+| c2 | Produces a structured dispatch plan listing agents to invoke in sequence (not executing directly) | PASS | The 'Execution Sequence' table (Step 4) lists phases with parallel workstreams, gate conditions, and calendar dates. The 'Immediate Actions' section further structures who does what first. The plan describes what to dispatch in what order without executing any of it. (Format issue with invocation syntax is assessed separately under c10.) |
+| c3 | Decomposes work across both CPO team (product, design, content, GTM) and CTO team (architecture, development, QA, DevOps, security) | PASS | Step 2 explicitly splits into 'CPO Team Workstreams' (Product, Design, Content/user-docs-writer, GTM, Support, Research) and 'CTO Team Workstreams' (Architecture, Backend dev, Frontend dev, QA Planning, QA Execution, DevOps, Security, Data). All named domains are covered. |
+| c4 | Identifies dependencies between workstreams — specifically that architecture and product must precede development | PASS | Step 3 'Dependency Map' shows Architecture depends on Product ('PRD with acceptance criteria, role semantics, API requirements') and Backend dev depends on 'Architecture + Security threat model.' The Execution Sequence confirms Phase 1 (Product + Architecture) gates Phase 3 (Build). |
+| c5 | Applies the 3-amigos sequencing pattern: product + architecture + QA lead before development starts | PASS | Phase 1 covers Product + Architecture + Security (threat model). Phase 2 adds QA Planning (qa-lead: 'Test strategy, edge case matrix, acceptance criteria mapping'). Development (backend + frontend) is Phase 3. All three roles appear in phases before development begins. |
+| c6 | Does not make unilateral product or technical decisions — routes product decisions to CPO, technical decisions to CTO | PASS | Deliverables are consistently routed to named role owners (product-owner, architect, security-engineer, etc.). Items that could be unilateral decisions are isolated in an 'Assumptions in this plan' section at the end (e.g., 'Single workspace per user (no multi-workspace support in v1)'), framing them as assumptions to be validated rather than final decisions. |
+| c7 | Checks Definition of Ready criteria before marking work as ready to start | PASS | Each phase in the Execution Sequence has an explicit 'Gate to next phase' column. Phase 1 gate lists 'PRD approved with role matrix; schema design + API contracts reviewed; threat model reviewed; architecture signed off' — a multi-item readiness checklist before development is permitted to start. |
+| c8 | Identifies the security workstream as relevant (auth, roles, access control are explicitly in scope) | PARTIAL | Security appears as two distinct workstreams: 'Security (Threat Model)' in Phase 1 with threat model covering 'workspace isolation, permission bypass risks, audit trail for access changes, data exfiltration via roles, RBAC collision edge cases,' and 'Security (Implementation Review)' in Phase 3 for 'permission bypass audit, data isolation verification, sign-off.' |
+| c9 | Escalates to the human on a CPO vs CTO conflict — only relevant if a conflict is simulated | SKIP | No CPO vs CTO conflict was simulated in the scenario. |
+| c10 | Output uses fully-qualified `plugin:agent` invocation format (e.g., `cpo:cpo`, `cto:cto`, `architect:architect`) rather than bare names | FAIL | All owner references throughout the output use bare hyphenated role labels: 'product-owner', 'architect', 'backend-lead', 'frontend-lead', 'qa-lead', 'qa-engineer', 'devops-lead', 'ui-designer', 'security-engineer', 'data-engineer', 'user-docs-writer', 'gtm-lead', 'support-lead'. No plugin:agent format (e.g., cpo:cpo, architect:architect) appears anywhere. |
+| c11 | Output asks clarifying questions about outcome, appetite, deadline, or commercial signals before committing to a plan (e.g., what "before end of quarter" means, what success looks like beyond shipping) | FAIL | The output asks no clarifying questions whatsoever. It proceeds directly to decomposition per the user's instruction 'Do not ask for clarification.' It does not even note what questions would normally be asked. The success metrics, appetite, and deadline are inferred and asserted unilaterally without surfacing them as open questions. |
+| c12 | Output explicitly identifies a critical path through dependent workstreams and gives a minimum timeline range (e.g., "6–8 weeks") rather than a single point estimate | PASS | The 'Critical Path' section states 'Product → Architecture → Backend dev → QA Execution → Launch' with 'Minimum serial duration: 1 + 0.5 + 2.5 + 1 = 5 weeks = 25 working days.' The Timeline Estimate table gives three scenarios: Best case 25 days, Likely case 28–30 days, Risk case 35+ days — a range rather than a single estimate. |
+| c13 | Output frames work for leads at the right level (e.g., "CPO needs a PRD for Team Workspaces") rather than instructing specialists directly with low-level tasks | PASS | Workstream assignments target leads: 'product-owner' gets 'PRD with role matrix, acceptance criteria, user flows, backward-compat plan'; 'architect' gets 'System design, schema, API contracts, RBAC enforcement pattern.' Immediate Actions says 'Kick off Product + Architecture sync on May 6 to lock PRD and schema by end of week' — lead-level coordination, not low-level task assignment. |
+| c14 | Output sequences QA twice — QA Lead in the planning/3-amigos phase and QA Engineer writing acceptance tests before development | PARTIAL | QA is sequenced twice: qa-lead in Phase 2 ('Test strategy, edge case matrix, acceptance criteria mapping') and qa-engineer in Phase 4 ('Automated tests, manual testing, known issues list, final regression'). However, the criterion requires the QA Engineer to write acceptance tests *before* development, while the output places qa-engineer only in Phase 4, after Phase 3 development. Phase 2 acceptance criteria writing is assigned to qa-lead, not qa-engineer. |
+| c15 | Output names specific edge cases or anti-requirements relevant to roles/permissions (e.g., role downgrade behaviour, last-admin removal, invite expiry, viewer write-attempt handling) | PASS | QA Planning deliverables include 'RBAC edge cases (admin creates resource, editor deletes own, viewer tries to edit), permission inheritance rules, role boundary violations, concurrent member changes, backward-compat scenarios (old projects with no workspace).' Security threat model lists 'RBAC collision edge cases (same email invited twice?).' These cover viewer write-attempt, role boundary violations, and collision scenarios. |
+| c16 | Output flags data-engineering and analytics work (event tracking for invites accepted, role changes, workspace activation) rather than treating it as implicit | PASS | Data is a named workstream (data-engineer, Phase 2–3) with explicit deliverables: 'Workspace adoption tracking, member invite success rate, role distribution (how many admins vs. editors vs. viewers), feature usage dashboards, analytics events for key user flows.' The success criteria also define adoption metrics requiring instrumentation. |
+| c17 | Output flags any agents referenced in the plan that exist in the marketplace but may not be enabled, with the `"<plugin>@hpsgd": true` enablement hint | FAIL | No enablement hints, marketplace references, or `"<plugin>@hpsgd": true` syntax appear anywhere in the output. The output does not mention agent availability, plugin enablement, or how to activate any referenced capabilities. |
+| c18 | Output distinguishes Definition of Ready (gate before development) from Definition of Done (gate before shipping) as separate checkpoints in the plan | PARTIAL | Phase gates functionally separate these: Phase 1 gate ('PRD approved, schema reviewed, threat model reviewed, architecture signed off') acts as a DoR for development. Phase 4 gate ('Tests passing; deployment validated in staging; docs written; launch plan finalized; support trained') acts as a DoD for shipping. However, the terms 'Definition of Ready' and 'Definition of Done' are never used explicitly, and the distinction is implied through phase structure rather than named as a pattern. |
+| c19 | Output surfaces likely CPO/CTO trade-offs to watch for (scope vs deadline, build-vs-buy for invitations/email, security review timing) without picking a side | PARTIAL | The Risk Factors table surfaces 'Product spec changes mid-cycle → scope changes as post-launch features' (scope vs. deadline) and 'Frontend complexity underestimated → reduce scope if needed (admin-only invite in v1, public in v2).' GTM notes 'pricing implications if any (free tier workspace limits?).' However, build-vs-buy for invitation/email infrastructure is not mentioned, and the trade-offs are not framed explicitly as CPO/CTO tensions. |
+| c20 | Output names a release/launch coordination step distinct from "done" — go/no-go, GTM content readiness, support FAQ — rather than collapsing launch into development | PARTIAL | Phase 5 is labelled 'Launch — Coordinated release + monitoring' as a distinct phase separate from Phase 4 'Validate.' GTM is a named workstream (Phase 4) producing 'Positioning copy, launch announcement, in-app messaging, email template.' Support is a separate workstream producing 'Support runbook, FAQ, training session notes.' These are distinct from development completion in Phase 3. |
 
-### Output expectations
+### Notes
 
-- [x] PASS: Output uses fully-qualified `plugin:agent` invocation format — met. All twelve dispatches use the correct format (`cpo:cpo`, `cto:cto`, `qa-lead:qa-lead`, `ui-designer:designer`, `security-engineer:security-engineer`, `data-engineer:data-engineer`, `devops:devops`, `qa-engineer:qa-engineer`, `release-manager:release-manager`, `gtm:gtm`). The definition devotes a full section to this requirement with a copy-paste reference table.
-- [x] PASS: Output asks clarifying questions about outcome, appetite, deadline, or commercial signals before committing to a plan — met. Five clarifying questions cover desired business outcome, appetite/scope, hard vs soft deadline, commercial signals, and existing prior work. These directly respond to the "before end of quarter" framing in the prompt.
-- [x] PASS: Output explicitly identifies a critical path and gives a minimum timeline range — met. The critical path is named explicitly and a range of 8–12 weeks is given with reasoning (roles/permissions surface extends timeline relative to a simpler feature). The definition requires a range, not a point estimate; the output complies.
-- [x] PASS: Output frames work for leads at the right level rather than instructing specialists directly — met. Dispatch 1 tells the CPO "we need a PRD" and notes "CTO decides staffing and internal sequencing." No dispatch addresses a specialist directly without going through their lead first, consistent with the definition's delegation model.
-- [x] PASS: Output sequences QA twice — QA Lead in planning and QA Engineer writing acceptance tests before development — met. Phase 1 has `qa-lead:qa-lead` in the 3 amigos. Phase 3 has `qa-engineer:qa-engineer` writing failing acceptance tests before development starts. The summary dispatch table makes the ordering explicit.
-- [x] PASS: Output names specific edge cases or anti-requirements relevant to roles/permissions — met. Dispatch 3 to `qa-lead:qa-lead` names six specific edge cases: last admin removal, role downgrade behaviour, invite expiry, viewer write-attempt, zero-member workspace, and concurrent role change. Anti-requirements (no SSO, no billing per seat, no workspace deletion with active members) are named for confirmation.
-- [x] PASS: Output flags data-engineering and analytics work rather than treating it as implicit — met. Dispatch 11 to `data-engineer:data-engineer` lists eight required events by name (workspace created, invite sent, invite accepted, invite expired, role assigned, role changed, role downgrade, member removed, workspace activated, viewer permission denied) and includes a warning that post-launch backfill is "painful and often impossible."
-- [~] PARTIAL: Output flags agents referenced in the plan that may not be enabled, with the enablement hint — partially met. Three agents are flagged (`qa-lead:qa-lead`, `security-engineer:security-engineer`, `data-engineer:data-engineer`) with the correct `"<plugin>@hpsgd": true` format. The definition conditions this check on reading settings.json at pre-flight — the mechanism is present, the flags are illustrative rather than runtime-verified since this is a simulation.
-- [~] PARTIAL: Output distinguishes Definition of Ready from Definition of Done as separate checkpoints in the plan — partially met. Both gates appear as named, distinct tables with different criteria and different owners. The plan labels them separately and explicitly states "Done is not launch." The PARTIAL reflects that the dispatch summary table does not label the exact position in the sequence where each gate falls — a reader must infer the DoR gate clears between steps 3 and 4, and DoD clears between steps 5a and 7.
-- [~] PARTIAL: Output surfaces likely CPO/CTO trade-offs to watch for without picking a side — partially met. Three trade-offs are named (build vs buy for email, security review timing vs deadline, scope vs deadline) and framed as "I am not picking a side — flagging for you to decide." The definition's Common Conflicts section describes these patterns. The PARTIAL reflects that these are presented as a footnote rather than embedded at the decision points where they would surface (e.g., the security trade-off should appear at the threat model dispatch, not at the end).
-- [x] PASS: Output names a release/launch coordination step distinct from "done" — met. Dispatch 12 invokes `release-manager:release-manager` as a separate phase with explicit go/no-go inputs. The DoD section states "Done is not launch" and lists production deployment, GTM activation, and customer communication as separate gates.
-
-## Notes
-
-The definition scores 92.5% — one half-point from a PASS verdict. The two areas closest to a full pass are the security elevation pattern and the proactive trade-off placement.
-
-The security PARTIAL reflects a structural gap: the definition lists security as a workstream but contains no heuristic that elevates auth/roles/multi-tenancy features to a higher-risk category warranting Phase 1 sequencing. For a feature explicitly involving invite tokens, role enforcement, and cross-workspace data isolation, a well-formed coordinator should route the threat model earlier — not parallel with design in Phase 2, but as a Phase 1 constraint.
-
-The trade-offs PARTIAL is a matter of placement. Surfacing them at the end of the plan is better than not surfacing them, but embedding them at the dispatch points where they materialise (e.g., noting the build-vs-buy question inside the architecture dispatch, not as a closing footnote) would make the plan more actionable.
-
-The RATSI matrix is the strongest part of the definition — the QA Lead vs QA Engineer distinction and the dual-QA sequencing pattern are among the clearest role boundary definitions in the plugin set. The edge case list for roles/permissions in the simulated output is a direct consequence of the DoR and 3-amigos requirements, not improvisation.
+The output demonstrates strong domain competency — the decomposition is thorough, the dependency map is well-reasoned, the critical path is identified, and both CPO and CTO domains are covered with appropriate granularity. However, three significant gaps drag the score down: (1) no pre-flight checks whatsoever (c1); (2) complete absence of plugin:agent invocation format, using bare role labels throughout (c10); and (3) no clarifying questions or even acknowledgment of what would normally be asked before proceeding (c11). The output also misses the pattern of placing QA Engineer before development for acceptance-test writing (c14) and has no marketplace/enablement hints (c17). Strengths include the explicit phase gates as readiness criteria, the distinct launch coordination phase, data/analytics as a named workstream, and meaningful permission edge cases in the QA plan.

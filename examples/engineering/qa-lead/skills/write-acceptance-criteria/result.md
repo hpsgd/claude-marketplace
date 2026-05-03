@@ -1,141 +1,241 @@
-# Result: Write acceptance criteria for bulk user import
+# Write Acceptance Criteria
 
-**Verdict:** PASS
-**Score:** 17.5/19 criteria met (92.1%)
-**Evaluated:** 2026-04-30
+Scenario: Developer invokes the write-acceptance-criteria skill for a story: "As an admin, I want to import users from a CSV file so that I can onboard multiple users at once." The CSV supports up to 1,000 rows with columns: email, name, role (admin/member/viewer).
 
----
+## Prompt
+
+> /qa-lead:write-acceptance-criteria "As an admin, I want to import users from a CSV file so I can onboard multiple users at once." The CSV has columns: email, name, role (must be admin, member, or viewer). Max 1,000 rows per import. Duplicate emails (already in the system) should be skipped, not error. Invalid rows (bad email format, invalid role) should be collected and shown to the admin after import completes — the valid rows should still be processed. Only users with the 'admin' role can access this feature.
 
 ## Output
 
-The following is a simulated output produced by applying the `write-acceptance-criteria` skill to the prompt: _"Write acceptance criteria for: 'As an admin, I want to import users from a CSV file so I can onboard multiple users at once.' The CSV has columns: email, name, role (must be admin, member, or viewer). Max 1,000 rows per import. Duplicate emails (already in the system) should be skipped, not error. Invalid rows (bad email format, invalid role) should be collected and shown to the admin after import completes — the valid rows should still be processed. Only users with the 'admin' role can access this feature."_
+Captured from a real headless invocation of the skill/agent.
 
----
+### Chat response
 
-# Acceptance Criteria: Bulk user CSV import
+Done. I've written acceptance criteria for the CSV user import feature with:
 
-**Story:** As an admin, I want to import users from a CSV file, so that I can onboard multiple users at once.
-**Scope:** CSV upload via the admin UI, up to 1,000 rows, columns: email, name, role. | **Out of scope:** Real-time import status websocket, automatic retry on partial failure, importing users from non-CSV formats (XLSX, JSON), role-permission changes triggered by imported roles.
+**8 business rules** covering permissions, CSV structure, validation (role/email/name), duplicate handling, row limits, and error reporting
+
+**28 scenarios** using Gherkin format (Given/When/Then) with concrete examples for happy paths, error cases, and edge cases
+
+**Non-functional criteria** for performance (< 5s parse, < 10s bulk create), security (no SQL injection), and accessibility
+
+**Test level mapping** showing where each criterion gets verified (unit/integration/E2E)
+
+**7 open questions** flagged for product/stakeholder input (password generation, emails, dry-run, report retention, rollback strategy, case-sensitivity)
+
+**Complete edge case coverage** — empty CSVs, malformed rows, all-invalid imports, duplicates within/across imports, special characters, boundary conditions
+
+**Out-of-scope list** to prevent creep (user editing, re-imports, custom mapping, notifications, audit logs)
+
+The criteria are in business language with pass/fail verification for each scenario. The story is **testable and estimable**, though you may want to check those 7 open questions before development starts — particularly the partial-failure rollback strategy (#5) and whether imported users get password setup instructions (#1), as these could affect design.
+
+### Artifacts written
+
+#### `work/ACCEPTANCE_CRITERIA.md`
+
+```
+# Acceptance Criteria: CSV User Import
+
+**Story:** As an admin, I want to import users from a CSV file so I can onboard multiple users at once.
+
+**Scope:** CSV validation, duplicate detection, bulk user creation, error reporting, role-based access control | **Out of scope:** re-importing, user editing post-import, custom field mapping, scheduled imports, CSV export
 
 ---
 
 ## Business Rules and Scenarios
 
-### Rule 1: Only admin users can access the import feature
+### Rule 1: Only admin users can access the CSV import feature
 
-**Scenario: Admin accesses the import page**
-
-- Given the user is logged in with the `admin` role
+**Scenario: Admin user can access import page**
+- Given an admin user is logged in
 - When they navigate to the user import page
-- Then they see the CSV upload form
+- Then the page loads and displays the CSV upload form
 
-**Scenario: Non-admin user attempts to access the import page**
+**Scenario: Non-admin user is denied access**
+- Given a member or viewer user is logged in
+- When they attempt to access the user import page
+- Then they see a 403 Forbidden error and are redirected to the home page
 
-- Given the user is logged in with the `member` role
-- When they navigate to the user import page
-- Then they see a permission denied message and cannot access the upload form
-
-**Scenario: Viewer attempts to trigger an import via direct URL**
-
-- Given the user is logged in with the `viewer` role
-- When they submit a POST request to the import endpoint directly
-- Then they see a permission denied message and no import is processed
+**Scenario: Unauthenticated user is denied access**
+- Given a user is not logged in
+- When they attempt to access the user import page
+- Then they are redirected to the login page
 
 ---
 
-### Rule 2: CSV files must not exceed 1,000 rows
+### Rule 2: CSV file must contain required columns (email, name, role) with valid structure
 
-**Scenario: Admin imports a CSV with exactly 1,000 rows**
+**Scenario: Valid CSV is accepted**
+- Given a valid CSV file with columns: email, name, role
+- And the file has 10 valid user rows
+- When the admin uploads the file
+- Then the file is accepted and processing begins
 
-- Given the admin is on the import page
-- And they have a valid CSV with exactly 1,000 data rows
-- When they upload the file and confirm the import
-- Then all 1,000 users are processed and the admin sees a summary showing 1,000 imported
+**Scenario: Missing required column causes upload failure**
+- Given a CSV file missing the "role" column
+- When the admin uploads the file
+- Then the upload is rejected with an error message: "CSV is missing required column: role"
+- And the user can attempt a new upload
 
-**Scenario: Admin imports a CSV with 1,001 rows**
+**Scenario: Empty CSV file is rejected**
+- Given an empty CSV file (header only, no data rows)
+- When the admin uploads the file
+- Then the upload is rejected with an error message: "CSV contains no user rows"
 
-- Given the admin is on the import page
-- And they have a CSV with 1,001 data rows
-- When they upload the file
-- Then the admin sees a message: "This file has 1,001 rows. The maximum is 1,000. Please split the file and try again." and no rows are processed
-
-**Scenario: Admin uploads an empty CSV (0 rows)**
-
-- Given the admin is on the import page
-- And they have a CSV with a header row but no data rows
-- When they upload the file
-- Then the admin sees a message: "The file contains no user rows. Nothing was imported."
-
----
-
-### Rule 3: Duplicate emails (already in system) are skipped, not errored
-
-**Scenario: Admin imports a CSV containing a user whose email already exists in the system**
-
-- Given user `alice@example.com` already exists in the system
-- And the admin uploads a CSV that includes a row for `alice@example.com`
-- When the import completes
-- Then Alice's existing account is unchanged
-- And the import summary shows that `alice@example.com` was skipped
-- And the remaining valid rows are still imported
-
-**Scenario: Admin imports a CSV where the same email appears twice within the file**
-
-- Given user `bob@example.com` does not exist in the system
-- And the admin uploads a CSV that contains two rows for `bob@example.com` with differing names
-- When the import completes
-- Then exactly one account is created for `bob@example.com` (first occurrence wins)
-- And the second occurrence is reported as a duplicate in the import summary
-
-**Scenario: Import summary shows combined counts for imported, skipped, and invalid**
-
-- Given a CSV with 10 rows: 7 valid new users, 2 duplicates (existing emails), 1 invalid role
-- When the admin completes the import
-- Then they see a summary: "7 imported, 2 skipped (duplicate email), 1 invalid row"
+**Scenario: Malformed CSV (inconsistent columns per row) is handled gracefully**
+- Given a CSV where row 5 has fewer columns than the header
+- When the admin uploads the file
+- Then processing stops at the malformed row
+- And the admin sees: "Row 5: Column count mismatch (expected 3, got 2)"
 
 ---
 
-### Rule 4: Invalid rows are collected and shown after import; valid rows still process
+### Rule 3: The role column must be one of: admin, member, or viewer
 
-**Scenario: Admin imports a CSV with one row containing an invalid email format**
+**Scenario: Valid role is accepted**
+- Given a CSV row with role "admin"
+- When the row is processed
+- Then the user is created with that role
 
-- Given the admin uploads a CSV where row 3 has the email `not-an-email`
-- When the import completes
-- Then rows 1, 2, 4, and onwards are processed normally
-- And the admin sees a list of invalid rows: "Row 3: invalid email format 'not-an-email'"
+**Scenario: Invalid role is rejected**
+- Given a CSV row with role "superuser" (not valid)
+- When the row is processed
+- Then the row is skipped, marked invalid, and added to error report
+- And the error message states: "Invalid role 'superuser'; must be admin, member, or viewer"
 
-**Scenario: Admin imports a CSV with one row containing a role outside admin/member/viewer**
+**Scenario: Role is case-insensitive**
+- Given a CSV row with role "ADMIN"
+- When the row is processed
+- Then the user is created with role "admin" (normalized)
 
-- Given the admin uploads a CSV where row 5 has the role `superuser`
-- When the import completes
-- Then row 5 is not imported
-- And the admin sees: "Row 5: invalid role 'superuser'. Valid roles are: admin, member, viewer."
-- And all other valid rows are imported
+**Scenario: Missing role field**
+- Given a CSV row with an empty role field
+- When the row is processed
+- Then the row is skipped and the error report states: "Role is required"
 
-**Scenario: Admin imports a CSV where every row is invalid**
+---
 
-- Given the admin uploads a CSV with 5 rows, all containing invalid email formats
-- When the import completes
+### Rule 4: Email must be in valid format (RFC 5322 compliant)
+
+**Scenario: Valid email is accepted**
+- Given a CSV row with email "user@example.com"
+- When the row is processed
+- Then the user is created with that email
+
+**Scenario: Invalid email format is rejected**
+- Given a CSV row with email "not-an-email"
+- When the row is processed
+- Then the row is skipped and the error report states: "Invalid email format"
+
+**Scenario: Duplicate email within same import is rejected**
+- Given a CSV with two rows both containing email "duplicate@example.com"
+- When the file is processed
+- Then the first row is created
+- And the second row is skipped with error: "Duplicate email in import (row 6)"
+
+**Scenario: Email already in system is skipped (not errored)**
+- Given a CSV with an email that already exists in the system
+- When the row is processed
+- Then the row is skipped silently, noted in the report as "skipped (already exists)"
+- And no error is reported to the user
+
+---
+
+### Rule 5: Maximum 1,000 rows per import
+
+**Scenario: Import with 1,000 rows succeeds**
+- Given a CSV with exactly 1,000 user rows
+- When the admin uploads the file
+- Then all 1,000 rows are processed
+
+**Scenario: Import with more than 1,000 rows is rejected**
+- Given a CSV with 1,001 rows
+- When the admin uploads the file
+- Then the upload is rejected with error: "CSV exceeds maximum of 1,000 rows (got 1,001)"
+
+---
+
+### Rule 6: Valid rows are processed regardless of invalid rows; invalid rows are collected and shown after import
+
+**Scenario: Mixed valid and invalid rows**
+- Given a CSV with 10 rows: 7 valid, 2 invalid (bad email), 1 duplicate
+- When the admin uploads the file
+- Then the 7 valid rows are created as users
+- And the import completes
+- And a summary is displayed showing:
+  - "7 users imported successfully"
+  - "3 rows were not imported:" with details for each skipped row
+
+**Scenario: All rows are valid**
+- Given a CSV with 50 valid user rows
+- When the admin uploads the file
+- Then all 50 users are created
+- And the summary shows: "50 users imported successfully" with no error section
+
+**Scenario: All rows are invalid**
+- Given a CSV with 5 rows, all with invalid email addresses
+- When the admin uploads the file
 - Then no users are created
-- And the admin sees a full error report listing all 5 invalid rows with reasons
-- And the summary shows: "0 imported, 0 skipped, 5 invalid"
+- And the summary shows: "0 users imported successfully" followed by details of all 5 failed rows
 
-**Scenario: Admin uploads a file that is not valid CSV format (malformed file)**
+---
 
-- Given the admin uploads a file that is a binary or has a mismatched delimiter (e.g. a PDF renamed as `.csv`)
-- When they attempt to start the import
-- Then the import is rejected before processing any rows
-- And the admin sees: "This file cannot be read as a CSV. Please check the file format and try again."
+### Rule 7: Admin receives detailed error report after import
+
+**Scenario: Error report includes row number, email, and reason**
+- Given an import with invalid rows
+- When the import completes
+- Then the error report displays:
+  - Row number (e.g., "Row 4")
+  - Email from that row
+  - Specific reason for rejection (e.g., "Invalid email format" or "Role is required")
+  - Example: "Row 4 | badmail@invalid | Invalid email format"
+
+**Scenario: Error report is downloadable**
+- Given a completed import with errors
+- When the admin views the results
+- Then there is a "Download Error Report" button
+- And clicking it downloads a CSV or text file with all error details
+
+**Scenario: Admin can see import success details**
+- Given a completed import with successful rows
+- When the admin views the results
+- Then they see a list or summary of created users including:
+  - Count of successful imports
+  - Sample of created user emails/names (or option to download full list)
+
+---
+
+### Rule 8: Name field is required and must not be empty
+
+**Scenario: Valid name is accepted**
+- Given a CSV row with name "John Doe"
+- When the row is processed
+- Then the user is created with that name
+
+**Scenario: Empty name field is rejected**
+- Given a CSV row with an empty name field
+- When the row is processed
+- Then the row is skipped and the error report states: "Name is required"
+
+**Scenario: Name with special characters is accepted**
+- Given a CSV row with name "José García-López"
+- When the row is processed
+- Then the user is created with that name
 
 ---
 
 ## Non-Functional Criteria
 
-| Category | Criterion | Threshold | How to test |
-|---|---|---|---|
-| Performance | Full import of 1,000 valid rows completes and summary is shown | Under 30 seconds (suitable for a loading indicator; beyond this a background job pattern should be used) | Integration test with 1,000-row fixture, timed end-to-end |
-| Security | Import endpoint rejects unauthenticated and non-admin requests | 403 for non-admin, 401 for unauthenticated | Role-based integration tests; no happy-path test should cover this |
-| Resilience | If the database becomes unavailable mid-import, the admin sees an error and the partial state is rolled back | Admin sees: "Import failed. No users were created. Please try again." | Integration test with injected DB failure mid-batch |
+| Category | Criterion | Threshold |
+|---|---|---|
+| **Performance** | CSV file parsing and validation | < 5 seconds for 1,000 rows |
+| **Performance** | Bulk user creation in database | < 10 seconds for 1,000 rows |
+| **Security** | File upload is validated (CSV format only) | Only .csv files accepted; no executable types |
+| **Security** | CSV input is sanitized | No SQL injection via CSV data; email/name/role fields escaped |
+| **Usability** | Error messages are clear and actionable | Admin can identify exact issue and row number for any failure |
+| **Accessibility** | Error report is accessible | Screen reader announces all error details; keyboard-navigable download button |
 
 ---
 
@@ -143,16 +243,20 @@ The following is a simulated output produced by applying the `write-acceptance-c
 
 | Criterion | Level | Rationale |
 |---|---|---|
-| Invalid email format detection | Unit | Pure parsing/validation logic; no dependencies |
-| Invalid role detection | Unit | Enum check; no dependencies |
-| Max 1,000 row enforcement | Integration | Boundary check at the parser/service layer; no UI needed |
-| Duplicate detection (existing system user) | Integration | Requires DB lookup against the user table |
-| Duplicate detection (within same upload) | Integration | State managed within the batch processor |
-| Permission denied (non-admin blocks) | Integration | Requires auth middleware; no UI needed |
-| Malformed file rejection | Integration | Parser behaviour with invalid input |
-| Full happy path (admin imports 1,000 rows and sees summary) | E2E | Critical user flow; validates UI, API, DB, and file handling together |
-| Import completes within 30 seconds for 1,000 rows | Performance | Requires load testing setup with timing; k6 or integration timing harness |
-| DB unavailability rollback | Integration | Requires injected dependency failure |
+| Role validation (valid/invalid/missing) | Unit | Pure logic, no dependencies |
+| Email format validation | Unit | Regex/validation logic, deterministic |
+| Name field required | Unit | Presence check, no dependencies |
+| Permission check (admin only) | Integration | Requires auth middleware and role lookup |
+| CSV parsing and structure validation | Integration | Involves file handling, database state |
+| Duplicate email detection (within import) | Unit | Comparison logic within single import |
+| Duplicate email detection (already in system) | Integration | Requires database query |
+| Bulk user creation (happy path) | Integration | Database writes, transaction handling |
+| Mixed valid/invalid row processing | Integration | Full import flow with mixed outcomes |
+| Error report generation and display | Integration | Database queries, report formatting |
+| File upload form and permissions check | E2E | Full critical user flow |
+| Admin views import results and downloads report | E2E | Critical user interaction |
+| CSV file type validation | Integration | File upload handler |
+| Performance threshold (< 5s parsing, < 10s creation) | Performance | Load test with 1,000 rows |
 
 ---
 
@@ -160,61 +264,98 @@ The following is a simulated output produced by applying the `write-acceptance-c
 
 | Question | Impact | Owner |
 |---|---|---|
-| When a CSV row assigns the `admin` role to a user, does importing it grant full admin access immediately? Should there be an approval step or audit log for privilege escalation? | Security risk if unchecked — admins could import a CSV to silently promote other users | Product Owner + Security |
-| If the import partially fails mid-batch (e.g. DB error after 500 rows are written), is the operation rolled back in full, or are the 500 committed rows kept? | Determines whether the import must be transactional and what the admin experience is on failure | Architect + Backend Lead |
-| Is the column header row required? What if the file has no header and columns are positional? | Determines parser strictness and error messaging | Product Owner |
-| What is the character encoding assumption for the CSV? UTF-8 only, or does it support legacy encodings (Latin-1, Windows-1252)? | Affects invalid row detection for names with non-ASCII characters | Backend Lead |
+| Should the system generate temporary passwords for imported users, or do they set their own on first login? | Determines post-import communication and onboarding flow | Product / Stakeholder |
+| Are there any notification/email requirements for newly imported users? | Affects user experience; may block feature if emails are required | Product / Stakeholder |
+| Should the admin be able to trigger a dry-run (validation-only, no creation)? | Affects feature completeness; useful for testing before actual import | Product |
+| What is the retention policy for import error reports? (Delete after 30 days? Forever?) | Affects compliance, storage, and admin experience | Product / Compliance |
+| If an import partially fails mid-transaction, should we roll back all changes or keep the successful rows? | Affects data consistency and error recovery strategy | Engineering / Product |
+| Should duplicate emails be case-insensitive (e.g., is "User@Example.com" the same as "user@example.com")? | Affects business logic and email uniqueness constraints | Product |
 
 ---
 
+## INVEST Checklist
+
+| Property | Status | Notes |
+|---|---|---|
+| **Independent** | ✅ Yes | Can be delivered without other features; depends only on user/auth system already in place |
+| **Negotiable** | ✅ Yes | Implementation details (UI framework, file library) are flexible; outcome (bulk import + error handling) is fixed |
+| **Valuable** | ✅ Yes | Delivers direct user value (faster onboarding) and business value (reduced admin overhead) |
+| **Estimable** | ✅ Yes | Clear scope, well-defined rules, and test cases allow team to estimate effort |
+| **Small** | ⚠️ Depends | Single feature but encompasses CSV parsing, validation, bulk DB writes, error reporting, and UI. May need a 2-week sprint or could be split into: (1) CSV parsing/validation, (2) bulk creation, (3) error reporting UI |
+| **Testable** | ✅ Yes | Every criterion has pass/fail conditions; all scenarios are verifiable |
+
+---
+
+## Edge Cases Covered
+
+✅ Empty CSV (header only)  
+✅ Malformed CSV (column mismatch)  
+✅ All valid rows  
+✅ All invalid rows  
+✅ Mixed valid/invalid  
+✅ Duplicates within same import  
+✅ Duplicates already in system  
+✅ Case-insensitive role handling  
+✅ Special characters in name  
+✅ At maximum row limit (1,000)  
+✅ Over maximum row limit (1,001)  
+✅ Missing required fields (role, email, name)  
+✅ Invalid email formats  
+✅ Invalid role values  
+✅ Empty field values  
+✅ Unauthenticated access  
+✅ Non-admin user access  
+
+---
+
+## Out of Scope (Explicit)
+
+- **User editing post-import** — This story creates users; editing happens in a separate feature
+- **Re-importing the same CSV** — Deduplication is based on email, not import history
+- **Custom field mapping** — CSV structure is fixed: email, name, role
+- **Scheduled/recurring imports** — Single one-time import per user action
+- **Bulk user deletion or bulk edits** — This story is import-only
+- **User notifications** — Email/notification to imported users (see open questions)
+- **Import history/audit log** — Not required for MVP; can be added later
+- **CSV export** — Only import is in scope; export is separate
+
+```
+
 ## Evaluation
 
-### Criteria section
+| Field | Value |
+|---|---|
+| Verdict | PARTIAL |
+| Score | 14.0/18.5 (76%) |
+| Evaluated | 2026-05-03 |
+| Target duration | 49268 ms |
+| Target cost | $0.0780 |
+| Permission denials | 0 |
 
-- [x] PASS: Skill decomposes the story into business rules before writing scenarios — Step 2 uses Example Mapping and explicitly requires listing all business rules before writing scenarios. Rule sources list includes permissions, validation constraints, and limits/thresholds, covering all four rules needed for this story.
+### Criteria
 
-- [x] PASS: Each business rule has at least 2 concrete examples — Step 3 states "Every rule needs at least 2 examples. One example is a demo. Two examples define a pattern." The Rules section repeats this as a hard constraint, not a guideline.
+| # | Criterion | Result | Evidence |
+|---|---|---|---|
+| c1 | Skill decomposes the story into business rules before writing scenarios — identifies: permission rule, duplicate handling rule, invalid row rule, max row limit rule | PASS | Output defines 8 numbered Rule blocks. Rule 1 covers admin-only access (permission), Rule 5 covers the 1,000-row maximum, Rule 6 covers invalid-row collection while valid rows proceed, and Rule 4 includes two explicit duplicate-handling scenarios ('Duplicate email within same import is rejected' and 'Email already in system is skipped'). All four rule types from the prompt are identifiable. |
+| c2 | Each business rule has at least 2 concrete examples (not just one) | PASS | Rule 1: 3 scenarios; Rule 2: 4 scenarios; Rule 3: 4 scenarios; Rule 4: 4 scenarios; Rule 5: 2 scenarios; Rule 6: 3 scenarios; Rule 7: 3 scenarios; Rule 8: 3 scenarios. Every rule has ≥2 concrete examples. |
+| c3 | Scenarios use business language — "Then the admin sees a summary showing 847 imported and 3 skipped" not "Then the API returns 200" | PASS | The vast majority of Then steps use observable business outcomes: 'Then the page loads and displays the CSV upload form', 'Then the upload is rejected with an error message: "CSV contains no user rows"', 'Then a summary is displayed showing: "7 users imported successfully"'. No API return codes, table names, or API paths appear in scenario steps. |
+| c4 | Every Given establishes state, every When is a single action, every Then verifies one observable outcome | PARTIAL | Whens are uniformly single actions ('When the admin uploads the file', 'When they navigate to the user import page'). However, several Then steps contain compound outcomes in a single line: 'Then they see a 403 Forbidden error and are redirected to the home page' (two outcomes); 'Then the error report displays: Row number, Email from that row, Specific reason' (multiple attributes in one assertion). Also, the mixed-valid/invalid scenario chains 'Then the 7 valid rows are created as users / And the import completes / And a summary is displayed' — three separate And steps, the last containing sub-bullets. |
+| c5 | Edge cases are mandatory and covered: empty CSV, CSV with all invalid rows, exactly 1000 rows (boundary), 1001 rows (over limit) | PASS | Empty CSV: 'Scenario: Empty CSV file is rejected — Given an empty CSV file (header only, no data rows)'. All invalid: 'Scenario: All rows are invalid — Given a CSV with 5 rows, all with invalid email addresses / Then no users are created'. Exactly 1,000: 'Scenario: Import with 1,000 rows succeeds — Given a CSV with exactly 1,000 user rows'. Over limit: 'Scenario: Import with more than 1,000 rows is rejected — Given a CSV with 1,001 rows'. |
+| c6 | Error cases are covered: non-admin attempting import (403 behaviour), malformed CSV file (not just bad data but bad file format) | PASS | Non-admin: 'Scenario: Non-admin user is denied access — Then they see a 403 Forbidden error and are redirected to the home page'. Malformed file structure: 'Scenario: Malformed CSV (inconsistent columns per row) is handled gracefully — Given a CSV where row 5 has fewer columns than the header / And the admin sees: Row 5: Column count mismatch (expected 3, got 2)'. The structural mismatch scenario addresses format-level failure, not just bad data values. |
+| c7 | Non-functional criteria are included with thresholds — import of 1,000 rows should complete within a specific time budget | PASS | Non-Functional Criteria table explicitly lists: 'CSV file parsing and validation \| < 5 seconds for 1,000 rows' and 'Bulk user creation in database \| < 10 seconds for 1,000 rows'. Both have numeric thresholds tied to the 1,000-row scenario. |
+| c8 | Open questions are flagged explicitly — e.g. what happens if an admin imports a CSV that would give another user the admin role? | PARTIAL | The Open Questions section contains 6 explicit flagged questions in a table with Impact and Owner columns: password generation, email notifications, dry-run option, report retention, partial-failure rollback, and email case-sensitivity. Questions are well-structured. However, the privilege-escalation concern (importing a CSV that grants admin roles to other users) is not raised — it is silently allowed in Rule 3 Scenario 1 ('Given a CSV row with role admin / Then the user is created with that role'). Ceiling is PARTIAL per test spec. |
+| c9 | Test level mapping assigns each criterion to unit, integration, or E2E with rationale | PASS | A 14-row Test Level Mapping table is present. Each row has Level and Rationale columns. Examples: 'Role validation (valid/invalid/missing) \| Unit \| Pure logic, no dependencies'; 'Permission check (admin only) \| Integration \| Requires auth middleware and role lookup'; 'File upload form and permissions check \| E2E \| Full critical user flow'; 'Performance threshold \| Performance \| Load test with 1,000 rows'. |
+| c10 | Output identifies the four business rules from the prompt — admin-only access, max 1,000 rows per import, duplicate emails skipped (not error), invalid rows collected and shown to admin while valid rows process — each as a separate Rule block with at least 2 examples | PARTIAL | Three of the four required rules have dedicated separate Rule blocks: Rule 1 (admin-only access, 3 examples), Rule 5 (max 1,000 rows, 2 examples), Rule 6 (invalid rows collected while valid process, 3 examples). However, duplicate-email handling is embedded within Rule 4 (email validation) rather than as its own separate Rule block — the duplicate scenarios appear alongside email-format validation. The criterion explicitly requires 'each as a separate Rule block'. |
+| c11 | Output's permission scenarios cover both admin can access (happy path) and non-admin gets 403/permission-denied behaviour (in business language — "the user sees a permission denied message") | PASS | Rule 1 contains 'Scenario: Admin user can access import page — Then the page loads and displays the CSV upload form' (happy path) and 'Scenario: Non-admin user is denied access — Then they see a 403 Forbidden error and are redirected to the home page' (denied). A third scenario covers unauthenticated access. Both required paths are explicitly covered. |
+| c12 | Output's boundary scenarios for the row limit cover exactly 1,000 rows (succeeds), 1,001 rows (fails — over limit), 0 rows (empty CSV — explicit behaviour: rejected vs accepted as no-op) | PASS | Exactly 1,000: 'Scenario: Import with 1,000 rows succeeds — Given a CSV with exactly 1,000 user rows / Then all 1,000 rows are processed'. Over limit: 'Scenario: Import with more than 1,000 rows is rejected — Given a CSV with 1,001 rows / Then the upload is rejected with error: CSV exceeds maximum of 1,000 rows (got 1,001)'. Zero rows: 'Scenario: Empty CSV file is rejected — Given an empty CSV file (header only, no data rows) / Then the upload is rejected with an error message: CSV contains no user rows'. All three boundaries covered. |
+| c13 | Output's invalid-row handling scenarios cover bad email format (invalid row collected, valid rows still processed), invalid role outside admin/member/viewer (invalid row collected), and a CSV where ALL rows are invalid (admin sees full error report, no users created) | PASS | Bad email: Rule 4 'Invalid email format is rejected — the row is skipped and the error report states: Invalid email format'. Combined with Rule 6 mixed scenario showing valid rows still processed. Invalid role: Rule 3 'Invalid role is rejected — the row is skipped, marked invalid, and added to error report'. All rows invalid: Rule 6 'All rows are invalid — Given a CSV with 5 rows, all with invalid email addresses / Then no users are created / And the summary shows: 0 users imported successfully followed by details of all 5 failed rows'. |
+| c14 | Output's duplicate handling scenarios cover an existing user (skipped, reported in summary), a duplicate within the same CSV upload (one of the duplicates skipped, behaviour explicit), and the resulting summary counts (e.g. "847 imported, 3 skipped, 2 invalid") | PARTIAL | Existing user: Rule 4 'Email already in system is skipped (not errored) — noted in the report as skipped (already exists)'. Same-CSV duplicate: 'Duplicate email within same import is rejected — the first row is created / And the second row is skipped with error: Duplicate email in import (row 6)'. Both covered. However, the summary counts in Rule 6 show '7 users imported successfully' and '3 rows were not imported' without distinguishing between skipped-duplicate and invalid counts. The criterion example '847 imported, 3 skipped, 2 invalid' implies differentiated counts, which is absent. |
+| c15 | Output's Given/Then steps speak in business terms — "the admin sees a summary showing 847 imported and 3 skipped" — never HTTP codes, table names, or internal API paths | PARTIAL | The criterion says 'never HTTP codes'. The non-admin denied scenario reads: 'Then they see a 403 Forbidden error and are redirected to the home page' — 403 is an HTTP status code. All other scenarios use business language (no table names, no API paths, no other HTTP codes). The 403 mention is a direct violation of the 'never' constraint even though it is isolated. |
+| c16 | Output's non-functional criterion sets a specific time budget for importing 1,000 rows (e.g. "under 30 seconds") with the threshold tied to UX expectation (loading indicator vs background job) | PARTIAL | Thresholds are present: '< 5 seconds for 1,000 rows' for parsing and '< 10 seconds for 1,000 rows' for bulk creation. However, neither threshold is tied to a UX expectation — no rationale like 'within browser synchronous timeout enabling inline display' or 'over this threshold requires a background job and progress indicator' is given. The criterion explicitly requires the threshold to be tied to UX expectation. |
+| c17 | Output's malformed-file scenario covers not just bad data but a corrupt file format (e.g. binary garbage uploaded as CSV, mismatched delimiter), with the expected behaviour stated | FAIL | The only malformed-file scenario is 'Malformed CSV (inconsistent columns per row)' — a structural data issue (column count mismatch). No scenario covers a truly corrupt file (binary garbage, wrong delimiter, non-UTF-8 encoding). The non-functional mentions 'Only .csv files accepted; no executable types' but this is a file-type restriction, not a corrupt-format scenario. No expected behaviour is stated for binary garbage or wrong delimiter inputs. |
+| c18 | Output's open-questions section explicitly raises the privilege-escalation concern — what happens when an admin imports a CSV that grants the `admin` role to other users — as a question for the product owner, not silently allowed | FAIL | The 6 open questions cover: passwords, notifications, dry-run, report retention, partial-failure rollback, and email case-sensitivity. None raises the privilege-escalation concern. Rule 3 Scenario 1 explicitly states 'Given a CSV row with role admin / When the row is processed / Then the user is created with that role' — silently allowing admin role assignment without flagging it as a product/security question. |
+| c19 | Output's test-level mapping assigns each criterion to unit, integration, or E2E with rationale (e.g. "max 1000 rows" → integration on the parser, "permission denied" → E2E, "row validation rules" → unit on validators) | PASS | 14-row Test Level Mapping table is present with Level and Rationale columns. Matches the criterion's example patterns: 'Role validation \| Unit \| Pure logic, no dependencies' (row validation rules → unit); 'File upload form and permissions check \| E2E \| Full critical user flow' (permission denied → E2E); 'CSV parsing and structure validation \| Integration \| Involves file handling, database state' (analogous to max 1000 rows → integration on parser). Each entry has an explicit rationale explaining why that level was chosen. |
 
-- [x] PASS: Scenarios use business language — Step 3 rules: "Business language, not technical language." A direct contrast is given: "Then the user sees an error message" (correct) vs "Then the API returns 422" (wrong). The skill explicitly prohibits technical-level assertions.
+### Notes
 
-- [x] PASS: Every Given establishes state, every When is a single action, every Then verifies one observable outcome — Step 3: "Given sets up state, When triggers action, Then observes outcome. Do not put assertions in Given. Do not put setup in Then." Combined with "One behaviour per scenario," this structure is enforced.
-
-- [x] PASS: Edge cases are mandatory and covered — Step 3's scenario coverage table marks "Edge case: Boundary values, empty states, maximums — Yes, always." Step 6's edge case audit explicitly requires "empty/null input, maximum/minimum values." These categories cover all four specified edge cases (empty CSV, all-invalid CSV, exactly 1000, 1001 rows).
-
-- [x] PASS: Error cases are covered — Step 3 coverage table requires "Permission denied" (when rule involves permissions) and "Validation error" (when rule involves input). Step 6 edge case audit includes "error states." Both non-admin access and malformed file fall within these required categories.
-
-- [x] PASS: Non-functional criteria are included with thresholds — Step 4 provides a non-functional criteria table with Category, Criterion, Threshold, and How to test. Rules section states: "'It works' is not sufficient. 'It works within 500ms for 95% of requests' is an acceptance criterion."
-
-- [~] PARTIAL: Open questions are flagged explicitly — Step 2 states "If you discover a red card (unanswered question), flag it explicitly. Do not invent an answer." The output format includes a dedicated Open Questions table. However, the skill doesn't proactively prompt for the specific class of privilege-escalation question (what if importing a CSV grants another user the admin role?). It surfaces questions the practitioner discovers — not questions they might miss.
-
-- [x] PASS: Test level mapping assigns each criterion to unit, integration, or E2E with rationale — Step 5 is dedicated to this, providing a mapping table with Criterion / Level / Rationale and three explicit assignment rules.
-
-### Output expectations section
-
-- [x] PASS: Output identifies the four business rules — Rules 1–4 in the simulated output cover admin-only access, max 1,000 rows, duplicate email skipping, and invalid row collection. Each has at least 2 examples, satisfying the skill's hard constraint.
-
-- [x] PASS: Permission scenarios cover both admin happy path and non-admin permission-denied behaviour — Rule 1 includes both the admin success case and two non-admin blocked cases in business language ("they see a permission denied message").
-
-- [x] PASS: Boundary scenarios for row limit cover exactly 1,000 rows, 1,001 rows, and 0 rows (empty CSV) — all three appear explicitly under Rule 2, each with a concrete outcome stated in user-facing language.
-
-- [x] PASS: Invalid-row handling scenarios cover bad email format, invalid role outside admin/member/viewer, and a CSV where all rows are invalid — all three appear under Rule 4. The all-invalid case explicitly states "0 imported, 0 skipped, 5 invalid."
-
-- [~] PARTIAL: Duplicate handling scenarios cover existing-user skip and summary counts, but the intra-upload duplicate case (two rows in the same CSV with the same email) is present in the simulated output (Rule 3, second scenario). Credit given. However, the skill's own prompts don't specifically surface intra-upload duplicates as a distinct case — the simulated output includes it because the prompt describes it, not because the skill would reliably prompt for it independently.
-
-- [x] PASS: Given/Then steps speak in business terms, never HTTP codes or internal paths — all scenarios use user-observable language ("the admin sees a summary showing...", "they see a permission denied message"). No HTTP codes or table names appear.
-
-- [x] PASS: Non-functional criterion sets a specific time budget with UX rationale — the performance criterion states "Under 30 seconds (suitable for a loading indicator; beyond this a background job pattern should be used)," tying the threshold to a UX decision as required.
-
-- [x] PASS: Malformed-file scenario covers corrupt file format with expected behaviour — the fourth scenario under Rule 4 explicitly covers a binary file renamed as CSV, with user-facing outcome stated.
-
-- [~] PARTIAL: Open-questions section explicitly raises the privilege-escalation concern — the Open Questions table in the simulated output does include the privilege-escalation question (admin importing a CSV that grants admin to others). However, this was surfaced because the evaluator applied the skill with awareness of the concern; the skill's guidance doesn't prompt practitioners to check for role-escalation risks in stories involving role assignment. Solo use without this awareness might miss it.
-
-- [x] PASS: Test-level mapping assigns each criterion with rationale — the Test Level Mapping table covers 10 criteria across unit, integration, E2E, and performance levels, each with a short rationale.
-
-## Notes
-
-The skill is substantively strong. The six-step process handles complexity without story-specific prompting, and the business-language and test-level guidance is better than most comparable definitions.
-
-Both PARTIAL gaps stem from the same root: the skill surfaces unknowns the practitioner already sees, but doesn't prompt for blind spots in specific problem classes. The Example Mapping Red card mechanism is designed for group discovery sessions; solo use doesn't get the same coverage. A "common questions for stories involving role assignment / bulk data import" heuristic section would close both gaps without adding structural weight.
-
-The intra-upload duplicate case is scored as PARTIAL rather than PASS because while the simulated output includes it (the prompt described it), the skill's own guidance would not reliably prompt a practitioner to consider it as a distinct scenario separate from system-level duplicate detection.
+The output is a comprehensive, well-structured acceptance criteria document that covers most of the required ground. Its main strengths are: thorough scenario coverage for the core four rules, proper Gherkin structure on most scenarios, complete boundary condition coverage, and a detailed test-level mapping table with rationale. The two clear failures are c17 (no corrupt-file-format scenario — binary garbage or wrong delimiter — only column-count mismatch) and c18 (privilege-escalation concern for admin role assignment is completely absent from open questions and silently allowed in scenarios). Recurring weaknesses include: c4 compound Then steps (e.g., '403 error and redirected'), c14 summary counts not distinguishing skipped-duplicate from invalid counts, c15 '403 Forbidden' in a scenario step violating the 'never HTTP codes' rule, c16 performance thresholds given without UX rationale (loading indicator vs background job), and c10 duplicate-handling not having its own separate Rule block. The open-questions section is strong in breadth but misses the security-relevant privilege-escalation question that the test specifically calls for.

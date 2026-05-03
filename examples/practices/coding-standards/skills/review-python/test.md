@@ -4,7 +4,43 @@ Scenario: A developer submits Python code for review with several type safety vi
 
 ## Prompt
 
-Review `user_registration.py`. The file has a `register_user` function that takes a `username` and `email` param with no type annotations and no return type. There's a `@dataclass` class called `UserRecord` that's not frozen. The error handling uses a bare `except:` clause around the database call, and there's an `os.getenv("DB_URL")` call directly inside the function body rather than through a config module.
+First, write this file to disk at `user_registration.py`:
+
+```python
+from __future__ import annotations
+
+import os
+from dataclasses import dataclass
+
+
+@dataclass
+class UserRecord:
+    username: str
+    email: str
+    created_at: str
+
+
+def register_user(username, email):
+    db_url = os.getenv("DB_URL")
+    try:
+        conn = connect(db_url)
+        existing = conn.query("SELECT id FROM users WHERE email = %s", email)
+        if existing:
+            return None
+        user = UserRecord(
+            username=username,
+            email=email,
+            created_at=now(),
+        )
+        conn.insert(user)
+        return user
+    except:
+        return None
+```
+
+Then run:
+
+/coding-standards:review-python user_registration.py
 
 ## Criteria
 

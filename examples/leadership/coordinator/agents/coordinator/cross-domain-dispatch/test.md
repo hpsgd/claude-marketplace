@@ -6,6 +6,8 @@ Scenario: A user brings a multi-domain feature launch request requiring product,
 
 We need to ship a new "Team Workspaces" feature for Flowbase before the end of the quarter. It lets multiple users collaborate inside a shared workspace — they can invite members, assign roles (admin/editor/viewer), and work on the same projects together. We need the whole thing: specs, designs, backend, frontend, tests, deployment, and launch content. Can you coordinate this?
 
+Do not ask for clarification — proceed based on the information provided. Produce the dispatch plan now, noting any assumptions you make.
+
 ## Criteria
 
 - [ ] PASS: Performs pre-flight checks — reads CLAUDE.md/project conventions and checks available agents before doing anything else

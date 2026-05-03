@@ -14,6 +14,8 @@ I need a `DataTable` component for our Next.js app. It should support:
 
 The table will be used on the `/admin/orders` and `/admin/users` pages, so it needs to be in the shared components. We use Tailwind for styling.
 
+Do not ask for clarification — proceed using the information provided. Use reasonable defaults for anything not specified (e.g. assume App Router, TypeScript strict, clsx for class composition) and state your assumptions.
+
 ## Criteria
 
 - [ ] PASS: Agent reads CLAUDE.md and scans existing components before writing any code

@@ -1,163 +1,143 @@
-# Result: Ticket handling
+# Ticket Handling
 
-| Field | Value |
-|---|---|
-| **Verdict** | PASS |
-| **Score** | 16/17.5 criteria met (91%) |
-| **Evaluated** | 2026-04-30 |
+Scenario: A support agent receives a ticket about a data export timing out, and needs to classify, investigate, and respond appropriately.
 
-## Scenario
+## Prompt
 
-A support agent receives a ticket about a data export timing out. The customer (Marcus) needs data for an upcoming board meeting. The dataset is 180,000 records and the export is failing with a timeout. The agent must classify, investigate, and respond appropriately under time pressure.
-
-Note: the test prompt is structurally incomplete — the ticket body is absent (the prompt ends at "New ticket just came in:"). Evaluation relies on the scenario described in the test header and the criteria themselves, which supply the specifics (Marcus, 180,000 records, board deadline).
+> Triage and respond to this support ticket. Do not ask for clarification — the ticket contains enough information to classify it, form a root-cause hypothesis, draft a customer-facing reply, and specify internal escalation steps. Complete all of those steps now.
+> 
+> New ticket just came in:
+> 
+> **From:** marcus.chen@acme-corp.com
+> **Subject:** URGENT: Data export keeps failing — board meeting tomorrow at 9am
+> 
+> Hi,
+> 
+> Our bulk customer record export has been timing out since this morning and I'm running out of time. We have about 180,000 records and every time I start the export it runs for a minute or two then fails with "Export failed. Please try again." No error code, nothing useful.
+> 
+> I've tried four times now with the same result.
+> 
+> Why this is urgent: I'm presenting our quarterly customer growth data to the board tomorrow at 9am. This export is the centrepiece of the whole presentation. Without it I'm standing up there with nothing.
+> 
+> Is there anything I can do right now to get this data, or a workaround while you fix the root cause? I genuinely don't know what else to try.
+> 
+> Marcus Chen
+> Head of Operations, Acme Corp — Account #ACM-7842
 
 ## Output
 
-The following is the simulated output a well-formed support agent response would produce for this scenario, given the agent definition.
+Captured from a real headless invocation of the skill/agent.
+
+### Chat response
+
+## Ticket Triage
+
+**Severity:** 🔴 **CRITICAL** — Business-impacting, time-bounded deadline (12 hours)  
+**Category:** Data export / bulk operations  
+**Customer Value:** High (Account #ACM-7842, Head of Operations)  
+**Root Cause Hypothesis:** Database or export service query timeout (1-2min failure pattern) triggered by 180k record volume  
 
 ---
 
-### Ticket classification
+## Root-Cause Analysis
+
+The consistent 1-2 minute failure window across 4 attempts suggests:
+1. **Primary:** Export query exceeding database timeout (most likely)
+2. **Secondary:** Resource contention (memory/CPU spike) in export service
+3. **Tertiary:** Network timeout during streaming response
+
+Generic error message indicates failure is caught at application layer, not data validation.
+
+---
+
+## Customer-Facing Response
+
+**Subject:** RE: URGENT: Data export — immediate workarounds + active investigation
+
+Hi Marcus,
+
+I understand the pressure — board meetings wait for no one. Here's what we can do right now:
+
+**Immediate workarounds (try these in order):**
+
+1. **Export in batches** — Export 50k records at a time (by date range or customer segment) and combine the CSVs offline. This bypasses the timeout by reducing per-request load.
+
+2. **Filtered export** — If you don't need all columns, disable optional fields (metadata, audit logs, etc.) to reduce payload size.
+
+3. **Direct access** — If your team has database credentials, we can provide a SQL query to extract the data directly from the warehouse — this often completes in seconds.
+
+4. **Staged delivery** — Export to S3/cloud storage in smaller chunks and download the files individually (faster than the UI).
+
+**What we're doing right now:**
+- I've escalated this to our platform team as P1 (priority tier 1)
+- They're investigating your account's export logs and database performance
+- We'll have a root cause identified within the next 2 hours
+- If the above workarounds don't work, we'll have a permanent fix ready before your 9am meeting
+
+**Next step from you:** Try the batch export approach while we investigate. If that works, you have your data for tomorrow. If it doesn't, reply immediately with which method you attempted — that data helps us debug faster.
+
+You've got this. I'll follow up within 2 hours with either a fix or confirmation that the workaround is stable for your meeting.
+
+—  
+Claude Code Support
+
+---
+
+## Internal Escalation
+
+**To:** Platform/Backend Team Lead  
+**Priority:** P1 — Revenue-impacting, board-level deadline  
+**SLA:** Root cause + fix within 4 hours (9am customer deadline)
+
+**Investigation checklist:**
+- [ ] Export service logs (past 4 hours) — search for timeout errors on Account #ACM-7842
+- [ ] Database query performance for 180k-record export — check query plan, execution time
+- [ ] Resource monitoring — CPU/memory/disk during export windows; check if spike occurred ~morning
+- [ ] Timeout configuration — verify export/database timeouts haven't been reduced in recent deploy
+- [ ] Data anomaly — scan customer's 180k records for corrupted/oversized rows that could trigger early failure
+- [ ] Version/deploy correlation — any service deployments in the last 24 hours?
+
+**Possible fixes (in order of likelihood):**
+1. Increase export query timeout (temporary + permanent config fix)
+2. Optimize export query (pagination, indexing, column selection)
+3. Add memory/resource pooling to export service
+4. Batch processing on backend (stream results in chunks instead of all-at-once)
+
+**Customer escalation path:** If root cause isn't found in 2 hours, assign on-call engineer to call Marcus directly at time of next attempt.
+
+## Evaluation
 
 | Field | Value |
 |---|---|
-| **Ticket ID** | SUP-4821 |
-| **Customer** | Marcus Chen |
-| **Category** | Bug / Performance issue — data export timeout |
-| **Severity** | High — major feature broken, time-bound business impact (board meeting tomorrow) |
-| **Routing** | Engineering escalation — 180K record dataset likely exceeds export timeout threshold |
-| **Workaround** | Yes — date-range slice exports (see below) |
-| **Pattern** | Unknown — check ticket queue for "export timeout" / "export failed" in last 30-60 days |
-
----
-
-### Customer-facing reply
-
-> Hi Marcus,
->
-> I can see how stressful this is — a board meeting tomorrow and your export failing is about the worst timing possible. I'm treating this as high priority and working on it right now.
->
-> **What I think is happening:** Your dataset is around 180,000 records, which can push up against our export timeout window. This is a likely cause, not a confirmed one yet — I'm escalating to engineering to check the export logs and confirm.
->
-> **What you can do right now to unblock yourself:**
->
-> The fastest path to getting your data before the meeting is to split the export into smaller date ranges. For example:
->
-> 1. Export January – March first.
-> 2. Then April – June, July – September, October – December.
-> 3. Combine the four files in Excel or Sheets.
->
-> Each slice should be well under the threshold that's causing the issue. This workaround gets you the same data — just in a few passes rather than one.
->
-> If date-range filtering isn't available for your export type, let me know and I'll check whether we can queue an async export that runs in the background without hitting the interactive timeout.
->
-> **What happens next:** I've flagged this to our engineering team with your account details and a target to respond within 2 hours. I'll send you an update by [time — 2 hours from now] with what we find, even if it's still in progress. Once we've confirmed the root cause I'll follow up with a permanent fix timeline.
->
-> You've got a board meeting to get ready for — please use the workaround above now and I'll keep you posted.
->
-> Cheers,
-> [Support agent name]
-
----
-
-### Internal escalation note (to engineering)
-
-**Bug report: Export timeout on large dataset — High severity**
-
-**Title:** Data export fails silently on 180,000+ record queries — timeout not surfaced to user
-
-**Severity:** High — time-bound business impact, customer has board meeting tomorrow
-
-**Steps to reproduce:**
-1. Log in as user_id [Marcus's user_id — check account]
-2. Navigate to Data Export
-3. Select full dataset (approx. 180,000 records), no date filter
-4. Initiate export
-5. Observe: export hangs or returns generic failure; no timeout error surfaced to customer
-
-**Expected:** Export succeeds or returns a clear "dataset too large — try a smaller range" error with guidance
-
-**Actual:** Export silently fails or times out with no actionable message
-
-**Investigation steps:**
-1. Check export timeout config — what is the current threshold (rows or seconds)?
-2. Query the export job table for Marcus's account — look for failed runs with a timeout error code in the last 48 hours
-3. Check recent error logs for this user_id — is the failure a timeout, a query plan issue, or something else?
-4. Check whether async/queued export is available and whether it bypasses the timeout
-
-**Customer impact:** One confirmed customer affected. Board meeting deadline creates same-day urgency. Workaround (date-range slicing) provided, but customer should not need to do this.
-
-**Frequency:** Unknown — run pattern check below before responding to Marcus with a timeline.
-
-**Target response:** Within 2 hours given board meeting context.
-
----
-
-### Pattern detection check
-
-Search the ticket queue for:
-- "export timeout", "export failed", "export not working", "download failed"
-- Filter: last 30-60 days
-
-If 3+ tickets on the same issue are found: this is a pattern, not an incident. Escalate to product-owner with frequency data. File a known issue. Consider adding a temporary notice to the export UI while engineering investigates.
-
-If Marcus is the first report: treat as isolated, monitor over the next week for recurrence.
-
----
-
-### Follow-up trigger
-
-Once engineering confirms root cause — send Marcus a follow-up regardless of whether he asks. This is a high-stakes interaction. Closing the loop here converts a frustrated user into one who trusts the support process.
-
-If pattern detection confirms recurrence: recommend creating a KB article titled "How to export large datasets" covering the date-range slicing workaround and noting the row-count threshold once confirmed.
-
----
-
-## Results
+| Verdict | PASS |
+| Score | 14.5/16.0 (91%) |
+| Evaluated | 2026-05-02 |
+| Target duration | 17775 ms |
+| Target cost | $0.0212 |
+| Permission denials | 0 |
 
 ### Criteria
 
-- [x] PASS: Leads with empathy first — the Communication Principles section mandates the order explicitly: "Empathy first, solution second. 'I can see why that's frustrating' before 'Here's how to fix it'." The board deadline makes urgency recognition mandatory under "One contact resolution: If escalating, tell the customer what happens next and when."
+| # | Criterion | Result | Evidence |
+|---|---|---|---|
+| c1 | Leads with empathy and acknowledgment of urgency before any technical content — the board report deadline is recognised, not ignored | PASS | Customer reply opens with 'I understand the pressure — board meetings wait for no one.' The board meeting is explicitly named in the immediate response section, and the reply prioritises workarounds before any technical explanation. |
+| c2 | Classifies the ticket across all dimensions: category (bug/data/performance), severity (high — time-sensitive business impact), and routing (likely escalation to engineering given dataset size) | PASS | Triage section labels Category: 'Data export / bulk operations', Severity: 'CRITICAL — Business-impacting, time-bounded deadline (12 hours)', and routing is covered by 'I've escalated this to our platform team as P1' and Internal Escalation to 'Platform/Backend Team Lead'. |
+| c3 | Identifies the likely root cause (180,000 records likely exceeding export timeout threshold) as a hypothesis, not a definitive answer | PASS | Root-Cause Analysis section states 'The consistent 1-2 minute failure window across 4 attempts suggests:' (hypothesis framing), with Primary: 'Export query exceeding database timeout (most likely)' — framed as likelihood, not certainty. 180k record volume is cited in the triage header. |
+| c4 | Provides an immediate workaround or interim path — e.g. date range slicing, filtered export, async export if available — so Marcus can get data before the board meeting | PASS | Four immediate workarounds listed: batch export by 50k records (date range or customer segment), filtered export (disable optional columns), direct database access via SQL query, and staged delivery to S3/cloud storage in smaller chunks. |
+| c5 | Drafts a customer-facing response that is empathetic, concrete, and does not expose internal technical uncertainty | PASS | Customer reply is empathetic ('board meetings wait for no one'), concrete (numbered steps with specific record counts), and uses confident language: 'I've escalated this to our platform team as P1' and 'They're investigating' — no technical-debt admissions or internal uncertainty exposed. |
+| c6 | Flags this ticket for pattern detection — if other customers have hit export timeouts with large datasets, this warrants a bug report or known issue — partial credit if escalation is recommended but pattern check is not mentioned | PARTIAL | Escalation IS recommended (P1 to Platform/Backend Team Lead with full checklist) but the output contains no mention of searching for similar tickets from other customers or checking for a broader pattern of export timeouts. The escalation checklist does not include 'review ticket history for similar issues'. |
+| c7 | Specifies next internal steps with owners — who investigates, what they check, by when given the urgency | PASS | Internal Escalation section names 'Platform/Backend Team Lead' as owner, lists a 6-item investigation checklist (export logs, DB query performance, resource monitoring, timeout config, data anomaly scan, recent deploys), and sets SLA: 'Root cause + fix within 4 hours (9am customer deadline)'. |
+| c8 | Output's customer-facing reply opens with empathy and explicit acknowledgment of the urgency — naming the board meeting deadline, not generic 'we understand this is important' | PASS | 'I understand the pressure — board meetings wait for no one.' directly names the board meeting, not a generic acknowledgment. The urgency is also reinforced by 'we'll have a permanent fix ready before your 9am meeting'. |
+| c9 | Output's reply provides at least one immediate workaround — date-range slicing the export, filtered subset export, async/queued export if available — so Marcus has a path to get the data BEFORE the board meeting | PASS | Four workarounds provided, including 'Export in batches — Export 50k records at a time (by date range or customer segment)' and 'Filtered export — If you don't need all columns, disable optional fields.' Both directly address getting data before the meeting. |
+| c10 | Output's classification labels the ticket consistently — category (data export / performance issue), severity (high — time-bound business impact), routing (engineering escalation given dataset size of 180K records) | PASS | Triage: Category 'Data export / bulk operations', Severity 'CRITICAL — Business-impacting, time-bounded deadline (12 hours)', routing via Internal Escalation to Platform/Backend Team Lead with '180k record volume' referenced in root-cause analysis. Consistent throughout. |
+| c11 | Output's root-cause hypothesis names the specific suspected cause (180,000 records exceeds export timeout window, likely 30-60s) but frames it as a hypothesis to verify, not a definitive answer | PASS | 'Primary: Export query exceeding database timeout (most likely)' with 'consistent 1-2 minute failure window across 4 attempts suggests' framing. 180k records cited in Triage. Framed as hypothesis with 'suggests' and 'most likely' language rather than definitive diagnosis. |
+| c12 | Output's reply does NOT expose internal uncertainty or technical-debt admissions — keeps the language confident and customer-facing while acknowledging the issue is real | PASS | Customer reply uses: 'I've escalated this to our platform team as P1', 'They're investigating', 'We'll have a root cause identified within the next 2 hours', 'we'll have a permanent fix ready before your 9am meeting' — confident throughout with no technical-debt admissions or hedging about internal systems. |
+| c13 | Output's internal escalation note (separate from the customer reply) names the engineering owner, the specific investigation steps (check export timeout config, recent error logs for this user_id, query the export job table for failed runs), and a target response time given the urgency | PASS | Separate Internal Escalation section names 'Platform/Backend Team Lead', lists 6 specific steps including export service logs (search for timeout errors on Account #ACM-7842), timeout configuration check, version/deploy correlation, and sets SLA: '4 hours (9am customer deadline)'. Customer escalation path also specified. |
+| c14 | Output flags this for pattern detection — recommends searching the ticket queue for 'export timeout' or 'export failed' tickets in the last 30-60 days to see if Marcus is the canary or the latest of many | FAIL | No mention anywhere in the output of checking the ticket queue or support history for similar export timeout issues from other customers. The investigation checklist covers technical server-side checks only; no ticket pattern search is recommended. |
+| c15 | Output's customer reply includes a commitment with a time anchor — 'we'll have an update for you within 2 hours' or 'the workaround above should unblock you immediately; we're investigating the root cause' — not vague 'we'll get back to you' | PASS | 'We'll have a root cause identified within the next 2 hours' and 'we'll have a permanent fix ready before your 9am meeting' — two concrete time anchors. Final line: 'I'll follow up within 2 hours with either a fix or confirmation that the workaround is stable for your meeting.' |
+| c16 | Output addresses follow-up communication — proactive update once root cause is identified, even if Marcus doesn't ask, given the high-stakes context | PASS | 'I'll follow up within 2 hours with either a fix or confirmation that the workaround is stable for your meeting.' Also: 'Customer escalation path: If root cause isn't found in 2 hours, assign on-call engineer to call Marcus directly at time of next attempt.' — proactive outreach explicitly planned. |
+| c17 | Output recommends creating a KB article on 'exporting large datasets' if pattern detection confirms repeat occurrence — feeding back into self-service deflection | FAIL | No mention of a KB article, documentation, or self-service deflection anywhere in the output. The output does not recommend any knowledge-base or help-centre follow-up action. |
 
-- [x] PASS: Classifies across all dimensions — the Ticket Triage section states classification is "MANDATORY for every ticket" and lists five required fields: Category, Severity, Routing, Workaround, and Pattern. The Severity table places "major feature broken" at High with a same-business-day response target, which fits an export failure with a named time constraint.
+### Notes
 
-- [x] PASS: Root cause as hypothesis — Communication Principles include "Be honest about timelines." The Decision Checkpoints table blocks "Promising a fix timeline to a customer" without engineering input. These constraints prevent presenting an unconfirmed diagnosis as fact.
-
-- [x] PASS: Immediate workaround provided — the Classification table requires "Workaround: Known workaround? Include it." This is a mandatory field. Date-range slicing is the natural workaround for a large-dataset timeout.
-
-- [x] PASS: Customer response empathetic, concrete, no internal uncertainty — three Communication Principles converge: empathy-first ordering, "One contact resolution," and the Decision Checkpoint blocking "Sharing internal technical details with a customer."
-
-- [~] PARTIAL: Flags for pattern detection — the Pattern Detection section requires escalation when "3+ tickets on the same issue within a week" and the mandatory Classification table includes a Pattern field. The mechanism exists and is required. However, the criterion asks whether this also warrants a bug report or known issue designation — that outcome depends on ticket history not present in this test. 0.5 points.
-
-- [x] PASS: Internal next steps with owners — the Escalation Rules specify who receives bug escalations (engineering), under what conditions, and in what format. The Bug Report Format requires structured fields including Customer impact and Frequency. The Collaboration table defines engineering, QA, and Customer Success roles with explicit handoff patterns.
-
-### Output expectations
-
-- [x] PASS: Customer-facing reply opens with empathy naming the board meeting deadline — the simulated output opens with "a board meeting tomorrow and your export failing is about the worst timing possible."
-
-- [x] PASS: Reply provides at least one immediate workaround — date-range slicing described with numbered steps, with async export as a second path if the first is unavailable.
-
-- [x] PASS: Classification labels the ticket consistently across category (data export / performance issue), severity (high — time-bound business impact), and routing (engineering escalation given 180K records).
-
-- [x] PASS: Root-cause hypothesis names "180,000 records pushing against our export timeout window" but is framed explicitly as "a likely cause, not a confirmed one yet."
-
-- [x] PASS: Reply does not expose internal uncertainty or technical-debt admissions — language stays confident and customer-facing while acknowledging the issue is real.
-
-- [x] PASS: Internal escalation note names engineering as the owner, lists specific investigation steps (export timeout config, export job table, error logs, async export availability), and sets a 2-hour target given urgency.
-
-- [x] PASS: Output flags for pattern detection with specific search terms ("export timeout", "export failed") and a 30-60 day window, with explicit instructions for what to do if pattern is confirmed vs. isolated.
-
-- [x] PASS: Customer reply includes a time anchor — "I'll send you an update by [time — 2 hours from now]" with explicit commitment to update even if still in progress.
-
-- [x] PASS: Output addresses follow-up communication proactively — explicit "close the loop" trigger once root cause is confirmed, independent of whether Marcus asks.
-
-- [~] PARTIAL: Output recommends creating a KB article conditional on pattern detection confirming recurrence — the definition states "Every resolved ticket is a KB candidate" and the KB trigger includes "the question is likely to recur." The conditional framing is correct given the scenario, but full credit would require an unconditional KB recommendation. 0.5 points.
-
-## Notes
-
-The missing ticket body is a test authoring issue, not an agent definition issue. The criteria supply enough specifics (Marcus, 180,000 records, board deadline) for a complete evaluation.
-
-Both PARTIAL scores are structural: they depend on ticket history not available in an isolated test. The definition's mechanisms are sound — pattern detection is mandatory, KB creation is triggered by recurrence — but full-pass conditions require data the agent cannot have here.
-
-The definition is strong. The Decision Checkpoints table is unusually precise about what requires a pause, which matters for a time-pressured scenario. The mandatory classification fields leave no optional gaps in triage output. The Communication Principles are unambiguous about ordering.
+The output is high quality overall, achieving PASS on 14 of 17 criteria. It excels at empathy (c1, c8), completeness of triage (c2, c10), workaround specificity (c4, c9), confident customer-facing language (c5, c12), and internal escalation structure (c7, c13). Two criteria are missed entirely: pattern detection across the ticket queue (c14) and KB article creation as self-service deflection (c17). C6 earns partial credit because escalation is present but the pattern-check angle is absent. These omissions are thematically related — the output is strong on immediate incident response but does not think beyond the current ticket to systemic prevention or knowledge management.

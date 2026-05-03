@@ -4,6 +4,60 @@ Scenario: Testing whether the write-runbook skill requires copy-pasteable comman
 
 ## Prompt
 
+First, create the database infrastructure context:
+
+```bash
+mkdir -p infrastructure/database docs/runbooks
+```
+
+Write to `infrastructure/database/topology.md`:
+
+```markdown
+# Database Topology
+
+### Primary Instance
+- Host: db-primary.internal (10.0.1.10)
+- Engine: PostgreSQL 15.4
+- Instance: db.r6g.2xlarge (8 vCPU, 64 GB RAM)
+- Storage: 2 TB gp3, multi-AZ enabled
+- Region: ap-southeast-2 (Sydney)
+
+### Read Replica
+- Host: db-replica-1.internal (10.0.1.11)
+- Replication lag: typically <500ms
+- Promotes automatically via RDS Multi-AZ (but manual procedure needed for cross-AZ failover)
+- Read endpoint DNS: db-readonly.internal (always points to current replica)
+
+### Application Connection
+- App reads from: db-readonly.internal (connection pool: PgBouncer, 10.0.1.20)
+- App writes to: db-primary.internal (direct, no proxy)
+- Connection pool size: 50 write, 200 read
+
+### Monitoring
+- Primary health check: AWS CloudWatch `DatabaseConnections` metric
+- Replication lag: CloudWatch `ReplicaLag` metric
+- Alert channel: #ops-alerts (Teams)
+- On-call rotation: PagerDuty, escalation to DB team lead (James Cho, +61 400 000 000)
+```
+
+Write to `infrastructure/database/failover-history.md`:
+
+```markdown
+# Failover History
+
+| Date | Duration | Root Cause | Performed By |
+|---|---|---|---|
+| 2024-11-03 | 8 min | Primary disk I/O saturation | Sarah Mitchell |
+| 2024-07-22 | 14 min | AZ outage (ap-southeast-2b) | Auto + James Cho |
+| 2024-02-11 | 22 min | Unplanned major version upgrade | Dev team |
+
+Lessons learned:
+- Step 4 (update DNS) must happen BEFORE app restart or connections fail for 5-10 min
+- Always verify replication lag < 1s before promoting or data loss is possible
+- PgBouncer must be restarted after DNS update — it caches the old IP
+```
+
+Then run:
 
 /internal-docs-writer:write-runbook for our database failover procedure — promoting the read replica to primary when the primary instance becomes unavailable.
 

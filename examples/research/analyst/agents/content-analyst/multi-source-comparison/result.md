@@ -1,323 +1,188 @@
-# Result: content-analyst — multi-source comparison
+# Multi Source Comparison
 
-**Verdict:** PASS
-**Score:** 17.5/18 criteria met (97%)
-**Evaluated:** 2026-04-30
+Scenario: A user provides three articles on the same topic from different source types (financial press, progressive press, industry body) and asks the content analyst to compare framing and source quality before citing them in a policy brief.
 
----
+## Prompt
+
+> I have three articles about Australia's critical minerals strategy — one from the AFR, one from The Guardian, and one from the Minerals Council of Australia's website. Can you analyse how each one frames the issue differently? I want to understand the framing and source quality before I cite any of them in a policy brief.
+> 
+> Here are the three articles:
+> 
+> ---
+> 
+> **ARTICLE 1 — Australian Financial Review**
+> 
+> **Australia's Critical Minerals Opportunity: Why We Can't Afford to Blink**
+> *Australian Financial Review, March 12, 2024. By Angela Marsh, Resources Correspondent.*
+> 
+> Australia sits atop one of the richest deposits of critical minerals on earth — lithium, cobalt, nickel, rare earths — at precisely the moment global demand for these materials is accelerating. The energy transition is not a future event; it is happening now, and the nations that control the supply of battery minerals will define the next industrial epoch.
+> 
+> The federal government's Critical Minerals Strategy, released late last year, correctly identifies Australia as a potential "renewable energy superpower." What it underestimates is the pace required. China currently processes roughly 60% of the world's lithium, 65% of its cobalt, and more than 80% of its rare earths. Australia ships raw ore and imports the value-added products back. This is a structural weakness that compounding investment can correct — but only if the regulatory and infrastructure settings attract capital rather than repel it.
+> 
+> The economics are compelling. Benchmark Mineral Intelligence estimates that meeting 2030 electric vehicle demand alone will require $514 billion in new mine and processing capacity globally. Macquarie Bank forecasts that Australian lithium exports could grow fivefold by 2030 if processing capacity is onshored. That is not a prediction — it is a conditional: if the approvals pipeline moves.
+> 
+> The strategic logic extends beyond economics. Japan, South Korea, the United States, and the European Union are all scrambling to reduce exposure to Chinese supply chains. Several bilateral agreements signed in the past 18 months — including the US–Australia Critical Minerals Partnership and supply agreements with Japan under the Quad framework — reflect this. The question is whether domestic policy settings are fast enough to match the opportunity window.
+> 
+> Current approval timelines for new mining projects average 4.7 years. Canada's fast-track critical minerals process averages 2.1 years. For an industry where first-mover advantage determines who captures downstream processing investment, this gap is not a minor inconvenience. The government's response — a Critical Minerals List and a $2 billion facility — signals intent. It does not yet signal urgency.
+> 
+> ---
+> 
+> **ARTICLE 2 — The Guardian Australia**
+> 
+> **The dark side of Australia's critical minerals rush**
+> *The Guardian Australia, April 3, 2024. By Sienna Okafor, Environment Correspondent.*
+> 
+> The language of the energy transition has become a kind of moral permission slip. Because critical minerals are essential for batteries, solar panels, and electric vehicles, the logic runs, extracting them at scale is not just commercially sound but environmentally necessary. The contradiction embedded in this argument — that we must damage ecosystems to save them — is rarely examined.
+> 
+> The Pilbara, the Kimberley, the Flinders Ranges, and the Northern Territory — the regions identified in government strategy documents as priority areas for critical mineral extraction — are not blank administrative canvases. They are the country of Aboriginal and Torres Strait Islander peoples, many of whom have fought for decades to achieve the native title determinations now being tested by the pace of exploration licence approvals.
+> 
+> Professor Megan Davis, who has spent her career at the interface of Indigenous law and resources policy, has described the current moment as "the fastest erosion of free, prior and informed consent I've seen since the mining boom of the 2000s." Community consultations that should take 12–18 months are being compressed into weeks.
+> 
+> The science, too, is more complicated than the government narrative allows. Processing lithium and nickel generates sulphuric acid and toxic tailings. The water footprint of lithium brine extraction in arid environments is substantial. A study published in Nature Sustainability in 2023 found that when full lifecycle emissions are included, the carbon intensity of some processing pathways rivals that of the fossil fuel technologies they are meant to replace.
+> 
+> Conservation groups including the Wilderness Society and the Australian Conservation Foundation have raised concerns that Strategic Assessment provisions — allowing the federal government to fast-track approvals in exchange for high-level environmental commitments — provide cover for individual project impacts that would otherwise require closer scrutiny. The Environment Protection and Biodiversity Conservation Act has not been reformed since 1999; the government's own review, completed in 2020, recommended significant changes that have not been legislated.
+> 
+> None of this means Australia should not develop its critical minerals sector. It means the framing of the sector as a clean-energy story, rather than a mining story with clean-energy applications, obscures costs borne by communities and ecosystems — not by the shareholders who benefit.
+> 
+> ---
+> 
+> **ARTICLE 3 — Minerals Council of Australia**
+> 
+> **Critical Minerals: Delivering for Australia's Future**
+> *Minerals Council of Australia, January 2024 Policy Position.*
+> 
+> Australia's critical minerals sector is at an inflection point. The global transition to clean energy technologies has created structural demand for minerals that Australia has in abundance — lithium, cobalt, vanadium, graphite, and a suite of rare earth elements essential for the permanent magnets in wind turbines and electric vehicle motors.
+> 
+> The Minerals Council of Australia represents the companies investing to develop this opportunity. Our members have committed more than $38 billion in announced critical minerals projects over the next decade. These investments will create 85,000 direct jobs in regional Australia — communities that have borne the brunt of agricultural downturns and manufacturing decline and are positioned to benefit most from a well-managed resource transition.
+> 
+> The strategic case is clear. Australia's Five Eyes partners — the United States, United Kingdom, Canada, and New Zealand — have each identified critical mineral supply security as a national security priority. Australia's geological endowment and institutional stability make it the partner of choice for friendly-nation supply chains.
+> 
+> To realise this potential, government must address the regulatory bottlenecks deterring investment. Project approval timelines are too long. Royalty frameworks designed for bulk commodity exports need updating for value-added processing. Infrastructure — particularly rail, water, and power to remote deposits — requires co-investment the private sector cannot provide unilaterally.
+> 
+> The MCA calls for a coordinated Critical Minerals Investment Compact: a single-window approval pathway, matched infrastructure co-investment, and a sovereign processing fund to support domestic value-add. Australia's major trading partners are moving fast; the window for positioning as the world's preferred critical minerals supplier will not remain open indefinitely.
+> 
+> ---
 
 ## Output
 
-> Simulated agent response to the prompt: "I have three articles about Australia's critical minerals strategy — one from the AFR, one from The Guardian, and one from the Minerals Council of Australia's website. Can you analyse how each one frames the issue differently? I want to understand the framing and source quality before I cite any of them in a policy brief."
+Captured from a real headless invocation of the skill/agent.
 
-The agent routes this request through the multi-piece bulk-analysis workflow: run `/analyst:content-analysis` on each article independently, then synthesise framing and source-credibility patterns across all three.
+### Chat response
 
----
+I'll break down the framing, evidence quality, and potential biases in each source:
 
-### Step 1 of 4 — Per-article analyses
+## **Article 1 — AFR (Marsh)**
+**Framing:** Economic opportunity + national competitiveness  
+**Bias:** Market-oriented, pro-development, but from a business publication with editorial standards
 
----
+**Strengths:**
+- Cites specific third-party analysts (Benchmark Mineral Intelligence, Macquarie Bank)
+- Quantifies the opportunity ($514B capex need) and the gap (4.7 vs 2.1 year approvals)
+- Acknowledges regulatory bottlenecks as the constraint, not geology or demand
+- Credible sourcing (analyst reports are traceable; bilateral agreements are public record)
 
-## Content analysis: Australian Financial Review — "Critical minerals: Australia's next resources boom"
+**Weaknesses:**
+- Treats government strategy as gospel without critical distance
+- No discussion of environmental or social costs — notably absent for a major extraction story
+- The comparison to Canada's timeline needs context (different regulatory scope, different environmental standards)
+- Frames the issue entirely through capital velocity
 
-**Date of content:** [publication date not provided]
-**Date of analysis:** 2026-04-30
-**Word count:** ~1,200 (estimated)
-
-### Entities
-
-**People:** Federal Resources Minister (named, source); senior executives from Rio Tinto and Glencore (named, sources); Treasury officials (anonymous, background)
-**Organisations:** Australian Government; Rio Tinto; Glencore; ASX-listed junior explorers (as category)
-**Key figures cited:** AUD investment pipeline figures; projected export revenue to 2030; comparison to iron ore export values
-
-### Key claims
-
-**Primary claim:** Australia's critical minerals sector represents a generational economic opportunity comparable in scale to the iron ore boom, and government policy settings are broadly supportive.
-
-**Supporting claims:**
-- Investment pipeline from named corporate executives (named primary)
-- Government co-investment announcement (named primary — ministerial quote)
-- Analyst forecasts on lithium and nickel demand (named secondary — bank research)
-
-**Implicit claims:** Economic upside is the primary lens through which policy should be evaluated. Environmental and community considerations are manageable costs, not competing goods. Development speed is implicitly desirable.
-
-### Sentiment
-
-**Overall tone:** Positive
-**Sentiment targets:** Positive toward industry development and government facilitation; mildly critical of regulatory timelines as impediments
-**Notable language signals:** "boom," "opportunity," "competitive advantage," "cutting through red tape" — growth register throughout; regulatory process referred to as "delays"
-
-### Framing
-
-**Perspective:** The piece structures the topic from the perspective of investors and government policy-makers seeking to maximise economic returns. Industry voices dominate quotation.
-**Foregrounded:** Export revenue projections; investment announcements; government co-investment; competitive positioning vs Canada and Chile
-**Backgrounded:** Environmental approvals (mentioned as "challenges"); Indigenous land consultation (one mid-piece paragraph); supply-chain constraints
-**Omissions:** No independent environmental analysis; no Indigenous community voices; no academic or civil-society sourcing. Insufficient topic knowledge to assess whether specific regulatory concerns are well-founded.
-**Dominant framing device:** Progress/opportunity — things are improving and this development is positive; economic-opportunity frame dominates
-
-### Narrative
-
-The AFR tells an economic-ascent story: Australia holds a strategic resource at a moment of global demand, government and industry are aligned, and the question is how fast the opportunity can be captured. The narrative activates investor and policy-maker audiences. The implied antagonist is regulatory delay, not environmental or social risk.
-
-### Source structure
-
-| Source type | Count | For what claims |
-|---|---|---|
-| Named primary | ~6 | Ministerial quotes; corporate executive statements |
-| Named secondary | ~3 | Bank research; industry body data (MCA cited) |
-| Anonymous | ~2 | Background Treasury commentary |
-| Unattributed | ~4 | Global demand claims; comparative country positioning |
-
-**Summary assessment:** The AFR piece is structurally sound for market-impact and government-policy claims, with strong named-source attribution for corporate and ministerial positions. Environmental and Indigenous dimensions are present but backgrounded. Note: MCA is cited as a secondary source here — MCA data cited in the AFR should be traced to that origin and not re-cited as independent corroboration.
+**Cite as:** A reliable source on *economic framing and the investment case*, with the caveat that it doesn't address non-economic constraints.
 
 ---
 
-## Content analysis: The Guardian Australia — "Critical minerals rush: who pays the price?"
+## **Article 2 — Guardian (Okafor)**
+**Framing:** Environmental justice + Indigenous rights  
+**Bias:** Explicitly critical of extraction; pro-Indigenous, pro-conservation stance
 
-**Date of content:** [publication date not provided]
-**Date of analysis:** 2026-04-30
-**Word count:** ~1,400 (estimated)
+**Strengths:**
+- Centers Indigenous voices and legal concepts (free, prior and informed consent)
+- Quotes a credible legal scholar (Megan Davis) with named expertise
+- Raises concrete technical concerns (sulphuric acid, water footprint, lifecycle emissions)
+- Flags an actual regulatory gap (EPBC Act last reformed 1999; 2020 review not legislated)
+- Transparent about its critical stance
 
-### Entities
+**Weaknesses:**
+- The Nature Sustainability study is cited but not linked — verify the 2023 claim and what it actually found
+- "Consultations compressed into weeks" is asserted without specific examples; needs documentation
+- The claim that Strategic Assessment allows "cover for impacts" is argumentative without citing specific cases
+- Counterpoint: this is *interpreting* environmental impact, not inventing it — but verify the specific assertions
 
-**People:** Named Indigenous community spokespersons (source); university environmental researchers (named, authority); community legal centre representative (named, source); federal minister (subject, briefly quoted)
-**Organisations:** Named Indigenous land councils; ANU and Monash University; community legal centres; Department of Resources (subject); Minerals Council of Australia (subject, critique)
-**Key figures cited:** Number of active exploration licences on Indigenous land; proportion of projects in contested or co-management areas; emissions projections from processing facilities
-
-### Key claims
-
-**Primary claim:** The critical minerals expansion is proceeding at a pace that outstrips the capacity of Indigenous communities and environmental regulators to assess and respond to its impacts.
-
-**Supporting claims:**
-- Indigenous community spokesperson accounts of inadequate consultation timelines (named primary)
-- Academic research on approval process gaps (named secondary — peer-reviewed)
-- Regulatory submissions from community legal centres (named secondary)
-
-**Implicit claims:** Speed of development is being prioritised over procedural fairness and environmental rigour. The economic framing in other coverage obscures distributional impacts. Industry and government are aligned against community interests.
-
-### Sentiment
-
-**Overall tone:** Negative (toward the pace and process of development)
-**Sentiment targets:** Critical of government facilitation and industry lobbying (MCA named directly); sympathetic toward Indigenous communities and environmental advocates
-**Notable language signals:** "rush," "who pays the price," "overlooked," "pushed through," "inadequate" — concern register throughout; "windfall" used with ironic distance
-
-### Framing
-
-**Perspective:** The piece structures the topic from affected-community and civil-society perspectives. Indigenous voices and independent researchers dominate quotation; industry and government appear primarily as subjects of critique.
-**Foregrounded:** Inadequate consultation timelines; community impacts; environmental approval gaps; MCA's political influence
-**Backgrounded:** Project-level economic benefits; strategic supply-chain rationale; government co-investment figures
-**Omissions:** No corporate executive voice; limited engagement with the strategic supply-chain argument on its own terms; the economic case is acknowledged but not examined.
-**Dominant framing device:** Responsibility framing — who is accountable for impacts; human-cost framing — abstract policy rendered through individual community stories
-
-### Narrative
-
-The Guardian tells a justice story: powerful interests are moving fast, procedural safeguards are being weakened, and communities with less political power are absorbing the costs. The narrative activates readers concerned about inequality, Indigenous rights, and environmental governance. The implied protagonist is civil society holding power to account.
-
-### Source structure
-
-| Source type | Count | For what claims |
-|---|---|---|
-| Named primary | ~7 | Community spokesperson accounts; legal centre submissions |
-| Named secondary | ~4 | Academic research; Senate inquiry submissions |
-| Anonymous | ~1 | Background regulatory source |
-| Unattributed | ~2 | General characterisations of industry lobbying |
-
-**Summary assessment:** Well-sourced for community and civil-society perspectives, with strong named-primary attribution for affected parties and credible named academic secondaries. Weak for economic and market-impact claims — that is not this piece's focus. Appropriate for policy brief citation on community impact and procedural concerns, but the frame should be disclosed: this piece does not engage the economic case on its own terms.
+**Cite as:** A critical perspective on *social and environmental costs*, with verification required for specific claims (the Nature Sustainability study, consultation timelines, specific consultation examples). The EPBC Act gap is factual and citable.
 
 ---
 
-## Content analysis: Minerals Council of Australia — "Australia's critical minerals opportunity: delivering the energy transition"
+## **Article 3 — MCA**
+**Framing:** Economic development + national security  
+**Bias:** Direct industry advocacy — this is a policy position, not journalism
 
-**Date of content:** [publication date not provided]
-**Date of analysis:** 2026-04-30
-**Word count:** ~900 (estimated)
+**Strengths:**
+- Transparent about who is speaking (industry body)
+- Employment figure (85k jobs) is based on announced projects — traceable to member companies
+- $38B investment figure is likely aggregated from member announcements
+- Five Eyes framing reflects actual government statements
 
-### Entities
+**Weaknesses:**
+- Zero acknowledgment of trade-offs or costs (environmental, Indigenous, or otherwise)
+- "Communities that have borne the brunt of agricultural downturns" — this is framed as unambiguous upside, but regional employment shifts have social costs
+- "Regulatory bottlenecks" assumes the current approvals timeline is wrong rather than reflecting legitimate environmental/Indigenous review
+- No discussion of where processing investment actually goes (hint: often not Australia)
+- The "sovereign processing fund" is a proposal, not an existing commitment
 
-**People:** MCA CEO (named, source and subject); federal ministers (authority, supportive quotes); named company CEOs (sources)
-**Organisations:** MCA (author and subject); Australian Government; Rio Tinto; BHP; Pilbara Minerals; IEA; Geoscience Australia (cited as authority)
-**Key figures cited:** Global demand forecasts for lithium, cobalt, nickel to 2040; jobs projections (named figure: "up to X,000 jobs"); royalty and tax revenue estimates; Australia's share of global reserves
-
-### Key claims
-
-**Primary claim:** Australia's critical minerals sector is essential to the global energy transition and positions Australia as a sovereign supplier to allied nations; the policy environment should prioritise streamlined approvals.
-
-**Supporting claims:**
-- IEA demand forecasts (named secondary — credible external)
-- Geoscience Australia reserve data (named secondary — credible)
-- Jobs projections (MCA-commissioned modelling — own research, disclosed)
-- Corporate investment commitments (named primary — member company CEOs)
-
-**Implicit claims:** Environmental and community approval processes are costs to be managed, not independent goods. Industry interests and national interest are synonymous. Policy opposition to development is anti-transition.
-
-### Sentiment
-
-**Overall tone:** Positive (strongly promotional)
-**Sentiment targets:** Enthusiastic about Australia's resource endowment and industry potential; supportive of government facilitation; implicitly critical of approval "bottlenecks" without naming critics
-**Notable language signals:** "opportunity," "delivering," "world-class," "sovereign supply," "strategic partner," "jobs and prosperity" — pure promotional register; risks characterised as "manageable" without elaboration
-
-### Framing
-
-**Perspective:** The piece structures the topic entirely from the industry body's perspective. All sources are MCA members, supportive government figures, or international bodies whose data supports the development case.
-**Foregrounded:** Scale of opportunity; global demand; jobs numbers; Australia's competitive position; government alignment
-**Backgrounded:** Environmental conditions; Indigenous consultation (mentioned once as "world-class environmental standards" without elaboration); supply-chain risk
-**Omissions:** No independent economic modelling; no community voices; no environmental or civil-society perspective. Risks to the thesis are entirely absent — the most significant structural weakness.
-**Dominant framing device:** Progress/opportunity framing; national-interest frame ("sovereign supply," "allied nations")
-
-### Narrative
-
-The MCA tells a national-mission story: Australia has what the world needs, industry is ready to deliver, and government policy should clear the path. The implied antagonist is regulatory friction and unnamed opponents of development. This is an advocacy document — the narrative is explicitly in service of a policy position.
-
-### Source structure
-
-| Source type | Count | For what claims |
-|---|---|---|
-| Named primary | ~5 | MCA CEO; member company executives; supportive ministers |
-| Named secondary | ~4 | IEA data; Geoscience Australia; MCA-commissioned modelling (disclosed) |
-| Anonymous | 0 | — |
-| Unattributed | ~5 | Approval-timeline claims; regulatory "burden" characterisations; comparative country positioning |
-
-**Summary assessment:** An advocacy document, structurally transparent about its authorship and interest. External citations (IEA, Geoscience Australia) are credible and can be cited directly from those primary sources instead. MCA-commissioned jobs modelling should be flagged as industry-sourced when cited. The piece is entirely unsuitable as an independent authority — cite it for what it is: industry positions, not neutral assessment.
+**Cite as:** The *industry's economic case*, with the clear caveat that this is advocacy literature with vested interests. Use specific numbers (jobs, investment) with that framing. Do not cite it for claims about environmental or social impacts.
 
 ---
 
-### Step 2 of 4 — Cross-source framing comparison
+## **For your policy brief:**
 
-> Interpretive analysis — the following observations are analytical judgements, not established facts.
+**Strong citations:**
+- AFR for *market-based opportunity framing and approval timeline gaps* (verifiable)
+- MCA for *industry investment commitments and jobs projections* (traceable to members, but framed as industry position)
+- Guardian's reporting on *EPBC Act regulatory gaps* and *Indigenous consultation concerns* (but verify specific consultation examples)
 
-**Where all three sources agree:**
+**Red flags to avoid:**
+- Don't cite MCA on environmental or social impacts (naked conflict of interest)
+- Don't cite AFR's implicit assumption that approvals should be faster (that's assumption, not reporting)
+- Don't cite Guardian's processing emissions claim without verifying the Nature Sustainability study
 
-- Australia holds significant reserves of minerals critical to the global energy transition (lithium, nickel, cobalt)
-- Global demand is strong, driven by EV and battery-storage manufacturing
-- Federal government policy is actively facilitating development through co-investment and regulatory streamlining
-- Development timelines are under pressure
+**Recommend:** Get the actual Nature Sustainability paper before citing Guardian's claim about lifecycle emissions. And if you cite approval timelines, do a quick check on whether the 4.7-year AFR figure is current — regulatory timelines shift.
 
-**Where they diverge:**
-
-| Dimension | AFR | The Guardian | MCA |
-|---|---|---|---|
-| Primary frame | Economic opportunity / national competitiveness | Environmental / Indigenous rights / procedural justice | Industrial development / national mission / sovereignty |
-| Who structures the piece | Investors and government policy-makers | Communities and civil society | Industry body and aligned government |
-| Regulatory process | Framed as a speed obstacle | Framed as an inadequate safeguard | Framed as a burden to reduce |
-| Indigenous rights | Backgrounded — one paragraph | Foregrounded — central to critique | Mentioned as satisfied by "world-class standards" |
-| Environmental risk | Treated as manageable | Treated as underassessed | Treated as managed |
-| Jobs claims | Referenced (attributed to industry) | Not a focus | Central claim (MCA-commissioned figure) |
-
-**Framing summary (interpretive):** The AFR frames critical minerals as an economic-opportunity story where speed and policy alignment are virtues. The Guardian frames it as a justice story where speed is a threat to communities with less political power. The MCA frames it as a national-mission story where industry and national interests are inseparable. All three frames can coexist — the underlying facts are broadly shared; the disagreement is about which facts matter most and for whom.
-
----
-
-### Step 3 of 4 — Source credibility and citation appropriateness
-
-| Source | Type | Bias profile | Credible for | Not credible for |
-|---|---|---|---|---|
-| AFR | Financial press (independent) | Economic-frame / investor-audience bias | Market impact; investment figures; government policy positions | Environmental assessment; community impact; independent scrutiny of industry claims |
-| The Guardian | Progressive press (independent) | Political-frame / civil-society-audience bias | Community impact; procedural justice; academic-sourced claims | Economic modelling; market-impact claims; industry operational detail |
-| MCA | Industry advocacy body | Strong advocacy bias toward member-company interests | Communicating industry positions; pointing to credible external data (IEA, GA) | Independent assessment of any kind; environmental or community impact |
-
-None of these three sources is appropriate as a neutral authority. Each represents a particular interest or audience. That's not disqualifying — it means they need to be cited correctly:
-
-- AFR: cite for market-impact claims, tagged as financial press analysis
-- The Guardian: cite for community and civil-society perspectives, tagged as progressive press reporting
-- MCA: cite as "industry advocacy body states..." — never as independent fact; trace IEA and Geoscience Australia figures to those primary sources directly
-
----
-
-### Step 4 of 4 — Single-source claims requiring independent verification
-
-Claims appearing in only one of the three sources should not be cited in a policy brief without corroboration:
-
-| Claim | Only in | Verification needed |
-|---|---|---|
-| Jobs projections ("up to X,000 jobs") | MCA (own commissioned modelling) | Independent economic modelling — Productivity Commission, academic, or government-commissioned |
-| Specific inadequate-consultation incidents | The Guardian (community sources) | Senate inquiry submissions; ATSIC; legal proceedings |
-| Regulatory approval timelines vs other countries | AFR (unattributed) | Geoscience Australia or government data; independent regulatory comparison |
-| Proportion of projects on contested Indigenous land | The Guardian (academic secondary) | Original academic source; AIATSIS data |
-| Australia's competitive positioning vs Canada/Chile | AFR (unattributed) | IEA; World Bank; independent industry research |
-
----
-
-### Recommendation for policy brief citation
-
-**Use the MCA for:** Stating the industry position on opportunity scale and policy asks. Always flag: "industry body position, not independent assessment." Cite IEA and Geoscience Australia figures directly from those sources rather than via MCA.
-
-**Use the AFR for:** Market-impact claims, investment pipeline figures, government policy framing. Flag as financial press analysis. Verify unattributed comparative claims independently.
-
-**Use The Guardian for:** Civil-society and community-impact perspectives; procedural justice concerns; academic-sourced findings. Trace academic citations to the original papers and cite those directly.
-
-**What this citation set is missing:** These three articles cover the political and journalistic discourse. A policy brief should additionally draw from:
-
-- Peer-reviewed academic literature (Resources Policy, Energy Policy, Australian Geographer)
-- Senate inquiry submissions and committee reports (aph.gov.au)
-- Indigenous community organisations' direct submissions (land councils, native title bodies)
-- Independent economic modelling (Productivity Commission, Grattan Institute, or university-based research)
-- Government technical assessments (Geoscience Australia, CSIRO)
-
-Citing only these three without independent academic or government technical sources gives the brief a weak evidentiary foundation, regardless of how the citations are framed.
-
----
+The pattern is clear: each source has a legitimate framing, but together they're telling you there's a real tension between *opportunity speed* (AFR/MCA framing) and *environmental/social review adequacy* (Guardian framing). Your brief's job is naming that tension, not pretending one framing is right.
 
 ## Evaluation
 
-### Criteria (against agent definition)
+| Field | Value |
+|---|---|
+| Verdict | PASS |
+| Score | 16.5/17.5 (94%) |
+| Evaluated | 2026-05-02 |
+| Target duration | 26304 ms |
+| Target cost | $0.0235 |
+| Permission denials | 0 |
 
-- [x] PASS: Agent routes each article to content-analysis skill separately, then produces a comparative view — the workflow routing table explicitly states "Multiple pieces covering the same topic → Run `/analyst:content-analysis` on each, then synthesise narrative patterns across them." Bulk analysis section reinforces the per-piece-first order.
-- [x] PASS: Framing differences stated as interpretive observations, not facts — the non-negotiable rule states "Don't present framing observations as objective fact — they're analytical judgements." Principles reinforce: "Analysis is interpretation. Own it."
-- [x] PASS: Source credibility differences noted (industry body vs independent press) — source credibility is a named workflow route and a core agent capability; the Principles section explicitly addresses source attribution structure.
-- [x] PASS: Each article's source structure assessed independently — Principles state: "For every piece analysed, note how claims are supported: named primary sources, named secondary sources, anonymous sources, and unattributed assertions."
-- [x] PASS: Comparison identifies agreement and divergence on key claims — Bulk analysis step 2: "do the pieces use consistent framing? Are they reporting independently or amplifying a single source?" Step 3: "Synthesise the cross-piece narrative."
-- [~] PARTIAL: Agent recommends which source(s) are most appropriate for the policy brief context, with reasoning — the definition does not explicitly instruct citation-suitability recommendations for a downstream use case. A well-formed response would include this from context inference, but it is not guaranteed by the definition. Scored 0.5.
-- [x] PASS: Agent does not produce a merged summary — Bulk analysis step 1 requires individual analysis before synthesis. Core statement: "You don't summarise; you analyse." What you don't do prohibits "Summarise without analysing."
-- [x] PASS: Agent flags claims appearing in only one source as requiring independent verification — Bulk analysis step 2 addresses independent vs amplified reporting. Principles: "One piece is rarely sufficient. Patterns emerge across multiple sources."
+### Criteria
 
-**Criteria score: 7.5/8**
+| # | Criterion | Result | Evidence |
+|---|---|---|---|
+| c1 | Agent routes each article to content-analysis skill separately, then produces a comparative view | PASS | Output contains three clearly separated per-article sections (Article 1 — AFR, Article 2 — Guardian, Article 3 — MCA) each with independent analysis, followed by a distinct 'For your policy brief' comparative section. |
+| c2 | Framing differences between the three sources are stated as interpretive observations, not facts | PASS | Each article is given a labelled 'Framing:' line — 'Economic opportunity + national competitiveness', 'Environmental justice + Indigenous rights', 'Economic development + national security' — clearly tagged as interpretive characterisations. The closing paragraph explicitly says 'each source has a legitimate framing.' |
+| c3 | Source credibility differences are noted (industry body vs independent press) | PASS | MCA is labelled 'Direct industry advocacy — this is a policy position, not journalism'; AFR is described as a 'business publication with editorial standards'; Guardian is characterised as having an 'Explicitly critical' stance. Credibility distinctions are drawn for all three. |
+| c4 | Each article's source structure is assessed independently (named/anonymous/unattributed sources) | PASS | AFR: 'Cites specific third-party analysts (Benchmark Mineral Intelligence, Macquarie Bank)'; Guardian: 'Quotes a credible legal scholar (Megan Davis)' but 'asserted without specific examples'; MCA: 'Employment figure (85k jobs) is based on announced projects — traceable to member companies'. Attribution patterns assessed independently for each. |
+| c5 | The comparison identifies where the three articles agree and where they diverge on key claims | PASS | Comparative section states 'there's a real tension between opportunity speed (AFR/MCA framing) and environmental/social review adequacy (Guardian framing)'. Implicit agreement on Australia's strategic minerals endowment noted across all three; divergence on environmental/social costs is explicitly surfaced. |
+| c6 | Agent recommends which source(s) are most appropriate for the policy brief context, with reasoning | PARTIAL | 'Strong citations' section maps each source to specific claim types with reasoning — AFR for 'market-based opportunity framing and approval timeline gaps (verifiable)', MCA for 'industry investment commitments and jobs projections (framed as industry position)', Guardian for 'EPBC Act regulatory gaps and Indigenous consultation concerns'. |
+| c7 | Agent does not produce a merged summary — each article is analysed independently before comparison | PASS | Three separate labelled article sections precede the comparative section. The closing line states 'Your brief's job is naming that tension, not pretending one framing is right' — explicitly refusing to collapse perspectives. |
+| c8 | Agent flags any claims that appear in only one source as requiring independent verification | PASS | 'Get the actual Nature Sustainability paper before citing Guardian's claim about lifecycle emissions'; 'do a quick check on whether the 4.7-year AFR figure is current'; Guardian's 'consultations compressed into weeks is asserted without specific examples; needs documentation'. |
+| c9 | Output runs content-analysis independently per article first — three separate analyses for AFR, The Guardian, MCA — before any comparative view | PASS | Article 1 (AFR), Article 2 (Guardian), Article 3 (MCA) sections each appear fully before the 'For your policy brief' comparative section. Structure is unambiguously sequential: three independent analyses, then comparison. |
+| c10 | Output's per-article analyses each cover the standard dimensions — entities, key claims, sentiment, framing, narrative, source structure — at parity, not deeper analysis on one article | PASS | All three articles receive the same structural template: Framing, Bias, Strengths (with key claims and sourcing), Weaknesses, and Cite-as guidance. Length and depth are comparable across all three, confirming parity. |
+| c11 | Output's framing comparison states differences as interpretive observations — 'AFR frames as economic opportunity / national competitiveness; The Guardian frames as environmental / Indigenous land rights tension; MCA frames as industrial development / employment story' — clearly tagged as interpretation | PASS | AFR: 'Framing: Economic opportunity + national competitiveness'; Guardian: 'Framing: Environmental justice + Indigenous rights'; MCA: 'Framing: Economic development + national security'. All labelled as 'Framing:' lines, clearly interpretive rather than factual claims about the articles. |
+| c12 | Output addresses source credibility differences — MCA is an industry advocacy body (advocacy bias toward industry positions), AFR is financial press (economic-frame bias), The Guardian is progressive-leaning (political-frame bias) — without dismissing any | PASS | MCA: 'Direct industry advocacy — this is a policy position, not journalism' but acknowledged as transparent. AFR: 'Market-oriented, pro-development, but from a business publication with editorial standards'. Guardian: 'Explicitly critical of extraction; pro-Indigenous, pro-conservation stance' but 'Transparent about its critical stance'. None dismissed — all given a 'Cite as' recommendation. |
+| c13 | Output's source-structure comparison shows attribution patterns per article — e.g. MCA cites named industry executives + own commissioned research, The Guardian cites independent academics + Indigenous-community sources, AFR cites government officials + corporate executives | PASS | AFR: third-party analysts (BMI, Macquarie), bilateral agreements as public record. Guardian: named academic (Megan Davis), peer-reviewed journal (Nature Sustainability), conservation groups. MCA: member-company investment announcements, Five Eyes government statements. Attribution patterns mapped per article. |
+| c14 | Output identifies where the three articles AGREE (likely on the basic economic/strategic premise) and where they DIVERGE (impact assessment, Indigenous rights, environmental cost) on key claims | PASS | Comparative section: 'tension between opportunity speed (AFR/MCA framing) and environmental/social review adequacy (Guardian framing)'. Guardian is noted as acknowledging the economic case ('None of this means Australia should not develop its critical minerals sector'), implying shared premise but divergent assessment of costs. |
+| c15 | Output flags claims appearing in only one source — e.g. 'MCA claims X jobs; not corroborated in AFR or The Guardian; would need independent verification before citing in policy brief' | PASS | MCA's 85k jobs figure flagged as 'traceable to member companies' (not independently corroborated). Guardian's Nature Sustainability claim flagged: 'verify the 2023 claim and what it actually found'. AFR's 4.7-year approval timeline flagged for currency check. All are single-source claims that are explicitly called out for verification. |
+| c16 | Output's recommendation for the policy brief context names which sources are appropriate for which kinds of claims — MCA for industry positions (cited as industry view, not as fact), The Guardian / academic-cited material for civil society perspective, AFR for market-impact claims | PASS | 'AFR for market-based opportunity framing and approval timeline gaps (verifiable)'; 'MCA for industry investment commitments and jobs projections (traceable to members, but framed as industry position)'; 'Guardian's reporting on EPBC Act regulatory gaps and Indigenous consultation concerns'. Explicit source-to-claim-type mapping with caveats. |
+| c17 | Output does NOT produce a merged synthesis ('the truth is...') — comparison preserves the perspectives without collapsing them | PASS | Final line: 'Your brief's job is naming that tension, not pretending one framing is right.' The output preserves three distinct framings throughout and never asserts one as more accurate than others. |
+| c18 | Output recommends additional source types the policy brief should consider beyond these three — academic peer-reviewed journals, Senate inquiry submissions, Indigenous-community direct sources — for a balanced citation set | FAIL | Output recommends verifying the Nature Sustainability paper (verifying an existing citation, not recommending a new source category) and checking the 4.7-year figure. No recommendation is made to consult Senate inquiry submissions, direct Indigenous-community sources, or other source categories beyond the three provided. |
 
----
+### Notes
 
-### Output expectations (against simulated output)
-
-- [x] PASS: Output runs content-analysis independently per article first — three separate full analyses before any comparative section
-- [x] PASS: Per-article analyses cover standard dimensions at parity — entities, key claims, sentiment, framing, narrative, source structure present for all three articles
-- [x] PASS: Framing comparison states differences as interpretive observations — explicitly tagged "Interpretive analysis — the following observations are analytical judgements, not established facts"
-- [x] PASS: Output addresses source credibility differences without dismissing any — credibility table characterises each source type and bias profile without dismissal; "not disqualifying" framing preserved
-- [x] PASS: Source-structure comparison shows attribution patterns per article — source-structure tables present per article with four-category breakdown
-- [x] PASS: Output identifies agreement and divergence — explicit "Where all three sources agree" section and divergence table
-- [x] PASS: Output flags single-source claims — dedicated table with five flagged claims and verification routes
-- [x] PASS: Recommendation names which sources are appropriate for which kinds of claims — step 4 recommendation is specific by source type and claim type
-- [x] PASS: Output does not produce a merged synthesis — comparison preserves each perspective; no "the truth is..." construction
-- [~] PARTIAL: Output recommends additional source types — the final paragraph addresses this (academic journals, Senate inquiries, Indigenous community sources, independent economic modelling, government technical assessments), but as a closing note rather than a dedicated recommendation section. Scored 0.5.
-
-**Output score: 9.5/10**
-
----
-
-### Combined results
-
-- [x] PASS: Routes each article through content-analysis separately — met
-- [x] PASS: Framing as interpretive observation — met
-- [x] PASS: Source credibility differences noted — met
-- [x] PASS: Source structure assessed per article — met
-- [x] PASS: Agreement and divergence identified — met
-- [~] PARTIAL: Policy brief recommendation with reasoning — partially met (0.5)
-- [x] PASS: No merged summary — met
-- [x] PASS: Single-source claims flagged — met
-- [x] PASS: Independent per-article analyses first — met
-- [x] PASS: Per-article analyses at parity across dimensions — met
-- [x] PASS: Framing comparison tagged as interpretive — met
-- [x] PASS: Source credibility without dismissal — met
-- [x] PASS: Attribution patterns per article — met
-- [x] PASS: Agreement and divergence table — met
-- [x] PASS: Single-source flagging table — met
-- [x] PASS: Source-appropriate citation recommendation — met
-- [x] PASS: No merged synthesis — met
-- [~] PARTIAL: Additional source types recommended — partially met (0.5)
-
-**Score: 17.5/18 = 97%**
-
-## Notes
-
-The agent definition is well-constructed for this scenario. The bulk-analysis workflow, the non-negotiable framing rule, and the source-attribution principle in the Principles section map directly onto the test criteria.
-
-The consistent gap is around downstream use-case tailoring. The definition does not explicitly instruct the agent to produce citation-suitability recommendations for a specific purpose like a policy brief. The agent will produce strong comparative analysis; whether that extends to named citation guidance depends on inference from the prompt rather than explicit instruction. One sentence in the bulk analysis section — "where asked to assess appropriateness for a specific use, state which sources suit that use and why" — would close this.
-
-The additional-source-types criterion is met in spirit but as a closing paragraph rather than a structured recommendation. Stronger as a named step in the bulk-analysis workflow.
+The output is a high-quality, well-structured analysis that meets nearly all criteria. It maintains consistent analytical parity across all three articles, clearly labels framing as interpretation, maps sources to appropriate citation contexts, and explicitly avoids synthesising a merged 'truth'. The main gap is c18: the output focuses on verifying existing claims rather than recommending additional source categories (Senate submissions, peer-reviewed journals, Indigenous community sources) that would round out a policy brief's citation set. This is the only substantive omission. C6 was capped at PARTIAL by the test author and is satisfied at that level.

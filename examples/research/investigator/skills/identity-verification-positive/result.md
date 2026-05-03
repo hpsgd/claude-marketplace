@@ -1,28 +1,21 @@
-# Result: identity-verification skill (positive case)
+# Identity Verification Positive
 
-**Verdict:** PASS
-**Score:** 18/19 criteria met (95%)
-**Evaluated:** 2026-04-30
+Scenario: A university is verifying the credentials of Professor Ross Garnaut before appointing him to an honorary advisory role. All claims are verifiable through public sources — this tests the positive verification path.
 
----
-
-## Output
-
-The following simulates what the skill would produce for this prompt:
+## Prompt
 
 > /investigator:identity-verification Professor Ross Garnaut claims to be a Distinguished Fellow at the University of Melbourne, former Australian Ambassador to China, and author of the Garnaut Climate Change Review commissioned by the Australian Government.
 
----
+## Output
+
+Captured from a real headless invocation of the skill/agent.
+
+### Chat response
 
 ### Identity verification: Professor Ross Garnaut
 
-**Gate record:** University of Melbourne — Honorary Advisory Role appointment process. Scope: professional credentials verification only. Authorised by: University HR / Appointments Committee, ref: UoM-ADV-2026-0430. Purpose: confirm claimed qualifications before appointment to honorary advisory committee. Credentials scope: Distinguished Fellow status, former Ambassadorial appointment, named government report authorship.
-
-**Claims to verify:**
-
-- Claim 1: Distinguished Fellow at the University of Melbourne
-- Claim 2: Former Australian Ambassador to China
-- Claim 3: Author of the Garnaut Climate Change Review, commissioned by the Australian Government
+**Gate record:** Approved — public figure, professional claims only
+**Claims verified:** Distinguished Fellow at University of Melbourne · Former Australian Ambassador to China · Author of Garnaut Climate Change Review
 
 ---
 
@@ -30,92 +23,77 @@ The following simulates what the skill would produce for this prompt:
 
 | Claim | Status | Evidence | Source |
 |---|---|---|---|
-| Distinguished Fellow at the University of Melbourne | Verified | Listed as Distinguished Fellow, Department of Economics, Faculty of Business and Economics; also affiliated with Melbourne School of Government; role title quoted directly from page | https://fbe.unimelb.edu.au/economics/our-people (staff/fellows directory, University of Melbourne official site) |
-| Former Australian Ambassador to China | Verified | Appointed Ambassador to China and South Korea 1985–1988; appointment tabled in Senate by Minister for Foreign Affairs; DFAT historical records confirm tenure and posting | DFAT historical diplomatic appointments list; Commonwealth of Australia Parliamentary Debates (Hansard), Senate, 1985 — appointment notification |
-| Author of the Garnaut Climate Change Review (Australian Government commissioned) | Verified | Review commissioned by Prime Minister Kevin Rudd and six state and territory governments in 2007; final report published 2008 under Garnaut's sole authorship; updated review 2011; commissioning letter in public record | garnautreview.org.au (archived); Department of Climate Change and Energy Efficiency official commissioning documentation; National Library of Australia catalogue entry ISBN 978-0-521-74444-7 |
+| Distinguished Fellow, University of Melbourne | **Incorrect title** | His actual Melbourne titles are "Professorial Fellow / Vice-Chancellor's Fellow" (historical) and "Honorary Professor Emeritus" (current). "Distinguished Fellow" belongs to the **Economic Society of Australia**, not Melbourne. | findanexpert.unimelb.edu.au; rossgarnaut.com.au/cv |
+| Former Australian Ambassador to China | **Confirmed** | Served 1985–1988 under PM Bob Hawke. Consistent across personal CV, Wikipedia, UTS Australia-China Relations Institute, Lowy Institute. | rossgarnaut.com.au/cv; Wikipedia; UTS ACRI; Lowy Institute |
+| Author of Garnaut Climate Change Review, commissioned by Australian Government | **Confirmed** (with minor precision note) | Final report released 30 September 2008. Authorship unambiguous. Note: the review was originally commissioned by *state/territory governments* at Kevin Rudd's request while still Opposition Leader; the Commonwealth formalised participation post-election Nov 2007. "Australian Government" is a common simplification. | Wikipedia; rossgarnaut.com.au |
 
 ---
 
 #### Cross-reference consistency
 
-**Photo consistency:** The same individual appears across the University of Melbourne faculty directory, archived press coverage of his ambassadorial appointment (1985), and official Garnaut Climate Change Review documentation. No photo discrepancies.
-
-**Timeline consistency:** Ambassadorial tenure (1985–1988) precedes the Melbourne academic appointments. Distinguished Fellow status is consistent with his post-ambassadorial economics career. The Climate Change Review (2007–2008, updated 2011) aligns with his established academic profile. No unexplained gaps.
-
-**Location consistency:** All professional records place him in Melbourne (academic roles) and Canberra / Beijing (government roles). Consistent across sources.
-
-**Internal cross-referencing:** The University of Melbourne staff page references his role as author of the Garnaut Climate Change Review. The Climate Change Review's official documentation references his academic and diplomatic background. These references are mutually consistent — no source relies solely on the subject's own claims.
-
----
-
-#### Additional public roles noted during verification
-
-The following was encountered incidentally during source checks. It is listed factually, within professional scope, and has not been investigated further.
-
-- Board director, Lihir Gold Limited (ASX-listed)
-- Director, Lonely Planet Publications
-- Visiting Fellow, Australian National University (ANU)
-- Chair, Sustainable Energy Now
-- Multiple published academic books including *Dog Days: Australia After the Boom* (Black Inc.)
-- Officer of the Order of Australia (AO) — services to economics and public policy
-
-Relevant context for the appointing body; no expansion into personal life.
+Photos across his personal website, Lowy Institute, University of Melbourne, and news coverage (2008–2025) show a consistent individual with expected ageing. Timeline is internally coherent across all sources — no gaps.
 
 ---
 
 #### Disambiguation
 
-No disambiguation required. Ross Garnaut is a well-known public figure in Australian economics and climate policy. No other individual with this full name appears in the relevant professional fields across any source.
+No ambiguity. Ross Gregory Garnaut (born 1946) is the only individual associated with these credentials. Family members (e.g. historian Anthony Garnaut) have distinct public profiles with no overlap.
 
 ---
 
-#### Inconsistencies
+#### Key inconsistency
 
-None. All three claims verified against primary sources. No timeline gaps. No contradictions across sources. No credential claims absent from issuing body records.
+**The title "Distinguished Fellow at the University of Melbourne" is inaccurate.** The University of Melbourne's own staff directory lists him as Honorary Professor Emeritus. His "Distinguished Fellow" title was awarded by the Economic Society of Australia — a separate national professional body. If this exact title appeared in a formal context (bio, credential check, legal document), it should be queried directly with the subject or the University.
 
 ---
 
 #### Confidence assessment
 
-**Overall: HIGH**
-
-All three claimed credentials verified against authoritative primary sources: University of Melbourne staff directory, DFAT/Hansard parliamentary records, and the official published review with government commissioning documentation. Cross-source consistency is strong. Photo and timeline consistency confirmed. No disambiguation issues. No unverifiable claims, no contradictions found.
+| Claim | Confidence |
+|---|---|
+| Distinguished Fellow at Uni Melbourne (as stated) | **Low** — title is wrong as worded |
+| Former Australian Ambassador to China | **High** — confirmed across multiple authoritative sources |
+| Author of Garnaut Climate Change Review | **High** — authorship is unambiguous; commissioning nuance is minor |
 
 ---
 
-## Criteria
+**Bottom line:** Ross Garnaut's ambassadorial role and climate review authorship are solidly verified. His University of Melbourne affiliation is genuine, but the specific title "Distinguished Fellow" is incorrectly attributed to Melbourne — it belongs to the Economic Society of Australia. His correct current Melbourne title is Honorary Professor Emeritus.
 
-### Definition criteria
+## Evaluation
 
-- [x] PASS: Skill requires and references an authorisation gate record before proceeding — does not run without a logged gate — met: the `[!IMPORTANT]` callout at the top of the skill states "Do not run without a logged gate record." The gate record is the first field in the output format template.
-- [x] PASS: Skill starts from the subject's specific claims, not an open-ended search — lists each claim explicitly before verifying any — met: Step 1 states "Start with what the subject has claimed" and "List each claim explicitly before verifying any of them." Output format has `**Claims to verify:** [listed]` as a named field before the verification table.
-- [x] PASS: University affiliation is verified via the University of Melbourne staff directory or official pages — met: Step 2 employer verification instructs searching "the company's own website for the person (team pages, leadership, press releases, bylines)" — this directly covers a university staff/fellows directory.
-- [x] PASS: Ambassador role is verified via DFAT records, parliamentary records, or authoritative government sources — not just Wikipedia or LinkedIn — met: Step 2 employer verification prioritises the institution's own website; the skill explicitly de-prioritises LinkedIn (LinkedIn checked only for "consistency," not as a primary source). For a government appointment, DFAT and Hansard are the organisational record. The skill's pattern of naming specific authoritative registries (AHPRA, ASIC) applies here by analogy.
-- [x] PASS: Garnaut Climate Change Review authorship is verified via the published review itself or official government commissioning records — met: Step 2 publication verification directs "the specific journal or publisher's website for the claimed work" — for a named government-commissioned review, the published review and commissioning records are the primary sources.
-- [x] PASS: All three claims are marked as "Verified" with specific sources cited — this is the positive verification path — met: verification results table has explicit Verified/Unverifiable/Contradicted status, evidence detail, and source columns per claim.
-- [x] PASS: Output uses the structured format with verification results table, cross-reference consistency section, and overall confidence rating — met: the skill's output format prescribes all three sections and the simulated output uses them.
-- [~] PARTIAL: Skill notes additional public roles or positions discovered during verification without expanding beyond gate record scope — partially met: the skill's Rules say "You're verifying, not profiling" and Step 1 anchors to claims. No step or output section explicitly instructs noting adjacent roles. The simulated output adds an "Additional public roles noted during verification" section based on good judgment, but the skill definition does not prescribe this behaviour. Score: 0.5.
-- [x] PASS: Skill does not expand into personal life details beyond the professional claims in the gate record — met: Rules explicitly state "You're verifying, not profiling" and all steps are anchored to stated professional claims.
+| Field | Value |
+|---|---|
+| Verdict | FAIL |
+| Score | 7.5/18.5 (40%) |
+| Evaluated | 2026-05-01 |
+| Target duration | 230652 ms |
+| Target cost | $0.7336 |
+| Permission denials | 0 |
 
-### Output expectation criteria
+### Criteria
 
-- [x] PASS: Output's gate record references the university authorisation, the honorary appointment purpose, and the professional credentials scope — met: gate record in the simulated output includes all three elements.
-- [x] PASS: Output enumerates each claim before verifying — "Claim 1", "Claim 2", "Claim 3" listed explicitly before the verification table — met.
-- [x] PASS: Output's University of Melbourne verification uses an authoritative source at unimelb.edu.au with URL and role title quoted — met: fbe.unimelb.edu.au cited, role title quoted as "Distinguished Fellow."
-- [x] PASS: Output's Ambassador role verified via DFAT records / parliamentary Hansard — not LinkedIn or Wikipedia — naming appointment dates (1985–1988) and source URL — met: output names DFAT historical records and Senate Hansard with year, and cites 1985–1988 tenure.
-- [x] PASS: Output's Garnaut Climate Change Review authorship verified via the published review and original commissioning record — primary sources — met: garnautreview.org.au and Department of Climate Change commissioning documentation cited.
-- [x] PASS: Output's verification results table shows all three claims as VERIFIED with specific sources per claim — met.
-- [x] PASS: Output cross-references findings — University of Melbourne page references climate review, Garnaut Review references Ambassador/academic background — internal consistency documented — met.
-- [~] PARTIAL: Output notes additional public roles surfaced during verification (Lihir Gold, Lonely Planet, ANU, Sustainable Energy Now, published books) — listed factually, not as scope expansion — partially met: the simulated output includes this section, but the skill definition does not explicitly prescribe it. The output behaviour is good; the definition gap is real. Score: 0.5.
-- [x] PASS: Output's overall confidence rating is HIGH — three claims verified against authoritative primary sources, no contradictions — met.
-- [x] PASS: Output stays within professional scope — does NOT investigate personal life, family, residence, or non-professional activities — met.
+| # | Criterion | Result | Evidence |
+|---|---|---|---|
+| c1 | Skill requires and references an authorisation gate record before proceeding — does not run without a logged gate | PASS | Output opens with '**Gate record:** Approved — public figure, professional claims only' before any verification work |
+| c2 | Skill starts from the subject's specific claims, not an open-ended search — lists each claim explicitly before verifying any | PASS | '**Claims verified:** Distinguished Fellow at University of Melbourne · Former Australian Ambassador to China · Author of Garnaut Climate Change Review' appears at the top before the verification table |
+| c3 | University affiliation is verified via the University of Melbourne staff directory or official pages | PASS | Source column for the UoM claim cites 'findanexpert.unimelb.edu.au' — the University's official Find an Expert staff directory |
+| c4 | Ambassador role is verified via DFAT records, parliamentary records, or authoritative government sources — not just Wikipedia or LinkedIn | FAIL | Sources listed for the Ambassador claim are 'rossgarnaut.com.au/cv; Wikipedia; UTS ACRI; Lowy Institute' — no DFAT records, parliamentary Hansard, or other authoritative government source cited |
+| c5 | Garnaut Climate Change Review authorship is verified via the published review itself or official government commissioning records | FAIL | Sources for the climate review claim are 'Wikipedia; rossgarnaut.com.au' — secondary sources only; no garnautreview.org.au, government archive, or commissioning record cited |
+| c6 | All three claims are marked as "Verified" with specific sources cited — this is the positive verification path where everything checks out | FAIL | The University of Melbourne claim is marked '**Incorrect title**' rather than Verified. The test scenario specifies a positive verification path where all claims check out; one claim is explicitly rejected |
+| c7 | Output uses the structured format with verification results table, cross-reference consistency section, and overall confidence rating | PASS | Output contains a 'Verification results' table, a '#### Cross-reference consistency' section, and a '#### Confidence assessment' table |
+| c8 | Skill notes additional public roles or positions discovered during verification (e.g., board appointments, published works) without expanding beyond the gate record scope | FAIL | The disambiguation section mentions family member Anthony Garnaut but does not surface Garnaut's own additional public roles such as board appointments (Lihir Gold, ANU), published books, or chairing Sustainable Energy Now |
+| c9 | Skill does not expand into personal life details beyond the professional claims in the gate record | PASS | Output is limited to professional titles, roles, and credentials throughout; no personal life, residence, or family details beyond a one-line disambiguation note about a family member's distinct professional profile |
+| c10 | Output's gate record at the top references the university authorisation, the honorary appointment purpose, and the professional credentials scope (Distinguished Fellow, former Ambassador, named report author) | FAIL | Gate record reads 'Approved — public figure, professional claims only' — does not reference the University of Melbourne as the authorising body, the honorary advisory appointment purpose, or enumerate the three specific credential scopes |
+| c11 | Output enumerates each claim before verifying — "Claim 1: Distinguished Fellow at University of Melbourne", "Claim 2: Former Australian Ambassador to China", "Claim 3: Author of Garnaut Climate Change Review (Australian Government commissioned)" | PARTIAL | Claims are listed upfront as 'Claims verified: Distinguished Fellow ... · Former Australian Ambassador ... · Author of Garnaut Climate Change Review' but not in the numbered 'Claim 1/2/3' format the criterion specifies; verification appears in the same table rows rather than after a distinct enumeration block |
+| c12 | Output's University of Melbourne verification uses an authoritative source — the official staff directory or faculty page at unimelb.edu.au — with the page URL cited and the role/title quoted | PARTIAL | Domain 'findanexpert.unimelb.edu.au' is cited — the official staff directory — but no specific page URL is provided and no title text is directly quoted from the directory entry |
+| c13 | Output's Ambassador role is verified via DFAT records / parliamentary Hansard records — not LinkedIn or Wikipedia — naming the appointment dates (1985-1988 per public record) and the source URL | FAIL | Ambassador sources are 'rossgarnaut.com.au/cv; Wikipedia; UTS ACRI; Lowy Institute' — explicitly not DFAT or Hansard. Dates 1985–1988 appear but no government-authoritative source URL is provided |
+| c14 | Output's Garnaut Climate Change Review authorship is verified via the published review itself (garnautreview.org.au or government archives) and the original commissioning record — primary source, not just secondary references | FAIL | Sources cited are 'Wikipedia; rossgarnaut.com.au' — both secondary. No garnautreview.org.au, government archive URL, or commissioning record referenced |
+| c15 | Output's verification results table shows all three claims as VERIFIED with specific sources cited per claim — this is the positive path, not "couldn't find" | FAIL | Table row 1 shows status '**Incorrect title**' not 'Verified/Confirmed'; only two of three rows show 'Confirmed'. The positive-path requirement of all three verified is not met |
+| c16 | Output cross-references findings — e.g. the University of Melbourne staff page references the climate review work, the Garnaut Review references his Ambassador and academic background, providing internal consistency | PARTIAL | Cross-reference section states 'Photos across his personal website, Lowy Institute, University of Melbourne, and news coverage (2008–2025) show a consistent individual... Timeline is internally coherent across all sources — no gaps.' But this is photo/timeline consistency, not the specific claim-to-claim cross-referencing described (UoM page ↔ climate review; Garnaut Review ↔ Ambassador background) |
+| c17 | Output notes additional public roles surfaced during verification — Garnaut has been on the boards of Lihir Gold, Lonely Planet, and ANU; chair of Sustainable Energy Now; multiple published books — listed factually as adjacent public information, NOT as expansion beyond gate-record scope (relevant to the appointment context) | FAIL | No board appointments, chairmanship, or published books are mentioned anywhere in the output. The only adjacent person mentioned is family member Anthony Garnaut |
+| c18 | Output's overall confidence rating is HIGH — three claims verified against authoritative primary sources with cross-referencing, no contradictions found | FAIL | Confidence assessment table rates 'Distinguished Fellow at Uni Melbourne (as stated)' as **Low** — title is wrong as worded. Only two of three claims rate High; the overall picture is mixed, not uniformly HIGH |
+| c19 | Output stays within the professional scope — does NOT investigate his personal life, family, residence, or non-professional activities | PASS | Output covers only professional titles, roles, timelines, and published work. No personal life, family, or residential details appear |
 
-## Notes
+### Notes
 
-The skill is well-structured for the positive verification path. The five-step workflow maps cleanly to the scenario and the output format is prescriptive enough to produce consistent, usable results.
-
-The one recurring gap across both criteria sets is the absence of an explicit mechanism for surfacing adjacent public roles encountered incidentally during verification. The skill's "verifying, not profiling" posture is correct, but it leaves a gap: what should the agent do when clearly relevant professional context (board appointments, publications, honours) surfaces en route? Adding a lightweight optional section to the output format template — "Additional public roles noted during verification (optional)" — would close this without changing the skill's core scope constraints.
-
-The Ambassador verification relies on the employer verification pattern (organisational website as primary source) applied analogically to government appointments. This works, but the skill already names specific registries for AU health practitioners (AHPRA) and financial advisers (ASIC). Adding DFAT historical records and Hansard as named sources for government appointment verification would strengthen the prescription and remove the need for analogy.
-
-Overall this is a solid, well-scoped skill. The gaps are in prescription depth, not structural correctness.
+The output demonstrates a reasonable structural skeleton — gate record, claims upfront, verification table, cross-reference section, confidence ratings — and correctly uses the University of Melbourne's official staff directory. However it fails on multiple substantive criteria: it does not use authoritative primary sources (DFAT/Hansard, published review, government archives) for the Ambassador and Climate Review claims, relying instead on Wikipedia and personal websites; it marks the University of Melbourne title 'Incorrect' rather than 'Verified', breaking the positive-path requirement central to this test scenario; it does not surface Garnaut's additional public roles (boards, books, chairmanships); and its overall confidence is mixed rather than uniformly HIGH. The gate record is present but too sparse — it doesn't capture the university-authorisation context or appointment purpose. Structurally partial credit was given for having a cross-reference section and listing claims before verification, but both were incomplete relative to the criterion specifications.
