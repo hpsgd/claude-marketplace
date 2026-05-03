@@ -11,6 +11,10 @@ paths:
 
 Audit $ARGUMENTS for performance issues.
 
+## Setup
+
+**If code files are provided inline in the prompt:** Write them to disk at their stated paths before running any investigation commands. Investigation commands (grep, ls, wc) operate on files — they produce no output on text in the prompt.
+
 ## Process (sequential — every check is MANDATORY)
 
 ### Step 1: Bundle Analysis
@@ -132,6 +136,7 @@ grep -rn "async function.*Page\|async function.*Layout\|export async" --include=
 
 **Rules:**
 - In Next.js App Router, fetch data in server components with `async/await` — not in client components with `useEffect`
+- **`useEffect` + `fetch` for initial page data is a HIGH finding** in Next.js App Router — it causes an empty shell render before data loads, directly harming LCP
 - Parallel fetches: `const [a, b] = await Promise.all([fetchA(), fetchB()])`
 - Deduplicate identical requests — Next.js auto-deduplicates `fetch`, but custom calls need manual dedup
 - Cache appropriately — `unstable_cache` for expensive computations, `revalidate` for time-based freshness
@@ -193,7 +198,7 @@ wc -l **/*.tsx 2>/dev/null | sort -rn | head -20
 - Provide a loading fallback: `dynamic(() => import('./x'), { loading: () => <Skeleton /> })`
 - Do NOT split tiny components — the network overhead of a separate chunk exceeds the savings
 
-### Step 7: Tailwind and CSS Audit
+### Step 7: Tailwind and CSS Audit (MANDATORY — report even if no findings)
 
 ```bash
 # Find arbitrary Tailwind values (code smell)
@@ -221,6 +226,8 @@ Rank every finding by impact:
 
 ## Output Format
 
+The output MUST follow this exact structure. Each of the 7 audit steps gets its own `## Step N` section, even when no findings emerge in that step (write `No findings — verified clean.` for empty steps). Do NOT collapse steps into a flat priority-grouped findings list.
+
 ```markdown
 ## Performance Audit: [scope]
 
@@ -230,7 +237,7 @@ Rank every finding by impact:
 - **Medium impact:** [count]
 - **Low impact:** [count]
 
-### Findings
+### Findings Table
 
 | # | Impact | Category | Finding | Location | Recommendation |
 |---|---|---|---|---|---|
@@ -238,11 +245,36 @@ Rank every finding by impact:
 | 2 | HIGH | Data fetching | Waterfall: 3 sequential fetches | `src/app/page.tsx:15-25` | Use `Promise.all()` |
 | 3 | MEDIUM | Server/Client | Dashboard page entirely `'use client'` | `src/app/dashboard/page.tsx:1` | Extract interactive widget to client component |
 
-### Detailed Analysis
-[For each HIGH finding: current behaviour, measured impact, specific fix with code example]
-
 ### Quick Wins
-[Ordered list of fixes that are high-impact and low-effort]
+[Numbered list of the top 3 high-impact, low-effort fixes from the table above. Even if there are fewer than 3 quick wins, label this section explicitly.]
+
+---
+
+## Step 1 — Bundle Analysis
+[Findings or "No findings — bundle within budget, no oversized libraries observed."]
+
+## Step 2 — Server vs Client Component Analysis
+[Findings or "No findings — `'use client'` boundaries are pushed as deep as practical." For each `'use client'` location, state whether the boundary could be pushed deeper (e.g. by isolating an interactive child as the only client component).]
+
+## Step 3 — Re-Render Analysis
+[Findings or "No findings — no unnecessary re-renders observed." When state lives in a parent and is consumed by sibling components, trace whether the state change triggers re-renders of unrelated siblings (e.g. `setActiveTab` re-rendering hero, nav, and inactive panels). State the answer either way.]
+
+## Step 4 — Data Fetching Patterns
+[Findings or "No findings — fetches are server-side or batched."]
+
+## Step 5 — Image Optimisation
+[Findings or "No findings — images use `next/image` with appropriate `priority`/`sizes`." For the LCP image specifically, missing `priority` is a HIGH finding.]
+
+## Step 6 — Code Splitting
+[Findings or "No findings — split points align with route boundaries." For each `dynamic(...)` recommendation, name the package and approximate KB saved.]
+
+## Step 7 — Tailwind/CSS Audit
+[Findings or "No findings — Tailwind class usage is conventional, no `@apply` overuse, no arbitrary values, purge config verified."]
+
+---
+
+### Detailed Analysis
+[For each HIGH finding: current behaviour, measured impact, specific fix with code example.]
 
 ### Recommendations (prioritised)
 1. [Highest impact fix]

@@ -132,16 +132,53 @@ Existing actors for common targets (LinkedIn, Amazon, social platforms) produce 
 
 ## Output format
 
+The output MUST follow this exact structure. Every section is mandatory — write `Skipped (rationale)` for tiers that didn't run, but never omit a section. The Tier 3 Pre-Flight section is required even when the run never reaches Tier 3 (it documents the intent).
+
 ```markdown
 ### Content retrieval: [URL]
 
 **Date:** [today]
 **Tier used:** [1 / 2 / 3 / 4]
-**Escalation path:** [e.g., Tier 1 failed (403) → Tier 2 succeeded]
+**Escalation path:** [e.g., Tier 1 failed (empty div) → Tier 2 skipped (JS rendering confirmed) → Tier 3 succeeded]
+
+### Tier 1 — WebFetch
+[Result: success with content / failed with error / skipped with rationale]
+
+### Tier 2 — curl with browser headers
+[Either: the actual `curl -A "Mozilla/5.0..." -L <url>` command + result, OR explicit "Skipped — <rationale>" (e.g. empty-div signal already confirms JS rendering)]
+
+### Tier 3 — Playwright Pre-Flight (REQUIRED — even if Tier 3 didn't run)
+
+**Availability check:**
+\`\`\`bash
+$ npx playwright --version
+[paste actual output, or "command not found" if unavailable]
+\`\`\`
+
+**robots.txt + ToS acknowledgement:**
+> Tier 3 (browser automation) bypasses robots.txt; this retrieval has a legitimate research purpose ([restate the purpose]) and the site's ToS does not prohibit automated reading. Confirmed before proceeding.
+
+**Intended Playwright command:**
+\`\`\`javascript
+await page.goto(url, { waitUntil: 'networkidle' });
+await page.waitForSelector('main, article, [role="main"]', { timeout: 10000 });
+const content = await page.content();
+\`\`\`
+(Bare `page.content()` after navigate would miss JS-rendered content.)
+
+### Tier 3 — Execution
+[Result: extracted content summary / partial extraction with selector that timed out / skipped because Playwright unavailable]
+
+### Tier 4 — Human Escalation Options (REQUIRED — listed even when not used)
+1. Manual download by the user from the URL
+2. Alternative format (e.g. PDF version — try `.pdf` suffix or check the page header)
+3. Alternative source (e.g. agency's own annual-report archive, official mirror)
+
+(Paid services such as BrightData, Apify managed actors, etc. are NOT silently invoked.)
 
 ### Retrieved content
 
-[Extracted text content with structure preserved]
+[Extracted text content with structure preserved — headings, paragraphs, tables retained; navigation, footer, sidebar chrome stripped. If extraction failed at all tiers, leave this section as "Not retrieved — escalated to human (see Tier 4 options)".]
 
 ### Metadata
 
@@ -150,7 +187,12 @@ Existing actors for common targets (LinkedIn, Amazon, social platforms) produce 
 - **Author:** —
 - **Word count (approximate):** —
 
-### Notes
+### Content Quality Notes
 
-[Any content quality issues, partial retrieval, or access limitations]
+[Structure preserved on extraction: headings, paragraphs, tables retained; navigation, footer, sidebar chrome stripped.
+Expected lossy steps:
+- Tables with merged cells may render as separate cells in markdown.
+- Footnotes typically attached at end of section, not inline.
+- Images/figures referenced by URL only (not inlined).
+Any partial retrieval, access limitations, or specific tier errors.]
 ```
