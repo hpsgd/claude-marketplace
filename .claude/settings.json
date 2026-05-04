@@ -1,8 +1,7 @@
 {
   "enabledPlugins": {
     "thinking@turtlestack": true,
-    "plugin-curator@turtlestack": true,
-    "caveman@caveman": true
+    "plugin-curator@turtlestack": true
   },
   "extraKnownMarketplaces": {
     "turtlestack": {
