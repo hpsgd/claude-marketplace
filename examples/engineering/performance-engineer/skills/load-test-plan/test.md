@@ -13,11 +13,18 @@ Implementation requirements:
 - **k6 script skeleton** with BOTH:
   - `check()` calls for response validation (status 200, body has `results` array, `response_time < 500ms`).
   - `thresholds` config for automated pass/fail (e.g. `http_req_duration: ['p(95)<800']`, `http_req_failed: ['rate<0.01']`, `http_reqs: ['count>9000']`).
-- **Test scenarios (4 phases, sequenced)**:
+- **Test scenarios (FIVE phases, sequenced)** — the scenarios table MUST contain all five rows labelled with the test type names below:
   1. **Baseline** — 50 rps for 5 min (matches current production load).
-  2. **3× target verification** — 150 rps for 30 min (verifies the goal).
-  3. **Breaking point** — ramp from 150 rps to 1000 rps over 20 min, identify where p99 crosses 2× baseline OR error rate >1%.
-  4. **Memory leak detection** — sustained 100 rps for 4 hours, monitor RSS / heap on the API process every 30s, flag if monotonic increase.
+  2. **Stress (3× target verification)** — 150 rps for 30 min (verifies the goal).
+  3. **Stress (breaking point)** — ramp from 150 rps to 1000 rps over 20 min, identify where p99 crosses 2× baseline OR error rate >1%.
+  4. **Endurance (memory leak detection)** — sustained 100 rps for 4 hours, monitor RSS / heap on the API process every 30s, flag if monotonic increase.
+  5. **Spike** — sudden jump from 50 rps to 500 rps for 2 min, then drop back to 50 rps for 5 min. Verify the system recovers (latency returns to baseline within 60s) and no requests are dropped during the descent. This is REQUIRED — a gradual ramp does NOT count as a spike test.
+
+- **Isolation requirement** — the plan MUST include an explicit warning that shared staging produces unreliable/noisy results. State concretely what "isolated" means: dedicated DB instance (not shared with other test workloads or staging consumers), no concurrent CI jobs or background batch processes, dedicated API host, no other tenants on the test environment.
+
+- **Monitoring owner** — the execution plan MUST name the monitoring owner by role (e.g. "Performance Engineer on duty" or "DevOps lead") and list the metrics they track during each test: server RSS/heap, DB active connection count, GC pauses, error log rate, p50/p95/p99 latency.
+
+- **Encode p50 in k6 thresholds** — `p(50) < 250` (or similar) MUST appear in the k6 `thresholds` block alongside p95 and p99, so all three percentiles drive automated pass/fail.
 - **Realistic query parameter distribution**: `q` should rotate through ~100 representative search terms (popular + long-tail), not the same string every iteration. `page` should follow Zipf distribution favouring page 1.
 - **Pre-flight infrastructure check**: state required environment — k6 binary version, target environment URL, monitoring dashboard for RSS/CPU during run.
 

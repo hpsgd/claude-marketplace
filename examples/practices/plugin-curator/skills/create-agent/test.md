@@ -26,7 +26,23 @@ Output structure:
     "category": "engineering"
   }
   ```
-- **Step 6 — README update** — add the new agent to the Engineering section.
+- **Step 6 — README updates (THREE places)** — show the diff for each:
+  1. Main agent listing (top-level table or list of agents)
+  2. Engineering-category section listing
+  3. Skill cross-reference (if any related skill mentions billing-adjacent agents)
+- **Step 7 — Coordinator RATSI update** — show the diff to the coordinator agent's RATSI table (`plugins/leadership/coordinator/agents/coordinator.md` or equivalent) adding billing-engineer with Responsibilities/Accountabilities entries.
+- **Step 8 — CTO/lead team listing update** — show the diff to the relevant lead agent (likely `plugins/leadership/cto/agents/cto.md`) adding billing-engineer to its specialist roster.
+- **Step 9 — Verification** — run and SHOW THE OUTPUT of:
+  ```bash
+  jq . plugins/engineering/billing-engineer/.claude-plugin/plugin.json
+  jq '.plugins | length' .claude-plugin/marketplace.json
+  find plugins/engineering -maxdepth 1 -mindepth 1 -type d | wc -l
+  grep -r "billing-engineer" plugins/ | wc -l
+  grep -rn "Martin\|martin@hps" plugins/engineering/billing-engineer/ || echo "no private references found"
+  ```
+  Each command MUST be shown with its captured output beneath. The `jq '.plugins | length'` count MUST be reported alongside the directory count from `find ... | wc -l` and the two MUST be reconciled (e.g. "31 marketplace entries vs 31 plugin directories — match").
+
+ALL nine steps above MUST appear as labelled headings in the output (`## Step 1 — Pre-flight reads`, `## Step 2 — Domain research`, ..., `## Step 9 — Verification`). Do NOT collapse, merge, or skip steps even if a registry entry already exists — if it exists, show its current content via `grep`/`jq` instead of writing a diff, but the heading MUST be present.
 
 A few specifics for the response:
 

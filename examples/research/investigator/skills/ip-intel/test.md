@@ -12,10 +12,11 @@ Output structure (use these section names in this order):
 2. **Primary ownership lookup** — `ipinfo.io` for ASN, organisation, geolocation. Quote URL `https://ipinfo.io/185.220.101.47` and report fields: `org`, `asn`, `country`, `city`, `region`, `postal`, `loc`, `timezone`. If blocked, mark `[blocked]` per field.
 3. **Authoritative allocation lookup** — query the appropriate RIR. For 185.x.x.x → RIPE (`https://stat.ripe.net/data/whois/data.json?resource=185.220.101.47` or `whois -h whois.ripe.net 185.220.101.47`). Report allocation date, country, allocated to.
 4. **Reverse DNS PTR record** — `dig -x 185.220.101.47 +short` (or equivalent). Interpret what the PTR reveals (e.g. `tor-exit-relay.example.org` → Tor exit node; `static.cloudflare.com` → CDN; default ISP-formatted hostname → residential dynamic).
-5. **Reputation lookups** — VirusTotal, AbuseIPDB, OTX, ThreatFox, URLhaus. Each with URL + result. Mark `[blocked]` or `[no data]` where applicable.
+5. **Reputation lookups** — at minimum VirusTotal, AbuseIPDB, AND Shodan public search (all three are mandatory; OTX/ThreatFox/URLhaus optional extras). Each with URL + result count. Mark `[blocked]` or `[no data]` where applicable. Shodan data MUST be labelled HISTORICAL (e.g. "Shodan last scanned YYYY-MM-DD; current state may differ — Shodan reflects past scans, not live state"). MUST include an explicit clean-reputation caveat: "Absence of flagging in VirusTotal/AbuseIPDB does NOT mean safe — many IPs are uncategorised, especially recently allocated infrastructure."
 6. **Tor / VPN / proxy check** — `https://check.torproject.org/exit-addresses` or `https://www.dan.me.uk/tornodes`. Tor exit nodes have a known list — explicit yes/no.
-7. **Final classification** — verdict (e.g. "Tor exit node — outbound 443 from this IP is consistent with proxied traffic; investigate the originating internal host, not the IP").
-8. **Follow-on routing** — `/investigator:domain-intel <reverse-DNS-domain>` if PTR resolves to a domain, or `/investigator:entity-footprint <org>` if the org is a known entity.
+7. **Related infrastructure** — passive DNS (SecurityTrails / RiskIQ-style) for other domains hosted on this IP, /24 neighbour reputation patterns, ASN-level reputation summary. Even if blocked, attempt each and mark `[blocked]` per source. Do NOT defer this to a follow-on command — perform the lookups inline.
+8. **Final classification** — verdict (e.g. "Tor exit node — outbound 443 from this IP is consistent with proxied traffic; investigate the originating internal host, not the IP").
+9. **Follow-on routing** — `/investigator:domain-intel <reverse-DNS-domain>` if PTR resolves to a domain, or `/investigator:entity-footprint <org>` if the org is a known entity.
 
 A few specifics for the response:
 

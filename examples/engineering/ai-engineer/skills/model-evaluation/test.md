@@ -15,6 +15,18 @@ Output requirements:
 - **Cost calculation shown**: token-cost × tokens-per-ticket × tickets/day × 30 = $/month. Verify the result fits the $225/month ceiling.
 - **Recommendation with sacrifice statement** — what is sacrificed by choosing the recommended model (e.g. "Haiku gives us 92% accuracy at $0.0008/request — sacrificing 1.5pp accuracy vs Sonnet for 5× cost reduction; revisit if accuracy drops below 90% on production samples").
 
+- **Hard requirements table (mandatory ALL SIX dimensions)** — list pass/fail thresholds for: (1) accuracy ≥90%, (2) p95 latency <2s, (3) cost <$0.005/request, (4) context window ≥1K tokens, (5) **reliability ≥99.5% provider uptime SLA** (named explicitly), (6) **safety refusal rate ≤2% on benign tickets** (named explicitly). All six MUST be hard pass/fail thresholds, not narrative.
+
+- **Comparison matrix MUST include an explicit `All requirements met? (YES/NO)` row** per candidate AND the recommended candidate MUST be the **cheapest passing** model — not the highest-quality. If GPT-4o-mini and Haiku both pass all six requirements, recommend GPT-4o-mini if cheaper. Justify the choice on cost, not on extra accuracy headroom.
+
+- **Fallback plan MUST cover all FOUR scenarios with a NAMED fallback model for each** (no generic "switch model" text):
+  - Primary model **unavailable** (provider outage) → fallback model: name it (e.g. GPT-4o-mini via OpenRouter)
+  - **Latency degradation** (p95 breaches 2s) → fallback model: name it
+  - **Cost spike** (provider raises pricing >20%) → fallback model: name it
+  - **Quality degradation** (accuracy drops below 90% on rolling 7-day production samples) → fallback model: name it
+
+- **Class-imbalance section (REQUIRED)** — explicitly state that billing/technical/account/feature-request appear at unequal rates in production (e.g. billing ~45%, technical ~30%, account ~15%, feature-request ~10%). Per-model results MUST report **per-class precision, recall, and F1** (not only overall accuracy), in a labelled `### Per-class metrics` subsection. Note explicitly that overall accuracy can mask poor minority-class performance.
+
 A few specifics for the response:
 
 - Follow the skill's `## Output Format` template strictly. Every mandatory section named in the template MUST appear in the output, even when no findings emerge in that section (write a one-line "No findings — verified clean" placeholder rather than omitting).

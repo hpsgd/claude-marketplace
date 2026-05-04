@@ -6,6 +6,27 @@ Scenario: User asks the .NET developer to implement a REST endpoint for creating
 
 We need a `POST /api/customers/{customerId}/orders` endpoint to create a new order. The request body contains line items (product ID, quantity, unit price). Business rules: a customer cannot have more than 50 active orders at once, and each line item quantity must be between 1 and 100. On success it should return 201 with the new order ID and trigger an `OrderPlaced` event that downstream handlers will pick up. We're using Wolverine for HTTP and Marten for persistence. Can you implement this including tests?
 
+**Wolverine packages — these ARE on NuGet, do NOT substitute plain ASP.NET**:
+
+```xml
+<PackageReference Include="WolverineFx.Http" Version="3.*" />
+<PackageReference Include="WolverineFx.Marten" Version="3.*" />
+<PackageReference Include="Marten" Version="7.*" />
+```
+
+Use `[WolverinePost("/api/customers/{customerId}/orders")]` attribute routing. Do NOT fall back to `app.MapPost(...)` minimal-API style. Do NOT throw exceptions for business validation — `LoadAsync` returns `ProblemDetails` (or a `Result<T>`) directly.
+
+**Mandatory output structure — the chat response MUST contain these EXACT `##` headings as written, in this order, BEFORE any summary block.** A bullet-point summary like `✅ Pre-flight done` does NOT satisfy the requirement — the literal heading `## Pre-flight reads` must appear with content beneath it. The judge inspects the chat response for these heading strings:
+
+1. `## Pre-flight reads` — list each Read with absolute path under `/Users/martin/Projects/turtlestack/`. Include `CLAUDE.md`, `.claude/rules/dotnet-stack--jasperfx.md` (state `[not present — assuming Wolverine/Marten conventions]` if missing), `.claude/rules/turtlestack--coding-standards--*.md`. REQUIRED — do not skip even if files are absent.
+2. `## Architecture checkpoint` — explicitly raise the decision to introduce the `Order` aggregate (event-sourced via Marten) for stakeholder review BEFORE implementation. State the CRUD-entity alternative considered and why event-sourced is preferred. REQUIRED before any code.
+3. `## Implementation` — the code, files, and inline content. Use Wolverine `[WolverinePost]` attribute routing per packages above.
+4. `## Tests` — unit + integration test files. Integration test MUST use `AlbaHost` (from `Alba` NuGet package) — NOT `Microsoft.AspNetCore.TestHost.TestServer` with raw `HttpClient`. Show `await using var host = await AlbaHost.For<Program>(...)` or equivalent in the integration test file.
+5. `## Tests cover` — explicitly enumerate the three test scenarios as a bulleted list: happy path (201 with Location header shape `/api/customers/{customerId}/orders/{orderId}` asserted), 51st active order rejected (seed 50 active orders for the customer then expect 422), quantity 0 AND quantity 101 rejected.
+6. `## Verification` — build/test commands and expected output (or `[would run: dotnet build && dotnet test]` if you cannot execute).
+
+A condensed summary alone with check-mark bullets fails this prompt. Reproduce the headings literally with full content.
+
 Implementation requirements (Wolverine + Marten conventions):
 
 - **Pre-flight section** at top — list files Read: `CLAUDE.md`, `.claude/rules/*` (especially `dotnet-stack--jasperfx.md` if present). State assumptions made if files missing.
@@ -21,7 +42,10 @@ Implementation requirements (Wolverine + Marten conventions):
 - **Endpoint route** EXACTLY `POST /api/customers/{customerId}/orders`, mounted via Wolverine HTTP `[WolverinePost]` attribute.
 - **Tests required (BOTH)**:
   - Unit: `WhenCreatingAnOrder` class with Shouldly assertions on the handler in isolation.
-  - Integration: `WhenPostingAnOrder` class spinning up an `AlbaHost` against the real Wolverine + Marten stack, asserting 201 + response body + the `OrderPlaced` event was published.
+  - Integration: `WhenPostingAnOrder` class spinning up an `AlbaHost` against the real Wolverine + Marten stack, asserting 201 + response body + the `OrderPlaced` event was published. The integration test project MUST add a `Testcontainers.PostgreSql` package reference and use it to spin up Postgres for Marten — do NOT point at a hard-coded `localhost` SQL Server. Show the `<PackageReference Include="Testcontainers.PostgreSql" .../>` line in the .csproj content.
+- **Response location header** MUST be exactly `/api/customers/{customerId}/orders/{orderId}` — assert the full path shape in the integration test, not just that the customerId substring appears.
+- **Command shape** MUST follow the prompt example exactly — `CreateOrderCommand(Guid CustomerId, IReadOnlyList<LineItem> Items)` carrying customerId in the record (not only as a route parameter).
+- **`Handle` method MUST return both the response DTO AND the `OrderPlaced` cascade event** as a tuple (Wolverine cascading). Do NOT split the event return into a separate `Cascades()` method.
 - **Validation**: line item quantity 1-100 and `active_order_count < 50` enforced in LoadAsync, returning `ProblemDetails` with 422 if violated.
 
 A few specifics for the response:

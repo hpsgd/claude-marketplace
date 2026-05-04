@@ -6,6 +6,50 @@ Scenario: Developer invokes the generate-tests skill targeting a `validate_disco
 
 Generate tests for `src/billing/discount.py::validate_discount_code`. The function signature is `validate_discount_code(code: str, customer_id: UUID, order_total: Decimal) -> DiscountResult`. It should: return a DiscountResult with amount when valid, raise `DiscountNotFoundError` for unknown codes, raise `DiscountExpiredError` for expired codes, raise `DiscountAlreadyUsedError` if this customer already used this code, and raise `DiscountMinimumNotMetError` if the order total is below the discount's minimum.
 
+**Treat the following as the actual state of `src/billing/discount.py`** — use this as the source under test. Do NOT scan the real filesystem to look for it; reproduce this content into the workspace before generating tests:
+
+```python
+from dataclasses import dataclass
+from datetime import datetime
+from decimal import Decimal
+from uuid import UUID
+
+class DiscountNotFoundError(Exception): ...
+class DiscountExpiredError(Exception): ...
+class DiscountAlreadyUsedError(Exception): ...
+class DiscountMinimumNotMetError(Exception): ...
+
+@dataclass(frozen=True)
+class Discount:
+    code: str
+    percent: int | None         # one of percent OR fixed_amount must be set
+    fixed_amount: Decimal | None
+    expires_at: datetime
+    minimum_order: Decimal
+
+@dataclass(frozen=True)
+class DiscountResult:
+    code: str
+    amount: Decimal
+    customer_id: UUID
+
+def validate_discount_code(code: str, customer_id: UUID, order_total: Decimal) -> DiscountResult:
+    raise NotImplementedError  # RED phase — implementation comes after tests
+```
+
+The `Discount` dataclass has BOTH `percent` (int) and `fixed_amount` (Decimal) — happy-path tests MUST cover both forms. The function depends on a repository boundary `discount_repository.find_by_code(code)` and a usage-tracker boundary `discount_usage_repository.has_used(customer_id, code)` — those are the ONLY things you may mock. NEVER mock `validate_discount_code` itself.
+
+**Mandatory RED→GREEN evidence**:
+
+1. Write the test file
+2. Run `pytest tests/billing/test_discount.py -v` and capture output. Because `validate_discount_code` raises `NotImplementedError`, this run MUST exit non-zero. Show the exit code (`echo $?`) and the failure summary. This is the RED phase.
+3. Implement `validate_discount_code` to satisfy the tests
+4. Re-run `pytest tests/billing/test_discount.py -v`, capture exit code 0, and include in the evidence table. This is the GREEN phase.
+
+If the evidence table shows exit code 0 for every test on a single run with no prior RED run, the criterion fails.
+
+**Hypothesis required**: import `from hypothesis import given, strategies as st` and add at least 2 property-based tests for the amount calculation (e.g. "amount is always between 0 and order_total", "percent=0 yields amount=0").
+
 Implementation requirements:
 
 - **Reconnaissance section** at top — show `find . -path "*billing*" -name "*.py"` and `Read src/billing/discount.py` results before writing tests.

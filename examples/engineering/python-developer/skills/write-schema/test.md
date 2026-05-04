@@ -6,10 +6,18 @@ Scenario: Developer invokes the write-schema skill to produce a JSON Schema and 
 
 Write a schema for pipeline configuration. Each pipeline has: a name (required, 1-255 chars), a source with type (postgres, mysql, s3, or api) and a connection string, an optional cron schedule, and output settings with format (json, csv, or parquet) and optional output path.
 
+**Required deliverables (write all to disk AND show inline)**:
+
+1. `pipeline_schema.json` — JSON Schema (draft 2020-12). MUST include `$schema`, `$id`, and `additionalProperties: false` on every object definition (root, `source`, `output`). MUST list a `required` array on every object. Every property MUST have a `description`. `source.type` MUST use the `enum` keyword with exactly `["postgres", "mysql", "s3", "api"]`. `output.format` MUST use `enum` with exactly `["json", "csv", "parquet"]`. The `name` property MUST have `minLength: 1` and `maxLength: 255`. The optional `schedule` property MUST have a `pattern` validating 5 or 6 space-separated tokens.
+2. `pipeline_schema.py` — Pydantic v2 models (see implementation requirements below).
+3. `test_pipeline_schema.py` — at least 3 valid configs (one per source type plus minimal vs full) AND at least 3 invalid configs (unknown source type, name too long, extra unknown field) — each asserting expected error class.
+4. `example_pipeline.yaml` (or `.json`) — example configuration file that round-trips through BOTH the JSON Schema validator (`jsonschema`) and the Pydantic model.
+5. `SCHEMA_EVOLUTION.md` — schema evolution guidance section naming additive vs breaking changes with a specific code example of each.
+
 Implementation requirements (Pydantic v2 strict):
 
 - **Reconnaissance section** at top — show commands run: `find . -name "*.py" -path "*schema*" -o -name "models.py"`, identify validation library (assume Pydantic v2 if not stated). Report results.
-- **Pydantic models** with `model_config = ConfigDict(frozen=True, strict=True)` on every domain model.
+- **Pydantic models** with `model_config = ConfigDict(frozen=True, strict=True, extra='forbid')` on every domain model. The `extra='forbid'` is mandatory — unknown fields must raise.
 - **String enums use `StrEnum`** (Python 3.11+) — not plain string literals or `Literal[...]`:
   ```python
   from enum import StrEnum

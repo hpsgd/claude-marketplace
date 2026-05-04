@@ -12,17 +12,26 @@ Use these reference data points (don't leave [DATA NEEDED] gaps):
 - **Our product (Clearpath)**: $25/user/month at Pro tier. Currently positioned as small-team-friendly (5-50 seats). Native iOS/Android apps. Pre-built integrations: Slack, GitHub, GitLab, Linear. Mid-market repositioning means targeting 50-500 seats.
 - **Direct competitors**: Asana ($30.49/user/mo Business), Monday.com ($24/user/mo Pro), ClickUp ($19/user/mo Business Plus), Linear ($14/user/mo Business), Notion ($15/user/mo Plus)
 - **Indirect competitors**: Jira ($16/user/mo Premium), Smartsheet ($25/user/mo Business)
-- **Substitutes**: Trello (free tier), Microsoft Planner (bundled with M365), spreadsheet-based tracking
+- **Status quo / do-nothing**: spreadsheets + Slack + email, Trello (free tier), Microsoft Planner (bundled with M365)
+- **Emerging threats (AI-native PM)**: Notion AI ($10/user/mo add-on), Reclaim AI ($18/user/mo Pro), Motion ($34/user/mo) — all introducing AI-driven scheduling/prioritisation
+- **Adjacent tools**: Slack Workflows, GitHub Projects, Microsoft Loop
 - **Aspirational competitors**: Airtable Enterprise ($45/user/mo)
 - **Internal-build threat**: large enterprises building on Jira + custom plugins or Confluence + macros
+- **Clearpath analytics add-on**: $15/seat/month optional add-on enabling cross-portfolio dashboards. Asana includes basic reporting in Business; Monday locks portfolio reporting behind Enterprise.
 
 Output structure:
 
-1. **Competitive set (5 types named explicitly)**: direct, indirect, substitute, aspirational, internal-build. List each category with examples from above.
+1. **Competitive set (5 types named explicitly using THESE labels)**: `direct`, `indirect`, `status quo / do-nothing`, `emerging threats`, `adjacent tools`. Each category MUST have ≥1 named example from the reference data above. The `emerging threats` and `adjacent tools` categories are mandatory — do not collapse them into other categories.
 2. **Per-competitor research card** with named source citation (G2, Capterra, vendor website, AFR coverage). One per direct competitor at minimum.
 3. **Comparison matrix** with columns: `Competitor | Pricing ($/user/mo) | Mobile UX | API rate limit | Integration count | Mid-market fit (S/M/L) | Strengths | Weaknesses`. Table format, not prose.
-4. **Parity vs differentiator section**: features that are TABLE STAKES (every competitor has them — task list, kanban, calendar, comments) vs features that are DIFFERENTIATORS (Linear's keyboard-first, Notion's docs+db, Clearpath's <unique angle>).
-5. **White-space synthesis**: name the segment + feature + price combo currently underserved, framed for the mid-market repositioning.
+4. **Parity vs differentiator section** (REQUIRED — must appear as its own labelled heading `## Parity vs Differentiators`): structured as TWO labelled lists. `### Table stakes (parity required)` — at least 3 features every competitor has (e.g. task list, kanban, calendar view, comments, file attachments). `### Differentiators (reasons to choose)` — at least 3 named per-competitor differentiators (e.g. Linear's keyboard-first speed, Notion's docs+db hybrid, Clearpath's mid-market analytics add-on at $15/seat). Do NOT bury this distinction inside the per-competitor narrative — produce the explicit two-list section.
+
+5. **Buyer-anchor analysis** (REQUIRED): explicitly state that operations directors / PMOs anchor evaluations to Asana and Monday because those are in-house standards, and DO NOT typically benchmark against Linear or Notion in mid-market RFPs. Name this dynamic — do not leave it implicit.
+
+6. **Pricing power analysis** (REQUIRED): one paragraph comparing Clearpath's $15/seat analytics add-on to (a) Monday's tiered pricing where portfolio reporting is Enterprise-locked and (b) Asana including basic reporting in Business at $30.49. Conclude whether the add-on is defensible at $15.
+7. **White-space synthesis**: name the segment + feature + price combo currently underserved, framed for the mid-market repositioning.
+
+The chat response MUST quote the YAML frontmatter from the skill at `/Users/martin/Projects/turtlestack/plugins/product/gtm/skills/competitive-analysis/SKILL.md` (the `name`, `description`, and `argument-hint` fields) verbatim at the top of the response so frontmatter validity can be verified.
 
 A few specifics for the response:
 
