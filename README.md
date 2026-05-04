@@ -925,7 +925,7 @@ The regex classifier self-evolves. Each retrospective that classifies an ambiguo
 
 ### Evaluation framework
 
-Every plugin definition is tested against a calibrated [evaluator agent](plugins/practices/plugin-curator/agents/evaluator.md). Each test has a [realistic prompt, criteria, simulated output, and per-criterion evaluation](examples/). The Example column in each plugin table links to the evaluated output.
+Every plugin definition is tested against a calibrated [evaluator agent](plugins/practices/plugin-curator/agents/evaluator.md). Each test has a [realistic prompt, criteria, captured output, and per-criterion evaluation](examples/). The Example column in each plugin table links to the evaluated output.
 
 Run evaluations via the [evaluate skill](plugins/practices/plugin-curator/skills/evaluate/SKILL.md):
 
@@ -935,7 +935,7 @@ Run evaluations via the [evaluate skill](plugins/practices/plugin-curator/skills
 /evaluate examples/research/analyst/skills/company-lookup  # single test
 ```
 
-Full results in [examples/REPORT.md](examples/REPORT.md).
+The skill prints a summary table to the chat. Per-test `result.md` files in each test directory carry the full output and judge breakdown — those are linked from the Example column in every plugin table above.
 
 ### Creating a new plugin
 

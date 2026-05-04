@@ -79,13 +79,13 @@ Treat exit codes ≥ 3 as failures of the harness, not the skill — record them
 
 For long batches, run sequentially. Parallel runs are safe in principle (each gets its own tmp workspace) but cost-of-debugging outweighs the speed-up for now.
 
-## Step 5: Aggregate results
+## Step 5: Build the summary
 
-For directory or all-tests mode, collect every JSON summary into a single report at `examples/REPORT.md`:
+For directory or all-tests mode, collect the per-test JSON summaries into a table for chat output. Don't write this to a file — each test's `result.md` already carries the full record on disk; an aggregate snapshot just goes stale between runs.
+
+Use this shape:
 
 ```markdown
-# Evaluation report
-
 | Field | Value |
 |---|---|
 | Run date | <YYYY-MM-DD> |
@@ -100,16 +100,14 @@ For directory or all-tests mode, collect every JSON summary into a single report
 | Total cost | $X.XX |
 | Total duration | XmYs |
 
-## Results
-
 | Test | Type | Verdict | Score | Cost | Duration |
 |---|---|---|---|---|---|
 | <relative-path> | skill\|agent | PASS\|PARTIAL\|FAIL | X/Y (Z%) | $0.XX | XX s |
 ```
 
-Sort the table by score ascending so the lowest-scoring tests surface first. Verdicts under PASS deserve attention before the high scorers.
+Sort the results table by score ascending so the lowest-scoring tests surface first. Verdicts under PASS deserve attention before the high scorers.
 
-For single-test mode, skip the report file and just print the runner's JSON output along with the `result.md` path.
+For single-test mode, skip the table and just print the runner's JSON output along with the `result.md` path.
 
 ## Step 6: Report back
 
@@ -126,9 +124,9 @@ Don't suggest fixes here — that's a separate workflow. Just surface the data.
 
 | Argument | Behaviour |
 |---|---|
-| (empty) | Run all of `examples/`, write `REPORT.md` |
-| `examples/research` | Run all tests under that subtree, write `REPORT.md` |
-| `examples/practices/thinking/skills/handoff` | Run that single test, no report |
+| (empty) | Run every `test.md` under `examples/`, print summary table to chat |
+| `examples/research` | Run every `test.md` under that subtree, print summary table to chat |
+| `examples/practices/thinking/skills/handoff` | Run that single test, print its result.md path |
 | `path/that/doesnt/exist` | Report missing path, stop |
 | Anything else | Treat as a path, glob for `test.md` underneath |
 
@@ -158,14 +156,15 @@ Don't suggest fixes here — that's a separate workflow. Just surface the data.
 
 ### Multi-test mode
 
-Print the full `REPORT.md` table to the chat, then point at the file:
+Print the summary block and results table from Step 5 directly to chat, followed by:
 
 ```markdown
-Wrote evaluation report to `examples/REPORT.md` — N tests, X passed, Y partial, Z failed.
-Total cost $X.XX, total duration XmYs.
+N tests — X passed, Y partial, Z failed. Total cost $X.XX, total duration XmYs.
 
 <sub-90% tests listed inline so they're impossible to miss>
 ```
+
+Per-test `result.md` files on disk hold the full output and judge reasoning for any test the user wants to drill into.
 
 ## Related skills
 
