@@ -6,6 +6,15 @@ Scenario: Developer invokes the model-evaluation skill to select a model for cla
 
 Evaluate models for support ticket classification. We receive ~1,500 tickets/day. Each ticket is 50-500 words. We need to classify into: billing, technical, account, feature-request. Requirements: >= 90% accuracy, p95 latency < 2s, cost < $0.005/request (~$225/month at volume), context window of at least 1K tokens is fine.
 
+Output requirements:
+
+- **Determinism settings**: explicitly set **temperature = 0** for classification (deterministic output) AND run each test prompt at least 3 times to confirm the model returns the same label each time (rules out non-deterministic ties).
+- **Eval dataset specification**: 50+ examples MINIMUM with the **60/25/15 split** — 60% happy-path / clear-class examples, 25% edge cases (ambiguous between two classes, bilingual content, very short tickets, very long tickets), 15% adversarial (jailbreak attempts in ticket body, prompt-injection via subject line).
+- **Re-evaluation schedule** — explicit recommendation: re-run the eval **quarterly** OR on these triggers: model version update from provider, accuracy on production samples drops >2pp, new ticket category added, support volume changes >30%.
+- **Comparison matrix** with rows for at least: Claude Haiku 4.5, Claude Sonnet 4.6, GPT-4o-mini, Llama-3.1-8B (self-hosted). Columns: accuracy, p95 latency, cost/request, context window, recommendation.
+- **Cost calculation shown**: token-cost × tokens-per-ticket × tickets/day × 30 = $/month. Verify the result fits the $225/month ceiling.
+- **Recommendation with sacrifice statement** — what is sacrificed by choosing the recommended model (e.g. "Haiku gives us 92% accuracy at $0.0008/request — sacrificing 1.5pp accuracy vs Sonnet for 5× cost reduction; revisit if accuracy drops below 90% on production samples").
+
 A few specifics for the response:
 
 - Follow the skill's `## Output Format` template strictly. Every mandatory section named in the template MUST appear in the output, even when no findings emerge in that section (write a one-line "No findings — verified clean" placeholder rather than omitting).

@@ -18,6 +18,25 @@ Rate limits: 100 requests/minute per token. Returns 429 with Retry-After header 
 
 Webhook payloads are signed with HMAC-SHA256 using a secret we provide at registration. Customers must verify the signature or we recommend rejecting the payload.
 
+Output requirements:
+
+- **Every endpoint section MUST include**:
+  - **Complete request example** with ALL required headers (`Authorization: Bearer <token>`, `Content-Type: application/json`, `Idempotency-Key: <uuid>` for POSTs).
+  - **Success response example** AND **error response examples** for at minimum **400, 401, 403, 404, 409, 422, 429**. Show the exact JSON body shape per status.
+  - **Required scope** explicitly: POST/DELETE → `webhooks:write`, GET → `webhooks:read`.
+- **All code examples are syntactically correct and copy-pasteable** — no `<...>` placeholders without convention, no `# ...` ellipsis. Use `<YOUR_TOKEN>` / `<WEBHOOK_ID>` placeholders with a "Replace with..." note on first use.
+- **Code examples in 3 languages**: `curl`, JavaScript (`fetch`), Python (`requests`). Each fully runnable.
+- **HMAC verification example** in 3 languages with the exact algorithm: `hmac.new(secret, body, hashlib.sha256).hexdigest()` (Python), `crypto.createHmac('sha256', secret).update(body).digest('hex')` (Node), `openssl dgst -sha256 -hmac "$SECRET"` (curl/shell). Compare against the `X-Signature` header.
+- **Rate-limit section** documenting the response: 429 status, `Retry-After: <seconds>` header, `X-RateLimit-Remaining`, `X-RateLimit-Reset` headers.
+- **Pagination section** for `GET /v1/webhooks`: `limit`, `cursor`, response includes `next_cursor` + `has_more`.
+- **Webhooks-specific Quality Checklist** at end:
+  ```
+  - [ ] Every example was executed against staging before publication
+  - [ ] HMAC verification example tested with a known signature pair
+  - [ ] All 429-Retry-After examples include the header
+  - [ ] All scoped endpoints document the required scope
+  ```
+
 A few specifics for the response:
 
 - Follow the skill's `## Output Format` template strictly. Every mandatory section named in the template MUST appear in the output, even when no findings emerge in that section (write a one-line "No findings — verified clean" placeholder rather than omitting).

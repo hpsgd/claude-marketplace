@@ -6,6 +6,24 @@ Scenario: User asks the .NET developer to implement a REST endpoint for creating
 
 We need a `POST /api/customers/{customerId}/orders` endpoint to create a new order. The request body contains line items (product ID, quantity, unit price). Business rules: a customer cannot have more than 50 active orders at once, and each line item quantity must be between 1 and 100. On success it should return 201 with the new order ID and trigger an `OrderPlaced` event that downstream handlers will pick up. We're using Wolverine for HTTP and Marten for persistence. Can you implement this including tests?
 
+Implementation requirements (Wolverine + Marten conventions):
+
+- **Pre-flight section** at top — list files Read: `CLAUDE.md`, `.claude/rules/*` (especially `dotnet-stack--jasperfx.md` if present). State assumptions made if files missing.
+- **Wolverine handler structure** — split `LoadAsync` (pre-conditions: customer exists, active order count < 50) from `Handle` (mutation). LoadAsync returns the loaded entities to inject into Handle.
+- **Cascading messages** — `Handle` RETURNS `OrderPlaced` event as the cascading message (Wolverine convention), not raised inline via `IMessageBus`.
+- **`IDocumentSession`** is injected by Wolverine — do NOT create sessions from `IDocumentStore`.
+- **Command AND event as C# `record` types** with immutable properties — not classes:
+  ```csharp
+  public record CreateOrderCommand(Guid CustomerId, IReadOnlyList<LineItem> Items);
+  public record OrderPlaced(Guid OrderId, Guid CustomerId, decimal Total);
+  ```
+- **Response DTO** separate from aggregate — never expose aggregate internals via the API response.
+- **Endpoint route** EXACTLY `POST /api/customers/{customerId}/orders`, mounted via Wolverine HTTP `[WolverinePost]` attribute.
+- **Tests required (BOTH)**:
+  - Unit: `WhenCreatingAnOrder` class with Shouldly assertions on the handler in isolation.
+  - Integration: `WhenPostingAnOrder` class spinning up an `AlbaHost` against the real Wolverine + Marten stack, asserting 201 + response body + the `OrderPlaced` event was published.
+- **Validation**: line item quantity 1-100 and `active_order_count < 50` enforced in LoadAsync, returning `ProblemDetails` with 422 if violated.
+
 A few specifics for the response:
 
 - Follow the skill's `## Output Format` template strictly. Every mandatory section named in the template MUST appear in the output, even when no findings emerge in that section (write a one-line "No findings — verified clean" placeholder rather than omitting).

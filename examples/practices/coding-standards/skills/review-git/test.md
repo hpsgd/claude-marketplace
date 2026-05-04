@@ -12,6 +12,25 @@ Can you review my branch `feature/user-notifications` before I raise a PR? The l
 
 The PR title is "User notification improvements" and the description just says "Various improvements to how we send notifications to users."
 
+Output structure (use these section names):
+
+- **Per-pass summary table at top**:
+  ```
+  | Pass | Topic | Findings |
+  |------|-------|----------|
+  | 1 | Conventional commit format | N |
+  | 2 | Subject line under 50 chars + imperative | N |
+  | 3 | Commit body (why not what) | N |
+  | 4 | PR title + description quality | N |
+  | 5 | Branch hygiene (WIP, fixup, squash candidates) | N |
+  ```
+- **Run all 5 passes** in order with `## Pass N` headings, even when no findings emerge in a pass write `Pass N: 0 findings`.
+- **Each finding** uses structured format: `**Pass:** N | **Severity:** HIGH/MEDIUM/LOW | **Commit/PR:** <ref> | **Issue:** <description> | **Fix:** <concrete rewrite>`.
+- **Findings expected**:
+  - Pass 1, HIGH — commits 1 and 3 lack conventional commit type. Fix: rewrite as `feat(notifications): add welcome email template` and `feat(notifications): rate-limit the notification endpoint`.
+  - Pass 5, MEDIUM — `wip: still working on the push notification handler` is a hygiene finding. WIP commits are acceptable in branch history but MUST be squashed before merge. Recommend `git rebase -i HEAD~4` to fold the wip commit into the relevant feat commit.
+  - Pass 4, HIGH — PR title "User notification improvements" lacks conventional commit type. Recommend: `feat(notifications): add welcome email, dedup, rate limit, push handler`. Description "Various improvements" is too vague; needs the standard PR template with Summary, Changes, Test plan.
+
 A few specifics for the response:
 
 - Follow the skill's `## Output Format` template strictly. Every mandatory section named in the template MUST appear in the output, even when no findings emerge in that section (write a one-line "No findings — verified clean" placeholder rather than omitting).

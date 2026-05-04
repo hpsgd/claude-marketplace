@@ -6,6 +6,24 @@ Scenario: Developer invokes the generate-tests skill targeting a `validate_disco
 
 Generate tests for `src/billing/discount.py::validate_discount_code`. The function signature is `validate_discount_code(code: str, customer_id: UUID, order_total: Decimal) -> DiscountResult`. It should: return a DiscountResult with amount when valid, raise `DiscountNotFoundError` for unknown codes, raise `DiscountExpiredError` for expired codes, raise `DiscountAlreadyUsedError` if this customer already used this code, and raise `DiscountMinimumNotMetError` if the order total is below the discount's minimum.
 
+Implementation requirements:
+
+- **Reconnaissance section** at top — show `find . -path "*billing*" -name "*.py"` and `Read src/billing/discount.py` results before writing tests.
+- **Single-assertion-per-test discipline**: each `def test_*` asserts ONE behaviour. If you need to assert "function returns DiscountResult AND amount is correct AND it was called once", that's THREE separate tests.
+- **Factories for test data** in `conftest.py`:
+  ```python
+  @pytest.fixture
+  def discount_factory():
+      def _make(code="WELCOME10", percent=10, expires=datetime(2030, 1, 1), minimum=Decimal("0")):
+          return Discount(code=code, percent=percent, expires_at=expires, minimum_order=minimum)
+      return _make
+  @pytest.fixture
+  def customer_id(): return UUID("00000000-0000-0000-0000-000000000001")
+  ```
+  No inline `UUID("...")` or `Decimal(...)` repeated across tests — use the fixtures.
+- **Tests required (≥10)**: happy path, unknown code, expired code, already used code, minimum not met, plus boundary tests (amount = minimum exactly, expires_at = now exactly, percent at boundaries).
+- **Evidence table** with columns `Test name | Command | Exit code | Result (PASS/FAIL)` listing EVERY test individually (not class/run level summary). Show actual `pytest -v src/billing/test_discount.py` output with each test name.
+
 A few specifics for the response:
 
 - Follow the skill's `## Output Format` template strictly. Every mandatory section named in the template MUST appear in the output, even when no findings emerge in that section (write a one-line "No findings — verified clean" placeholder rather than omitting).

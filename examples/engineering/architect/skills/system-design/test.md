@@ -6,6 +6,20 @@ Scenario: Checking that the system-design skill enforces quantified requirements
 
 Review the system-design skill definition and verify it produces complete, structured architecture documentation rather than informal diagrams.
 
+Read the skill at `/Users/martin/Projects/turtlestack/plugins/engineering/architect/skills/system-design/SKILL.md` and verify each item by name. Quote skill text where present:
+
+- **Vague NFR rejection**: skill requires numeric thresholds (e.g. "p95 < 200ms", "10K concurrent users", "99.9% uptime"), explicitly forbids adjectives like "fast", "scalable", "robust".
+- **Numbered assumption ledger**: each assumption has a number, a confidence rating, AND a validation method.
+- **Options analysis per significant decision**: at least two options weighed with rationale for the chosen one.
+- **Mermaid diagrams**: component AND sequence diagrams mandatory.
+- **C4 model**: levels Context, Container, Component named; at minimum Level 1 and Level 2 diagrams required.
+- **Confidence assessment table per component**: rule that components <60% confidence must have a spike planned.
+- **Change impact analysis (what-if scenarios)**: traffic growth, new client types, dependency outages.
+- **Anti-patterns named (3)**: premature microservices, distributed monolith, shared database.
+- **arc42 reference**: skill references arc42 as output structure standard and links to a template.
+
+Confirm or flag each by name. Do NOT pause for clarification.
+
 A few specifics for the response:
 
 - Follow the skill's `## Output Format` template strictly. Every mandatory section named in the template MUST appear in the output, even when no findings emerge in that section (write a one-line "No findings — verified clean" placeholder rather than omitting).

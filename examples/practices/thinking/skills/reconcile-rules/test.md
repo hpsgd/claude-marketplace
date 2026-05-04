@@ -6,7 +6,31 @@ Scenario: A developer runs reconcile-rules after a new version of the coding-sta
 
 /reconcile-rules all
 
-(Setup: ~/.claude/rules/ contains `learned--verify-before-declaring-complete.md` and `learned--read-files-before-modifying.md`. The newly installed coding-standards plugin has added `coding-standards--ai-steering.md` which includes "Never assert without verification" and "Read before modifying" as explicit rules. A third learned rule `learned--monorepo-run-full-ci.md` covers something the marketplace does not address.)
+Treat the following as the actual filesystem state for this reconciliation (the workspace is sandboxed; substitute these values for the real ls / Read results). Do NOT pause to ask permission or check the real filesystem — these ARE the contents to reconcile:
+
+```
+~/.claude/rules/ (global, 2 learned rules):
+  learned--verify-before-declaring-complete.md  → "Always verify state with tools before declaring a task complete. Never assert without checking."
+  learned--read-files-before-modifying.md       → "Always Read a file before Edit. Editing without Read fails."
+
+.claude/rules/ (project-local, 1 learned rule):
+  learned--monorepo-run-full-ci.md              → "In monorepos run `moon ci` checking all projects, not just the changed one."
+
+Marketplace rules just installed (via thinking plugin SessionStart hook):
+  turtlestack--coding-standards--ai-steering.md → contains explicit rules "Never assert without verification" AND "Read before modifying" (PLUS other rules)
+```
+
+A few specifics for the response:
+
+- **Output structure** — include sections in this order:
+  1. **Inventory** — list all 5 files (2 global learned, 1 project learned, 1+ marketplace) with their core imperative quoted from content (not just file name).
+  2. **Overlap analysis** — table with columns `Learned rule | Marketplace rule | Overlap classification | Recommended action`. Three classifications: SUPERSEDED (safe to remove), PARTIAL OVERLAP (review needed — narrower scope or different angle), NO OVERLAP (keep).
+  3. **Per-rule classification**:
+     - `learned--verify-before-declaring-complete` → SUPERSEDED by `coding-standards--ai-steering.md` ("Never assert without verification") → recommend remove.
+     - `learned--read-files-before-modifying` → SUPERSEDED by `coding-standards--ai-steering.md` ("Read before modifying") → recommend remove.
+     - `learned--monorepo-run-full-ci` → NO OVERLAP — marketplace doesn't address monorepo CI specifically → keep.
+  4. **User-approval prompt** — present the recommendations and ask for approval before deleting (don't auto-delete).
+  5. **Reconciliation snapshot update** — after approval, write the snapshot file (`~/.claude/learnings/reconciliation-snapshot.json` or workspace-local equivalent) so the SessionStart hook knows reconciliation is current.
 
 A few specifics for the response:
 

@@ -8,6 +8,19 @@ We're building a logistics platform called FreightFlow. We need a real-time noti
 
 Do not ask for clarification — produce the full design now. State your assumptions in an assumption ledger and mark each as proven_by_code, inferred, or needs_user_confirmation.
 
+Output structure (use these section names):
+
+1. **Pre-flight** — list project conventions checked: `CLAUDE.md`, `docs/architecture/adr/` (existing ADRs), `docs/tooling-register.md` (tool stack), `pyproject.toml` (Django version). Even if files not accessible, state what would be checked.
+2. **Work classification + scope** — explicitly classify: this is **architecture design** (not implementation, not bug fix). In-scope: notification delivery design, transport choice, scaling for 50k/day with peak bursts. Out-of-scope: mobile app implementation, push provider account setup, business rules for shipment state transitions.
+3. **Assumption Ledger** — numbered table with columns `# | Assumption | Classification (proven_by_code / inferred / needs_user_confirmation) | Validation method | Confidence`. At least 8 assumptions covering: DB load capacity, push provider choice (FCM/APNs/Web Push), authentication model, multi-tenancy isolation, peak burst sizing, message ordering guarantees, retry semantics, dashboard browser support.
+4. **Quantified NFRs** — numeric targets only: p95 delivery latency < 5s end-to-end, throughput 50k events/day with peak 5k/hour at 9am+2pm, availability 99.9%, message ordering guaranteed per shipment.
+5. **C4 Level 1 + Level 2 Mermaid diagrams**.
+6. **Options analysis per significant decision** (transport: WebSocket vs SSE vs long-poll vs push-notification-only) — at least 2 options each, rejected alternative with reasoning.
+7. **Confidence assessment table per component** — components <60% confidence get a spike planned.
+8. **Change impact analysis** — what-if traffic 10× growth, what-if a new client type (3PL partner API), what-if push-provider outage.
+9. **Anti-patterns flagged**: premature microservices for a notification feature, distributed monolith via shared DB, unbounded WebSocket connection growth without backpressure.
+10. **Recommended ADR**: title + summary + rejected alternative.
+
 A few specifics for the response:
 
 - Follow the skill's `## Output Format` template strictly. Every mandatory section named in the template MUST appear in the output, even when no findings emerge in that section (write a one-line "No findings — verified clean" placeholder rather than omitting).

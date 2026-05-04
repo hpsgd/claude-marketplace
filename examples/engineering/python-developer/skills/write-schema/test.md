@@ -6,6 +6,23 @@ Scenario: Developer invokes the write-schema skill to produce a JSON Schema and 
 
 Write a schema for pipeline configuration. Each pipeline has: a name (required, 1-255 chars), a source with type (postgres, mysql, s3, or api) and a connection string, an optional cron schedule, and output settings with format (json, csv, or parquet) and optional output path.
 
+Implementation requirements (Pydantic v2 strict):
+
+- **Reconnaissance section** at top — show commands run: `find . -name "*.py" -path "*schema*" -o -name "models.py"`, identify validation library (assume Pydantic v2 if not stated). Report results.
+- **Pydantic models** with `model_config = ConfigDict(frozen=True, strict=True)` on every domain model.
+- **String enums use `StrEnum`** (Python 3.11+) — not plain string literals or `Literal[...]`:
+  ```python
+  from enum import StrEnum
+  class SourceType(StrEnum):
+      POSTGRES = "postgres"
+      MYSQL = "mysql"
+      S3 = "s3"
+      API = "api"
+  ```
+- **Schema evolution guidance section** at the end naming which changes are safe (additive — new optional fields, new enum values at the end) vs breaking (removing fields, renaming, changing types, reordering enums). Cite Pydantic's `model_validator` for migration helpers.
+- **Cron schedule validation**: use `croniter` to validate the cron string at parse time, not just regex.
+- **Connection string**: validate format per source type (e.g. `postgres://...`, `mysql://...`, `s3://bucket/prefix`, `https://...`).
+
 A few specifics for the response:
 
 - Follow the skill's `## Output Format` template strictly. Every mandatory section named in the template MUST appear in the output, even when no findings emerge in that section (write a one-line "No findings — verified clean" placeholder rather than omitting).

@@ -50,6 +50,14 @@ Then run:
 
 /internal-docs-writer:write-changelog for our v2.4.0 release — we have 31 commits including new features, bug fixes, performance improvements, and 2 breaking changes to our webhooks API.
 
+Output requirements:
+
+- **Produce TWO changelogs**: a **developer-facing** version (technical detail, commit refs, code changes) AND a **customer-facing** version (plain language, benefit-led, no commit hashes). Label each section explicitly.
+- **Version summary** at the top of each: 2-3 sentence overview of what this release delivers and why it matters.
+- **Sections in Keep-a-Changelog format**: `### Breaking Changes` (FIRST, with migration path), `### Added` (new features), `### Changed` (improvements), `### Fixed` (bug fixes), `### Performance` (perf improvements), `### Security` (security fixes), `### Deprecated` (sunset notices).
+- **Breaking changes**: each has a `**Before:**` / `**After:**` code block AND a numbered migration step list AND a deprecation timeline.
+- **Show file content inline** in chat AND write to disk at `CHANGELOG.md` (developer) and `RELEASE_NOTES.md` (customer) — do NOT just summarise.
+
 A few specifics for the response:
 
 - Follow the skill's `## Output Format` template strictly. Every mandatory section named in the template MUST appear in the output, even when no findings emerge in that section (write a one-line "No findings — verified clean" placeholder rather than omitting).

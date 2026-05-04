@@ -6,6 +6,30 @@ Scenario: A journalist is checking public records for Salim Mehajer in connectio
 
 /investigator:public-records Salim Mehajer, Sydney-based property developer and former Auburn deputy mayor — checking court records, business registrations, director disqualifications, and any relevant professional licences in AU
 
+The following authorisation gate is granted — proceed without asking:
+
+```
+Authorisation:  Journalism authorisation — public-interest reporting on a public figure with substantial existing court history
+Purpose:        Compile public-record summary for an investigative piece
+Scope:          AU public records: court records, ASIC business registrations, ASIC banned/disqualified directors, professional licences, AFSA bankruptcy register
+Subject Aware:  N/A — public figure, prior coverage extensive
+```
+
+Output structure:
+
+1. **Gate Record at top** — four labelled lines as above, with explicit "journalism authorisation, public-interest" framing.
+2. **Source attempts** — each named explicitly with URL, even when blocked: 
+   - **ASIC Connect** (`https://connectonline.asic.gov.au`) — director / company history
+   - **ABN Lookup** (`https://abr.business.gov.au`) — business name registrations
+   - **AFSA bankruptcy register** (`https://www.afsa.gov.au`) — personal insolvency
+   - **NSW Caselaw** (`https://www.caselaw.nsw.gov.au`) — court decisions
+   - **AustLII** (`http://www.austlii.edu.au`) — broader case law
+   - **ASIC banned and disqualified persons register**
+   - **NSW Office of Fair Trading** — relevant professional licences
+3. **Per-source result** with `[blocked]` or `[no data]` or actual findings. ABN Lookup MUST appear by name even if blocked.
+4. **Findings table** with columns `Record type | Source | Reference (case number / ABN / file ref) | Summary | Date`.
+5. **Follow-on routing**: `/investigator:corporate-ownership <company-name>` for any company directorships surfaced; `/investigator:domain-intel <related-domain>` if relevant.
+
 A few specifics for the response:
 
 - Follow the skill's `## Output Format` template strictly. Every mandatory section named in the template MUST appear in the output, even when no findings emerge in that section (write a one-line "No findings — verified clean" placeholder rather than omitting).

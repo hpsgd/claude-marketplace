@@ -6,6 +6,17 @@ Scenario: A SaaS company is evaluating a commercial partnership with Culture Amp
 
 /analyst:due-diligence Culture Amp Pty Ltd for commercial partnership — we're considering integrating their employee engagement surveys into our HR platform
 
+Output structure (use these section names in this order):
+
+1. **Scope** (top of document) — explicit one-paragraph: "Commercial partnership due diligence on Culture Amp Pty Ltd. Public data only. NOT a substitute for legal, financial, or technical due diligence — those require separate workstreams. Findings are time-stamped."
+2. **Business fundamentals** — every revenue/funding figure carries source + date inline (e.g. "$200M ARR — Forbes, 2024-08-12"). No bare figures.
+3. **Product signals** — review score TREND over time (e.g. G2 score 4.5→4.3 over 18 months), not just current score. List multiple data points.
+4. **Customer / market signals** — named customers (with public proof), employee count trend, geographic footprint.
+5. **Risk signals** — funding runway, leadership changes, competitive pressure, regulatory exposure.
+6. **Signal Summary table** (BEFORE verdict) with columns: `Signal | Direction (positive/neutral/negative) | Confidence (HIGH/MED/LOW) | Source`.
+7. **Verdict** (follows from the table, doesn't precede it).
+8. **Sources** — numbered, each with URL + access date.
+
 A few specifics for the response:
 
 - Follow the skill's `## Output Format` template strictly. Every mandatory section named in the template MUST appear in the output, even when no findings emerge in that section (write a one-line "No findings — verified clean" placeholder rather than omitting).

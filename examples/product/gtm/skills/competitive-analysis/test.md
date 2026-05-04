@@ -7,6 +7,23 @@ Scenario: Testing whether the competitive-analysis skill defines a competitive s
 
 /gtm:competitive-analysis for Clearpath in the project management space — we need to understand our competitive position before repositioning for the mid-market.
 
+Use these reference data points (don't leave [DATA NEEDED] gaps):
+
+- **Our product (Clearpath)**: $25/user/month at Pro tier. Currently positioned as small-team-friendly (5-50 seats). Native iOS/Android apps. Pre-built integrations: Slack, GitHub, GitLab, Linear. Mid-market repositioning means targeting 50-500 seats.
+- **Direct competitors**: Asana ($30.49/user/mo Business), Monday.com ($24/user/mo Pro), ClickUp ($19/user/mo Business Plus), Linear ($14/user/mo Business), Notion ($15/user/mo Plus)
+- **Indirect competitors**: Jira ($16/user/mo Premium), Smartsheet ($25/user/mo Business)
+- **Substitutes**: Trello (free tier), Microsoft Planner (bundled with M365), spreadsheet-based tracking
+- **Aspirational competitors**: Airtable Enterprise ($45/user/mo)
+- **Internal-build threat**: large enterprises building on Jira + custom plugins or Confluence + macros
+
+Output structure:
+
+1. **Competitive set (5 types named explicitly)**: direct, indirect, substitute, aspirational, internal-build. List each category with examples from above.
+2. **Per-competitor research card** with named source citation (G2, Capterra, vendor website, AFR coverage). One per direct competitor at minimum.
+3. **Comparison matrix** with columns: `Competitor | Pricing ($/user/mo) | Mobile UX | API rate limit | Integration count | Mid-market fit (S/M/L) | Strengths | Weaknesses`. Table format, not prose.
+4. **Parity vs differentiator section**: features that are TABLE STAKES (every competitor has them — task list, kanban, calendar, comments) vs features that are DIFFERENTIATORS (Linear's keyboard-first, Notion's docs+db, Clearpath's <unique angle>).
+5. **White-space synthesis**: name the segment + feature + price combo currently underserved, framed for the mid-market repositioning.
+
 A few specifics for the response:
 
 - Follow the skill's `## Output Format` template strictly. Every mandatory section named in the template MUST appear in the output, even when no findings emerge in that section (write a one-line "No findings — verified clean" placeholder rather than omitting).

@@ -6,6 +6,28 @@ Scenario: A contributor asks the create-agent skill to create a new `billing-eng
 
 /create-agent billing-engineer — responsible for subscription billing logic, invoicing, payment gateway integration (Stripe, PayPal), dunning management, and revenue recognition workflows. Engineering category.
 
+Output structure:
+
+- **Step 1 — Pre-flight reads** (show explicitly): list each Read with absolute path:
+  ```
+  Read: /Users/martin/Projects/turtlestack/plugins/practices/plugin-curator/templates/agent-template.md
+  Read: /Users/martin/Projects/turtlestack/CLAUDE.md
+  Read: /Users/martin/Projects/turtlestack/.claude-plugin/marketplace.json
+  ```
+- **Step 2 — Domain research** — list established billing/subscription patterns the agent should know: SaaS metrics (MRR, ARR, churn, LTV), revenue recognition (ASC 606), Stripe billing primitives (Subscriptions, Invoices, PaymentIntents, Webhooks), dunning workflows (3-7 day retry cadence), VAT/GST handling per jurisdiction.
+- **Step 3 — Agent file** at `plugins/engineering/billing-engineer/agents/billing-engineer.md` with full agent template structure (frontmatter, mission, non-negotiable rules, methodology, output format, anti-patterns, related skills).
+- **Step 4 — plugin.json** at `plugins/engineering/billing-engineer/.claude-plugin/plugin.json` with plugin metadata.
+- **Step 5 — marketplace.json update** — show the diff adding the new entry with `source`, `description`, `category` fields:
+  ```json
+  {
+    "name": "billing-engineer",
+    "source": "./plugins/engineering/billing-engineer",
+    "description": "Subscription billing, invoicing, payment gateway integration, dunning, revenue recognition.",
+    "category": "engineering"
+  }
+  ```
+- **Step 6 — README update** — add the new agent to the Engineering section.
+
 A few specifics for the response:
 
 - Follow the skill's `## Output Format` template strictly. Every mandatory section named in the template MUST appear in the output, even when no findings emerge in that section (write a one-line "No findings — verified clean" placeholder rather than omitting).

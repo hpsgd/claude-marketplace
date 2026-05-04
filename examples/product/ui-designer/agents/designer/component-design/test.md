@@ -13,6 +13,14 @@ We need to design a multi-step onboarding wizard for Clearpath, our B2B project 
 
 We have a design system with existing Input, Button, Avatar, and Card components. The wizard should work on desktop and tablet. Can you design this?
 
+Output structure:
+
+- **Existing component reuse table** at top with columns `Component | Decision (REUSE / EXTEND / CREATE) | Rationale`. Cover Input (REUSE), Button (REUSE), Avatar (REUSE — for invited team members), Card (REUSE — for integration tiles), Stepper/ProgressIndicator (decide REUSE / EXTEND / CREATE — most likely CREATE since it's not in the existing system).
+- **8 component states for EVERY new component** — not just one diagram, repeat for each new component. The 8 states: Default, Hover (cursor over interactive area), Focus (keyboard focus ring), Active (pressed/clicked), Disabled, Loading (async work in progress), Error (validation failure or operation error), Empty (no data yet — e.g. no team members invited).
+- **Per-step error states** explicitly: Step 1 (workspace name validation: empty, too long, duplicate), Step 2 (invalid email format, duplicate email, too many invites), Step 3 (integration auth failure, network timeout, scope-denied), Step 4 (template fetch failure, project name conflict).
+- **ARIA + keyboard navigation**: each new component documents `role`, `aria-label` / `aria-labelledby`, `tabindex`, and which keys advance/retreat (Tab, Shift+Tab, Enter, Esc).
+- **Step indicator decision**: explicitly state REUSE/EXTEND/CREATE for the progress component. If CREATE, document the 8 states for it too.
+
 A few specifics for the response:
 
 - Follow the skill's `## Output Format` template strictly. Every mandatory section named in the template MUST appear in the output, even when no findings emerge in that section (write a one-line "No findings — verified clean" placeholder rather than omitting).

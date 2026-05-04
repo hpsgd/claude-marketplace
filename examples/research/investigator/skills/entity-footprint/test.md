@@ -6,6 +6,21 @@ Scenario: A venture capital analyst wants to map the public digital presence of 
 
 /investigator:entity-footprint SafetyCulture Pty Ltd — Sydney-based workplace safety SaaS, known for the iAuditor product. We want to understand their full public digital presence: domains, product footprint, social, GitHub, hiring signals, and any press or regulatory filings.
 
+Output structure:
+
+1. **Domain inventory** — primary domain (`safetyculture.com`), related domains via reverse-WHOIS / certificate transparency (`safetyculture.io`, `iauditor.com`, `safetyculture.com.au`). State each as `[discovered]` or `[blocked-lookup, expected]`.
+2. **Product footprint** — apps (iAuditor on iOS App Store + Google Play with download / review counts), web product surface, integrations marketplace.
+3. **Social** — LinkedIn company page (employee count + growth), Twitter/X handle, YouTube channel, podcast presence.
+4. **GitHub** — `github.com/safetyculture` org if exists, public repos, contributor activity.
+5. **Hiring signals** — Seek, LinkedIn Jobs, company careers page. Roles open per discipline (eng / sales / product). Hiring velocity hint.
+6. **Press coverage** — AFR, SmartCompany, Crikey, TechCrunch coverage of the company.
+7. **Regulatory filings** — **ASIC Connect** (`https://connectonline.asic.gov.au`) for ABN, directors, registered office. ACN if known. Plus press coverage of any regulatory matters.
+8. **Follow-on routing** (mandatory): explicit recommendations for downstream skills:
+   - `/investigator:domain-intel safetyculture.com` for full DNS/cert footprint
+   - `/investigator:ip-intel <resolving-ip>` for hosting infrastructure
+   - `/investigator:corporate-ownership SafetyCulture Pty Ltd` for full ASIC director and shareholder extract
+   - `/investigator:people-lookup <CEO-name>` for the founder/CEO background
+
 A few specifics for the response:
 
 - Follow the skill's `## Output Format` template strictly. Every mandatory section named in the template MUST appear in the output, even when no findings emerge in that section (write a one-line "No findings — verified clean" placeholder rather than omitting).

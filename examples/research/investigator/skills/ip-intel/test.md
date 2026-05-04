@@ -6,6 +6,17 @@ Scenario: A security team wants to investigate an IP address that appeared repea
 
 /investigator:ip-intel 185.220.101.47 — appeared in our firewall logs making repeated outbound connections on port 443. Security investigation context.
 
+Output structure (use these section names in this order):
+
+1. **Authorisation gate** — security investigation context noted.
+2. **Primary ownership lookup** — `ipinfo.io` for ASN, organisation, geolocation. Quote URL `https://ipinfo.io/185.220.101.47` and report fields: `org`, `asn`, `country`, `city`, `region`, `postal`, `loc`, `timezone`. If blocked, mark `[blocked]` per field.
+3. **Authoritative allocation lookup** — query the appropriate RIR. For 185.x.x.x → RIPE (`https://stat.ripe.net/data/whois/data.json?resource=185.220.101.47` or `whois -h whois.ripe.net 185.220.101.47`). Report allocation date, country, allocated to.
+4. **Reverse DNS PTR record** — `dig -x 185.220.101.47 +short` (or equivalent). Interpret what the PTR reveals (e.g. `tor-exit-relay.example.org` → Tor exit node; `static.cloudflare.com` → CDN; default ISP-formatted hostname → residential dynamic).
+5. **Reputation lookups** — VirusTotal, AbuseIPDB, OTX, ThreatFox, URLhaus. Each with URL + result. Mark `[blocked]` or `[no data]` where applicable.
+6. **Tor / VPN / proxy check** — `https://check.torproject.org/exit-addresses` or `https://www.dan.me.uk/tornodes`. Tor exit nodes have a known list — explicit yes/no.
+7. **Final classification** — verdict (e.g. "Tor exit node — outbound 443 from this IP is consistent with proxied traffic; investigate the originating internal host, not the IP").
+8. **Follow-on routing** — `/investigator:domain-intel <reverse-DNS-domain>` if PTR resolves to a domain, or `/investigator:entity-footprint <org>` if the org is a known entity.
+
 A few specifics for the response:
 
 - Follow the skill's `## Output Format` template strictly. Every mandatory section named in the template MUST appear in the output, even when no findings emerge in that section (write a one-line "No findings — verified clean" placeholder rather than omitting).

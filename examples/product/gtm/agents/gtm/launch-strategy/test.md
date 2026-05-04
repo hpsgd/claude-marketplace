@@ -18,6 +18,15 @@ Main competitors: Asana's reporting, Monday.com dashboards. We think we're bette
 
 Can you help me build the launch strategy?
 
+Output structure:
+
+- **Customer-problem-led messaging** at the top: lead with the problem (blind spots in project health, late deliveries discovered too late, hidden over-utilisation) BEFORE the product capability list. The product features are the answer to the problem, not the headline.
+- **TWO distinct GTM motions** explicitly named and separated:
+  1. **Existing customer expansion** (340 Pro accounts, ~50+ seats) — in-product upsell, account-team-led, no acquisition cost. Target: 30% attach rate by Q4.
+  2. **New customer acquisition** ("Analytics" as differentiated landing) — content marketing, paid search on PM-reporting keywords, demo-led sales. Target: 50 net-new logos.
+- **Post-launch review plan** with measurable success metrics + cadence: T+30, T+60, T+90 reviews. Specific metrics: attach rate, MRR contribution, NPS for the module, support ticket volume by category.
+- **Competitive positioning**: name the differentiator (executive summary report PDF/email weekly) explicitly and compare with Asana reporting + Monday.com dashboards on this specific dimension.
+
 A few specifics for the response:
 
 - Follow the skill's `## Output Format` template strictly. Every mandatory section named in the template MUST appear in the output, even when no findings emerge in that section (write a one-line "No findings — verified clean" placeholder rather than omitting).

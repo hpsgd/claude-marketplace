@@ -6,6 +6,52 @@ Scenario: A developer is mid-investigation on a CI flake (intermittent test fail
 
 /handoff write ci-flake-investigation The intermittent failure is in `tests/integration/test_billing.py::test_refund_flow` — it passes locally and fails ~30% of the time on CI. Branch `debug/ci-flake` has one commit `abc1234` adding extra logging. Last CI run id was `7892341`. Suspect a race condition between the seed data fixture and the parallel test runner, but haven't confirmed. Need to pick this up tomorrow.
 
+Write the handoff doc to the `handoff/` directory (workspace-local, accessible in this sandbox — `mkdir -p handoff/` first if needed). State the canonical production path as `.claude/handoff/<YYYY-MM-DD-HHMM>-ci-flake-investigation.md` in your output. Show the full file content INLINE in the chat response.
+
+Before writing, run these git commands in parallel and report output:
+```bash
+git status
+git log -5 --oneline
+git rev-parse --abbrev-ref HEAD
+```
+
+Doc template (use exactly these section names):
+```markdown
+# Handoff: ci-flake-investigation
+
+## Context
+[1-3 sentences on why we're stopping]
+
+## What changed
+[branch + commit + files touched]
+
+## State at handoff
+- Branch: debug/ci-flake
+- Last commit SHA: abc1234
+- Dirty files: [from git status]
+- In-flight work: [what's incomplete]
+
+## Verify in new session
+1. [Numbered, runnable cold — no "remember from earlier"]
+2. ...
+
+## Failure modes to watch
+- [Specific things that could go wrong on resume]
+
+## Files of interest
+- [Paths to relevant files]
+```
+
+End your chat response with the "When writing" template:
+```
+Path: <absolute path to handoff doc>
+Topic: ci-flake-investigation
+Branch at handoff: debug/ci-flake
+Resume with: /handoff read ci-flake-investigation
+```
+
+Do NOT ask permission. Do NOT summarise the file content (the file IS the summary). Do NOT pause for clarification.
+
 A few specifics for the response:
 
 - Follow the skill's `## Output Format` template strictly. Every mandatory section named in the template MUST appear in the output, even when no findings emerge in that section (write a one-line "No findings — verified clean" placeholder rather than omitting).
