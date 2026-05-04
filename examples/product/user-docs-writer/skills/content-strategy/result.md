@@ -82,352 +82,307 @@ Captured from a real headless invocation of the skill/agent.
 
 ### Chat response
 
-Content strategy complete. Here are the headline problems:
-
-## Critical Issues
-
-**Staleness crisis (60% of content)**: 24 of 40 articles haven't been updated since 2021 or earlier. The onboarding docs are 4+ years old, and core features like "dashboard," "reports," and "export" all have stale guidance. This directly drives support tickets.
-
-**Explanation gap (7% coverage)**: You have only 3 explanation-quadrant docs for the entire product. Users have how-to guides but no "why"—they don't understand when to use dashboards vs reports, what task dependencies are for, or how the project/task hierarchy works. This causes misuse and support volume.
-
-**Findability problems**: Four high-traffic searches return no results or the wrong docs:
-- "dashboard slow" (1,620 searches, 891 tickets) → doc exists but titled "Understanding the dashboard"
-- "find reports" (980 searches, 441 tickets) → scattered across multiple docs
-- "export not working" (680 searches, 512 tickets) → troubleshooting doc buried
-- "bulk edit" (870 searches, 290 tickets) → titled "Bulk project actions" instead
-
-**Weak onboarding**: Only 4 tutorials for a complex product, and all stale since 2021. Users can't learn the basics.
-
-## Recommended Path
-
-**Phase 1 (Weeks 1-6)**: Fix the 10 P0 items—rewrite the 3 onboarding tutorials, create explanation docs for dashboard/export/core concepts, update the top pain-point how-tos, and rewrite stale export guidance. This addresses 60% of support tickets.
-
-**Phase 2 (Weeks 7-12)**: Fill remaining explanation gaps and update other stale docs. Establish the ownership model so content doesn't decay again.
-
-**Phase 3 (Weeks 13-18)**: Polish lower-priority items and set up quarterly freshness audits.
-
-The strategy doc includes 10 P0 items, 8 P1 items, and 7 P2 items—all with effort estimates and owners assigned. It also specifies per-quadrant content standards and a quarterly maintenance schedule so you don't end up here again in 4 years.
-
-### Artifacts written
-
-#### `work/CONTENT_STRATEGY.md`
-
-```
-# Content Strategy: Clearpath Help Centre
-
-**Date:** 2026-05-02  |  **Status:** Draft  |  **Scope:** 40 articles across 12 categories
-
----
+I'll work through the Diataxis analysis using your inventory and analytics data.
 
 ## 1. Content Inventory
 
-### By Diataxis Quadrant
+Let me map your 40 articles by Diataxis quadrant and staleness:
 
-| ID | Title | Category | Quadrant | Last Updated | Views (90d) | Tickets | Status |
-|---|---|---|---|---|---|---|---|
-| 1 | Getting started with Clearpath | Onboarding | Tutorial | 2021-03-10 | 4,200 | 0 | Stale |
-| 2 | Creating your first project | Onboarding | Tutorial | 2021-03-10 | 3,800 | 2 | Stale |
-| 3 | Inviting team members | Onboarding | Tutorial | 2021-04-05 | 2,100 | 18 | Stale |
+```markdown
+### Content Inventory
+
+| # | Document | Category | Quadrant | Last updated | Views (90d) | Tickets | Status |
+|---|---|---|---|---|---|---|
+| 1 | Getting started with Clearpath | Onboarding | Tutorial | 2021-03-10 | 4,200 | 0 | **Stale** |
+| 2 | Creating your first project | Onboarding | Tutorial | 2021-03-10 | 3,800 | 2 | **Stale** |
+| 3 | Inviting team members | Onboarding | How-to | 2021-04-05 | 2,100 | 18 | **Stale** |
 | 4 | Understanding project statuses | Projects | Reference | 2022-01-20 | 1,800 | 4 | Current |
-| 5 | How to archive a project | Projects | How-to | 2021-06-15 | 890 | 31 | Stale |
+| 5 | How to archive a project | Projects | How-to | 2021-06-15 | 890 | 31 | **Stale** |
 | 6 | Bulk project actions | Projects | How-to | 2023-08-01 | 450 | 0 | Current |
-| 7 | Creating tasks and subtasks | Tasks | How-to | 2021-05-01 | 3,100 | 1 | Stale |
+| 7 | Creating tasks and subtasks | Tasks | How-to | 2021-05-01 | 3,100 | 1 | Current |
 | 8 | Assigning tasks to team members | Tasks | How-to | 2022-02-14 | 2,200 | 3 | Current |
-| 9 | Setting due dates and reminders | Tasks | How-to | 2021-05-01 | 1,900 | 2 | Stale |
+| 9 | Setting due dates and reminders | Tasks | How-to | 2021-05-01 | 1,900 | 2 | Current |
 | 10 | Using task dependencies | Tasks | Reference | 2023-01-10 | 780 | 0 | Current |
-| 11 | Understanding the dashboard | Dashboard | Explanation | 2020-11-01 | 5,100 | 44 | Stale |
-| 12 | Customising dashboard widgets | Dashboard | How-to | 2021-09-22 | 1,200 | 12 | Stale |
-| 13 | Dashboard performance troubleshooting | Dashboard | How-to | 2022-06-01 | 340 | 67 | Stale |
-| 14 | Using the reports section | Reports | Tutorial | 2020-11-01 | 2,800 | 38 | Stale |
-| 15 | Exporting a report to CSV | Reports | How-to | 2021-02-10 | 1,600 | 29 | Stale |
+| 11 | Understanding the dashboard | Dashboard | Explanation | 2020-11-01 | 5,100 | 44 | **Stale** |
+| 12 | Customising dashboard widgets | Dashboard | How-to | 2021-09-22 | 1,200 | 12 | **Stale** |
+| 13 | Dashboard performance troubleshooting | Dashboard | Reference | 2022-06-01 | 340 | 67 | **Stale + Incomplete** |
+| 14 | Using the reports section | Reports | How-to | 2020-11-01 | 2,800 | 38 | **Stale** |
+| 15 | Exporting a report to CSV | Reports | How-to | 2021-02-10 | 1,600 | 29 | **Stale** |
 | 16 | Scheduling automated reports | Reports | How-to | 2023-03-15 | 440 | 0 | Current |
-| 17 | How to export project data | Export | How-to | 2020-12-01 | 2,900 | 51 | Stale |
-| 18 | Export file formats explained | Export | Reference | 2021-01-20 | 800 | 8 | Stale |
-| 19 | Troubleshooting export errors | Export | How-to | 2022-04-05 | 1,100 | 72 | Stale |
-| 20 | Using the search function | Search | How-to | 2020-12-01 | 1,700 | 22 | Stale |
+| 17 | How to export project data | Export | How-to | 2020-12-01 | 2,900 | 51 | **Stale** |
+| 18 | Export file formats explained | Export | Reference | 2021-01-20 | 800 | 8 | **Stale** |
+| 19 | Troubleshooting export errors | Export | How-to | 2022-04-05 | 1,100 | 72 | **Stale + Gap** |
+| 20 | Using the search function | Search | How-to | 2020-12-01 | 1,700 | 22 | **Stale** |
 | 21 | Advanced search filters | Search | Reference | 2023-07-01 | 380 | 0 | Current |
 | 22 | Setting up your account | Account | How-to | 2021-01-15 | 2,100 | 5 | Current |
-| 23 | Managing billing and plans | Billing | How-to | 2021-03-01 | 1,400 | 9 | Stale |
-| 24 | API authentication guide | API | How-to/Reference | 2022-05-01 | 980 | 3 | Current |
+| 23 | Managing billing and plans | Billing | How-to | 2021-03-01 | 1,400 | 9 | **Stale** |
+| 24 | API authentication guide | API | How-to | 2022-05-01 | 980 | 3 | Current |
 | 25 | API rate limits | API | Reference | 2022-05-01 | 560 | 1 | Current |
 | 26 | Webhook setup guide | Integrations | How-to | 2023-11-01 | 420 | 0 | Current |
-| 27 | Zapier integration | Integrations | How-to | 2021-08-10 | 310 | 14 | Stale |
+| 27 | Zapier integration | Integrations | How-to | 2021-08-10 | 310 | 14 | **Stale** |
 | 28 | Salesforce integration | Integrations | How-to | 2024-01-15 | 290 | 2 | Current |
 | 29 | Two-factor authentication setup | Security | How-to | 2023-04-01 | 680 | 0 | Current |
-| 30 | Managing user permissions | Security | How-to | 2021-07-01 | 1,200 | 16 | Stale |
-| 31 | Understanding notification settings | Notifications | How-to | 2021-02-20 | 900 | 21 | Stale |
-| 32 | Email notification troubleshooting | Notifications | How-to | 2021-02-20 | 650 | 18 | Stale |
-| 33 | Mobile app getting started | Mobile | Tutorial | 2022-09-01 | 720 | 8 | Stale |
+| 30 | Managing user permissions | Security | Reference | 2021-07-01 | 1,200 | 16 | **Stale** |
+| 31 | Understanding notification settings | Notifications | Explanation | 2021-02-20 | 900 | 21 | **Stale** |
+| 32 | Email notification troubleshooting | Notifications | How-to | 2021-02-20 | 650 | 18 | **Stale** |
+| 33 | Mobile app getting started | Mobile | Tutorial | 2022-09-01 | 720 | 8 | Current |
 | 34 | Keyboard shortcuts reference | Productivity | Reference | 2023-05-01 | 540 | 0 | Current |
 | 35 | Project templates guide | Templates | How-to | 2023-10-01 | 310 | 0 | Current |
-| 36 | Importing projects from spreadsheet | Import | Tutorial | 2022-01-01 | 880 | 33 | Stale |
-| 37 | CSV import format requirements | Import | Reference | 2022-01-01 | 640 | 27 | Stale |
-| 38 | Troubleshooting CSV import errors | Import | How-to | 2022-06-01 | 420 | 41 | Stale |
+| 36 | Importing projects from spreadsheet | Import | How-to | 2022-01-01 | 880 | 33 | **Stale** |
+| 37 | CSV import format requirements | Import | Reference | 2022-01-01 | 640 | 27 | **Stale** |
+| 38 | Troubleshooting CSV import errors | Import | How-to | 2022-06-01 | 420 | 41 | **Stale** |
 | 39 | Dark mode setup | Accessibility | How-to | 2024-02-01 | 210 | 0 | Current |
 | 40 | Accessibility features overview | Accessibility | Explanation | 2023-01-01 | 180 | 0 | Current |
 
-### Quadrant Summary
-
-| Quadrant | Count | % | Assessment |
-|---|---|---|---|
-| Tutorial | 4 | 10% | **Insufficient** — Only 4 onboarding tutorials for a complex product |
-| How-to | 25 | 63% | **Adequate but stale** — Good coverage, but 18/25 articles marked outdated |
-| Reference | 8 | 20% | **Adequate** — API, format, and feature reference covered |
-| Explanation | 3 | 7% | **Critical gap** — Only 3 explanations for an entire product |
-
----
+**Staleness summary:** 17 articles from 2020-2021 (42.5%), despite some having high traffic.
+```
 
 ## 2. Coverage Matrix
 
-### User Tasks × Quadrant Coverage
+Mapping user tasks (from support tickets and search queries) across quadrants:
 
-| User Task | Tutorial | How-to | Reference | Explanation | Overall |
+```markdown
+### Coverage Matrix — User Tasks × Quadrants
+
+| User task | Tutorial | How-to | Reference | Explanation | Overall |
 |---|---|---|---|---|---|
-| **Onboarding: Get started** | Getting started (stale) | — | — | — | **Partial** |
-| **Onboarding: Create first project** | Creating first project (stale) | — | — | — | **Partial** |
-| **Onboarding: Invite teammates** | Inviting members (stale) | — | — | Understanding permissions (stale) | **Partial** |
-| **Core: Create and manage tasks** | — | Creating tasks (stale) | Task dependencies ref | — | **Partial** |
-| **Core: Assign tasks** | — | Assigning tasks | — | — | **Partial** |
-| **Core: Set task timeline** | — | Set dates/reminders (stale) | — | — | **Partial** |
-| **Dashboard: Get oriented** | — | Customize widgets (stale) | — | Understanding dashboard (stale) | **Partial** |
-| **Dashboard: Troubleshoot performance** | — | Performance troubleshooting (stale) | — | — | **Partial** |
-| **Projects: Manage status** | — | — | Project statuses (current) | — | **Minimal** |
-| **Projects: Archive projects** | — | Archive projects (stale) | — | — | **Partial** |
-| **Projects: Bulk operations** | — | Bulk actions (current) | — | — | **Partial** |
-| **Reports: Use reports** | Using reports (stale) | — | — | — | **Minimal** |
-| **Reports: Schedule automated** | — | Schedule reports (current) | — | — | **Partial** |
-| **Reports: Export reports** | — | Export to CSV (stale) | Export formats (stale) | — | **Partial** |
-| **Data: Export project data** | — | Export project (stale) | Export formats (stale) | — | **Partial** |
-| **Data: Import data** | Importing projects (stale) | CSV import errors (stale) | Import format spec (stale) | — | **Partial** |
-| **Integration: Set up webhook** | — | Webhook setup (current) | — | — | **Minimal** |
-| **Integration: Third-party tool** | — | Zapier (stale), Salesforce (current) | — | — | **Minimal** |
-| **Search: Find information** | — | Using search (stale) | Advanced filters (current) | — | **Minimal** |
-| **Security: Set up 2FA** | — | 2FA setup (current) | — | — | **Minimal** |
-| **Security: Manage permissions** | — | Manage permissions (stale) | — | — | **Minimal** |
-| **Notifications: Configure alerts** | — | Notification settings (stale) | — | — | **Minimal** |
-| **Notifications: Troubleshoot delivery** | — | Email troubleshooting (stale) | — | — | **Minimal** |
-| **Mobile: Get started on app** | Mobile getting started (stale) | — | — | — | **Minimal** |
-| **Account: Set up** | — | Account setup (current) | — | — | **Minimal** |
-| **Billing: Understand plans** | — | Billing & plans (stale) | — | — | **Minimal** |
+| Get started with Clearpath | Article 1 (stale) | — | — | — | **Partial (broken)** |
+| Create first project | Article 2 (stale) | — | — | — | **Partial (broken)** |
+| Invite teammates | — | Article 3 (stale) | Article 30 (stale) | — | **Partial (broken)** |
+| Export project data | — | Article 17 (stale) | Article 18 (stale) | — | **Partial (broken)** |
+| Troubleshoot export failures | — | Article 19 (stale) | — | — | **Missing explanation** |
+| Import from CSV | — | Article 36 (stale) | Article 37 (stale) | — | **Partial (broken)** |
+| Troubleshoot import errors | — | Article 38 (stale) | — | — | **Missing explanation** |
+| Understand/optimise dashboard | Article 11 (stale) | Article 12 (stale) | — | **Article 13 inadequate** | **Partial + inadequate** |
+| Fix dashboard performance | — | — | — | — | **Missing entirely** |
+| Create and manage tasks | — | Articles 7, 8, 9 | Article 10 | — | **Complete** |
+| Understand reports | — | Article 14 (stale) | — | — | **Partial** |
+| Find reports/data | — | — | — | — | **Missing entirely** |
+| Bulk edit projects | — | — | — | — | **Missing entirely** |
+| Set up integrations | — | Articles 26, 27, 28 | — | — | **Partial** |
+| Manage notifications | — | Article 32 (stale) | — | Article 31 (stale) | **Partial (broken)** |
 
-### Key Findings
+### Coverage Summary
 
-- **No task has full coverage** across all four quadrants
-- **Most tasks have how-to only** — no explanation of why features work this way
-- **Onboarding tasks are stale** — getting started content (tutorials) hasn't been updated since 2021
-- **Export/import/reports are high-traffic but stale** — these are pain points with outdated docs
-- **Explanation quadrant is nearly empty** — only 3 docs explain "why" instead of "how"
+| Quadrant | Count | % of total | Assessment |
+|---|---|---|---|
+| **Tutorial** | 3 | 7.5% | **Insufficient** — only 2 onboarding tutorials, both stale |
+| **How-to** | 23 | 57.5% | **Dominant but broken** — 57.5% are stale, outdated product info |
+| **Reference** | 11 | 27.5% | **Incomplete** — many features lack reference docs; those that exist are stale |
+| **Explanation** | 3 | 7.5% | **Severely missing** — only 3 explanation docs for entire product |
 
----
+**Key finding:** Your help centre is heavy on how-to (57.5%) but severely light on explanation (7.5%). Users get task-level answers but lack understanding docs. This is a **fundamental quadrant imbalance**.
+```
 
 ## 3. Gap Analysis
 
-### Missing Content — Action: Create
+```markdown
+### Gap Analysis — Prioritised by Impact
 
-| Gap # | User Task | Missing Quadrant(s) | Impact | Priority |
-|---|---|---|---|---|
-| G1 | Understand dashboard purpose and design | Explanation | 5,100 views + 44 support tickets = high confusion about what dashboard is for | **P0** |
-| G2 | Learn why reports are structured this way | Explanation | 2,800 views + 38 tickets = users stuck using reports without understanding concept | **P0** |
-| G3 | Understand when/why to use dependencies | Explanation | Task dependencies not explained — users don't understand when to use them (0 tickets suggest underuse) | **P1** |
-| G4 | Learn export fundamentals (why formats exist) | Explanation | 2,900 views + 51 tickets + 1,840 search queries for "how to export" = critical gap | **P0** |
-| G5 | Understand project vs task hierarchy | Explanation | Core mental model missing; causes confusion (implied by tickets on task creation, assignment) | **P0** |
-| G6 | Get started with dashboard (tutorial) | Tutorial | Current "Understanding dashboard" is explanation — needs guided onboarding | **P1** |
-| G7 | Get started with bulk operations (tutorial) | Tutorial | "Bulk project actions" how-to exists but no guided intro for new users | **P1** |
-| G8 | Understand permissions model | Explanation | 1,200 views + 16 tickets on permissions, only how-to exists | **P1** |
+#### MISSING CONTENT — action: create
 
-### Stale Content — Action: Rewrite
+These user tasks have no documentation at all, or the docs exist but deliver no results in search.
 
-| Gap # | Document | Last Updated | Product Changes Likely | Severity |
-|---|---|---|---|---|
-| G9 | Getting started with Clearpath | 2021-03-10 | 4+ years; core onboarding likely changed | **Critical** |
-| G10 | Creating your first project | 2021-03-10 | 4+ years; UI/workflow probably evolved | **Critical** |
-| G11 | Inviting team members | 2021-04-05 | 4+ years; invitation flow likely redesigned | **Critical** |
-| G12 | Creating tasks and subtasks | 2021-05-01 | 4+ years; task creation UI/options evolved | **Critical** |
-| G13 | Setting due dates and reminders | 2021-05-01 | 4+ years; date picker, reminder system likely changed | **Critical** |
-| G14 | Understanding the dashboard | 2020-11-01 | 5+ years; dashboard completely rewritten likely | **Critical** |
-| G15 | Customising dashboard widgets | 2021-09-22 | 3+ years; widget options likely expanded | **High** |
-| G16 | Dashboard performance troubleshooting | 2022-06-01 | 3+ years; performance baseline and fixes changed | **High** |
-| G17 | Using the reports section | 2020-11-01 | 5+ years; reports interface likely redesigned | **Critical** |
-| G18 | Exporting a report to CSV | 2021-02-10 | 4+ years; export UX likely improved | **High** |
-| G19 | How to export project data | 2020-12-01 | 5+ years; core feature, likely redesigned | **Critical** |
-| G20 | Export file formats explained | 2021-01-20 | 4+ years; new formats may exist | **High** |
-| G21 | Troubleshooting export errors | 2022-04-05 | 3+ years; error messages and fixes likely changed | **High** |
-| G22 | Using the search function | 2020-12-01 | 5+ years; search index and filters likely overhauled | **High** |
-| G23 | Managing billing and plans | 2021-03-01 | 4+ years; pricing tiers and features changed | **High** |
-| G24 | Importing projects from spreadsheet | 2022-01-01 | 3+ years; import UI/options likely evolved | **High** |
-| G25 | CSV import format requirements | 2022-01-01 | 3+ years; schema may have changed | **Medium** |
-| G26 | Troubleshooting CSV import errors | 2022-06-01 | 3+ years; error messages and validators changed | **High** |
-| G27 | Zapier integration | 2021-08-10 | 4+ years; Zapier API/actions likely changed | **Medium** |
-| G28 | Managing user permissions | 2021-07-01 | 4+ years; permission model likely evolved | **High** |
-| G29 | Understanding notification settings | 2021-02-20 | 4+ years; notification channels/options changed | **High** |
-| G30 | Email notification troubleshooting | 2021-02-20 | 4+ years; email delivery system likely redesigned | **High** |
-| G31 | Mobile app getting started | 2022-09-01 | 2+ years; app features and onboarding evolved | **Medium** |
+| Gap ID | User task | Missing quadrant(s) | Evidence | Priority | Impact |
+|---|---|---|---|---|---|
+| **G1** | Troubleshoot dashboard performance | Tutorial + How-to + Explanation | "dashboard slow" = 1,620 searches, **0 results found**. Article 13 exists but is inadequate (67 tickets reference it). Dashboard is highest-traffic feature (5,100 views) with highest ticket volume (123 tickets total). | **P0 Critical** | **1,620 searches + 67 tickets.** Users are actively looking and failing. This single gap likely accounts for 5-10% of support volume. |
+| **G2** | Troubleshoot export failures | Explanation | "export not working" = 680 searches, **0 results**. Article 19 exists but stale and apparently incomplete. Export is 2nd highest ticket driver (51+29+72 = 152 tickets). | **P0 Critical** | 680 searches + 72 tickets on troubleshooting alone. |
+| **G3** | Find/discover reports and data | Tutorial + How-to | "find reports" = 980 searches, **0 results**. Articles 14-16 exist but don't help users locate data. | **P0 Critical** | 980 searches with zero results is a findability + content gap. |
+| **G4** | Bulk edit projects/tasks | How-to + Reference | "bulk edit" = 870 searches, **0 results**. Article 6 exists (Bulk project actions) but users can't find it. | **P0 High** | 870 searches, 0 results. Pure findability + content gap. |
+| **G5** | Understand why dashboard works as it does | Explanation | No explanation doc exists for dashboard. Only task-level how-to and stale reference. Users know HOW to use widgets but not WHY the dashboard is designed that way. | **P1 Medium** | Drives unnecessary tickets when behaviour is misunderstood (e.g., "why can't I filter this way?"). |
+| **G6** | Understand import/export conceptually | Explanation | No explanation doc on import/export workflows, data format philosophy, when to use each. Only stale task-level docs. Users hit errors (Article 38: 41 tickets) without understanding the system. | **P1 Medium** | High ticket volume (33+27+41 = 101 tickets on import alone) partly driven by lack of conceptual understanding. |
+| **G7** | Understand role/permission model | Explanation | Article 30 exists (reference) but only task level. No explanation of permission philosophy, inheritance, or why restrictions exist. | **P1 Medium** | 16 tickets reference Article 30; a clearer explanation would reduce delegation questions. |
 
-### Orphaned Content — Action: Retire
+#### STALE CONTENT — action: rewrite
 
-*None identified.* All 40 articles appear linked and in-use (support tickets and search data show them being found).
+These articles are from 2020-2021 but still receiving traffic and tickets, indicating users rely on them despite being outdated.
 
-### Findability Gaps — Action: Fix IA
+| Gap ID | Document | Path | Last updated | Views (90d) | Tickets | What changed | Priority |
+|---|---|---|---|---|---|---|
+| **G8** | Getting started with Clearpath | — | 2021-03-10 | 4,200 | 0 | **Entire product.** Onboarding flow, UI, feature set all changed since 2021. Stale screenshots, deprecated workflows. | **P0** |
+| **G9** | Creating your first project | — | 2021-03-10 | 3,800 | 2 | Workflow, project types, defaults changed. Users see stale screenshots in their first experience. | **P0** |
+| **G10** | Understanding the dashboard | — | 2020-11-01 | 5,100 | 44 | Dashboard redesigned multiple times since 2020. Widget types, layout options, performance characteristics all changed. **Highest-traffic article is 3.5 years stale.** | **P0** |
+| **G11** | Using the reports section | — | 2020-11-01 | 2,800 | 38 | Reports UI redesigned; export options changed. | **P0** |
+| **G12** | How to export project data | — | 2020-12-01 | 2,900 | 51 | Export formats, workflows changed. This is the most-read export doc but is stale. | **P0** |
+| **G13** | Export file formats explained | — | 2021-01-20 | 800 | 8 | File format support changed; new formats added. | **P0** |
+| **G14** | Inviting team members | — | 2021-04-05 | 2,100 | 18 | Invite workflows, permission assignment, team roles changed. Stale doc contributes to ticket volume. | **P0** |
+| **G15** | How to archive a project | — | 2021-06-15 | 890 | 31 | Archive workflows changed; impact on data/team changed. High ticket count (31) despite traffic — indicates stale doc is misleading. | **P0** |
+| **G16** | Customising dashboard widgets | — | 2021-09-22 | 1,200 | 12 | Widget types, customisation options changed. | **P1** |
+| **G17** | Dashboard performance troubleshooting | — | 2022-06-01 | 340 | 67 | Performance characteristics, root causes changed. **Only 2 years old but 67 tickets reference it** — suggests content is actively wrong. | **P0** |
+| **G18-G23** | [6 other 2021 articles — omitted for brevity] | — | 2021 | — | — | Archive operations, search, billing, notifications, etc. all changed. | **P1** |
 
-| Gap # | User Question (from search data) | Answer Exists? | Why Users Miss It | IA Fix |
-|---|---|---|---|---|
-| G32 | "dashboard slow" (1,620 searches, 891 tickets) | Yes: "Dashboard performance troubleshooting" | Title doesn't match search intent; nested under Dashboard category | Retitle to "Why is my dashboard slow?" + add "performance" tag + surface in main search |
-| G33 | "find reports" (980 searches, 441 tickets) | Partial: "Using the reports section" exists but is stale | Title uses "using" not "find"; users expect navigation help, not feature overview | Retitle to "Finding and accessing reports" + create tutorial-style intro |
-| G34 | "bulk edit" (870 searches, 290 tickets) | Yes: "Bulk project actions" exists | Title says "actions" not "edit"; users search for "bulk edit tasks" | Add synonyms in search metadata; consider retitle to "Bulk editing projects and tasks" |
-| G35 | "export not working" (680 searches, 512 tickets) | Yes: "Troubleshooting export errors" exists | Title doesn't match error-state search intent; grouped with other export docs | Surface separately in nav as "Export troubleshooting" + add error codes to search index |
-| G36 | "delete project" (590 searches, 18 tickets) | Partial: "How to archive a project" exists but users search for "delete" not "archive" | Terminology mismatch (archive vs delete); users expect deletion | Add clarification doc: "Deleting vs archiving projects" + update "archive" article to explain the distinction |
-| G37 | "change project status" (640 searches, 22 tickets) | Yes: "Understanding project statuses" + "How to archive a project" exist | Scattered across two documents; "understanding" and "how to" are separate | Create "Changing project status" how-to that consolidates both, links to reference |
+#### FINDABILITY GAPS — action: fix information architecture
 
----
+The content exists but search is not finding it. This is an IA/search problem, not a content problem.
+
+| Gap ID | User question | Existing doc | Search term tried | Why not found | IA fix |
+|---|---|---|---|---|---|
+| **G24** | How do I bulk edit? | Article 6 (Bulk project actions) | "bulk edit" | Title doesn't contain "bulk edit"; buried in Projects category; not tagged or surfaced in nav | **Reword title to "Bulk edit projects"**; add to primary nav; tag as "bulk, batch, multiple" |
+| **G25** | Where do I find my reports? | Articles 14-16 (Using reports, Exporting, Scheduling) | "find reports" | Articles explain how to USE reports but not how to DISCOVER them. Nav shows "Reports" but no "search/discover" guidance. | **Add section in Article 14: "Finding your reports"**; create index/directory of all reports user can create; improve search indexing |
+| **G26** | How do I fix export errors? | Article 19 (Troubleshooting export errors) | "export not working" | Article exists but incomplete; doesn't cover all error codes. Users search "not working" (colloquial) but article title is "Troubleshooting export errors" (formal). | **Expand Article 19 with complete error code list and solutions**; add synonyms to search ("not working", "failed", "broken") |
+| **G27** | Why is my dashboard slow? | Article 13 (Dashboard performance troubleshooting) | "dashboard slow" | Article exists but is inadequate (67 tickets reference it, suggesting it doesn't answer the question). Root cause analysis missing. | **Rewrite Article 13 with: performance checklist, common causes, debugging steps, when to contact support.** Ensure it's discoverable under "dashboard", "slow", "performance" |
+
+#### Orphaned or Low-Value Content — action: audit for retirement
+
+Articles with 0 views and 0 tickets in 90 days (likely not solving user problems):
+
+| Gap ID | Document | Path | Views | Tickets | Assessment |
+|---|---|---|---|---|---|
+| **G28** | Project templates guide | Templates | 310 | 0 | **Orphaned?** Very low traffic. Feature may not be widely used, or users don't know about it. Audit whether the feature is actively promoted. If promoted, this doc is failing; if not promoted, retire it. |
+| **G29** | Keyboard shortcuts reference | Productivity | 540 | 0 | **Orphaned.** Reference docs can have low traffic (power-user docs), but 0 tickets + 540 views suggests it's not tied to core workflows. Keep but deprioritise. |
+| **G30** | Advanced search filters | Search | 380 | 0 | **Orphaned?** Feature is low-traffic and generates no support. Keep as reference but don't prioritise. |
+```
 
 ## 4. Prioritised Content Backlog
 
-### Critical Path (blocks onboarding or generates frequent support tickets)
+```markdown
+### Prioritised Content Backlog
 
-| Priority | Content Piece | Quadrant | Feature | Effort | Owner | Notes |
-|---|---|---|---|---|---|---|
-| **P0-1** | Rewrite: Getting started with Clearpath | Tutorial | Onboarding | M | Product team + Doc owner | Stale 4+ years; foundation for all new users |
-| **P0-2** | Rewrite: Creating your first project | Tutorial | Onboarding | M | Product team + Doc owner | Stale 4+ years; critical path task |
-| **P0-3** | Rewrite: Inviting team members | Tutorial | Onboarding | M | Product team + Doc owner | Stale 4+ years; blocks team setup; 18 support tickets |
-| **P0-4** | New: Dashboard explained (explanation) | Explanation | Dashboard | M | Product team + Doc owner | 5,100 views + 44 tickets; users don't understand purpose |
-| **P0-5** | New: Export fundamentals (explanation) | Explanation | Export | M | Doc owner | 2,900 views + 51 tickets; "export not working" #2 pain point |
-| **P0-6** | Rewrite: How to export project data | How-to | Export | M | Product team + Doc owner | Stale 5+ years; 1,840 searches for "how to export" |
-| **P0-7** | New: Project vs task hierarchy (explanation) | Explanation | Core concepts | S | Doc owner | Core mental model; implied confusion across tickets |
-| **P0-8** | Rewrite: Dashboard performance troubleshooting | How-to | Dashboard | M | Support + Doc owner | Stale 3+ years; #1 support pain point (1,620 searches, 891 tickets) |
-| **P0-9** | New: Understanding reports (explanation) | Explanation | Reports | M | Product team + Doc owner | 2,800 views + 38 tickets; users don't understand when to use reports |
-| **P0-10** | Rewrite: Using the reports section | Tutorial | Reports | M | Product team + Doc owner | Stale 5+ years; critical path feature |
+**Rationale:** P0 gaps block onboarding or generate high support volume. P1 gaps serve active users but don't block. P2 gaps are completeness.
 
-### High Priority (gaps for active users)
+| Priority | Content piece | Quadrant | Current status | Effort | Impact (users/tickets) | Owner | Target |
+|---|---|---|---|---|---|---|---|
+| **P0-1** | Rewrite: Getting started tutorial (Article 1) | Tutorial | Stale (4.5 years) | M | 4,200 views — users' first impression | Product | Week 1-2 |
+| **P0-2** | Rewrite: Understanding the dashboard (Article 11) | Explanation + Reference | Stale (5.5 years) + incomplete | L | 5,100 views + 44 tickets | Product | Week 1-2 |
+| **P0-3** | Create: Dashboard performance troubleshooting (NEW + rewrite Article 13) | How-to + Explanation | Inadequate (67 tickets!) | M | 1,620 searches + 67 tickets | Product | Week 2-3 |
+| **P0-4** | Rewrite: How to export project data (Article 17) | How-to | Stale (5.5 years) | M | 2,900 views + 51 tickets | Product | Week 1-2 |
+| **P0-5** | Create: Troubleshoot export failures (NEW + rewrite Article 19) | How-to + Reference | Incomplete (72 tickets) | M | 680 searches + 72 tickets on troubleshooting | Product | Week 2-3 |
+| **P0-6** | Create: Find and discover reports (NEW section in Article 14) | How-to | Missing | S | 980 searches + 0 results | Product | Week 3 |
+| **P0-7** | Fix findability: Bulk edit projects (reword + reindex Article 6) | How-to (IA fix) | Exists but unfindable | S | 870 searches + 0 results | Product | Week 3 |
+| **P1-1** | Rewrite: Creating your first project (Article 2) | Tutorial | Stale (4.5 years) | M | 3,800 views — critical onboarding | Product | Week 2-3 |
+| **P1-2** | Rewrite: Inviting team members (Article 3) | How-to | Stale (4 years) + ticket driver | M | 2,100 views + 18 tickets | Product | Week 3 |
+| **P1-3** | Create: Understanding import/export workflows (NEW) | Explanation | Missing entirely | M | Reduces 101 tickets on import/export | Product | Week 4 |
+| **P1-4** | Create: Understanding permissions and roles (NEW) | Explanation | Missing entirely | M | Contextualises Article 30; reduces confusion | Product | Week 4 |
+| **P1-5** | Rewrite: Using reports section (Article 14) | How-to | Stale (5.5 years) | M | 2,800 views + 38 tickets | Product | Week 4 |
+| **P1-6** | Audit & retire: Low-traffic articles (Articles 28, 29, 30, etc.) | Various | Low engagement | S | Clarify which features are actively supported | Product | Week 5 |
+| **P2-1** | Refresh: Stale reference docs (Articles 18, 20, 23, etc.) | Reference | 2021-2022 | L | Completeness; lower ticket impact | Product | Ongoing |
 
-| Priority | Content Piece | Quadrant | Feature | Effort | Owner | Notes |
-|---|---|---|---|---|---|---|
-| **P1-1** | Rewrite: Creating tasks and subtasks | How-to | Tasks | M | Product team + Doc owner | Stale 4+ years; 3,100 views |
-| **P1-2** | Rewrite: Setting due dates and reminders | How-to | Tasks | S | Product team + Doc owner | Stale 4+ years; 1,900 views |
-| **P1-3** | Rewrite: Importing projects from spreadsheet | Tutorial | Import | M | Product team + Doc owner | Stale 3+ years; 880 views + 33 tickets |
-| **P1-4** | New: Permissions model explained (explanation) | Explanation | Security | M | Security + Doc owner | 1,200 views + 16 tickets; no explanation of how/why |
-| **P1-5** | Rewrite: Managing user permissions | How-to | Security | M | Security + Doc owner | Stale 4+ years; 1,200 views + 16 tickets |
-| **P1-6** | Rewrite: Export file formats | Reference | Export | S | Product team + Doc owner | Stale 4+ years; 800 views |
-| **P1-7** | Rewrite: Customising dashboard widgets | How-to | Dashboard | M | Product team + Doc owner | Stale 3+ years; 1,200 views |
-| **P1-8** | Rewrite: Managing billing and plans | How-to | Billing | M | Business + Doc owner | Stale 4+ years; 1,400 views + 9 tickets |
+**Effort scale:** S (Small, <2 hours), M (Medium, 2-4 hours), L (Large, 4+ hours)
 
-### Medium Priority (completeness & polish)
-
-| Priority | Content Piece | Quadrant | Feature | Effort | Owner | Notes |
-|---|---|---|---|---|---|---|
-| **P2-1** | Rewrite: Mobile app getting started | Tutorial | Mobile | S | Product team + Doc owner | Stale 2+ years; 720 views |
-| **P2-2** | Rewrite: Using the search function | How-to | Search | S | Product team + Doc owner | Stale 5+ years; 1,700 views |
-| **P2-3** | Rewrite: CSV import format requirements | Reference | Import | S | Product team + Doc owner | Stale 3+ years; 640 views |
-| **P2-4** | Rewrite: Troubleshooting CSV import errors | How-to | Import | M | Support + Doc owner | Stale 3+ years; 420 views + 41 tickets |
-| **P2-5** | Rewrite: Email notification troubleshooting | How-to | Notifications | S | Support + Doc owner | Stale 4+ years; 650 views + 18 tickets |
-| **P2-6** | Rewrite: Understanding notification settings | How-to | Notifications | S | Product team + Doc owner | Stale 4+ years; 900 views + 21 tickets |
-| **P2-7** | Rewrite: Zapier integration | How-to | Integrations | S | Integrations + Doc owner | Stale 4+ years; 310 views + 14 tickets |
-
----
+**Total P0 effort:** ~20 hours (1 week with one writer)  
+**Total P1 effort:** ~18 hours (1-2 weeks)
+```
 
 ## 5. Content Standards
 
-### Universal Standards
+```markdown
+### Content Standards
 
 | Standard | Policy |
 |---|---|
-| **Style guide** | Follow [Google Developer Documentation Style Guide](https://developers.google.com/style) for technical clarity and consistency |
-| **Review process** | 1) Product SME (confirms accuracy), 2) Technical reviewer (checks for errors/outdated info), 3) Editorial review (style/clarity) |
-| **Freshness policy** | - Feature-linked review: docs updated within 1 week of related feature shipping<br>- Bulk review: quarterly audit of all docs marked "stale"<br>- Time-based: all docs reviewed for staleness every 6 months |
-| **Ownership model** | - Feature teams own tutorial + explanation + how-to for their feature<br>- Support owns troubleshooting how-tos<br>- Integrations team owns third-party integration docs<br>- Central doc owner coordinates cross-cutting content and freshness |
-| **Testing** | - Screenshots and UI references captured at release time<br>- Code samples in docs tested against latest API<br>- All external links checked monthly<br>- Search synonym tags verified quarterly |
-| **Versioning** | - Version docs when product introduces breaking changes<br>- Maintain "current version" and previous version branch<br>- Add migration guides when backwards compatibility breaks |
+| **Style guide** | Use [Martin's writing rules](file:///Users/martin/.claude/rules/) — conversational Australian register, lean prose, specific examples, show uncertainty ("my hunch is..."), avoid AI-isms |
+| **Review process** | (1) Author writes; (2) Product Owner reviews for accuracy; (3) QA spot-checks steps against live product; (4) Editorial pass for tone/clarity |
+| **Freshness policy** | Every article reviews a 6-month refresh cycle. If the feature changed, rewrite the doc. If unchanged, update the "last reviewed" date. Any feature change triggers immediate doc audit. |
+| **Ownership model** | Each feature owns all quadrants: Onboarding team owns "Getting started" (tutorial); Dashboard team owns dashboard docs (all 4 quadrants); Product team audits quarterly. |
+| **Templates** | Tutorial: 10-30 min completion time, includes prerequisites + working example + next steps. How-to: <5 min read, goal in title, numbered steps, single outcome. Reference: tables/lists, complete coverage, every parameter. Explanation: prose + diagrams, "why" not "how", conceptual. |
+| **Testing** | (1) Steps tested against live product before publish; (2) Screenshots captured month before publish cycle; (3) Links checked monthly; (4) Code samples tested if applicable |
+| **Versioning** | Docs track product version. Deprecated features marked with date and redirect. Maintain docs for current + previous release only. |
 
 ### Per-Quadrant Standards
 
-| Quadrant | Structure | Length | Must Include | Tone | Examples |
-|---|---|---|---|---|---|
-| **Tutorial** | 1. Outcome statement<br>2. Prerequisites<br>3. Numbered steps (5-10)<br>4. Working example/end state<br>5. Next steps | 10-15 min read | - Clear goal in H1<br>- Prerequisites (skills, permissions)<br>- Prerequisites (skills, permissions)<br>- Every step has action + expected result<br>- Screenshot at key steps<br>- "What's next?" links | Warm, encouraging, beginner-safe | "Getting started with Clearpath", "Creating your first project" |
-| **How-to** | 1. Goal in title<br>2. Prerequisites<br>3. Numbered steps<br>4. Success state | 2-5 min read | - Single, specific outcome<br>- Assumption of user knowledge<br>- Error states and fixes<br>- Link to explanation for why | Direct, action-oriented | "How to archive a project", "Exporting a report to CSV" |
-| **Reference** | 1. Overview<br>2. Table / List / Schema<br>3. Parameter descriptions<br>4. Examples | Scannable, complete | - Every parameter explained<br>- All valid values listed<br>- Error codes and meanings<br>- Code sample if applicable | Technical, precise, no fluff | "API authentication guide", "Export file formats explained" |
-| **Explanation** | 1. Context<br>2. Problem/Why it matters<br>3. Core concepts<br>4. Examples or diagrams<br>5. Relationship to other features | 5-10 min read | - Why this exists<br>- When/why to use it<br>- How it fits into the product<br>- Common misconceptions | Conversational, educational | "Understanding the dashboard", "Project vs task hierarchy" |
-
----
-
-## 6. Roadmap
-
-### Phase 1: Critical Path (Weeks 1-6)
-**Goal:** Fix onboarding and #1 pain points (dashboard, export); establish freshness baseline
-
-| Content Piece | Quadrant | Owner | Priority | Status |
-|---|---|---|---|---|
-| Getting started with Clearpath | Tutorial | Product + Doc | P0-1 | To do |
-| Creating your first project | Tutorial | Product + Doc | P0-2 | To do |
-| Inviting team members | Tutorial | Product + Doc | P0-3 | To do |
-| Dashboard explained (new) | Explanation | Product + Doc | P0-4 | To do |
-| Export fundamentals (new) | Explanation | Doc | P0-5 | To do |
-| How to export project data | How-to | Product + Doc | P0-6 | To do |
-| Dashboard performance troubleshooting | How-to | Support + Doc | P0-8 | To do |
-
-**Success criteria:** Onboarding docs current (last updated within 2 weeks); "dashboard slow" and "export" search results surface current docs in top 2 results; support tickets for these topics decline 30%+.
-
-### Phase 2: Completeness (Weeks 7-12)
-**Goal:** Fill explanation gaps; update core features; establish ownership model
-
-| Content Piece | Quadrant | Owner | Priority | Status |
-|---|---|---|---|---|
-| Project vs task hierarchy (new) | Explanation | Doc | P0-7 | To do |
-| Understanding reports (new) | Explanation | Product + Doc | P0-9 | To do |
-| Using the reports section | Tutorial | Product + Doc | P0-10 | To do |
-| Creating tasks and subtasks | How-to | Product + Doc | P1-1 | To do |
-| Importing projects from spreadsheet | Tutorial | Product + Doc | P1-3 | To do |
-| Permissions model explained (new) | Explanation | Security + Doc | P1-4 | To do |
-| Managing user permissions | How-to | Security + Doc | P1-5 | To do |
-
-**Success criteria:** All top 10 features have at least 3/4 Diataxis quadrants covered; explanation content published for core concepts; quarterly freshness audit scheduled.
-
-### Phase 3: Polish & Depth (Weeks 13-18)
-**Goal:** Lower-priority updates; advanced content; IA improvements
-
-| Content Piece | Quadrant | Owner | Priority | Status |
-|---|---|---|---|---|
-| [All P1 and P2 items from backlog] | Mixed | Various | P1-P2 | To do |
-
-**Success criteria:** All 40 articles current (updated within 6 months); zero "orphaned" docs; search results ranked by relevance and recency.
-
-### Ongoing: Maintenance Schedule
-
-- **Weekly:** Support triage — identify doc gaps from tickets
-- **Bi-weekly:** Content updates tied to feature releases
-- **Monthly:** Broken link check + search metadata verification
-- **Quarterly:** Freshness audit + coverage matrix review + support ticket analysis
-- **Semi-annually:** Full documentation review + deprecation of outdated articles
-
----
-
-## Key Findings Summary
-
-### Quantified Problems
-
-| Metric | Finding | Impact |
-|---|---|---|
-| **Staleness** | 24/40 articles (60%) haven't been updated since 2021 or earlier | Users reading incorrect procedures; support volume increases |
-| **Explanation gap** | Only 3/40 articles explain "why" | Users don't understand when/why to use features; overuse of support |
-| **Findability** | 4 high-traffic searches return no results or wrong docs | Users give up and open support tickets instead of self-serving |
-| **Onboarding coverage** | 4 tutorials, 3 stale | New users struggle; high initial churn risk |
-| **Tutorial deficit** | Only 10% of docs are tutorials | Complex product with minimal guided learning paths |
-
-### Recommended Execution Strategy
-
-1. **Start with onboarding** (P0-1, P0-2, P0-3) — these are highest-traffic, most-critical, and all stale since 2021
-2. **Fix pain points in parallel** (P0-4 through P0-8) — "dashboard slow" and "export not working" are #1 and #2 support drivers
-3. **Build explanation culture** — 17 new explanation docs needed; start with core concepts (project/task hierarchy, dashboard, reports, permissions)
-4. **Establish freshness guardrails** — move from "stale" reactive updates to preventive quarterly reviews + feature-release triggers
-5. **Improve findability** — add search synonyms and metadata to existing docs before writing new ones; fix IA gaps (G32–G37)
-
-### Success Metrics (post-implementation)
-
-- Support tickets for "I don't understand X" decline 40%+
-- Search queries resolving in top 2 results reach 80%+
-- Time-to-resolution for common issues drops 30%+
-- New user onboarding time improved (tracked via analytics)
-- Documentation freshness baseline: 100% of docs reviewed within 6 months
-
+| Quadrant | Structure | Length target | Must include |
+|---|---|---|---|
+| **Tutorial** | Numbered steps with clear outcomes after each step | 10-30 min to complete | Prerequisites, working example at end (user sees success), next steps (what to do after) |
+| **How-to** | Numbered steps, minimal explanation | 2-5 min read | Goal in title, prerequisites (what you need before starting), single outcome (what you'll have done) |
+| **Reference** | Tables, lists, parameter/error code tables | Complete coverage, scannable in 30 sec | Every parameter/option/error code, valid range/values, when used, links to how-to examples |
+| **Explanation** | Prose with diagrams/flowcharts | As long as needed to explain | Why the system is designed this way, when you'd need this concept, relationship to other concepts |
 ```
+
+## 6. Content Roadmap
+
+```markdown
+### Content Roadmap — 12 Weeks
+
+#### Phase 1: Foundation Crisis (Weeks 1-3)
+**Goal:** Fix the broken onboarding and high-ticket features. Stop the bleed.
+
+**What we're doing:** Rewriting the 5 highest-impact stale articles (Getting started, Dashboard, Export) + creating 2 critical missing docs (Dashboard perf, Export troubleshooting).
+
+| Content | Quadrant | Owner | Status | Due |
+|---|---|---|---|---|
+| Rewrite: Getting started tutorial | Tutorial | Product | Not started | Week 2 |
+| Rewrite: Understanding the dashboard | Explanation + Reference | Product | Not started | Week 2 |
+| Create: Dashboard performance troubleshooting | How-to + Explanation | Product | Not started | Week 3 |
+| Rewrite: How to export project data | How-to | Product | Not started | Week 2 |
+| Create: Troubleshoot export failures | How-to + Reference | Product | Not started | Week 3 |
+| Fix: Bulk edit findability (IA + reindex) | How-to | Product | Not started | Week 3 |
+| Create: Find reports (new section in Article 14) | How-to | Product | Not started | Week 3 |
+
+**Success metric:** Support tickets on these topics drop 30% week-on-week. Search "no results" drop to <5%.
+
+---
+
+#### Phase 2: Completeness (Weeks 4-7)
+**Goal:** Fill explanation gaps + rewrite remaining stale onboarding.
+
+| Content | Quadrant | Owner | Status | Due |
+|---|---|---|---|---|
+| Rewrite: Creating your first project | Tutorial | Product | Not started | Week 4 |
+| Rewrite: Inviting team members | How-to | Product | Not started | Week 4 |
+| Create: Understanding import/export workflows | Explanation | Product | Not started | Week 5 |
+| Create: Understanding permissions and roles | Explanation | Product | Not started | Week 5 |
+| Rewrite: Using reports section | How-to | Product | Not started | Week 5-6 |
+| Audit: Which features are "officially supported"? (drives retirement decisions) | — | Product | Not started | Week 6 |
+| Retire or sunset: Low-value docs (Articles 28, 29, 30 candidates) | — | Product | Not started | Week 7 |
+
+**Success metric:** Explanation content increases from 7.5% to 20% of total. No tutorial or how-to left without supporting explanation.
+
+---
+
+#### Phase 3: Depth & Discoverability (Weeks 8-12)
+**Goal:** Polish, refresh remaining stale reference docs, improve search/navigation.
+
+| Content | Owner | Status | Due |
+|---|---|---|---|
+| Refresh: Stale reference docs (Articles 18, 20, 23, etc., 2021-2022 articles) | Product | Not started | Week 10 |
+| Improve: Navigation and search indexing (tag articles, create "common tasks" index) | Product/Tech writing | Not started | Week 9 |
+| Quarterly content audit: Run coverage matrix again, identify new gaps | Product | Not started | Week 12 |
+| Establish: Freshness review schedule (6-month cycles, feature-change triggers) | Product | Not started | Week 12 |
+
+---
+
+### Maintenance — Ongoing (after roadmap complete)
+
+- [ ] **Monthly**: Check articles modified >6 months ago; refresh if product changed
+- [ ] **Feature-change trigger**: When feature PR merges, audit docs (link provided in PR template)
+- [ ] **Quarterly**: Re-run coverage matrix; identify new gaps
+- [ ] **Per-ticket**: If a support ticket references an old article, add to refresh queue
+- [ ] **Per-release**: Update version references; mark deprecated features
+
+---
+
+### Success Metrics
+
+| Metric | Baseline (now) | Target (Week 12) | Owner |
+|---|---|---|---|
+| Search queries with 0 results | 4 queries (5,040 searches) | <1 query (<500 searches) | Product |
+| Articles >2 years stale | 13 articles (42.5%) | 0 articles | Product |
+| Tutorial + Explanation coverage | 10.5% of total | 35% of total | Product |
+| Support tickets on top 5 features | 326 tickets | <230 tickets (-30%) | Product |
+| Dashboard-related tickets specifically | 123 tickets | <80 tickets | Product |
+| New user onboarding completion rate | [Baseline?] | +15% | Product |
+```
+
+---
+
+## Summary
+
+Your help centre has a **quadrant imbalance** and **staleness crisis**:
+
+- **17 of 40 articles are 2-5 years stale** while still receiving traffic
+- **Tutorial + Explanation quadrants are severely underfunded** (15% combined vs. 57.5% how-to)
+- **Search is broken** on 4 major user queries (5,040 searches, zero results)
+- **Highest-traffic features have highest ticket volume**, indicating docs aren't solving the real problems
+
+**The P0 priority is Week 1-3:** rewrite the 5 stale, high-traffic articles + create 2 critical missing docs (dashboard perf, export troubleshooting). This single week of focused work would likely cut support tickets on these topics by 30%.
+
+**Phase 2 adds explanation content** — most teams write how-to but skip why. Your dashboard, export, and permissions docs would all benefit from conceptual explanation docs that sit behind the how-to guides.
+
+**Phase 3** is polish and discoverability — once content is current and complete, improve the IA so users can find what exists.
+
+Would you like me to draft the first rewrite (Getting Started tutorial) or audit the existing articles to understand what specifically changed in the product since 2021?
+
+### Artifacts written
 
 #### `work/help-centre/inventory.csv`
 
@@ -499,34 +454,34 @@ api token,480,yes,12
 |---|---|
 | Verdict | PASS |
 | Score | 16.0/17.0 (94%) |
-| Evaluated | 2026-05-02 |
-| Target duration | 94785 ms |
-| Target cost | $0.1327 |
+| Evaluated | 2026-05-04 |
+| Target duration | 100443 ms |
+| Target cost | $0.1200 |
 | Permission denials | 0 |
 
 ### Criteria
 
 | # | Criterion | Result | Evidence |
 |---|---|---|---|
-| c1 | Skill uses the Diataxis framework — classifying content as Tutorial, How-to, Reference, or Explanation — not an ad-hoc taxonomy | PASS | Section 1 of CONTENT_STRATEGY.md is headed 'By Diataxis Quadrant' and the Quadrant Summary table explicitly names Tutorial, How-to, Reference, and Explanation. Every article in the inventory is classified into one of these four categories. |
-| c2 | Skill requires a content inventory step before any recommendations — auditing what exists before deciding what to create | PASS | Section 1 ('Content Inventory') fully classifies all 40 articles by Diataxis quadrant, staleness, views, and tickets before Section 3 (Gap Analysis) or Section 4 (Prioritised Content Backlog) appear. |
-| c3 | Skill produces a gap analysis — identifying what content types are missing or underrepresented for each product area | PASS | Section 3 'Gap Analysis' separates gaps into Missing Content (G1–G8 with product area, missing quadrant, impact), Stale Content (G9–G31 per article), Orphaned Content, and Findability Gaps (G32–G37). Each entry names the specific product area and quadrant gap. |
-| c4 | Skill produces a prioritised content roadmap — what to create first, with rationale based on user impact | PASS | Section 4 lists P0/P1/P2 items with Notes fields citing specific impact (e.g., 'P0-8: 1,620 searches, 891 tickets'). Section 6 maps these into Phase 1 (Weeks 1–6), Phase 2 (Weeks 7–12), and Phase 3 (Weeks 13–18) with measurable success criteria per phase. |
-| c5 | Skill defines content standards — what good looks like for each content type in this context | PASS | Section 5 'Per-Quadrant Standards' table has columns Structure, Length, Must Include, Tone, Examples for Tutorial, How-to, Reference, and Explanation. E.g., How-to 'Must Include: Single, specific outcome … Error states and fixes'; Reference 'Must Include: Every parameter explained … Code sample if applicable'. |
-| c6 | Skill requires a coverage matrix — mapping content to user tasks to identify blind spots | PASS | Section 2 'User Tasks × Quadrant Coverage' has rows for 26 user tasks (e.g., 'Core: Create and manage tasks', 'Reports: Export reports') and columns Tutorial/How-to/Reference/Explanation, with article names or '—' in each cell. Key Findings summarise the blanks. |
-| c7 | Skill addresses content maintenance — how to keep existing content current as the product evolves — partial credit if this is mentioned but not required as a strategy component | PARTIAL | Section 5 Universal Standards includes a 'Freshness policy' (feature-linked review within 1 week of shipping, quarterly bulk review, 6-month time-based) and an 'Ownership model'. Section 6 'Ongoing: Maintenance Schedule' lists Weekly/Bi-weekly/Monthly/Quarterly/Semi-annual cadences. Ceiling capped at PARTIAL. |
-| c8 | Skill has a valid YAML frontmatter with name, description, and argument-hint fields | FAIL | The captured output (chat response and CONTENT_STRATEGY.md artifact) contains no skill definition file and no YAML frontmatter is visible. There is no evidence in the captured output of name, description, or argument-hint fields. |
-| c9 | Output's content inventory step processes the 140 existing articles — at minimum classifying each into one of the four Diataxis types and flagging stale articles (last reviewed > 6 months without product change) — not a sample | PASS | All 40 articles from the provided CSV are listed in the Section 1 inventory table, each with a Quadrant column (Tutorial/How-to/Reference/Explanation) and a Status column (Stale/Current). No sampling was done. (The '140 articles' figure was context in the prompt; the actual CSV contained 40, all processed.) |
-| c10 | Output uses the Diataxis taxonomy explicitly — Tutorial (learning-oriented), How-to (task-oriented), Reference (information-oriented), Explanation (understanding-oriented) — with the framework named, not invented categories | PASS | Section 1 heading reads 'By Diataxis Quadrant'. The Per-Quadrant Standards table in Section 5 uses the canonical four names. The framework is named, not described as a custom taxonomy. |
-| c11 | Output's gap analysis identifies what's missing per product area — e.g. 'Reporting has 8 How-tos but 0 Tutorials, suggesting new users have nowhere to start' — concrete, not generic 'we need more content' | PASS | Gap entries are product-area specific and quantified: G1 'Understand dashboard purpose — 5,100 views + 44 support tickets'; G2 'Learn why reports are structured this way — 2,800 views + 38 tickets'; Quadrant Summary flags 'Explanation \| 3 \| 7% \| Critical gap — Only 3 explanations for an entire product'. |
-| c12 | Output's coverage matrix maps content to user tasks — rows are user tasks ('export a report', 'invite a teammate'), columns are Diataxis types — with cells showing the article(s) that cover each, blanks revealing gaps | PASS | Section 2 table has exactly this structure: 26 rows of named user tasks (e.g., 'Reports: Export reports', 'Onboarding: Invite teammates'), four Diataxis columns, article names in cells (e.g., 'Export to CSV (stale)'), and '—' for gaps. Overall column shows 'Minimal' or 'Partial' where coverage is thin. |
-| c13 | Output addresses the support-ticket signal — common questions where users couldn't find answers should be cross-referenced with the inventory to identify content that exists but isn't findable, vs content that's genuinely missing | PASS | Section 3 'Findability Gaps' (G32–G37) explicitly distinguishes: G32 'dashboard slow — doc exists but titled differently'; G36 'delete project — archive doc exists but terminology mismatch'. Each entry specifies whether the doc exists (findability) or is absent (genuine gap), with search volumes and ticket counts cited. |
-| c14 | Output's roadmap is prioritised — with the top items being either (a) high-frequency support deflection wins or (b) gaps blocking key user tasks — not arbitrary 'let's update the docs' | PASS | P0 items are justified with explicit impact data: P0-8 'Dashboard performance troubleshooting — 1,620 searches, 891 tickets'; P0-1,2,3 'Onboarding tutorials stale 4+ years; foundation for all new users'. Phase 1 success criterion: 'support tickets for these topics decline 30%+'. |
-| c15 | Output's content standards define what GOOD looks like per Diataxis type — e.g. 'How-tos must have numbered steps with expected results', 'Reference must be exhaustive and machine-scannable' — actionable for writers | PASS | Per-Quadrant Standards table: Tutorial 'Must Include: Every step has action + expected result; Screenshot at key steps'; How-to 'Must Include: Single, specific outcome; Error states and fixes'; Reference 'Every parameter explained; All valid values listed; Code sample if applicable'; Explanation 'Why this exists; Common misconceptions'. Tone and Length also specified per type. |
-| c16 | Output's recommendations distinguish between rewrite (article exists but is stale or wrong type), retire (no longer relevant), and create (genuine gap) — and the inventory feeds these decisions | PASS | Section 3 Gap Analysis uses explicit action headers: 'Missing Content — Action: Create', 'Stale Content — Action: Rewrite', 'Orphaned Content — Action: Retire', 'Findability Gaps — Action: Fix IA'. The P0/P1/P2 backlog items are prefixed 'Rewrite:' or 'New:' throughout, tracing back to inventory staleness dates. |
-| c17 | Output addresses content maintenance as a strategic component — review cadence (e.g. every 6 months), trigger-based update (after a product release in the same area), and content owner per article | PASS | Section 5 Freshness policy: 'Feature-linked review: docs updated within 1 week of related feature shipping; Bulk review: quarterly; Time-based: all docs reviewed every 6 months'. Ownership model assigns feature teams, support, integrations, and a central doc owner. Section 4 backlog has an Owner column per item. |
-| c18 | Output addresses the IA / findability dimension — even good content fails if users can't find it; recommendations on search, navigation hierarchy, and tagging belong in the strategy | PARTIAL | Section 3 'Findability Gaps — Action: Fix IA' (G32–G37) gives concrete per-article IA fixes: 'Retitle to Why is my dashboard slow? + add performance tag + surface in main search'; 'Add synonyms in search metadata; consider retitle to Bulk editing projects and tasks'. The chat response echoes these. Ceiling capped at PARTIAL. |
+| c1 | Skill uses the Diataxis framework — classifying content as Tutorial, How-to, Reference, or Explanation — not an ad-hoc taxonomy | PASS | The output explicitly names 'Diataxis quadrant' in section 1 and applies all four types (Tutorial, How-to, Reference, Explanation) as the sole classification taxonomy across every article in the inventory table. |
+| c2 | Skill requires a content inventory step before any recommendations — auditing what exists before deciding what to create | PASS | Section '## 1. Content Inventory' is the first substantive step, producing a full 40-row table of all articles classified by Diataxis quadrant and staleness before any gap analysis or recommendations appear. |
+| c3 | Skill produces a gap analysis — identifying what content types are missing or underrepresented for each product area | PASS | Section '## 3. Gap Analysis' has three sub-categories: MISSING CONTENT (G1–G7), STALE CONTENT (G8–G23), and FINDABILITY GAPS (G24–G27), each with specific product areas named, evidence cited, and priority assigned. |
+| c4 | Skill produces a prioritised content roadmap — what to create first, with rationale based on user impact | PASS | Section '## 6. Content Roadmap' has three phases with explicit P0/P1/P2 prioritisation tied to search volume (e.g., 'dashboard slow: 1,620 searches') and ticket counts (e.g., '67 tickets on Article 13'). Section '## 4. Prioritised Content Backlog' reinforces this with effort/impact columns. |
+| c5 | Skill defines content standards — what good looks like for each content type in this context | PASS | Section '## 5. Content Standards' includes a '### Per-Quadrant Standards' table defining Structure, Length target, and Must include for each Diataxis type — e.g., 'How-to: Numbered steps, minimal explanation \| 2-5 min read \| Goal in title, prerequisites, single outcome'. |
+| c6 | Skill requires a coverage matrix — mapping content to user tasks to identify blind spots | PASS | Section '## 2. Coverage Matrix' has rows labelled as user tasks (e.g., 'Get started with Clearpath', 'Export project data', 'Fix dashboard performance') and columns for Tutorial, How-to, Reference, Explanation, with article numbers in cells and gaps marked 'Missing entirely'. |
+| c7 | Skill addresses content maintenance — how to keep existing content current as the product evolves — partial credit if this is mentioned but not required as a strategy component | PARTIAL | The output includes a dedicated 'Maintenance — Ongoing' section with monthly, quarterly, per-ticket, per-release, and feature-change-trigger cadences. The Content Standards table also contains a 'Freshness policy' row. Comprehensive coverage, but ceiling is PARTIAL. |
+| c8 | Skill has a valid YAML frontmatter with name, description, and argument-hint fields | FAIL | The captured output is a runtime chat response only. No YAML frontmatter (name, description, argument-hint fields) appears anywhere in the output. The skill definition file is not provided or shown. |
+| c9 | Output's content inventory step processes the 140 existing articles — at minimum classifying each into one of the four Diataxis types and flagging stale articles (last reviewed > 6 months without product change) — not a sample | PASS | All 40 articles from the CSV are classified in the inventory table with Diataxis quadrant and staleness status (e.g., '**Stale**', '**Stale + Incomplete**'). The prompt says 140 total but the CSV provided has 40 — the output processes every row in the provided inventory without sampling. |
+| c10 | Output uses the Diataxis taxonomy explicitly — Tutorial (learning-oriented), How-to (task-oriented), Reference (information-oriented), Explanation (understanding-oriented) — with the framework named, not invented categories | PASS | The output opens section 1 with 'Let me map your 40 articles by Diataxis quadrant' and applies Tutorial, How-to, Reference, and Explanation consistently throughout the inventory, coverage matrix, gap analysis, and standards sections. |
+| c11 | Output's gap analysis identifies what's missing per product area — e.g. 'Reporting has 8 How-tos but 0 Tutorials, suggesting new users have nowhere to start' — concrete, not generic | PASS | Gap G1: 'dashboard slow = 1,620 searches, 0 results found. Article 13 exists but is inadequate (67 tickets).' Gap G3: 'find reports = 980 searches, 0 results. Articles 14-16 exist but don't help users locate data.' Each gap includes specific search volumes, ticket counts, and named articles. |
+| c12 | Output's coverage matrix maps content to user tasks — rows are user tasks ('export a report', 'invite a teammate'), columns are Diataxis types — with cells showing the article(s) that cover each, blanks revealing gaps | PASS | The '### Coverage Matrix — User Tasks × Quadrants' table has rows for user tasks ('Fix dashboard performance', 'Bulk edit projects/tasks', 'Find/discover reports and data') and columns Tutorial, How-to, Reference, Explanation, with article numbers or 'Missing entirely' in each cell. |
+| c13 | Output addresses the support-ticket signal — common questions where users couldn't find answers should be cross-referenced with the inventory to identify content that exists but isn't findable, vs content that's genuinely missing | PASS | Gap G24: 'Article 6 exists (Bulk project actions) but users can't find it — title doesn't contain bulk edit, buried in Projects category.' Gap G27: 'Article 13 exists but is inadequate (67 tickets).' These are explicitly contrasted with G1–G7 where content is genuinely absent. |
+| c14 | Output's roadmap is prioritised — with the top items being either (a) high-frequency support deflection wins or (b) gaps blocking key user tasks — not arbitrary 'let's update the docs' | PASS | P0-3 is 'Create: Dashboard performance troubleshooting' justified with '1,620 searches + 67 tickets'. P0-5 is 'Troubleshoot export failures' justified with '680 searches + 72 tickets on troubleshooting'. Each P0 item has an explicit impact justification. |
+| c15 | Output's content standards define what GOOD looks like per Diataxis type — e.g. 'How-tos must have numbered steps with expected results', 'Reference must be exhaustive and machine-scannable' — actionable for writers | PASS | Per-Quadrant Standards table: Tutorial 'Must include: Prerequisites, working example at end (user sees success), next steps'; How-to 'Numbered steps, minimal explanation \| 2-5 min read \| Goal in title, single outcome'; Reference 'Tables, lists \| Complete coverage, scannable in 30 sec \| Every parameter/option/error code'. |
+| c16 | Output's recommendations distinguish between rewrite (article exists but is stale or wrong type), retire (no longer relevant), and create (genuine gap) — and the inventory feeds these decisions | PASS | Gap analysis sub-headings are explicitly 'MISSING CONTENT — action: create', 'STALE CONTENT — action: rewrite', and 'Orphaned or Low-Value Content — action: audit for retirement'. Each decision is fed by staleness date, ticket count, and traffic from the inventory. |
+| c17 | Output addresses content maintenance as a strategic component — review cadence (e.g. every 6 months), trigger-based update (after a product release in the same area), and content owner per article | PASS | 'Maintenance — Ongoing' section lists monthly staleness checks, feature-change triggers ('When feature PR merges, audit docs'), quarterly coverage matrix re-runs, per-ticket refresh queue, and per-release version updates. Content Standards also includes 'Freshness policy' (6-month cycle, feature-change triggers) and 'Ownership model' (each feature team owns all quadrants for their domain). |
+| c18 | Output addresses the IA / findability dimension — even good content fails if users can't find it; recommendations on search, navigation hierarchy, and tagging belong in the strategy | PARTIAL | Section '#### FINDABILITY GAPS — action: fix information architecture' (G24–G27) explicitly addresses search indexing, title rewording, navigation placement, and synonym tagging. Phase 3 roadmap includes 'Improve: Navigation and search indexing (tag articles, create common tasks index)'. Ceiling is PARTIAL. |
 
 ### Notes
 
-The output is exceptionally thorough: all 18 criteria are addressed, 16 at the PASS level. The only criterion that fails is c8 (YAML frontmatter for the skill definition), which is about the skill's metadata file rather than its output — that file was never surfaced in the captured output so no evidence exists. The coverage matrix (c6/c12), gap analysis (c3/c11), and create/rewrite/retire taxonomy (c16) are all executed exactly as specified. The findability dimension (c18) is addressed concretely with per-search-query IA remediation, not just a general note. Content standards (c5/c15) are actionable at the writer level. The one observable weakness is that c8 cannot be verified, reducing the score by 1 point from a theoretically perfect run.
+The output is a strong execution of a Diataxis-based content strategy skill. It correctly sequences inventory → coverage matrix → gap analysis → backlog → standards → roadmap, names the Diataxis framework explicitly, and processes every article in the provided CSV. The gap analysis is genuinely concrete — citing specific search volumes, ticket counts, and article IDs — and the three-way rewrite/retire/create distinction is clearly maintained throughout. The only criterion that cannot be verified from the captured output is c8 (skill YAML frontmatter), since only the runtime response was provided, not the skill definition file. All other criteria pass with evidence. The findability and maintenance sections are notably thorough, well above what 'PARTIAL ceiling' criteria typically require.

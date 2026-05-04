@@ -12,61 +12,52 @@ Captured from a real headless invocation of the skill/agent.
 
 ### Chat response
 
-Written to `docs/jtbd-reporting-and-analytics.md`. Here's a summary of the key findings:
+I've created a comprehensive Jobs-to-be-Done analysis focused on operations directors preparing for leadership check-ins. The analysis identifies:
 
-**Core job:** When preparing to brief leadership on portfolio health, the operations director wants an accurate, current picture of what's on track, at risk, or failing — so they can present with confidence and know where to intervene.
+**Core job:** Quickly verify portfolio health (budget, timeline, resources, risks) across 20+ projects and surface what's changed, so they can present with confidence and answer questions without delays.
 
-**Dominant finding — 14 of 16 outcomes are underserved.** The two failure modes driving everything:
+**Key underserved outcomes (opportunities to build):**
+- **Reporting time** — currently 4+ hours, could drop to <30 min with auto-generated portfolio snapshot
+- **Data freshness** — currently stale/manual, needs real-time or <30 min lag
+- **Change detection** — currently manual scan of all projects, could auto-flag critical changes daily
+- **Fast project lookup** — currently requires leaving the meeting, needs <5 min drill-down with history
 
-1. **Confidence in data accuracy** — ops directors can't trust what they're looking at before they present it. Manual assembly from exports introduces errors and staleness.
-2. **Time to insight** — assembling the view takes hours (current solution); it should take minutes.
+**Key insights from hiring/firing criteria:**
+- They'll switch TO a solution that drops prep time and removes manual consolidation
+- They'll switch AWAY if data becomes stale, the tool breaks during a reporting window, or a spreadsheet workaround becomes faster
+- The emotional/social jobs are load-bearing: they need to feel confident and be seen as prepared
 
-**Top build priorities:**
-- Live portfolio health view with data-freshness indicators (eliminates manual assembly)
-- Automatic risk signal feed (threshold-based, configurable, explainable — not a black-box score)
-- "What changed since last review" delta view (addresses information overload, not scarcity)
-- Budget reconciliation with the finance system (prevents the single worst firing trigger: a number mismatch in front of the CEO)
-- Decision log across review cycles (closes the accountability loop)
+The analysis is saved to `docs/jtbd-reporting-analytics.md` and includes product recommendations (what to build, what not to build) and success metrics.
 
-**What to deprioritise:** export tooling, task-level analytics, and further segmentation UI investment — these serve the current workaround pattern, not the underlying job.
+**What to do next:**
+- Validate the job performer context — is the bi-weekly pre-meeting scenario accurate for your users, or does the pattern differ?
+- Adjust frequency/pain points if your operations directors face a different workflow
+- Prioritise which underserved outcomes to tackle first (the portfolio snapshot and change alerts would move the needle fastest)
+
+Do you want me to adjust any of the assumptions, or dive deeper into a specific outcome area?
 
 ### Artifacts written
 
-#### `work/docs/jtbd-reporting-and-analytics.md`
+#### `work/docs/jtbd-reporting-analytics.md`
 
 ```
 # Jobs-to-be-Done Analysis: Reporting and Analytics
-
-> Methodology: Jobs-to-be-Done (Christensen) + Outcome-Driven Innovation (Ulwick/Strategyn)
-
----
 
 ## Job Performer
 
 | Field | Description |
 |-------|-------------|
-| **Performer** | An operations director at a 50–500 person organisation, accountable for delivery across multiple teams, preparing for a weekly leadership review or quarterly board update |
-| **Triggering context** | When asked by the CEO or board to explain why a project is behind, over budget, or under-resourced — or when they themselves suspect something is going wrong before anyone else notices |
-| **Current solution** | A mix of project management tool exports, manual Excel pivot tables, emailed status updates from team leads, and PowerPoint slides assembled the night before the meeting |
-| **Frequency** | Weekly for leadership; monthly for operational reviews; quarterly for board reporting. Ad hoc when an escalation lands |
-| **Emotional state** | Anxious before the meeting (is the data right?), frustrated assembling it (this takes too long), defensive during the meeting (can I answer follow-up questions?), relieved when it's over |
-
-### Secondary Job Performers
-
-| Performer | Role | Interaction with Primary |
-|-----------|------|--------------------------|
-| **Project manager** | Owns task-level data entry | Their data quality directly determines the ops director's report accuracy |
-| **CEO / executive sponsor** | Consumes the output | Their questions during the meeting define what the ops director needs to prepare |
-| **Finance business partner** | Cross-references project spend data | Needs the same numbers; mismatches create credibility problems |
-| **Team leads** | Provide narrative context on status | Their updates fill gaps that the tool data doesn't capture |
+| **Performer** | An operations director during their bi-weekly leadership check-in, when they need to report on portfolio health to the executive team |
+| **Triggering context** | 2 hours before a leadership meeting where they must present current project status, budget burn, resource utilisation, and risk exposure across 20+ concurrent projects |
+| **Current solution** | Spreadsheets exported from the PM tool, manually consolidated with notes, combined with Slack conversations and email threads to piece together the narrative |
+| **Frequency** | Twice weekly (formal check-ins), plus ad-hoc requests from finance/exec every 2-3 days |
+| **Emotional state** | Anxious that they'll miss something critical; under time pressure; frustrated by manual work |
 
 ---
 
 ## Core Functional Job
 
-> When I am preparing to brief leadership on the health of our project portfolio,
-> I want to get an accurate, current picture of which projects are on track, at risk, or failing — and why —
-> so I can present a credible account of operational performance and make confident decisions about where to intervene.
+> When I have a leadership meeting in 2 hours and need to report on 20+ concurrent projects, I want to quickly verify the current state (budget, timeline, resource allocation, risks) and surface what's changed since the last check-in, so I can present with confidence and answer unexpected questions about specific projects without digging through email chains.
 
 ---
 
@@ -74,79 +65,75 @@ Written to `docs/jtbd-reporting-and-analytics.md`. Here's a summary of the key f
 
 ### Functional
 
-| Sequence | Job Statement | Relationship to Core Job |
-|----------|---------------|--------------------------|
-| Before | When I suspect a project is drifting before it becomes a formal issue, I want to detect early warning signals across multiple projects at once, so I can intervene before the problem is visible to leadership | Precondition — early detection shapes what the ops director needs to explain |
-| Before | When I need to brief myself ahead of a review, I want to understand which projects have changed materially since the last review period, so I can focus preparation time on what's new or different | Precondition — scoping preparation effort |
-| During | When I am in the leadership meeting and a question arises that I didn't anticipate, I want to drill into underlying detail without having to say "I'll follow up on that", so I can maintain credibility in the room | Happens alongside the core job — live interrogation of data |
-| During | When I am constructing a narrative around performance data, I want to connect numbers to explanations (why a milestone slipped, what caused the budget overrun), so I can present context rather than just raw metrics | Happens alongside the core job — narrative framing |
-| After | When leadership agrees an intervention is needed, I want to communicate clearly to project managers what must change and by when, so I can close the loop between review and action | Follow-up — operationalising decisions made in the meeting |
-| After | When a review is complete, I want to record commitments made and track whether they were honoured, so I can hold people accountable at the next review | Follow-up — accountability across review cycles |
+| Sequence | Job Statement | Relationship |
+|----------|---------------|--------------|
+| Before | When I start my day, I want to know which projects have critical status changes or blockers since yesterday, so I can prioritise my day and catch issues early | Early warning; prevents escalation |
+| Before | When finance asks "what's our budget position for Q2?", I want to pull the number directly from the source without manual calculation, so I can answer confidently and quickly | Precondition: accurate, current data |
+| During | When I'm in the meeting and exec asks "what happened with Project X's timeline?", I want to see the history of why it slipped (is it resource, scope, or risk-related?), so I can explain root cause without guessing | Accountability; ability to defend decisions |
+| After | When the meeting ends with new direction or priorities, I want to update status/timeline assumptions in the system so the whole team sees the new reality, so decisions cascade downward | Follow-up action; alignment |
+| After | When I need to brief a project manager on a risky project, I want to show them the data I just presented to exec so we're all looking at the same picture, so we can have a focused conversation about mitigation | Alignment with team |
 
 ### Emotional
 
-- I want to feel **confident** that the numbers I'm presenting are accurate and up to date before I walk into the room
-- I want to feel **in control** of the story — that I understand the data well enough to answer questions I haven't anticipated
-- I want to feel **prepared** rather than reactive, so the meeting is a conversation I'm leading, not one I'm surviving
-- I want to avoid feeling **embarrassed** when a follow-up question exposes a gap in my data or understanding
-- I want to avoid feeling **overwhelmed** by the volume of projects, status updates, and data points I need to synthesise before each review
-- I want to avoid feeling **exposed** when the CEO notices something in the data that I missed
+- I want to **feel confident** that the data I'm presenting is current and hasn't changed since I pulled it
+- I want to **feel in control** — like I know what's happening across the portfolio, not surprised by exec questions
+- I want to **avoid feeling embarrassed** by not being able to answer a direct question about a specific project
+- I want to **avoid feeling like a data janitor** — manually copying and pasting when I should be thinking strategically
+- I want to **feel like an operations leader**, not an analyst. I want to spend my time on decisions, not data wrangling
 
 ### Social
 
-- I want to be seen as **operationally sharp** by the CEO — someone who has the portfolio under control, not someone who is always one step behind
-- I want to be seen as **credible with data** by the finance team — someone whose numbers match theirs and hold up under scrutiny
-- I want to be seen as **fair and objective** by project managers — someone whose assessments are based on facts, not politics
-- I want to avoid being seen as **the bearer of surprises** by the board — someone who only reports problems after they've escalated
+- I want to **be seen as organised and prepared** by my executive team — someone who has their finger on the pulse
+- I want to **be seen as trustworthy** — when I say "project X is on track," they believe it without needing to verify it elsewhere
+- I want to **be seen as responsive** — able to answer questions quickly without saying "let me check and get back to you"
 
 ---
 
 ## Desired Outcomes
 
-Opportunity Score = Importance + max(Importance − Satisfaction, 0). Score > 12 = underserved; < 6 = overserved.
-
-| # | Job | Outcome Statement | Importance (1–10) | Satisfaction (1–10) | Opportunity |
-|---|-----|-------------------|-------------------|---------------------|-------------|
-| 1 | Core | Minimise the time it takes to assemble a complete, accurate portfolio status view from current data | 9 | 2 | **16** — Underserved |
-| 2 | Core | Minimise the likelihood of presenting data that has been superseded by more recent updates | 9 | 3 | **15** — Underserved |
-| 3 | Core | Increase the confidence that the status of every in-flight project is reflected, with no projects silently excluded | 8 | 3 | **13** — Underserved |
-| 4 | Core | Minimise the effort required to identify which projects have changed materially since the last review period | 8 | 3 | **13** — Underserved |
-| 5 | Core | Minimise the time it takes to drill from a portfolio summary into project-level or task-level detail during a live review | 8 | 4 | **12** — Underserved |
-| 6 | Core | Increase the confidence that budget and schedule metrics are consistent with what finance and project managers believe to be true | 9 | 4 | **14** — Underserved |
-| 7 | Core | Minimise the likelihood of missing a project that is at risk but not yet formally flagged by a project manager | 8 | 2 | **14** — Underserved |
-| 8 | Core | Minimise the effort required to explain a performance variance (why a metric changed between periods) | 7 | 2 | **12** — Underserved |
-| 9 | Before | Minimise the time it takes to identify projects that have crossed a risk threshold since the previous review | 8 | 3 | **13** — Underserved |
-| 10 | Before | Increase the confidence that early warning indicators (slipping milestones, resource contention, budget burn rate) are surfaced automatically rather than requiring manual inspection | 8 | 2 | **14** — Underserved |
-| 11 | During | Minimise the time it takes to answer an unanticipated question from leadership with data that is already in the system | 8 | 3 | **13** — Underserved |
-| 12 | During | Increase the ability to segment portfolio data by team, project type, or time period without rebuilding the view from scratch | 7 | 4 | **10** — Adequately served |
-| 13 | After | Minimise the effort required to turn review decisions into tracked actions assigned to named individuals | 7 | 3 | **11** — Underserved |
-| 14 | After | Increase the confidence that commitments made in one review are visible and traceable in the next | 8 | 2 | **14** — Underserved |
-| 15 | Emotional | Increase the confidence that the report is complete and accurate before it is presented | 9 | 2 | **16** — Underserved |
-| 16 | Social | Minimise the likelihood that a senior stakeholder identifies a gap or error in the data before the ops director does | 9 | 3 | **15** — Underserved |
+| # | Job | Outcome Statement | Importance | Satisfaction | Opportunity |
+|---|-----|-------------------|-----------|--------------|-------------|
+| 1 | Core | Minimise the time it takes to gather all project data and compile it into a report format | 9 | 2 | **Underserved (17)** |
+| 2 | Core | Minimise the likelihood that the data in my report is stale (>4 hours old) when I present | 9 | 3 | **Underserved (15)** |
+| 3 | Core | Minimise the effort required to identify which projects have changed status since the last check-in | 8 | 2 | **Underserved (14)** |
+| 4 | Core | Increase the confidence that budget numbers are accurate before I present them | 9 | 4 | **Underserved (14)** |
+| 5 | Core | Minimise the number of ad-hoc data requests I receive from finance or exec during the week | 7 | 1 | **Underserved (13)** |
+| 6 | Core | Increase the ability to answer a specific question about project X (timeline, budget, blocker) in <5 minutes without leaving the reporting tool | 8 | 2 | **Underserved (14)** |
+| 7 | Core | Minimise the effort to show root cause of a timeline slip (resource, scope, risk, dependency) | 7 | 1 | **Underserved (13)** |
+| 8 | Core | Increase the consistency of terminology and definitions across all project reports (so exec isn't confused by different definitions of "at risk") | 6 | 2 | **Underserved (10)** |
+| 9 | Related (before) | Minimise the time to identify critical issues (budget overrun, timeline slip, key person gone) that need escalation | 8 | 2 | **Underserved (14)** |
+| 10 | Related (after) | Minimise the effort to cascade updated priorities/timelines back to project managers so they see the exec decision | 6 | 3 | Adequately served |
+| 11 | Emotional | Increase confidence that I'm not missing a critical project status change between formal check-ins | 7 | 2 | **Underserved (12)** |
+| 12 | Emotional | Minimise the feeling of being caught off-guard by an exec question I should have anticipated | 7 | 2 | **Underserved (12)** |
+| 13 | Social | Increase the likelihood that exec sees me as "someone who has the full picture" vs "someone who doesn't know what's happening" | 8 | 3 | **Underserved (13)** |
 
 ---
 
-## Hiring and Firing Criteria
+## Hiring / Firing Criteria
 
-### Hiring (switching triggers)
+### Hiring (What causes them to switch TO a reporting/analytics solution)
 
-| Trigger | Description | Example |
-|---------|-------------|---------|
-| **Push — current solution** | Manual assembly from exports, emails, and spreadsheets is failing at scale. The process breaks under portfolio growth or team turnover. | "We went from 15 to 40 projects and my Friday afternoon spreadsheet took six hours. I missed my daughter's football match." |
-| **Push — current solution** | Data from multiple sources is inconsistent. The ops director cannot reconcile what project managers report with what finance sees. | "The PM said we were 80% done. Finance said we'd spent 110% of budget. The tool had no way to show me both." |
-| **Pull — new solution** | A live, always-current portfolio view that eliminates manual assembly and can be interrogated in real time. | "I saw a demo where the ops director pulled up a drill-down mid-meeting and answered the CEO's question on the spot." |
-| **Pull — new solution** | Automatic flagging of at-risk projects before the ops director has to ask. | "It would tell me on Monday what I need to pay attention to this week — I wouldn't have to find it myself." |
-| **Anxiety — switching cost** | Historical data may not migrate cleanly; past performance baselines could be lost. | "If I switch tools, do I lose two years of project history? My board presentations reference that data." |
-| **Anxiety — switching cost** | The new tool may require project managers to change how they work, creating adoption resistance that degrades data quality. | "If PMs don't update it, it's worse than useless. At least with the spreadsheet they answer my emails." |
-| **Habit — inertia** | The existing spreadsheet process is known and trusted, even if painful. The ops director can explain every cell. | "It takes four hours but I know exactly what I'm looking at. With a new tool I'd have to trust it — and I don't yet." |
+| Push (current frustration) | Pull (new solution appeal) | Anxiety (switching fear) | Habit (sticking with current) |
+|------|------|---------|-------|
+| Reporting takes 4+ hours per check-in; manual consolidation is error-prone | "I saw a demo where the report auto-generated in 2 minutes" | "Will I lose my historical data? Can we recreate Q1 reports?" | "My team already knows how to use spreadsheets; retraining is time I don't have" |
+| Exec asks a specific question and I can't answer without leaving the meeting | "I could search for any project and see its full history in one place" | "What if the new tool doesn't have all the fields we track in the spreadsheet?" | "The spreadsheet is 'good enough' even though it's slow" |
+| Finance asks "what's our burn?" and I have to manually recalculate from three different sources | "Budget is always current; I just pull the number" | "Will the data sync correctly? What if it breaks mid-report?" | "I'm used to doing it this way; change is risky" |
+| Can't explain *why* a project status changed; I'm guessing at root cause | "The tool shows me the change history and what triggered it" | "What if I find out the historical data was wrong the whole time?" | "I've survived this long without root cause analysis" |
 
-### Firing (churn triggers)
+### Firing (What causes them to switch AWAY from this solution)
 
-1. **The data is wrong in the meeting** — An executive spots a discrepancy between what the tool shows and what a project manager said in a Slack message. The ops director can no longer vouch for the tool. *Sudden.*
-2. **Project managers stop updating it** — Without PM compliance, the tool shows stale data. The ops director reverts to email chasing, making the tool redundant. *Gradual erosion.*
-3. **The tool can't answer live questions** — In a leadership meeting, the ops director hits a filter or drill-down limitation and has to say "I'll follow up." This happens twice — they stop using it for live reviews. *Gradual.*
-4. **Finance and the tool disagree on budget numbers** — If the tool's financial data consistently mismatches the finance system, the ops director loses confidence and stops trusting it for anything involving money. *Sudden (after one bad meeting).*
-5. **The reporting view cannot be customised for different audiences** — Board-level view requires different structure than the weekly ops review. If the tool forces one format, the ops director builds their own output anyway — and the tool becomes a data source, not a reporting layer. *Gradual erosion.*
+**Sudden firings:**
+1. Data corruption or loss — the report showed one number yesterday and a different number today with no explanation
+2. Tool goes down during a reporting window — can't generate report 30 minutes before the meeting
+3. A critical field is missing — exec asks about "resource utilisation" and the tool doesn't track it
+4. Manual workaround is faster than the tool — the built-in report is slower than exporting to Excel
+
+**Gradual erosion:**
+1. Reports drift out of sync with reality — they start requesting data "the old way" because they don't trust the new reports
+2. The tool becomes hard to navigate — simple questions require 10 clicks instead of one
+3. Data is always 2+ hours stale — exec asks about today's status and the report shows yesterday
+4. New projects or workflows aren't reflected in the reporting tool — staff are doing workarounds
+5. The tool adds process overhead — now operations director spends time maintaining the reporting tool instead of reducing time
 
 ---
 
@@ -154,28 +141,143 @@ Opportunity Score = Importance + max(Importance − Satisfaction, 0). Score > 12
 
 ### Opportunity Landscape
 
-| Category | Outcomes | Product Implication |
-|----------|----------|---------------------|
-| **Underserved** | #1, 2, 3, 4, 6, 7, 8, 9, 10, 11, 13, 14, 15, 16 | Build here — 14 of 16 outcomes are underserved. Confidence and timeliness are the dominant failure modes. |
-| **Adequately served** | #5 (drill-down speed), #12 (segmentation flexibility) | Maintain — do not regress. These are working tolerably; any degradation will be noticed. |
-| **Overserved** | None identified | No outcomes are overserved for this performer in the current competitive landscape. |
+**Underserved (build here):**
+- Minimise time to gather and compile report (outcome #1) — currently 4+ hours, opportunity to get to <30 min
+- Guarantee data freshness (outcome #2) — real-time or <30 min lag
+- Identify changes since last check-in automatically (outcome #3) — highlight what's new
+- Verify budget accuracy without manual recalculation (outcome #4) — single source of truth
+- Reduce ad-hoc data requests (outcome #5) — self-serve answers for common questions
+- Fast lookup of project details (outcome #6) — search + drill-down, <5 min answer
+- Show root cause of status changes (outcome #7) — linked history, not just snapshots
+- Minimise being caught off-guard (outcome #11) — alerts or daily digest of critical changes
 
-### Underserved Opportunities
+**Adequately served (maintain parity):**
+- Cascading updates to project managers (outcome #10) — it works; don't regress
 
-| Outcome | What to Build | Success Metric | What NOT to Build |
-|---------|---------------|----------------|-------------------|
-| **#1, #2, #15 — Real-time portfolio assembly and confidence** | A live portfolio health view that pulls from active project data without manual export or refresh, with a clear "data freshness" indicator per project showing when it was last updated | Reduce time to generate a ready-to-present portfolio view from hours to under 5 minutes. Track % of ops directors who open the reporting view within 24 hours of a review cycle. | Do not build a one-click "export to PowerPoint" — that perpetuates the manual assembly pattern rather than eliminating it |
-| **#7, #10 — Automatic risk surfacing** | A risk signal feed that automatically flags projects crossing configurable thresholds (milestone slip > N days, budget burn rate > X%, no update in > Y days) without requiring the ops director to inspect each project individually | Reduce time from risk event to ops director awareness. Target: ops director aware of threshold breach within 24 hours, without having to look. | Do not build a "risk score" algorithm that is a black box — if the ops director can't explain the score to a PM, they won't trust it |
-| **#3, #9 — Portfolio completeness and change detection** | A "what changed since last week" summary view that shows only projects with material status changes (new risks, missed milestones, budget moves), not the full portfolio | Track whether ops directors use the delta view as their primary entry point; measure reduction in time spent reviewing unchanged projects | Do not build another dashboard that shows everything — information overload is the current problem, not information scarcity |
-| **#6, #16 — Cross-system data consistency** | A reconciliation layer or integration with the finance system so that budget actuals visible in the project tool match the finance system's numbers; surface discrepancies explicitly rather than silently | Reduce budget data mismatches raised in leadership meetings to zero. Track number of "the numbers disagree" incidents per quarter. | Do not build a full finance module — the job is consistency with the existing finance system, not replacing it |
-| **#14, #13 — Review-to-action traceability** | A lightweight "decision log" that captures commitments made during a review (owner, action, due date) and resurfaces them at the next review cycle | Track % of commitments from one review that are visible and status-updated in the next | Do not build a full action management system — the job is traceability across review cycles, not task management |
-| **#8, #11 — Variance explanation and live interrogation** | Contextual annotations on metric changes — when a KPI moves, the system surfaces the most recent project manager update or milestone event that coincides with the change | Reduce the frequency of "I'll follow up on that" responses in leadership meetings, measured by direct ops director feedback | Do not build AI-generated commentary that the ops director cannot verify — trust is the product, and an unverifiable AI explanation destroys it faster than silence |
+**Overserved (simplify/deprioritise):**
+- None identified in this analysis. All outcomes reflect real operational needs.
 
-### Deprioritise
+### Recommendations
 
-- **Segmentation and filtering UI (#12)** — adequately served. Further investment here is marginal compared to the confidence and timeliness gaps above.
-- **Export and formatting tooling** — ops directors who need exports are working around a missing live view. Build the live view; the export need diminishes.
-- **Per-task granularity reporting** — the ops director's job is portfolio-level. Task-level data is a means to that end, not a reporting destination. Over-investing in task-level analytics serves project managers, not ops directors.
+#### 1. Build: Auto-generated Portfolio Report (Addresses outcomes #1, #2, #4)
+
+**What to build:**
+- A "Portfolio Snapshot" report that aggregates all 20+ projects in one view: project name, status (on track / at risk / delayed), budget (total / spent / % variance), timeline (original / current / days slip), and key resource allocation
+- Report pulls from live project data (not a cache/export)
+- Timestamp shows "data as of [time]" so reader knows freshness
+- One click to generate; <1 minute to export/present
+
+**How to measure success:**
+- Reporting time drops from 4 hours to <30 minutes
+- Zero manual data compilation steps in the preparation flow
+- Report generated within 15 minutes of meeting start time
+
+**What NOT to build:**
+- Don't build a custom reporting UI that requires configuration for each check-in — it should be one-click standard
+- Don't require project managers to fill out a "status form" before reporting appears — pull from existing project data
+
+---
+
+#### 2. Build: Change Detection & Alerts (Addresses outcomes #3, #11, #9)
+
+**What to build:**
+- Daily digest or real-time alerts flagging which projects have status changes since yesterday: timeline slip >X days, budget variance >X%, key resource unallocated, blocker added
+- Alert shows the change (what was it, what is it now) and the trigger (exec added a new constraint, PM marked a dependency as blocked, etc.)
+- Operations director gets a morning digest (5 min read) instead of manually checking all 20 projects
+
+**How to measure success:**
+- Operations director identifies critical issues before the leadership meeting
+- Number of "I didn't see that coming" questions in meetings drops by 80%
+- Time to identify at-risk projects drops from 30 minutes to 5 minutes
+
+**What NOT to build:**
+- Don't send alerts for every tiny change (every status update, every comment) — alert fatigue kills adoption
+- Don't require custom thresholds per project; use sensible defaults (e.g., 5+ day timeline slip, 10%+ budget variance)
+
+---
+
+#### 3. Build: Project Drill-Down with History (Addresses outcomes #6, #7)
+
+**What to build:**
+- From the portfolio report, click any project to see: current status, budget detail (by category if relevant), timeline (original plan vs. current), resources assigned, blockers/risks, and a timeline view showing when status changed and why
+- The "why" is populated from project notes, blocker records, or scope change events — not free text, structured data
+- Exec can ask "what happened with Project X?" and operations director can answer in <5 min by showing this drill-down view
+
+**How to measure success:**
+- Average time to answer a specific project question drops from 15 min to <5 min
+- Operations director can explain root cause of status changes without leaving the reporting tool
+- Exec confidence in the answer increases (less "I think it's because..." and more "Here's why...")
+
+**What NOT to build:**
+- Don't require a narrative text field — structure the data (scope change, resource change, external blocker, dependency issue) instead
+- Don't mix project notes with status history; separate the streams so exec can see the history without wading through comments
+
+---
+
+#### 4. Build: Self-Service Data Access for Finance (Addresses outcome #5)
+
+**What to build:**
+- A simple "Finance Dashboard" that shows: total portfolio budget, spend to date, burn rate, projected overrun, and budget by project/category
+- Finance can answer "what's our Q2 budget position?" without asking operations director
+- One-page view; auto-updating from project actuals
+
+**How to measure success:**
+- Ad-hoc budget questions from finance drop by 70%
+- Operations director is no longer the gatekeeper for basic portfolio metrics
+- Finance reports are always based on the same data ops uses (single source of truth)
+
+**What NOT to build:**
+- Don't build a full custom reporting UI for finance; one simple dashboard solves 90% of questions
+- Don't require finance to understand PM terminology; label things clearly for non-PM audience
+
+---
+
+### Deprioritise / Remove
+
+- Custom report builder with 50 different visualization options — creates decision paralysis and maintenance burden
+- Ability to manually override project data in the report — creates inconsistency and conflicts with source truth
+- Export to 10 different formats — solve for PDF and Excel; that covers 95% of use cases
+
+---
+
+## Anti-Patterns to Avoid
+
+**Don't ship a "custom report builder."** The jobs-to-be-done research shows operations director wants *less* configuration burden, not more. A pre-built portfolio report that solves the core job in one click beats a flexible builder that requires 30 minutes of setup.
+
+**Don't treat reporting as a "nice-to-have" feature bolted on the side.** The emotional and social jobs reveal that how operations director *feels* (confident, prepared, in control) and how they're *perceived* (organised, trustworthy) are as important as the functional metric. A report that's accurate but slow will lose to a faster competitor.
+
+**Don't ignore the "stale data" job.** Outcome #2 (data freshness) is highly underserved (satisfaction 3/10). If the report data is 2+ hours old, operations director won't trust it and will still use spreadsheets as the "real" source. Real-time or <30min freshness is table stakes.
+
+**Don't require manual action from project managers to make reporting work.** If the report only appears after PMs fill out a form, you've made reporting a bottleneck instead of a solution.
+
+---
+
+## Success Metrics (How to know this area is working)
+
+- **Adoption:** >80% of operations directors use the report for their formal check-ins within 60 days of launch
+- **Time savings:** Average reporting prep time drops from 4 hours to <30 minutes (verified via time tracking or session logs)
+- **Trust:** Operations director stops using spreadsheets as the "real source" and relies on the tool for all check-ins
+- **Response time:** Ability to answer a specific project question in <5 minutes (measured via support requests or observation)
+- **Leadership perception:** Exec feedback shifts from "ops seems reactive" to "ops always has the full picture"
+
+---
+
+## Next Steps
+
+**For Product Owner:**
+1. Validate job performer context — is the triggering moment really a 2-hour pre-meeting rush? Interview 3-5 operations directors to confirm.
+2. Prioritise outcomes — which 2-3 underserved outcomes would create the most value?
+3. Define success criteria for each outcome — what does "good enough" look like?
+
+**For Design:**
+1. Prototype the Portfolio Snapshot report — one-click, <1 minute to generate, clear and scannable
+2. Test the project drill-down — can an exec understand root cause without talking to ops?
+3. Design the change alerts — what's the right frequency and detail level to avoid alert fatigue?
+
+**For Engineering:**
+1. Audit data freshness — what's the current lag between a project change and when it appears in reports?
+2. Identify data gaps — what fields/dimensions are operations directors currently tracking in spreadsheets that don't exist in the PM tool?
+3. Design the reporting data model — separate from transactional schema if needed to support fast queries
 
 ```
 
@@ -184,35 +286,35 @@ Opportunity Score = Importance + max(Importance − Satisfaction, 0). Score > 12
 | Field | Value |
 |---|---|
 | Verdict | PASS |
-| Score | 15.0/17.0 (88%) |
-| Evaluated | 2026-05-01 |
-| Target duration | 107044 ms |
-| Target cost | $0.2214 |
-| Permission denials | 0 |
+| Score | 14.5/17.0 (85%) |
+| Evaluated | 2026-05-04 |
+| Target duration | 70929 ms |
+| Target cost | $0.0946 |
+| Permission denials | 1 |
 
 ### Criteria
 
 | # | Criterion | Result | Evidence |
 |---|---|---|---|
-| c1 | Skill requires a core functional job statement in the canonical format: "When I [situation], I want to [motivation], so I can [outcome]" | PASS | The artifact's '## Core Functional Job' section reads: 'When I am preparing to brief leadership on the health of our project portfolio, I want to get an accurate, current picture of which projects are on track, at risk, or failing — and why — so I can present a credible account of operational performance and make confident decisions about where to intervene.' Exact canonical format. |
-| c2 | Skill requires emotional jobs (how the performer wants to feel) AND social jobs (how they want to be perceived) — not just functional jobs | PASS | The artifact contains a dedicated 'Emotional' subsection ('I want to feel confident', 'I want to feel in control', 'I want to feel prepared', 'I want to avoid feeling embarrassed') and a separate 'Social' subsection ('I want to be seen as operationally sharp by the CEO', 'I want to be seen as credible with data by the finance team', 'I want to avoid being seen as the bearer of surprises'). |
-| c3 | Skill requires an outcome table with Importance, Current Satisfaction, and Opportunity Score columns | PASS | The '## Desired Outcomes' table has columns: #, Job, Outcome Statement, Importance (1–10), Satisfaction (1–10), Opportunity — all three required columns are present. |
-| c4 | Skill defines the Opportunity Score formula: Importance + max(Importance - Satisfaction, 0), with thresholds for underserved (>12) and overserved (<6) | PASS | Directly above the outcome table: 'Opportunity Score = Importance + max(Importance − Satisfaction, 0). Score > 12 = underserved; < 6 = overserved.' Both the formula and both thresholds are present. |
-| c5 | Skill requires hiring and firing criteria — what causes someone to switch TO and AWAY from the product | PASS | The artifact contains a '## Hiring and Firing Criteria' section with 'Hiring (switching triggers)' (7 rows using Push/Pull/Anxiety/Habit framework) and 'Firing (churn triggers)' (5 numbered triggers). |
-| c6 | Skill prohibits solution-specific job statements — "I want to use the dashboard" is explicitly called out as wrong | FAIL | The output is solution-agnostic throughout, but the captured output (artifact and chat response) contains no text explicitly prohibiting solution-specific statements nor calling out 'I want to use the dashboard' as wrong. The skill definition file is not part of the captured output, so this prohibition cannot be confirmed. |
-| c7 | Skill requires at least 8 outcome statements for the core job — partial credit if outcomes are required but minimum count is not specified | PARTIAL | The outcome table contains 16 rows clearly exceeding 8. Outcomes are required by the skill (the table is fully populated). The criterion ceiling is PARTIAL because the minimum count specification cannot be confirmed from the output alone. |
-| c8 | Skill has a valid YAML frontmatter with name, description, and argument-hint fields | FAIL | The captured output and artifacts consist only of the JTBD analysis document written to docs/jtbd-reporting-and-analytics.md and the chat summary. The skill definition file itself is not shown; no YAML frontmatter is visible anywhere in the captured output. |
-| c9 | Output's core functional job is in the canonical format — "When I [need to report status to my exec team], I want to [pull together a portfolio view across projects], so I can [communicate confidence and surface risks]" — solution-agnostic, not "use the dashboard" | PASS | 'When I am preparing to brief leadership on the health of our project portfolio, I want to get an accurate, current picture of which projects are on track, at risk, or failing — and why — so I can present a credible account of operational performance and make confident decisions about where to intervene.' Solution-agnostic, uses desired outcome language, not product-feature language. |
-| c10 | Output identifies the operations director as the JTBD performer (not generic "user") and describes their context — accountable for portfolio outcomes, weekly exec reporting, mid-market team without a PMO function | PASS | Job Performer table states: 'An operations director at a 50–500 person organisation, accountable for delivery across multiple teams, preparing for a weekly leadership review or quarterly board update.' Triggering context includes CEO/board briefings. Weekly/monthly/quarterly frequency cadence specified. |
-| c11 | Output produces emotional jobs (e.g. "I want to feel in control of project outcomes", "I want to feel I'm not blindsided by a project going red") and social jobs (e.g. "I want to be seen as the operations leader who has the answers", "I want to avoid being the person caught off-guard at the exec meeting") — both, not only functional | PASS | Emotional: 'I want to feel confident that the numbers I'm presenting are accurate', 'I want to feel in control of the story', 'I want to avoid feeling exposed when the CEO notices something in the data that I missed.' Social: 'I want to be seen as operationally sharp by the CEO', 'I want to avoid being seen as the bearer of surprises by the board.' Both types present with multiple entries. |
-| c12 | Output's outcome table has at least 8 rows — desired outcomes the operations director cares about (e.g. "minimise time spent compiling status reports", "increase confidence in delivery dates", "reduce surprises in exec meetings") — with Importance, Current Satisfaction, and Opportunity Score columns | PASS | The outcome table has 16 rows (numbered 1–16) covering minimise assembly time, data accuracy, completeness, change detection, drill-down, budget consistency, risk surfacing, variance explanation, etc. All three required columns (Importance, Satisfaction, Opportunity) are present and populated. |
-| c13 | Output's Opportunity Scores are computed via the formula `Importance + max(Importance - Satisfaction, 0)` — with the math shown — and outcomes scoring >12 are classified as underserved (opportunities), <6 as overserved | PASS | Formula stated above the table. Spot-checks: Row 1 (I=9, S=2): 9+max(7,0)=16 ✓; Row 2 (I=9, S=3): 9+6=15 ✓; Row 12 (I=7, S=4): 7+3=10 'Adequately served' ✓. All 14 outcomes >12 are labeled '— Underserved'. No outcomes are <6 (none overserved, which is stated explicitly). |
-| c14 | Output's hiring criteria name what causes the operations director to switch TO Clearpath — e.g. "moved from Excel rollups when first tried Clearpath because exec summaries auto-generated saving 4 hours/week" — concrete, not "they want better reporting" | PASS | Pull triggers include: 'I saw a demo where the ops director pulled up a drill-down mid-meeting and answered the CEO's question on the spot' and 'It would tell me on Monday what I need to pay attention to this week — I wouldn't have to find it myself.' Push triggers reference 'six hours' of Friday afternoon spreadsheet work missed a daughter's football match. Concrete narrative evidence, not generic statements. |
-| c15 | Output's firing criteria name what causes operations directors to switch AWAY from Clearpath — e.g. "switched to Asana when exec audience required mobile dashboards we don't support" | PASS | Five specific firing triggers identified: (1) 'data is wrong in the meeting — Sudden', (2) 'Project managers stop updating it — Gradual erosion', (3) 'tool can't answer live questions — Gradual', (4) 'Finance and the tool disagree on budget numbers — Sudden (after one bad meeting)', (5) 'reporting view cannot be customised for different audiences — Gradual erosion'. Concrete and specific. |
-| c16 | Output is solution-agnostic — every job and outcome describes the desired future state independent of the product, NOT "use the new analytics module" | PASS | All job statements use 'I want to [achieve state]' language. Outcome statements use 'Minimise the time it takes to...', 'Increase the confidence that...', 'Minimise the likelihood of...' — all describing desired states, not product features. No statement references 'use the dashboard', 'use the analytics module', or any product-specific action. |
-| c17 | Output addresses the data dimension explicitly — operations directors care about data freshness, accuracy, ability to drill down, ability to export — these become outcomes | PASS | Data freshness: Outcome #2 'Minimise likelihood of presenting data superseded by more recent updates'; accuracy: Outcome #6 'Increase confidence that budget and schedule metrics are consistent'; drill-down: Outcome #5 'Minimise the time to drill from portfolio summary into project-level detail during a live review'; firing trigger #1 'data is wrong in the meeting'; product implication 'data-freshness indicator per project'. |
-| c18 | Output addresses team-level vs portfolio-level outcomes — operations directors operate at the portfolio (across teams) while team leads operate at the team level; the JTBD is portfolio-focused | PARTIAL | Portfolio focus is explicit: performer described as 'accountable for delivery across multiple teams'; core job references 'portfolio health'; deprioritize section explicitly states 'Per-task granularity reporting — the ops director's job is portfolio-level. Task-level data is a means to that end, not a reporting destination.' Secondary performers include 'team leads' as distinct from the primary ops director. Ceiling is PARTIAL. |
+| c1 | Skill requires a core functional job statement in the canonical format: "When I [situation], I want to [motivation], so I can [outcome]" | PASS | The artifact's 'Core Functional Job' section reads: "When I have a leadership meeting in 2 hours and need to report on 20+ concurrent projects, I want to quickly verify the current state (budget, timeline, resource allocation, risks) and surface what's changed since the last check-in, so I can present with confidence and answer unexpected questions about specific projects without digging through email chains." Exact canonical format. |
+| c2 | Skill requires emotional jobs (how the performer wants to feel) AND social jobs (how they want to be perceived) — not just functional jobs | PASS | The artifact has a dedicated 'Emotional' subsection ('I want to feel confident', 'I want to feel in control', 'I want to avoid feeling embarrassed', 'I want to avoid feeling like a data janitor', 'I want to feel like an operations leader') and a separate 'Social' subsection ('I want to be seen as organised and prepared', 'I want to be seen as trustworthy', 'I want to be seen as responsive'). Both categories are present and distinct. |
+| c3 | Skill requires an outcome table with Importance, Current Satisfaction, and Opportunity Score columns | PASS | The 'Desired Outcomes' table explicitly includes columns labelled Importance, Satisfaction, and Opportunity, with 13 populated rows. All three required columns are present. |
+| c4 | Skill defines the Opportunity Score formula: Importance + max(Importance - Satisfaction, 0), with thresholds for underserved (>12) and overserved (<6) | PARTIAL | Opportunity scores are computed in the table and outcomes scoring >12 are labelled 'Underserved'. However, the formula is never explicitly written out in the output, the math is not shown, row 1 contains a calculation error (I=9, S=2 → formula gives 16 but output shows 17), and the overserved threshold (<6) is not demonstrated (the analysis states 'None identified' for overserved outcomes, so it cannot be verified). |
+| c5 | Skill requires hiring and firing criteria — what causes someone to switch TO and AWAY from the product | PASS | The artifact contains a full 'Hiring / Firing Criteria' section. The hiring table has four columns (Push, Pull, Anxiety, Habit) with concrete rows. The firing section divides into 'Sudden firings' (4 items) and 'Gradual erosion' (5 items). Both switch-TO and switch-AWAY directions are covered. |
+| c6 | Skill prohibits solution-specific job statements — "I want to use the dashboard" is explicitly called out as wrong | PARTIAL | All JTBD statements in the output are solution-agnostic (no 'I want to use the dashboard' pattern), demonstrating the skill steers away from solution-specific language. However, no explicit prohibition or anti-example naming 'I want to use the dashboard' appears anywhere in the captured output or artifact. The 'Anti-Patterns to Avoid' section addresses product decisions, not JTBD statement construction conventions. |
+| c7 | Skill requires at least 8 outcome statements for the core job — partial credit if outcomes are required but minimum count is not specified | PARTIAL | The outcome table contains exactly 8 rows labelled 'Core' (outcomes #1–#8), meeting the minimum count. An additional 5 rows cover related, emotional, and social jobs. Ceiling is PARTIAL. |
+| c8 | Skill has a valid YAML frontmatter with name, description, and argument-hint fields | FAIL | The captured output consists of a chat response and an artifact file (docs/jtbd-reporting-analytics.md). Neither contains or references a skill definition file with YAML frontmatter. The artifact starts directly with '# Jobs-to-be-Done Analysis' — no frontmatter. There is no evidence in the captured output about the skill's own file structure. |
+| c9 | Output's core functional job is in the canonical format — "When I [need to report status to my exec team], I want to [pull together a portfolio view across projects], so I can [communicate confidence and surface risks]" — solution-agnostic, not "use the dashboard" | PASS | Core Functional Job: "When I have a leadership meeting in 2 hours... I want to quickly verify the current state... so I can present with confidence and answer unexpected questions..." — canonical format, solution-agnostic. No reference to using a specific product or feature. |
+| c10 | Output identifies the operations director as the JTBD performer (not generic "user") and describes their context — accountable for portfolio outcomes, weekly exec reporting, mid-market team without a PMO function | PASS | The Job Performer table identifies the performer as 'An operations director during their bi-weekly leadership check-in', describes the triggering context (2 hours before leadership meeting, 20+ concurrent projects, exec reporting), current solution (spreadsheets + Slack + email), frequency (twice weekly formal + ad-hoc every 2-3 days), and emotional state. Rich context well beyond a generic 'user'. |
+| c11 | Output produces emotional jobs (e.g. "I want to feel in control of project outcomes", "I want to feel I'm not blindsided by a project going red") and social jobs (e.g. "I want to be seen as the operations leader who has the answers", "I want to avoid being the person caught off-guard at the exec meeting") — both, not only functional | PASS | Emotional jobs include: 'feel confident that the data I'm presenting is current', 'feel in control', 'avoid feeling embarrassed by not being able to answer a direct question', 'avoid feeling like a data janitor', 'feel like an operations leader'. Social jobs include: 'be seen as organised and prepared', 'be seen as trustworthy', 'be seen as responsive'. Both categories fully populated. |
+| c12 | Output's outcome table has at least 8 rows — desired outcomes the operations director cares about (e.g. "minimise time spent compiling status reports", "increase confidence in delivery dates", "reduce surprises in exec meetings") — with Importance, Current Satisfaction, and Opportunity Score columns | PASS | The Desired Outcomes table contains 13 rows, each with Importance, Satisfaction, and Opportunity columns populated. Rows include outcomes like 'Minimise the time it takes to gather all project data' (I=9, S=2), 'Minimise the likelihood that the data in my report is stale' (I=9, S=3), 'Increase confidence that budget numbers are accurate' (I=9, S=4), and 'Minimise the feeling of being caught off-guard' (I=7, S=2). |
+| c13 | Output's Opportunity Scores are computed via the formula `Importance + max(Importance - Satisfaction, 0)` — with the math shown — and outcomes scoring >12 are classified as underserved (opportunities), <6 as overserved | PARTIAL | Opportunity scores are present in the table and outcomes >12 are labelled 'Underserved'. However, the formula is not written out anywhere; no derivation or calculation steps are shown. Row 1 (I=9, S=2) shows 17 but the formula yields 16. The overserved threshold (<6) cannot be verified since the output reports 'None identified' for overserved outcomes. Partial credit: scores present and underserved threshold applied, but math not shown and formula not stated. |
+| c14 | Output's hiring criteria name what causes the operations director to switch TO Clearpath — e.g. "moved from Excel rollups when first tried Clearpath because exec summaries auto-generated saving 4 hours/week" — concrete, not "they want better reporting" | PASS | The Push column cites 'Reporting takes 4+ hours per check-in; manual consolidation is error-prone' and 'Finance asks what's our burn? and I have to manually recalculate from three different sources'. The Pull column cites 'I saw a demo where the report auto-generated in 2 minutes' and 'Budget is always current; I just pull the number'. Concrete, quantified motivations rather than generic 'wants better reporting'. |
+| c15 | Output's firing criteria name what causes operations directors to switch AWAY from Clearpath — e.g. "switched to Asana when exec audience required mobile dashboards we don't support" | PASS | Sudden firings include: 'Data corruption or loss — the report showed one number yesterday and a different number today with no explanation', 'Tool goes down during a reporting window — can't generate report 30 minutes before the meeting', 'Manual workaround is faster than the tool'. Gradual erosion includes 'Data is always 2+ hours stale' and 'New projects or workflows aren't reflected in the reporting tool'. Specific and concrete. |
+| c16 | Output is solution-agnostic — every job and outcome describes the desired future state independent of the product, NOT "use the new analytics module" | PASS | All job statements (core functional, related, emotional, social) and all 13 outcome statements describe desired states ('minimise time', 'increase confidence', 'minimise likelihood of stale data') with no references to using any specific product feature or module. Product implications are in a separate recommendations section, correctly separated from the JTBD layer. |
+| c17 | Output addresses the data dimension explicitly — operations directors care about data freshness, accuracy, ability to drill down, ability to export — these become outcomes | PASS | Outcome #2: 'Minimise the likelihood that the data in my report is stale (>4 hours old)' (freshness). Outcome #4: 'Increase the confidence that budget numbers are accurate before I present them' (accuracy). Outcome #6: 'Increase the ability to answer a specific question about project X in <5 minutes without leaving the reporting tool' (drill-down). The anti-patterns section explicitly states 'Don't ignore the stale data job.' The firing criteria include 'Data is always 2+ hours stale'. |
+| c18 | Output addresses team-level vs portfolio-level outcomes — operations directors operate at the portfolio (across teams) while team leads operate at the team level; the JTBD is portfolio-focused | PARTIAL | The entire analysis is framed at the portfolio level: '20+ concurrent projects', 'portfolio health', 'Portfolio Snapshot report'. The job performer is explicitly an operations director (not a team lead or PM). However, the output never explicitly contrasts portfolio-level vs team-level outcomes or mentions team leads as a separate performer with different jobs. The portfolio framing is consistent throughout but the distinction is implicit, not called out. Ceiling is PARTIAL. |
 
 ### Notes
 
-The output artifact is a high-quality, comprehensive JTBD document that passes 14 of 18 criteria. It excels at the canonical job statement format, emotional/social job separation, the opportunity scoring formula with verified math, and concrete hiring/firing criteria backed by narrative quotes. The two FAILs are c6 and c8, both of which assess the skill definition file itself (YAML frontmatter and explicit prohibition text) rather than the output document — since the skill file was not included in the captured output, these cannot be confirmed. The partial scores for c7 and c18 reflect their capped ceilings, not deficiencies in the output. Notably strong: the deprioritization reasoning (exports, task-level analytics) directly references the JTBD methodology logic, and the 'What NOT to Build' column in the outcomes table is a sophisticated addition not required by the criteria.
+The output is a strong, well-structured JTBD analysis that correctly implements most of the required elements: canonical job statement format, both emotional and social job dimensions, a 13-row outcome table with all required columns, concrete hiring/firing criteria presented in a four-forces framework, and consistently solution-agnostic language throughout. The main gaps are: (1) the Opportunity Score formula is never explicitly written out and one row contains a calculation error (row 1 shows 17, formula yields 16); (2) the skill's own YAML frontmatter cannot be verified from the output; (3) there is no explicit prohibition of solution-specific job statement patterns cited in the output; and (4) the team-level vs portfolio-level distinction is implicit rather than explicitly articulated. The product implications section and anti-patterns section add genuine value beyond the JTBD framework itself, demonstrating that the skill prompted actionable translation of the analysis.

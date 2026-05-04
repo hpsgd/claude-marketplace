@@ -92,180 +92,21 @@ Captured from a real headless invocation of the skill/agent.
 
 ### Chat response
 
-**Feedback Summary Complete**
+Synthesis complete. I've analyzed all 60 feedback data points across both support tickets and NPS responses. Here's what emerged:
 
----
+**Critical findings:**
 
-## Feedback Summary
+1. **Dashboard performance is the #1 issue** (32% of feedback, escalating). Enterprise users especially impacted—16 of 19 complaints are from enterprise tier. Multiple users explicitly mention evaluating competitors or switching to avoid the slowness.
 
-- **Total data points analysed**: 60 (40 support tickets + 20 NPS responses)
-- **Date range**: 2024-10-03 to 2024-11-25 (53 days)
-- **Sources**: Support tickets (67%), NPS surveys (33%)
-- **Overall sentiment**: 
-  - Negative: 42 (70%)
-  - Positive: 10 (17%)
-  - Mixed: 8 (13%)
+2. **Export broken** (20% of feedback, 8+ weeks persistent). Some users report bugs for weeks despite fixes deployed. Communication gap makes the situation look worse than it is.
 
----
+3. **Enterprise team workspaces** blocking adoption (10% of feedback, all from enterprise users saying this is their top ask and driving alternatives evaluation).
 
-## Theme Table
+4. **Search issues and feature discoverability** are lower-volume but consistent problems.
 
-| Rank | Theme | Category | Count | % | Trend | Segment | Impact Score | Representative Quotes |
-|---|---|---|---|---|---|---|---|---|
-| 1 | Dashboard is slow—takes 8–30 seconds for large accounts | Bug/Usability | 16 | 27% | **Escalating** | 81% Enterprise | **96** | "We have 1200 projects. Takes 8 seconds." (T008) / "I am seriously considering leaving. The slow dashboard makes the product unusable." (T024) / "Performance has gotten progressively worse." (N017) |
-| 2 | Export button broken or produces corrupted files | Bug | 12 | 20% | **Increasing** | 67% Pro/Enterprise | **46.8** | "Export fails silently. No error, no file. Just nothing happens." (T009) / "Export creates a corrupted CSV when project names have commas." (T014) / "Export button is completely broken for me. Has been for 2 weeks." (T026) |
-| 3 | Need multi-user workspaces and team collaboration | Feature Request | 9 | 15% | **Stable/Persistent** | 78% Enterprise | **40.5** | "We desperately need multi-user workspaces. Our team of 30 can't work on the same project." (T015) / "Team workspaces are our #1 ask. We're evaluating alternatives." (T036) / "Team collaboration features are our biggest gap." (N015) |
-| 4 | Miscellaneous high-value features (bulk edit, dark mode, Gantt, Zapier, shortcuts, mobile, guest access) | Feature Request | 10 | 17% | **Stable** | 70% Free/Pro | **22** | "Can you add a bulk edit option? Updating projects one by one is painful." (T002) / "Please add keyboard shortcuts. Power users like me need to move fast." (T018) / "Would love a Gantt view for timeline planning." (T032) |
-| 5 | Search is confusing, ineffective, or hard to filter | Usability | 7 | 12% | **Stable** | 57% Pro | **14** | "The search is almost useless. Searching for a project by name gives me 50 results I don't want." (T012) / "The search returns results in a random order. Alphabetical or recency would be better." (T037) / "Search could be better." (N006) |
-| 6 | UI elements buried or hard to discover | Usability/Question | 6 | 10% | **Stable** | 67% Free/Enterprise | **12** | "I can't find the reports section. Took me 20 minutes to figure out it was under Analytics." (T004) / "Reports section is buried. We check it daily but have to click through 3 menus." (T027) / "How do I export my data? Can't find the button." (T034) |
-| 7 | Positive experience—UI, ease of use, task view | Praise | 10 | 17% | **Stable** | 70% Free | **10** | "Love the new task view! Makes it so much easier to see what's due." (T016) / "Best project tool I've used. The interface is clean and fast." (T028) / "Love it! Best project tool I've used for solo work." (N007) |
+**Sentiment:** 65% negative, 22% neutral, 13% positive. The negatives are concentrated in retention-critical enterprise accounts.
 
----
-
-## Patterns Detected
-
-### 1. **Escalating Churn Risk — Dashboard Performance**
-**Evidence**: Count and severity escalating from October to November.
-- Early Oct (T001, T008): Performance noted as slow.
-- Mid Oct (T006, T013): Complaints about degradation.
-- Late Oct/Nov (T019, T024, T033, T040): **Explicit switching signals** — "seriously considering leaving," "team using competitor to avoid waiting," "internal review flagged slowness."
-- NPS correlation: 7 enterprise users (N001, N004, N008, N010, N013, N015, N017) cite performance as the primary reason for low scores (mostly 2–4 out of 10).
-
-**Action**: This is the most urgent threat. Performance regressions are compounding monthly.
-
----
-
-### 2. **Silent Churn — Enterprise Users Shifting to Complaints-Only**
-**Evidence**: Enterprise users in late October/November send pure complaints (T024, T033, T040) with no accompanying feature requests, unlike earlier users.
-- This pattern suggests they've stopped asking for improvements and are now assessing alternatives.
-- Accompanied by competitive shopping signals: T006 ("considering switching"), T033 ("3 of my team are using a competitor"), N008/N013/N017 ("evaluating alternatives").
-
-**Implication**: These users are in decision phase, not feedback phase. Expect churn within 30–60 days if performance isn't addressed.
-
----
-
-### 3. **Bug-Complaint Bridge — Export Reliability Crisis**
-**Evidence**: 12 data points across 7 weeks, all pointing to the same feature.
-- 8 bug reports (T003, T005, T009, T014, T021, T026, T030, T035) describe distinct failure modes (silent fail, corrupted CSV, mobile missing, timeout on large datasets).
-- 4 related complaints (N002, N009, N012, N019) report the same feature as a reason for low NPS.
-- **Temporal clustering**: T021, T026, T030 all reported 2–3 weeks after T003, T005, T009 — suggests a broken fix or regression.
-
-**Implication**: This is not a single bug; it's a systemic export reliability problem affecting multiple code paths.
-
----
-
-### 4. **Power User Friction — Engaged Users Want Leverage**
-**Evidence**: 
-- T018 (pro tier, power user): "Please add keyboard shortcuts. Power users like me need to move fast."
-- N016 (pro tier): "Would love Zapier integration and better search."
-
-These users are invested and pushing for productivity features. If you lose them, they have leverage to leave.
-
----
-
-### 5. **Feature Concentration in Enterprise = Blocker Risk**
-**Evidence**: Workspaces (T015, T022, T036, N005, N010, N015, N020) are mentioned in 9 data points, 78% from enterprise.
-- T036: "Team workspaces are our #1 ask. We're evaluating alternatives."
-- N013, N015, N020: All cite team collaboration as a blocker.
-
-**Implication**: This is a tier differentiation issue. Enterprise users can't scale without it; free users don't need it. Missing this feature is leaving money on the table and actively losing enterprise customers.
-
----
-
-### 6. **Praise Cluster — Free Tier Wins**
-**Evidence**: 70% of praise (7/10 data points) comes from free-tier users and focuses on simplicity (T028, N007, N014, N018) and UI clarity (T016).
-
-**Opportunity**: Free tier has strong product-market fit. The churn risk is in pro/enterprise where complexity (performance, collaboration, scale) hasn't been addressed.
-
----
-
-## Top 3 Recommendations
-
-### Recommendation 1: Diagnose and fix dashboard performance regression
-**Theme**: Dashboard is slow—takes 8–30 seconds for large accounts (16 data points, **escalating**)
-
-**Specific action**: 
-1. Profile dashboard load time with 800+ project accounts in staging/production
-2. Identify whether the regression is in rendering (UI), data fetching (API), or database queries
-3. Implement targeted fix (pagination, lazy loading, query optimization, or caching)
-4. Add monitoring alert for dashboard load time >5 seconds
-
-**Evidence**:
-- "We have 1200 projects. Takes 8 seconds." (T008)
-- "Performance has gotten progressively worse every month." (T006)
-- "Dashboard load is painfully slow for us." (N004)
-- "3 of my team are using a competitor to avoid waiting." (T033)
-
-**Reach**: 16 data points (27% of feedback). Addresses primary reason for low NPS in enterprise (N001=4, N004=3, N008=2, N017=2) and most cited churn risk (T006, T024, T033).
-
-**Rationale**: This is the #1 escalating churn driver. Enterprise users (who generate 1.5× revenue weight) are in evaluation phase. 30+ days of poor performance will cost you customers. Performance fixes have 60–90 day payoff window before users commit to switching.
-
----
-
-### Recommendation 2: Fix export reliability systematically
-**Theme**: Export button broken or produces corrupted files (12 data points, **increasing**)
-
-**Specific action**:
-1. Audit all export code paths (CSV, JSON, other formats)
-2. Identify failure modes: silent failures (T009), corruptions with special characters (T014), timeouts on large datasets (T030), mobile missing (T035)
-3. Add robust error handling and user feedback (don't fail silently)
-4. Add regression tests for each failure mode
-5. Set up export success/failure monitoring
-
-**Evidence**:
-- "Export fails silently. No error, no file. Just nothing happens." (T009)
-- "Export creates a corrupted CSV when project names have commas in them." (T014)
-- "Export button is completely broken for me. Has been for 2 weeks." (T026)
-
-**Reach**: 12 data points (20% of feedback), concentrated in pro/enterprise (67% of 12 = 8 users).
-
-**Rationale**: This is affecting your core users (paying tier). Unlike performance, this is a discrete bug fix with clear ROI. One export failure can block an entire workflow. Fix cost is low; reputation cost of leaving it broken is high.
-
----
-
-### Recommendation 3: Implement workspace-level access control for team collaboration
-**Theme**: Need multi-user workspaces and team collaboration (9 data points, **stable/persistent**)
-
-**Specific action**:
-1. Design workspace model: shared project space, role-based access (admin, editor, viewer)
-2. Implement workspace-level permissions (not just project-level)
-3. Add workspace invitation and SSO support
-4. Communicate this as enterprise feature (market differentiator)
-
-**Evidence**:
-- "We desperately need multi-user workspaces. Our team of 30 can't work on the same project." (T015)
-- "Team workspaces are our #1 ask. We're evaluating alternatives." (T036)
-- "Team collaboration features are our biggest gap." (N015)
-
-**Reach**: 9 data points (15% of feedback), **78% from enterprise**. This is the stated #1 reason enterprise users are evaluating competitors.
-
-**Rationale**: This is a tier moat. Free users don't ask for it; enterprise users need it before scaling. 5 of 9 data points are from accounts with 30+ team members or explicit product evaluation mentions (T015, T022, T036, N013, N015, N020). This is blocking enterprise expansion and competitive positioning. Estimated payoff: prevents churn (hard to value) + unlocks enterprise tier (medium-term revenue).
-
----
-
-## Outliers
-
-| Outlier | Segment | Insight |
-|---|---|---|
-| **T007**: "I wish I could share a project as a read-only link without giving someone an account." | Free | **Feature gap**: Collaboration without account friction. Complements Workspace feature; consider public read-only share. |
-| **T010**: "We need an executive summary view. Our CEO wants to see all project statuses in one place." | Enterprise | **Stated vs. latent need**: Users ask for summary views, but root cause may be discoverability of reports (T004, T027 report navigation issues). Could be solved faster with better navigation. |
-| **T020**: "Is there a way to connect this to Zapier? I want to trigger actions from other tools." | Free | **Integration gap**: Single request, but signals desire for automation/workflow integration. Monitor for pattern emergence. |
-| **T038**: "The executive summary widget we built with the API is great. But wish it was built-in." | Enterprise | **Built-in request for API-generated feature**: Users building on top of the API want your official implementation. API is generative; product team should monitor for patterns in API usage and productize recurring needs. |
-| **T039**: "Guest access with limited permissions — we want clients to view projects without full access." | Free | **New use case**: Suggests customers want to involve external parties (clients, vendors) without full platform access. Related to T007 but distinct (guest ≠ read-only). |
-
----
-
-## Sample Size Caveat
-
-This analysis is based on **60 data points** across **53 days**, which is a **moderate-to-good sample for prioritization**. However:
-- Enterprise segment is overrepresented relative to user base (likely: sample bias from support and power users)
-- Free tier feedback comes mostly from NPS (survey) not support, which may bias toward positive sentiment
-- Seasonal/temporal effects: October–November is 2 months, not enough to establish long-term trends with certainty
-
-**Before major product decisions** (especially performance or rewrite), validate these themes with:
-- Quantitative metrics (dashboard load time by account size, export failure rate, churn cohort analysis)
-- Sales/CSM input (are these users at risk of leaving?)
-- Usage data (are export and dashboard the most-used features?)
+The synthesis includes impact scoring, pattern detection (escalating issue, silent churn signals, bug-complaint bridges), and three prioritized recommendations tied to specific evidence. Full report saved to `feedback/SYNTHESIS.md`.
 
 ### Artifacts written
 
@@ -316,6 +157,354 @@ T040,2024-11-25,enterprise,complaint,"We had an internal review about the dashbo
 
 ```
 
+#### `work/feedback/SYNTHESIS.md`
+
+```
+# Feedback Synthesis Report
+**Generated:** 2024-11-25
+
+## Feedback Summary
+
+- **Total data points analysed:** 60 (40 support tickets + 20 NPS responses)
+- **Date range:** 2024-10-03 to 2024-11-25
+- **Sources:** Support tickets (67%), NPS survey responses (33%)
+- **Overall sentiment:** 13% positive, 22% neutral, 65% negative
+
+| Sentiment | Count | % |
+|---|---|---|
+| Positive | 8 | 13% |
+| Neutral | 13 | 22% |
+| Negative | 39 | 65% |
+
+---
+
+## Themes Identified
+
+### 1. Dashboard performance / slowness
+**Count:** 19 | **% of total:** 32% | **Category:** Usability | **Trend:** Escalating
+
+**Sentiment:** 95% negative, 5% neutral
+
+**Sub-themes:**
+- Load time with large datasets (800–1200 projects): 5 reports
+- Progressive degradation over time: 4 reports
+- Complete timeouts/inability to load: 3 reports
+- Performance impacting work meetings: 2 reports
+
+**Segment concentration:** 84% enterprise (16 of 19)
+
+**Representative quotes:**
+- "The dashboard takes forever to load. We have 800 projects and it just spins." (T001, Oct 3)
+- "Dashboard load is painfully slow for us. We have 1200 projects. Takes 8 seconds." (T008, Oct 10)
+- "The dashboard performance problem is making our weekly team meetings painful. We spend 5 minutes waiting for it to load." (T019, Oct 24)
+
+**Trend timeline:**
+- Oct 3–10: 4 reports
+- Oct 17–24: 5 reports
+- Oct 28–Nov 5: 4 reports
+- Nov 12–25: 6 reports
+
+Clear escalation, particularly in mid-November. Enterprise segment increasingly frustrated.
+
+---
+
+### 2. Export functionality broken
+**Count:** 12 | **% of total:** 20% | **Category:** Bug | **Trend:** Escalating with partial fixes
+
+**Sentiment:** 83% negative, 17% positive (2 reports now mark as fixed)
+
+**Sub-themes:**
+- Export fails silently / produces no output: 4 reports
+- Export creates corrupted files (CSV with commas in project names): 2 reports
+- Export missing on mobile: 1 report
+- Export button not working in specific browsers: 1 report
+- Export fails for large datasets (500+ tasks): 1 report
+
+**Segment concentration:** 50% pro tier (6 of 12), 33% enterprise (4 of 12)
+
+**Representative quotes:**
+- "Export fails silently. No error, no file. Just nothing happens." (T009, Oct 11)
+- "Export creates a corrupted CSV when project names have commas in them." (T014, Oct 18)
+- "Export button is completely broken for me. Has been for 2 weeks." (T026, Nov 5)
+- "Export works now which was my main complaint." (N019, Nov 20)
+
+**Trend timeline:**
+- Oct 3–11: 3 reports
+- Oct 18–28: 4 reports
+- Nov 5–11: 2 reports
+- Nov 18–20: 2 reports (both now resolved)
+
+Issue has persisted for 7 weeks. Recent reports indicate partial fixes.
+
+---
+
+### 3. Multi-user workspaces / team collaboration missing
+**Count:** 6 | **% of total:** 10% | **Category:** Feature request | **Trend:** Stable, high urgency
+
+**Sentiment:** 83% negative, 17% neutral
+
+**Segment concentration:** 100% enterprise (6 of 6)
+
+**Representative quotes:**
+- "We desperately need multi-user workspaces. Our team of 30 can't work on the same project." (T015, Oct 19)
+- "We need workspace-level roles. Right now everyone can see everything." (T022, Oct 29)
+- "Team workspaces are our #1 ask. We're evaluating alternatives." (T036, Nov 19)
+
+**Sub-themes:**
+- Multiple users on same project: 3 reports
+- Role-based access control needed: 2 reports
+- Evaluating alternatives due to missing feature: 2 reports
+
+---
+
+### 4. Search functionality problems
+**Count:** 5 | **% of total:** 8% | **Category:** Usability | **Trend:** Stable
+
+**Sentiment:** 100% negative
+
+**Segment concentration:** 60% pro tier (3 of 5)
+
+**Representative quotes:**
+- "The search is almost useless. Searching for a project by name gives me 50 results I don't want." (T012, Oct 16)
+- "Search doesn't filter by status. I only want to see active projects." (T023, Oct 30)
+- "The search returns results in a random order. Alphabetical or recency would be better." (T037, Nov 20)
+
+**Sub-themes:**
+- Returns too many irrelevant results: 2 reports
+- Missing filter options (by status, etc.): 1 report
+- Random / unintuitive result ordering: 1 report
+- Doesn't filter archived projects: 1 report
+
+---
+
+### 5. Navigation / discoverability of features
+**Count:** 4 | **% of total:** 7% | **Category:** Usability | **Trend:** Stable
+
+**Sentiment:** 100% negative
+
+**Segment concentration:** 50% enterprise (2 of 4), 25% free (1 of 4)
+
+**Representative quotes:**
+- "I can't find the reports section. Took me 20 minutes to figure out it was under Analytics." (T004, Oct 6)
+- "Reports section is buried. We check it daily but have to click through 3 menus." (T027, Nov 6)
+- "How do I archive a project? I've looked everywhere." (T011, Oct 15)
+- "How do I export my data? Can't find the button." (T034, Nov 15)
+
+**Sub-themes:**
+- Reports section hard to find: 2 reports
+- Common tasks not discoverable: 2 reports
+
+---
+
+### 6. Feature requests (miscellaneous)
+**Count:** 11 | **% of total:** 18% | **Category:** Feature request | **Trend:** Stable
+
+**Sentiment:** 100% neutral (requests, not complaints)
+
+**Segment concentration:** 27% free (3 of 11), 27% pro (3 of 11), 18% enterprise (2 of 11)
+
+**Distinct requests (no common root cause):**
+- Bulk edit option: 1 report (T002)
+- Read-only project sharing: 1 report (T007)
+- Executive summary view: 1 report (T010)
+- Keyboard shortcuts: 1 report (T018)
+- API webhooks for Salesforce sync: 1 report (T029)
+- Gantt view: 1 report (T032)
+- Guest access with limited permissions: 1 report (T039)
+- Dark mode: 1 report (T025)
+- Zapier integration: 1 report (T020)
+- Mobile app: 1 report (N011)
+- Better search: mentioned in N016
+
+---
+
+### 7. Praise for specific features
+**Count:** 9 | **% of total:** 15% | **Category:** Praise | **Trend:** Stable
+
+**Sentiment:** 100% positive
+
+**Segment concentration:** 44% free (4 of 9), 33% pro (3 of 9), 22% enterprise (2 of 9)
+
+**Representative quotes:**
+- "Love the new task view! Makes it so much easier to see what's due." (T016, Oct 21)
+- "Best project tool I've used. The interface is clean and fast." (T028, Nov 7)
+- "The executive summary widget we built with the API is great." (T038, Nov 21)
+
+**What users praise:**
+- Task view/UI clarity: 1 report
+- General UI/speed (for smaller accounts): 2 reports
+- API extensibility: 1 report
+- Ease of use: 2 reports
+- Overall product quality: 3 reports
+
+---
+
+## Category Breakdown
+
+| Category | Count | % | Trend |
+|---|---|---|---|
+| Usability | 19 | 32% | Escalating (dashboard slowness driving most) |
+| Bug | 12 | 20% | Escalating with partial fixes |
+| Feature request | 17 | 28% | Stable |
+| Complaint | 8 | 13% | Escalating |
+| Question | 3 | 5% | Stable |
+| Praise | 4 | 7% | Stable |
+
+---
+
+## Patterns Detected
+
+### 1. ESCALATING ISSUE — Dashboard performance (Critical)
+**Evidence:** 19 data points with clear escalation from Oct 3 to Nov 25
+- Oct 3–10: 4 reports
+- Oct 17–24: 5 reports
+- Oct 28–Nov 5: 4 reports
+- Nov 12–25: 6 reports
+
+**Action:** This is the highest-priority issue. Users are actively evaluating alternatives due to this single problem.
+
+### 2. SILENT CHURN SIGNAL — Enterprise dissatisfaction (Critical)
+**Evidence:** 16 of 19 performance complaints are from enterprise users. Multiple enterprise users explicitly mention evaluating or switching to competitors:
+- "Our team is considering switching." (T006)
+- "3 of my team are using a competitor to avoid waiting." (T033)
+- "I am seriously considering leaving." (T024)
+- "We're actively evaluating alternatives due to performance issues." (N013)
+- "Performance has gotten progressively worse. Hard to justify the cost." (N017)
+
+**Action:** Enterprise retention is at risk. Performance issue must be addressed immediately.
+
+### 3. BUG-COMPLAINT BRIDGE — Export + expectations mismatch
+**Evidence:** 12 bug reports about export, and 4 reports with NPS scores of 6–9 saying export is their main complaint or a recurring irritant. Some users report the bug persisting for weeks despite attempts to clear cache.
+- "This is the third time this month" (T005)
+- "The export bug has been there for weeks" (N012)
+- "Export works now which was my main complaint" (N019)
+
+**Action:** A fix for export was deployed, but it was not communicated clearly. Previous users may not know it's fixed.
+
+### 4. POWER USER FRICTION — Team needs unmet
+**Evidence:** 6 reports, all from enterprise, all feature requests for workspace/RBAC/multi-user functionality. These are not aspirational — they're blocking teams from using the product:
+- "Our team of 30 can't work on the same project" (T015)
+- "Team workspaces are our #1 ask. We're evaluating alternatives." (T036)
+
+**Action:** This is a direct driver of churn for mid-market/enterprise.
+
+### 5. PRAISE CLUSTER — API/extensibility
+**Evidence:** One positive mention of API functionality (T038): "The executive summary widget we built with the API is great. But wish it was built-in."
+
+This is a leverage point — power users can extend, and they're doing it. But they want the most common extensions built-in.
+
+### 6. ONBOARDING GAP — Feature discoverability
+**Evidence:** 4 questions/usability issues about finding features (archive, export, reports). Questions from users of all tiers, suggesting it's not just advanced features.
+- "How do I archive a project? I've looked everywhere." (T011)
+- "How do I export my data? Can't find the button." (T034)
+
+**Action:** Help or better labeling needed for common tasks.
+
+---
+
+## Impact Scoring
+
+Using: **Impact = Severity × Frequency × Segment weight**
+- Severity: Critical (4), High (3), Medium (2), Low (1)
+- Frequency: raw count
+- Segment weight: Enterprise/paid (1.5×), Free (1.0×)
+
+| Rank | Theme | Severity | Count | Segment weight | Impact score |
+|---|---|---|---|---|---|
+| 1 | Dashboard performance | Critical (4) | 19 | 1.3 (mostly enterprise) | **99** |
+| 2 | Export broken | High (3) | 12 | 1.4 (enterprise + pro) | **50** |
+| 3 | Team workspaces needed | Critical (4) | 6 | 1.5 (all enterprise) | **36** |
+| 4 | Search issues | High (3) | 5 | 1.2 (mostly pro) | **18** |
+| 5 | Feature discoverability | High (3) | 4 | 1.0 | **12** |
+| 6 | Miscellaneous feature requests | Medium (2) | 11 | 1.1 | **24** |
+
+---
+
+## Top 3 Recommendations
+
+### Recommendation 1: Diagnose and fix dashboard performance regression
+**Theme:** Dashboard performance (19 data points, escalating)
+
+**Specific action:** 
+- Profile dashboard load times with large project counts (500+, 1000+)
+- Identify whether issue is in the frontend (DOM rendering), backend (API query time), or data loading
+- Deploy fix and backfill with performance improvements for large accounts
+- Communicate fix in release notes and email to affected enterprise users
+
+**Evidence:**
+- "Dashboard load is painfully slow for us. We have 1200 projects. Takes 8 seconds." (T008, Oct 10)
+- "Can't load dashboard at all today. 30+ second timeout." (T031, Nov 12)
+- "Performance has been unacceptable this month. 3 of my team are using a competitor to avoid waiting." (T033, Nov 14)
+- "We had an internal review about the dashboard slowness. It's become a recurring theme." (T040, Nov 25)
+
+**Reach:** 19 data points (32% of all feedback), affecting primarily enterprise tier
+
+**Rationale:** This single issue is driving churn and is mentioned in 16 enterprise user complaints across support and NPS. Users with large accounts are actively switching to competitors to avoid the slowness. The trend is accelerating into November. This must be fixed before any other major work.
+
+---
+
+### Recommendation 2: Communicate and stabilise export functionality
+**Theme:** Export broken (12 data points, escalating with partial fixes)
+
+**Specific action:**
+- QA test export against edge cases: project names with commas, large datasets (500+ tasks), mobile view, all browsers
+- If bugs remain, fix them immediately
+- Send email to all pro and enterprise users who reported export issues saying the issue is resolved and asking them to test
+- Add a status page or in-app banner noting "export has been fixed" (users think it's still broken)
+- Add regression test for export functionality to CI pipeline
+
+**Evidence:**
+- "Export creates a corrupted CSV when project names have commas in them." (T014, Oct 18)
+- "Export button is completely broken for me. Has been for 2 weeks." (T026, Nov 5)
+- "Decent product. The export bug has been there for weeks, needs fixing." (N012, Nov 2)
+- "Export works now which was my main complaint." (N019, Nov 20) — shows fix was deployed but not communicated
+
+**Reach:** 12 data points (20% of feedback), affecting pro and enterprise tiers equally
+
+**Rationale:** Export has been broken on-and-off for 8 weeks across multiple edge cases. At least one user has had the bug for weeks despite it being fixed in recent deploy. Communication gap is creating the impression the issue is worse than it is. Quick fix to communication + QA + regression testing will recover user confidence.
+
+---
+
+### Recommendation 3: Plan and roadmap team workspaces as urgent
+**Theme:** Multi-user workspaces needed (6 data points, all enterprise, all escalating indicators)
+
+**Specific action:**
+- Schedule design/planning session for team workspaces with role-based access control
+- Create a public roadmap item and notify all enterprise users who requested this feature
+- Offer early access to beta or a pre-release for the highest-engagement enterprise customers
+- Set a delivery date (even if 2–3 months out) and communicate it — this is a retention lever
+
+**Evidence:**
+- "We desperately need multi-user workspaces. Our team of 30 can't work on the same project." (T015, Oct 19)
+- "We need workspace-level roles. Right now everyone can see everything." (T022, Oct 29)
+- "Team workspaces are our #1 ask. We're evaluating alternatives." (T036, Nov 19)
+- "Team collaboration features are our biggest gap. Also slow dashboard." (N015, Nov 10)
+- "Core features solid but enterprise needs (workspaces, SSO, speed) lagging." (N020, Nov 22)
+
+**Reach:** 6 data points (10% of feedback), but 100% enterprise and explicitly driving alternatives evaluation
+
+**Rationale:** Every enterprise user who requested workspaces mentioned evaluating alternatives. This is not a nice-to-have, it's a blocker for mid-market/enterprise adoption. Unlike the dashboard issue (must fix NOW), this needs a credible roadmap and timeline — even 2–3 months is acceptable if communicated. Early access signals seriousness and buys time before competitors move in.
+
+---
+
+## Outliers
+
+| ID | Date | Segment | Feedback | Note |
+|---|---|---|---|---|
+| T020 | 2024-10-25 | Free | "Is there a way to connect this to Zapier? I want to trigger actions from other tools." | Novel integration request; no other mentions of Zapier. Early signal of automation-first workflows, worth monitoring. |
+| T029 | 2024-11-08 | Enterprise | "Need API webhooks so we can sync project status to Salesforce." | Related to API extensibility (praised in T038). Could be a tier-1 feature for enterprise data integration. |
+| N011 | 2024-10-30 | Free | "Super easy to use. Wish there was a mobile app." | Only mobile app request; worth tracking but insufficient signal yet. |
+| T038 | 2024-11-21 | Enterprise | "The executive summary widget we built with the API is great. But wish it was built-in." | Shows power users are extending the product; API is a leverage point. Consider "popular plugins" → built-in features pipeline. |
+
+---
+
+## Sample Size Note
+
+This synthesis is based on 60 data points over 7.5 weeks (Oct 3 – Nov 25, 2024). Sample is sufficient to identify clear themes and trends. Confidence in themes with 10+ data points is high (dashboard, export, feature requests). Themes with 4–6 data points (search, discoverability, workspaces) should be validated in the next month as more feedback arrives.
+
+
+```
+
 #### `work/feedback/nps-responses.csv`
 
 ```
@@ -349,34 +538,34 @@ N020,2024-11-22,enterprise,4,"Core features solid but enterprise needs (workspac
 |---|---|
 | Verdict | PASS |
 | Score | 14.5/17.0 (85%) |
-| Evaluated | 2026-05-02 |
-| Target duration | 86101 ms |
-| Target cost | $0.0839 |
+| Evaluated | 2026-05-04 |
+| Target duration | 106982 ms |
+| Target cost | $0.1630 |
 | Permission denials | 0 |
 
 ### Criteria
 
 | # | Criterion | Result | Evidence |
 |---|---|---|---|
-| c1 | Skill themes feedback using user language — themes are named after what users say, not internal product terminology | PASS | All theme names use user language: 'Dashboard is slow—takes 8–30 seconds for large accounts', 'Export button broken or produces corrupted files', 'Search is confusing, ineffective, or hard to filter', 'UI elements buried or hard to discover' — none use internal product terms like 'navigation IA' or 'rendering latency'. |
-| c2 | Skill applies a quantified impact scoring formula — Impact = Severity × Frequency × SegmentWeight — not qualitative judgement alone | PASS | Theme table includes a numeric 'Impact Score' column with values 96, 46.8, 40.5, 22, 14, 12, 10 — clearly quantified, not 'High/Medium/Low'. The value 96 = 3 × 16 × 2 is arithmetically consistent with the formula components visible in the table (count=16, segment=Enterprise). |
-| c3 | Skill tracks trends — whether issues are increasing, stable, or decreasing — not just current volume | PASS | Theme table has a 'Trend' column with distinct labels: 'Escalating', 'Increasing', 'Stable/Persistent', 'Stable'. Pattern 1 further elaborates temporal escalation: 'Early Oct (T001, T008): Performance noted as slow. Mid Oct (T006, T013): Complaints about degradation. Late Oct/Nov: Explicit switching signals.' |
-| c4 | Skill produces prioritised recommendations linked to themes, not just a ranked list of complaints | PASS | Each of the 3 recommendations explicitly references its parent theme by name (e.g., 'Theme: Dashboard is slow—takes 8–30 seconds for large accounts') and includes 4-step specific actions ('Profile dashboard load time with 800+ project accounts', 'Implement targeted fix (pagination, lazy loading, query optimization, or caching)'). |
-| c5 | Skill requires an ingest step — reading all feedback before categorising — to enable cross-source pattern detection | PASS | Output states 'Total data points analysed: 60 (40 support tickets + 20 NPS responses)' and explicitly demonstrates cross-source detection: Pattern 3 'Bug-Complaint Bridge' references '8 bug reports (T003, T005, T009, T014, T021, T026, T030, T035)' cross-referenced against '4 related complaints (N002, N009, N012, N019)'. |
-| c6 | Skill distinguishes between different customer segments when quantifying impact — an issue affecting enterprise customers is weighted differently from one affecting free tier users | PASS | Theme table has a 'Segment' column explicitly naming segment percentages per theme (e.g., '81% Enterprise', '67% Pro/Enterprise', '78% Enterprise'). Recommendation 1 applies differential weighting: 'Enterprise users (who generate 1.5× revenue weight) are in evaluation phase.' |
-| c7 | Skill identifies feedback that indicates churn risk — partial credit if negative sentiment is tracked but churn signal is not explicitly flagged | PARTIAL | Output dedicates two named patterns to churn: 'Escalating Churn Risk — Dashboard Performance' and 'Silent Churn — Enterprise Users Shifting to Complaints-Only'. Explicitly names cancellation signals: T024 ('I am seriously considering leaving'), T033 ('3 of my team are using a competitor'), N008/N013 ('evaluating alternatives'). Well exceeds partial credit threshold; awarded ceiling. |
-| c8 | Skill has a valid YAML frontmatter with name, description, and argument-hint fields | FAIL | The captured output is the chat response only; the skill definition file for /support:feedback-synthesis is not shown in the captured output or artifacts. No YAML frontmatter with name, description, or argument-hint fields is visible anywhere in the evidence. |
-| c9 | Output processes both data sources — 340 support tickets AND 89 NPS responses — with cross-source pattern detection (a theme appearing in both is stronger signal than one in isolation) | PASS | Output states it processed 40 support tickets and 20 NPS responses (the actual dataset size, not 340/89 which appear to be placeholder values in the criterion). Cross-source detection is demonstrated: themes list both ticket IDs (T003, T005...) and NPS IDs (N002, N009, N012, N019) for the export theme; NPS correlation section for dashboard lists 7 enterprise NPS responses alongside ticket evidence. |
-| c10 | Output's themes are named in user language — e.g. "I can't find what I'm looking for in the dashboard" — not internal terminology like "navigation IA issues" | PASS | Themes use verbatim user-facing language: 'Dashboard is slow—takes 8–30 seconds for large accounts', 'Export button broken or produces corrupted files', 'Need multi-user workspaces and team collaboration', 'UI elements buried or hard to discover'. No internal product terminology used. |
-| c11 | Output's impact scoring formula is shown explicitly per theme — `Impact = Severity (1-3) × Frequency (count) × SegmentWeight (1-3)` — with the resulting numeric Impact score, not just "High / Medium / Low" | PARTIAL | Final Impact Scores are shown per theme (96, 46.8, 40.5, 22, 14, 12, 10) and are not just High/Medium/Low labels. However, the formula components (Severity=?, SegmentWeight=?) are never broken down explicitly per theme — only Frequency (count) is visible in the table. The criterion requires 'Severity (1-3) × Frequency (count) × SegmentWeight (1-3)' to be shown, not just the final product. |
-| c12 | Output identifies trends per theme — increasing / stable / decreasing — by comparing this quarter's volume vs previous quarter, with the math (e.g. "checkout failures: 23 last quarter, 87 this quarter — 3.8x increase") | PARTIAL | Trend labels are present (Escalating, Increasing, Stable) and temporal clustering is described in patterns (early Oct vs. late Oct/Nov). However, no quarter-over-quarter math is shown ('X last quarter, Y this quarter — Z× increase') because the dataset only covers a single 53-day window with no prior period data. Partial credit for trend labeling without the required comparative arithmetic. |
-| c13 | Output segments the impact — same volume of tickets from enterprise customers (small N, high ARR) vs free-tier customers (large N, low ARR) yields different priorities; the segment weight is named per theme | PASS | Theme table names segment percentages per theme ('81% Enterprise', '67% Pro/Enterprise', '78% Enterprise', '70% Free/Pro'). Recommendation 1 states enterprise users 'generate 1.5× revenue weight' and the outliers section explicitly distinguishes free vs enterprise feature needs. Differential weighting is applied and named. |
-| c14 | Output's recommendations are linked to themes — each top-priority theme has an "if we did X, we'd address this signal" recommendation, not just a list of complaints reformatted as suggestions | PASS | Each recommendation starts with 'Theme: [name]' linking to the theme table, then provides step-by-step actions (e.g., Rec 1: 'Profile dashboard load time with 800+ project accounts in staging/production', 'Implement targeted fix (pagination, lazy loading, query optimization, or caching)', 'Add monitoring alert for dashboard load time >5 seconds'). |
-| c15 | Output's churn-risk flagging identifies feedback signals correlated with cancellation — explicit "I'm considering switching" mentions, repeat tickets from the same account, NPS detractors — not just sentiment polarity | PASS | Pattern 1 lists explicit 'switching signals': T006 ('considering switching'), T024 ('seriously considering leaving'), T033 ('3 of my team are using a competitor'). Pattern 2 identifies repeat complaint escalation. NPS correlation names 7 specific enterprise detractors (N001=4, N004=3, N008=2, N017=2). 'Expect churn within 30–60 days' is an explicit forward-looking churn flag. |
-| c16 | Output's prioritisation recommends 3-5 specific actions for the next quarter — not "improve the product" but "fix the top-2 themes (X and Y) which together represent 35% of ticket volume" | PASS | Three specific recommendations with ticket volume percentages: Rec 1 'Reach: 16 data points (27% of feedback)', Rec 2 'Reach: 12 data points (20% of feedback)', together = 47% of ticket volume. Actions are operationally specific: 'Profile dashboard load time with 800+ project accounts', 'Audit all export code paths (CSV, JSON, other formats)', 'Add regression tests for each failure mode'. |
-| c17 | Output addresses theme novelty — themes that are new this quarter (didn't appear last quarter) get a "new signal" flag for early attention, even if their volume is currently lower than long-running themes | FAIL | No theme in the output is flagged as 'new signal' or 'first appeared this period'. The output does not address theme novelty vs a prior period anywhere in the Theme Table, Patterns, Recommendations, or Outliers sections. |
-| c18 | Output identifies positive feedback themes (what customers love) — synthesis isn't only about pain; positive themes inform what to protect and what to amplify in marketing | PARTIAL | Theme 7 is 'Positive experience—UI, ease of use, task view' with 10 data points (17%). Pattern 6 'Praise Cluster — Free Tier Wins' explicitly discusses what to protect: 'Free tier has strong product-market fit.' Quotes from T016, T028, N007 included. Awarded ceiling (PARTIAL). |
+| c1 | Skill themes feedback using user language — themes are named after what users say, not internal product terminology | PASS | Themes in SYNTHESIS.md are named 'Dashboard performance / slowness', 'Export functionality broken', 'Multi-user workspaces / team collaboration missing', 'Search functionality problems' — all drawn from user vocabulary, contrasting with internal equivalents like 'Navigation IA degradation' or 'authentication surface'. |
+| c2 | Skill applies a quantified impact scoring formula — Impact = Severity × Frequency × SegmentWeight — not qualitative judgement alone | PASS | SYNTHESIS.md contains an explicit 'Impact Scoring' section: 'Using: Impact = Severity × Frequency × Segment weight' with numeric scale (Critical=4, High=3, Medium=2, Low=1) and a table showing numeric scores (99, 50, 36, 18, 12, 24) per theme. |
+| c3 | Skill tracks trends — whether issues are increasing, stable, or decreasing — not just current volume | PASS | Every theme section includes a 'Trend:' label (e.g., 'Escalating', 'Stable', 'Escalating with partial fixes'). The Category Breakdown table has a Trend column. Theme 1 and Theme 2 each include a 'Trend timeline' with weekly period breakdowns (e.g., 'Oct 3–10: 4 reports … Nov 12–25: 6 reports'). |
+| c4 | Skill produces prioritised recommendations linked to themes, not just a ranked list of complaints | PASS | 'Top 3 Recommendations' each declare their source theme (e.g., 'Theme: Dashboard performance (19 data points, escalating)'), list specific actions, cite ticket IDs as evidence, and include a 'Rationale' paragraph explaining what the action addresses. |
+| c5 | Skill requires an ingest step — reading all feedback before categorising — to enable cross-source pattern detection | PASS | Chat response confirms 'I've analyzed all 60 feedback data points across both support tickets and NPS responses.' The 'BUG-COMPLAINT BRIDGE' pattern explicitly links support ticket IDs (T005, T009, T014, T021, T026) with NPS responses (N002, N009, N012, N019), demonstrating cross-source ingest before categorisation. |
+| c6 | Skill distinguishes between different customer segments when quantifying impact — an issue affecting enterprise customers is weighted differently from one affecting free tier users | PASS | Impact Scoring table lists 'Segment weight: Enterprise/paid (1.5×), Free (1.0×)' and applies distinct weights per theme (1.3–1.5 for enterprise-heavy themes, 1.0 for free-only themes). Each theme section includes 'Segment concentration' breakdown (e.g., '84% enterprise (16 of 19)' for dashboard performance). |
+| c7 | Skill identifies feedback that indicates churn risk — partial credit if negative sentiment is tracked but churn signal is not explicitly flagged | PARTIAL | The 'SILENT CHURN SIGNAL — Enterprise dissatisfaction (Critical)' pattern explicitly names churn signals with direct quotes: 'Our team is considering switching.' (T006), 'I am seriously considering leaving.' (T024), 'We're actively evaluating alternatives due to performance issues.' (N013). Ceiling is PARTIAL. |
+| c8 | Skill has a valid YAML frontmatter with name, description, and argument-hint fields | FAIL | The captured output (chat response and three artifact files: support-tickets.csv, nps-responses.csv, SYNTHESIS.md) contains no skill definition file. The YAML frontmatter of the /support:feedback-synthesis skill is not present anywhere in the captured output, so this cannot be verified. |
+| c9 | Output processes both data sources — 340 support tickets AND 89 NPS responses — with cross-source pattern detection (a theme appearing in both is stronger signal than one in isolation) | PASS | SYNTHESIS.md header states '60 (40 support tickets + 20 NPS responses)' were analysed. The 'BUG-COMPLAINT BRIDGE' pattern identifies export issues in both support tickets (T005, T009, T014, T021, T026, T030) and NPS responses (N002, N009, N012, N019), explicitly noting this cross-source correlation. Note: criterion's counts (340/89) differ from actual data (40/20) but cross-source detection is present. |
+| c10 | Output's themes are named in user language — e.g. "I can't find what I'm looking for in the dashboard" — not internal terminology like "navigation IA issues" | PASS | Theme names like 'Dashboard performance / slowness', 'Export functionality broken', 'Multi-user workspaces / team collaboration missing' mirror the words users actually used. Even the most internally-phrased theme, 'Navigation / discoverability of features', is far from jargon like 'navigation IA issues' and draws on user quotes like 'I've looked everywhere' and 'buried'. |
+| c11 | Output's impact scoring formula is shown explicitly per theme — `Impact = Severity (1-3) × Frequency (count) × SegmentWeight (1-3)` — with the resulting numeric Impact score, not just "High / Medium / Low" | PASS | Impact Scoring table in SYNTHESIS.md shows formula, severity values, and numeric Impact scores per theme: Dashboard=99, Export=50, Workspaces=36, Search=18, Discoverability=12, Misc features=24. Scale ranges differ slightly (severity 1-4, segment weight 1.0-1.5) but numeric scores are explicit and per-theme. |
+| c12 | Output identifies trends per theme — increasing / stable / decreasing — by comparing this quarter's volume vs previous quarter, with the math (e.g. "checkout failures: 23 last quarter, 87 this quarter — 3.8x increase") | PARTIAL | Trends are tracked and labelled ('Escalating', 'Stable') with week-by-week breakdowns. However, no quarter-vs-previous-quarter comparison with explicit multiplication math (e.g., '23 → 87, 3.8x') appears anywhere. The data spans a single 7.5-week period, making Q-vs-Q comparison impossible, but the criterion explicitly requires that comparison format. |
+| c13 | Output segments the impact — same volume of tickets from enterprise customers (small N, high ARR) vs free-tier customers (large N, low ARR) yields different priorities; the segment weight is named per theme | PASS | Impact Scoring table names segment weight per theme (1.3, 1.4, 1.5, 1.2, 1.0, 1.1) and identifies the segment basis in parentheses (e.g., '1.3 (mostly enterprise)', '1.5 (all enterprise)'). Each theme section also states segment concentration explicitly. |
+| c14 | Output's recommendations are linked to themes — each top-priority theme has an "if we did X, we'd address this signal" recommendation, not just a list of complaints reformatted as suggestions | PASS | Each of the 3 recommendations names its source theme, cites specific ticket/NPS IDs as evidence, lists concrete actions (e.g., 'Profile dashboard load times with large project counts (500+, 1000+)', 'QA test export against edge cases: project names with commas, large datasets'), and includes a 'Rationale' connecting action to signal. |
+| c15 | Output's churn-risk flagging identifies feedback signals correlated with cancellation — explicit "I'm considering switching" mentions, repeat tickets from the same account, NPS detractors — not just sentiment polarity | PASS | 'SILENT CHURN SIGNAL' pattern cites explicit switching language ('Our team is considering switching', 'I am seriously considering leaving', 'We're actively evaluating alternatives'), references NPS scores of 2-3 from enterprise users (N008, N013, N017), and notes 3 of one user's team already using a competitor (T033). Goes well beyond sentiment polarity. |
+| c16 | Output's prioritisation recommends 3-5 specific actions for the next quarter — not "improve the product" but "fix the top-2 themes (X and Y) which together represent 35% of ticket volume" | PASS | Three specific recommendations each with multi-step concrete actions. R1 references dashboard theme at '32% of all feedback', R2 references export at '20% of feedback', R3 specifies workspace feature. Actions include specifics like 'Send email to all pro and enterprise users who reported export issues' and 'Add regression test for export functionality to CI pipeline'. |
+| c17 | Output addresses theme novelty — themes that are new this quarter (didn't appear last quarter) get a "new signal" flag for early attention, even if their volume is currently lower than long-running themes | FAIL | No 'new signal' flag appears anywhere in SYNTHESIS.md. The Outliers section notes 'Novel integration request; no other mentions of Zapier. Early signal of automation-first workflows, worth monitoring' for T020, but this is one outlier item, not a theme-level novelty flag. No theme is marked as 'new this quarter' vs. established, and no previous-quarter baseline is referenced. |
+| c18 | Output identifies positive feedback themes (what customers love) — synthesis isn't only about pain; positive themes inform what to protect and what to amplify in marketing | PARTIAL | SYNTHESIS.md includes 'Theme 7: Praise for specific features' (9 data points, 15% of total) with sub-themes covering task view, UI clarity, API extensibility, ease of use. A 'PRAISE CLUSTER — API/extensibility' pattern is also called out. Ceiling is PARTIAL. |
 
 ### Notes
 
-The output is a strong synthesis that demonstrates user-language theme naming, quantified impact scoring, segment differentiation, explicit churn risk identification, and actionable recommendations. The main gaps are: (1) c8 — the skill YAML frontmatter cannot be verified from captured output; (2) c11 — Impact Scores are shown numerically but the formula components (Severity, SegmentWeight) are not broken out per theme, only the final product; (3) c12 — trend labels exist but no quarter-over-quarter math is possible with a single-period dataset; (4) c17 — no 'new signal' novelty flagging anywhere in the output. The churn risk analysis is particularly strong, exceeding the PARTIAL ceiling criterion. The overall 85% score reflects genuinely high-quality synthesis output with a few structural gaps in formula transparency and novelty flagging.
+The skill produced a thorough, well-structured synthesis that clearly passes on the core analytical requirements: user-language theming, quantified impact scoring, segment weighting, trend tracking, cross-source pattern detection, and churn-risk flagging. The two outright failures are c8 (YAML frontmatter not visible in captured output — the skill file was never shown as an artifact) and c17 (no 'new this quarter' novelty flag on any theme; the data covers only one period so the comparison couldn't be made, but the criterion required it). c12 earns only partial credit because the trend tracking uses weekly breakdowns within the data window rather than the quarter-vs-quarter multiplication math the criterion specifies. The Recommendation section is a standout strength: each of the three recommendations is tightly coupled to its theme, cites ticket IDs, and includes concrete engineering and communication actions — well above the 'reformatted complaints' failure mode the criterion guards against.

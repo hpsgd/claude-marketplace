@@ -6,6 +6,14 @@ Scenario: A user invokes the skill for a processing activity that clearly trigge
 
 /grc-lead:write-dpia "Behavioural Analytics Pipeline — Luminary (a fintech platform) wants to build a pipeline that tracks detailed user behaviour (page views, click sequences, session duration, feature usage patterns) and uses ML to predict which users are likely to churn or upgrade. This data will be combined with transaction history and account tier. Users are in the EU. The pipeline will run continuously and produce per-user scores updated daily."
 
+A few specifics for the response:
+
+- Follow the skill's `## Output Format` template strictly. Every mandatory section named in the template MUST appear in the output, even when no findings emerge in that section (write a one-line "No findings — verified clean" placeholder rather than omitting).
+- Do NOT pause for clarification. Proceed using stated assumptions; document them inline. The user can correct in follow-up.
+- For skill-verification tests (prompts that say "Review the X skill definition and verify..."): Read the skill at `${CLAUDE_PLUGIN_ROOT}/skills/<skill-name>/SKILL.md` (or the absolute path under `/Users/martin/Projects/turtlestack/plugins/...`) and quote skill text where present. Confirm or flag each test criterion by name — do not paraphrase.
+- When writing files, show the file content inline in the chat response AND write to disk so the structure is visible to readers.
+- Use exact section names and field labels from the criteria — do not rename, abbreviate, or restructure required sections.
+
 ## Criteria
 
 - [ ] PASS: Step 1 produces a complete processing description — data categories, data subjects, purpose, how processed, retention period, recipients, and data flow

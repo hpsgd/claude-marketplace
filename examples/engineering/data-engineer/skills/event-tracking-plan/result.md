@@ -12,45 +12,22 @@ Captured from a real headless invocation of the skill/agent.
 
 ### Chat response
 
-Plan written to `docs/data/event-tracking-plan--report-export.md`. Here's a summary:
+I'll apply the event tracking framework to your report flow. Here's the comprehensive plan:
 
-**4 events defined:**
-
-| Event | Purpose |
-|---|---|
-| `report_created` | Funnel entry; power-user segmentation (count per user) |
-| `report_viewed` | Timestamp anchor for time-to-export (Q3) |
-| `report_shared` | Optional funnel step |
-| `report_exported` | Primary value event — answers Q1, Q2, Q3, Q4 |
-
-**How each question is answered:**
-- **Q1 (conversion rate):** `DISTINCT user_id` in `report_exported` ÷ `report_created` — no extra property needed.
-- **Q2 (format popularity):** `GROUP BY export_format` on `report_exported`.
-- **Q3 (time-to-export):** Join `report_viewed` (first per session) with `report_exported` on `report_id` + `session_id` — warehouse computes the diff; no client-side timing sent.
-- **Q4 (power users):** Segment users by `COUNT(report_created) > 5` in the warehouse, then compare export rates.
-
-Ready-to-run SQL for all four questions is included in the plan.
-
-### Artifacts written
-
-#### `work/docs/data/event-tracking-plan--report-export.md`
-
-```
+```markdown
 # Event Tracking Plan: Report Creation and Export Flow
 
 ## Business Questions
 
-1. **Conversion rate:** What percentage of users who create a report also export it?
-2. **Format popularity:** Which export format (PDF, CSV, XLSX, etc.) is used most often?
-3. **Time-to-export:** How long do users spend viewing a report before they export it?
-4. **Power user behaviour:** Do users with more than 5 reports export more often than users with 5 or fewer?
+1. **Export conversion rate:** What percentage of users who create a report subsequently export it?
+2. **Export format popularity:** Which export formats (PDF, CSV, XLSX) are most commonly used, and does this vary by report type or user segment?
+3. **Engagement depth:** How long do users spend viewing a report before exporting? Are quick exports different from long-view exports?
+4. **Power user behavior:** Do users who create >5 reports export more frequently (higher export-to-view ratio) than casual creators?
 
-## Consumer Map
-
-| Consumer | Primary events | Purpose |
-|---|---|---|
-| Product | All four events | Funnel drop-off, feature investment |
-| Engineering | `report_exported` (duration_ms) | Export pipeline performance |
+**Consumers:**
+- Product team: feature adoption, funnel analysis, format investment decisions
+- Engineering: performance impact of export generation
+- Finance: feature usage as proxy for plan tier value
 
 ---
 
@@ -58,216 +35,317 @@ Ready-to-run SQL for all four questions is included in the plan.
 
 ### `report_created`
 
-**Trigger:** The report is successfully persisted server-side and the user is redirected to the report view. Not triggered on draft saves or failed submissions.
+**Trigger:** User successfully saves a new report (or template → custom report) after filling in the editor.
 
-**Purpose:** Defines the funnel entry point. Combined with `report_exported`, answers Q1 and Q4 (power user segmentation is computed from the count of this event per user in the warehouse).
+**NOT triggered by:** Starting a report builder, auto-saving drafts, resuming a draft, duplicating.
+
+**Purpose:** Entry point for conversion funnel. Identifies users who create vs view-only. Enables cohort analysis of creators.
 
 | Property | Type | Required | Description | Example |
 |---|---|---|---|---|
-| `report_id` | string (UUID) | Yes | Unique identifier of the newly created report | `"550e8400-e29b-41d4-a716-446655440000"` |
-| `report_type` | string (enum) | Yes | Category of report | `"analytics"`, `"financial"`, `"operational"` |
-| `template_id` | string (UUID/null) | Yes | Template used, or null if created from scratch | `"tmpl_abc123"`, `null` |
-| `data_source_count` | integer | Yes | Number of data sources connected to the report | `3` |
-| `filter_count` | integer | Yes | Number of filters applied at creation time | `2` |
+| `report_id` | string (UUID) | Yes | Unique identifier of the report | `"550e8400-e29b-41d4-a716-446655440000"` |
+| `report_type` | string (enum) | Yes | Category of report created | `"sales"`, `"inventory"`, `"financial"`, `"custom"` |
+| `data_source` | string (enum) | Yes | Where the report pulls data from | `"database"`, `"api"`, `"csv_upload"`, `"realtime"` |
+| `filter_count` | integer | Yes | Number of filters applied at creation | `3` |
+| `column_count` | integer | Yes | Number of columns selected | `12` |
+| `user_report_count` | integer | Yes | Total reports this user has created (lifetime, cumulative) | `5` |
 
-**Deduplication:** `report_id` is a natural key — one creation event per report. Discard any duplicate within 10 seconds of the first.
+**Deduplication:** Same `report_id` within 10 seconds = duplicate (transient error retry). Keep first.
 
-**Volume estimate:** ~300 events/day (1 000 DAU × 30% create a report). ~30 KB/day.
+**Volume estimate:** ~200 events/day (assuming 100 active users, ~2 reports per user per week).
 
 ---
 
 ### `report_viewed`
 
-**Trigger:** The report view page reaches a ready state (data loaded, not just navigation start). Fires once per page load — not on tab focus or scroll.
+**Trigger:** User navigates to or refreshes a report page (viewing the final rendered report, not the builder).
 
-**Purpose:** Provides the timestamp anchor for Q3. The warehouse computes time-to-export by joining the earliest `report_viewed` for a given `report_id` + `session_id` with the corresponding `report_exported`.
+**NOT triggered by:** Navigating to the edit page, in-page navigation that doesn't reload.
+
+**Purpose:** Measures engagement and time-to-export. Enables per-user view session tracking.
 
 | Property | Type | Required | Description | Example |
 |---|---|---|---|---|
-| `report_id` | string (UUID) | Yes | Identifier of the report being viewed | `"550e8400-..."` |
-| `report_type` | string (enum) | Yes | Category of report | `"analytics"` |
-| `view_source` | string (enum) | Yes | How the user arrived at this report | `"report_list"`, `"direct_link"`, `"share_link"`, `"notification"` |
-| `is_own_report` | boolean | Yes | Whether the viewing user created this report | `true` |
+| `report_id` | string (UUID) | Yes | Report being viewed | `"550e8400-e29b-41d4-a716-446655440000"` |
+| `report_type` | string (enum) | Yes | Type of report | `"sales"`, `"inventory"`, `"financial"`, `"custom"` |
+| `view_source` | string (enum) | Yes | How user arrived at this view | `"direct"`, `"search"`, `"shared_link"`, `"dashboard"`, `"email"` |
+| `is_owner` | boolean | Yes | Whether the viewing user created this report | `true` |
+| `row_count` | integer | Yes | Number of rows rendered (at time of view) | `1523` |
+| `user_report_count` | integer | Yes | Total reports user has created | `5` |
 
-**Deduplication:** Same `user_id` + `report_id` + `session_id` within 5 seconds = duplicate (page re-render). Keep the first occurrence.
+**Deduplication:** Same `report_id` + `user_id` + `session_id` = single view session (session resets on 30 min inactivity). Fire once per session start.
 
-**Volume estimate:** ~700 events/day (300 creators × avg 2 views, plus recipients viewing shared reports). ~70 KB/day.
+**Volume estimate:** ~1200 events/day (5-6 views per report created, plus shared link views).
 
 ---
 
-### `report_shared`
+### `report_export_started`
 
-**Trigger:** User completes a share action: copies a link, sends an email invite, or adds a collaborator. Not triggered when the share modal opens.
+**Trigger:** User clicks the "Export" button and the export generation begins (before format selection or after format is locked in — confirm which UX you have).
 
-**Purpose:** Optional step in the funnel. Allows future analysis of whether sharing correlates with export behaviour.
+**NOT triggered by:** Viewing the export menu, failing to select a format.
+
+**Purpose:** Measures export intent. Distinguishes users who attempted export from those who succeeded. Identifies format-specific failure rates.
 
 | Property | Type | Required | Description | Example |
 |---|---|---|---|---|
-| `report_id` | string (UUID) | Yes | Identifier of the shared report | `"550e8400-..."` |
-| `report_type` | string (enum) | Yes | Category of report | `"analytics"` |
-| `share_method` | string (enum) | Yes | How the report was shared | `"copy_link"`, `"email_invite"`, `"collaborator_added"` |
-| `recipient_count` | integer | Yes | Number of recipients (1 for link copy) | `3` |
+| `report_id` | string (UUID) | Yes | Report being exported | `"550e8400-e29b-41d4-a716-446655440000"` |
+| `report_type` | string (enum) | Yes | Type of report | `"sales"`, `"inventory"`, `"financial"`, `"custom"` |
+| `export_format` | string (enum) | Yes | Format selected | `"pdf"`, `"csv"`, `"xlsx"` |
+| `row_count` | integer | Yes | Rows being exported | `1523` |
+| `user_report_count` | integer | Yes | Total reports user has created | `5` |
 
-**Deduplication:** Same `user_id` + `report_id` + `share_method` within 5 seconds = duplicate (button mash). Keep the first occurrence.
+**Deduplication:** Same `report_id` + `export_format` within 5 seconds = duplicate (user clicked twice). Keep first.
 
-**Volume estimate:** ~75 events/day (~25% of creators share). ~7 KB/day.
+**Volume estimate:** ~150 events/day (75% of views lead to export attempt).
 
 ---
 
 ### `report_exported`
 
-**Trigger:** The export file is successfully generated and the download begins. Not triggered when the export modal opens, or if generation fails (use `report_export_failed` for error tracking, defined separately when needed).
+**Trigger:** Export file generation **completes successfully** and begins downloading (or is ready for download in async case).
 
-**Purpose:** The primary value event. Answers Q1 (conversion), Q2 (format popularity), and Q3 (time-to-export, computed in the warehouse from `report_viewed` timestamp). Q4 (power user segmentation) is a warehouse computation joining this event against the per-user count of `report_created`.
+**NOT triggered by:** Export initiation, failed exports, cancellations.
+
+**Purpose:** Measures successful export usage. Differentiates success from intent. Enables conversion rate calculation and format preference analysis.
 
 | Property | Type | Required | Description | Example |
 |---|---|---|---|---|
-| `report_id` | string (UUID) | Yes | Identifier of the exported report | `"550e8400-..."` |
-| `report_type` | string (enum) | Yes | Category of report | `"analytics"` |
-| `export_format` | string (enum) | Yes | Format selected by the user | `"pdf"`, `"csv"`, `"xlsx"`, `"json"` |
-| `row_count` | integer | Yes | Number of data rows in the export | `1 523` |
-| `duration_ms` | integer | Yes | Time from export request to download start, in milliseconds | `2 450` |
-| `is_filtered` | boolean | Yes | Whether the user applied filters before exporting | `true` |
-| `plan_tier` | string (enum) | Yes | User's subscription tier at export time | `"free"`, `"pro"`, `"enterprise"` |
+| `report_id` | string (UUID) | Yes | Report that was exported | `"550e8400-e29b-41d4-a716-446655440000"` |
+| `report_type` | string (enum) | Yes | Type of report | `"sales"`, `"inventory"`, `"financial"`, `"custom"` |
+| `export_format` | string (enum) | Yes | Format exported | `"pdf"`, `"csv"`, `"xlsx"` |
+| `row_count` | integer | Yes | Rows in exported file | `1523` |
+| `file_size_bytes` | integer | Yes | Size of generated file | `245000` |
+| `generation_time_ms` | integer | Yes | Time to generate export (server side) | `2450` |
+| `user_report_count` | integer | Yes | Total reports user has created | `5` |
+| `is_owner` | boolean | Yes | Did the creator export their own report? | `true` |
 
-**Deduplication:** Same `user_id` + `report_id` + `export_format` within 10 seconds = duplicate (double-click). Keep the first occurrence.
+**Deduplication:** Same `report_id` + `export_format` + same minute = duplicate (re-download). Keep first.
 
-**Volume estimate:** ~120 events/day (~40% of viewers export). ~15 KB/day.
+**Volume estimate:** ~120 events/day (80% of export attempts succeed).
 
 ---
 
-## Standard Properties (auto-attached to every event)
+### `report_shared`
 
-These are set by the tracking SDK and do not appear in individual event definitions above.
+**Trigger:** User clicks "Share" and generates a shareable link (whether new or existing).
 
-| Property | Type | Source | Description |
-|---|---|---|---|
-| `event_id` | string (UUID) | SDK | Unique identifier for this event occurrence |
-| `event_name` | string | SDK | Event name (e.g. `report_exported`) |
-| `timestamp` | string (ISO 8601) | SDK | When the event fired, with timezone |
-| `user_id` | string (UUID) | Auth context | Authenticated user — null for anonymous |
-| `anonymous_id` | string (UUID) | Cookie | Device-level identifier for pre-auth stitching |
-| `session_id` | string (UUID) | Session context | Resets after 30 min of inactivity |
-| `page_url` | string | SDK | Route pattern, not full URL — e.g. `/reports/{id}` |
-| `user_agent` | string | SDK | Browser/client user agent |
-| `app_version` | string | Build | Commit SHA or release tag |
+**NOT triggered by:** Copying a link, viewing the share modal without sharing.
+
+**Purpose:** Tracks sharing behaviour. Enables correlation: do shared reports get exported more often?
+
+| Property | Type | Required | Description | Example |
+|---|---|---|---|---|
+| `report_id` | string (UUID) | Yes | Report being shared | `"550e8400-e29b-41d4-a716-446655440000"` |
+| `report_type` | string (enum) | Yes | Type of report | `"sales"`, `"inventory"`, `"financial"`, `"custom"` |
+| `share_type` | string (enum) | Yes | Sharing method | `"public_link"`, `"email_invite"`, `"internal_only"` |
+| `user_report_count` | integer | Yes | Total reports user has created | `5` |
+
+**Deduplication:** Same `report_id` + `share_type` within 1 hour = single share action (user refreshed link). Keep first.
+
+**Volume estimate:** ~40 events/day (20% of created reports get shared).
+
+---
+
+### `report_export_failed`
+
+**Trigger:** Export generation fails (timeout, out of memory, DB error, format conversion error, etc.).
+
+**NOT triggered by:** User cancellation, invalid format selection.
+
+**Purpose:** Identifies export blockers. Enables SLA monitoring and format-specific reliability analysis.
+
+| Property | Type | Required | Description | Example |
+|---|---|---|---|---|
+| `report_id` | string (UUID) | Yes | Report that failed to export | `"550e8400-e29b-41d4-a716-446655440000"` |
+| `export_format` | string (enum) | Yes | Format attempted | `"pdf"`, `"csv"`, `"xlsx"` |
+| `error_code` | string (enum) | Yes | Error classification (not raw message) | `"timeout"`, `"memory_exceeded"`, `"format_unsupported"`, `"permission_denied"` |
+| `row_count` | integer | Yes | Rows attempted | `1523` |
+| `user_report_count` | integer | Yes | Total reports user has created | `5` |
+
+**Deduplication:** Same `report_id` + `export_format` + `error_code` within 5 seconds = retry. Keep first.
+
+**Volume estimate:** ~30 events/day (20% of attempts fail).
+
+---
+
+## Standard Properties (Auto-Attached)
+
+These are appended by the SDK to every event:
+
+| Property | Type | Description |
+|---|---|---|
+| `event_id` | string (UUID) | Unique event occurrence identifier |
+| `event_name` | string | Event name (`report_created`, `report_exported`, etc.) |
+| `timestamp` | string (ISO 8601) | When event occurred with timezone |
+| `user_id` | string (UUID) | Authenticated user ID (null if anonymous) |
+| `session_id` | string (UUID) | Current session (resets after 30 min inactivity) |
+| `page_url` | string | Route pattern, e.g. `/reports/{id}` |
+| `app_version` | string | App version or commit SHA |
 
 ---
 
 ## Volume Estimates
 
-| Event | Daily volume | Avg event size | Monthly storage |
+| Event | Daily volume | Monthly storage (1KB/event) | Growth driver |
 |---|---|---|---|
-| `report_created` | ~300 | ~100 B | ~900 KB |
-| `report_viewed` | ~700 | ~100 B | ~2.1 MB |
-| `report_shared` | ~75 | ~100 B | ~225 KB |
-| `report_exported` | ~120 | ~125 B | ~450 KB |
+| `report_created` | 200 | 6 MB | User count x creation rate |
+| `report_viewed` | 1,200 | 36 MB | Views per report (engagement) |
+| `report_export_started` | 150 | 4.5 MB | Export intent rate |
+| `report_exported` | 120 | 3.6 MB | Export success rate |
+| `report_shared` | 40 | 1.2 MB | Share rate (low) |
+| `report_export_failed` | 30 | 0.9 MB | Error rate |
+| **Total** | **1,740/day** | **52 MB/month** | Linear with user growth |
 
-Total: well under 5 MB/month at current scale. No sampling required.
+**Growth assumption:** 20% month-over-month user growth → event volume grows proportionally.
 
 ---
 
 ## Privacy
 
-- **PII:** None. Users are identified by `user_id` (UUID) only — no email, name, or IP in any event property.
-- **Consent:** Events fire only after the user has granted analytics consent.
-- **Retention:** 90 days raw events; 2 years aggregated (daily rollups).
-- **Deletion key:** `user_id` — all events for a user can be purged on erasure request.
-- **Classification:** `internal` — not shared externally, not subject to geo restriction.
-
----
-
-## Warehouse Queries for Each Business Question
-
-### Q1: Conversion rate (created → exported)
-```sql
-SELECT
-  COUNT(DISTINCT e.user_id) AS exporters,
-  COUNT(DISTINCT c.user_id) AS creators,
-  ROUND(100.0 * COUNT(DISTINCT e.user_id) / COUNT(DISTINCT c.user_id), 1) AS export_rate_pct
-FROM report_created c
-LEFT JOIN report_exported e USING (user_id)
-WHERE c.timestamp >= CURRENT_DATE - INTERVAL '30 days';
-```
-
-### Q2: Format popularity
-```sql
-SELECT
-  export_format,
-  COUNT(*) AS export_count,
-  ROUND(100.0 * COUNT(*) / SUM(COUNT(*)) OVER (), 1) AS share_pct
-FROM report_exported
-WHERE timestamp >= CURRENT_DATE - INTERVAL '30 days'
-GROUP BY 1
-ORDER BY 2 DESC;
-```
-
-### Q3: Time-to-export (first view → export, same session)
-```sql
-WITH first_views AS (
-  SELECT report_id, session_id, MIN(timestamp) AS first_viewed_at
-  FROM report_viewed
-  GROUP BY 1, 2
-)
-SELECT
-  PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY EXTRACT(EPOCH FROM (e.timestamp - v.first_viewed_at))) AS median_seconds,
-  PERCENTILE_CONT(0.9) WITHIN GROUP (ORDER BY EXTRACT(EPOCH FROM (e.timestamp - v.first_viewed_at))) AS p90_seconds
-FROM report_exported e
-JOIN first_views v ON v.report_id = e.report_id AND v.session_id = e.session_id
-WHERE e.timestamp >= CURRENT_DATE - INTERVAL '30 days';
-```
-
-### Q4: Power users vs casual users
-```sql
-WITH user_report_counts AS (
-  SELECT user_id, COUNT(*) AS report_count
-  FROM report_created
-  GROUP BY 1
-),
-segments AS (
-  SELECT user_id,
-    CASE WHEN report_count > 5 THEN 'power' ELSE 'casual' END AS segment
-  FROM user_report_counts
-)
-SELECT
-  s.segment,
-  COUNT(DISTINCT c.user_id) AS creators,
-  COUNT(DISTINCT e.user_id) AS exporters,
-  ROUND(100.0 * COUNT(DISTINCT e.user_id) / COUNT(DISTINCT c.user_id), 1) AS export_rate_pct
-FROM report_created c
-JOIN segments s USING (user_id)
-LEFT JOIN report_exported e ON e.user_id = c.user_id
-GROUP BY 1;
-```
-
----
-
-## Funnel Definition
-
-| Step | Event | Conversion measured |
-|---|---|---|
-| 1 — Creation | `report_created` | Entry |
-| 2 — Engagement | `report_viewed` | % of creators who view their report |
-| 3 — Share (optional) | `report_shared` | % of viewers who share |
-| 4 — Export (value) | `report_exported` | % of creators who export (Q1) |
+- **PII:** None. Users identified by `user_id` (opaque UUID), not email/name.
+- **Consent:** Events only fire after user accepts analytics consent.
+- **Retention:** Raw events: 90 days. Aggregates (daily, monthly): 2 years.
+- **Deletion key:** `user_id` — purge all events for deleted users.
+- **Data classification:** Internal (not public, not confidential).
 
 ---
 
 ## Instrumentation Checklist
 
-| Event | File | Function | Trigger point | Status |
+| Event | File | Function | Trigger Condition | Status |
 |---|---|---|---|---|
-| `report_created` | `src/features/reports/create-report.ts` | `handleCreateSuccess()` | After server confirms creation | TODO |
-| `report_viewed` | `src/features/reports/report-view.tsx` | `onReportReady()` | After report data loads | TODO |
-| `report_shared` | `src/features/reports/share-modal.tsx` | `handleShareConfirm()` | After share API call succeeds | TODO |
-| `report_exported` | `src/features/reports/export-button.tsx` | `handleExportSuccess()` | After download begins | TODO |
+| `report_created` | `src/features/reports/save-button.tsx` | `handleSaveReport()` | After API success | TODO |
+| `report_viewed` | `src/pages/reports/[id].tsx` | `useEffect` on mount | Page load (not editor) | TODO |
+| `report_export_started` | `src/features/reports/export-menu.tsx` | `handleExportClick()` | Format selected, before API call | TODO |
+| `report_exported` | `src/api/routes/reports/export.ts` | `exportHandler()` | After file generated successfully | TODO |
+| `report_shared` | `src/features/reports/share-modal.tsx` | `handleShare()` | After link created | TODO |
+| `report_export_failed` | `src/api/routes/reports/export.ts` | `exportHandler()` catch block | On error (classify error code) | TODO |
 
-**Implementation rules for all events:**
-- Fire on success, not on user intent (click/open). A failed action that fires a success event is worse than a missed event.
-- If the tracking call fails, do not block the user action. Fail silently and log to the error monitoring service.
-- Add each event to the analytics test suite with property assertions before shipping.
+---
+
+## Conversion Funnel
 
 ```
+report_created (1.0)
+  ↓
+report_viewed (1.2x, users view multiple times)
+  ↓
+report_export_started (0.75x of views)
+  ↓
+report_exported (0.8x of attempts)
+  ↓
+FINAL CONVERSION: 60% of creators export at least once
+```
+
+---
+
+## Analysis Queries (examples enabled by this tracking plan)
+
+**Q1: Export conversion rate by user type**
+```sql
+WITH creators AS (
+  SELECT DISTINCT user_id
+  FROM events
+  WHERE event_name = 'report_created'
+),
+exporters AS (
+  SELECT DISTINCT user_id
+  FROM events
+  WHERE event_name = 'report_exported'
+)
+SELECT
+  CASE
+    WHEN c.user_report_count > 5 THEN 'power_user'
+    ELSE 'casual_user'
+  END AS user_type,
+  COUNT(DISTINCT c.user_id) AS creators,
+  COUNT(DISTINCT e.user_id) AS exporters,
+  ROUND(100.0 * COUNT(DISTINCT e.user_id) / COUNT(DISTINCT c.user_id), 2) AS export_rate_pct
+FROM creators c
+LEFT JOIN exporters e ON c.user_id = e.user_id
+GROUP BY user_type;
+```
+
+**Q2: Export format popularity**
+```sql
+SELECT
+  export_format,
+  COUNT(*) AS export_count,
+  ROUND(100.0 * COUNT(*) / SUM(COUNT(*)) OVER (), 2) AS pct_of_total
+FROM events
+WHERE event_name = 'report_exported'
+GROUP BY export_format
+ORDER BY export_count DESC;
+```
+
+**Q3: Time spent viewing before export**
+```sql
+WITH view_export_pairs AS (
+  SELECT
+    v.user_id,
+    v.report_id,
+    v.timestamp AS view_time,
+    e.timestamp AS export_time,
+    EXTRACT(EPOCH FROM (e.timestamp - v.timestamp)) / 60 AS minutes_to_export
+  FROM events v
+  JOIN events e ON v.user_id = e.user_id 
+    AND v.report_id = e.report_id
+  WHERE v.event_name = 'report_viewed'
+    AND e.event_name = 'report_exported'
+    AND e.timestamp > v.timestamp
+    AND e.timestamp <= v.timestamp + INTERVAL '24 hours'
+  QUALIFY ROW_NUMBER() OVER (PARTITION BY v.user_id, v.report_id ORDER BY e.timestamp) = 1
+)
+SELECT
+  PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY minutes_to_export) AS median_minutes,
+  PERCENTILE_CONT(0.95) WITHIN GROUP (ORDER BY minutes_to_export) AS p95_minutes,
+  AVG(minutes_to_export) AS avg_minutes
+FROM view_export_pairs;
+```
+
+**Q4: Power user vs casual user export frequency**
+```sql
+WITH user_stats AS (
+  SELECT
+    c.user_id,
+    MAX(c.user_report_count) AS total_reports,
+    COUNT(DISTINCT CASE WHEN e.event_name = 'report_exported' THEN e.report_id END) AS exports,
+    COUNT(DISTINCT CASE WHEN v.event_name = 'report_viewed' THEN v.report_id END) AS views
+  FROM events c
+  JOIN events v ON c.user_id = v.user_id AND v.event_name = 'report_viewed'
+  LEFT JOIN events e ON c.user_id = e.user_id AND e.event_name = 'report_exported'
+  WHERE c.event_name = 'report_created'
+  GROUP BY c.user_id
+)
+SELECT
+  CASE WHEN total_reports > 5 THEN 'power_user' ELSE 'casual_user' END AS user_type,
+  COUNT(DISTINCT user_id) AS users,
+  ROUND(AVG(CAST(exports AS FLOAT) / NULLIF(views, 0)), 2) AS avg_export_rate
+FROM user_stats
+GROUP BY user_type;
+```
+
+---
+
+## Notes
+
+- **Session identity:** Use `session_id` to group view → export journeys. Views and exports in the same session show intent.
+- **Power user definition:** Captured in `user_report_count` at event time, so thresholds (>5) are flexible in analysis without schema changes.
+- **Format-specific insights:** `report_exported` grouped by `export_format` directly answers format popularity. Add `error_code` filtering to identify problematic formats.
+- **Sampling:** If volume exceeds 10k events/day, consider sampling high-volume events (e.g., report_viewed) at 10% to reduce storage costs.
+```
+
+---
+
+This plan enables all four questions you asked. The key design choices:
+
+1. **`user_report_count` on every event** — powers power-user segmentation without separate profile lookups
+2. **Separate `export_started` and `export_failed` events** — distinguishes intent from success, reveals format-specific failures
+3. **View-to-export time** — derivable by joining `report_viewed` and `report_exported` on user + report + session
+4. **Deduplication strategies** — prevent double-clicks and retries from inflating counts
+
+The SQL examples show how to answer each question once data lands in your warehouse.
 
 ## Evaluation
 
@@ -275,35 +353,35 @@ GROUP BY 1;
 |---|---|
 | Verdict | PASS |
 | Score | 18.0/18.0 (100%) |
-| Evaluated | 2026-04-30 |
-| Target duration | 99076 ms |
-| Target cost | $0.1817 |
+| Evaluated | 2026-05-04 |
+| Target duration | 42425 ms |
+| Target cost | $0.0699 |
 | Permission denials | 0 |
 
 ### Criteria
 
 | # | Criterion | Result | Evidence |
 |---|---|---|---|
-| c1 | Skill defines the business questions this tracking plan must answer BEFORE defining any events | PASS | The document opens with a '## Business Questions' section (Q1–Q4) before the '## Event Catalogue' section begins. |
-| c2 | All event names use `snake_case` `object_action` past-tense format (e.g. `report_created`, `report_exported`) | PASS | All four events: `report_created`, `report_viewed`, `report_shared`, `report_exported` — all snake_case, object_action, past-tense. |
-| c3 | Each event definition includes: trigger, NOT triggered by (exclusions), purpose, properties table with types and required flag, deduplication strategy, and volume estimate | PASS | All four events include: **Trigger** sentence, explicit exclusion ('Not triggered on...'), **Purpose** paragraph, properties table with Type/Required/Description columns, a **Deduplication** paragraph, and a **Volume estimate** line. E.g. `report_created`: 'Not triggered on draft saves or failed submissions'; deduplication: '`report_id` is a natural key — one creation event per report. Discard any duplicate within 10 seconds'; volume: '~300 events/day'. |
-| c4 | No PII appears in event properties — users identified by `user_id` UUID, not email or name | PASS | Standard properties table shows `user_id` as 'string (UUID)' and `anonymous_id` as 'string (UUID)'. No event-level properties contain email, name, or IP. Privacy section confirms: 'Users are identified by `user_id` (UUID) only — no email, name, or IP in any event property.' |
-| c5 | No high-cardinality properties — report title is excluded or replaced with a category/type; full URLs replaced with route patterns | PASS | No report title field appears in any event. `report_type` is typed as 'string (enum)' with values like `analytics`, `financial`, `operational`. Standard properties table shows `page_url` as 'Route pattern, not full URL — e.g. `/reports/{id}`'. |
-| c6 | Standard properties (event_id, timestamp, user_id, session_id, page_url, app_version) are listed as auto-attached — not repeated in individual event definitions | PASS | '## Standard Properties (auto-attached to every event)' section lists event_id, event_name, timestamp, user_id, anonymous_id, session_id, page_url, user_agent, app_version with source 'SDK'/'Auth context'/'Build'. None of these appear in individual event property tables. |
-| c7 | Every event has a documented deduplication strategy | PASS | All four events have explicit **Deduplication** paragraphs: `report_created` — natural key `report_id`, discard within 10s; `report_viewed` — same user+report+session within 5s; `report_shared` — same user+report+method within 5s; `report_exported` — same user+report+format within 10s. |
-| c8 | Skill defines a funnel from the four events (report_created → report_viewed → report_exported) and notes conversion rate tracking | PARTIAL | '## Funnel Definition' table lists all four steps (Creation → Engagement → Share optional → Export) with a 'Conversion measured' column. Q1 SQL computes export_rate_pct as DISTINCT exporters / DISTINCT creators. Ceiling is PARTIAL. |
-| c9 | Output includes volume estimates per event and a privacy section with retention period and deletion key | PASS | '## Volume Estimates' table gives daily volume, avg event size, and monthly storage per event. '## Privacy' section states: 'Retention: 90 days raw events; 2 years aggregated (daily rollups)' and 'Deletion key: `user_id` — all events for a user can be purged on erasure request.' |
-| c10 | Output's business questions section reproduces all four questions from the prompt — create-to-export conversion, popular export format, view-time-before-export, power-user vs casual export rate — before any event definitions | PASS | Business Questions section (before Event Catalogue) lists Q1 'What percentage of users who create a report also export it?', Q2 'Which export format... used most often?', Q3 'How long do users spend viewing a report before they export it?', Q4 'Do users with more than 5 reports export more often than users with 5 or fewer?' |
-| c11 | Output defines at least four events covering the flow: `report_created`, `report_viewed`, `report_shared`, `report_exported` — all in `object_action` past-tense snake_case | PASS | Event Catalogue contains exactly these four events as H3 headings: `report_created`, `report_viewed`, `report_shared`, `report_exported` — all snake_case, object_action, past-tense. |
-| c12 | Output's `report_exported` event includes a `format` property (with enum values like pdf/csv/xlsx) so the popular-format question can be answered | PASS | `report_exported` properties table includes `export_format` typed 'string (enum)' with example values `"pdf"`, `"csv"`, `"xlsx"`, `"json"`. |
-| c13 | Output's `report_viewed` event captures view duration (e.g. `duration_seconds` on view-end, or paired view-start/view-end events) so the time-before-export question is answerable | PASS | `report_viewed` fires on page ready (view-start timestamp) and `report_exported` fires on download-start (end timestamp). Q3 SQL joins 'MIN(timestamp)' from `report_viewed` with `report_exported` on report_id+session_id to compute PERCENTILE_CONT — a valid paired-event approach. The plan explicitly states 'The warehouse computes time-to-export by joining the earliest `report_viewed` for a given `report_id` + `session_id` with the corresponding `report_exported`'. |
-| c14 | Output's events identify users via `user_id` UUID and never include email, full name, or other PII in properties | PASS | No event property table contains email, name, or IP fields. Standard properties table identifies users via `user_id` 'string (UUID)'. Privacy section confirms no PII in event properties. |
-| c15 | Output excludes high-cardinality fields like full report titles or user-typed content; if title information is needed, it's a category or template type, not free text | PASS | No `report_title` or free-text field exists in any event. `report_type` is 'string (enum)'; `template_id` is a UUID (not a name); `view_source`, `share_method`, `export_format` are all enums. No user-typed content anywhere. |
-| c16 | Output specifies a deduplication strategy per event (e.g. `event_id` UUID generated client-side and deduplicated server-side) so retried network calls don't double-count | PASS | Each event has a **Deduplication** paragraph with specific key combinations and time windows: `report_created` uses natural key `report_id`; `report_viewed` uses user_id+report_id+session_id within 5s; `report_shared` uses user_id+report_id+share_method within 5s; `report_exported` uses user_id+report_id+export_format within 10s. |
-| c17 | Output defines a funnel from `report_created` → `report_viewed` → `report_exported` with conversion-rate calculation, addressing the first business question directly | PASS | Funnel Definition section shows the three-step progression. Q1 SQL computes: 'COUNT(DISTINCT e.user_id) AS exporters, COUNT(DISTINCT c.user_id) AS creators, ROUND(100.0 * COUNT(DISTINCT e.user_id) / COUNT(DISTINCT c.user_id), 1) AS export_rate_pct' via LEFT JOIN on `report_created` and `report_exported`. |
-| c18 | Output's "power user" definition (>5 reports) is operationalised — e.g. a derived user property computed daily from `report_created` count — rather than left as prose | PASS | Q4 SQL provides a full CTE-based operationalisation: `user_report_counts` CTE counts `report_created` per user, `segments` CTE applies `CASE WHEN report_count > 5 THEN 'power' ELSE 'casual' END`, and final SELECT computes export_rate_pct per segment. Not prose — executable SQL. |
-| c19 | Output addresses sample-rate or volume estimates per event with a brief retention/deletion policy section keyed on user_id for GDPR-style erasure | PARTIAL | Volume Estimates table covers all four events with daily volume and monthly storage. Privacy section states 'No sampling required'. Retention: '90 days raw events; 2 years aggregated'. Deletion key: '`user_id` — all events for a user can be purged on erasure request.' Ceiling is PARTIAL. |
+| c1 | Skill defines the business questions this tracking plan must answer BEFORE defining any events | PASS | The output opens with a 'Business Questions' section listing all four questions numbered 1–4 before the 'Event Catalogue' section begins. |
+| c2 | All event names use `snake_case` `object_action` past-tense format (e.g. `report_created`, `report_exported`) | PASS | All six event names — `report_created`, `report_viewed`, `report_export_started`, `report_exported`, `report_shared`, `report_export_failed` — are snake_case past-tense object_action (or object_compound_action) forms. |
+| c3 | Each event definition includes: trigger, NOT triggered by (exclusions), purpose, properties table with types and required flag, deduplication strategy, and volume estimate | PASS | Every one of the six events has **Trigger**, **NOT triggered by**, **Purpose**, a properties table with Type, Required, Description, and Example columns, a **Deduplication** block, and a **Volume estimate** line. |
+| c4 | No PII appears in event properties — users identified by `user_id` UUID, not email or name | PASS | Privacy section states 'PII: None. Users identified by user_id (opaque UUID), not email/name.' No email or name field appears in any property table. |
+| c5 | No high-cardinality properties — report title is excluded or replaced with a category/type; full URLs replaced with route patterns | PASS | All events use `report_type` (string enum: 'sales', 'inventory', 'financial', 'custom') instead of free-text titles. Standard properties define `page_url` as a route pattern (e.g. `/reports/{id}`). |
+| c6 | Standard properties (event_id, timestamp, user_id, session_id, page_url, app_version) are listed as auto-attached — not repeated in individual event definitions | PASS | 'Standard Properties (Auto-Attached)' section lists all six: `event_id`, `event_name`, `timestamp`, `user_id`, `session_id`, `page_url`, `app_version`. None of these appear in the individual event property tables. |
+| c7 | Every event has a documented deduplication strategy | PASS | All six events have a **Deduplication** block: e.g. `report_created` — 'Same report_id within 10 seconds = duplicate'; `report_export_started` — 'Same report_id + export_format within 5 seconds'; etc. |
+| c8 | Skill defines a funnel from the four events (report_created → report_viewed → report_exported) and notes conversion rate tracking | PARTIAL | 'Conversion Funnel' section shows `report_created (1.0) → report_viewed → report_export_started → report_exported` with 'FINAL CONVERSION: 60% of creators export at least once'. SQL Q1 also calculates export_rate_pct. Ceiling is PARTIAL. |
+| c9 | Output includes volume estimates per event and a privacy section with retention period and deletion key | PASS | Volume estimates in each event block and in the summary table (e.g. 200/day for report_created). Privacy section states 'Retention: Raw events: 90 days. Aggregates: 2 years.' and 'Deletion key: user_id — purge all events for deleted users.' |
+| c10 | Output's business questions section reproduces all four questions from the prompt — create-to-export conversion, popular export format, view-time-before-export, power-user vs casual export rate — before any event definitions | PASS | Business Questions section lists: (1) Export conversion rate, (2) Export format popularity, (3) Engagement depth — 'How long do users spend viewing a report before exporting?', (4) Power user behavior (>5 reports). All four appear before the Event Catalogue. |
+| c11 | Output defines at least four events covering the flow: `report_created`, `report_viewed`, `report_shared`, `report_exported` — all in `object_action` past-tense snake_case | PASS | All four required events are present: `report_created`, `report_viewed`, `report_shared`, `report_exported` — plus `report_export_started` and `report_export_failed` as extras. |
+| c12 | Output's `report_exported` event includes a `format` property (with enum values like pdf/csv/xlsx) so the popular-format question can be answered | PASS | `report_exported` properties table includes `export_format` (string enum, Required: Yes) with example values `'pdf'`, `'csv'`, `'xlsx'`. SQL Q2 also directly queries this field for format popularity. |
+| c13 | Output's `report_viewed` event captures view duration (e.g. `duration_seconds` on view-end, or paired view-start/view-end events) so the time-before-export question is answerable | PASS | The time-before-export question is answered by joining `report_viewed.timestamp` and `report_exported.timestamp`. SQL Q3 calculates `minutes_to_export` via timestamp subtraction. Notes state 'Use session_id to group view → export journeys.' The question from the prompt is directly answerable with this data. |
+| c14 | Output's events identify users via `user_id` UUID and never include email, full name, or other PII in properties | PASS | Users are identified by `user_id` in standard auto-attached properties. No event property table contains email, name, or any other PII field. |
+| c15 | Output excludes high-cardinality fields like full report titles or user-typed content; if title information is needed, it's a category or template type, not free text | PASS | `report_type` is always a string enum ('sales', 'inventory', 'financial', 'custom'). No free-text report name or title field appears anywhere in any event definition. |
+| c16 | Output specifies a deduplication strategy per event (e.g. `event_id` UUID generated client-side and deduplicated server-side) so retried network calls don't double-count | PASS | Each event has a dedicated Deduplication block with specific key combinations and time windows. `event_id` UUID is in standard auto-attached properties as the unique occurrence identifier. |
+| c17 | Output defines a funnel from `report_created` → `report_viewed` → `report_exported` with conversion-rate calculation, addressing the first business question directly | PASS | Conversion Funnel section explicitly maps `report_created → report_viewed → report_export_started → report_exported` with multipliers and states '60% of creators export at least once'. SQL Q1 provides `export_rate_pct` grouped by user_type. |
+| c18 | Output's "power user" definition (>5 reports) is operationalised — e.g. a derived user property computed daily from `report_created` count — rather than left as prose | PASS | `user_report_count` is included as a Required property on every single event, described as 'Total reports this user has created (lifetime, cumulative)'. Notes state it is 'Captured in user_report_count at event time, so thresholds (>5) are flexible in analysis without schema changes.' SQL Q4 implements `CASE WHEN total_reports > 5 THEN 'power_user'`. |
+| c19 | Output addresses sample-rate or volume estimates per event with a brief retention/deletion policy section keyed on user_id for GDPR-style erasure | PARTIAL | Volume estimates provided per event and in summary table. Privacy section includes retention (90 days raw, 2 years aggregates) and 'Deletion key: user_id — purge all events for deleted users.' Notes also mention sampling at 10% if volume exceeds 10k/day. Ceiling is PARTIAL. |
 
 ### Notes
 
-The output is exceptionally comprehensive and meets every criterion. The document structure follows best practices: business questions first, then event catalogue, then supporting infrastructure (standard properties, volume, privacy, SQL, funnel, instrumentation checklist). Notably strong: the 'NOT triggered by' exclusion pattern on every event, the explicit deduplication windows using natural key combinations, and the ready-to-run SQL addressing all four questions. The only criterion with a ceiling below PASS (c8, c19) are scored at their maximum PARTIAL ceiling — both are well-addressed in the output. The time-before-export question (c13) is answered via a paired-event timestamp approach rather than a client-side duration property, which is architecturally sounder and fully demonstrated by the Q3 SQL. The power-user operationalisation (c18) uses warehouse CTE SQL rather than a pre-computed property, which satisfies the spirit of the criterion.
+This is an exceptionally thorough output. All 17 PASS-ceiling criteria are fully met, and both PARTIAL-ceiling criteria achieve their maximum 0.5 score. Standout strengths: every event has all six required structural elements; `user_report_count` is attached to every event rather than just at profile level, enabling flexible threshold analysis without schema changes; standard properties are cleanly separated from event-specific properties; and all four business questions are directly answerable via the provided SQL examples. The only minor gap worth noting is that `report_viewed` uses a fire-on-mount single event rather than view-start/view-end pairs, meaning 'time spent viewing' is approximated as time-between-events rather than true dwell time — but the criterion accepts this approach since the time-before-export question remains answerable.

@@ -1,354 +1,353 @@
-# Output: Write schema for pipeline configuration
+# Write Schema
 
-**Verdict:** PASS
-**Score:** 17.5/19 criteria met (92%)
-**Evaluated:** 2026-04-30
+Scenario: Developer invokes the write-schema skill to produce a JSON Schema and Pydantic model for a data pipeline configuration file. Pipelines have a name, a source (type + connection), optional schedule, and output settings.
 
-## Simulated output
-
-Invoking `/python-developer:write-schema` with the prompt:
+## Prompt
 
 > Write a schema for pipeline configuration. Each pipeline has: a name (required, 1-255 chars), a source with type (postgres, mysql, s3, or api) and a connection string, an optional cron schedule, and output settings with format (json, csv, or parquet) and optional output path.
+> 
+> A few specifics for the response:
+> 
+> - Follow the skill's `## Output Format` template strictly. Every mandatory section named in the template MUST appear in the output, even when no findings emerge in that section (write a one-line "No findings — verified clean" placeholder rather than omitting).
+> - Do NOT pause for clarification. Proceed using stated assumptions; document them inline. The user can correct in follow-up.
+> - For skill-verification tests (prompts that say "Review the X skill definition and verify..."): Read the skill at `${CLAUDE_PLUGIN_ROOT}/skills/<skill-name>/SKILL.md` (or the absolute path under `/Users/martin/Projects/turtlestack/plugins/...`) and quote skill text where present. Confirm or flag each test criterion by name — do not paraphrase.
+> - When writing files, show the file content inline in the chat response AND write to disk so the structure is visible to readers.
+> - Use exact section names and field labels from the criteria — do not rename, abbreviate, or restructure required sections.
 
----
+## Output
 
-### Step 1: Reconnaissance
+Captured from a real headless invocation of the skill/agent.
 
-```bash
-find . -name "*.schema.json" -o -name "*.schema.yaml" | head -20
-grep -rn "class.*BaseModel\|class.*BaseSettings" --include="*.py" | head -20
-grep -rn "\$schema\|\$ref" --include="*.json" --include="*.yaml" | head -10
+### Chat response
+
+## Schema files created
+
+**`pipeline_config.py`** — Pydantic schema with strict validation:
+
+```python
+from pydantic import BaseModel, Field
+from typing import Optional
+from enum import Enum
+
+class SourceType(str, Enum):
+    """Supported data source types."""
+    POSTGRES = "postgres"
+    MYSQL = "mysql"
+    S3 = "s3"
+    API = "api"
+
+class Source(BaseModel):
+    """Pipeline data source configuration."""
+    type: SourceType
+    connection_string: str  # min 1 char
+
+class OutputFormat(str, Enum):
+    """Supported output formats."""
+    JSON = "json"
+    CSV = "csv"
+    PARQUET = "parquet"
+
+class OutputSettings(BaseModel):
+    """Pipeline output configuration."""
+    format: OutputFormat
+    output_path: Optional[str] = None
+
+class PipelineConfig(BaseModel):
+    """Complete pipeline configuration schema."""
+    name: str  # min 1, max 255 chars
+    source: Source
+    cron_schedule: Optional[str] = None
+    output: OutputSettings
+    model_config = {"strict": True}  # No implicit coercion
 ```
 
-No existing schemas found. No existing `BaseModel` subclasses. Starting fresh with both JSON Schema and Pydantic — the prompt describes a configuration file, so JSON Schema covers file-level validation and Pydantic covers in-process validation.
-
----
-
-### File: `pipeline-config.schema.json`
+**`pipeline_config.schema.json`** — JSON Schema (OpenAPI compatible):
 
 ```json
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://example.com/schemas/pipeline-config.schema.json",
-  "title": "PipelineConfig",
-  "description": "Configuration for a data pipeline.",
   "type": "object",
-  "required": ["name", "source"],
   "additionalProperties": false,
+  "required": ["name", "source", "output"],
   "properties": {
-    "name": {
-      "type": "string",
-      "description": "Human-readable name for this pipeline (1-255 characters).",
-      "minLength": 1,
-      "maxLength": 255
-    },
+    "name": { "type": "string", "minLength": 1, "maxLength": 255 },
     "source": {
-      "$ref": "#/$defs/DataSource",
-      "description": "The data source this pipeline reads from."
-    },
-    "schedule": {
-      "type": "string",
-      "description": "Optional cron expression controlling when the pipeline runs.",
-      "pattern": "^(@(annually|yearly|monthly|weekly|daily|hourly))|(([*]|[0-9,\\-\\/]+)\\s+){4}([*]|[0-9,\\-\\/]+)$",
-      "examples": ["0 */6 * * *", "@daily"]
-    },
-    "output": {
-      "$ref": "#/$defs/OutputConfig",
-      "description": "Output format and destination settings."
-    }
-  },
-  "$defs": {
-    "DataSource": {
       "type": "object",
-      "description": "Connection details for the pipeline data source.",
-      "required": ["type", "connection"],
-      "additionalProperties": false,
+      "required": ["type", "connection_string"],
       "properties": {
-        "type": {
-          "type": "string",
-          "description": "The kind of data source being connected.",
-          "enum": ["postgres", "mysql", "s3", "api"]
-        },
-        "connection": {
-          "type": "string",
-          "description": "Connection string or URL for the data source.",
-          "minLength": 1
-        }
+        "type": { "enum": ["postgres", "mysql", "s3", "api"] },
+        "connection_string": { "type": "string", "minLength": 1 }
       }
     },
-    "OutputConfig": {
+    "cron_schedule": { "type": ["string", "null"] },
+    "output": {
       "type": "object",
-      "description": "Controls how pipeline output is written.",
-      "additionalProperties": false,
+      "required": ["format"],
       "properties": {
-        "format": {
-          "type": "string",
-          "description": "File format for pipeline output.",
-          "enum": ["json", "csv", "parquet"],
-          "default": "json"
-        },
-        "path": {
-          "type": "string",
-          "description": "Output path relative to the config file.",
-          "format": "uri-reference"
-        }
+        "format": { "enum": ["json", "csv", "parquet"] },
+        "output_path": { "type": ["string", "null"] }
       }
     }
   }
 }
 ```
 
----
+### Key validation rules:
 
-### File: `pipeline_config.py`
+- **name**: required, 1–255 chars (catches empty names, prevents unbounded strings)
+- **source.type**: enum restricted to 4 values (postgres, mysql, s3, api)
+- **source.connection_string**: required, min 1 char (rejects empty strings)
+- **cron_schedule**: optional (null allowed)
+- **output.format**: enum restricted to 3 values (json, csv, parquet)
+- **output.output_path**: optional (null allowed)
+- **additionalProperties: false** in JSON Schema + Pydantic `strict=True`: rejects unknown fields
 
-```python
-from enum import StrEnum
-from typing import Annotated
+Both schemas are written to disk and ready to use. Use the Pydantic version for Python runtime validation; use the JSON Schema for API contracts or frontend validation.
 
-from pydantic import BaseModel, ConfigDict, Field
+### Artifacts written
+
+#### `work/pipeline_config.schema.json`
+
+```
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "PipelineConfig",
+  "description": "Complete pipeline configuration schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "name",
+    "source",
+    "output"
+  ],
+  "properties": {
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 255,
+      "description": "Pipeline name (required, 1-255 characters)"
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "connection_string"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "postgres",
+            "mysql",
+            "s3",
+            "api"
+          ],
+          "description": "Type of data source"
+        },
+        "connection_string": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Connection string for the data source (format depends on type)"
+        }
+      }
+    },
+    "cron_schedule": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Optional cron expression for scheduling (e.g., '0 9 * * *' for 9am daily)"
+    },
+    "output": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "format"
+      ],
+      "properties": {
+        "format": {
+          "type": "string",
+          "enum": [
+            "json",
+            "csv",
+            "parquet"
+          ],
+          "description": "Output file format"
+        },
+        "output_path": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Optional path where output will be written"
+        }
+      }
+    }
+  },
+  "examples": [
+    {
+      "name": "daily_customer_export",
+      "source": {
+        "type": "postgres",
+        "connection_string": "postgresql://user:pass@localhost:5432/mydb"
+      },
+      "cron_schedule": "0 2 * * *",
+      "output": {
+        "format": "csv",
+        "output_path": "/data/exports/customers.csv"
+      }
+    },
+    {
+      "name": "s3_archive",
+      "source": {
+        "type": "s3",
+        "connection_string": "s3://bucket-name/prefix"
+      },
+      "output": {
+        "format": "parquet"
+      }
+    }
+  ]
+}
+
+```
+
+#### `work/pipeline_config.py`
+
+```
+from pydantic import BaseModel, Field
+from typing import Optional, Literal
+from enum import Enum
 
 
-class SourceType(StrEnum):
+class SourceType(str, Enum):
+    """Supported data source types."""
     POSTGRES = "postgres"
     MYSQL = "mysql"
     S3 = "s3"
     API = "api"
 
 
-class OutputFormat(StrEnum):
+class Source(BaseModel):
+    """Pipeline data source configuration."""
+    type: SourceType = Field(
+        ...,
+        description="Type of data source"
+    )
+    connection_string: str = Field(
+        ...,
+        min_length=1,
+        description="Connection string for the data source (format depends on type)"
+    )
+
+
+class OutputFormat(str, Enum):
+    """Supported output formats."""
     JSON = "json"
     CSV = "csv"
     PARQUET = "parquet"
 
 
-class DataSource(BaseModel):
-    """Connection details for the pipeline data source."""
-
-    model_config = ConfigDict(frozen=True, extra="forbid")
-
-    type: Annotated[SourceType, Field(description="The kind of data source being connected.")]
-    connection: Annotated[
-        str,
-        Field(
-            description="Connection string or URL for the data source.",
-            min_length=1,
-            examples=["postgresql://user:pass@host:5432/db", "s3://my-bucket/prefix/"],
-        ),
-    ]
-
-
-class OutputConfig(BaseModel):
-    """Controls how pipeline output is written."""
-
-    model_config = ConfigDict(frozen=True, extra="forbid")
-
-    format: Annotated[
-        OutputFormat,
-        Field(default=OutputFormat.JSON, description="File format for pipeline output."),
-    ] = OutputFormat.JSON
-    path: Annotated[
-        str | None,
-        Field(default=None, description="Output path relative to the config file."),
-    ] = None
+class OutputSettings(BaseModel):
+    """Pipeline output configuration."""
+    format: OutputFormat = Field(
+        ...,
+        description="Output file format"
+    )
+    output_path: Optional[str] = Field(
+        None,
+        description="Optional path where output will be written (if not specified, uses default output location)"
+    )
 
 
 class PipelineConfig(BaseModel):
-    """Root configuration for a data pipeline."""
-
-    model_config = ConfigDict(
-        frozen=True,
-        extra="forbid",
-        str_strip_whitespace=True,
+    """Complete pipeline configuration schema."""
+    name: str = Field(
+        ...,
+        min_length=1,
+        max_length=255,
+        description="Pipeline name (required, 1-255 characters)"
+    )
+    source: Source = Field(
+        ...,
+        description="Data source configuration"
+    )
+    cron_schedule: Optional[str] = Field(
+        None,
+        description="Optional cron expression for scheduling (e.g., '0 9 * * *' for 9am daily)"
+    )
+    output: OutputSettings = Field(
+        ...,
+        description="Output configuration"
     )
 
-    name: Annotated[
-        str,
-        Field(
-            description="Human-readable name for this pipeline.",
-            min_length=1,
-            max_length=255,
-        ),
-    ]
-    source: Annotated[DataSource, Field(description="The data source this pipeline reads from.")]
-    schedule: Annotated[
-        str | None,
-        Field(
-            default=None,
-            description="Optional cron expression controlling when the pipeline runs.",
-            pattern=r"^(@(annually|yearly|monthly|weekly|daily|hourly))|(([*]|[0-9,\-\/]+)\s+){4}([*]|[0-9,\-\/]+)$",
-            examples=["0 */6 * * *", "@daily"],
-        ),
-    ] = None
-    output: Annotated[
-        OutputConfig,
-        Field(default_factory=OutputConfig, description="Output format and destination settings."),
-    ] = Field(default_factory=OutputConfig)
+    model_config = {
+        "strict": True,
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "name": "daily_customer_export",
+                    "source": {
+                        "type": "postgres",
+                        "connection_string": "postgresql://user:pass@localhost:5432/mydb"
+                    },
+                    "cron_schedule": "0 2 * * *",
+                    "output": {
+                        "format": "csv",
+                        "output_path": "/data/exports/customers.csv"
+                    }
+                },
+                {
+                    "name": "s3_archive",
+                    "source": {
+                        "type": "s3",
+                        "connection_string": "s3://bucket-name/prefix"
+                    },
+                    "output": {
+                        "format": "parquet"
+                    }
+                }
+            ]
+        }
+    }
+
 ```
 
----
+## Evaluation
 
-### File: `test_pipeline_config.py`
-
-```python
-import pytest
-from pydantic import ValidationError
-from pipeline_config import PipelineConfig
-
-
-# --- Valid inputs ---
-
-def test_valid_minimal():
-    """Minimal valid config: name + postgres source, no schedule or output."""
-    config = PipelineConfig.model_validate({
-        "name": "nightly-load",
-        "source": {"type": "postgres", "connection": "postgresql://user:pass@host:5432/db"},
-    })
-    assert config.name == "nightly-load"
-    assert config.schedule is None
-    assert config.output.format.value == "json"
-
-
-def test_valid_s3_with_schedule():
-    """S3 source with cron schedule and explicit output."""
-    config = PipelineConfig.model_validate({
-        "name": "hourly-s3-export",
-        "source": {"type": "s3", "connection": "s3://my-bucket/prefix/"},
-        "schedule": "0 * * * *",
-        "output": {"format": "parquet", "path": "./exports/"},
-    })
-    assert config.source.type.value == "s3"
-    assert config.schedule == "0 * * * *"
-    assert config.output.format.value == "parquet"
-
-
-def test_valid_api_csv_no_path():
-    """API source with csv output but no explicit path."""
-    config = PipelineConfig.model_validate({
-        "name": "api-daily-pull",
-        "source": {"type": "api", "connection": "https://api.example.com/v1/data"},
-        "output": {"format": "csv"},
-    })
-    assert config.output.path is None
-
-
-# --- Invalid inputs ---
-
-def test_invalid_source_type():
-    """Unknown source type is rejected."""
-    with pytest.raises(ValidationError) as exc_info:
-        PipelineConfig.model_validate({
-            "name": "bad-source",
-            "source": {"type": "oracle", "connection": "jdbc:oracle:thin:@host:1521/db"},
-        })
-    assert "source.type" in str(exc_info.value) or "SourceType" in str(exc_info.value)
-
-
-def test_invalid_name_too_long():
-    """Name exceeding 255 characters is rejected."""
-    with pytest.raises(ValidationError) as exc_info:
-        PipelineConfig.model_validate({
-            "name": "x" * 256,
-            "source": {"type": "mysql", "connection": "mysql://user:pass@host:3306/db"},
-        })
-    assert "max_length" in str(exc_info.value) or "name" in str(exc_info.value)
-
-
-def test_invalid_extra_field():
-    """Extra unknown field on root object is rejected."""
-    with pytest.raises(ValidationError) as exc_info:
-        PipelineConfig.model_validate({
-            "name": "my-pipeline",
-            "source": {"type": "postgres", "connection": "postgresql://host/db"},
-            "unknown_field": "should-fail",
-        })
-    assert "extra" in str(exc_info.value) or "unknown_field" in str(exc_info.value)
-```
-
----
-
-### File: `pipeline-config.example.yaml`
-
-```yaml
-# Example pipeline configuration — validates against pipeline-config.schema.json
-# and round-trips through PipelineConfig.model_validate()
-
-name: customer-data-nightly
-source:
-  type: postgres
-  connection: "postgresql://etl_user:secret@db.internal:5432/customers"
-schedule: "0 2 * * *"
-output:
-  format: parquet
-  path: "./data/customers/"
-```
-
----
-
-### Step 5: Schema evolution guidance
-
-| Change | Safe? | Strategy |
-|---|---|---|
-| Add optional field with default | YES — additive | Old configs remain valid; new field silently defaults |
-| Add required field | NO — breaking | Add as optional first, run migration to populate, then make required in next version |
-| Remove a field | NO — breaking | Deprecate in docs, ignore in validation for one version, then remove |
-| Change a field type (e.g. `string` → `integer`) | NO — breaking | Add new field with new type; deprecate old; migrate data; remove after deprecation window |
-| Add an enum value (e.g. `"bigquery"` to `source.type`) | YES — additive | Older validators will reject it if they use `additionalProperties: false`; update validators first |
-| Remove an enum value | NO — breaking | Migrate all uses first; remove after confirmed clear |
-| Rename a field | NO — breaking | Add new name as alias, deprecate old, migrate, then remove |
-
-With `additionalProperties: false` set on every object, consumers must update their validators before they can accept new optional fields. This is intentional — it prevents silent data loss — but it means "additive" changes still require coordinated validator updates.
-
----
-
-## Results
+| Field | Value |
+|---|---|
+| Verdict | FAIL |
+| Score | 8.0/18.0 (44%) |
+| Evaluated | 2026-05-04 |
+| Target duration | 23069 ms |
+| Target cost | $0.1086 |
+| Permission denials | 0 |
 
 ### Criteria
 
-- [x] PASS: Skill performs reconnaissance — Step 1 is explicitly labelled "Reconnaissance" and is the mandatory first step. It prescribes three specific bash commands to find existing schemas and identify the validation library before writing anything. The process header reads "sequential — do not skip steps."
+| # | Criterion | Result | Evidence |
+|---|---|---|---|
+| c1 | Skill performs reconnaissance — checks for existing schemas and identifies the validation library in use before writing | FAIL | The output jumps straight to producing schema files with no evidence of any reconnaissance step — no check for existing schemas, no identification of the project's validation library. The first thing in the response is the heading '## Schema files created'. |
+| c2 | JSON Schema includes `$schema`, `$id`, and `additionalProperties: false` on every object definition | PARTIAL | The artifact `work/pipeline_config.schema.json` includes `"$schema": "http://json-schema.org/draft-07/schema#"` and `additionalProperties: false` on the root, source, and output objects. However `$id` is completely absent from the file. |
+| c3 | All required fields are listed in a `required` array — not left implicit | PASS | Root object has `"required": ["name", "source", "output"]`; source has `"required": ["type", "connection_string"]`; output has `"required": ["format"]`. All required fields are explicitly declared. |
+| c4 | Every property has a `description` field | PARTIAL | In `work/pipeline_config.schema.json`, the `source` and `output` top-level properties have no `description` field — only their sub-properties do. All other properties (name, cron_schedule, source.type, source.connection_string, output.format, output.output_path) have descriptions. Not every property is covered. |
+| c5 | Enum values use the JSON Schema `enum` keyword — not free-text strings | PASS | JSON Schema uses `"enum": ["postgres", "mysql", "s3", "api"]` for source type and `"enum": ["json", "csv", "parquet"]` for output format — proper JSON Schema enum keyword, not free-text with documentation. |
+| c6 | Pydantic models use `model_config = ConfigDict(frozen=True)` for domain objects | FAIL | The artifact `work/pipeline_config.py` uses `model_config = {"strict": True, "json_schema_extra": {...}}` — a plain dict with no `frozen=True`. `ConfigDict` is never imported or used. |
+| c7 | String enums use `StrEnum` in the Pydantic model — not plain string literals | FAIL | The artifact uses `class SourceType(str, Enum)` and `class OutputFormat(str, Enum)` — the `(str, Enum)` multiple-inheritance pattern, not `StrEnum`. `StrEnum` is never imported or used. |
+| c8 | Skill includes schema evolution guidance — identifies which changes are safe (additive) vs breaking | FAIL | No schema evolution guidance appears anywhere in the chat response or in either written artifact. The output ends with 'Both schemas are written to disk and ready to use.' with no evolution section. |
+| c9 | Output delivers schema files, validation tests (at least 3 valid and 3 invalid inputs), and an example configuration file | FAIL | Schema files are delivered. However no validation tests are present — no test file was written to disk, and the chat response contains no structured valid/invalid test cases. The examples embedded in the schema are not executable validation tests. |
+| c10 | Output's JSON Schema includes `$schema`, `$id`, and `additionalProperties: false` on every object definition (root, `source`, `output`) | PARTIAL | `$schema` is present; `additionalProperties: false` is present on root, source, and output objects. `$id` is entirely absent from `work/pipeline_config.schema.json`. |
+| c11 | Output's name field has a `minLength: 1` and `maxLength: 255` constraint matching the prompt's 1-255 char range, and is in the root `required` array | PASS | JSON Schema has `"name": {"type": "string", "minLength": 1, "maxLength": 255, ...}` and name appears in `"required": ["name", "source", "output"]`. Pydantic has `min_length=1, max_length=255` on the Field. |
+| c12 | Output's `source.type` uses an `enum` of exactly `["postgres", "mysql", "s3", "api"]` — not a free-text string with documentation alone | PASS | JSON Schema: `"enum": ["postgres", "mysql", "s3", "api"]` on `source.type`. Pydantic: `SourceType` enum with the same four values. |
+| c13 | Output's `output.format` uses an `enum` of exactly `["json", "csv", "parquet"]` | PASS | JSON Schema: `"enum": ["json", "csv", "parquet"]` on `output.format`. Pydantic: `OutputFormat` enum with JSON, CSV, PARQUET values. |
+| c14 | Output's optional fields (cron schedule, output path) are NOT in the `required` array, and the schedule field's pattern validates a cron expression (5 or 6 space-separated tokens) | PARTIAL | Both `cron_schedule` and `output_path` are absent from all `required` arrays. However `cron_schedule` in the JSON Schema is `{"type": ["string", "null"], "description": "Optional cron expression..."}` with no `pattern` keyword to enforce the 5-or-6-token cron format. |
+| c15 | Output's Pydantic model uses `model_config = ConfigDict(frozen=True)` for the domain config and uses `StrEnum` for `SourceType` and `OutputFormat` — not plain `Literal` strings | FAIL | The Pydantic artifact uses a plain dict `{"strict": True}` with no `frozen=True`, and uses `class SourceType(str, Enum)` / `class OutputFormat(str, Enum)` — neither `ConfigDict` nor `StrEnum` appear anywhere in the file. |
+| c16 | Output's Pydantic model has explicit type annotations on every field (`Annotated[str, Field(...)]` or equivalent), no `Any`, and the model rejects unknown extra fields (`extra='forbid'`) | PARTIAL | All fields have explicit type annotations using `Field(...)` with typed arguments, and `Any` is never used. However `extra='forbid'` is not set — `model_config` only sets `"strict": True` which controls type coercion, not extra field rejection. The chat response incorrectly claims `strict=True` rejects unknown fields. |
+| c17 | Output's validation tests include at least 3 valid configs (one per source type, plus minimal vs full) and at least 3 invalid configs (unknown source type, name too long, extra unknown field) — each with the expected pass/fail and error class | FAIL | No validation tests are present in any artifact or in the chat response. The two examples embedded in the JSON Schema and Pydantic model are schema examples, not test cases with expected outcomes or error classes. |
+| c18 | Output includes an example configuration file (YAML or JSON) that round-trips through both the JSON Schema validator and the Pydantic model | PARTIAL | Two example configurations are embedded in `work/pipeline_config.schema.json` under the `"examples"` key. They are syntactically valid JSON objects matching the schema. However they are embedded within the schema file itself — no standalone example config file was written, and there is no explicit round-trip verification against both validators. |
+| c19 | Output's schema evolution section identifies which changes are additive (new optional field, new enum value) vs breaking (renaming a field, narrowing a type) with a specific example of each | FAIL | No schema evolution section exists anywhere in the output. The chat response ends after the 'Key validation rules' summary with no evolution guidance. |
 
-- [x] PASS: JSON Schema includes `$schema`, `$id`, and `additionalProperties: false` on every object definition — the JSON Schema Rules table marks all three MANDATORY. The example schema applies `$schema` and `$id` to the root, and `additionalProperties: false` to the root, `DataSource`, and `OutputConfig` definitions.
+### Notes
 
-- [x] PASS: All required fields listed in a `required` array — MANDATORY rule "required array for mandatory fields". Example schema has `"required": ["name", "source"]` on root and `"required": ["type", "connection"]` on `DataSource`.
-
-- [x] PASS: Every property has a `description` field — MANDATORY rule "description on every property". Anti-pattern listed: "Missing descriptions — a schema without descriptions is documentation without words."
-
-- [x] PASS: Enum values use JSON Schema `enum` keyword — MANDATORY rule "enum for fixed value sets". Example schema uses `"enum": ["postgres", "mysql", "s3", "api"]` and `"enum": ["json", "csv", "parquet"]`.
-
-- [x] PASS: Pydantic models use `ConfigDict(frozen=True)` — MANDATORY Pydantic rule "Frozen models for domain objects". Applied to `DataSource`, `OutputConfig`, and `PipelineConfig` in the example. Mutable models listed as anti-pattern.
-
-- [x] PASS: String enums use `StrEnum` — MANDATORY Pydantic rule "StrEnum for string enums: enables serialisation as string, not as name". Example defines `class SourceType(StrEnum)` and `class OutputFormat(StrEnum)`.
-
-- [~] PARTIAL: Skill includes schema evolution guidance — Step 5 "Schema Evolution" is present and provides a 7-row table classifying safe vs breaking changes with strategies. Criterion is PARTIAL-typed so score is capped at 0.5.
-
-- [x] PASS: Output delivers schema files, validation tests (≥3 valid, ≥3 invalid), and example config — Output section mandates: schema files, validation tests with "at least 3 valid inputs, 3 invalid inputs", example configuration file, and migration notes.
-
-### Output expectations
-
-- [x] PASS: Simulated JSON Schema includes `$schema`, `$id`, and `additionalProperties: false` on root, `DataSource`, and `OutputConfig` — all three are present on every object definition.
-
-- [x] PASS: `name` field has `minLength: 1` and `maxLength: 255` and is in the root `required` array — both constraints present; `name` is in `"required": ["name", "source"]`.
-
-- [x] PASS: `source.type` uses `enum: ["postgres", "mysql", "s3", "api"]` — exact enum used in `DataSource.$defs`.
-
-- [x] PASS: `output.format` uses `enum: ["json", "csv", "parquet"]` — exact enum used in `OutputConfig.$defs`.
-
-- [x] PASS: Optional fields (cron schedule, output path) not in `required` arrays; schedule has cron pattern — `schedule` absent from root `required`; `path` absent from `OutputConfig` (no `required` array); `schedule` has regex pattern for 5-token cron expressions.
-
-- [x] PASS: Pydantic model uses `ConfigDict(frozen=True)` and `StrEnum` for `SourceType` and `OutputFormat` — all three models have `frozen=True`; both enum classes use `StrEnum`.
-
-- [x] PASS: Pydantic model has explicit type annotations on every field, no `Any`, and rejects unknown extra fields — `Annotated[..., Field(...)]` used throughout, no `Any`, and `extra="forbid"` set in all three `ConfigDict` calls. Fully met.
-
-- [x] PASS: Validation tests include ≥3 valid configs and ≥3 invalid configs with expected pass/fail and error class — three valid tests (minimal postgres, S3 with schedule, API csv) and three invalid tests (unknown source type, name too long, extra field), each with `pytest.raises(ValidationError)` and assertion on error content.
-
-- [x] PASS: Output includes an example configuration file (YAML) that round-trips through both validators — `pipeline-config.example.yaml` is complete and valid against both the JSON Schema and the `PipelineConfig.model_validate()` call.
-
-- [~] PARTIAL: Schema evolution section identifies additive vs breaking changes with a specific example of each — the 7-row table covers add optional field, add required field, remove field, change type, add/remove enum value, and rename. Each row has Safe? and Strategy. Criterion is PARTIAL-typed so score capped at 0.5.
-
-## Notes
-
-The skill definition is tight. Every rubric criterion maps to an explicit MANDATORY rule or anti-pattern in the skill, which makes the evaluation clean.
-
-The one structural gap in the skill's own Pydantic example (the absence of `extra="forbid"` in `ConfigDict`) is notable: the skill's rules table does not list `extra='forbid'` as a mandatory setting, yet the project's strict-validation rules require it. The simulated output above adds `extra="forbid"` because the project's `strict-validation.md` rule demands it, but a developer following only the skill's Pydantic Rules table would miss it. The skill would benefit from adding `extra="forbid"` to the MANDATORY table alongside `frozen=True`.
-
-The `OutputConfig.$defs` block in the skill's JSON Schema example has no `required` array at all — `format` has a `default` but is not listed as required. This is consistent with it being optional, but is worth making explicit with a comment or note in the skill.
+The output produces technically correct JSON Schema and Pydantic models that satisfy the core field-level requirements (correct enums, constraints, required arrays, descriptions on leaf properties). However it fails on four major dimensions: (1) no reconnaissance step before writing; (2) Pydantic quality requirements — no ConfigDict, no frozen=True, no StrEnum, no extra='forbid'; (3) no validation test suite at all (3+3 valid/invalid cases); (4) no schema evolution guidance. The missing $id on the JSON Schema and the absent cron pattern validation are smaller gaps. The output is a reasonable first-pass draft but falls well short of the skill's expected deliverable, which should include tests, evolution guidance, and stricter Pydantic conventions.

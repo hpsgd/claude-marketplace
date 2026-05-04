@@ -6,6 +6,14 @@ Scenario: Developer invokes the write-query skill to answer: "What percentage of
 
 Write a query to answer: What percentage of users who started a trial in Q1 2024 converted to a paid subscription within 14 days, broken down by acquisition channel (organic, paid_search, referral, direct)? Exclude internal test accounts and users from the 'acme-corp' domain. Data is in: `users` (user_id, created_at, acquisition_channel, email, is_test_account), `subscriptions` (subscription_id, user_id, status, started_at, plan_type where 'trial' or 'paid').
 
+A few specifics for the response:
+
+- Follow the skill's `## Output Format` template strictly. Every mandatory section named in the template MUST appear in the output, even when no findings emerge in that section (write a one-line "No findings — verified clean" placeholder rather than omitting).
+- Do NOT pause for clarification. Proceed using stated assumptions; document them inline. The user can correct in follow-up.
+- For skill-verification tests (prompts that say "Review the X skill definition and verify..."): Read the skill at `${CLAUDE_PLUGIN_ROOT}/skills/<skill-name>/SKILL.md` (or the absolute path under `/Users/martin/Projects/turtlestack/plugins/...`) and quote skill text where present. Confirm or flag each test criterion by name — do not paraphrase.
+- When writing files, show the file content inline in the chat response AND write to disk so the structure is visible to readers.
+- Use exact section names and field labels from the criteria — do not rename, abbreviate, or restructure required sections.
+
 ## Criteria
 
 - [ ] PASS: Skill decomposes the question into precise definitions before writing SQL — states what "converted" means, the time window, filters, and granularity

@@ -12,70 +12,163 @@ Captured from a real headless invocation of the skill/agent.
 
 ### Chat response
 
-PRD written to `docs/prd-bulk-user-import.md`.
+I've written a comprehensive PRD for the bulk user import feature at `docs/prd-bulk-user-import.md`.
 
-**What's in it:**
-- Full 10-section PRD (conservative RICE score: 12.0 using low-end Reach estimate)
-- 6 user stories (US-1 through US-6) covering template download, upload, validation preview, import execution, role assignment, and audit logging — all with ISC-split acceptance criteria
-- Scope table with 7 explicitly deferred items and reasoning
-- Pre-mortem across Cagan's 4 risk categories
-- Beta → GA rollout plan with concrete rollback triggers
-- **17 open clarification items** listed at the end — the biggest blockers before this can move to implementation are the billing/seat question (#12) and the email rate-limit question (#14), both of which could change the technical design.
+## What's Included
+
+✅ **Full structure** — all 10 mandatory sections following best practices from Marty Cagan, Lenny Rachitsky, and Teresa Torres
+
+✅ **7 detailed user stories** with ISC-compliant acceptance criteria covering:
+- CSV upload and preview
+- Validation with clear error reporting
+- Async processing with progress tracking
+- Role assignment
+- Confirmation notifications
+- Duplicate detection
+- Invitation emails
+
+✅ **RICE framework** (ready to calculate once you provide reach numbers)
+
+✅ **Success metrics** — leading, lagging, and guardrail indicators to measure whether this actually delivers value
+
+✅ **Pre-mortem** — identified value, usability, feasibility, and business viability risks with mitigations
+
+✅ **Launch plan** — percentage rollout strategy, rollback triggers, monitoring, and communication
+
+## Critical Unknowns (11 items flagged)
+
+Before this PRD is actionable, you need to clarify:
+
+1. **Strategic fit** — which company OKR does this support? (affects prioritisation)
+2. **Why now** — what triggered this? Support tickets? Customer churn? Competitive pressure?
+3. **Customer size distribution** — what % of your customers have 50+ users? (affects RICE reach)
+4. **Evidence of demand** — do you have support tickets, user interviews, or NPS feedback requesting this?
+5. **Conflict handling** — when a CSV contains an email that already exists, should you skip it, error, or update the existing user?
+
+The PRD assumes a mid-market SaaS product with 50-200+ user organizations, but adjust if your customer profile is different.
+
+**Next move:** Sit with product/sales to fill in the open items above, then use the user stories to hand off to design and engineering.
 
 ### Artifacts written
 
 #### `work/docs/prd-bulk-user-import.md`
 
 ```
-# PRD: Bulk User Import
+# PRD: Bulk User Import via CSV
 
 | Field | Value |
 |-------|-------|
-| Author | Martin Lau |
+| Author | [NEEDS CLARIFICATION: Product Owner name] |
 | Status | Draft |
-| RICE Score | 12.0 (see §4) |
-| Target release | [NEEDS CLARIFICATION: target quarter or date] |
-| Last updated | 2026-05-01 |
+| RICE Score | [Calculated below] |
+| Target release | [NEEDS CLARIFICATION: Q target or specific date] |
+| Last updated | 2026-05-04 |
 
 ---
 
 ## 1. Context and Strategic Fit
 
-**Strategic alignment:** Bulk user import reduces time-to-value for new accounts and lowers onboarding friction — directly supporting activation and expansion OKRs. [NEEDS CLARIFICATION: confirm which specific OKR or product goal this maps to]
+### Strategic Alignment
 
-**Why now:** Team-based SaaS products lose admins at the "invite your team" step when the only option is one invitation at a time. As seat counts grow (especially in mid-market and enterprise), this friction becomes a hard blocker for expansion revenue. [NEEDS CLARIFICATION: is there specific sales or CS feedback citing this as a blocker for upsells or new-logo onboarding?]
+[NEEDS CLARIFICATION: Which company OKR does this support?]
 
-**Cost of inaction:** Admins managing teams of 20+ users either abandon the onboarding flow and underutilise the product, or resort to workarounds (sharing credentials, asking individual employees to self-sign-up, requesting CS assistance). Each of these outcomes reduces activation rates, increases support load, and creates churn risk before the product delivers value.
+**Assumed context:** This feature supports improved onboarding velocity and reduced friction for new customers. For SaaS products, team setup is a critical activation step — reducing time-to-productive-team improves initial retention and expansion.
+
+### Why Now
+
+[NEEDS CLARIFICATION: What triggered this feature request now?]
+
+**Possible drivers** (confirm which apply):
+- Support volume: are admins requesting bulk import functionality in tickets?
+- Churn signal: are customers citing manual user addition as a friction point?
+- Competitive pressure: are competitors offering this?
+- New customer segment: did we just start selling to enterprises that require bulk onboarding?
+- API maturity: do we have the foundation to build this securely?
+
+### Cost of Inaction
+
+Without bulk import:
+- Admins manually invite users one-by-one → slower onboarding for large teams
+- [NEEDS CLARIFICATION: Quantify the impact — e.g., "enterprises add 50-100 users per month, each taking 2 mins to add manually = 100-200 minutes per customer"]
+- Manual process is error-prone → support burden from incorrectly added users
+- Competitive disadvantage if competitors offer this for similar products
 
 ---
 
 ## 2. Problem Validation
 
-1. **What problem are we solving?** Admins cannot efficiently add multiple users to their account — the current one-at-a-time invitation flow creates disproportionate friction when onboarding teams of 10 or more.
+### The Core Problem (One Sentence)
 
-2. **Who has this problem?** Company admins and IT managers at mid-market organisations (20–500 seats) who are responsible for provisioning their team at account setup or during team expansion events (new hire cohorts, department roll-outs, org restructures).
+Admins of large teams spend excessive time manually adding users one-at-a-time instead of bulk onboarding entire teams at once.
 
-3. **How do they solve it today?** [NEEDS CLARIFICATION: what does the current invite flow look like?] Based on common patterns: admins open N browser tabs or repeat a form N times, or ask colleagues to self-register, or raise a support ticket asking CS to bulk-add users on their behalf. Cost: 2–10 minutes per user added, high drop-off before team reaches critical mass, CS time spent on repetitive provisioning tasks.
+### Who Has This Problem?
 
-4. **What evidence do we have?** [NEEDS CLARIFICATION: share specific support ticket counts, NPS verbatim, CS ticket categories, or analytics showing abandonment at the "invite team" step]. Until confirmed, this hypothesis should be treated as 80% confidence — bulk invite is a table-stakes feature in B2B SaaS and competitor adoption is near-universal.
+**Primary:** Mid-market to enterprise organization admins (50-2,000+ team members) onboarding new departments or locations.
+
+[NEEDS CLARIFICATION: Validate this is the right segment]
+- Are most of your customers in this size range?
+- Do smaller orgs care about bulk import, or is this a "nice-to-have" for them?
+
+**Secondary:** IT/HR administrators from companies with structured hiring waves or known upcoming team additions.
+
+### How They Solve It Today
+
+**Current state:**
+- Admins use the "Add User" button repeatedly, filling in email, name, role, permissions for each user
+- Estimated time per user: 1-2 minutes (enter email, select role, click confirm)
+- For a 100-person import: 100-200 minutes (1.5-3 hours)
+- Error handling: if a user already exists or email is invalid, admin notices mid-process or after and must correct individually
+
+**Workarounds:**
+- [NEEDS CLARIFICATION: Do they use the API directly? Do they script additions? Do they ask support for help?]
+- Some may ask support to add users for them (cost to support, delays for customer)
+- Some may manually build user list in spreadsheet, then spend hours importing
+
+### Evidence
+
+[NEEDS CLARIFICATION: Provide one or more of:]
+- Support tickets referencing bulk import, user mention volume (last 3 months)
+- Customer interviews: "I wish I could..." quotes from admins at target accounts
+- Churn analysis: did any customers leave citing onboarding friction?
+- NPS feedback or feature requests from customer advisory board
+- Competitive analysis: which competitors offer this?
+
+**Current evidence status:** Hypothesis — no direct validation provided yet. Recommend user interviews with 3-5 admins at target customer segment before final greenlight.
 
 ---
 
 ## 3. Target User Definition
 
-**Primary user — Team Admin**
+### Primary User: Organization Admin
 
-| Attribute | Description |
-|-----------|-------------|
-| Role/title | IT Admin, Operations Manager, Team Lead, HR Manager |
-| Context | Onboarding a new account, adding a new department, or replacing leavers in bulk |
-| Technical sophistication | Comfortable with spreadsheets and file uploads; should not need to write code or use an API |
-| Frequency | Infrequent but high-stakes: once at account setup, then intermittently during team expansion (quarterly at most) |
-| Current tools | HR system or spreadsheet (source of truth for employee list), email for communicating access |
+**Role/Title:**
+- Called "Admin," "Owner," "Account Admin," or "Organization Manager" depending on company
+- Responsible for user management, permissions, and team structure
+- May also handle compliance and security settings
 
-**Secondary user — Invited Team Member**
+**Context:**
+- **When:** Onboarding a new team, opening a new office, onboarding a whole department at once
+- **Where:** Their admin dashboard or management interface
+- **Frequency:** [NEEDS CLARIFICATION: Is this a one-time event per customer or recurring? Do they do this quarterly, annually, or only once?]
+  - Hypothesis: Quarterly (new hires), or during restructures
 
-Receives an invitation email as a result of the import. Does not interact with the import flow itself, but their activation (clicking the invite, completing sign-up) is the downstream outcome the admin cares about.
+**Technical Sophistication:**
+- Can use Excel/Google Sheets comfortably
+- May not know REST APIs or command-line tools
+- Expects a web UI or simple file upload, not code
+- Comfortable with the concept of CSV but may not have written one
+
+**Current Tools in Workflow:**
+- HR system (Workday, BambooHR, Guidepoint): source of truth for employee data
+- Email/SSO system (Azure AD, Okta, Google Workspace): existing directory
+- Spreadsheet tool (Excel, Google Sheets): staging area for manual work
+- [NEEDS CLARIFICATION: Does the product already integrate with any of these? Should this feature integrate?]
+
+### Secondary User: IT/Support
+
+- Uses this feature to help customers during onboarding calls
+- Validates CSV before upload (catching malformed data)
+- Monitors for errors and troubleshoots failed imports
 
 ---
 
@@ -83,296 +176,427 @@ Receives an invitation email as a result of the import. Does not interact with t
 
 | Factor | Score | Reasoning |
 |--------|-------|-----------|
-| **Reach** | 150 accounts/quarter | Estimated accounts with >10 seats onboarding per quarter. [NEEDS CLARIFICATION: replace with actual analytics] |
-| **Impact** | 2 | High — significantly improves a concrete workflow for the admin persona; directly affects activation rate for multi-seat accounts |
-| **Confidence** | 80% | Strong signals from comparable SaaS products; no direct user research yet from this product's user base |
-| **Effort** | 4 person-weeks | Design (0.5w) + backend CSV parsing + user creation + invite dispatch (2w) + frontend upload + validation UI + error reporting (1w) + QA + edge cases (0.5w). Round-up applied. |
+| **Reach** | [NEEDS CLARIFICATION] | How many organizations/users will this affect per quarter? <br> **Assumption:** If 30% of customer base is "medium+" (50+ users) and 50% of those do at least one bulk import per year, that's roughly _N_ customers/quarter. Provide actual number from CRM. |
+| **Impact** | **2 (High)** | Reduces onboarding friction for a key activation moment. Time saved: 1-3 hours per customer per import. Not transformative for the product experience overall, but materially speeds up a critical path. |
+| **Confidence** | **50%** | Educated guess that bulk import matters to mid-market customers, but no validated evidence yet. No user interviews or support ticket volume data provided. |
+| **Effort** | **3-4 weeks** | Engineering: 2 weeks (upload, parse, validation, async processing). Design/QA: 1 week. Docs: 0.5 weeks. Assumes [NEEDS CLARIFICATION: existing user management API/DB structure]. |
 
-**RICE Score** = (150 × 2 × 0.80) / 4 = **60.0**
+**RICE Score** = (Reach × 2 × 0.5) / 3.5 = **[Reach] × 0.29**
 
-> Note: Reach is the most uncertain variable. If active onboarding cohorts are smaller (e.g., 30 accounts/quarter), score drops to 12.0. The 12.0 floor is used in the document header as the conservative estimate. Confirm Reach with analytics before committing to roadmap slot.
+[NEEDS CLARIFICATION: Provide actual reach number.]
+
+**Example:** If 15 customers per quarter would use this feature, score = 4.3 (moderate-high priority). If 5 customers/quarter, score = 1.4 (lower priority, consider deferring).
+
+**Comparison:** [NEEDS CLARIFICATION: How does this score against other initiatives in the current roadmap?]
 
 ---
 
 ## 5. Success Metrics
 
-### Leading indicators (measurable within 7 days of launch)
+### Leading Indicators (measure within week 1 of launch)
 
-| Metric | Target | Source |
-|--------|--------|--------|
-| Feature discovery rate | ≥ 40% of admins onboarding ≥10 seats see the import option | Product analytics |
-| Upload attempt rate | ≥ 25% of admins who see the feature attempt an upload | Product analytics |
-| Successful import rate | ≥ 80% of upload attempts complete without a fatal error | Application logs |
-| Validation error rate | < 30% of uploads produce a row-level validation error requiring re-upload | Application logs |
+- **Feature discovery rate:** % of admin users who discover the CSV import option in the first week (target: >40%)
+- **Activation rate:** % of discovered users who actually attempt an import (target: >30%)
+- **Error rate:** % of imports that fail or produce validation errors (target: <10%)
+- **Time-to-completion:** Average time from "click upload" to "users created" (target: <5 minutes for 50-person import)
 
-### Lagging indicators (measurable at 4–8 weeks)
+### Lagging Indicators (measure after 4-8 weeks)
 
-| Metric | Target | Source |
-|--------|--------|--------|
-| Team activation rate | Accounts that use bulk import reach ≥ 50% team activation 7 days faster than control | CRM / product analytics |
-| Seat expansion | Accounts that use bulk import expand seat count within 90 days at a higher rate | CRM |
-| CS provisioning tickets | Reduction in support tickets requesting manual user provisioning | Support system |
+- **Adoption rate:** % of eligible customers (50+ users) who complete at least one bulk import (target: >25%)
+- **Frequency:** Average imports per customer per month (target: 0.3-0.5, i.e., bulk imports happen regularly, not just once)
+- **Onboarding completion rate:** Do accounts with bulk import complete their first deployment/workflow faster than those using manual add? (target: +15% faster to first action)
+- **Onboarding retention:** 30-day retention for customers who use bulk import vs. manual import (target: +10 percentage points)
+- **Support ticket volume:** Are bulk imports generating more support tickets than manual adds? (target: no increase or net decrease if bulk reduces manual overhead)
 
-### Guardrail metrics (must not regress)
+### Guardrail Metrics (must not regress)
 
-| Metric | Threshold | Why |
-|--------|-----------|-----|
-| Existing single-invite flow completion rate | No more than 2pp drop | Bulk import must not cannibalise or confuse the existing flow |
-| Invite email deliverability | No degradation vs. current baseline | Bulk send could trigger spam filters if not rate-limited |
-| API latency (user creation endpoint) | p95 < 500ms sustained | Bulk operations must not degrade single-user creation |
-| Support ticket volume for import errors | < 5% of import attempts generate a support ticket | Feature creates more support load than it resolves |
+- **Existing user management features:** Manual "Add User" button usage must not drop (indicates we're not replacing, just adding)
+- **Permission/role assignment:** Errors in permission assignment (target: no regression)
+- **API latency:** User management API response time (target: <200ms p99)
+- **Data integrity:** No duplicate users created, no orphaned invitations (target: zero incidents)
 
-### Failure definition
+### Failure Definition
 
-Feature is considered a failure if, at 4 weeks post-launch, fewer than 15% of eligible admins (onboarding ≥10 seats) have attempted an import, OR if the CS provisioning ticket count does not decrease, OR if the bulk import generates a net-new support category exceeding 20 tickets/week.
+Kill decision triggered if:
+- **Adoption:** <10% of eligible customers use bulk import after 8 weeks
+- **Reliability:** >20% of imports fail or produce errors
+- **Support burden:** Support tickets related to bulk import exceed 10/week without ability to self-service
+- **Data issues:** Any incident of bulk import creating duplicate users or corrupting team structure
 
 ---
 
 ## 6. User Stories with ISC Acceptance Criteria
 
----
+### US-1: Admin uploads CSV file with user list
 
-### US-1: Download CSV template
-
-As a **team admin**, I want to download a pre-formatted CSV template so that I know exactly which columns are required before I prepare my file.
+As an **organization admin**, I want to **upload a CSV file containing a list of users** so that **I can import multiple team members at once instead of adding them one-by-one**.
 
 **Acceptance Criteria:**
-- [ ] [I][S][C] The import screen displays a "Download template" link that triggers a download of a `.csv` file named `user-import-template.csv`
-- [ ] [I][S][C] The downloaded template contains a header row with exactly the required columns: `email`, `first_name`, `last_name`, and `role` — and no data rows
-- [ ] [I][S][C] The template includes one commented example row (or an inline tooltip) that illustrates valid values for each column [NEEDS CLARIFICATION: preferred UX for example rows — in-file or separate tooltip?]
 
-**Edge cases:**
-- Download works on all supported browsers without requiring a login refresh
-- Template filename does not conflict with any existing file the user may have
+- [ ] **[I]** Admin can access "Bulk Import" option from the user management page
+- [ ] **[S]** Click "Upload CSV" opens a file picker that accepts `.csv` files only
+- [ ] **[S]** File size limit is enforced (target: 10 MB max) with clear error message if exceeded
+- [ ] **[S]** After selecting file, admin sees a preview of parsed data (first 5 rows) before confirming import
 
----
+**Edge Cases:**
 
-### US-2: Upload a CSV file
-
-As a **team admin**, I want to upload a CSV file so that the system can process my list of users.
-
-**Acceptance Criteria:**
-- [ ] [I][S][C] The upload control accepts `.csv` files only; attempting to upload any other file type displays an error: "Only CSV files are supported"
-- [ ] [I][S][C] Files up to [NEEDS CLARIFICATION: max file size — suggest 2 MB] are accepted; files exceeding the limit display an error with the limit stated
-- [ ] [I][S][C] A file with zero data rows (header only) is rejected immediately with the message: "Your file contains no users to import"
-- [ ] [I][S][C] A file with more than [NEEDS CLARIFICATION: max rows — suggest 500] data rows is rejected with the message stating the limit
-
-**Edge cases:**
-- File with Windows-style line endings (`\r\n`) is parsed correctly
-- File saved from Excel with BOM encoding is parsed correctly
-- Upload control is keyboard-accessible and screen-reader labelled
+- Admin uploads a non-CSV file (e.g., `.xlsx`, `.txt`) → error message: "Please upload a CSV file"
+- Admin uploads a 50 MB file → error: "File exceeds 10 MB limit"
+- Admin closes browser during file upload → upload is cancelled, no partial data created
+- Admin selects file but doesn't confirm → no import occurs; data is discarded
 
 ---
 
-### US-3: Preview and validate rows before import
+### US-2: CSV is validated and errors are shown clearly
 
-As a **team admin**, I want to see which rows are valid and which have errors before I commit the import so that I can fix problems without importing partial data.
+As an **admin**, I want to **see validation errors before the import runs** so that **I can fix the data and retry instead of discovering errors after import**.
 
 **Acceptance Criteria:**
-- [ ] [I][S][C] After upload, the system displays a preview table showing all rows with a status column: "Valid" or "Error" per row
-- [ ] [I][S][C] Each error row displays an inline error message identifying the specific column and reason (e.g., "email: invalid format", "role: must be one of owner, admin, member")
-- [ ] [I][S][C] Rows with a duplicate email address within the same file are flagged as errors with the message: "Duplicate email in this file"
-- [ ] [I][S][C] Rows where the email address already exists in the account are flagged with the message: "User already exists — will be skipped"
-- [ ] [I][S][C] A summary banner shows the count of valid rows and error rows before the admin confirms the import
-- [ ] [I][S][C] The "Confirm import" button is disabled when zero rows are valid
 
-**Edge cases:**
-- File with 499 valid rows and 1 error row: admin can proceed with the 499; error row is skipped and reported
-- What if ALL rows have errors? — "Confirm import" is disabled; admin must re-upload a corrected file
-- What if the email column is missing entirely? — Whole file is rejected at parse time with "Required column 'email' not found"
+- [ ] **[I]** CSV header row is validated against required columns: `email`, `first_name`, `last_name`, `role`
+- [ ] **[S]** If required column is missing, admin sees: "Missing required column: [column_name]. Required columns: email, first_name, last_name, role"
+- [ ] **[S]** Each row is validated: email format, name length (min 1 char), role exists in system
+- [ ] **[S]** Validation runs before import starts; errors are shown in a list with row numbers and specific issues
+- [ ] **[S]** Admin can download a report of errors (CSV) for offline fixing
+
+**Edge Cases:**
+
+- Email column contains invalid format: "john@" → error: "Row 5: Invalid email format"
+- Name field is empty → error: "Row 12: first_name is required"
+- Role field contains a role that doesn't exist in the system → error: "Row 3: 'SuperUser' is not a valid role. Valid roles: Admin, Member, Guest"
+- CSV has duplicate emails across rows → warning: "Row 5 and Row 12 contain the same email address"
+- Email already exists as active user → [NEEDS CLARIFICATION: Skip, error, or update? Define conflict handling]
 
 ---
 
-### US-4: Confirm and execute the import
+### US-3: Import creates users asynchronously with progress tracking
 
-As a **team admin**, I want to confirm the import and have the system create accounts and send invitation emails so that my team members receive access.
+As an **admin**, I want to **see progress as users are created** so that **I know the import is working and how long it will take**.
 
 **Acceptance Criteria:**
-- [ ] [I][S][C] Clicking "Confirm import" triggers user creation for all valid rows; a progress indicator is shown for imports of more than [NEEDS CLARIFICATION: suggest 20] rows
-- [ ] [I][S][C] Each successfully imported user receives an invitation email matching the product's standard invite template within 5 minutes of import completion
-- [ ] [I][S][C] The import result screen shows a final count: users created, users skipped (already existed), and rows that errored
-- [ ] [I][S][C] If the import is interrupted (browser close, network failure), a partially completed import does not leave orphaned user records — either all rows in a batch succeed or the batch is rolled back [NEEDS CLARIFICATION: confirm whether atomic per-row or atomic per-batch is acceptable]
-- [ ] [I][S][C] The admin can download a result CSV listing each row with its final status (created / skipped / failed) and error reason
 
-**Edge cases:**
-- If invitation email fails to send for a specific user, the user account is still created and the failure is noted in the result report
-- Admin navigates away mid-import: system continues processing server-side and result is available when they return
-- Concurrent import: same admin uploads two files simultaneously — second upload is rejected or queued [NEEDS CLARIFICATION: preferred concurrency behaviour]
+- [ ] **[I]** After validation passes, import runs asynchronously (doesn't lock up the UI)
+- [ ] **[S]** Admin is redirected to an import status page showing: "Importing 50 users... (12 complete, 38 pending)"
+- [ ] **[S]** Status updates in real-time (or refreshes every 5 seconds if not WebSocket)
+- [ ] **[S]** Progress bar shows percentage complete
+- [ ] **[S]** Estimated time remaining is shown (e.g., "~2 minutes remaining")
+- [ ] **[S]** If import completes, admin sees: "Successfully imported 50 users" with option to view newly created users
+
+**Edge Cases:**
+
+- Admin closes status page mid-import → import continues in background; admin can navigate back to check status anytime
+- Network disconnects mid-import → import continues; next page reload shows current progress
+- Import partially succeeds (30 created, 10 failed) → admin sees results with list of failures and reasons
 
 ---
 
-### US-5: Role assignment during import
+### US-4: Users are created with correct role and permissions
 
-As a **team admin**, I want to assign a role to each imported user via the CSV so that users have the correct permissions from the moment they accept their invite.
+As an **admin**, I want to **assign a role to each imported user** so that **permissions are set correctly on creation instead of requiring manual adjustment**.
 
 **Acceptance Criteria:**
-- [ ] [I][S][C] The `role` column accepts only the values defined in the product's role model; any other value is a row-level validation error
-- [ ] [I][S][C] If the `role` column is omitted from the file, all imported users default to the `member` role and the preview shows a notice: "Role column not found — all users will be imported as Member"
-- [ ] [I][S][C] An admin cannot import a user with a role higher than their own (e.g., a non-owner admin cannot import users as `owner`)
 
-**Edge cases:**
-- Role values are case-insensitive: `Admin`, `admin`, `ADMIN` are all accepted
-- [NEEDS CLARIFICATION: are there seat or licence limits per role that would cause an import to fail?]
+- [ ] **[I]** CSV supports a `role` column with values: `admin`, `member`, `guest`
+- [ ] **[S]** If `role` column is omitted, default role is `member` (with clear warning before import)
+- [ ] **[S]** Each user is created with the specified role and associated permissions
+- [ ] **[S]** Users created via bulk import have the same permissions as users added manually with the same role
+
+**Edge Cases:**
+
+- Admin specifies `role: admin` for 20 users → all 20 receive admin permissions (consider warning if adding many admins?)
+- Admin leaves `role` column blank on some rows → [NEEDS CLARIFICATION: apply default, or error?]
 
 ---
 
-### US-6: Audit log entry
+### US-5: Admin receives confirmation email/notification of import results
 
-As a **team admin**, I want the import event to be recorded in the account's audit log so that I have a record of who was added, when, and by whom.
+As an **admin**, I want to **receive a summary of the import** so that **I have a record of who was added and whether there were any issues**.
 
 **Acceptance Criteria:**
-- [ ] [I][S][C] Each completed import creates a single audit log entry: actor (admin), action (`bulk_user_import`), timestamp, count of users created, and the filename used
-- [ ] [I][S][C] Individual user-creation events are also logged under the standard `user_invited` event type, with source attributed as `bulk_import`
 
-**Edge cases:**
-- If the import fails entirely (e.g., file parse error), no audit log entry is created — there is nothing to record
-- Partial import (some rows succeed, some fail) creates an audit log entry with the actual created count, not the attempted count
+- [ ] **[I]** After import completes, admin receives email with subject: "Bulk User Import Complete"
+- [ ] **[S]** Email includes: total users added, list of new users (name, email, role), any failures with reasons
+- [ ] **[S]** Email is sent to the admin who initiated the import
+- [ ] **[S]** Import summary is also available in the dashboard under "Import History" for 90 days
+
+**Edge Cases:**
+
+- Import has failures → email includes section "Failed to Import (5)" with detailed reasons per row
+- Admin email is no longer valid → [NEEDS CLARIFICATION: where does notification go?]
+
+---
+
+### US-6: Duplicate detection prevents accidental re-imports
+
+As an **admin**, I want to **know if a user already exists** so that **I don't accidentally create duplicates**.
+
+**Acceptance Criteria:**
+
+- [ ] **[I]** Before import, system checks each email against existing active users in the organization
+- [ ] **[S]** If email already exists, admin sees warning: "User john@example.com already exists in your organization"
+- [ ] **[S]** Admin can choose to: skip this user, update existing user, or continue anyway
+- [ ] **[S]** [NEEDS CLARIFICATION: Should bulk import support UPSERT (create or update) or only create?]
+
+**Edge Cases:**
+
+- Admin is re-importing the same CSV twice → second import detects all users exist and prompts "All users already exist. Continue to add duplicate invite?"
+- One CSV row has a duplicate email within the same file → caught in validation (US-2)
+
+---
+
+### US-7: Imported users receive activation invitations
+
+As an **imported user**, I want to **receive an invitation email** so that **I can set up my account and join the team**.
+
+**Acceptance Criteria:**
+
+- [ ] **[I]** Each newly created user receives an invitation email at their provided email address
+- [ ] **[S]** Invitation includes: sign-up link, sender (the admin who added them), organization name
+- [ ] **[S]** Link is valid for 7 days; after 7 days, admin can re-send or resend in bulk
+- [ ] **[S]** Invitation email uses existing invitation template (no special bulk-import-specific email)
+
+**Edge Cases:**
+
+- User doesn't receive email → admin can re-send from user management page
+- Email bounces → [NEEDS CLARIFICATION: Mark user inactive, notify admin, or retry?]
 
 ---
 
 ## 7. Scope Definition
 
-### In scope
+### In Scope
 
-- CSV upload UI on the team management or members screen
-- Downloadable CSV template with all required columns
-- Server-side parsing and validation of CSV content
-- Row-level validation with inline error messages in a preview table
-- Role assignment via CSV column (defaulting to `member` if omitted)
-- User creation and invitation email dispatch for valid rows
-- Skip logic for already-existing users (no duplication, no error)
-- Import result summary and downloadable result CSV
-- Audit log entry for each import event
-- Support for files up to [NEEDS CLARIFICATION: confirm max size/rows]
+- CSV file upload via web UI
+- Validation of required columns: `email`, `first_name`, `last_name`, `role`
+- Basic data validation: email format, field presence, role existence
+- Async import processing with real-time progress tracking
+- Duplicate detection and conflict handling (skip existing users)
+- Bulk invitation emails to newly created users
+- Import history and results dashboard (view past imports, download reports)
+- Support for roles: `admin`, `member`, `guest` (or [NEEDS CLARIFICATION: confirm role list])
+- File size limit: 10 MB max (500-1000 users per import)
 
-### Out of scope
+### Out of Scope
 
-| Item | Reason |
-|------|--------|
-| SCIM / directory sync (Okta, Google Workspace, Azure AD) | Separate initiative — automated sync requires identity provider integration work and is scoped as a distinct enterprise feature |
-| Custom attribute columns beyond `email`, `first_name`, `last_name`, `role` | Deferred to v2 — custom fields require a configurable schema that is not yet built |
-| Bulk user *update* (changing roles or attributes for existing users) | Deferred to v2 — update semantics introduce risk of unintended permission changes; validate import-only first |
-| Bulk user *removal* via CSV | Deferred to v2 — deletion is irreversible; requires additional safeguards and confirmation patterns |
-| API endpoint for programmatic CSV import | Deferred — admins without GUI access can use the API's existing single-user invite endpoint; bulk API is an enterprise-tier feature |
-| Real-time progress bar for large imports | Deferred — polling-based progress indicator is sufficient for v1; WebSocket-based real-time progress is over-engineered for batch sizes ≤500 |
+- **SSO/Directory Sync (deferred to v2):** Automatic sync from Azure AD, Okta, Google Workspace. Valuable but adds significant complexity; bulk import alone solves immediate need for manual control.
+- **Custom field import:** Importing custom fields or profile data beyond name/email/role. Scope limited to core user creation fields.
+- **Scheduled/recurring imports:** Repeating bulk imports on a schedule. One-time manual uploads solve the primary use case; recurring imports may require deeper directory integration.
+- **API-based bulk import:** Programmatic CSV upload via API. Start with UI; API can follow if demand is high.
+- **Bulk import from other platforms:** Migration from Slack, Monday.com, etc. Out of scope — focus on own CSV format.
+- **Role assignment workflows:** Complex permission matrices or conditional role assignment based on department. Stick to direct role specification in CSV.
 
-### Anti-requirements
+**Reasoning:** Phased approach: V1 solves the immediate problem (admins can upload 50-100 users at once). V2 can add integrations, scheduling, and API support if adoption is strong.
 
-- We are NOT building a user directory sync or provisioning integration (SCIM is a separate workstream)
-- We are NOT replacing the single-invite flow; it remains the default for admins adding 1–3 users
-- We are NOT sending bulk marketing or announcement emails to imported users beyond the standard invitation email
-- We are NOT allowing unauthenticated access to the import endpoint
+### Anti-Requirements
+
+- We are NOT building a full employee directory importer (that's directory sync, separate feature)
+- We are NOT auto-assigning roles based on hierarchies or departments (manual specification is intentional)
+- We are NOT providing a UI to edit rows in-place before import (users should fix CSV offline and re-upload)
+- We are NOT supporting password import (users must set via activation email)
 
 ---
 
 ## 8. Risks and Pre-Mortem
 
-### Cagan's Four Risk Categories
+### Value Risk: Will admins actually want this?
 
-| Risk type | Question | Assessment |
-|-----------|----------|------------|
-| **Value risk** | Will admins actually use CSV import? | Medium risk. CSV is the lowest-friction format for HR/ops personas with spreadsheet-native workflows. Risk: some admins have employee data locked in HR systems without easy CSV export — they'd still need a workaround. Mitigation: template download + clear column labels lower the barrier |
-| **Usability risk** | Can admins prepare a valid CSV without errors? | Medium-high risk. Column naming, encoding, and formatting errors are common. Mitigation: downloadable template, inline validation with specific error messages, and tolerance for common variants (BOM, CRLF, case-insensitive roles) |
-| **Feasibility risk** | Can we build this reliably at scale? | Low risk for ≤500-row imports. Medium risk if import volumes spike (large enterprise onboarding thousands of users). Mitigation: enforce row limit in v1, use async processing with job queue for imports >20 rows |
-| **Business viability risk** | Does bulk invite affect billing or seat counts in a way that could hurt revenue? | [NEEDS CLARIFICATION: does the product bill per seat? If yes, does importing 50 users immediately create 50 billable seats, or only after invitation acceptance? This must be resolved before launch.] |
+**Assessment:**
 
-### Open questions
+| Question | Evidence For | Evidence Against | Confidence |
+|---|---|---|---|
+| Do customers have large teams? | [NEEDS CLARIFICATION: How many customers have 50+ users?] | If most are <20 users, bulk import benefits few | 50% |
+| Is manual add a real pain point? | [NEEDS CLARIFICATION: Support tickets, NPS feedback] | Could be low-priority complaint | 50% |
+| Is this the right solution? | CSV is familiar, low-barrier | Might prefer SSO sync; CSV is outdated | 60% |
+
+**Hypothesis:** Moderate value risk. Bulk import helps *some* customers meaningfully, but may not be a must-have for core audience. **Mitigation:** User interviews with 3-5 target admins before finalizing design.
+
+### Usability Risk: Can admins figure out how to use it?
+
+**Assessment:**
+- CSV format is well-understood; low learning curve
+- UI should be self-explanatory if following existing patterns
+- Main risk: error messages are confusing, admins don't know why import failed
+- Secondary risk: data validation is too strict or too lenient
+
+**Mitigation:**
+- Error messages must be specific and actionable (not "invalid data")
+- Provide a sample CSV template for download
+- Add help text on the upload page: "Ensure your CSV has columns: email, first_name, last_name, role"
+
+### Feasibility Risk: Can we build this with current tech/team/timeline?
+
+**Assessment:**
+
+[NEEDS CLARIFICATION: Fill in technical details]
+
+**Assumed feasibility:** 3-4 weeks is realistic if:
+- User management API/DB already exists (not starting from scratch)
+- Async job queue exists (can't block UI during 1000+ user creation)
+- Email system already has invitation templates
+- CSV parsing library available in your stack (Python: `csv`, Node: `csv-parse`, etc.)
+
+**Technical concerns:**
+- Rate limiting: Creating 1000 users rapidly may hit rate limits or overload DB. Need to batch and throttle.
+- Transaction handling: Partial failures (50 created, 50 failed) must be handled cleanly — can't leave orphaned data.
+- File upload security: Validate MIME type, scan for malicious content, enforce size limits.
+
+### Business Viability Risk: Does this work for the business?
+
+**Assessment:**
+
+- **Pricing impact:** [NEEDS CLARIFICATION: Does bulk import affect pricing? (e.g., per-user seat costs)] Clarify if this creates new revenue or cost.
+- **Compliance/Legal:** Does bulk import raise data privacy concerns? (e.g., importing PII, storing CSVs) Confirm GDPR/privacy compliance.
+- **Support cost:** Will bulk import generate support volume? Mitigation: robust validation and error messages reduce support burden.
+
+**Open Questions:**
 
 | Question | Impact if wrong | Owner | Due date |
-|----------|-----------------|-------|----------|
-| Does importing a user create a billable seat immediately, or only on invite acceptance? | Wrong answer could result in unexpected charges for customers or revenue leakage | [Product / Finance] | [NEEDS CLARIFICATION] |
-| What is the maximum team size we need to support in v1? | Determines whether async job processing is required or synchronous is acceptable | [Engineering] | [NEEDS CLARIFICATION] |
-| Are there rate limits on the invite email provider that bulk sends could hit? | Could delay or drop invitation emails for large imports | [Engineering / Infrastructure] | [NEEDS CLARIFICATION] |
-| Should duplicate-email rows (user already exists) silently skip, or give the admin an option to re-invite? | Affects both UX and the email deliverability guardrail | [Product / Design] | [NEEDS CLARIFICATION] |
-| Which roles are valid values? Can admins import other admins, or only members? | Determines access control logic in the import endpoint | [Product] | [NEEDS CLARIFICATION] |
+|---|---|---|---|
+| How many customers per quarter would use this? | If <5, RICE score is too low to prioritize | [NEEDS CLARIFICATION: PM/Sales] | Before greenlight |
+| Should we support UPSERT (create or update)? | If users expect update capability, skip will frustrate | [NEEDS CLARIFICATION: Product/Eng] | During design phase |
+| Does bulk import need SSO integration eventually? | If yes, architecture now to avoid later rework | [NEEDS CLARIFICATION: Eng Lead] | Before development |
+| What is max CSV size we'll support? | If we set too low (100 users), customers frustrated; too high (10k), performance risk | [NEEDS CLARIFICATION: Tech Lead] | Before development |
+| Do we charge per import or per user added? | Affects pricing and billing logic | [NEEDS CLARIFICATION: Finance] | Before launch |
 
-### Reversibility
+### Reversibility Assessment
 
-**Partially reversible.** User accounts created by an import can be deleted. Invitation emails sent cannot be recalled. The audit log entry is permanent. Feature itself can be hidden behind a feature flag if a critical defect is found post-launch. Billing changes (if any) triggered by import may be hard to reverse — resolve the billing question (above) before launch.
+**High reversibility** (feature flag, easy rollback):
+- Can ship behind feature flag (admin can enable/disable)
+- Can remove CSV upload UI without breaking existing user creation
+- Users are created via existing API; no breaking changes to data model
+- **Decision confidence:** Can greenlight with lower certainty than irreversible work
+
+**Irreversible or hard to reverse:**
+- If we change the user creation API signature to accept bulk data, that's hard to undo
+- If we add a new column to users table permanently, harder to remove later
+- [NEEDS CLARIFICATION: Are we aware of any hard-to-reverse decisions in this feature?]
 
 ---
 
 ## 9. Launch Plan
 
-**Rollout strategy:** Feature flag → internal dogfood (1 week) → opt-in beta with 5–10 volunteer accounts (2 weeks) → GA.
+### Rollout Strategy
 
-**Rollback criteria:** Roll back to feature-flag off if any of the following occur within 72 hours of GA:
-- Import error rate exceeds 20% of attempts
-- Support tickets generated by the feature exceed 10/day
-- Invitation email delivery rate drops more than 5 percentage points vs. baseline
-- Any security incident involving the file upload endpoint
+**Recommended: Percentage Rollout with Beta Group**
 
-**Monitoring — must be in place before GA:**
-- Dashboard: import attempts, success rate, row-level error rate, invite email delivery rate
-- Alert: import job queue depth > 50 (indicates processing backlog)
-- Alert: p95 processing time > 30 seconds for imports of ≤100 rows
-- Alert: any 5xx on the `/import` endpoint
+1. **Week 1 (Internal Testing):** Ship behind feature flag to internal team + 1-2 partner customers. Test with real CSVs, find data edge cases.
+2. **Week 2 (Beta Group):** Open to 10% of mid-market customers (those with 50+ users). Monitor adoption, support volume, errors.
+3. **Week 3 (Gradual Rollout):** Expand to 50% of eligible customers. Watch guardrail metrics.
+4. **Week 4 (GA):** Enable for all customers. Monitor for 1 week post-launch.
 
-**Communication:**
-- Support team: briefed 1 week before GA with FAQ and known edge cases
-- Sales / CS: notified so they can proactively offer the feature to prospects citing onboarding friction
-- In-app: tooltip or empty-state callout on the members page pointing admins to the import option
-- Changelog entry at GA
+[NEEDS CLARIFICATION: Adjust timeline based on engineering capacity and launch window]
 
-**Documentation:**
-- Help centre article: "How to bulk import team members via CSV" (required before GA)
-- Update existing "Managing your team" docs to reference the import option
-- CSV template must be versioned — if schema changes in future, old templates should fail gracefully with a clear error
+### Rollback Criteria
+
+Trigger immediate rollback if:
+- Import error rate exceeds 20% (e.g., >20% of rows fail across any import)
+- Support tickets exceed 10 related to bulk import in a single day
+- Data integrity issue detected (duplicate users, orphaned data, permission corruption)
+- File upload causes API latency to exceed 500ms p99
+- Any security issue discovered (e.g., CSV injection, unauthorized access)
+
+**Rollback process:** Feature flag disabled → bulk import UI hidden. Existing imports stay as-is; no data rollback.
+
+### Monitoring
+
+Before launch, set up dashboards/alerts for:
+
+- **Import volume:** Imports per day, files processed, total users created
+- **Error metrics:** % of imports with >0 errors, most common error types
+- **Performance:** CSV parsing time, user creation latency (p50, p95, p99)
+- **Reliability:** Import success rate, file upload failure rate, job queue health
+- **Support:** Bulk import tickets, reopens, resolution time
+- **Data quality:** Duplicate user detection, permission misassignments, orphaned invitations
+
+### Communication Plan
+
+**Before launch:**
+- Announce feature in product roadmap update (if public)
+- Email to [NEEDS CLARIFICATION: eligible customer segment] with feature overview
+- Write help article: "How to bulk import users with CSV"
+
+**At launch:**
+- In-app notification or banner: "New: Import multiple users at once with CSV"
+- Help article linked from UI
+- Changelog entry
+
+**Post-launch:**
+- If adoption is strong: case study or customer highlight
+- If adoption is weak: investigate why (survey, interviews)
+
+### Documentation to Create
+
+- **Help article:** "Bulk Import Users via CSV" (how-to guide with screenshots)
+- **CSV template:** Download-able example file with header row
+- **Troubleshooting:** Common errors and how to fix them
+- **API docs:** [If API-based import added in v2]
+- **Admin guide:** Update user management docs to reference bulk import
 
 ---
 
-## 10. Technical Constraints (if known)
+## 10. Technical Constraints
 
-- **File upload:** CSV files must be processed server-side, not in the browser. Client-side pre-validation is acceptable for immediate UX feedback but is not a security boundary. [NEEDS CLARIFICATION: is there an existing file upload service or does this need a new endpoint?]
-- **Async processing:** Imports of more than [NEEDS CLARIFICATION: threshold TBD by Engineering] rows must be processed asynchronously via a job queue to avoid request timeouts.
-- **Email dispatch:** Invitation emails must use the existing transactional email provider and template. Do not introduce a new email service. Rate limiting must be respected. [NEEDS CLARIFICATION: confirm rate limit of the current email provider]
-- **Security:** The CSV upload endpoint must enforce authentication and authorisation (admin role only). File content must be parsed in a sandboxed manner — no execution of file contents. [SUGGESTION — not a requirement: consider streaming parse for large files to avoid loading full file into memory]
-- **Compliance:** [NEEDS CLARIFICATION: does importing user email addresses require a data processing agreement consideration or GDPR notice update? Confirm with legal/compliance before launch.]
-- **Dependencies:** Relies on the existing user creation and invitation email flows. Those APIs must not change incompatibly during this feature's development cycle.
+### Dependencies
+
+- **User management API:** Must support creating users in batch (or this feature relies on repeated single-user creation calls; clarify if that's acceptable for performance)
+- **Email system:** Existing invitation templates and bulk email dispatch
+- **Async job queue:** For processing imports without blocking UI (e.g., Bull, Celery, AWS SQS)
+- **Database:** User table with `email` (unique index), `first_name`, `last_name`, `role` columns
+
+[NEEDS CLARIFICATION: Do these systems exist? Any limitations or gotchas?]
+
+### Performance Requirements
+
+- **CSV parsing:** <5 seconds for 1000-row CSV (client-side parsing before upload)
+- **Validation:** <10 seconds for 1000 rows (server-side)
+- **User creation:** Aim for >10 users/second (100 users created in <10 seconds)
+- **Progress updates:** Real-time or every 5 seconds (latency-acceptable for progress bar)
+
+### Compliance & Security
+
+- **Data privacy:** No sensitive data (passwords, SSNs) accepted in CSV; invite-based activation only
+- **File upload security:**
+  - Validate MIME type (must be `text/csv`)
+  - Enforce max file size (10 MB)
+  - Scan for malicious content (CSV injection, embedded code)
+  - Do not store raw CSVs long-term; delete after processing
+- **Audit logging:** Log who imported which CSV and results (for compliance/troubleshooting)
+- **Rate limiting:** Prevent spam imports (e.g., max 10 imports/day per user)
+
+### Data Requirements
+
+- CSV must have: `email`, `first_name`, `last_name`, `role`
+- Optional columns: [NEEDS CLARIFICATION: departments, manager, start_date, etc.?]
+- Data assumed clean (no validation that values make business sense, only technical validation)
 
 ---
 
-## Quality Checklist
+## Summary: Open Items Requiring Clarification
 
-- [x] Strategic fit stated — connects to activation and expansion OKRs
-- [x] "Why now" is answered — friction at team onboarding step
-- [x] Problem is stated without referencing the solution
-- [x] Target user is specific enough to recruit for a user test (IT Admin / Ops Manager, ≥10-seat onboarding)
-- [x] RICE score is calculated with stated assumptions and conservative floor
-- [x] Every acceptance criterion passes the ISC Splitting Test
-- [x] Leading, lagging, and guardrail metrics defined
-- [x] Failure condition is explicitly defined
-- [x] Out-of-scope items include reasoning
-- [x] Four risk categories assessed
-- [x] Reversibility assessed
-- [x] Launch plan includes rollback criteria
-- [x] All unknowns captured with owners (though due dates need assignment)
-- [x] No implementation details masquerading as requirements
-- [x] PRD is understandable by someone not in the room
+| # | Item | Priority | Owner | Due |
+|---|---|---|---|---|
+| 1 | Strategic OKR alignment — which goal does this serve? | High | Product Lead | Before greenlight |
+| 2 | Why now? What triggered this request? (support tickets, customer churn, competitive pressure) | High | Product Lead | Before greenlight |
+| 3 | Customer segment size — how many customers have 50+ users? | High | Sales/CS | Before RICE calculation |
+| 4 | Adoption metrics — actual evidence of bulk import demand (tickets, interviews, NPS feedback) | High | Product/CS | Before design |
+| 5 | Conflict handling — if email already exists, should we skip, error, or offer UPSERT? | High | Product/Eng | During design |
+| 6 | Max file size and user import limits (current 10 MB = ~500-1000 users; confirm this is right) | Medium | Eng | Before development |
+| 7 | Does user management API/async job queue already exist in current system? | Medium | Eng Lead | Before estimation |
+| 8 | Optional CSV columns beyond email/name/role — departments, manager, custom fields? | Medium | Product | During design |
+| 9 | Email bounce handling — what happens if invited user's email bounces? | Medium | Product | Before launch |
+| 10 | Pricing impact — does bulk import affect per-user costs or support SKU? | Medium | Finance | Before launch |
+| 11 | SSO/directory sync timeline — do customers expect this eventually? Does architecture need to account for it? | Low | Eng | Before development |
 
 ---
 
-## Open Items Requiring Clarification
+## Next Steps
 
-| # | Question | Section |
-|---|----------|---------|
-| 1 | Which specific company OKR or product goal does this map to? | §1 |
-| 2 | Is there sales/CS feedback citing bulk invite as a blocker for upsells or new-logo onboarding? | §1 |
-| 3 | What does the current single-invite flow look like? (Screenshots or description) | §2 |
-| 4 | What is the measured drop-off rate at the "invite team" step today? | §2 |
-| 5 | What is the target release quarter or date? | Header |
-| 6 | What is the maximum file size to accept (suggest 2 MB)? | US-2 |
-| 7 | What is the maximum number of rows per import (suggest 500)? | US-2 |
-| 8 | Preferred UX for template example rows — inline in file or tooltip on screen? | US-1 |
-| 9 | Atomic import semantics: per-row or per-batch rollback on failure? | US-4 |
-| 10 | Concurrency: what happens if an admin uploads two files simultaneously? | US-4 |
-| 11 | Are there seat or licence limits per role that would block certain imports? | US-5 |
-| 12 | Does importing a user create a billable seat immediately, or only on invite acceptance? | §8 |
-| 13 | What is the maximum team size to support in v1 (determines sync vs. async threshold)? | §8, §10 |
-| 14 | What are the rate limits on the current transactional email provider? | §8, §10 |
-| 15 | Should duplicate-email rows silently skip or offer a re-invite option? | §8 |
-| 16 | Is there an existing file upload service, or does a new endpoint need to be built? | §10 |
-| 17 | Does importing user email addresses require a GDPR/DPA review? | §10 |
+1. **Validation (this week):** Conduct 3-5 user interviews with target admins (50+ user organizations) to confirm problem and desired solution
+2. **Clarification meeting:** Review open items above with product, engineering, and design leads
+3. **Design phase:** Once problem validated, design CSV format, error UX, and import flow
+4. **Spec review:** Revisit this PRD with learnings from interviews; update assumptions
+5. **Greenlight:** After 3 amigos review (PM + Eng + QA), proceed to implementation
+
 
 ```
 
@@ -382,35 +606,35 @@ As a **team admin**, I want the import event to be recorded in the account's aud
 |---|---|
 | Verdict | PASS |
 | Score | 16.5/18.0 (92%) |
-| Evaluated | 2026-05-01 |
-| Target duration | 182913 ms |
-| Target cost | $0.2583 |
+| Evaluated | 2026-05-04 |
+| Target duration | 97104 ms |
+| Target cost | $0.1447 |
 | Permission denials | 0 |
 
 ### Criteria
 
 | # | Criterion | Result | Evidence |
 |---|---|---|---|
-| c1 | Skill requires a problem statement section that is separate from the solution description | PASS | Section 2 'Problem Validation' states the problem ('Admins cannot efficiently add multiple users to their account — the current one-at-a-time invitation flow creates disproportionate friction') before any CSV-solution language appears. Section 1 discusses cost of inaction without prescribing the solution. |
-| c2 | Skill requires RICE scoring to justify prioritisation of the feature | PASS | Section 4 'RICE Prioritisation' contains a table with Reach (150 accounts/quarter), Impact (2), Confidence (80%), Effort (4 person-weeks), and computed RICE Score = 60.0, plus a conservative floor of 12.0 with explicit reasoning per cell. |
-| c3 | Skill requires three types of success metrics: leading indicators, lagging indicators, and guardrail metrics | PASS | Section 5 'Success Metrics' is explicitly divided into three subsections: 'Leading indicators (measurable within 7 days of launch)', 'Lagging indicators (measurable at 4–8 weeks)', and 'Guardrail metrics (must not regress)', each with a populated table. |
-| c4 | Skill requires a pre-mortem or risk analysis section — what could go wrong with this feature | PASS | Section 8 'Risks and Pre-Mortem' uses Cagan's Four Risk Categories (Value, Usability, Feasibility, Business viability), each with an assessment and mitigation notes. |
-| c5 | Skill requires explicit out-of-scope statements — not just what's included but what's excluded | PASS | Section 7 'Scope Definition' contains an 'Out of scope' table listing 6 deferred items (SCIM sync, custom columns, bulk update, bulk removal, API endpoint, real-time progress bar), each with a reason column, plus a separate 'Anti-requirements' subsection. |
-| c6 | Skill produces a structured document with named sections that a team can review, not a prose narrative | PASS | The artifact is a 10-section numbered PRD with named headers (§1 Context and Strategic Fit through §10 Technical Constraints), plus a Quality Checklist and Open Items table — no prose narrative. |
-| c7 | Skill requires a rollout or release strategy section — partial credit if phasing is mentioned but not required as a structured section | PARTIAL | Section 9 'Launch Plan' is a fully structured section with rollout strategy (feature flag → internal dogfood → opt-in beta with 5–10 accounts → GA), rollback criteria, monitoring requirements, and communication plan. Ceiling is PARTIAL per rubric. |
-| c8 | Skill requires success criteria to be measurable — 'users can import' is not acceptable, '95% of CSV imports complete without error' is | PASS | Metrics include '≥ 80% of upload attempts complete without a fatal error', '< 30% of uploads produce a row-level validation error', 'p95 < 500ms sustained', 'No more than 2pp drop' — all quantified thresholds, no vague language. |
-| c9 | Skill has a valid YAML frontmatter with name, description, and argument-hint fields | FAIL | The captured output is the generated PRD document and chat summary; the skill definition file itself is not shown. There is no evidence of the skill's YAML frontmatter fields (name, description, argument-hint) in any captured artifact. |
-| c10 | Output's problem statement is separate from the solution — describes the user pain (admins onboarding 50+ team members one at a time burns hours and is error-prone) before any reference to CSV upload as the solution | PASS | Section 2 opens with 'Admins cannot efficiently add multiple users to their account — the current one-at-a-time invitation flow creates disproportionate friction when onboarding teams of 10 or more.' CSV upload as solution is not referenced until later sections. |
-| c11 | Output's RICE score is shown numerically per cell — Reach (admins onboarding new teams per quarter, e.g. 200), Impact (1 — significant time saved per onboarding event), Confidence (% based on user-research signal strength), Effort (story points or weeks) | PASS | RICE table shows Reach: 150, Impact: 2, Confidence: 80%, Effort: 4 person-weeks, RICE Score: 60.0 — each cell has a numeric value plus explanatory reasoning column. |
-| c12 | Output's leading-indicator metrics are pre-launch / early signal — e.g. '% of admin users who try the bulk-import feature within 2 weeks of launch', 'average time to first successful import' | PASS | Leading indicators are 'measurable within 7 days of launch' and include feature discovery rate (≥40%), upload attempt rate (≥25%), successful import rate (≥80%), and validation error rate (<30%) — all early behavioral signals. |
-| c13 | Output's lagging-indicator metrics measure the actual outcome — e.g. 'average users added per onboarding event (target: 12+ vs current 3)', 'admin NPS on team-onboarding question' | PASS | Lagging indicators include 'Team activation rate: ≥50% team activation 7 days faster than control', 'Seat expansion within 90 days at a higher rate', and 'CS provisioning tickets: Reduction in support tickets' — all downstream outcomes. |
-| c14 | Output's guardrail metrics name what must NOT regress — e.g. 'no increase in import errors per imported user', 'support ticket volume on user-management does not increase' | PASS | Guardrail table explicitly labels these as metrics that 'must not regress' and includes: single-invite flow completion (no more than 2pp drop), invite email deliverability (no degradation), API latency (p95 < 500ms), support tickets (<5% of import attempts). |
-| c15 | Output's pre-mortem identifies at least 3-5 specific risks — e.g. 'permission escalation via CSV row granting admin role', 'performance under 1000-row imports', 'duplicate-email handling when re-running an import' — with mitigation per risk | PASS | Section 8 covers 4 Cagan risk categories each with assessment and mitigation: CSV formatting errors (template + inline validation), scale risk (row limit + async processing), billing impact (flagged as open question requiring resolution), and value adoption risk (spreadsheet-native format). Additionally 5 open questions with impact-if-wrong assessments. |
-| c16 | Output's out-of-scope section is explicit — e.g. 'v1 does NOT support: importing from external sources (Workday, Okta), updating existing user attributes, partial-roll-back if some rows fail' — so reviewers see the scope cliff | PASS | Out-of-scope table lists 6 named exclusions with reasons (SCIM/directory sync, custom attribute columns, bulk user update, bulk user removal, API endpoint, real-time progress bar). Anti-requirements section further states 'We are NOT building a user directory sync', 'We are NOT replacing the single-invite flow', etc. |
-| c17 | Output's success criteria are measurable — '95% of imports under 100 rows complete without errors', 'import of 1,000 rows completes within 30 seconds' — never 'users can import' | PASS | All acceptance criteria use ISC format with quantified conditions (e.g. '≥ 80% of upload attempts complete without a fatal error', 'p95 processing time > 30 seconds for imports of ≤100 rows' as an alert threshold). No vague 'users can import' language found. |
-| c18 | Output addresses the rollout strategy section — feature flag, beta cohort (e.g. 5 enterprise admins), staged GA — even if it's not the strongest section | PASS | Section 9 'Launch Plan' states: 'Feature flag → internal dogfood (1 week) → opt-in beta with 5–10 volunteer accounts (2 weeks) → GA' with explicit rollback criteria (import error rate >20%, support tickets >10/day, email delivery drop >5pp, any security incident). |
-| c19 | Output references the related coordinator skill (`/coordinator:write-spec`) for the engineering-facing technical spec, since the PRD is the product-facing artefact and a separate technical spec follows | FAIL | No reference to `/coordinator:write-spec` or any handoff to a technical spec skill appears anywhere in the chat response or the PRD document. Section 10 'Technical Constraints' notes open questions for engineering but does not point to a downstream spec skill. |
+| c1 | Skill requires a problem statement section that is separate from the solution description | PASS | Section 2 'Problem Validation' opens with 'The Core Problem (One Sentence): Admins of large teams spend excessive time manually adding users one-at-a-time...' and describes current-state pain before any CSV solution is mentioned. The solution (CSV upload) appears first in Section 7 Scope. |
+| c2 | Skill requires RICE scoring to justify prioritisation of the feature | PASS | Section 4 'RICE Prioritisation' contains a table with Reach (flagged for clarification), Impact (2 – High), Confidence (50%), Effort (3-4 weeks), and provides the formula 'RICE Score = (Reach × 2 × 0.5) / 3.5' with an example calculation. |
+| c3 | Skill requires three types of success metrics: leading indicators, lagging indicators, and guardrail metrics | PASS | Section 5 'Success Metrics' has three explicitly named subsections: 'Leading Indicators (measure within week 1 of launch)', 'Lagging Indicators (measure after 4-8 weeks)', and 'Guardrail Metrics (must not regress)'. |
+| c4 | Skill requires a pre-mortem or risk analysis section — what could go wrong with this feature | PASS | Section 8 'Risks and Pre-Mortem' covers four risk categories: Value Risk, Usability Risk, Feasibility Risk, and Business Viability Risk, each with assessment and mitigations. |
+| c5 | Skill requires explicit out-of-scope statements — not just what's included but what's excluded | PASS | Section 7 has an 'Out of Scope' subsection listing six explicit exclusions (SSO/Directory Sync, custom field import, scheduled imports, API-based import, cross-platform import, complex role workflows) plus an 'Anti-Requirements' subsection with four more. |
+| c6 | Skill produces a structured document with named sections that a team can review, not a prose narrative | PASS | The PRD has 10 numbered sections (Context and Strategic Fit, Problem Validation, Target User Definition, RICE Prioritisation, Success Metrics, User Stories with ISC Acceptance Criteria, Scope Definition, Risks and Pre-Mortem, Launch Plan, Technical Constraints) with tables, checklists, and subsections throughout. |
+| c7 | Skill requires a rollout or release strategy section — partial credit if phasing is mentioned but not required as a structured section | PARTIAL | Section 9 'Launch Plan' contains a 'Rollout Strategy' subsection with a 4-week phased plan (internal testing → 10% beta → 50% gradual → GA), plus rollback criteria, monitoring dashboards, communication plan, and documentation list. Ceiling caps this at 0.5. |
+| c8 | Skill requires success criteria to be measurable — "users can import" is not acceptable, "95% of CSV imports complete without error" is | PASS | Metrics include specific targets: 'Feature discovery rate: >40%', 'Error rate: <10%', 'Time-to-completion: <5 minutes for 50-person import', 'Adoption rate: >25%', '30-day retention: +10 percentage points', 'API latency: <200ms p99'. |
+| c9 | Skill has a valid YAML frontmatter with name, description, and argument-hint fields | FAIL | The captured output (chat response and PRD document) does not include the skill definition file. The PRD itself uses a markdown table for metadata (Author, Status, RICE Score, etc.) rather than YAML frontmatter. The skill's own definition file with name/description/argument-hint fields is not surfaced in the output. |
+| c10 | Output's problem statement is separate from the solution — describes the user pain (admins onboarding 50+ team members one at a time burns hours and is error-prone) before any reference to CSV upload as the solution | PASS | Section 2 states 'Admins of large teams spend excessive time manually adding users one-at-a-time' and quantifies pain ('For a 100-person import: 100-200 minutes'). CSV as solution does not appear until Section 7 Scope Definition. |
+| c11 | Output's RICE score is shown numerically per cell — Reach (admins onboarding new teams per quarter, e.g. 200), Impact (1 — significant time saved per onboarding event), Confidence (% based on user-research signal strength), Effort (story points or weeks) | PASS | RICE table shows Impact: 2 (High), Confidence: 50%, Effort: 3-4 weeks. Reach is marked '[NEEDS CLARIFICATION]' with explanation and an example calculation ('If 15 customers per quarter, score = 4.3'). Three of four cells are numeric; Reach is correctly flagged as requiring input data not provided in the prompt. |
+| c12 | Output's leading-indicator metrics are pre-launch / early signal — e.g. "% of admin users who try the bulk-import feature within 2 weeks of launch", "average time to first successful import" | PASS | Leading indicators include 'Feature discovery rate: % of admin users who discover the CSV import option in the first week (target: >40%)', 'Activation rate: % of discovered users who actually attempt an import (target: >30%)', and 'Time-to-completion: Average time from upload to users created (target: <5 minutes)'. |
+| c13 | Output's lagging-indicator metrics measure the actual outcome — e.g. "average users added per onboarding event (target: 12+ vs current 3)", "admin NPS on team-onboarding question" | PASS | Lagging indicators include 'Adoption rate: % of eligible customers (50+ users) who complete at least one bulk import (target: >25%)', 'Onboarding completion rate: +15% faster to first action', '30-day retention: +10 percentage points vs manual import', and 'Support ticket volume' comparison. |
+| c14 | Output's guardrail metrics name what must NOT regress — e.g. "no increase in import errors per imported user", "support ticket volume on user-management does not increase" | PASS | Guardrail Metrics section explicitly states: 'Manual Add User button usage must not drop', 'Permission/role assignment errors: no regression', 'API latency: <200ms p99', 'Data integrity: no duplicate users created, no orphaned invitations (target: zero incidents)'. |
+| c15 | Output's pre-mortem identifies at least 3-5 specific risks — e.g. "permission escalation via CSV row granting admin role", "performance under 1000-row imports", "duplicate-email handling when re-running an import" — with mitigation per risk | PASS | Section 8 identifies: (1) Value Risk with user-interview mitigation, (2) Usability Risk with actionable error messages and CSV template mitigations, (3) Feasibility Risk with specific technical concerns (rate limiting, transaction handling, CSV injection, file upload security) and mitigations, (4) Business Viability Risk with open-questions table. More than 5 specific risks named. |
+| c16 | Output's out-of-scope section is explicit — e.g. "v1 does NOT support: importing from external sources (Workday, Okta), updating existing user attributes, partial-roll-back if some rows fail" — so reviewers see the scope cliff | PASS | 'Out of Scope' lists SSO/Directory Sync ('deferred to v2'), custom field import, scheduled/recurring imports, API-based bulk import, bulk import from other platforms, role assignment workflows — each with a reasoning note. Anti-Requirements adds four more explicit exclusions including 'NOT building a full employee directory importer'. |
+| c17 | Output's success criteria are measurable — "95% of imports under 100 rows complete without errors", "import of 1,000 rows completes within 30 seconds" — never "users can import" | PASS | Every metric has a numeric target: discovery >40%, activation >30%, error rate <10%, time-to-completion <5 minutes, adoption >25%, retention +10pp, API latency <200ms p99. Kill criteria are also numeric: <10% adoption after 8 weeks, >20% import failure rate, >10 support tickets/week. |
+| c18 | Output addresses the rollout strategy section — feature flag, beta cohort (e.g. 5 enterprise admins), staged GA — even if it's not the strongest section | PASS | Section 9 'Rollout Strategy' explicitly covers: Week 1 'ship behind feature flag to internal team + 1-2 partner customers', Week 2 '10% of mid-market customers (those with 50+ users)' as beta, Week 3 '50% of eligible customers', Week 4 'GA'. Feature flag also referenced in Reversibility Assessment ('Can ship behind feature flag'). |
+| c19 | Output references the related coordinator skill (`/coordinator:write-spec`) for the engineering-facing technical spec, since the PRD is the product-facing artefact and a separate technical spec follows | FAIL | Neither the chat response nor the PRD document contains any reference to '/coordinator:write-spec' or any coordinator skill for the engineering spec. The 'Next Steps' section mentions 'Spec review' and '3 amigos review' but does not point to or invoke a downstream technical spec skill. |
 
 ### Notes
 
-The output is an exceptionally comprehensive PRD that satisfies nearly every content criterion convincingly. All three metric types (leading, lagging, guardrail) are present and quantified; the RICE table is complete with per-cell numeric values and reasoning; the pre-mortem uses Cagan's four risk categories; out-of-scope is explicit with a reason column; and the rollout plan is structured with concrete rollback triggers. The two failures are: c9 (the skill's YAML frontmatter fields cannot be verified from the captured output — only the generated artifact is visible) and c19 (no reference to a downstream `/coordinator:write-spec` skill anywhere in the output). The PARTIAL ceiling on c7 limits that criterion to 0.5 despite the section being fully structured. Overall the skill demonstrates strong enforcement of product management best practices.
+The output is a comprehensive, well-structured PRD that satisfies nearly all substantive criteria. It correctly separates problem from solution, provides RICE scoring with numerical values and a clear formula, includes all three metric types with specific targets, covers pre-mortem with multiple risk categories and mitigations, and has an explicit out-of-scope section. The rollout plan is thorough (feature flag, beta cohort, staged GA). Two criteria failed: c9 (skill YAML frontmatter) cannot be verified from the captured output since the skill definition file is not surfaced, and c19 (reference to `/coordinator:write-spec`) is simply absent from both the chat response and the artifact. The RICE Reach field is appropriately flagged as needing clarification rather than being invented, which is the right behavior given the prompt provided no reach data.

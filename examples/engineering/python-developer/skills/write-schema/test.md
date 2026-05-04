@@ -6,6 +6,14 @@ Scenario: Developer invokes the write-schema skill to produce a JSON Schema and 
 
 Write a schema for pipeline configuration. Each pipeline has: a name (required, 1-255 chars), a source with type (postgres, mysql, s3, or api) and a connection string, an optional cron schedule, and output settings with format (json, csv, or parquet) and optional output path.
 
+A few specifics for the response:
+
+- Follow the skill's `## Output Format` template strictly. Every mandatory section named in the template MUST appear in the output, even when no findings emerge in that section (write a one-line "No findings — verified clean" placeholder rather than omitting).
+- Do NOT pause for clarification. Proceed using stated assumptions; document them inline. The user can correct in follow-up.
+- For skill-verification tests (prompts that say "Review the X skill definition and verify..."): Read the skill at `${CLAUDE_PLUGIN_ROOT}/skills/<skill-name>/SKILL.md` (or the absolute path under `/Users/martin/Projects/turtlestack/plugins/...`) and quote skill text where present. Confirm or flag each test criterion by name — do not paraphrase.
+- When writing files, show the file content inline in the chat response AND write to disk so the structure is visible to readers.
+- Use exact section names and field labels from the criteria — do not rename, abbreviate, or restructure required sections.
+
 ## Criteria
 
 - [ ] PASS: Skill performs reconnaissance — checks for existing schemas and identifies the validation library in use before writing

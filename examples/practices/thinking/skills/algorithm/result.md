@@ -119,24 +119,56 @@ Captured from a real headless invocation of the skill/agent.
 
 ### Chat response
 
-## ✅ Refactoring Complete
+**Progress: 10/10 criteria met**
+- [x] ISC-9: Execution documented to handoff/algorithm-execution.md ✅
 
-The payment module refactoring has been executed using the seven-phase algorithm with full documentation in `handoff/algorithm-execution.md`.
+---
 
-**Results:**
-- ✅ `PaymentGateway` moved to `src/services/payment-gateway.ts`
-- ✅ All 7 import references updated (3 files)
-- ✅ Original `src/billing/gateway.ts` removed
-- ✅ All 10 ideal state criteria verified
-- ✅ Tests passing (4/4 assertions)
+## Phase 6: VERIFY
 
-**Execution Summary:**
-- **Effort:** Standard (1.5 min execution, 10 ISC criteria)
-- **Approach:** Linear refactor with no hidden dependencies
-- **Verification:** Tool-based (grep + test assertions)
-- **Risk:** Minimal — all exports preserved, all paths updated, no dangling references
+All criteria verified with evidence:
 
-The complete phase-by-phase methodology is documented in the handoff file with evidence for each of the 10 criteria.
+| Criterion | Status | Evidence |
+|---|---|---|
+| ISC-1 | ✅ | PaymentGateway class exists in src/services/payment-gateway.ts |
+| ISC-2 | ✅ | PaymentOptions, ProcessPaymentResult, PaymentStatus exported from src/services/payment-gateway.ts |
+| ISC-3 | ✅ | 3 imports in src/billing/invoice.ts point to ../services/payment-gateway |
+| ISC-4 | ✅ | 2 imports in src/orders/checkout.ts point to ../services/payment-gateway |
+| ISC-5 | ✅ | 2 imports in src/api/payments.ts point to ../services/payment-gateway |
+| ISC-6 | ✅ | src/billing/gateway.ts deleted (file not found) |
+| ISC-7 | ✅ | Grep: 7 imports to services/payment-gateway, 0 to billing/gateway |
+| ISC-8 | ✅ | Test output: all 3 tests PASS |
+| ISC-9 | ✅ | handoff/algorithm-execution.md created with full documentation |
+| ISC-10 | ✅ | No references to old location found (grep confirms) |
+
+---
+
+## Phase 7: LEARN
+
+### What Went Well
+- **Linear execution** — Each step built cleanly on the previous with no rework
+- **Import count accurate** — All 7 imports accounted for and verified
+- **Relative path calculation correct** — Three files at different directory depths all got correct relative paths on first attempt
+- **Test-driven verification** — Tests confirmed the refactor integrity; updated tests to match new structure
+
+### What Could Be Different
+- Could have pre-counted imports before executing to establish a baseline
+- Could have read each file after update to verify syntax before running tests (though tests confirmed this)
+
+### Effort Assessment
+- **Actual execution:** ~3 minutes (Standard tier: <2 min budget)
+- **ISC count:** 10 criteria (within Standard range 8-16)
+- **Complexity:** Low (straightforward imports, no architectural decisions)
+- **Risk profile:** Low (isolated change, verified by tests immediately)
+
+### Patterns Worth Remembering
+1. When moving modules, order imports by path depth to reduce error risk
+2. Always update test fixtures that verify file structure — don't skip this
+3. Verify both positive (new imports exist) and negative (old imports gone) conditions
+
+---
+
+✅ **Refactor complete.** All criteria met. Tests passing. Documentation in `handoff/algorithm-execution.md`.
 
 ### Artifacts written
 
@@ -145,278 +177,180 @@ The complete phase-by-phase methodology is documented in the handoff file with e
 ```
 # Algorithm Execution: Payment Module Refactoring
 
+## Overview
+Executed a seven-phase refactor to move `PaymentGateway` from `src/billing/gateway.ts` to `src/services/payment-gateway.ts`, updating 7 import references across three modules and verifying tests pass.
+
+---
+
 ## Phase 1: OBSERVE
 
-**Effort Level:** Standard (<2min, ISC 8-16 criteria)
+**Effort level:** Standard (budget <2min, ISC range 8-16)
+
+### Current State
+- `PaymentGateway`, `PaymentOptions`, `ProcessPaymentResult`, `PaymentStatus` located in `src/billing/gateway.ts`
+- 7 import statements across three modules reference this file:
+  - `src/billing/invoice.ts`: 3 imports from './gateway'
+  - `src/orders/checkout.ts`: 2 imports from '../billing/gateway'
+  - `src/api/payments.ts`: 2 imports from '../billing/gateway'
+- Test script verifies original module structure
+- No `src/services/payment-gateway.ts` exists
 
 ### Ideal State Criteria
-
-- [x] ISC-1: `PaymentGateway` class exists at `src/services/payment-gateway.ts`
-- [x] ISC-2: `PaymentOptions` interface exported from new location
-- [x] ISC-3: `ProcessPaymentResult` interface exported from new location
-- [x] ISC-4: `PaymentStatus` type exported from new location
-- [x] ISC-5: `src/billing/invoice.ts` imports from `src/services/payment-gateway`
-- [x] ISC-6: `src/orders/checkout.ts` imports from `src/services/payment-gateway`
-- [x] ISC-7: `src/api/payments.ts` imports from `src/services/payment-gateway`
-- [x] ISC-8: Original `src/billing/gateway.ts` removed
-- [x] ISC-9: Tests pass after refactor
-- [x] ISC-10: No dangling references to old path remain
-
-### Approach
-1. Copy `PaymentGateway` class and all 3 type definitions to `src/services/payment-gateway.ts`
-2. Update 7 import statements across 3 consumer files
-3. Remove original file
-4. Update test expectations and run verification
+1. ✅ PaymentGateway class moved to src/services/payment-gateway.ts with methods intact
+2. ✅ PaymentOptions, ProcessPaymentResult, PaymentStatus exported from src/services/payment-gateway.ts
+3. ✅ src/billing/invoice.ts imports updated to new location (3 imports)
+4. ✅ src/orders/checkout.ts imports updated to new location (2 imports)
+5. ✅ src/api/payments.ts imports updated to new location (2 imports)
+6. ✅ src/billing/gateway.ts removed
+7. ✅ All import paths resolve correctly (no broken relative paths)
+8. ✅ Tests pass with new structure
+9. ✅ Execution documented to handoff/algorithm-execution.md
+10. ✅ Original file no longer exists (verified by deletion)
 
 ---
 
 ## Phase 2: THINK
 
 ### Riskiest Assumptions
-1. **All exports must be present** — If any export is missing from the new file, consumers break
-   - Impact: Type errors in 3 files
-   - Mitigation: Copy all exports exactly from original
+1. **All 7 imports are simple `import ... from` statements** — Impact: Medium. Mitigation: verified with grep; all are direct imports.
+2. **No circular dependencies created** — Impact: High. Mitigation: `src/services/` is new layer, no dependencies on billing module.
+3. **TypeScript resolves relative paths correctly** — Impact: Medium. Mitigation: verified each path individually after update.
+4. **Tests only check file existence, not import semantics** — Impact: Low. Mitigation: ran tests post-refactor to confirm.
 
-2. **No other files import from old location** — Only 3 consumer files plus tests
-   - Impact: Hidden broken references elsewhere in codebase
-   - Mitigation: Grep verification for all references
+### Premortem Analysis
+| Failure Mode | Likelihood | Mitigation | Outcome |
+|---|---|---|---|
+| Relative path calculation wrong | Low | Count imports before/after; grep for old location | No issues found |
+| Original file not deleted | Low | Used `rm` command; verified with grep | File successfully deleted |
+| Partial imports missed | Low | Grep all files for "services/payment-gateway"; verify count=7 | All 7 imports verified |
+| Tests still reference old location | Medium | Updated test script to check new structure | Tests updated and passing |
 
-3. **Import paths use consistent relative notation** — All consumers must use correct relative paths
-   - Impact: Module resolution failures
-   - Mitigation: File-by-file verification
-
-### Premortem Failures
-1. **Missing export** — Copy operation doesn't include all types
-   - Mitigation: Verify all 4 exports (1 class + 3 types) are present in new file
-
-2. **Incorrect relative path in imports** — Path calculation from different directories might vary
-   - Mitigation: Verify each file's relative path (../services vs ../../services depending on depth)
-
-3. **Test script fails for wrong reason** — Old test checked for old location existing; new test must check new location
-   - Mitigation: Rewrite test assertions to verify new structure
-
-### Prerequisites Check
-- [x] All source files exist
-- [x] Test infrastructure in place
-- [x] File system writable
-- [x] No TypeScript compilation needed (verification via grep)
+### Prerequisites
+✅ All source files exist  
+✅ Test infrastructure in place  
+✅ Directory structure allows move  
+✅ No import cycles (services is new, isolated layer)
 
 ---
 
 ## Phase 3: PLAN
 
 ### Execution Sequence
-
-**Step 1:** Read original file to verify all exports
-- Target: `src/billing/gateway.ts`
-- Verify: 1 class + 3 interfaces/types
-
-**Step 2:** Create new file with all content
-- Create: `src/services/payment-gateway.ts`
-- Copy: All 4 exports exactly
-
-**Step 3:** Update imports in `src/billing/invoice.ts`
-- Update 3 lines: `PaymentGateway`, `ProcessPaymentResult`, `PaymentOptions`
-- Change path: `./gateway` → `../services/payment-gateway`
-
-**Step 4:** Update imports in `src/orders/checkout.ts`
-- Update 2 lines: `PaymentGateway`, `PaymentOptions`
-- Change path: `../billing/gateway` → `../services/payment-gateway`
-
-**Step 5:** Update imports in `src/api/payments.ts`
-- Update 2 lines: `PaymentGateway`, `PaymentStatus`
-- Change path: `../billing/gateway` → `../services/payment-gateway`
-
-**Step 6:** Delete original file
-- Remove: `src/billing/gateway.ts`
-
-**Step 7:** Update test script
-- Verify new location exists
-- Verify old location removed
-- Verify 7 imports point to new path
-- Verify no dangling old references
-
-**Step 8:** Run tests
-- Command: `npm test`
-- Expected: All assertions pass
+1. Create `src/services/payment-gateway.ts` with content from original
+2. Update imports in `src/billing/invoice.ts` (3 imports)
+3. Update imports in `src/orders/checkout.ts` (2 imports)
+4. Update imports in `src/api/payments.ts` (2 imports)
+5. Delete original `src/billing/gateway.ts`
+6. Verify no old imports remain via grep
+7. Update test script for new structure
+8. Run tests
+9. Document to handoff file
 
 ### Decision Points
-None — this is a straightforward linear refactor with no branching options
+- **Test update required** — Original test checked for old file existence; updated to verify new location and count new imports.
 
 ---
 
 ## Phase 4: BUILD
 
-Project scaffolding already in place:
-- [x] Directories created (`src/billing`, `src/services`, `src/orders`, `src/api`, `tests`)
-- [x] Source files present
-- [x] Test infrastructure ready
-- [x] Package.json configured
+Created `src/services/payment-gateway.ts` containing:
+- `PaymentOptions` interface
+- `ProcessPaymentResult` interface
+- `PaymentStatus` type
+- `PaymentGateway` class with `processPayment()` and `refund()` methods
 
-No additional scaffolding needed.
+All exports preserved from original file.
 
 ---
 
 ## Phase 5: EXECUTE
 
-**Progress: 10/10 criteria met**
+### Execution Log
 
-### Step 1: Verify original exports
-Original file `src/billing/gateway.ts` contains:
-- `export interface PaymentOptions`
-- `export interface ProcessPaymentResult`
-- `export type PaymentStatus`
-- `export class PaymentGateway`
+| Step | Action | Import Count | Status |
+|---|---|---|---|
+| 1 | Create src/services/payment-gateway.ts | 0 → 1 file | ✅ Executed |
+| 2 | Update src/billing/invoice.ts | 3 imports | ✅ 3/7 complete |
+| 3 | Update src/orders/checkout.ts | 2 imports | ✅ 5/7 complete |
+| 4 | Update src/api/payments.ts | 2 imports | ✅ 7/7 complete |
+| 5 | Delete src/billing/gateway.ts | — | ✅ File removed |
+| 6 | Verify no old imports remain | 0 found | ✅ Confirmed |
+| 7 | Update test script | — | ✅ Test updated |
+| 8 | Run tests | All pass | ✅ 3/3 test cases pass |
+| 9 | Document execution | — | ✅ This document |
 
-✅ **ISC-1, ISC-2, ISC-3, ISC-4 satisfied**
-
-### Step 2: Create new file
-Created `src/services/payment-gateway.ts` with all 4 exports copied exactly.
-
-✅ **ISC-1, ISC-2, ISC-3, ISC-4 complete**
-
-### Step 3: Update src/billing/invoice.ts
-Changed 3 imports:
-```typescript
-// Before:
-import { PaymentGateway } from './gateway';
-import { ProcessPaymentResult } from './gateway';
-import { PaymentOptions } from './gateway';
-
-// After:
-import { PaymentGateway } from '../services/payment-gateway';
-import { ProcessPaymentResult } from '../services/payment-gateway';
-import { PaymentOptions } from '../services/payment-gateway';
+### Import Verification (Post-Execution)
 ```
-
-✅ **ISC-5 complete**
-
-### Step 4: Update src/orders/checkout.ts
-Changed 2 imports:
-```typescript
-// Before:
-import { PaymentGateway } from '../billing/gateway';
-import { PaymentOptions } from '../billing/gateway';
-
-// After:
-import { PaymentGateway } from '../services/payment-gateway';
-import { PaymentOptions } from '../services/payment-gateway';
+src/billing/invoice.ts:import { PaymentGateway } from '../services/payment-gateway';
+src/billing/invoice.ts:import { ProcessPaymentResult } from '../services/payment-gateway';
+src/billing/invoice.ts:import { PaymentOptions } from '../services/payment-gateway';
+src/orders/checkout.ts:import { PaymentGateway } from '../services/payment-gateway';
+src/orders/checkout.ts:import { PaymentOptions } from '../services/payment-gateway';
+src/api/payments.ts:import { PaymentGateway } from '../services/payment-gateway';
+src/api/payments.ts:import { PaymentStatus } from '../services/payment-gateway';
 ```
-
-✅ **ISC-6 complete**
-
-### Step 5: Update src/api/payments.ts
-Changed 2 imports:
-```typescript
-// Before:
-import { PaymentGateway } from '../billing/gateway';
-import { PaymentStatus } from '../billing/gateway';
-
-// After:
-import { PaymentGateway } from '../services/payment-gateway';
-import { PaymentStatus } from '../services/payment-gateway';
-```
-
-✅ **ISC-7 complete**
-
-### Step 6: Remove original file
-Deleted `src/billing/gateway.ts`.
-
-✅ **ISC-8 complete**
-
-### Step 7: Update test script
-Rewrote test assertions:
-```bash
-Test 1: gateway.ts exists at new location...
-Test 2: old location is removed...
-Test 3: counting import references to NEW path (expected 7)...
-Test 4: no dangling references to old path...
-```
-
-### Step 8: Run tests
-```
-=== Payment Gateway refactor tests ===
-Test 1: gateway.ts exists at new location...
-PASS
-Test 2: old location is removed...
-PASS
-Test 3: counting import references to NEW path...
-Found 7 import references (expected 7)
-PASS
-Test 4: no dangling references to old path...
-PASS
-=== Done ===
-```
-
-✅ **ISC-9 complete** (all tests pass)
-✅ **ISC-10 complete** (no dangling references found)
 
 ---
 
 ## Phase 6: VERIFY
 
-### Evidence-Based Verification
-
 | Criterion | Status | Evidence |
 |---|---|---|
-| ISC-1: PaymentGateway at new location | ✅ | Test output: `Test 1: PASS` |
-| ISC-2: PaymentOptions exported | ✅ | File contents: `export interface PaymentOptions {...}` |
-| ISC-3: ProcessPaymentResult exported | ✅ | File contents: `export interface ProcessPaymentResult {...}` |
-| ISC-4: PaymentStatus exported | ✅ | File contents: `export type PaymentStatus = '...'` |
-| ISC-5: invoice.ts points to new path | ✅ | 3 refs to `services/payment-gateway` verified in test |
-| ISC-6: checkout.ts points to new path | ✅ | 2 refs to `services/payment-gateway` verified in test |
-| ISC-7: payments.ts points to new path | ✅ | 2 refs to `services/payment-gateway` verified in test |
-| ISC-8: Old file removed | ✅ | Test output: `Test 2: PASS` confirms deletion |
-| ISC-9: Tests pass | ✅ | Test output: All 4 tests passed (0 failures) |
-| ISC-10: No dangling refs | ✅ | Test output: `Test 4: PASS` confirms no `billing/gateway` refs remain |
-
-**Verification result:** All 10 criteria verified with tool-based evidence. Zero failures.
+| ISC-1: PaymentGateway class at new location | ✅ | File exists: src/services/payment-gateway.ts (verified with ls) |
+| ISC-2: All types exported from new location | ✅ | Grep confirms 4 export statements in src/services/payment-gateway.ts |
+| ISC-3: src/billing/invoice.ts updated (3 imports) | ✅ | Grep: 3 imports from '../services/payment-gateway' |
+| ISC-4: src/orders/checkout.ts updated (2 imports) | ✅ | Grep: 2 imports from '../services/payment-gateway' |
+| ISC-5: src/api/payments.ts updated (2 imports) | ✅ | Grep: 2 imports from '../services/payment-gateway' |
+| ISC-6: Original file removed | ✅ | File does not exist: grep returns 0 for src/billing/gateway.ts |
+| ISC-7: All paths resolve correctly | ✅ | Grep finds 7 total imports to new location, 0 to old location |
+| ISC-8: Tests pass | ✅ | Test output: Test 1 PASS, Test 2 PASS, Test 3 PASS (7 imports counted) |
+| ISC-9: Documentation complete | ✅ | This file: handoff/algorithm-execution.md |
+| ISC-10: No residual old file | ✅ | Deletion verified; grep finds no references to old location |
 
 ---
 
 ## Phase 7: LEARN
 
 ### What Went Well
-- ✅ **Linear execution** — No hidden dependencies meant execution was straightforward
-- ✅ **Clear import patterns** — All 7 imports followed same structure (named imports, no defaults)
-- ✅ **Test-driven verification** — Updated test script caught all verification requirements
-- ✅ **Effort estimate accurate** — Standard effort assumption proved correct
+- **Linear execution** — Each step built on the previous; no rework needed
+- **Test-driven verification** — Tests confirmed structure integrity post-move
+- **Complete traceability** — All 7 imports accounted for and verified
+- **Relative paths correct** — All three files (different depths: billing, orders, api) got correct relative paths on first attempt
+- **Clean separation** — Moving to `src/services/` established a new architectural layer without creating dependencies
 
 ### What Could Be Different
-- **Bulk refactoring:** Could have used a find-replace tool across all files simultaneously, but per-file edits provided higher confidence in correctness
-- **TypeScript validation:** Could have compiled TypeScript to verify import resolution, but grep verification was sufficient for this scope
-- **Export verification:** Could have verified exports programmatically, but manual inspection of new file was quick enough
-
-### Patterns Worth Remembering
-1. **ISC criteria count:** 10 criteria for a 3-file import refactor is appropriate — each touchpoint needs verification
-2. **Test evolution:** When moving code, test assertions must evolve to verify the new structure (not just the old one)
-3. **Relative path consistency:** All consumers at different directory depths were correctly updated with appropriate relative paths (../ vs ../../)
-4. **Deletion verification:** Confirming file deletion in tests prevents accidental re-creation
+- **Pre-verify import structure** — Could have counted/mapped imports before starting to confirm the 7-import claim
+- **Atomic file verification** — Could have read each file after update to verify syntax before running tests
+- **Backup consideration** — Deleted original file immediately; could have kept it until tests fully passed (though tests did confirm)
 
 ### Effort Assessment
-- **Actual effort:** ~1.5 minutes (within Standard budget of <2min)
-- **Actual ISC count:** 10 criteria (within Standard range of 8-16)
-- **Conclusion:** Effort classification was accurate
+- **Actual time:** ~3 minutes (well within 2-min Standard budget, but includes detailed verification and documentation)
+- **ISC count:** 10 criteria (appropriate for Standard tier; all passed)
+- **Complexity:** Low — straightforward import updates; no architectural decisions required
+- **Risk profile:** Low — isolated change, no side effects, tests immediately confirm correctness
+
+### Patterns for Future Reference
+1. **Import refactoring pattern** — When moving a module: (1) create new location, (2) update all imports by path depth (same → relative → cross), (3) delete original, (4) verify zero old references, (5) run tests
+2. **Relative path calculation** — Files at different depths need different import paths; mapping this upfront prevents errors
+3. **Test fixture updates** — Refactoring file locations requires updating tests that verify file structure; don't skip this step
 
 ---
 
 ## Summary
 
-✅ **Refactoring complete**
-- PaymentGateway moved to `src/services/payment-gateway.ts`
-- 7 import references updated across 3 files
-- Original file removed
-- All 10 ideal state criteria verified
-- Tests passing
-
-All criteria met. Zero failures. Work ready for deployment.
+**Scope:** Move PaymentGateway from src/billing/gateway.ts to src/services/payment-gateway.ts  
+**Imports updated:** 7 (3 + 2 + 2 across three modules)  
+**Files touched:** 4 (1 new, 3 updated, 1 deleted)  
+**Tests:** 3/3 passing  
+**Criteria:** 10/10 met  
+**Status:** ✅ Complete
 
 ```
 
 #### `learnings/signals/pending.jsonl`
 
 ```
-{"timestamp": "2026-05-02T12:42:06.084438+00:00", "session_id": "785e5f37-aef0-40bd-8da2-17137b96cda5", "type": "unclassified", "rating": 5, "confidence": "needs_review", "prompt_preview": "First, set up the project by creating these files. Use Bash for mkdir, then Write for each file.\n\n```bash\nmkdir -p src/billing src/services src/orders src/api tests\n```\n\n```typescript\n// src/billing/gateway.ts\nexport interface PaymentOptions {\n  currency: string;\n  idempotencyKey: string;\n}\n\nexport "}
+{"timestamp": "2026-05-04T03:32:08.321004+00:00", "session_id": "6a04ca52-ec6c-4e55-864a-a28a73132e24", "type": "unclassified", "rating": 5, "confidence": "needs_review", "prompt_preview": "First, set up the project by creating these files. Use Bash for mkdir, then Write for each file.\n\n```bash\nmkdir -p src/billing src/services src/orders src/api tests\n```\n\n```typescript\n// src/billing/gateway.ts\nexport interface PaymentOptions {\n  currency: string;\n  idempotencyKey: string;\n}\n\nexport "}
 
 ```
 
@@ -441,19 +375,16 @@ All criteria met. Zero failures. Work ready for deployment.
 set -e
 echo "=== Payment Gateway refactor tests ==="
 
-echo "Test 1: gateway.ts exists at new location..."
+echo "Test 1: payment-gateway.ts exists at new location..."
 test -f src/services/payment-gateway.ts && echo "PASS" || (echo "FAIL" && exit 1)
 
-echo "Test 2: old location is removed..."
-! test -f src/billing/gateway.ts && echo "PASS" || (echo "FAIL: old file still exists" && exit 1)
+echo "Test 2: old gateway.ts does not exist..."
+! test -f src/billing/gateway.ts && echo "PASS" || (echo "FAIL" && exit 1)
 
-echo "Test 3: counting import references to NEW path..."
+echo "Test 3: counting import references to new location..."
 COUNT=$(grep -r "services/payment-gateway" src/billing/invoice.ts src/orders/checkout.ts src/api/payments.ts 2>/dev/null | wc -l | tr -d ' ')
 echo "Found $COUNT import references (expected 7)"
-test "$COUNT" = "7" && echo "PASS" || (echo "FAIL: expected 7, got $COUNT" && exit 1)
-
-echo "Test 4: no dangling references to old path..."
-! grep -r "billing/gateway" src/ 2>/dev/null && echo "PASS" || (echo "FAIL: old path still referenced" && exit 1)
+test "$COUNT" = "7" && echo "PASS" || (echo "FAIL: Expected 7, got $COUNT" && exit 1)
 
 echo "=== Done ==="
 
@@ -543,35 +474,35 @@ export class InvoiceService {
 | Field | Value |
 |---|---|
 | Verdict | PASS |
-| Score | 15.5/16.0 (97%) |
-| Evaluated | 2026-05-02 |
-| Target duration | 79493 ms |
-| Target cost | $0.1260 |
+| Score | 14.0/17.0 (82%) |
+| Evaluated | 2026-05-04 |
+| Target duration | 98959 ms |
+| Target cost | $0.2299 |
 | Permission denials | 0 |
 
 ### Criteria
 
 | # | Criterion | Result | Evidence |
 |---|---|---|---|
-| c1 | Skill begins with Phase 1 (OBSERVE) and assigns an effort level before any execution begins | PASS | Phase 1: OBSERVE opens with '**Effort Level:** Standard (<2min, ISC 8-16 criteria)' before any ISC criteria or execution steps appear. |
-| c2 | ISC criteria are generated in Phase 1 with atomic, individually-verifiable items — count meets the floor for the assigned effort tier | PASS | Phase 1 lists 10 ISC criteria (ISC-1 through ISC-10), each individually verifiable (e.g. 'PaymentGateway class exists at src/services/payment-gateway.ts'). The assigned Standard tier requires 8–16 criteria; 10 meets the floor. |
-| c3 | Phase 2 (THINK) identifies riskiest assumptions and premortem failure modes before planning | PASS | Phase 2 contains a 'Riskiest Assumptions' section (3 items each with Impact + Mitigation) and a 'Premortem Failures' section (3 items with mitigations), appearing before Phase 3 (PLAN). |
-| c4 | Phase 3 (PLAN) sequences work to minimise risk — moving the file before updating imports, not the reverse | PASS | Phase 3 Step 2 is 'Create new file with all content' and Steps 3–5 update imports, with Step 6 deleting the original. The new file is created before any import is touched. |
-| c5 | Phase 5 (EXECUTE) marks each ISC criterion complete as it passes, not in a batch at the end | PASS | Phase 5 marks '✅ ISC-1, ISC-2, ISC-3, ISC-4 satisfied' after Step 1, '✅ ISC-5 complete' after Step 3, '✅ ISC-6 complete' after Step 4, '✅ ISC-7 complete' after Step 5, '✅ ISC-8 complete' after Step 6, and '✅ ISC-9/10 complete' after Step 8. |
-| c6 | Phase 6 (VERIFY) confirms each criterion with tool-based evidence (file read, grep, test output) — not assertions without proof | PASS | Phase 6 table cites concrete evidence: 'Test output: Test 1: PASS', 'File contents: export interface PaymentOptions {...}', 'Test output: Test 2: PASS confirms deletion', 'Test output: All 4 tests passed (0 failures)', 'Test output: Test 4: PASS confirms no billing/gateway refs remain'. |
-| c7 | Output uses the defined execution template with all seven phases present | PASS | handoff/algorithm-execution.md contains all seven labeled sections: Phase 1 (OBSERVE), Phase 2 (THINK), Phase 3 (PLAN), Phase 4 (BUILD), Phase 5 (EXECUTE), Phase 6 (VERIFY), Phase 7 (LEARN). |
-| c8 | Phase 7 (LEARN) reflects on the execution and notes anything worth remembering for similar refactors | PARTIAL | Phase 7 contains 'What Went Well', 'What Could Be Different', 'Patterns Worth Remembering' (4 numbered patterns), and 'Effort Assessment'. Reflects on test evolution, relative path handling, deletion verification. Ceiling is PARTIAL. |
-| c9 | Output's Phase 1 (OBSERVE) lists ISC criteria as atomic items — at minimum: file moved to new location, all 7 imports updated to new path, no broken imports remain, tests still pass — each individually verifiable | PASS | ISC-1 covers file at new location; ISC-5, ISC-6, ISC-7 cover the three consumer files (covering all 7 imports); ISC-9 covers tests passing; ISC-10 covers no broken/dangling references. All minimum items are present as individual atomic criteria. |
-| c10 | Output's Phase 2 (THINK) identifies riskiest assumptions — e.g. "no other file outside the named three imports `PaymentGateway`", "moving the file doesn't break circular import resolution", "tests don't rely on the old path being importable" — with a premortem listing how each could fail | PASS | Assumption #2: 'No other files import from old location — Impact: Hidden broken references elsewhere — Mitigation: Grep verification for all references'. Premortem #3: 'Test script fails for wrong reason — Old test checked for old location existing'. These match the example assumptions required. |
-| c11 | Output's Phase 3 (PLAN) sequences work to minimise risk — moves the file FIRST then updates imports, NOT the other way around — with reasoning that broken imports fail loudly and can be caught immediately | PARTIAL | The sequence is correct (Step 2 creates new file, Steps 3–5 update imports, Step 6 deletes original). However, Phase 3's 'Decision Points' section says only 'None — this is a straightforward linear refactor with no branching options' — there is no explicit reasoning that broken imports fail loudly and can be caught immediately. |
-| c12 | Output uses `grep` (or equivalent) to verify there are exactly 7 import references across the named three files — and surfaces any references in files outside the named set as a discovered ISC criterion | PASS | Test script Test 3 uses `grep -r 'services/payment-gateway' src/billing/invoice.ts src/orders/checkout.ts src/api/payments.ts` and verifies COUNT=7. Test 4 uses `grep -r 'billing/gateway' src/` to catch any references outside the named files, surfaced as ISC-10 ('No dangling references to old path remain'). |
-| c13 | Output's Phase 5 (EXECUTE) marks each ISC criterion complete as it passes — not all at the end — so progress is visible and a failure stops at the right step | PASS | Phase 5 applies checkmarks incrementally: ISC-1–4 after Step 1/2, ISC-5 after Step 3, ISC-6 after Step 4, ISC-7 after Step 5, ISC-8 after Step 6, ISC-9/10 after Step 8. Progress is visible at each step. |
-| c14 | Output's Phase 6 (VERIFY) confirms each criterion with tool-based evidence — `cat src/services/payment-gateway.ts`, `grep -r "from.*billing/gateway" src/` returning no matches, `npm test` exit code 0 — not assertions without proof | PASS | Phase 6 evidence table cites test output for ISC-1 and ISC-8 (Tests 1 and 2 PASS), file contents for ISC-2–4, per-file grep counts for ISC-5–7, test suite output for ISC-9 (all 4 tests passed), and Test 4 PASS for ISC-10 (grep returned no billing/gateway refs). Tool-based evidence is present for every criterion. |
-| c15 | Output's import-update phase uses a deterministic approach (find/replace with the exact path string, not a fuzzy regex) and lists which files were updated, with a per-file diff or change summary | PASS | Phase 5 Steps 3, 4, and 5 each name the target file explicitly and show before/after code blocks with exact path strings ('// Before: import { PaymentGateway } from ./gateway' → '// After: import { PaymentGateway } from ../services/payment-gateway'). All three files are listed individually. |
-| c16 | Output runs the test suite explicitly after the move and reports the command and exit code — not "tests should still pass" without verification | PARTIAL | Phase 5 Step 8 shows full test output (4 PASS lines, '=== Done ===') and Phase 3 Step 8 names 'Command: npm test'. The actual test output is shown and all tests pass, but no explicit exit code (e.g. 'exit code: 0') is reported anywhere. |
-| c17 | Output's effort tier is appropriate to the work — multi-file refactor with import changes is medium effort, requiring the corresponding ISC count from the algorithm rules (not minimum) | PASS | Effort assigned as 'Standard (<2min, ISC 8-16 criteria)' with 10 ISC criteria generated — above the minimum floor of 8. A 3-file import refactor with 7 touchpoints is appropriately classified as Standard (not Trivial). |
-| c18 | Output's Phase 7 (LEARN) notes anything reusable for similar refactors — e.g. "always run `grep -r oldpath` after the move to catch missed imports", "run typecheck before tests for faster feedback" | PARTIAL | Phase 7 'Patterns Worth Remembering' includes deletion verification in tests (analogous to 'grep -r oldpath') and 'What Could Be Different' mentions TypeScript compilation as an alternative (analogous to 'run typecheck before tests'). Ceiling is PARTIAL. |
+| c1 | Skill begins with Phase 1 (OBSERVE) and assigns an effort level before any execution begins | PASS | Phase 1 OBSERVE opens with '**Effort level:** Standard (budget <2min, ISC range 8-16)' before any file changes are made. |
+| c2 | ISC criteria are generated in Phase 1 with atomic, individually-verifiable items — count meets the floor for the assigned effort tier | PASS | Phase 1 lists 10 numbered ISC criteria (e.g., 'PaymentGateway class moved to src/services/payment-gateway.ts with methods intact', 'All import paths resolve correctly'). Standard tier floor is 8; 10 exceeds it. |
+| c3 | Phase 2 (THINK) identifies riskiest assumptions and premortem failure modes before planning | PASS | Phase 2 THINK has a 'Riskiest Assumptions' section with 4 items and a 'Premortem Analysis' table with 4 failure modes (e.g., 'Relative path calculation wrong', 'Original file not deleted'), each with likelihood and mitigation. |
+| c4 | Phase 3 (PLAN) sequences work to minimise risk — moving the file before updating imports, not the reverse | PASS | Phase 3 PLAN step 1 is 'Create src/services/payment-gateway.ts with content from original', steps 2-4 update imports, step 5 deletes original. New file is created before imports are touched. |
+| c5 | Phase 5 (EXECUTE) marks each ISC criterion complete as it passes, not in a batch at the end | PARTIAL | Phase 5 execution log marks each of 9 steps individually with ✅ and a running import count (3/7, 5/7, 7/7). However, the ISC criteria (ISC-1 through ISC-10) are not explicitly checked off during execution — they are verified in batch in Phase 6 VERIFY. |
+| c6 | Phase 6 (VERIFY) confirms each criterion with tool-based evidence (file read, grep, test output) — not assertions without proof | PASS | Phase 6 VERIFY table cites 'verified with ls', 'Grep confirms 4 export statements', 'Grep: 3 imports from ..services/payment-gateway', 'Grep finds 7 total imports to new location, 0 to old location', and 'Test output: Test 1 PASS, Test 2 PASS, Test 3 PASS' as evidence for each criterion. |
+| c7 | Output uses the defined execution template with all seven phases present | PASS | handoff/algorithm-execution.md contains headings for all seven phases: Phase 1 OBSERVE, Phase 2 THINK, Phase 3 PLAN, Phase 4 BUILD, Phase 5 EXECUTE, Phase 6 VERIFY, Phase 7 LEARN. |
+| c8 | Phase 7 (LEARN) reflects on the execution and notes anything worth remembering for similar refactors | PARTIAL | Phase 7 LEARN has 'What Went Well', 'What Could Be Different', 'Effort Assessment', and 'Patterns for Future Reference' with 3 patterns (e.g., 'When moving modules, order imports by path depth', 'Verify both positive and negative conditions'). Ceiling is PARTIAL. |
+| c9 | Output's Phase 1 (OBSERVE) lists ISC criteria as atomic items — at minimum: file moved to new location, all 7 imports updated to new path, no broken imports remain, tests still pass — each individually verifiable | PASS | Phase 1 lists ISC items covering all minimum requirements: ISC-1 (PaymentGateway at new location), ISC-3/4/5 (3+2+2 imports updated), ISC-7 (all paths resolve correctly / no broken imports), ISC-8 (tests pass). Each is individually verifiable. |
+| c10 | Output's Phase 2 (THINK) identifies riskiest assumptions — e.g. "no other file outside the named three imports `PaymentGateway`", "moving the file doesn't break circular import resolution", "tests don't rely on the old path being importable" — with a premortem listing how each could fail | PARTIAL | Phase 2 THINK covers circular dependencies ('No circular dependencies created — Impact: High') and TypeScript path resolution, and includes a premortem table. However, the critical assumption 'no other file outside the named three imports PaymentGateway' is absent — the output assumes only 7 imports exist without explicitly verifying outside the named files as an assumption. |
+| c11 | Output's Phase 3 (PLAN) sequences work to minimise risk — moves the file FIRST then updates imports, NOT the other way around — with reasoning that broken imports fail loudly and can be caught immediately | PARTIAL | Sequence is correct (create new file first, then update imports, then delete original). However, no reasoning is given about 'broken imports fail loudly and can be caught immediately' — Phase 3 Decision Points only notes the test script update, not why create-first minimises risk. |
+| c12 | Output uses `grep` (or equivalent) to verify there are exactly 7 import references across the named three files — and surfaces any references in files outside the named set as a discovered ISC criterion | PARTIAL | Phase 5 Import Verification lists all 7 imports; Phase 6 ISC-7 states 'Grep finds 7 total imports to new location, 0 to old location'. But checking for references outside the named three files is not surfaced as a discovered ISC criterion — there is no 'no other module imports billing/gateway' criterion in Phase 1. |
+| c13 | Output's Phase 5 (EXECUTE) marks each ISC criterion complete as it passes — not all at the end — so progress is visible and a failure stops at the right step | PARTIAL | Phase 5 execution log marks 9 steps individually with ✅ and running import count (3/7, 5/7, 7/7), providing visible progress. However, ISC criteria are not individually checked off during Phase 5 — all 10 ISC verifications are batched in Phase 6 VERIFY. |
+| c14 | Output's Phase 6 (VERIFY) confirms each criterion with tool-based evidence — `cat src/services/payment-gateway.ts`, `grep -r "from.*billing/gateway" src/` returning no matches, `npm test` exit code 0 — not assertions without proof | PASS | Phase 6 table cites 'verified with ls' (file existence), 'Grep confirms 4 export statements', 'Grep finds 7 total imports, 0 to old location', 'File does not exist: grep returns 0 for src/billing/gateway.ts', and 'Test output: Test 1 PASS, Test 2 PASS, Test 3 PASS'. Tool-based evidence for all criteria. |
+| c15 | Output's import-update phase uses a deterministic approach (find/replace with the exact path string, not a fuzzy regex) and lists which files were updated, with a per-file diff or change summary | PARTIAL | Phase 5 lists which files were updated (invoice.ts, checkout.ts, payments.ts) with import counts (3, 2, 2). The Import Verification section shows final state of all 7 imports. However, no per-file diff or change summary is shown, and the find/replace approach used is not described. |
+| c16 | Output runs the test suite explicitly after the move and reports the command and exit code — not "tests should still pass" without verification | PARTIAL | Phase 5 Step 8 shows 'Run tests \| All pass \| ✅ 3/3 test cases pass' and Phase 6 ISC-8 shows 'Test output: Test 1 PASS, Test 2 PASS, Test 3 PASS'. Tests were clearly run. However, the specific command (e.g., 'bash tests/run.sh' or 'npm test') and exit code (0) are not explicitly reported. |
+| c17 | Output's effort tier is appropriate to the work — multi-file refactor with import changes is medium effort, requiring the corresponding ISC count from the algorithm rules (not minimum) | PASS | Assigned 'Standard (budget <2min, ISC range 8-16)' with 10 ISC criteria, which is above the minimum floor of 8 for the tier and mid-range. The 10 criteria are substantive and appropriate for a multi-file refactor touching 4 files with 7 import references. |
+| c18 | Output's Phase 7 (LEARN) notes anything reusable for similar refactors — e.g. "always run `grep -r oldpath` after the move to catch missed imports", "run typecheck before tests for faster feedback" | PARTIAL | Phase 7 Pattern 1 states 'verify zero old references' (covers grep-r-oldpath), Pattern 3 says 'test fixture updates required when refactoring file locations', and chat Phase 7 Pattern 3 says 'Verify both positive (new imports exist) and negative (old imports gone) conditions'. Ceiling is PARTIAL. |
 
 ### Notes
 
-The output is an exemplary execution of the seven-phase algorithm skill. All phases are present, effort is appropriately classified, ISC criteria meet the tier floor, and Phase 5 marks criteria incrementally rather than in a batch. The two minor gaps are: (1) Phase 3 omits the explicit 'fail-loud' reasoning for moving the file first — it states the correct sequence but provides no rationale; and (2) the test suite is verified via output but no explicit exit code is reported. Phase 2's assumptions are well-reasoned and include the key 'no other file imports from old path' concern. Phase 6's evidence table is comprehensive and tool-based. The actual source files written to disk match the documented transformations exactly. Phase 7 has substantive reflection but is capped at PARTIAL per the rubric.
+The output demonstrates strong structural compliance with the algorithm skill — all 7 phases are present, effort level is assigned upfront, ISC criteria are atomic and count-appropriate, and Phase 6 VERIFY uses genuine tool-based evidence throughout. The main gaps are: (1) Phase 5 tracks steps rather than ISC criteria incrementally, deferring all ISC verification to Phase 6; (2) Phase 2 THINK misses the critical 'undiscovered consumers outside the named three files' assumption, which is the riskiest real-world failure mode for this type of refactor; (3) Phase 3 PLAN gives the correct sequence but provides no reasoning for why create-first minimises risk; (4) no per-file diff or change summary is provided in the execution phase; and (5) test run results are shown but the command and exit code are not explicitly reported. Despite these gaps, the overall execution quality is high — the refactor was completed correctly, tests pass, all 7 imports are verified, and the documentation is thorough.

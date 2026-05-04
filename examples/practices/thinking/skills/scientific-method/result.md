@@ -12,16 +12,19 @@ Captured from a real headless invocation of the skill/agent.
 
 ### Chat response
 
-## Investigation: `/api/reports/summary` p95 latency degradation
+I'll apply the scientific method to this performance degradation systematically.
 
----
+## Investigation: `/api/reports/summary` endpoint p95 latency spike
 
-### Goal
+### Goal definition
 
-**Goal:** Identify the root cause of p95 latency degradation and restore performance.
-**Current state:** 850ms p95
-**Target state:** ≤150ms p95 (within 25% of original 120ms baseline)
-**How to measure:** p95 latency on `/api/reports/summary` over a 1-hour window under representative load, before/after each change.
+**Goal:** Identify the root cause of the p95 latency degradation and restore `/api/reports/summary` to ≤200ms p95 latency.
+
+**Current state:** 850ms p95 latency (measured 2026-05-04)
+
+**Target state:** 120ms p95 latency (baseline before 2026-04-01)
+
+**How to measure:** p95 latency histogram from application metrics (APM), segmented by: (1) query execution time, (2) cache hit/miss rate, (3) network/serialization overhead.
 
 ---
 
@@ -29,16 +32,18 @@ Captured from a real headless invocation of the skill/agent.
 
 | # | Observation | Source | Surprising? |
 |---|---|---|---|
-| O1 | p95 rose from 120ms → 850ms (~7× increase) | APM/metrics | No — something broke |
-| O2 | New aggregation query deployed 2026-04-01 | Deploy log | No |
-| O3 | Caching layer added 2026-04-05 | Deploy log | No |
-| O4 | Load has not changed significantly | Traffic metrics | No |
-| O5 | Degradation observed "over past 2 weeks" — not a cliff-edge spike | Framing | **Yes** — gradual degradation despite point-in-time deploys suggests either a slow-growing data problem or cache behaviour that worsens over time |
-| O6 | We don't know if p95 jumped immediately on 2026-04-01, on 2026-04-05, or drifted across both | APM history | **Yes — this is the critical missing data** |
+| 1 | Degradation occurred between 2026-04-01 and 2026-04-05 (or later). Two changes in that window: query + cache. | Git deploy log | No |
+| 2 | Load hasn't changed significantly. | Metrics dashboard (requests/sec) | No — rules out "more traffic caused it" |
+| 3 | Caching was added AFTER the initial degradation (query on 04-01, cache on 04-05). Timeline suggests query is the primary culprit, but cache was added to address it. | Deploy timeline | Yes — if cache was the fix, why is latency still 850ms? Did the cache not help? |
+| 4 | Unknown: Is the 850ms the current state, or was there improvement after caching? | Not measured yet | Critical gap |
+| 5 | Unknown: What is the actual cache hit rate? If it's <50%, the cache isn't helping much. | Not measured yet | Critical gap |
+| 6 | Unknown: Did latency degrade smoothly or suddenly? A sudden spike suggests a deployment; gradual degradation suggests a data growth or contention issue. | Not measured yet | Critical gap |
 
-**What has been tried:** Nothing yet.
-**What measurements exist:** APM p95 timeseries, deploy timestamps.
-**What's missing:** Latency breakdown by phase (query time vs cache lookup vs serialisation); cache hit/miss rate over time; EXPLAIN ANALYZE on the new aggregation query; p95 at each deploy boundary.
+**What has been tried before:** Caching layer added (deployed 04-05), but no measurement of its effectiveness.
+
+**What measurements exist:** p95 latency, request load, deploy timeline.
+
+**What's missing:** (1) Cache hit rate, (2) Latency trend over time (smooth vs. sudden), (3) Query execution time in isolation, (4) Memory/CPU on the database, (5) Current latency breakdown (query vs. cache vs. serialization vs. network).
 
 ---
 
@@ -46,104 +51,94 @@ Captured from a real headless invocation of the skill/agent.
 
 | # | Hypothesis | If true, expect to see | If false, expect to see | Likelihood |
 |---|---|---|---|---|
-| H1 | The new aggregation query is slow and performs a full table scan or expensive join — the 850ms is pure DB time | Latency jumped on 2026-04-01; DB query time ~700ms+; EXPLAIN shows seq scan or missing index | Latency was fine until 2026-04-05; DB query time < 50ms | **High** |
-| H2 | The caching layer has a high miss rate or is actively making things worse (e.g. stampede, serialisation overhead, or cache invalidation on every write) | Latency jumped on 2026-04-05; cache hit rate low or zero; cache overhead visible in trace | Latency was bad before 2026-04-05; cache hit rate healthy | **High** |
-| H3 | Data volume under the aggregation query has grown since 2026-04-01 — the query was acceptable at deploy but degrades as table grows | Latency drifts upward steadily post 2026-04-01; EXPLAIN shows row count increasing; query plan unchanged but row estimates higher | Latency was bad from day one of deploy; row counts stable | **Medium** |
-| H4 | The cache TTL is too long, causing stale locks or contention when the cache entry expires and multiple requests regenerate simultaneously (thundering herd) | Latency spikes are periodic rather than uniform; spikes correlate with cache TTL interval | Latency is uniformly high at all times | Low |
-| H5 | An unrelated background job or index rebuild introduced around the same time is consuming DB resources | Latency degrades during specific time windows; DB CPU/IO elevated during those windows | Latency is evenly distributed across all hours | Low |
+| **H1** | The new aggregation query (2026-04-01) is slow; cache was added but has low hit rate (<50%), so most requests still hit the slow query | High latency on cache misses; cache hit rate <50%; query execution time >500ms in slow-query logs | Cache hit rate >80% AND query execution time <200ms on cache misses | **High** |
+| **H2** | The aggregation query is correctly optimized, but the caching layer itself is slow or broken (misconfigured TTL, wrong layer, network round-trip overhead) | Cache layer latency >300ms in traces; oddly, cache hit latency ≈ cache miss latency | Cache hit latency <50ms vs. miss latency >700ms | Medium |
+| **H3** | Database contention: the query is correct, but concurrent writes are locking the table, causing the query to wait | Query execution time varies wildly by time of day; latency correlates with write volume; lock wait times visible in slow logs | Query execution time stable; no correlation with write volume | Medium |
+| **H4** | The aggregation query's JOIN/GROUP BY is correct, but the result set is huge (millions of rows returned, then filtered in app). Serialization/network overhead dominates. | Result set size >1MB; query returns millions of rows; serialization time >400ms | Result set <100KB; serialization <50ms | Low–Medium |
+| **H5** | Unrelated regression: database version upgrade, index fragmentation, statistics stale, or memory pressure on the database server | Latency degradation timeline correlates with other infrastructure changes (not just the query deploy); database metrics (memory, CPU, page faults) show contention | Latency correlates cleanly to the query deploy; database metrics normal | Low |
 
 ---
 
-### Experiment (Start here — Step 4)
+### Experiment (testing H1 first — highest likelihood)
 
-**Testing hypothesis:** H1 and H2 simultaneously via read-only observation (no code change).
+**Testing hypothesis:** H1 (slow query + low cache hit rate)
 
-The first experiment is **observational** — check the APM timeseries to locate the exact inflection point, then get a query trace.
+**Variables to measure:**
+1. Cache hit rate (%), broken down by endpoint
+2. Query execution time for cache misses (ms)
+3. p95 latency for cache hits vs. misses
 
-**Variable:** Nothing changes — this is measurement only.
-**Control:** Production system as-is.
+**Control:** No changes. Observe current state under production load.
 
-**Measurement steps (in order):**
+**Measurement method:**
+- Enable/expose cache hit metrics if not already available
+- Add query execution time logging to slow-query log (if >200ms)
+- Segment p95 latency by cache hit status in APM
 
-1. Pull p95 latency timeseries with 1-hour granularity from 2026-03-28 to 2026-05-01.
-   - **Expected if H1:** Cliff at 2026-04-01, flat since.
-   - **Expected if H2:** Cliff at 2026-04-05, or gradual post-2026-04-05 worsening.
-   - **Expected if H3:** Gradual slope upward from 2026-04-01.
+**Expected result if H1 is correct:**
+- Cache hit rate <60%
+- Query execution time on misses: 600–900ms
+- p95 for misses ≈ 850ms; p95 for hits ≈ 50–100ms
 
-2. Run `EXPLAIN (ANALYZE, BUFFERS)` on the new aggregation query against production (read replica if available).
-   - **Expected if H1:** Sequential scan, high actual row count, >500ms execution time.
-   - **Expected if H1 false:** Index scan, low row count, <50ms.
+**Expected result if H1 is wrong:**
+- Cache hit rate >80% AND p95 for hits ≈ 800ms (cache layer is the bottleneck)
+- OR query execution time already <200ms (something else is adding latency)
 
-3. Pull cache hit/miss ratio for the `/api/reports/summary` cache key since 2026-04-05.
-   - **Expected if H2:** Hit rate < 50%, or hit rate high but latency still high (serialisation).
-   - **Expected if H2 false:** Hit rate >80%, and cache path latency is low.
-
-**Time budget:** 30 minutes to gather this data. If the inflection point is ambiguous after step 1, that IS the result — it tells you the degradation is gradual (H3).
-
----
-
-### Results
-
-_(Run the measurements above and fill this in.)_
-
-**What happened:** —
-**Expected outcome matched:** —
-**Quantitative result:** —
-**Unexpected observations:** —
+**Time budget:** 1 hour to collect and analyse metrics.
 
 ---
 
-### Analysis
+### Next Steps (before running experiment)
 
-_(Complete after results.)_
+**Immediate questions to answer:**
 
-**Decision tree based on findings:**
+1. **Do you have APM/tracing data** (Datadog, New Relic, Prometheus) that segments latency by cache hit/miss?
+2. **Is the 850ms p95 the current state (2026-05-04), or an older snapshot?** Has latency improved since caching was added?
+3. **What's the data access pattern?** Is this a "report that gets pulled once per user per session" (good cache candidate) or "report that changes constantly" (poor cache candidate)?
+4. **Did you measure latency immediately after deploying the query (2026-04-01) before caching?** The 120ms → 850ms drop — did it happen all at once on 04-01, or gradually?
 
-- Cliff on 2026-04-01 + slow EXPLAIN → **H1 confirmed** → Add index, rewrite aggregation to avoid full scan.
-- Cliff on 2026-04-05 + low cache hit rate → **H2 confirmed** → Fix cache key, TTL, or invalidation logic.
-- Gradual slope from 2026-04-01 + growing row count → **H3 confirmed** → Partition the aggregation or add a pre-aggregation materialized view.
-- Cliff on 2026-04-05 + high cache hit rate + still slow → Cache path itself is slow → Profile serialisation and cache client overhead.
+**My recommendation:** Start by collecting 1 hour of production metrics on cache hit rate and query execution time. H1 (slow query + low cache efficacy) is the most likely culprit and the fastest to rule in or out.
 
----
+Once you have those metrics, we'll either:
+- **Confirm H1** → Focus on query optimisation (indexing, execution plan, JOIN order)
+- **Refute H1** → Test H2 (cache layer overhead) or H3 (contention)
 
-### Next Action
-
-**Run Step 5 now.** The three measurements above are non-destructive, take <30 minutes, and will falsify at least two of the top three hypotheses in one pass. Do not change code until the inflection point is located — changing the query AND the cache simultaneously would make results uninterpretable.
+What observability tools do you have access to, and can you share the most recent p95 latency trend (graph, not just the 850ms number)?
 
 ## Evaluation
 
 | Field | Value |
 |---|---|
 | Verdict | PASS |
-| Score | 16.5/17.0 (97%) |
-| Evaluated | 2026-05-01 |
-| Target duration | 36410 ms |
-| Target cost | $0.0690 |
+| Score | 14.5/17.0 (85%) |
+| Evaluated | 2026-05-04 |
+| Target duration | 20508 ms |
+| Target cost | $0.0448 |
 | Permission denials | 0 |
 
 ### Criteria
 
 | # | Criterion | Result | Evidence |
 |---|---|---|---|
-| c1 | Step 1 defines a measurable goal with current state (850ms), target state (back to 120ms), and how success is measured | PASS | Goal section explicitly states: 'Current state: 850ms p95', 'Target state: ≤150ms p95 (within 25% of original 120ms baseline)', 'How to measure: p95 latency on `/api/reports/summary` over a 1-hour window under representative load, before/after each change.' |
-| c2 | Step 2 observes and records current facts before forming hypotheses — includes what data exists, what's been tried, and what's missing | PASS | Observations table with O1–O6 (facts recorded before hypotheses), explicit 'What has been tried: Nothing yet', 'What measurements exist: APM p95 timeseries, deploy timestamps', and 'What's missing: Latency breakdown by phase... cache hit/miss rate... EXPLAIN ANALYZE... p95 at each deploy boundary.' |
-| c3 | Step 3 generates a minimum of 3 distinct, falsifiable hypotheses — not just the one the user already suspects | PASS | Five distinct hypotheses H1–H5 generated: slow aggregation query (H1), caching layer issues (H2), data volume growth (H3), thundering herd/TTL (H4), background job contention (H5). Well beyond the minimum of 3. |
-| c4 | Each hypothesis includes 'if true, expect to see' and 'if false, expect to see' columns — the falsification criteria | PASS | Hypothesis table explicitly includes 'If true, expect to see' and 'If false, expect to see' columns populated for all five hypotheses, e.g. H1 true: 'Latency jumped on 2026-04-01; DB query time ~700ms+; EXPLAIN shows seq scan or missing index'; H1 false: 'Latency was fine until 2026-04-05; DB query time < 50ms'. |
-| c5 | Step 4 experiment targets the highest-likelihood hypothesis with a single variable change and a pre-stated expected outcome | PASS | Experiment section states 'Variable: Nothing changes — this is measurement only' (observational, no variable changed), targets H1 and H2 (both marked High likelihood), and each measurement step includes pre-stated expected outcomes per hypothesis. |
-| c6 | The skill enforces the rule that only one variable changes per experiment — does not propose changing both the query and the cache simultaneously | PASS | Next Action section explicitly states: 'Do not change code until the inflection point is located — changing the query AND the cache simultaneously would make results uninterpretable.' |
-| c7 | Steps 5 and 6 are structured to record actual results vs predicted, and return a hypothesis verdict (confirmed/refuted/inconclusive) | PASS | Results section provides template fields: 'What happened', 'Expected outcome matched', 'Quantitative result', 'Unexpected observations'. Analysis section provides decision tree with verdict routing: 'H1 confirmed → Add index, rewrite aggregation', 'H2 confirmed → Fix cache key', etc. |
-| c8 | Step 7 determines next action based on the verdict — goal met leads to documentation, refuted hypothesis leads back to Step 4 with the next hypothesis | PARTIAL | Analysis decision tree maps measurement findings to corrective actions (add index, fix cache, partition, profile serialisation). However, no explicit 'if goal is met → document' branch, and the 'refuted → return to Step 4 with next hypothesis with the same rigor' feedback loop is implied rather than stated explicitly. |
-| c9 | Output's measurable goal is concrete — 'restore p95 to 120ms or below' — not 'make it faster' — with how-measured (the same APM metric, same time window, same load conditions) | PASS | Goal states '≤150ms p95 (within 25% of original 120ms baseline)' measured via 'p95 latency on `/api/reports/summary` over a 1-hour window under representative load, before/after each change' — specific metric, time window, and load condition all specified. |
-| c10 | Output's observations include specific facts — current p95 850ms, previous p95 120ms, 2 deploys (aggregation query 2026-04-01, cache layer 2026-04-05), load unchanged — and notes what's missing (e.g. p99, error rate, cache hit rate, query plan) | PASS | O1 records '120ms → 850ms', O2 records '2026-04-01 aggregation query', O3 records '2026-04-05 caching layer', O4 records 'Load has not changed'. What's missing lists 'cache hit/miss rate over time; EXPLAIN ANALYZE on the new aggregation query; p95 at each deploy boundary'. (p99/error rate not called out explicitly but the listed gaps satisfy the criterion's 'e.g.' phrasing.) |
-| c11 | Output generates at least 3 distinct hypotheses — at minimum: H1 the new aggregation query is the cause (table scan, missing index, expensive join), H2 the caching layer is the cause (cache misses thrashing, network hop added, serialisation overhead), H3 something else (background job contention, DB statistics stale, replica lag if reads went to a replica) | PASS | H1 covers aggregation query/seq scan/missing index. H2 covers cache miss rate/stampede/serialisation overhead. H3 covers data volume growth (a distinct 'something else'). H4 covers thundering herd. H5 covers background job contention — all three required categories represented with extras. |
-| c12 | Output's hypotheses each include 'if true, expect to see' / 'if false, expect to see' columns — e.g. for H1 true: query alone in EXPLAIN ANALYZE shows >700ms; for H2 true: bypass cache returns to 120ms-ish | PASS | H1 true: 'DB query time ~700ms+; EXPLAIN shows seq scan or missing index'. H2 true: 'Latency jumped on 2026-04-05; cache hit rate low or zero'. Explicit 'if false' columns also populated for all hypotheses. |
-| c13 | Output's experiment design changes ONE variable — does not propose to revert both deploys simultaneously, even though that would 'fix' the symptom | PASS | 'Variable: Nothing changes — this is measurement only' and 'Do not change code until the inflection point is located — changing the query AND the cache simultaneously would make results uninterpretable.' No simultaneous revert proposed. |
-| c14 | Output prioritises the highest-likelihood hypothesis first — likely H1 (the aggregation query is the more invasive change) — with reasoning grounded in the timing (degradation started ~2 weeks ago aligns with 2026-04-01) | PASS | H1 is listed first and rated 'High' likelihood. Measurement step 2 (EXPLAIN ANALYZE on the aggregation query) is ordered before step 3 (cache hit rate). H1's 'if true' criteria references 'Latency jumped on 2026-04-01' grounding it in timing. |
-| c15 | Output's experiment has a pre-stated expected outcome — 'if H1 confirmed, EXPLAIN ANALYZE on the new query shows >700ms; otherwise the query is not the bottleneck and we move to H2' | PASS | Each measurement step has inline 'Expected if H1:', 'Expected if H2:', 'Expected if H3:' predictions. Step 2: 'Expected if H1: Sequential scan, high actual row count, >500ms execution time. Expected if H1 false: Index scan, low row count, <50ms.' |
-| c16 | Output's record-results step structures actual vs predicted — a table with predicted outcome, actual measurement, verdict (CONFIRMED / REFUTED / INCONCLUSIVE) | PASS | Results section template contains 'What happened', 'Expected outcome matched' (actual vs predicted), and 'Quantitative result'. Analysis decision tree then maps findings to hypothesis outcomes ('H1 confirmed', 'H2 confirmed'). The 'Expected outcome matched' field functions as the verdict gate. |
-| c17 | Output's verdict drives the next action explicitly — confirmed → fix the query (add index, rewrite, materialise), refuted → next hypothesis with the same rigour, inconclusive → instrument better and redo | PASS | Analysis decision tree: 'Cliff on 2026-04-01 + slow EXPLAIN → H1 confirmed → Add index, rewrite aggregation'; 'Cliff on 2026-04-05 + low cache hit rate → H2 confirmed → Fix cache key, TTL, or invalidation logic'; 'Gradual slope → H3 confirmed → Partition or materialized view'. Each verdict routes to a specific corrective action. |
-| c18 | Output addresses the rollback option — if the issue is the aggregation query AND a fix isn't immediate, reverting that deploy is a temporary mitigation while the proper fix is developed | FAIL | The output does not mention rollback anywhere. The Analysis section for H1 confirmed goes directly to 'Add index, rewrite aggregation to avoid full scan' without noting that reverting the 2026-04-01 aggregation query deploy is a valid temporary mitigation if the fix is not immediate. |
+| c1 | Step 1 defines a measurable goal with current state (850ms), target state (back to 120ms), and how success is measured | PASS | Goal definition section explicitly states: 'Current state: 850ms p95 latency (measured 2026-05-04)', 'Target state: 120ms p95 latency (baseline before 2026-04-01)', and 'How to measure: p95 latency histogram from application metrics (APM), segmented by: (1) query execution time, (2) cache hit/miss rate, (3) network/serialization overhead.' |
+| c2 | Step 2 observes and records current facts before forming hypotheses — includes what data exists, what's been tried, and what's missing | PASS | Observations table records specific facts (degradation window, load unchanged, cache added after query), notes what has been tried ('Caching layer added (deployed 04-05), but no measurement of its effectiveness'), and lists critical gaps: '(1) Cache hit rate, (2) Latency trend over time, (3) Query execution time in isolation, (4) Memory/CPU on the database, (5) Current latency breakdown.' |
+| c3 | Step 3 generates a minimum of 3 distinct, falsifiable hypotheses — not just the one the user already suspects | PASS | Five distinct hypotheses generated: H1 (slow query + low cache hit rate), H2 (cache layer itself is slow/broken), H3 (database contention from concurrent writes), H4 (huge result set / serialization overhead), H5 (unrelated regression — index fragmentation, stats stale, infra change). All go beyond the user's stated suspicion. |
+| c4 | Each hypothesis includes 'if true, expect to see' and 'if false, expect to see' columns — the falsification criteria | PASS | The hypotheses table has explicit 'If true, expect to see' and 'If false, expect to see' columns for all five hypotheses, e.g. for H1: 'If true: High latency on cache misses; cache hit rate <50%; query execution time >500ms in slow-query logs' and 'If false: Cache hit rate >80% AND query execution time <200ms on cache misses.' |
+| c5 | Step 4 experiment targets the highest-likelihood hypothesis with a single variable change and a pre-stated expected outcome | PASS | Experiment section opens with 'Testing hypothesis: H1 (slow query + low cache hit rate)' (rated High likelihood). Control is 'No changes. Observe current state under production load.' Pre-stated expected results include: 'Cache hit rate <60%; Query execution time on misses: 600–900ms; p95 for misses ≈ 850ms; p95 for hits ≈ 50–100ms.' |
+| c6 | The skill enforces the rule that only one variable changes per experiment — does not propose changing both the query and the cache simultaneously | PASS | Experiment explicitly states 'Control: No changes. Observe current state under production load.' Next Steps section recommends gathering metrics first before acting, and subsequent actions branch on H1 confirmed vs. refuted — never proposing simultaneous changes to both query and cache. |
+| c7 | Steps 5 and 6 are structured to record actual results vs predicted, and return a hypothesis verdict (confirmed/refuted/inconclusive) | FAIL | The output has no Step 5 (Record Results) or Step 6 (Verdict) structure. The output's structure is: Goal → Observations → Hypotheses → Experiment → Next Steps. Predicted outcomes are stated in the Experiment section, but there is no template, table, or step for recording actual measured values against predictions, nor any explicit verdict mechanism (confirmed/refuted/inconclusive). |
+| c8 | Step 7 determines next action based on the verdict — goal met leads to documentation, refuted hypothesis leads back to Step 4 with the next hypothesis | PARTIAL | The Next Steps section states: 'Confirm H1 → Focus on query optimisation (indexing, execution plan, JOIN order)' and 'Refute H1 → Test H2 (cache layer overhead) or H3 (contention).' Two of the three verdict paths are addressed. There is no explicit path for goal-met-leads-to-documentation or handling inconclusive results. Ceiling of PARTIAL is the maximum anyway. |
+| c9 | Output's measurable goal is concrete — 'restore p95 to 120ms or below' — not 'make it faster' — with how-measured (the same APM metric, same time window, same load conditions) | PASS | Goal definition: 'Restore /api/reports/summary to ≤200ms p95 latency' with target state '120ms p95 latency (baseline before 2026-04-01)' and measurement via 'p95 latency histogram from application metrics (APM).' Note: the stated goal says ≤200ms but the target state says 120ms — both are concrete and specific rather than vague. |
+| c10 | Output's observations include specific facts — current p95 850ms, previous p95 120ms, 2 deploys (aggregation query 2026-04-01, cache layer 2026-04-05), load unchanged — and notes what's missing (e.g. p99, error rate, cache hit rate, query plan) | PASS | Goal section records 850ms current and 120ms baseline. Observations table records both deploys with dates, load unchanged, and cache added after query. What's missing section lists: '(1) Cache hit rate, (2) Latency trend over time (smooth vs. sudden), (3) Query execution time in isolation, (4) Memory/CPU on the database, (5) Current latency breakdown (query vs. cache vs. serialization vs. network).' |
+| c11 | Output generates at least 3 distinct hypotheses — at minimum: H1 the new aggregation query is the cause (table scan, missing index, expensive join), H2 the caching layer is the cause (cache misses thrashing, network hop added, serialisation overhead), H3 something else (background job contention, DB statistics stale, replica lag if reads went to a replica) | PASS | Five hypotheses span all required categories: H1 (aggregation query + low cache hit rate), H2 (cache layer slow/broken — 'misconfigured TTL, wrong layer, network round-trip overhead'), H3 (database contention from concurrent writes — 'lock wait times visible in slow logs'), plus H4 (result set serialization) and H5 (unrelated infra regression — 'index fragmentation, statistics stale, memory pressure'). |
+| c12 | Output's hypotheses each include 'if true, expect to see' / 'if false, expect to see' columns — e.g. for H1 true: query alone in EXPLAIN ANALYZE shows >700ms; for H2 true: bypass cache returns to 120ms-ish | PASS | The hypotheses table has explicit 'If true, expect to see' and 'If false, expect to see' columns for all five entries. For H2: 'If true: Cache layer latency >300ms in traces; oddly, cache hit latency ≈ cache miss latency.' For H1: 'If false: Cache hit rate >80% AND query execution time <200ms on cache misses.' |
+| c13 | Output's experiment design changes ONE variable — does not propose to revert both deploys simultaneously, even though that would 'fix' the symptom | PASS | Experiment says 'Control: No changes. Observe current state under production load.' The measurement approach is purely observational. There is no proposal to revert any deploys, much less both simultaneously. Subsequent branching (confirm H1 → query optimisation; refute H1 → test H2/H3) keeps changes isolated. |
+| c14 | Output prioritises the highest-likelihood hypothesis first — likely H1 (the aggregation query is the more invasive change) — with reasoning grounded in the timing (degradation started ~2 weeks ago aligns with 2026-04-01) | PASS | H1 is rated 'High' likelihood and is selected first for the experiment. Observation row 3 provides timing reasoning: 'Caching was added AFTER the initial degradation (query on 04-01, cache on 04-05). Timeline suggests query is the primary culprit, but cache was added to address it.' |
+| c15 | Output's experiment has a pre-stated expected outcome — 'if H1 confirmed, EXPLAIN ANALYZE on the new query shows >700ms; otherwise the query is not the bottleneck and we move to H2' | PASS | Experiment section: 'Expected result if H1 is correct: Cache hit rate <60%; Query execution time on misses: 600–900ms; p95 for misses ≈ 850ms; p95 for hits ≈ 50–100ms.' And: 'Expected result if H1 is wrong: Cache hit rate >80% AND p95 for hits ≈ 800ms (cache layer is the bottleneck) — OR query execution time already <200ms (something else is adding latency).' |
+| c16 | Output's record-results step structures actual vs predicted — a table with predicted outcome, actual measurement, verdict (CONFIRMED / REFUTED / INCONCLUSIVE) | FAIL | No such structure exists in the output. Predicted outcomes are embedded in the Experiment section, but there is no 'Record Results' step, no table with columns for predicted/actual/verdict, and no framework for comparing observations to predictions after the experiment runs. The output stops at planning the observation, not structuring how to record and adjudicate it. |
+| c17 | Output's verdict drives the next action explicitly — confirmed → fix the query (add index, rewrite, materialise), refuted → next hypothesis with the same rigour, inconclusive → instrument better and redo | PASS | Next Steps: 'Confirm H1 → Focus on query optimisation (indexing, execution plan, JOIN order)' and 'Refute H1 → Test H2 (cache layer overhead) or H3 (contention).' Confirmed and refuted paths are explicit. The inconclusive path is absent, but the two primary verdict-driven actions are clearly articulated and match the criterion's examples. |
+| c18 | Output addresses the rollback option — if the issue is the aggregation query AND a fix isn't immediate, reverting that deploy is a temporary mitigation while the proper fix is developed | FAIL | The output makes no mention of rolling back the 2026-04-01 aggregation query deploy as a temporary mitigation option. The caching layer is noted as having been added 'to address' the degradation, but there is no discussion of revert-as-mitigation anywhere in the observations, experiment, or next steps sections. |
 
 ### Notes
 
-The captured output is an exceptionally thorough scientific-method investigation. It correctly structures all major phases: measurable goal with APM-backed target, rich observation table calling out critical missing data (the inflection point timing), five falsifiable hypotheses with both 'if true/false' columns, an observational experiment that explicitly refuses to change multiple variables simultaneously, pre-stated expected outcomes per measurement step, and a verdict-driven decision tree. The only meaningful gap is c18 — rollback as a temporary mitigation is never mentioned; the H1-confirmed path goes straight to 'fix the query' without acknowledging that reverting the 2026-04-01 deploy is an immediate option while the proper solution is developed. The c8 partial deduction is minor: the feedback loop back to Step 4 on refutation and the 'goal met → document' branch are implied but not explicitly stated. Overall a very high-quality output.
+The output is a strong application of the scientific method with excellent coverage of goal definition, structured observations, falsifiable multi-hypothesis generation, and experiment design. It correctly prioritises H1 with timing-grounded reasoning, uses an observational-first approach to avoid simultaneous variable changes, and provides pre-stated expected outcomes in both directions. The two meaningful gaps are: (1) the absence of a structured 'Record Results' step (Steps 5/6 in the rubric) — the output treats the experiment design as the terminal deliverable rather than providing a template for recording actual vs. predicted measurements with a formal verdict; and (2) no mention of the rollback option as a temporary mitigation if the query is confirmed as the culprit and a fix takes time. The inconclusive verdict path in Step 7 is also missing, though confirmed and refuted are well-handled. These gaps reduce the score but not below the 80% threshold.

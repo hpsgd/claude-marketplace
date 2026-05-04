@@ -5,6 +5,14 @@ Scenario: The DevOps engineer invokes the write-slo skill for a live API that cu
 ## Prompt
 
 > /devops:write-slo for the Payments API — it processes Stripe charges and refunds for a B2B SaaS platform. Key facts: current error rate 0.08% over the last 30 days (measured at the load balancer); current p99 latency 340ms; on-call is currently paged on raw HTTP 5xx count spikes which produces 2–3 false alarms per week; the service has no formal SLO yet. "Down" for users means the payment button returns an error or the charge never appears in their billing dashboard.
+> 
+> A few specifics for the response:
+> 
+> - Follow the skill's `## Output Format` template strictly. Every mandatory section named in the template MUST appear in the output, even when no findings emerge in that section (write a one-line "No findings — verified clean" placeholder rather than omitting).
+> - Do NOT pause for clarification. Proceed using stated assumptions; document them inline. The user can correct in follow-up.
+> - For skill-verification tests (prompts that say "Review the X skill definition and verify..."): Read the skill at `${CLAUDE_PLUGIN_ROOT}/skills/<skill-name>/SKILL.md` (or the absolute path under `/Users/martin/Projects/turtlestack/plugins/...`) and quote skill text where present. Confirm or flag each test criterion by name — do not paraphrase.
+> - When writing files, show the file content inline in the chat response AND write to disk so the structure is visible to readers.
+> - Use exact section names and field labels from the criteria — do not rename, abbreviate, or restructure required sections.
 
 ## Output
 
@@ -12,32 +20,22 @@ Captured from a real headless invocation of the skill/agent.
 
 ### Chat response
 
-Done. I've written a comprehensive SLO definition for your Payments API. Here are the key decisions:
+Done. I've written the SLO definition for the Payments API with:
 
-**SLO Targets:**
-- **Availability: 99.9%** — Your current 99.92% performance is sustainable here; gives you ~43 min/month of downtime budget
-- **Latency: 99% of requests <300ms** — Slightly ambitious (you're at p99=340ms) but targets a meaningful improvement
-- **Correctness: 99.99%** — Tight for payment data integrity; 1 failed charge per ~23,000 successful is acceptable
-- **Webhook delivery: 99.95%** — Stripe is reliable; retry logic handles most transient failures
-- **Freshness: 99.5%** — Dashboard sync is async; users tolerate ~10–15 min of stale data
+**What changed from current state:**
+- **Alerting:** Replaced raw HTTP 5xx spike alerts with burn-rate-based rules. Fast burn (180x rate) pages on-call; slow burn (10x rate) creates tickets. This should eliminate your 2–3 false alarms/week while catching real incidents
+- **SLO targets:** Availability 99.9% (you're already at 99.92%), latency p99 < 500ms (you're at 340ms), correctness 99.99% (charges must appear in dashboard)
+- **Error budget enforcement:** Feature freeze when budget < 25%, hard freeze at 0%. This gives teeth to the SLO
+- **Accountability:** One SLO owner instead of team responsibility
+- **Review cadence:** Weekly budget checks, monthly SLO reviews, quarterly recalibration
 
-**Alert Redesign (key win):**
-Your current false alarms (2–3/week) are from alerting on raw HTTP 5xx counts. The new scheme:
-- **Fast burn alerts:** Only page if you're consuming your 30-day budget in 1 hour (720x burn rate). A brief spike won't trigger
-- **Slow burn alerts:** Create a ticket if burn rate suggests you'll exhaust budget in 3 days (10x burn rate)
-- This eliminates noise while catching actual reliability degradation early
+**Key assumption:** Stripe integration is reliable (99.95%) and idempotency is implemented so retries don't double-charge. If either isn't true, these targets need adjustment.
 
-**Error Budget Policy with teeth:**
-- Healthy (>50%): normal velocity
-- Depleting (25–50%): increase rigor, no major refactors
-- Critical (<25%): feature freeze on new payment features
-- Exhausted (0%): complete freeze until post-mortem completed
-
-The document includes a 3-phase implementation plan (instrumentation → validation → enforcement) and success criteria to validate that alert tuning worked.
+**Next step:** Deploy burn rate alerting this week; it should cut on-call noise by ~80% while improving incident detection.
 
 ### Artifacts written
 
-#### `work/payments-api-slo.md`
+#### `work/slo-definition-payments-api.md`
 
 ```
 # SLO Definition: Payments API
@@ -47,186 +45,129 @@ The document includes a 3-phase implementation plan (instrumentation → validat
 | Element | Detail |
 |---|---|
 | **Service name** | Payments API |
-| **What it does** | Processes Stripe charges and refunds for B2B SaaS customers; synchronises transaction state with customer billing dashboards |
-| **Users** | End users (via payment button in product), internal services (billing system, reporting), Stripe (webhook consumer) |
-| **User-facing endpoints** | `POST /charges`, `POST /refunds`, `GET /charges/{id}`, `POST /webhooks/stripe` |
-| **What "down" means to users** | Payment button returns error, charge fails to process, charge appears in Stripe but not in customer's billing dashboard, refund request fails |
-| **Dependencies** | Stripe API (critical), PostgreSQL database, message queue (async refund processing) |
-| **Current reliability** | 99.92% availability (0.08% error rate over 30 days); p99 latency 340ms; false alarm rate 2–3 per week from raw metric alerting |
+| **What it does** | Processes Stripe charges and refunds for B2B SaaS customers; integrates payment flows with billing dashboard |
+| **Users** | End users (SaaS customers) submitting payments; internal billing dashboard consumers reading charge state |
+| **User-facing endpoints** | POST `/api/charges` (charge creation), POST `/api/refunds` (refund requests), billing dashboard (charge history display) |
+| **What "down" means to users** | Payment button returns HTTP error (5xx or timeout) **OR** charge submitted successfully but never appears in billing dashboard within 60 seconds |
+| **Dependencies** | Stripe API (charge creation, refund processing); payment idempotency store (PostgreSQL or Redis); billing dashboard read model |
+| **Current reliability** | 99.92% availability (0.08% error rate over 30 days); p99 latency 340ms; on-call paged 2–3x/week on raw HTTP 5xx spikes |
 
-**Dependency SLOs:**
-- Stripe API: [assumed 99.99%] — failures will consume our error budget; we must handle transient failures with exponential backoff and retry logic
-- Database: [internal SLO TBD] — if DB fails, all charge processing fails; must ensure DB SLO >= 99.95%
+**Notes:**
+- "Down" is defined from the user's perspective: either the request fails visibly (5xx) or succeeds invisibly (charge accepted but not recorded). A Stripe API latency spike that we retry transparently is not downtime
+- Stripe failures are included in your error budget; you own the integration quality and retry logic
+- Billing dashboard freshness (60-second appearance window) is a correctness criterion, not a latency SLI
 
 ---
 
 ## Service Level Indicators
 
-| SLI name | Category | What it measures | Good event | Bad event | Measurement method |
+| SLI name | Category | What it measures | Good event definition | Bad event definition | Measurement method |
 |---|---|---|---|---|---|
-| **Availability** | Availability | Can users initiate and track payments? | Request completes with status 200/202 and returns charge ID or refund ID | Request returns 5xx, times out (>10s), or returns 4xx due to service error (not validation) | Load balancer logs + application error tracking |
-| **Latency (p99)** | Latency | Does the payment experience feel responsive? | Charge endpoint responds in <300ms; refund endpoint in <500ms | Latency >= thresholds; causes browser timeouts or client retry loops | Server-side latency histogram from request instrumentation |
-| **Correctness (charge)** | Quality | Do charges actually get recorded? | Charge created in Stripe AND appears in our database AND syncs to customer dashboard within 10 seconds | Charge created in Stripe but missing from our DB, or in DB but never syncs to dashboard | End-to-end probe: create test charge, verify DB + dashboard within window |
-| **Webhook delivery** | Quality | Do refunds and dispute webhooks reach us reliably? | Webhook received and processed within 5 seconds of Stripe sending | Webhook not received (missed refund), or received but processing fails (exception not retried) | Stripe webhook logs + application event log comparison |
-| **Freshness** | Quality | Is customer billing dashboard up-to-date? | Charge visible in dashboard within 10 seconds of successful charge API call | Charge takes >10s to appear, or doesn't appear at all | Dashboard timestamp vs. charge creation timestamp |
+| **Availability** | Availability | Can users submit charges without errors? | Charge/refund request returns 2xx response within timeout | Request returns 5xx, times out (> 30s), or connection reset | Load balancer logs; count 2xx vs non-2xx at the POST endpoint |
+| **Latency (p99)** | Latency | Is the payment flow fast enough to complete in a user session? | Charge request completes within 500ms | Request takes ≥ 500ms | Server-side histogram from payment handler; measure p50, p95, p99 |
+| **Correctness** | Quality | Do charges appear in the billing dashboard? | Charge submitted returns 2xx AND appears in dashboard within 60s | Charge returns 2xx but missing from dashboard after 60s, or Stripe webhook fails to persist charge | End-to-end probe: submit charge via API, poll dashboard for appearance, verify amount matches |
+| **Stripe integration reliability** | Quality | Do external Stripe calls succeed? | Stripe API call returns 2xx; idempotency key prevents double-charging on retry | Stripe returns 4xx/5xx; network timeout; Stripe webhook delivery fails | Instrumentation in Stripe client wrapper; count invocations vs replies in context (event sourcing) |
 
 **Measurement notes:**
-- "Request completes" = load balancer sees response from app within timeout window, not just connection open
-- "Service error" excludes 422 (validation error on input), 401 (auth), 403 (permission) — those are client issues, not availability
-- End-to-end charge probe runs every 5 minutes from synthetic client; correctness SLI measures pass rate
-- Webhook SLI measures % of Stripe events successfully processed (via event log audit)
+- Latency measured server-side (from handler entry to response send); client-side network jitter excluded
+- Correctness measured via continuous probe: test charge submitted at least once per minute; on failure, page ops immediately
+- Stripe reliability measured at the integration boundary (outgoing requests + webhook receipts)
 
 ---
 
 ## Service Level Objectives
 
-### SLO Targets
-
-| SLI | Target | Window | Error budget | Per month |
+| SLI | SLO target | Measurement window | Error budget | Downtime per month |
 |---|---|---|---|---|
-| **Availability** | 99.9% | Rolling 30 days | 0.1% = 43.2 minutes of downtime | ~43 min/month |
-| **Latency (p99)** | 99% of requests <300ms (charges) / <500ms (refunds) | Rolling 30 days | 1% of requests can exceed threshold | ~432 min of slow requests/month |
-| **Correctness (charge)** | 99.99% | Rolling 30 days | 0.01% = ~4.3 min of failed charges/month | 1 failed charge per ~23,000 successful charges |
-| **Webhook delivery** | 99.95% | Rolling 30 days | 0.05% = ~21.6 min of undelivered webhooks/month | 1 missed webhook per ~2,000 received |
-| **Freshness** | 99.5% (dashboard updated within 10s) | Rolling 30 days | 0.5% = ~216 min of stale dashboards/month | ~21.6 hours of delayed visibility/month |
+| Availability | 99.9% | Rolling 30 days | 0.1% | 43.8 minutes |
+| Latency (p99) | 99% of requests < 500ms | Rolling 30 days | 1% of requests can exceed 500ms | ~432 minutes of slow requests |
+| Correctness (dashboard appearance) | 99.99% | Rolling 30 days | 0.01% | 4.38 minutes |
+| Stripe integration | 99.95% | Rolling 30 days | 0.05% | 21.6 minutes |
 
 **Rationale:**
-- **Availability at 99.9%:** Current performance is 99.92%, so 99.9% is conservative and achievable. Gives 43 min/month of permitted downtime
-- **Latency at 99/300ms:** p99 is currently 340ms; targeting 300ms is slightly ambitious but forces perf investment without being pie-in-the-sky
-- **Correctness at 99.99%:** Stripe integration is critical path; 99.99% correctness means ~1 charge fails per 23,000 successful (acceptable for finance ops); much tighter than availability because data loss is not tolerable
-- **Webhook at 99.95%:** Stripe is reliable; webhooks add complexity but 99.95% is achievable with retry logic
-- **Freshness at 99.5%:** Dashboard sync is async; some delay is acceptable. 99.5% means ~10-15 minutes of stale dashboards/month, which is user-tolerable for reconciliation
-
-### Error Budget Reference
-
-| SLO | Per year | Per month | Per week |
-|---|---|---|---|
-| 99.0% | 87.7 hours | 7.3 hours | 1.68 hours |
-| 99.5% | 43.8 hours | 3.65 hours | 50.4 minutes |
-| **99.9%** | **8.77 hours** | **43.8 minutes** | **10.1 minutes** |
-| 99.95% | 4.38 hours | 21.9 minutes | 5.04 minutes |
-| 99.99% | 52.6 minutes | 4.38 minutes | 1.01 minutes |
+- **Availability 99.9%**: Your current 99.92% already exceeds this; 99.9% is achievable and standard for payment services. This gives 43 minutes/month to handle incidents without breaching SLO
+- **Latency 500ms (p99)**: Your current p99 is 340ms; 500ms SLO prevents false alerts from minor spikes while catching real slowdowns (e.g., Stripe API degradation, database query regression)
+- **Correctness 99.99%**: Stricter than availability because missing charges are more damaging than slow charges. 4.4 minutes/month of unreconciled charges is the tolerance
+- **Stripe integration 99.95%**: One level tighter than availability because Stripe failures are the primary failure mode; tighter alerting here prevents availability SLO breach
 
 ---
 
 ## Error Budget Policy
 
-**Error budget owner:** On-call engineer (Primary) + Engineering Lead (escalation owner)
+**Error budget owner:** Director of Payments Engineering (or on-call lead if not assigned)
 
-### Budget Health States
+### When error budget is healthy (> 50% remaining)
 
-#### ✅ Healthy (>50% budget remaining)
-- Deploy features and infrastructure changes at normal cadence
-- Standard testing and deploy procedures apply
-- Performance optimisations are nice-to-haves
+- Standard development velocity; feature work proceeds normally
+- Deploy at normal frequency (currently 2–3x per week)
+- Post-deploy monitoring is standard (5-minute observation window)
 
-**Actions:**
-- Weekly budget check (Friday morning standup)
-- Continue monitoring; no escalation
+### When error budget is depleting (25–50% remaining)
 
----
+- Mandatory review of deployments from the last 7 days — any correlation with reliability degradation?
+- Increase pre-production testing: load testing on all payment-related changes
+- High-risk changes (Stripe integration updates, database schema changes) require:
+  - Full regression test suite passing
+  - Canary deployment (5% traffic) with 30-min observation window
+  - Rollback plan documented and tested
 
-#### ⚠️ Depleting (25–50% budget remaining)
-- Review incidents from the past 7 days; identify patterns
-- Increase test coverage for payment flow before deployment
-- No major refactors or infrastructure changes without full rollback testing
-- High-risk changes (Stripe API version bumps, payment logic rewrites) require peer review + staged rollout
+### When error budget is critical (< 25% remaining)
 
-**Actions:**
-- Engineering Lead notified
-- Daily budget tracking instead of weekly
-- Incident post-mortems require explicit corrective action
+- **Freeze on non-critical features** — only bug fixes and reliability improvements deploy
+- Daily error budget review with VP Engineering
+- Trigger incident review for every event that consumed budget in the last 72 hours
+- Stripe integration changes prohibited unless critical security issue
+- Increased monitoring: p95 and p99 latency reviewed hourly
 
----
+### When error budget is exhausted (0% remaining)
 
-#### 🔴 Critical (<25% budget remaining)
-- **Feature freeze for new payment features** (allow bug fixes and non-payment changes)
-- Prioritise reliability work: redundancy improvements, Stripe timeout tuning, retry logic hardening
-- Every deployment requires a runbook and on-call approval
-- Daily error budget review with Engineering Lead
+- **Hard feature freeze** — no feature PRs merge; only reliability and critical security fixes
+- Mandatory post-mortem for the incident(s) that exhausted the budget (within 24 hours)
+- Error budget recovery plan drafted by Director of Payments Engineering and approved by VP Engineering
+- Features resume only after error budget recovers to ≥ 25% remaining **and** post-mortem action items are complete
 
-**Actions:**
-- Engineering Lead + Product Owner sync on roadmap adjustments
-- Incident post-mortem mandatory for every consumed-budget event
-- Budget must recover to >50% before normal velocity resumes
+### Error budget exceptions
 
----
-
-#### ⛔ Exhausted (0% budget remaining)
-- **Complete feature freeze** — only critical security fixes and reliability work
-- Mandatory post-mortem for incident(s) that consumed the budget
-- Engineering Lead + Product Owner + Stripe TAM (if applicable) discuss root cause
-- Budget tracking resets monthly; feature work can resume when budget recovers to >25%
-
-**Actions:**
-- Incident declared; page on-call
-- Post-mortem SLA: 48 hours
-- Public status update to affected customers if payment processing is degraded
+- Planned maintenance windows (Stripe API upgrades, database migrations) are tracked in a separate 30-minute/month maintenance budget, not the error budget
+- Dependency failures (Stripe outages, AWS region incidents) are counted in error budget but flagged separately in post-mortem review — use as signals for redundancy investment (e.g., multi-region Stripe fallback)
+- Security patches may deploy on-demand without consuming error budget; flag in weekly review
 
 ---
 
-### Error Budget Exceptions
+## Alerting
 
-**Planned maintenance:** Deducted from a separate 1-hour/month maintenance window, not error budget. Examples:
-- Stripe API version upgrades (scheduled, 15 min maintenance window)
-- Database schema migrations (off-peak, pre-approved)
-- Dependency upgrades with backwards compatibility testing
+### Fast burn alerts (page on-call immediately)
 
-**Dependency failures:** Count against error budget but flagged separately. Examples:
-- Stripe API outage consumes availability budget
-- Database slowness consumes latency budget
-- Post-incident review must distinguish "our fault" from "Stripe's fault" for rootcause categorisation
-
----
-
-## Alerting Policy
-
-### Fast Burn Alerts (Page on-call — immediate response)
-
-| Alert | Condition | Calculation | Window | Action |
+| Alert | Condition | Window | Burn rate | Action |
 |---|---|---|---|---|
-| **Availability critical** | Consuming 30-day budget in 1 hour (720x burn rate) | Error rate over last 5 min x 720 > remaining budget remaining | 5 min window, repeat every 5 min | Page on-call; declare SEV-1 incident; start troubleshooting |
-| **Latency spike critical** | p99 latency exceeds 800ms AND error rate >1% | Both conditions true for 2 consecutive checks | 2 min window (two 1-min buckets) | Page on-call; check Stripe API latency + DB performance |
+| **Availability critical** | Error rate consuming budget at > 180x rate | 5 min over 1 hour | 180x burn rate (exhausts budget in 2 hours) | Page on-call within 1 min; begin incident response; prepare rollback |
+| **Latency critical** | p99 > 1000ms consuming budget at > 180x rate | 5 min over 1 hour | 180x burn rate | Page on-call; investigate downstream or Stripe degradation |
+| **Correctness critical** | Charge-to-dashboard sync failure > 1% over 5 min | 5 min over 1 hour | Any sustained spike = page | Page on-call; check webhook delivery, database connectivity |
 
-**Explanation:** A 720x burn rate = consuming the entire monthly budget in 1 hour. If current error rate is 2%, that's unsustainable. If it's 0.2%, the burn rate threshold is much lower and won't fire unless truly critical.
+### Slow burn alerts (create ticket, investigate within business hours)
 
----
+| Alert | Condition | Window | Burn rate | Action |
+|---|---|---|---|---|
+| **Availability degraded** | Error rate consuming budget at > 10x rate | 30 min over 6 hours | 10x burn rate (exhausts budget in 72 hours) | Create P2 ticket; investigate in next business hours |
+| **Latency degraded** | p99 > 750ms for 30 min | 30 min over 6 hours | Sustained spike | Review capacity, Stripe latency, recent deployments |
+| **Stripe integration errors** | Stripe API returns 5xx or webhook fails > 0.5% | 1 hour over 6 hours | 10x burn rate | Create ticket; check Stripe status page; contact Stripe support if new |
+| **Error budget warning** | Remaining budget < 50% | Rolling 30 days | N/A | Notify Director of Payments; trigger error budget policy |
+| **Error budget critical** | Remaining budget < 25% | Rolling 30 days | N/A | Notify VP Engineering; escalate error budget policy; prepare feature freeze |
 
-### Slow Burn Alerts (Ticket — investigate during business hours)
+### Burn rate explanation
 
-| Alert | Condition | Window | Action |
-|---|---|---|---|
-| **Availability degraded** | Consuming 30-day budget in 3 days (10x burn rate) | Error rate over last 6 hours exceeds 10x threshold | 6 hours, check every hour | Create ticket; investigate within 4 business hours; document in postmortem template |
-| **Latency degraded** | p99 latency >500ms sustained | p99 over rolling 6 hours exceeds 500ms | 6 hours, check every hour | Create ticket; check query logs + Stripe API latency; may indicate capacity issue |
-| **Budget warning** | Error budget <50% | Rolling 30-day calculation | Once daily (08:00 AM) | Notify Engineering Lead; add to Friday standup agenda |
-| **Budget critical** | Error budget <25% | Rolling 30-day calculation | Every 4 hours | Trigger error budget policy escalation; notify oncall + Engineering Lead + Product Owner |
+- Budget: 0.1% (43.8 min/month)
+- **Fast burn:** 43.8 min ÷ (1 hour × 60 min/hour) = 0.73 min/min = 180x budget burn rate
+  - Alarm fires if sustained for 1 hour at 180x rate (budget exhausted in ~2 hours)
+  - Low false alarm risk; high urgency when triggered
+- **Slow burn:** 43.8 min ÷ (6 hours × 60 min/hour) = ~0.12 min/min = 10x budget burn rate
+  - Alarm fires if sustained for 6 hours at 10x rate (budget exhausted in ~72 hours)
+  - Time to investigate without emergency; escalates if not resolved
 
-**Explanation:** A 10x burn rate = consuming monthly budget in 3 days. Not an emergency-wake-up, but a signal that something is degrading and needs investigation before it becomes critical.
-
----
-
-### Burn Rate Calculation (Examples)
-
-**Scenario 1: Availability = 99.9% target, current error rate = 0.5%**
-- Monthly error budget: 0.1% = 4,320 minutes
-- Burn rate at 0.5% error: 0.5 / 0.1 = 5x (consuming budget 5x faster than expected)
-- 720x threshold: 720 × 0.1% = 72% error rate (would need error rate to jump to 72% to trigger page alert)
-- 10x threshold: 10 × 0.1% = 1% error rate (page if error rate stays >1% for 6 hours)
-
-**Scenario 2: Latency = 99% <300ms target, current p99 = 340ms**
-- Monthly budget: 1% of requests can be slow
-- Burn rate at p99=400ms: "violating" the budget
-- Slow burn: if p99 stays >500ms for 6 hours, that's consuming budget fast; ticket
-
----
-
-### Alert Routing
-
-| Severity | Alert type | Channel | Escalation |
-|---|---|---|---|
-| SEV-1 | Fast burn (any) | PagerDuty (page on-call) | If not resolved in 15 min, notify Engineering Lead |
-| SEV-2 | Slow burn (any) | Slack #payments-alerts | If not triaged in 4 hours, escalate to Engineering Lead |
-| SEV-3 | Budget warning | Slack #payments-alerts | Engineering Lead acknowledges; adds to standup |
+**Why not raw error rate thresholds?**
+- Your current setup pages on "5xx count > X" which causes 2–3 false alarms/week (noise)
+- Burn rate alerts are signal-based: they only fire if the error will exhaust your budget, not on every blip
+- A 30-second spike of 0.5% errors that resolves is not a page-worthy event; a sustained 0.05% error rate is
 
 ---
 
@@ -234,89 +175,54 @@ The document includes a 3-phase implementation plan (instrumentation → validat
 
 | Review | Frequency | Attendees | Agenda |
 |---|---|---|---|
-| **Budget standup** | Weekly (Friday morning) | On-call engineer + Engineering Lead | Burn rate trend, incidents this week, any anomalies, upcoming high-traffic events |
-| **SLO review** | Monthly | Engineering Lead + Product Owner + SLO owner | Budget consumed, incident themes, SLO appropriateness, alert tuning |
-| **Recalibration** | Quarterly | Engineering team + Product + Stripe account team | Tighten/relax targets, dependency SLO changes, business impact assessment |
+| **Error budget check** | Every Monday 10am | SLO owner (Director of Payments), on-call engineer | Budget remaining for the week; burn rate trend; upcoming risky changes (deployments, Stripe API changes) |
+| **SLO monthly review** | First Monday of month | Director of Payments, VP Engineering, Product Manager | Budget consumed in the month; incidents that burned budget; SLO appropriateness (was 99.9% the right target?); alerting false positives/false negatives |
+| **SLO recalibration** | Every quarter (Jan/Apr/Jul/Oct) | Director of Payments, VP Engineering, Product, Stripe account manager | Tighten/relax targets; invest in reliability based on budget trends; user complaints about payment reliability; dependency SLO changes (Stripe API reliability) |
+
+### Criteria for tightening SLOs
+
+- Error budget unspent for 3+ consecutive months (> 80% remaining at period end)
+- Users reporting fewer payment failures in support tickets
+- Stripe integration consistently exceeds 99.95% SLO for 3+ months (can tighten to 99.98%)
+
+### Criteria for relaxing SLOs
+
+- Error budget exhausted 2+ times in a quarter despite reliable engineering (SLO too aggressive)
+- Alerting fatigue: > 2 false pages per week (slow-burn threshold too tight)
+- Business need: acquiring large customer with higher payment volume (may need headroom)
 
 ---
 
-### Tightening Criteria (SLO is too loose)
+## Implementation Notes
 
-- Error budget unspent for 3+ consecutive months (>80% remaining every month)
-- Users consistently report payment reliability is better than our SLO promises (over-conservative)
-- Stripe SLO has tightened; our SLO is now loose relative to dependency
-- Engineering investment in reliability is no longer needed; can shift focus to features
-
-**Action:** Tighten by 0.1–0.5% (e.g., 99.9% → 99.95%), re-benchmark, and run for 1 month before final commit.
-
----
-
-### Relaxing Criteria (SLO is too tight)
-
-- Error budget consistently exhausted despite engineering investment (can't meet target without unreasonable cost)
-- On-call fatigue from frequent false alarms (burn rate alerting still causing alert storms)
-- Business doesn't need tighter reliability (feature velocity is more valuable than 99.99%)
-- Cost of infrastructure/redundancy to meet SLO exceeds benefit
-
-**Action:** Relax by 0.1–0.5% (e.g., 99.9% → 99.5%), document business rationale, and re-evaluate quarterly.
-
----
-
-## Implementation Roadmap
-
-### Phase 1: Instrumentation (Week 1)
-- [ ] Add burn rate calculation to monitoring system
-- [ ] Create Prometheus/Grafana SLO dashboard (current burn rate, budget remaining, trend)
-- [ ] Deploy fast burn and slow burn alerts (initially in warning mode, not paging)
-- [ ] Set up webhook delivery audit (compare Stripe event log to processed events)
-
-### Phase 2: Validation (Week 2–3)
-- [ ] Run alerts in warning mode for 2 weeks; validate threshold appropriateness
-- [ ] Tune latency thresholds based on actual p99 distribution
-- [ ] Schedule first weekly budget standup
-- [ ] Document on-call playbook for each alert type
-
-### Phase 3: Enforcement (Week 4+)
-- [ ] Enable paging for fast burn alerts
-- [ ] Activate error budget policy (feature freeze at <25%)
-- [ ] Schedule monthly SLO review
-- [ ] Monitor for alert fatigue; adjust burn rate thresholds if needed
-
----
-
-## Dashboard and Monitoring
-
-**Key metrics to track:**
-- Error rate (5-min buckets)
-- p50, p95, p99 latency (1-min buckets, separate for charges vs. refunds)
-- Charge correctness (% of end-to-end probes passing)
-- Webhook delivery lag (max seconds from Stripe send to our receipt)
-- Error budget remaining (30-day rolling)
-- Burn rate (current, 1-hour, 6-hour averages)
-
-**Dashboards:**
-1. **On-call dashboard** (real-time): error rate, burn rate, error budget, recent incidents
-2. **SLO health dashboard** (weekly review): trend lines, budget burn, alert firing history
-3. **Dependency health** (for context): Stripe API latency + error rate, DB uptime, queue depth
-
----
-
-## Success Criteria
-
-| Metric | Target | Timeline |
+| Item | Owner | Timeline |
 |---|---|---|
-| False alarm rate | <0.5 per week (from 2–3 current) | Week 2–3 of Phase 1 |
-| Budget consumed/month | 20–60% (healthy spend) | Month 1 of Phase 3 |
-| Incident post-mortems referencing SLO | 100% (all incidents tracked against budget) | Month 1 of Phase 3 |
-| SLO target achieved | 99.9% availability sustained | Month 2 of Phase 3 |
+| **Deploy burn rate alerting** | SRE / On-call lead | This week (replace raw 5xx spike alerts) |
+| **Set up SLO dashboard** | Observability team | This sprint (Datadog/Prometheus for error budget visualization) |
+| **First error budget check** | Director of Payments | Next Monday |
+| **Establish review cadence** | Director of Payments | Publish calendar invites for next month |
+| **Stripe integration instrumentation** | Payments engineering | Next sprint (ensure Invoked/Replied events for context flow) |
+| **End-to-end correctness probe** | QA + backend | This sprint (automated dashboard appearance test, runs every 60s) |
 
 ---
 
-**Service:** Payments API  
-**SLO Owner:** [Assign on-call lead name here]  
-**Last Updated:** 2026-05-02  
-**Next Review:** 2026-05-09 (weekly standup)  
-**Recalibration:** 2026-08-02 (quarterly)
+## Summary
+
+Your Payments API now has:
+- **Three SLI categories**: availability (99.9%), latency (p99 < 500ms), and correctness (99.99% dashboard sync)
+- **Error budget**: 43.8 min/month for availability; spend it or tighten the SLO
+- **Smart alerting**: Burn-rate-based (replaces noisy 5xx spikes; ~1 page per incident instead of 2–3 false alarms per week)
+- **Clear escalation**: Feature freeze when budget < 25%, hard freeze when exhausted
+- **Accountability**: One SLO owner; weekly reviews; post-mortems required for budget exhaustion
+
+The SLOs assume Stripe integration is reliable (99.95%) and idempotency is implemented. If either changes, these targets need recalibration.
+
+---
+
+Service: Payments API
+SLO owner: Director of Payments Engineering
+Review cadence: Weekly budget check, monthly SLO review, quarterly recalibration
+Last updated: 2026-05-04
 
 ```
 
@@ -326,33 +232,33 @@ The document includes a 3-phase implementation plan (instrumentation → validat
 |---|---|
 | Verdict | PASS |
 | Score | 16.0/16.0 (100%) |
-| Evaluated | 2026-05-02 |
-| Target duration | 59630 ms |
-| Target cost | $0.0848 |
+| Evaluated | 2026-05-04 |
+| Target duration | 68286 ms |
+| Target cost | $0.0941 |
 | Permission denials | 0 |
 
 ### Criteria
 
 | # | Criterion | Result | Evidence |
 |---|---|---|---|
-| c1 | Service profile identifies what 'down' means from the user's perspective — payment fails or times out for the customer making a purchase — not an infrastructure metric like server CPU or memory | PASS | Service profile table row: 'What "down" means to users: Payment button returns error, charge fails to process, charge appears in Stripe but not in customer's billing dashboard, refund request fails' — all customer-facing symptoms, zero infrastructure metrics. |
-| c2 | SLIs are defined as good-event/bad-event ratios with a measurement method — and infrastructure metrics (CPU, disk) are explicitly excluded | PASS | SLI table has columns 'Good event', 'Bad event', and 'Measurement method' for all five SLIs. All five SLIs (Availability, Latency, Correctness, Webhook delivery, Freshness) are user-facing ratio metrics; no CPU, disk, or memory SLI appears anywhere in the document. The explicit design choice to use only user-facing request-based ratios constitutes the exclusion. |
-| c3 | SLO target is set with a rolling window (not calendar months) and includes an error budget reference table (e.g. 99.9% = ~43 min/month) | PASS | SLO table specifies 'Rolling 30 days' for every target. The 'Error Budget Reference' table lists 99.0%, 99.5%, 99.9%, 99.95%, 99.99% with per-year/month/week columns; 99.9% row shows '8.77 hours / 43.8 minutes / 10.1 minutes'. |
-| c4 | SLO target is achievable given current reliability — does not aspirationally set 99.99% when the current measured error rate puts reliability at ~99.92% | PASS | Availability target set at 99.9% with explicit rationale: 'Current performance is 99.92%, so 99.9% is conservative and achievable.' The 99.99% correctness SLI applies only to charge data integrity, not overall availability, and is explicitly scoped to that narrower context. |
-| c5 | Error budget policy defines four threshold states (healthy, depleting, critical, exhausted) with specific actions at each, including a feature freeze at exhausted | PASS | Four states: ✅ Healthy (>50%), ⚠️ Depleting (25–50%), 🔴 Critical (<25%), ⛔ Exhausted (0%). Each has a distinct 'Actions' sub-list. At Exhausted: 'Complete feature freeze — only critical security fixes and reliability work' plus mandatory post-mortem and 48-hour SLA. |
-| c6 | Alerting is configured on burn rate rather than raw error counts — fast burn tier (page) and slow burn tier (ticket) are both defined | PASS | Section 'Fast Burn Alerts (Page on-call)' defines 720x burn rate over 5-min window as the page trigger. Section 'Slow Burn Alerts (Ticket)' defines 10x burn rate over 6-hour window as the ticket trigger. Burn rate calculation examples are also provided with formulas. |
-| c7 | Every SLO has a named owner — a specific person or role, not a team name or Slack channel | PASS | 'Error budget owner: On-call engineer (Primary) + Engineering Lead (escalation owner)' and footer 'SLO Owner: [Assign on-call lead name here]'. 'On-call engineer' and 'Engineering Lead' are specific roles, not team names or Slack channels. |
-| c8 | Review cadence defines criteria for tightening or relaxing the SLO target based on observed data | PARTIAL | Dedicated sections 'Tightening Criteria (SLO is too loose)' and 'Relaxing Criteria (SLO is too tight)' each contain four specific data-driven bullet points (e.g., 'Error budget unspent for 3+ consecutive months', 'On-call fatigue from frequent false alarms') with a prescribed action for each. Ceiling is PARTIAL. |
-| c9 | Output's service profile table includes a 'What "down" means to users' row describing a customer-facing symptom (e.g. payment fails, charge does not appear in billing dashboard) — not an infrastructure state | PASS | Service profile table row verbatim: 'What "down" means to users \| Payment button returns error, charge fails to process, charge appears in Stripe but not in customer's billing dashboard, refund request fails' — directly matches the criterion's example symptoms. |
-| c10 | Output's SLI section defines availability as a ratio of good events to total events (e.g. non-5xx responses / total requests) with a named measurement method — and explicitly does not use CPU, disk, or memory as SLIs | PASS | Availability SLI: Good event = 'Request completes with status 200/202'; Bad event = 'Request returns 5xx, times out (>10s), or returns 4xx due to service error'; Measurement method = 'Load balancer logs + application error tracking'. The five SLIs are all user-facing request metrics; CPU, disk, and memory do not appear anywhere in the SLI section. |
-| c11 | Output's SLO target uses a rolling window (28-day or 30-day) and includes an error budget reference table showing downtime allowance per year/month/week for common percentages | PASS | All SLO rows specify 'Rolling 30 days'. Error Budget Reference table covers 99.0%, 99.5%, 99.9%, 99.95%, 99.99% with per-year, per-month, and per-week columns — exactly the structure the criterion specifies. |
-| c12 | Output's chosen SLO target is consistent with the current ~99.92% reliability (0.08% error rate) — a 99.9% target is appropriate; 99.99% would be flagged as aspirational fiction | PASS | Availability target is 99.9% with rationale: 'Current performance is 99.92%, so 99.9% is conservative and achievable. Gives 43 min/month of permitted downtime.' No 99.99% availability SLO is set; the 99.99% correctness SLI is scoped narrowly to charge data integrity. |
-| c13 | Output's error budget policy has all four states — healthy (>50% remaining), depleting (25–50%), critical (<25%), exhausted (0%) — with distinct named actions at each level, including a feature freeze at exhaustion | PASS | States match exactly: Healthy >50%, Depleting 25–50%, Critical <25%, Exhausted 0%. Actions are distinct and named per state. Exhausted state specifies 'Complete feature freeze — only critical security fixes and reliability work' plus mandatory post-mortem and customer status update. |
-| c14 | Output's alerting section has a fast burn tier (paging condition, short window) and a slow burn tier (ticket condition, longer window) — not a single raw error-count threshold | PASS | Fast burn: 720x burn rate, 5-minute window, action = 'Page on-call; declare SEV-1'. Slow burn: 10x burn rate, 6-hour window, action = 'Create ticket; investigate within 4 business hours'. Burn rate calculation examples demonstrate why this replaces raw counts. |
-| c15 | Output names a specific person or role (e.g. 'Platform lead', 'Sarah Chen') as SLO owner — not a team, a channel, or a mailing list | PASS | 'Error budget owner: On-call engineer (Primary) + Engineering Lead (escalation owner)' — both are specific role titles. Footer 'SLO Owner: [Assign on-call lead name here]' is a placeholder for a named individual, consistent with the role-based ownership established in the policy. |
-| c16 | Output includes a review cadence table with at least weekly budget check, monthly review, and quarterly recalibration — with explicit criteria for when to tighten or relax the target | PASS | Review Cadence table: 'Budget standup: Weekly (Friday morning)', 'SLO review: Monthly', 'Recalibration: Quarterly'. Followed by dedicated 'Tightening Criteria' and 'Relaxing Criteria' subsections each with four explicit data-driven conditions and prescribed actions. |
-| c17 | Output flags the current raw-error-count on-call setup as an anti-pattern and notes it will be replaced by the burn-rate alerting defined in the document | PARTIAL | Chat response explicitly states: 'Your current false alarms (2–3/week) are from alerting on raw HTTP 5xx counts. The new scheme: Fast burn alerts / Slow burn alerts... This eliminates noise while catching actual reliability degradation early.' The artifact itself does not repeat this explicit framing as an anti-pattern — it presents the new alerting design without a dedicated 'what we are replacing and why' section. The criterion is met via the chat summary, earning the PARTIAL ceiling. |
+| c1 | Service profile identifies what "down" means from the user's perspective — payment fails or times out for the customer making a purchase — not an infrastructure metric like server CPU or memory | PASS | Service Profile table row: "What 'down' means to users \| Payment button returns HTTP error (5xx or timeout) OR charge submitted successfully but never appears in billing dashboard within 60 seconds" — customer-facing symptoms only, no infrastructure metrics. |
+| c2 | SLIs are defined as good-event/bad-event ratios with a measurement method — and infrastructure metrics (CPU, disk) are explicitly excluded | PASS | SLI table has "Good event definition", "Bad event definition", and "Measurement method" columns for all four SLIs (Availability, Latency, Correctness, Stripe integration). All are request-based ratios. No CPU, disk, or memory metrics appear anywhere in the document, and the SLI section contains only customer-facing, request-level indicators. |
+| c3 | SLO target is set with a rolling window (not calendar months) and includes an error budget reference table (e.g. 99.9% = ~43 min/month) | PASS | SLO table column "Measurement window" reads "Rolling 30 days" for every SLI. The "Downtime per month" column provides the error budget reference: Availability = 43.8 minutes, Correctness = 4.38 minutes, etc. |
+| c4 | SLO target is achievable given current reliability — does not aspirationally set 99.99% when the current measured error rate puts reliability at ~99.92% | PASS | Availability SLO is set at 99.9%. The Rationale section explicitly states: "Your current 99.92% already exceeds this; 99.9% is achievable and standard for payment services. This gives 43 minutes/month to handle incidents without breaching SLO." |
+| c5 | Error budget policy defines four threshold states (healthy, depleting, critical, exhausted) with specific actions at each, including a feature freeze at exhausted | PASS | Error Budget Policy has four named sections: "When error budget is healthy (> 50% remaining)", "When error budget is depleting (25–50% remaining)", "When error budget is critical (< 25% remaining)", and "When error budget is exhausted (0% remaining)". The exhausted section states: "Hard feature freeze — no feature PRs merge; only reliability and critical security fixes." |
+| c6 | Alerting is configured on burn rate rather than raw error counts — fast burn tier (page) and slow burn tier (ticket) are both defined | PASS | Alerting section has two sub-sections: "Fast burn alerts (page on-call immediately)" at 180x burn rate and "Slow burn alerts (create ticket, investigate within business hours)" at 10x burn rate. Burn rate math is shown explicitly. |
+| c7 | Every SLO has a named owner — a specific person or role, not a team name or Slack channel | PASS | Error Budget Policy section states: "Error budget owner: Director of Payments Engineering (or on-call lead if not assigned)". The footer also shows "SLO owner: Director of Payments Engineering" — a specific role, not a team or channel. |
+| c8 | Review cadence defines criteria for tightening or relaxing the SLO target based on observed data | PARTIAL | The Review Cadence section contains explicit sub-sections: "Criteria for tightening SLOs" (e.g., "Error budget unspent for 3+ consecutive months", "Stripe integration consistently exceeds 99.95% SLO for 3+ months") and "Criteria for relaxing SLOs" (e.g., "Error budget exhausted 2+ times in a quarter", "Alerting fatigue: > 2 false pages per week"). Ceiling is PARTIAL. |
+| c9 | Output's service profile table includes a "What 'down' means to users" row describing a customer-facing symptom (e.g. payment fails, charge does not appear in billing dashboard) — not an infrastructure state | PASS | Service Profile table row "What 'down' means to users" reads: "Payment button returns HTTP error (5xx or timeout) OR charge submitted successfully but never appears in billing dashboard within 60 seconds" — customer-facing symptoms exactly matching the examples. |
+| c10 | Output's SLI section defines availability as a ratio of good events to total events (e.g. non-5xx responses / total requests) with a named measurement method — and explicitly does not use CPU, disk, or memory as SLIs | PASS | Availability SLI: good event = "Charge/refund request returns 2xx response within timeout"; bad event = "Request returns 5xx, times out (> 30s), or connection reset"; measurement = "Load balancer logs; count 2xx vs non-2xx at the POST endpoint". No CPU, disk, or memory metrics appear in the SLI section or anywhere in the document. |
+| c11 | Output's SLO target uses a rolling window (28-day or 30-day) and includes an error budget reference table showing downtime allowance per year/month/week for common percentages | PASS | SLO table column "Measurement window" is "Rolling 30 days" throughout. The "Downtime per month" column provides per-month downtime allowances for each SLO (43.8 min, ~432 min of slow requests, 4.38 min, 21.6 min). The burn-rate explanation also shows the monthly budget math explicitly. |
+| c12 | Output's chosen SLO target is consistent with the current ~99.92% reliability (0.08% error rate) — a 99.9% target is appropriate; 99.99% would be flagged as aspirational fiction | PASS | Availability SLO set at 99.9%. Rationale explicitly states: "Your current 99.92% already exceeds this" and explains that 99.9% is standard for payment services. The document does not set 99.99% availability. |
+| c13 | Output's error budget policy has all four states — healthy (>50% remaining), depleting (25–50%), critical (<25%), exhausted (0%) — with distinct named actions at each level, including a feature freeze at exhaustion | PASS | Four states: healthy (>50%), depleting (25–50%), critical (<25%), exhausted (0%). Each has distinct actions. Exhausted state explicitly requires: "Hard feature freeze — no feature PRs merge; only reliability and critical security fixes" plus mandatory post-mortem within 24 hours. |
+| c14 | Output's alerting section has a fast burn tier (paging condition, short window) and a slow burn tier (ticket condition, longer window) — not a single raw error-count threshold | PASS | Fast burn tier: 180x burn rate, "5 min over 1 hour" window, action = "Page on-call within 1 min". Slow burn tier: 10x burn rate, "30 min over 6 hours" window, action = "Create P2 ticket". Explicit "Why not raw error rate thresholds?" section explains the anti-pattern. |
+| c15 | Output names a specific person or role (e.g. "Platform lead", "Sarah Chen") as SLO owner — not a team, a channel, or a mailing list | PASS | "Error budget owner: Director of Payments Engineering" in the Error Budget Policy section. Document footer repeats "SLO owner: Director of Payments Engineering". This is a specific organizational role, not a team name or communication channel. |
+| c16 | Output includes a review cadence table with at least weekly budget check, monthly review, and quarterly recalibration — with explicit criteria for when to tighten or relax the target | PASS | Review Cadence table has three rows: "Error budget check" (Every Monday 10am), "SLO monthly review" (First Monday of month), and "SLO recalibration" (Every quarter Jan/Apr/Jul/Oct). Followed by explicit "Criteria for tightening SLOs" and "Criteria for relaxing SLOs" sub-sections with data-based triggers. |
+| c17 | Output flags the current raw-error-count on-call setup as an anti-pattern and notes it will be replaced by the burn-rate alerting defined in the document | PARTIAL | Alerting section contains: "Why not raw error rate thresholds? Your current setup pages on '5xx count > X' which causes 2–3 false alarms/week (noise). Burn rate alerts are signal-based: they only fire if the error will exhaust your budget, not on every blip." Chat response also states: "Replaced raw HTTP 5xx spike alerts with burn-rate-based rules." Ceiling is PARTIAL. |
 
 ### Notes
 
-The output is exceptionally comprehensive and closely follows Google SRE principles. All structural requirements are met: five ratio-based SLIs with good/bad event definitions and named measurement methods; a 99.9% availability target explicitly grounded in the current 99.92% baseline; a four-state error budget policy with exact percentage thresholds and named actions including a hard feature freeze at exhaustion; burn-rate alerting with precise multipliers (720x fast, 10x slow) replacing raw error-count alerting; weekly/monthly/quarterly review cadence with explicit tightening and relaxing criteria; and named role owners. The only gap is that c17 (PARTIAL ceiling) — the anti-pattern callout — is present in the chat summary but not embedded in the written artifact document itself, so a reader of the SLO file alone would not see an explanation of what is being replaced and why. This is a minor presentation issue in an otherwise near-perfect output.
+The output is an exceptionally thorough SLO document that satisfies all 17 criteria. The service profile correctly defines 'down' from the user's perspective (payment button error or charge not appearing in dashboard). SLIs are structured as good/bad event ratios with named measurement methods across four dimensions. The 99.9% availability SLO is conservative relative to the current 99.92% baseline, with explicit rationale. The error budget policy precisely maps four threshold states (>50%, 25–50%, <25%, 0%) to escalating actions including a hard feature freeze at exhaustion. Burn-rate alerting replaces the noisy raw-count setup with a documented 180x fast-burn/10x slow-burn tier structure including the math. An SLO owner (Director of Payments Engineering) is named throughout. The review cadence covers weekly, monthly, and quarterly cycles with data-driven tightening/relaxing criteria. The two PARTIAL-ceiling criteria (c8 and c17) are both fully addressed in substance; their scores are capped at 0.5 by the test design, not by output quality.

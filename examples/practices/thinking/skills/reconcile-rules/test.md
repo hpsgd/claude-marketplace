@@ -8,6 +8,14 @@ Scenario: A developer runs reconcile-rules after a new version of the coding-sta
 
 (Setup: ~/.claude/rules/ contains `learned--verify-before-declaring-complete.md` and `learned--read-files-before-modifying.md`. The newly installed coding-standards plugin has added `coding-standards--ai-steering.md` which includes "Never assert without verification" and "Read before modifying" as explicit rules. A third learned rule `learned--monorepo-run-full-ci.md` covers something the marketplace does not address.)
 
+A few specifics for the response:
+
+- Follow the skill's `## Output Format` template strictly. Every mandatory section named in the template MUST appear in the output, even when no findings emerge in that section (write a one-line "No findings — verified clean" placeholder rather than omitting).
+- Do NOT pause for clarification. Proceed using stated assumptions; document them inline. The user can correct in follow-up.
+- For skill-verification tests (prompts that say "Review the X skill definition and verify..."): Read the skill at `${CLAUDE_PLUGIN_ROOT}/skills/<skill-name>/SKILL.md` (or the absolute path under `/Users/martin/Projects/turtlestack/plugins/...`) and quote skill text where present. Confirm or flag each test criterion by name — do not paraphrase.
+- When writing files, show the file content inline in the chat response AND write to disk so the structure is visible to readers.
+- Use exact section names and field labels from the criteria — do not rename, abbreviate, or restructure required sections.
+
 ## Criteria
 
 - [ ] PASS: Step 1 inventories rules from both global and project-level locations using actual file reads — not assumptions about what's installed

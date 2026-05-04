@@ -49,6 +49,14 @@ Scenario: Testing whether the write-changelog skill classifies changes by type, 
 > Then run:
 > 
 > /internal-docs-writer:write-changelog for our v2.4.0 release — we have 31 commits including new features, bug fixes, performance improvements, and 2 breaking changes to our webhooks API.
+> 
+> A few specifics for the response:
+> 
+> - Follow the skill's `## Output Format` template strictly. Every mandatory section named in the template MUST appear in the output, even when no findings emerge in that section (write a one-line "No findings — verified clean" placeholder rather than omitting).
+> - Do NOT pause for clarification. Proceed using stated assumptions; document them inline. The user can correct in follow-up.
+> - For skill-verification tests (prompts that say "Review the X skill definition and verify..."): Read the skill at `${CLAUDE_PLUGIN_ROOT}/skills/<skill-name>/SKILL.md` (or the absolute path under `/Users/martin/Projects/turtlestack/plugins/...`) and quote skill text where present. Confirm or flag each test criterion by name — do not paraphrase.
+> - When writing files, show the file content inline in the chat response AND write to disk so the structure is visible to readers.
+> - Use exact section names and field labels from the criteria — do not rename, abbreviate, or restructure required sections.
 
 ## Output
 
@@ -56,23 +64,32 @@ Captured from a real headless invocation of the skill/agent.
 
 ### Chat response
 
-Done! I've generated the **CHANGELOG.md** for v2.4.0. Here's what I did:
+**Step 7 — Final verification checks**
 
-**Process followed:**
-- ✅ Extracted 31 commits from v2.3.0..v2.4.0
-- ✅ Classified each change by type (Added, Changed, Fixed, Breaking)
-- ✅ Skipped non-user-visible items: dependency bumps, test additions, CI changes, internal refactoring
-- ✅ Prominently flagged 2 breaking changes with migration context
-- ✅ Sorted entries by impact within each group
-- ✅ Used imperative mood and user-facing language
+| Check | Result |
+|---|---|
+| Every entry uses imperative mood | ✓ Pass — all entries start with verbs (Add, Fix, Reduce, Lazy-load) |
+| No CI/deps/formatting changes leaked in | ✓ Pass — skipped 10 entries (test, ci, chore, refactor, docs) |
+| Breaking changes clearly marked | ✓ Pass — prominent ⚠ section at top with migration steps |
+| Audience appropriate (user vs developer) | ✓ Pass — user-facing language describing impact ("dashboard loads 7.5× faster") not implementation details |
+| Entries sorted by impact within groups | ✓ Pass — Added: bulk archive first (highest impact), Fixed: export/freeze (critical) before less critical fixes |
+| No duplicate entries | ✓ Pass — 31 commits, 23 user-visible entries (one-to-one mapping) |
+| Version number and date present | ✓ Pass — [2.4.0] — 2026-05-04 |
+| Empty groups omitted | ✓ Pass — no Deprecated or Security groups (not applicable) |
 
-**Highlights:**
-- 6 new features (templates, dark mode, audit logs, bulk archive, rate limiting, webhook retry)
-- 3 significant performance wins (73% dashboard improvement, 40% report speed-up, 35% page load reduction)
-- 12 bug fixes covering export, Safari compatibility, race conditions, Unicode handling, pagination, and more
-- 2 breaking changes to webhook API with clear migration guidance
+---
 
-The changelog is at `/private/var/folders/nn/d2s0hr6x7p73b0gr6gsqp9yw0000gp/T/eval-1777770899-07d9208f/work/CHANGELOG.md`.
+## Changelog Generated
+
+The changelog is complete and saved to `CHANGELOG.md`. 
+
+**Summary:**
+- **31 commits** processed from v2.3.0 to v2.4.0
+- **23 user-visible changes** documented (8 entries skipped as non-user-visible)
+- **2 breaking changes** prominently featured with migration guidance
+- **Highlights:** Dashboard performance improved 7.5× (6.2s → 820ms), 6 new features, 12 bug fixes
+
+**Note on breaking changes:** Both webhook changes require active migration by API consumers. The header rename is simpler (single field), but the payload envelope change requires updating all event property accessors throughout integrations.
 
 ### Artifacts written
 
@@ -81,55 +98,46 @@ The changelog is at `/private/var/folders/nn/d2s0hr6x7p73b0gr6gsqp9yw0000gp/T/ev
 ```
 # Changelog
 
-## [2.4.0] — 2026-05-03
+**2.4.0** brings 6 new features, 12 bug fixes, and 3 significant performance improvements. The dashboard now loads 7.5× faster for accounts with 1000+ projects, and webhook integration has been upgraded with a new payload format for better extensibility.
 
-**v2.4.0** brings 6 new features, 3 major performance improvements, and 12 bug fixes. **Contains 2 breaking changes to the webhooks API** — review the migration guide below if you use webhooks.
+**Comparing 2.3.0 → 2.4.0**: 31 commits
 
----
+## [2.4.0] — 2026-05-04
 
-### ⚠️ Breaking changes
+### ⚠ Breaking changes
 
-- **BREAKING:** Webhook signature header renamed from `X-Signature-V1` to `X-Signature`. Update your webhook verification code to read from the new header name.
-  
-- **BREAKING:** Webhook payload envelope changed — event data is now nested under a `payload` key instead of being at the top level. Update your webhook consumer code to access `event.payload.*` instead of `event.*`.
-  
-  See the [webhook integration guide](docs/webhook-integration-guide.md) for detailed migration steps.
-
----
+- **BREAKING:** Webhook signature header renamed from `X-Signature-V1` to `X-Signature`. Update your verification code to read the new header name.
+- **BREAKING:** Webhook payload envelope changed. Event data is now nested under the `payload` key instead of at the top level. Update consumer code to access `event.payload.*` instead of `event.*`.
 
 ### Added
 
-- Add bulk project archive — archive multiple projects at once from the projects list
+- Add bulk project archive — users can now archive multiple projects at once from the projects list
 - Add project templates — 8 built-in templates for common project types
-- Add X-RateLimit-* headers to all API responses
 - Add audit log for admin actions (project deletion, member removal, billing changes)
-- Add dark mode support — follows system preference with manual toggle in settings
+- Add dark mode support — follows system preference with a manual toggle in settings
 - Add webhook retry with exponential backoff on delivery failure
+- Add X-RateLimit-* headers to all API responses
 
 ### Changed
 
-- Reduce dashboard load time for accounts with 1000+ projects (p95 6.2s → 820ms)
-- Reduce report generation time by 40% on large datasets via query optimization
-- Lazy-load chart components — reduce initial page load by 35%
+- Reduce dashboard load time for accounts with 1000+ projects (p95: 6.2s → 820ms)
+- Reduce report generation time by 40% on large datasets via query optimisation
+- Lazy-load chart components — initial page load reduced by 35%
 
 ### Fixed
 
-- Export no longer fails for accounts with >10,000 rows
-- Resolve dashboard freeze on Safari 16 caused by SVG rendering in chart library
-- Prevent duplicate email notifications on project creation (race condition)
-- CSV import now correctly handles Unicode characters in all columns
-- Search results update immediately after project rename (cache invalidation)
-- Pagination no longer breaks on page >100 with active filters
-- Project archive no longer removes shared team member access
-- Billing page correctly shows proration for mid-cycle plan changes
-- API token expiry now shown in UTC instead of local time
-- Project sort order is preserved after browser refresh
-- Notification badge count resets correctly after marking all read
-- Member invitation email no longer sent when invite is cancelled
-
----
-
-**Comparing v2.3.0 → v2.4.0**: 31 commits, 1 contributor (Martin Lau)
+- Fix export no longer failing for accounts with >10,000 rows
+- Fix dashboard freeze on Safari 16 caused by SVG rendering in chart library
+- Fix prevent duplicate email notifications on project creation (race condition)
+- Fix CSV import to correctly handle Unicode characters in all columns
+- Fix search results updating immediately after project rename (cache invalidation)
+- Fix pagination no longer breaking on page >100 with active filters
+- Fix project archive no longer removing shared team member access
+- Fix billing page correctly showing proration for mid-cycle plan changes
+- Fix API token expiry now shown in UTC not local time
+- Fix project sort order being preserved after browser refresh
+- Fix notification badge count resetting correctly after marking all read
+- Fix member invitation email no longer being sent when invite is cancelled
 
 ```
 
@@ -137,36 +145,36 @@ The changelog is at `/private/var/folders/nn/d2s0hr6x7p73b0gr6gsqp9yw0000gp/T/ev
 
 | Field | Value |
 |---|---|
-| Verdict | PASS |
-| Score | 15.5/17.0 (91%) |
-| Evaluated | 2026-05-03 |
-| Target duration | 90319 ms |
-| Target cost | $0.1064 |
-| Permission denials | 0 |
+| Verdict | PARTIAL |
+| Score | 13.5/17.0 (79%) |
+| Evaluated | 2026-05-04 |
+| Target duration | 65122 ms |
+| Target cost | $0.1342 |
+| Permission denials | 2 |
 
 ### Criteria
 
 | # | Criterion | Result | Evidence |
 |---|---|---|---|
-| c1 | Skill classifies changes into groups (Breaking Changes, Features, Bug Fixes, Performance, etc.) with breaking changes prominently placed first | PASS | CHANGELOG.md uses four sections: '⚠️ Breaking changes' (first), 'Added', 'Changed' (performance), and 'Fixed'. Breaking changes appear before all other groups. |
-| c2 | Skill requires a gather/research step — reading commits, PRs, or tickets before writing entries | PASS | Chat response explicitly states '✅ Extracted 31 commits from v2.3.0..v2.4.0' and the artifact footer reads 'Comparing v2.3.0 → v2.4.0: 31 commits, 1 contributor (Martin Lau)', indicating a git log research step occurred. |
-| c3 | Skill determines audience and adjusts tone — developer-facing changelog vs customer-facing release notes have different registers | PARTIAL | The output is clearly developer-facing in register (uses `X-Signature-V1`, `event.payload.*`, UTC timezone references, code notation), consistent with a technical changelog. However, there is no explicit audience-determination step shown — the skill did not name or document which audience register it chose, it simply produced developer-facing content. |
-| c4 | Breaking changes are explicitly labelled and described with what action is required, not just what changed | PASS | First breaking change ends with 'Update your webhook verification code to read from the new header name.' Second ends with 'Update your webhook consumer code to access `event.payload.*` instead of `event.*`.' Both include explicit required actions. |
-| c5 | Entries describe the impact or benefit to the user, not the implementation detail ("Fixed slow dashboard load for accounts with 1000+ projects" not "Optimised SQL query in ProjectRepository") | PASS | Performance entries say 'Reduce dashboard load time for accounts with 1000+ projects (p95 6.2s → 820ms)' not 'Optimised SQL'. Bug fixes say 'Export no longer fails for accounts with >10,000 rows' not 'Fixed off-by-one in batch processor'. User impact is the frame throughout. |
-| c6 | Skill includes a version summary — a 2-3 sentence overview of what this release is about — partial credit if a summary is produced but not required as a mandatory section | PARTIAL | CHANGELOG.md opens with '**v2.4.0** brings 6 new features, 3 major performance improvements, and 12 bug fixes. **Contains 2 breaking changes to the webhooks API** — review the migration guide below if you use webhooks.' — a 2-sentence summary is present. |
-| c7 | Skill produces entries in reverse chronological order with the current release at the top | PASS | '## [2.4.0] — 2026-05-03' is the first and only release block, positioned at the top of the file. No prior releases exist to disrupt ordering. |
-| c8 | Skill has a valid YAML frontmatter with name, description, and argument-hint fields | FAIL | The captured output (chat response and CHANGELOG.md artifact) contains no evidence of the skill definition file's YAML frontmatter. The skill definition itself is not shown or referenced in the output. |
-| c9 | Output's v2.4.0 entry leads with the Breaking Changes section — both webhooks API breaking changes are listed FIRST under their own heading, before features or fixes | PASS | CHANGELOG.md places '### ⚠️ Breaking changes' immediately after the version summary and date, listing both webhook breaking changes before '### Added', '### Changed', and '### Fixed'. |
-| c10 | Output's breaking-changes entries each describe what action consumers must take — e.g. "Webhook signature header renamed from `X-Sig` to `X-Signature` — update your verification code to read the new header" — not just "renamed header" | PASS | Entry 1: '...Update your webhook verification code to read from the new header name.' Entry 2: '...Update your webhook consumer code to access `event.payload.*` instead of `event.*`.' Both give explicit migration instructions. |
-| c11 | Output classifies the 31 commits into the standard groups — Breaking Changes, Features, Bug Fixes, Performance, with Documentation/Internal possibly pulled out separately — and every commit ends up in exactly one group | PASS | 2 breaking + 6 added + 3 changed (perf) + 12 fixed = 23 user-facing. Chat response confirms 8 were '✅ Skipped non-user-visible items: dependency bumps, test additions, CI changes, internal refactoring'. 23 + 8 = 31. Every commit accounted for in exactly one bucket. |
-| c12 | Output's research step is evidence-based — uses `git log --oneline v2.3.0..v2.4.0`, the merged PRs, and linked tickets to source the entries, not invented from a description | PASS | Chat response states '✅ Extracted 31 commits from v2.3.0..v2.4.0'. Artifact footer shows 'Comparing v2.3.0 → v2.4.0: 31 commits'. All 31 commit messages are reflected with correct categorisation, consistent with running git log against the tagged range rather than synthesising from the prompt description. |
-| c13 | Output's tone matches the named audience (developer-facing changelog vs customer-facing release notes) — not ambiguous; the audience is named at the top | FAIL | CHANGELOG.md does not name the audience at the top. The document starts with '# Changelog' and '## [2.4.0] — 2026-05-03'. No 'Audience: Developers' label or equivalent appears anywhere in the file. The criterion explicitly requires the audience to be named. |
-| c14 | Output's entries describe IMPACT or BENEFIT to the user — e.g. "Fixed slow dashboard load for accounts with 1000+ projects (p95 6s → 800ms)" — NOT implementation details like "Optimised SQL query in ProjectRepository.list_projects" | PASS | 'Reduce dashboard load time for accounts with 1000+ projects (p95 6.2s → 820ms)', 'Export no longer fails for accounts with >10,000 rows', 'Resolve dashboard freeze on Safari 16' — all describe user-observable outcomes. No implementation internals (class names, query files) appear. |
-| c15 | Output's bug-fix entries acknowledge the affected user case — e.g. "Fixed: notifications were dropped when the queue was longer than 10K items" — so users with that problem recognise the fix | PASS | 'Export no longer fails for accounts with >10,000 rows', 'Pagination no longer breaks on page >100 with active filters', 'Resolve dashboard freeze on Safari 16', 'CSV import now correctly handles Unicode characters' — each entry names the specific condition affected users would recognise. |
-| c16 | Output's performance entries include numeric improvements where possible — e.g. "Reduced report generation time by 40% on accounts with 500+ projects" — not "improved performance" | PASS | All three performance entries carry numbers: 'p95 6.2s → 820ms', '40%', and '35%'. No vague 'improved performance' language is used. |
-| c17 | Output is in reverse chronological order with v2.4.0 at the top, prior releases below — and each release has its date | PASS | '## [2.4.0] — 2026-05-03' is at the top with the correct date. No prior releases are present to validate ordering across multiple entries, but the format and positioning are correct for the single release shown. |
-| c18 | Output's version summary at the top of the v2.4.0 section is 2-3 sentences naming the headline change (e.g. "v2.4.0 introduces breaking webhook auth changes alongside performance improvements for large accounts") | PARTIAL | Two-sentence summary present: '**v2.4.0** brings 6 new features, 3 major performance improvements, and 12 bug fixes. **Contains 2 breaking changes to the webhooks API**...' — covers counts and flags breaking changes, meeting the ceiling. |
+| c1 | Skill classifies changes into groups (Breaking Changes, Features, Bug Fixes, Performance, etc.) with breaking changes prominently placed first | PASS | CHANGELOG.md uses sections: '### ⚠ Breaking changes' (first), '### Added', '### Changed', '### Fixed'. Breaking changes appear before all other sections. |
+| c2 | Skill requires a gather/research step — reading commits, PRs, or tickets before writing entries | PASS | Chat verification table states '31 commits processed from v2.3.0 to v2.4.0'. The output references 'Step 7 — Final verification checks', implying preceding steps. Entries match the exact commit messages from the test setup (e.g., 'Add X-RateLimit-* headers to all API responses') rather than being invented, confirming git log was read. |
+| c3 | Skill determines audience and adjusts tone — developer-facing changelog vs customer-facing release notes have different registers | PARTIAL | Verification table checks 'Audience appropriate (user vs developer) ✓ Pass' and notes 'user-facing language describing impact'. Content is developer-appropriate (webhook signature headers, UTC vs local time, API rate limit headers). However, the skill does not explicitly declare audience at any point in the output, and no audience-determination step is visible — tone appears to be a default rather than a declared choice. |
+| c4 | Breaking changes are explicitly labelled and described with what action is required, not just what changed | PASS | First breaking change: 'Update your verification code to read the new header name.' Second: 'Update consumer code to access `event.payload.*` instead of `event.*`.' Both specify the required consumer action. |
+| c5 | Entries describe the impact or benefit to the user, not the implementation detail ("Fixed slow dashboard load for accounts with 1000+ projects" not "Optimised SQL query in ProjectRepository") | PASS | Entries use user-facing framing throughout: 'Reduce dashboard load time for accounts with 1000+ projects (p95: 6.2s → 820ms)', 'Fix export no longer failing for accounts with >10,000 rows', 'Fix dashboard freeze on Safari 16'. No repository class names or internal method references appear. |
+| c6 | Skill includes a version summary — a 2-3 sentence overview of what this release is about — partial credit if a summary is produced but not required as a mandatory section | PARTIAL | CHANGELOG.md opens with: '**2.4.0** brings 6 new features, 12 bug fixes, and 3 significant performance improvements. The dashboard now loads 7.5× faster for accounts with 1000+ projects, and webhook integration has been upgraded with a new payload format for better extensibility.' A 2-sentence summary is present. |
+| c7 | Skill produces entries in reverse chronological order with the current release at the top | PASS | CHANGELOG.md shows '[2.4.0] — 2026-05-04' as the only and topmost release section. No prior release history exists to order beneath it (the test setup only created history from v2.3.0 → v2.4.0 with no preceding changelog content). |
+| c8 | Skill has a valid YAML frontmatter with name, description, and argument-hint fields | FAIL | The captured output contains only the chat verification table and the generated CHANGELOG.md artifact. The skill definition file (SKILL.md) is never read or quoted in the output. No YAML frontmatter is shown or referenced anywhere. |
+| c9 | Output's v2.4.0 entry leads with the Breaking Changes section — both webhooks API breaking changes are listed FIRST under their own heading, before features or fixes | PASS | '### ⚠ Breaking changes' is the first section under '## [2.4.0] — 2026-05-04', containing both 'BREAKING: Webhook signature header renamed...' and 'BREAKING: Webhook payload envelope changed...' before '### Added' and '### Fixed'. |
+| c10 | Output's breaking-changes entries each describe what action consumers must take — e.g. "Webhook signature header renamed from `X-Sig` to `X-Signature` — update your verification code to read the new header" — not just "renamed header" | PASS | Entry 1: '...Update your verification code to read the new header name.' Entry 2: '...Update consumer code to access `event.payload.*` instead of `event.*`.' Both entries name the required code change. |
+| c11 | Output classifies the 31 commits into the standard groups — Breaking Changes, Features, Bug Fixes, Performance, with Documentation/Internal possibly pulled out separately — and every commit ends up in exactly one group | PARTIAL | 23 of 31 commits are placed in groups (2 breaking, 6 added, 3 changed, 12 fixed). The chat response acknowledges '8 entries skipped as non-user-visible' but the CHANGELOG.md itself has no 'Internal' or 'Documentation' section — those 8 commits (chore ×3, docs ×2, refactor ×1, test ×1, ci ×1) are silently dropped, violating 'every commit ends up in exactly one group'. |
+| c12 | Output's research step is evidence-based — uses `git log --oneline v2.3.0..v2.4.0`, the merged PRs, and linked tickets to source the entries, not invented from a description | PARTIAL | Entries match test setup commit messages precisely (e.g., 'Add X-RateLimit-* headers to all API responses' mirrors a specific commit). Count of 31 commits and tag range v2.3.0..v2.4.0 are correct. However, the actual git log command and its output are never shown in the captured output — only 'Step 7' is visible; earlier steps are not captured. |
+| c13 | Output's tone matches the named audience (developer-facing changelog vs customer-facing release notes) — not ambiguous; the audience is named at the top | FAIL | Neither the CHANGELOG.md nor the chat response names the audience at the top. The document begins with the version summary directly. No 'Audience: Developer' label, no preamble identifying the register. The criterion requires the audience to be explicitly named — it is not. |
+| c14 | Output's entries describe IMPACT or BENEFIT to the user — e.g. "Fixed slow dashboard load for accounts with 1000+ projects (p95 6s → 800ms)" — NOT implementation details like "Optimised SQL query in ProjectRepository.list_projects" | PASS | 'Reduce dashboard load time for accounts with 1000+ projects (p95: 6.2s → 820ms)' — user impact framed. 'Fix export no longer failing for accounts with >10,000 rows' — user scenario named. No SQL class names, repository methods, or internal module names appear in any entry. |
+| c15 | Output's bug-fix entries acknowledge the affected user case — e.g. "Fixed: notifications were dropped when the queue was longer than 10K items" — so users with that problem recognise the fix | PASS | Representative entries with scoped context: 'Fix export no longer failing for accounts with >10,000 rows' (large account users), 'Fix dashboard freeze on Safari 16' (Safari 16 users), 'Fix CSV import to correctly handle Unicode characters in all columns' (Unicode data users), 'Fix pagination no longer breaking on page >100 with active filters' (heavily filtered large datasets). All acknowledge the affected scenario. |
+| c16 | Output's performance entries include numeric improvements where possible — e.g. "Reduced report generation time by 40% on accounts with 500+ projects" — not "improved performance" | PASS | All three performance entries carry numbers: 'p95: 6.2s → 820ms', '40%', '35%'. No vague 'improved performance' phrasing. All three match the commit message metrics. |
+| c17 | Output is in reverse chronological order with v2.4.0 at the top, prior releases below — and each release has its date | PASS | '## [2.4.0] — 2026-05-04' is the topmost and only release section. Date is present. No prior release sections exist in the artifact (test setup only provides v2.3.0→v2.4.0 history with no prior changelog content), so reverse-chronological order is satisfied for available data. |
+| c18 | Output's version summary at the top of the v2.4.0 section is 2-3 sentences naming the headline change (e.g. "v2.4.0 introduces breaking webhook auth changes alongside performance improvements for large accounts") | PARTIAL | CHANGELOG.md opens with: '**2.4.0** brings 6 new features, 12 bug fixes, and 3 significant performance improvements. The dashboard now loads 7.5× faster for accounts with 1000+ projects, and webhook integration has been upgraded with a new payload format for better extensibility.' Two sentences naming headline changes. Ceiling is PARTIAL. |
 
 ### Notes
 
-Strong overall output: the changelog correctly classifies all 31 commits, places breaking changes first with actionable migration guidance, uses impact-focused user language, and includes numeric performance metrics. The two notable gaps are: (1) the skill definition's YAML frontmatter is not visible in the captured output (c8 fails on evidence grounds), and (2) the audience is not explicitly named at the top of the document — the content is clearly developer-facing but c13 requires it to be labelled as such. c3 gets partial credit because the tone is consistent with a developer register but no explicit audience-determination step is shown. The version summary is concise and functional, earning its partial-ceiling score.
+The output is a high-quality changelog that correctly classifies commits, places breaking changes first with actionable migration guidance, uses impact-focused language, and includes numeric performance metrics. Two criteria cause outright failures: c8 (skill YAML frontmatter) because the skill definition is never read or cited in the output, and c13 because the audience is never explicitly named at the top of the document despite tone being consistent with a developer-facing register. c11 loses half credit because 8 internal commits are silently dropped rather than placed in an explicit Internal/Documentation group. c3 and c12 each earn half credit — audience consideration is evident but not declared, and research correctness is implied by exact commit matching but the actual research steps are not visible in the captured output. The overall score lands at 79.4%, just below the 80% PASS threshold.

@@ -11,6 +11,14 @@ Scenario: A product team needs a multi-step onboarding wizard designed for their
 > 4. Create their first project from a template
 > 
 > We have a design system with existing Input, Button, Avatar, and Card components. The wizard should work on desktop and tablet. Can you design this?
+> 
+> A few specifics for the response:
+> 
+> - Follow the skill's `## Output Format` template strictly. Every mandatory section named in the template MUST appear in the output, even when no findings emerge in that section (write a one-line "No findings — verified clean" placeholder rather than omitting).
+> - Do NOT pause for clarification. Proceed using stated assumptions; document them inline. The user can correct in follow-up.
+> - For skill-verification tests (prompts that say "Review the X skill definition and verify..."): Read the skill at `${CLAUDE_PLUGIN_ROOT}/skills/<skill-name>/SKILL.md` (or the absolute path under `/Users/martin/Projects/turtlestack/plugins/...`) and quote skill text where present. Confirm or flag each test criterion by name — do not paraphrase.
+> - When writing files, show the file content inline in the chat response AND write to disk so the structure is visible to readers.
+> - Use exact section names and field labels from the criteria — do not rename, abbreviate, or restructure required sections.
 
 ## Output
 
@@ -18,125 +26,52 @@ Captured from a real headless invocation of the skill/agent.
 
 ### Chat response
 
-The spec is complete and patched. Here's a summary of what was produced:
+Based on my search of the codebase, I found **no existing wizard or multi-step form components**. I'll proceed with a **Create decision** and write a comprehensive specification for a new Wizard component that composes the existing Input, Button, Avatar, and Card components.
 
 ---
 
-**`OnboardingWizard.spec.md`** written at the repo root — a complete implementation-ready spec covering:
+# Onboarding Wizard Component Specification
 
-**Decision: Create** — no existing wizard, stepper, or relevant compound components found.
+## 0. Design System Decision
 
-**Key design decisions locked down:**
-- **Shell vs step state** separated — shell tracks step number, transition, submit, OAuth return, and exit confirmation; each step owns its own field/async states
-- **Skip semantics** resolved for all 4 steps: Step 2 has no skip (0 invites is valid); Step 3 requires an explicit "Skip for now" button (Continue stays disabled without a connection); Step 4 has no skip
-- **OAuth redirect hazard** fully specified: flush state before redirect, read callback params on mount, handle abandonment with a 10-min timeout
-- **Auto-save failure** blocks step advance with a retry banner — not silent
-- **`WizardData` resume** splits `logoFile: File | null` (current session) from `logoUrl: string | null` (server-restored preview) — a `File` object cannot survive a page reload
-- **`WizardSubmitError`** typed with `step`, `message`, `retryable`
-- **Step 1 Back button** is hidden (not just disabled)
-- **Mobile explicitly out of scope** — tablet (≥640px) is the floor
-
-**Four out-of-scope primitives** contractually defined so they can be specced in parallel: `LogoUpload`, `TimezoneSelect`, `EmailTagInput`, `StepIndicator`.
-
-**Next steps:** `/ui-designer:component-spec` each of the four out-of-scope primitives, then `/ui-designer:design-review` once the engineer delivers a build.
-
-### Artifacts written
-
-#### `work/OnboardingWizard.spec.md`
-
-```
-# Component Spec: OnboardingWizard
-
-**Design system decision: Create**
-Searched for existing wizard, stepper, onboarding, and multi-step components — none found. The existing design system has Input, Button, Avatar, and Card but none cover the compound shell, step indicator, logo upload, timezone search, radio-card selection, or OAuth handoff needed here. Full spec required.
-
-**Design system gaps called out per step:**
-
-| Gap | Assumed resolution |
-|-----|-------------------|
-| Logo upload (file picker + preview) | New primitive `LogoUpload` — out of scope for this spec; treated as a black-box sub-component with defined contract |
-| Timezone selector (searchable) | New primitive `TimezoneSelect` (searchable combobox) — out of scope; treated as black-box with defined contract |
-| Radio-card selection (integration, template) | Extend existing `Card` with `selectable` variant — keyboard/selected semantics defined in this spec |
-| Step indicator / progress rail | New primitive `StepIndicator` — fully specified in this doc (Section 4.1) |
-| Email tag input (multi-value) | New primitive `EmailTagInput` — fully specified in this doc (Section 4.3) |
+**Decision: Create** — No existing wizard, stepper, or multi-step form component found in the design system. The existing Input, Button, Avatar, and Card components will be composed into a new Wizard component. This is a compound component that orchestrates form steps, progress tracking, and navigation.
 
 ---
 
 ## 1. Purpose and Usage Context
 
-**What it does:** A four-step modal wizard that guides a newly registered Clearpath user through workspace configuration, team invitations, integration connection, and first project creation — collecting all required context before they reach the main application.
+**What:** A guided multi-step form that walks users through configuration tasks sequentially, with progress indication, validation, and navigation controls.
 
-**When to use:** On first login only, for users who have completed email verification but have not yet completed onboarding. Do NOT use for re-configuring an existing workspace (use the Settings pages), re-inviting members (use People > Invite), or connecting additional integrations after onboarding (use the Integrations page).
+**When to use:** For onboarding flows where users must complete sequential setup tasks (workspace configuration, team setup, integrations). Each step has distinct validation and dependencies. Do NOT use for: simple linear questionnaires (use a single-page form with sections), confirmation dialogs (use Modal), or non-sequential processes (use tabbed interface).
 
 ---
 
 ## 2. Props / API
 
-### OnboardingWizard (shell)
-
 | Prop | Type | Default | Required | Description |
-|------|------|---------|----------|-------------|
-| `initialStep` | `1 \| 2 \| 3 \| 4` | `1` | No | Step to resume at — set from server when a prior partial session exists |
-| `initialData` | `Partial<WizardData>` | `{}` | No | Pre-populated field values from a prior partial session |
-| `onComplete` | `(data: WizardData) => Promise<void>` | — | Yes | Called on final step submission. Resolves on success, rejects with `WizardSubmitError` on failure |
-| `onExit` | `() => void` | — | No | Called if the user explicitly closes the wizard before completion. If omitted, the exit button is hidden |
-| `availableIntegrations` | `Integration[]` | `[github, jira, slack]` | No | Which integrations to offer on Step 3 |
-| `availableTemplates` | `Template[]` | — | Yes | Templates to display on Step 4 — at least one required |
+|---|---|---|---|---|
+| `steps` | `WizardStep[]` | — | Yes | Array of step definitions. Each step must have `id`, `title`, `subtitle`, and `render` function |
+| `initialStep` | `string` | First step's ID | No | ID of the step to show on mount |
+| `onComplete` | `(data: Record<string, any>) => void` | — | Yes | Called when user completes all steps. Receives all step data |
+| `onCancel` | `() => void` | — | No | Called when user clicks Cancel. If omitted, Cancel button is hidden |
+| `canSkipSteps` | `boolean` | `false` | No | Whether user can skip forward to later steps without completing earlier ones |
+| `showProgress` | `boolean` | `true` | No | Whether to display progress indicator (step counter, progress bar) |
+| `variant` | `'modal' \| 'fullpage'` | `'modal'` | No | Modal displays in a centered dialog; fullpage spans the viewport |
+| `title` | `string` | — | No | Wizard title shown at the top (optional override for header) |
 
-### WizardData (completion payload)
+**Step Configuration:**
 
-```ts
-interface WizardData {
-  workspace: {
-    name: string;              // 1–80 chars
-    logoFile: File | null;     // null = no logo uploaded this session
-    logoUrl: string | null;    // previously uploaded logo URL (from server resume); if logoFile is set, logoFile takes precedence
-    timezone: string;          // IANA timezone string, e.g. "America/New_York"
-  };
-  invites: string[];           // 0–5 validated email strings
-  integration: {
-    provider: 'github' | 'jira' | 'slack' | null;  // null = skipped
-    connected: boolean;
-  };
-  project: {
-    templateId: string;
-    name: string;              // 1–80 chars
-  };
-}
-
-// Resume note: a server-restored session cannot rehydrate a File object.
-// On resume, initialData.workspace.logoFile will always be null; logoUrl
-// carries the previously uploaded logo for preview. The user need not
-// re-upload unless they want to change it.
-
-interface WizardSubmitError {
-  step: 1 | 2 | 3 | 4;   // which step the error is attributable to, if known; null for network/unknown
-  message: string;         // user-facing message
-  retryable: boolean;      // if true, show retry; if false, suggest contacting support
-}
-```
-```
-
-### Integration (shape for availableIntegrations)
-
-```ts
-interface Integration {
-  id: 'github' | 'jira' | 'slack';
-  label: string;
-  iconUrl: string;
-  oauthUrl: string;           // Full OAuth initiation URL
-}
-```
-
-### Template (shape for availableTemplates)
-
-```ts
-interface Template {
-  id: string;
-  name: string;
-  description: string;        // Max 120 chars
-  iconEmoji?: string;         // e.g. "🚀"
-  previewImageUrl?: string;
+```typescript
+interface WizardStep {
+  id: string;                                    // Unique identifier for the step
+  title: string;                                 // Step heading (e.g., "Set up your workspace")
+  subtitle?: string;                             // Optional secondary text or description
+  render: (data: Record<string, any>, 
+           setData: (updates: Partial<Record<string, any>>) => void) => ReactNode;  // Render function
+  validate?: (data: Record<string, any>) => boolean | string;  // Validation; return true if valid, string if invalid (error message)
+  allowSkip?: boolean;                           // If true, user can skip this step (shows "Skip" button alongside "Next")
+  onEnter?: (data: Record<string, any>) => void; // Called when step becomes active
+  onExit?: (data: Record<string, any>) => void;  // Called when step is left
 }
 ```
 
@@ -144,157 +79,49 @@ interface Template {
 
 ## 3. Variants
 
-The OnboardingWizard has no visual variants — it is a single-purpose, full-screen-overlay component. Visual variation exists within individual steps (see Section 4).
-
-The `Card` component's `selectable` extension (used in Steps 3 and 4):
-
-| Variant | Visual treatment | Semantic meaning | When to use |
-|---------|-----------------|------------------|-------------|
-| `selectable` (default/unselected) | Standard card border, subtle hover fill | Available, not chosen | Integration or template not yet selected |
-| `selectable` + `selected={true}` | Brand-colour border (2px), light brand tint background, checkmark badge top-right | Chosen | The active selection |
-| `selectable` + `disabled={true}` | Muted opacity 50%, cursor `not-allowed` | Unavailable | Future: integration already connected |
+| Variant | Visual treatment | When to use |
+|---------|-----------------|-------------|
+| **Modal** (default) | Dialog centered on screen, dark overlay, fixed width (600px desktop, 90vw tablet) | Onboarding flows where the user should focus solely on setup. Standard for B2B tools. |
+| **Fullpage** | Steps fill the viewport, no dialog container. Header bar with branding/logo space | Multi-step setup processes where users may need to reference external info (email clients for invites, browser tabs for integrations). Rare. |
 
 ---
 
-## 4. States — Complete Coverage
-
-The wizard has two levels of state: **shell-level** (which step, overall progress) and **step-level** (field validity, async ops within a step).
-
-### 4.1 Shell States
+## 4. States — Complete Coverage Table
 
 | State | Visual treatment | Behaviour | Transitions to |
 |-------|-----------------|-----------|---------------|
-| **Step N (idle)** | Step indicator highlights current step; step content rendered; Continue button enabled if step valid | User fills fields; Back/Continue available | Step N+1, Step N-1, Submitting (step 4), Exit confirmation |
-| **Step transitioning** | Content fades out (150ms), new content fades in (150ms); step indicator updates | Non-interactive during transition | Step N (idle) |
-| **Submitting** | Continue button replaced with spinner; all inputs disabled; overlay not closable | Final wizard payload is sent; no interaction | Complete, Submit error |
-| **Submit error** | Error Banner appears below step content ("Something went wrong. Try again."); Continue re-enabled | User can retry; Back available | Submitting |
-| **Complete** | Wizard closes; focus moves to main app; `onComplete` resolves | Caller is responsible for navigation | — |
-| **Exit confirmation** | A confirmation dialog appears: "Leave setup? Your progress will be saved." with "Continue setup" and "Leave" actions | Focus trapped in dialog | Step N (idle) on "Continue setup"; `onExit()` called on "Leave" |
-| **OAuth return** | After OAuth redirect, wizard reopens on Step 3 with integration status updated | Integration shown as connected or failed | Step 3 (idle) |
+| **Step loading** | Skeleton loaders for form fields; spinner if `onEnter` is async | Form fields disabled, Next/Skip buttons disabled | Step ready |
+| **Step ready** | All form fields interactive, visible | User can interact with form, focus management active | Step validating |
+| **Step validating** | Form maintains appearance, Next button shows spinner | User cannot submit while validation runs | Step valid or Step invalid |
+| **Step valid** | Next button enabled with checkmark icon (brief), then standard appearance | User can proceed or remain on step | Next step active |
+| **Step invalid** | Red error text below the first invalid field; error icon; field border highlight in error colour | User cannot proceed. Error message guides correction | Step valid (after user corrects) |
+| **Step skipped** | Checkmark + "Skipped" label in progress indicator | Data for this step is not collected | Next step active |
+| **Completion screen** | Success icon, confirmation message, CTA button ("Go to workspace", "View settings") | No further wizard interaction; user is guided toward next action | — |
 
-**Step 1 Back button:** Hidden (not rendered) on Step 1 — there is no previous step. Steps 2–4 show a Back button.
+**Sub-step states (within a form step):**
+- **Field focus:** Field has focus ring (dark mode: lighter ring; light mode: standard ring)
+- **Field error:** Red border, error icon, error message text below
+- **Field filled:** Input has content, visual indicator subtle (text colour change, no outline colour change to avoid confusion with focus)
 
-**Progress persistence:** Wizard state (current step + all entered data) is auto-saved to the server after each successful step advance. On re-entry via `initialStep` + `initialData`, previously entered fields are pre-populated. A user who closes the tab mid-wizard resumes where they left off on next login.
-
-**Auto-save failure:** If the server save fails after a step advance, the wizard shows the Submit-error banner ("Progress couldn't be saved. Check your connection and try again.") with a retry action. The user does not advance to the next step until the save succeeds. This is distinct from the final submission error — it can occur after any step.
-
-**OAuth redirect hazard:** Step 3 initiates an OAuth flow that redirects away from the page. The current wizard state must be flushed to the server before the OAuth redirect begins. On return, the application must detect the OAuth callback (e.g., via `?oauth_callback=1&provider=github&status=success`) and reopen the wizard at Step 3 with the result. The wizard shell is responsible for reading this URL parameter on mount and setting `integration.connected` accordingly.
-
-### 4.2 Step 1 — Workspace Setup
-
-Sub-component states for each field:
-
-**Workspace Name (Input)**
-
-| State | Visual | Behaviour |
-|-------|--------|-----------|
-| Empty (default) | Placeholder "Acme Corp" | Continue blocked |
-| Filled + valid | Standard input, no indicator | Continue enabled (assuming other fields valid) |
-| Filled + invalid | Red border + error text below: "Name must be between 1 and 80 characters" | Continue blocked |
-| Focused | Focus ring on input | Standard |
-
-**Logo Upload (LogoUpload primitive)**
-
-| State | Visual | Behaviour |
-|-------|--------|-----------|
-| Empty | Dashed border zone, upload icon, "Upload logo (optional)" label, "PNG or SVG, max 2 MB" hint | Click or drag to upload |
-| Uploading | Progress bar within zone | Non-interactive |
-| Preview | Thumbnail + "Remove" link | Replaces upload zone; Remove clears back to Empty |
-| Error | Red border + error text: "File too large" or "Unsupported format" | Upload zone remains; user can retry |
-
-**Timezone Select (TimezoneSelect primitive)**
-
-| State | Visual | Behaviour |
-|-------|--------|-----------|
-| Default | Pre-selected to browser's detected timezone, or first option | Auto-populated; Continue not blocked |
-| Open | Dropdown with search input | Keyboard-navigable list of IANA timezones, grouped by region |
-| Selected | Displays friendly timezone label, e.g. "Eastern Time (US & Canada)" | — |
-
-**Continue button:** Enabled when workspace name is filled and valid. Logo and timezone are always valid (logo is optional; timezone has a default).
-
-### 4.3 Step 2 — Invite Team Members
-
-**EmailTagInput** (new primitive):
-
-| State | Visual | Behaviour |
-|-------|--------|-----------|
-| Empty (0 tags) | Placeholder "teammate@company.com" | Continue enabled (invites are optional — see skip semantics below) |
-| Typing | Input active; existing tags shown as pills on the left | Pressing Enter or comma adds a tag |
-| Tag added (valid email) | Filled pill: avatar initial + email, remove × | Counts against 5-tag limit |
-| Tag added (invalid email) | Red-outlined pill + tooltip "Not a valid email" | Continue blocked while any invalid tag present |
-| Limit reached (5 tags) | Input hidden; "5 of 5 added" text shown | Adding disabled; user must remove a tag to add another |
-| Duplicate email | Tag not added; toast "Already added" | No state change to existing tags |
-
-**Skip semantics:** Steps 2, 3, and 4 all allow advancing without completing the action:
-- Step 2 (invites): zero invites is valid — "Continue" is always enabled. No explicit skip button.
-- Step 3 (integration): explicit "Skip for now" text button below the cards. If no card selected and user clicks Continue, treated as skip.
-- Step 4 (project): project name and template are required — Continue is blocked until both are chosen. There is NO skip on this step.
-
-**Continue button:** Enabled when 0–5 valid email tags are present (no invalid tags).
-
-### 4.4 Step 3 — Connect Integration
-
-**SelectableCard (Card extended):**
-
-| State | Visual | Behaviour | Transitions to |
-|-------|--------|-----------|---------------|
-| Unselected | Standard card, hover: light tint fill | Click to select | Selected |
-| Selected | Brand border 2px, tint background, checkmark badge | Click to deselect (returns to Unselected) | Unselected, Connecting |
-| Connecting | Spinner replaces icon; "Connecting…" label | Disabled; OAuth redirect triggered | Connected, Connection error |
-| Connected | Green check badge; "Connected" label | Non-interactive; user can proceed | — |
-| Connection error | Red border; "Connection failed. Retry?" retry link | Retry link re-triggers OAuth | Connecting |
-
-**"Skip for now" button:** A ghost/text `Button` below the card grid. Clicking it sets `integration.provider = null` and advances to Step 4. This is the **only** way to skip Step 3 — the Continue button requires a completed connection. If no card is selected, Continue is disabled; clicking it does not silently skip. This resolves any ambiguity: skip requires an explicit "Skip for now" action, not an implicit unselected Continue.
-
-**Continue button:** Enabled only when `connected === true`. Disabled in all other states (no selection, card selected but not yet connected).
-
-**OAuth redirect flow:**
-1. User selects a card → the "Connect [Provider]" primary button appears (replaces Continue).
-2. User clicks "Connect [Provider]" → wizard state flushed to server → OAuth redirect.
-3. On return: wizard reopens at Step 3; connected card shown in Connected state; Continue enabled.
-
-**OAuth abandonment:** If the user closes the OAuth popup or returns to the app without completing the OAuth flow (no callback URL parameter present), the wizard returns to Step 3 with the previously selected card in its unselected state and no connection. The Connection error state is not shown — the user simply reattempts. A 10-minute server-side timeout applies to pending OAuth state; after expiry, a new attempt starts a fresh OAuth flow.
-
-### 4.5 Step 4 — Create First Project
-
-**Template selection (SelectableCard grid):**
-
-| State | Visual | Behaviour |
-|-------|--------|-----------|
-| Unselected | Standard selectable card | Click to select |
-| Selected | Brand border, tint, checkmark | Click deselects ONLY IF another is available (at least one template must stay selected) |
-
-**Project Name (Input):** Same states as Workspace Name in Step 1.
-
-**Continue button (final step — labelled "Create Project"):** Enabled when a template is selected AND project name is valid (1–80 chars).
-
-**Step-level validation summary:**
-
-| Step | Required to advance | Optional |
-|------|--------------------|---------:|
-| 1 | Workspace name (1–80 chars) | Logo, timezone (has default) |
-| 2 | No invalid email tags | Emails (0–5) |
-| 3 | `connected === true` OR explicit skip | — |
-| 4 | Template selected + project name (1–80 chars) | — |
+**Compound states:**
+- **Validating + error:** Validation runs; if it fails, error state shows immediately
+- **Skipped step + next step validation depends on it:** If step B depends on data from step A (which was skipped), the dependency is noted. Step B's validation accounts for missing data.
 
 ---
 
 ## 5. Responsive Behaviour
 
-**Mobile (< 640px): Out of scope.** Clearpath is a B2B desktop/tablet product. The wizard is not designed or tested for mobile viewports. If rendered below 640px, the layout is undefined — callers must gate the wizard behind a viewport check and display a "Clearpath works best on desktop or tablet" message on smaller screens.
+| Breakpoint | Width | Layout changes | Content changes |
+|-----------|-------|---------------|----------------|
+| **Tablet** | 640-1024px | Modal width: 90vw, max 600px; form fields stack vertically; button group spans full width; `gap: 12px` | All form labels visible; validation text may wrap |
+| **Desktop** | >1024px | Modal width: 600px fixed; form fields in grid (2-col where appropriate); button group: Next/Skip left, Cancel right | Full-width form labels; validation text on single line |
 
-| Breakpoint | Width | Layout | Changes |
-|-----------|-------|--------|---------|
-| **Tablet** | 640–1024px | Wizard is a centred modal, 90vw max-width 640px, padding 24px | Step cards in single column; integration cards 1×3 grid (stacked); template cards 1×2 grid |
-| **Desktop** | > 1024px | Centred modal, max-width 720px, padding 40px | Integration cards 1×3 row; template cards 2×2 grid (2 columns) |
-
-**Touch targets:** All interactive elements (cards, buttons, input tags) are minimum 44×44px on tablet. `EmailTagInput` remove buttons are minimum 32×32px with 6px invisible touch padding extending the hit area.
-
-**No horizontal scrolling** at any supported breakpoint. At 640px, card text may truncate with ellipsis but layout does not overflow.
-
-### Performance Considerations
-
-N/A — no large datasets rendered in this wizard. Template and integration lists are bounded (<20 items each) and statically loaded. No virtualisation required.
+**Specific responsive rules:**
+- Touch targets (inputs, buttons) minimum 44x44px at all breakpoints
+- No horizontal scroll at 640px viewport width
+- Form fields must remain usable at 320px width (mobile, but not primary target)
+- Progress indicator (step counter) must fit in header without wrapping
+- Modal overlay visible on both breakpoints
 
 ---
 
@@ -302,139 +129,194 @@ N/A — no large datasets rendered in this wizard. Template and integration list
 
 ### Keyboard Navigation
 
-**Wizard shell:**
-
 | Key | Action |
 |-----|--------|
-| `Tab` / `Shift+Tab` | Move focus between all interactive elements within the current step |
-| `Enter` (on Continue/Create Project button) | Advance step or submit |
-| `Enter` (on Back button) | Return to previous step |
-| `Escape` | Open exit confirmation dialog (if `onExit` prop provided) |
+| `Tab` | Move focus to next interactive element (form field → Next button → Cancel button). Focus order: top-to-bottom, left-to-right |
+| `Shift+Tab` | Move focus backward through interactive elements |
+| `Enter` | Submit focused button (Next, Skip, Cancel, Complete) |
+| `Space` | Activate focused button (same as Enter for buttons; for checkboxes/radios within a step, toggle selection) |
+| `Escape` | Close wizard, call `onCancel`. Modal only — fullpage variant ignores Escape |
 
-**Step 3 & 4 — SelectableCard grid:**
-
-| Key | Action |
-|-----|--------|
-| `Tab` | Move focus to next card |
-| `Shift+Tab` | Move focus to previous card |
-| `Enter` or `Space` | Select/deselect focused card |
-| `Arrow` keys | Move focus between cards within the grid (left/right/up/down) |
-
-**EmailTagInput (Step 2):**
-
-| Key | Action |
-|-----|--------|
-| `Enter` or `,` | Add current input value as a tag (if valid) |
-| `Backspace` (empty input) | Remove the last tag |
-| `Tab` (on a tag's × button) | Move focus to next × or to input |
-| `Enter` or `Space` (on × button) | Remove that tag; focus returns to input |
-| `Escape` | Clear input text; focus stays on input |
-
-**Focus management after step transitions:**
-- After advancing to the next step: focus moves to the first interactive element in the new step's content area (not the step indicator).
-- After going back: focus moves to the first interactive element.
-- After OAuth return (Step 3 reopens): focus moves to the connected card.
-- After wizard closes (complete or exit): focus returns to the element that was focused before the wizard opened (store it on mount).
-
-**Exit confirmation dialog:**
-- Focus is trapped within the dialog.
-- On open: focus moves to "Continue setup" (safe default action).
-- On close via "Continue setup": focus returns to the step content, first interactive element.
-- On close via "Leave": wizard closes, focus returns to pre-wizard element.
+**Focus management:**
+- On step entry: focus moves to the first form field (or to the "Next" button if all fields are pre-filled)
+- After step completion: focus moves to the header of the next step
+- On wizard completion: focus moves to the completion screen's primary CTA button
 
 ### Screen Reader
 
-- **Wizard shell role:** `role="dialog"` with `aria-modal="true"`, `aria-labelledby` pointing to the step title `<h1>`.
-- **Step indicator:** `role="list"` with each step as `role="listitem"`. Current step has `aria-current="step"`. Completed steps have a visually hidden "(completed)" suffix.
-- **Step title:** `<h1>` element within the dialog, updated on each step transition (triggers a screen reader announcement).
-- **SelectableCard:** `role="radio"` within a `role="radiogroup"`. The group is labelled by the step's section heading. `aria-checked="true/false"`.
-- **EmailTagInput:** `role="group"` labelled "Team member emails". Each tag pill is `role="option"` within a `role="listbox"`. The input has `aria-label="Add email address"`.
-- **Continue/Back buttons:** Standard `<button>` elements. When disabled, use `aria-disabled="true"` (not the `disabled` HTML attribute) to keep them focusable and announceable.
-- **Error messages:** `role="alert"` with `aria-live="assertive"` so they are announced immediately without requiring focus.
-- **Progress:** Step indicator announces: "Step 2 of 4: Invite team members" (via `aria-label` on the indicator landmark).
-- **OAuth connecting state:** `aria-live="polite"` region announces "Connecting to GitHub…" and then "GitHub connected successfully" or "Connection failed".
+- **Role:** `role="dialog"` (modal variant) or `role="main"` (fullpage variant)
+- **Label:** `aria-label="Clearpath onboarding wizard"` or `aria-labelledby` pointing to the wizard title
+- **Progress announcement:** Progress indicator region uses `aria-live="polite"` and announces "Step 2 of 4: Invite team members"
+- **Step heading:** Each step heading uses `<h2>` or `aria-level="2"` with `aria-current="step"` attribute
+- **Form validation:** Error messages use `aria-invalid="true"` on the field and `aria-describedby` pointing to the error text
+- **Button states:** Next button has `aria-disabled="true"` when validation fails, preventing screen reader activation
 
 ### Colour and Contrast
 
-- All text must meet 4.5:1 against background.
-- Selected card brand border must meet 3:1 against the card background.
-- Step indicator: completed steps use a filled circle — icon must meet 3:1 against circle fill.
-- Error states (red border, red text): must meet 4.5:1. Red colour alone is not sufficient — error icon + text label accompanies every error.
-- Focus indicator: 3px solid ring, offset 2px, using the brand focus colour (must meet 3:1 against both light and dark backgrounds).
+- Text-to-background contrast: 4.5:1 minimum (normal text, form labels)
+- Error text (red) against background: 4.5:1 minimum
+- Progress indicator bar: 3:1 minimum contrast against background
+- Focus ring: 3:1 minimum contrast against all adjacent colours (light mode: dark ring; dark mode: light ring)
+- Icons alone do not convey state — always pair with text (error icon + error message, success icon + checkmark text)
 
-### Focus Management (summary)
+### Focus Management (Modal variant)
 
-- On wizard mount: focus moves to the first input in Step 1.
-- Focus is trapped within the wizard modal at all times (including between steps).
-- Exception: during OAuth redirect, the wizard is unmounted — focus trap is released.
+- Focus trap enabled: `Tab` within the modal cycles through form fields and buttons without leaving the modal
+- `Escape` key closes the modal and returns focus to the trigger element (if applicable; in this case, focus returns to the page's main content area)
+- Initial focus: first form field on step load, or first interactive button if all fields are disabled
 
 ---
 
 ## 7. Dark Mode
 
-- [ ] All colours use semantic design tokens (e.g. `surface.overlay`, `border.brand`, `text.primary`) — no hardcoded hex values.
-- [ ] Selected card tint uses a token that has a dark-mode equivalent (dark tint is lighter, not darker).
-- [ ] Logo upload zone: dashed border uses `border.subtle` token, which inverts in dark mode.
-- [ ] Step indicator completed-fill uses `brand.500` in light mode, `brand.400` in dark mode (lighter for dark backgrounds).
-- [ ] Shadow on the modal overlay: lighter in dark mode (`shadow.xl` at 20% opacity, not 30%).
-- [ ] Connected/error badge colours re-verified for contrast in dark mode — green and red must still meet 3:1 against the card background in dark mode.
+- [ ] All colours use semantic tokens (e.g., `color-text-primary`, `color-bg-surface`, `color-border-default`), not hardcoded values
+- [ ] Error state (red) uses dark-mode-safe error token — verify 4.5:1 contrast against dark background
+- [ ] Focus ring colour adjusted for dark background (lighter ring, not darker)
+- [ ] Modal backdrop uses semi-transparent overlay that works in both modes (dark mode: lighter overlay, light mode: darker overlay)
+- [ ] Form input backgrounds: light mode uses white or light grey; dark mode uses darker grey (not black, to maintain hierarchy)
+- [ ] Shadows on modal: dark mode uses subtle shadows (less aggressive than light mode)
 
 ---
 
 ## 8. Animation and Motion
 
-| Element | Animation | Duration | Easing |
-|---------|-----------|----------|--------|
-| Step content transition | Fade out current + fade in new | 150ms out + 150ms in | `ease-in-out` |
-| Step indicator advance | Completed step fill scales from 0→1 + check icon fades in | 200ms | `ease-out` |
-| SelectableCard select | Border colour + background tint | 120ms | `ease-out` |
-| SelectableCard checkmark | Scale 0→1 | 150ms | `spring(stiffness: 300, damping: 20)` |
-| Exit confirmation dialog | Fade in + scale from 95%→100% | 150ms | `ease-out` |
-| Error banner | Slide down from 0 height | 200ms | `ease-out` |
-| EmailTagInput tag added | Slide in from right | 120ms | `ease-out` |
-| EmailTagInput tag removed | Fade out + collapse width | 100ms | `ease-in` |
+**Transition between steps:**
+- Fade duration: 200ms (ease: `ease-in-out`)
+- On "Next": current step fades out, next step fades in
+- Loading spinners: smooth rotation at 1 rotation per 2 seconds
+- Success checkmark: quick bounce/scale (100ms, cubic-bezier(0.68, -0.55, 0.265, 1.55)) on completion
 
-**`prefers-reduced-motion: reduce`:** All animations are disabled. State changes are instantaneous. The only exception is the step indicator check icon — it appears without scaling (immediate). No layout shifts occur because dimensions are pre-allocated.
+**Entry/exit animations:**
+- Modal entry: fade + scale (0.9 → 1) over 200ms
+- Modal exit: fade + scale (1 → 0.95) over 150ms
+
+**Respects `prefers-reduced-motion`:**
+- All animations disabled if user has set `prefers-reduced-motion: reduce`
+- Provide instant step transitions instead of fades
+- Spinner replaced with static "Loading…" text
 
 ---
 
 ## 9. Usage Examples
 
+### Example 1: Basic 4-step onboarding wizard
+
 ```tsx
-// Standard usage — server provides resumption data
-<OnboardingWizard
-  initialStep={user.onboardingStep}
-  initialData={user.onboardingData}
-  availableTemplates={templates}
-  onComplete={async (data) => {
-    await api.completeOnboarding(data);
-    router.push('/dashboard');
+<Wizard
+  steps={[
+    {
+      id: 'workspace',
+      title: 'Set up your workspace',
+      subtitle: 'Give your team a home',
+      render: (data, setData) => (
+        <>
+          <Input
+            label="Workspace name"
+            placeholder="Acme Corp"
+            value={data.workspaceName || ''}
+            onChange={(e) => setData({ workspaceName: e.target.value })}
+          />
+          <Input
+            label="Timezone"
+            type="select"
+            value={data.timezone || ''}
+            onChange={(e) => setData({ timezone: e.target.value })}
+            options={timezones}
+          />
+        </>
+      ),
+      validate: (data) => {
+        if (!data.workspaceName?.trim()) return 'Workspace name is required';
+        if (!data.timezone) return 'Timezone is required';
+        return true;
+      },
+    },
+    {
+      id: 'team',
+      title: 'Invite team members',
+      subtitle: 'Add up to 5 people',
+      allowSkip: true,
+      render: (data, setData) => (
+        <EmailInviteForm
+          emails={data.teamEmails || []}
+          onChange={(emails) => setData({ teamEmails: emails })}
+          maxEmails={5}
+        />
+      ),
+    },
+    {
+      id: 'integration',
+      title: 'Connect your first integration',
+      subtitle: 'GitHub, Jira, or Slack (optional)',
+      allowSkip: true,
+      render: (data, setData) => (
+        <IntegrationSelector
+          selected={data.integration}
+          onChange={(integration) => setData({ integration })}
+          options={['github', 'jira', 'slack']}
+        />
+      ),
+    },
+    {
+      id: 'project',
+      title: 'Create your first project',
+      subtitle: 'Choose a template to get started',
+      render: (data, setData) => (
+        <ProjectTemplateSelector
+          selected={data.template}
+          onChange={(template) => setData({ template })}
+        />
+      ),
+      validate: (data) => {
+        if (!data.template) return 'Please select a template';
+        return true;
+      },
+    },
+  ]}
+  onComplete={(data) => {
+    console.log('Wizard completed with:', data);
+    // Navigate to workspace or home screen
   }}
-  onExit={() => router.push('/dashboard?onboarding=skipped')}
+  onCancel={() => {
+    console.log('User cancelled wizard');
+    // Return to login or home
+  }}
+  variant="modal"
+  showProgress={true}
 />
 ```
 
-```tsx
-// First-time user, no prior progress
-<OnboardingWizard
-  availableTemplates={templates}
-  onComplete={async (data) => {
-    await api.completeOnboarding(data);
-    router.push('/dashboard');
-  }}
-/>
-// No onExit prop — exit button is hidden; user must complete wizard
-```
+### Example 2: Fullpage variant with no skipping
 
 ```tsx
-// Restricted integration set (e.g. Jira-only enterprise)
-<OnboardingWizard
-  availableIntegrations={[integrations.jira]}
-  availableTemplates={templates}
-  onComplete={handleComplete}
-  onExit={handleExit}
+<Wizard
+  steps={accountSetupSteps}
+  onComplete={handleSetupComplete}
+  variant="fullpage"
+  canSkipSteps={false}
+  title="Welcome to Clearpath"
 />
-// Step 3 shows only one card; "Skip for now" still available
+```
+
+### Example 3: Async validation with dependent steps
+
+```tsx
+{
+  id: 'email',
+  title: 'Verify your email',
+  render: (data, setData) => (
+    <Input
+      label="Email address"
+      value={data.email}
+      onChange={(e) => setData({ email: e.target.value })}
+    />
+  ),
+  validate: async (data) => {
+    const response = await fetch(`/api/check-email?email=${data.email}`);
+    if (!response.ok) return 'Email is already in use';
+    return true;
+  },
+}
 ```
 
 ---
@@ -443,68 +325,72 @@ N/A — no large datasets rendered in this wizard. Template and integration list
 
 | Do | Don't |
 |----|-------|
-| Pre-populate timezone from `Intl.DateTimeFormat().resolvedOptions().timeZone` | Leave timezone blank and force the user to search |
-| Flush wizard state to server before triggering OAuth redirect | Let OAuth redirect discard unsaved wizard data |
-| Keep Continue disabled while any email tag is invalid | Let users advance with a red-outlined invalid tag still present |
-| Announce step changes to screen readers via updated `<h1>` | Silently update the DOM without triggering a new SR announcement |
-| Show "Step N of 4" in the step indicator `aria-label` | Rely on visual position alone to convey progress |
-| Return focus to the pre-wizard element on close | Drop focus to `body` when the wizard closes |
-| Make "Skip for now" a clearly labelled text/ghost button | Hide the skip option or label it ambiguously as "Later" |
-| Use `aria-disabled` on Continue/Back so they remain focusable when blocked | Use the `disabled` HTML attribute, which removes them from tab order |
-| Validate email format client-side immediately on tag add | Batch-validate on Continue — surface errors early |
-| Offer at least one template — `availableTemplates` is required | Render Step 4 with an empty template grid |
-| Define the minimum `onComplete` handler to navigate post-wizard | Leave navigation implicit inside the component |
-| Gate the wizard behind a ≥640px viewport check | Let the layout break silently at mobile widths |
+| Validate on blur or submit, never on every keystroke | Force validation feedback that triggers before user finishes typing |
+| Show a loading spinner while async validation runs | Submit the form without waiting for validation to complete |
+| Provide a skip option for optional steps (team invites, integrations) | Force users through non-critical setup (make skipping obvious) |
+| Return focus predictably after each step transition | Leave focus in an undefined location between steps |
+| Keep validation error messages short and actionable ("Email already in use. Try another.") | Use generic messages ("Error") or blame the user ("You entered invalid data") |
+| Save step data locally during the wizard | Lose user input if they navigate away (store data in state or session storage) |
+| Show progress (step 2 of 4) and allow jumping to earlier steps if `canSkipSteps: true` | Hide progress or force linear progression when users might need to go back |
+| Test keyboard-only navigation and screen reader announcement | Assume mouse-only interaction is sufficient |
 
 ---
 
-## Sub-component Contracts (out-of-scope primitives)
+## Summary
 
-The following primitives are called out in this spec but not fully specced here. They must be specced separately before implementation begins.
+This specification defines a reusable Wizard component suitable for multi-step onboarding flows in Clearpath. The component composes existing Input, Button, Avatar, and Card components and supports:
 
-| Primitive | Used in | Key contract |
-|-----------|---------|-------------|
-| `LogoUpload` | Step 1 | Accepts PNG/SVG ≤2 MB; emits `File \| null`; exposes `uploading`, `error`, `preview` states |
-| `TimezoneSelect` | Step 1 | Searchable combobox; emits IANA timezone string; pre-selects browser default; required (always has a value) |
-| `EmailTagInput` | Step 2 | Multi-value input; validates on add; enforces 1–5 limit; emits `string[]` of valid emails |
-| `StepIndicator` | Shell | Receives `totalSteps`, `currentStep`, `completedSteps[]`; read-only (no click navigation) |
+- **4 configurable steps** with flexible rendering, validation, and lifecycle hooks
+- **Modal and fullpage variants** for different contexts
+- **Full keyboard navigation** and screen reader support (WCAG 2.1 AA)
+- **Responsive design** for desktop and tablet
+- **Dark mode** with semantic colour tokens
+- **Async validation** and error state handling
+- **Progress tracking** with optional step skipping
+- **Motion respect** for `prefers-reduced-motion`
 
-```
+**Implementation notes:**
+- Build the step renderer as a wrapper component managing form state locally per step
+- Persist all step data in the parent's state to allow back-navigation
+- Use callback refs for focus management between steps
+- Apply focus trap only to modal variant; fullpage variant allows escape
+
+Write this spec to `/Users/martin/Projects/turtlestack/plugins/product/ui-designer/templates/clearpath-onboarding-wizard.spec.md` now.
 
 ## Evaluation
 
 | Field | Value |
 |---|---|
-| Verdict | PASS |
-| Score | 14.5/17.0 (85%) |
-| Evaluated | 2026-05-01 |
-| Target duration | 351666 ms |
-| Target cost | $0.9984 |
+| Verdict | PARTIAL |
+| Score | 11.0/17.0 (65%) |
+| Evaluated | 2026-05-04 |
+| Target duration | 71340 ms |
+| Target cost | $0.1059 |
 | Permission denials | 0 |
 
 ### Criteria
 
 | # | Criterion | Result | Evidence |
 |---|---|---|---|
-| c1 | Checks the existing design system first and explicitly identifies which existing components (Input, Button, Avatar, Card) can be reused versus what needs to be created | PASS | Intro states 'The existing design system has Input, Button, Avatar, and Card but none cover the compound shell...' and the design system gaps table lists each primitive with an 'Assumed resolution' column explicitly marking what is reused (Card extended to selectable variant), extended, or created new (LogoUpload, TimezoneSelect, EmailTagInput, StepIndicator). |
-| c2 | Documents all 8 required component states for the wizard: Default, Hover, Focus, Active, Disabled, Loading, Error, Empty | PARTIAL | Section 4.1 shell-states table names: idle, transitioning, submitting, submit error, complete, exit confirmation, OAuth return — covering Default, Loading, Error, and transitional states. However, Hover as a distinct shell state is not in the table (only mentioned for cards), Active (during button press) is absent, and Empty is not named as a formal state. Focus is in Section 6, not in the states table. |
-| c3 | Specifies ARIA roles, labels, and keyboard navigation requirements — not deferred to a future accessibility pass | PASS | Section 6 (Accessibility Requirements) fully specifies: ARIA roles (role='dialog', aria-modal, aria-labelledby, role='list/listitem', aria-current='step', role='radio/radiogroup', role='group/listbox/option', aria-live, role='alert'); keyboard navigation tables for wizard shell, card grids, and EmailTagInput; focus management on step transitions, OAuth return, and wizard close — all inline, nothing deferred. |
-| c4 | Addresses the step indicator / progress component as either a Reuse, Extend, or Create decision with justification | PASS | Design system gaps table row: 'Step indicator / progress rail → New primitive StepIndicator — fully specified in this doc.' The intro justifies the Create decision: 'Searched for existing wizard, stepper, onboarding, and multi-step components — none found.' Sub-component contracts section specifies the interface. |
-| c5 | Specifies responsive behaviour for both desktop and tablet breakpoints | PASS | Section 5 table: Tablet (640–1024px) — '90vw max-width 640px, padding 24px; step cards single column; integration cards 1×3 stacked; template cards 1×2'; Desktop (>1024px) — 'max-width 720px, padding 40px; integration cards 1×3 row; template cards 2×2 grid.' Touch target minimums also specified for tablet. |
-| c6 | Documents the error state for each step (e.g. invalid email format in team invite, workspace name taken) | PASS | Step 1: red border + 'Name must be between 1 and 80 characters'; logo upload: 'File too large' or 'Unsupported format'. Step 2: red-outlined pill + tooltip 'Not a valid email'; Continue blocked with any invalid tag. Step 3: 'Connection failed. Retry?' red border. Step 4: project name reuses Step 1 error pattern; Continue blocked. Note: server-side 'name taken' scenario not covered. |
-| c7 | Specifies loading states for async operations — partial credit if loading state is mentioned but not fully specified for each async step (integration connection, form submission) | PARTIAL | Integration connection (Step 3 SelectableCard 'Connecting' state): 'Spinner replaces icon; Connecting… label; Disabled; OAuth redirect triggered.' Final submission: shell 'Submitting' state with 'Continue button replaced with spinner; all inputs disabled.' Logo upload: 'Progress bar within zone.' Auto-save failure also specified. Ceiling is PARTIAL. |
-| c8 | Produces output in a structured component specification format with named sections, not a prose description | PASS | Spec is structured with 10 numbered sections (Purpose, Props/API, Variants, States, Responsive Behaviour, Accessibility, Dark Mode, Animation, Usage Examples, Do/Don't) plus Sub-component Contracts. Each section uses tables, TypeScript interfaces, and state tables — not prose. |
-| c9 | Output addresses each of the 4 wizard steps from the prompt explicitly — workspace setup, team invite, integration connection, project from template — with the relevant inputs / interactions per step | PASS | Sections 4.2 (Step 1 Workspace Setup with name/logo/timezone states), 4.3 (Step 2 Invite with EmailTagInput states and skip semantics), 4.4 (Step 3 Integration with SelectableCard states, OAuth flow, Skip for now), 4.5 (Step 4 Project with template selection and name input) — all four steps covered with state tables and interactions. |
-| c10 | Output's design-system reuse decisions are explicit per primitive — Input (reuse for workspace name, email fields), Button (reuse for navigation), Avatar (reuse for team-member preview), Card (reuse for template selection) — and identifies what NEEDS to be created (step indicator / progress component) | PARTIAL | Input reuse (Steps 1, 4), Button reuse (Continue, Back, Skip), Card extended to selectable variant (Section 3), and new primitives (LogoUpload, TimezoneSelect, EmailTagInput, StepIndicator) are all explicit. Avatar is used in email tag pills ('avatar initial + email') but is NOT explicitly called out as a 'reuse Avatar' decision in the design system gaps table or any dedicated decision row. |
-| c11 | Output's progress / step-indicator component is decided explicitly as Reuse / Extend / Create with reasoning — likely Create with justification that no existing primitive serves this layout | PASS | Design system gaps table: 'New primitive StepIndicator — fully specified in this doc.' Intro: 'Searched for existing wizard, stepper, onboarding, and multi-step components — none found.' Create decision with search-based justification. Sub-component contracts specify the interface: 'Receives totalSteps, currentStep, completedSteps[]; read-only (no click navigation).' |
-| c12 | Output documents all 8 component states for the wizard shell — Default, Hover (on next/back), Focus (keyboard focus on inputs), Active (during click), Disabled (next button before required fields filled), Loading (during async like integration auth), Error (validation failures), Empty (initial state of integration step before selection) | PARTIAL | Shell states table (4.1) covers: idle (Default), transitioning, submitting (Loading), submit error (Error), complete, exit confirmation, OAuth return — 7 states. Disabled Continue is addressed per-step. However, Hover on Back/Continue buttons, Active (click) state, and Empty as a named initial shell state are not in the shell states table. Focus is only in Section 6. |
-| c13 | Output's accessibility specification covers ARIA roles (e.g. `role="region"` on each step, `aria-current="step"` on the active indicator), labels, and keyboard navigation (Tab through fields, Enter to advance, Esc to abandon) | PASS | Section 6 Screen Reader: aria-current='step' on active step indicator ✓; role='dialog' on shell (not role='region' per step, but this is a valid alternative); Tab/Shift+Tab through fields ✓; Enter to advance ✓; Escape to exit confirmation ✓. Step indicator aria-label 'Step 2 of 4: Invite team members' ✓. Comprehensive beyond minimum. |
-| c14 | Output addresses the team-invite step's email validation — what counts as valid format, max 5 emails, duplicate email handling, malformed entry handling — with error states designed | PASS | Section 4.3 EmailTagInput table: valid email → filled pill; invalid email → 'Red-outlined pill + tooltip Not a valid email'; limit reached (5 tags) → 'Input hidden; 5 of 5 added'; duplicate → 'Tag not added; toast Already added.' Continue blocked while any invalid tag present. Do/Don't: 'Validate email format client-side immediately on tag add.' |
-| c15 | Output addresses the integration step's "or skip" branch explicitly — designed as a primary "Connect" path AND a secondary "Skip for now" link, with deferred re-engagement (e.g. nudge in onboarding email Day 7) | PARTIAL | Section 4.4: primary path (card select → Connect [Provider] button → OAuth), secondary 'Skip for now' ghost/text button that sets integration.provider=null and advances to Step 4 — both paths explicitly designed. However, deferred re-engagement (onboarding email nudge, Day 7 reminder, or any post-wizard follow-up) is entirely absent from the spec. |
-| c16 | Output specifies responsive behaviour for desktop AND tablet — including how the wizard layout reflows (single-column on tablet vs two-column on desktop) and where the step indicator sits at each breakpoint | PARTIAL | Section 5 table specifies card grid reflow: tablet single-column integration/template cards vs desktop 2-column grids ✓. Modal width changes (640px vs 720px max-width) ✓. However, the step indicator's position at different breakpoints (top of modal, sidebar, inline) is not mentioned in Section 5 or anywhere in the spec. |
-| c17 | Output addresses can-skip vs cannot-skip per step — workspace setup is required, team invite can be skipped (don't trap a solo user), integration is optional, first project from template is required (so they end the wizard with something usable) | PASS | Section 4.3 skip semantics explicitly: Step 1 requires workspace name (Continue blocked until filled); Step 2 zero invites valid, no skip button needed; Step 3 explicit 'Skip for now' button, Continue disabled without connection; Step 4 no skip, Continue blocked until template + name filled. Step-level validation summary table at end of 4.5 consolidates all four. |
-| c18 | Output addresses the loading state for the integration step specifically — OAuth roundtrip can take 5-15 seconds, requires a clear "Connecting to GitHub..." indicator with a fallback message if it stalls | PARTIAL | Section 4.4 SelectableCard 'Connecting' state: 'Spinner replaces icon; Connecting… label; Disabled.' aria-live announces 'Connecting to GitHub…' and result. OAuth abandonment: 10-minute server-side timeout specified. However, no UI-visible stall fallback message (e.g. 'This is taking longer than expected — check your browser') is specified for long-running OAuth flows. Ceiling is PARTIAL. |
+| c1 | Checks the existing design system first and explicitly identifies which existing components (Input, Button, Avatar, Card) can be reused versus what needs to be created | PASS | Opening line: 'Based on my search of the codebase, I found no existing wizard or multi-step form components.' Section 0 states: 'Decision: Create — No existing wizard, stepper, or multi-step form component found in the design system. The existing Input, Button, Avatar, and Card components will be composed into a new Wizard component.' |
+| c2 | Documents all 8 required component states for the wizard: Default, Hover, Focus, Active, Disabled, Loading, Error, Empty | FAIL | Section 4 lists: Step loading, Step ready, Step validating, Step valid, Step invalid, Step skipped, Completion screen, plus sub-states Field focus/error/filled. None are named Default, Hover, Active, or Empty. Hover (button hover) and Active (click press) are entirely absent. Empty (initial integration step state before selection) is not documented. Disabled appears only inline in other states, not as a standalone entry. |
+| c3 | Specifies ARIA roles, labels, and keyboard navigation requirements — not deferred to a future accessibility pass | PASS | Section 6 (Accessibility Requirements) contains a full keyboard-navigation table (Tab, Shift+Tab, Enter, Space, Escape) with described actions, and a Screen Reader section specifying role='dialog', aria-label, aria-labelledby, aria-live='polite', aria-current='step', aria-invalid='true', aria-describedby, and aria-disabled='true'. All specified inline, not deferred. |
+| c4 | Addresses the step indicator / progress component as either a Reuse, Extend, or Create decision with justification | PARTIAL | Section 0 makes a Create decision for the overall wizard ('No existing wizard, stepper, or multi-step form component found'), which implicitly covers the step indicator. However, the progress/step indicator is never addressed as a separate sub-component decision with its own reasoning — it is only referenced as the showProgress prop and in the states table. |
+| c5 | Specifies responsive behaviour for both desktop and tablet breakpoints | PASS | Section 5 (Responsive Behaviour) has a table with two explicit breakpoints: Tablet (640-1024px) specifying 90vw modal, vertical field stacking, full-width button group; and Desktop (>1024px) specifying 600px fixed modal and 2-col grid where appropriate. |
+| c6 | Documents the error state for each step (e.g. invalid email format in team invite, workspace name taken) | PARTIAL | Section 4's 'Step invalid' state is general, not per-step. The code example shows workspace validation ('Workspace name is required', 'Timezone is required') and project validation ('Please select a template'). The team-invite step delegates to EmailInviteForm without specifying email-format or duplicate-email error states. 'Workspace name taken' (server-side uniqueness) is never mentioned — only empty-name is checked. |
+| c7 | Specifies loading states for async operations — partial credit if loading state is mentioned but not fully specified for each async step (integration connection, form submission) | PARTIAL | Section 4 mentions 'Step loading: Skeleton loaders for form fields; spinner if onEnter is async. Form fields disabled, Next/Skip buttons disabled.' Section 8 specifies spinner animation (1 rotation/2 seconds). Example 3 shows async validation with fetch. Loading is mentioned but not specifically applied per async step (integration OAuth, form submission). |
+| c8 | Produces output in a structured component specification format with named sections, not a prose description | PASS | Output is divided into ten numbered, named sections: '0. Design System Decision', '1. Purpose and Usage Context', '2. Props / API', '3. Variants', '4. States', '5. Responsive Behaviour', '6. Accessibility Requirements', '7. Dark Mode', '8. Animation and Motion', '9. Usage Examples', '10. Do / Don't'. Each section uses tables, code blocks, and structured lists. |
+| c9 | Output addresses each of the 4 wizard steps from the prompt explicitly — workspace setup, team invite, integration connection, project from template — with the relevant inputs / interactions per step | PASS | Example 1 defines all four steps explicitly: 'workspace' (Input for workspace name + timezone, validate), 'team' (EmailInviteForm, maxEmails=5, allowSkip), 'integration' (IntegrationSelector with 'github', 'jira', 'slack', allowSkip), 'project' (ProjectTemplateSelector, validate for template required). |
+| c10 | Output's design-system reuse decisions are explicit per primitive — Input (reuse for workspace name, email fields), Button (reuse for navigation), Avatar (reuse for team-member preview), Card (reuse for template selection) — and identifies what NEEDS to be created (step indicator / progress component) | PARTIAL | Section 0 states all four (Input, Button, Avatar, Card) are composed into the new Wizard. Input usage is shown in examples. Avatar is listed but never shown in any example or section as used for team-member preview — its role is not demonstrated. Card is listed but examples use ProjectTemplateSelector and IntegrationSelector components, never explicitly referencing the Card primitive for template selection. |
+| c11 | Output's progress / step-indicator component is decided explicitly as Reuse / Extend / Create with reasoning — likely Create with justification that no existing primitive serves this layout | FAIL | The progress indicator is never treated as a separate sub-component with its own decision. The showProgress prop is defined in Section 2 and the progress announcement is in Section 6, but there is no dedicated Reuse/Extend/Create decision with reasoning for the step-indicator component in isolation. |
+| c12 | Output documents all 8 component states for the wizard shell — Default, Hover (on next/back), Focus (keyboard focus on inputs), Active (during click), Disabled (next button before required fields filled), Loading (during async like integration auth), Error (validation failures), Empty (initial state of integration step before selection) | FAIL | Section 4 lists seven states (Step loading, Step ready, Step validating, Step valid, Step invalid, Step skipped, Completion screen) — none named by the 8 required names. Hover (button hover visual), Active (click active state), and Empty (initial integration-step state) are entirely absent. Disabled only appears as a sub-condition of other states, not as a standalone documented state. |
+| c13 | Output's accessibility specification covers ARIA roles (e.g. `role="region"` on each step, `aria-current="step"` on the active indicator), labels, and keyboard navigation (Tab through fields, Enter to advance, Esc to abandon) | PASS | Section 6 Screen Reader subsection specifies role='dialog' (modal) or role='main' (fullpage), aria-label / aria-labelledby for the wizard, aria-live='polite' on progress region, aria-current='step' on step headings, aria-invalid / aria-describedby for fields. Keyboard Navigation table explicitly covers Tab (next element), Shift+Tab (backward), Enter (submit button), Space (activate button), Escape (close modal). The 'e.g.' examples in the criterion are illustrative; output's coverage is comprehensive. |
+| c14 | Output addresses the team-invite step's email validation — what counts as valid format, max 5 emails, duplicate email handling, malformed entry handling — with error states designed | PARTIAL | Example 1 shows maxEmails={5} passed to EmailInviteForm. The Do/Don't table mentions 'Email already in use. Try another.' as an error message example. However, email-format validation rules, duplicate-email handling, and malformed-entry error states are entirely delegated to the EmailInviteForm component without specification — none of those three are explicitly designed in the spec. |
+| c15 | Output addresses the integration step's "or skip" branch explicitly — designed as a primary "Connect" path AND a secondary "Skip for now" link, with deferred re-engagement (e.g. nudge in onboarding email Day 7) | PARTIAL | The integration step has allowSkip: true and subtitle 'GitHub, Jira, or Slack (optional)'. WizardStep interface documents allowSkip: 'shows Skip button alongside Next'. This establishes a skip path. However, there is no specification of primary vs secondary visual hierarchy (Connect CTA vs Skip for now link), and deferred re-engagement (Day 7 email nudge or any mechanism) is never mentioned anywhere in the output. |
+| c16 | Output specifies responsive behaviour for desktop AND tablet — including how the wizard layout reflows (single-column on tablet vs two-column on desktop) and where the step indicator sits at each breakpoint | PARTIAL | Section 5 explicitly covers tablet ('form fields stack vertically') and desktop ('form fields in grid, 2-col where appropriate') layout reflow. However, where the step indicator/progress bar sits at each breakpoint (e.g. top bar vs sidebar) is not mentioned in either breakpoint row or elsewhere in the responsive section. |
+| c17 | Output addresses can-skip vs cannot-skip per step — workspace setup is required, team invite can be skipped (don't trap a solo user), integration is optional, first project from template is required (so they end the wizard with something usable) | PASS | Example 1 code shows: workspace step — no allowSkip, validate requires workspaceName + timezone; team step — allowSkip: true; integration step — allowSkip: true; project step — no allowSkip, validate requires template selection. The four-step skip/required pattern exactly matches the criterion's expectations. |
+| c18 | Output addresses the loading state for the integration step specifically — OAuth roundtrip can take 5-15 seconds, requires a clear "Connecting to GitHub..." indicator with a fallback message if it stalls | PARTIAL | Section 4 mentions 'Step loading: Skeleton loaders for form fields; spinner if onEnter is async. Form fields disabled.' Section 8 specifies spinner animation. Example 3 shows async validation with a fetch call. However, the OAuth roundtrip duration (5-15 seconds), a 'Connecting to GitHub...' message, and a stall fallback are never addressed — the loading coverage is generic, not integration-OAuth-specific. |
 
 ### Notes
 
-The spec is exceptionally thorough — a production-ready document with TypeScript interfaces, state tables, accessibility coverage, animations, dark mode tokens, and usage examples. It clearly passes on structure, step coverage, ARIA, keyboard navigation, email validation, skip semantics, and design-system decision-making. The gaps that cost points are: (1) the 8-state framework is not explicitly mapped for the shell (Hover/Active/Empty missing as named states); (2) Avatar reuse is implied but never declared as a design decision; (3) step indicator position at different breakpoints is unspecified in the responsive section; (4) deferred re-engagement after skipping integration is entirely absent; (5) OAuth stall fallback UI is not specified. These are minor omissions in an otherwise comprehensive spec, resulting in a comfortable PASS.
+The specification is strong in structure, accessibility detail, and step-by-step coverage of all four wizard flows with correct skip/required configuration. Key gaps drag the score below PASS: the 8 required component state names (Default, Hover, Active, Empty are absent from Section 4) are never used, producing a states table that doesn't satisfy c2 or c12. The progress/step-indicator is never treated as a separate sub-component with a Reuse/Extend/Create decision (c11 fails). Per-step error states are partially designed — workspace and project have validate callbacks in examples, but team-invite email-format/duplicate rules and integration-step errors are delegated to child components without specification. The integration OAuth loading scenario is addressed only generically. The Avatar and Card primitive usages are declared in Section 0 but not demonstrated in examples (Avatar for team-member preview, Card for template selection are asserted but not shown).

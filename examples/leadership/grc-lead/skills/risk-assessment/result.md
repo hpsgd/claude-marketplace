@@ -12,441 +12,1137 @@ Captured from a real headless invocation of the skill/agent.
 
 ### Chat response
 
-The risk assessment is complete and saved to `risk-assessment-prescribe.md`. Here's a summary of what was found:
+I'll conduct a comprehensive risk assessment for Prescribe. Let me work through each step systematically.
+
+## Step 1: Scope Definition
+
+- **Subject:** Prescribe — telehealth prescription management system
+- **Boundaries:** Patient data storage (medication history, personal identifiers), prescription processing logic, SMS reminder delivery via Twilio, AWS RDS database operations, authentication/access control, SMS communication channels
+- **Exclusions:** Third-party healthcare provider systems (GP systems, pharmacy systems) that Prescribe integrates with; physical pharmacy operations; patient devices (phones, browsers) security
+- **Time horizon:** Immediate risks (0-3 months), medium-term (3-12 months), ongoing operational risks
+- **Stakeholders:** Patients (AU/NZ), healthcare providers, Prescribe operators, regulatory bodies (OAIC, NZ Privacy Commissioner), Twilio/AWS as vendors
+- **Assessment date:** 2026-05-04
+- **Assessor:** GRC Lead
 
 ---
 
-**16 risks identified across 7 categories.** Key findings:
+## Step 2: Risk Identification
 
-**Two pre-launch blockers (Critical residual — do not go live until closed):**
-- **R-001 — TGA SaMD:** Prescription automation is likely a medical device under Australian law. Operating without TGA registration is a criminal offence. Commission a regulatory affairs consultant immediately.
-- **R-002 — RTPM:** If the platform handles S8/controlled substances, state Real-Time Prescription Monitoring integration is mandatory. Map obligations by state before launch.
+### Regulatory Risks
 
-**High residual risks requiring mitigation before launch:**
-- **R-005** — Twilio likely transmits PHI offshore; APP 8 compliance requires a DPA and/or PHI stripping from SMS templates
-- **R-006** — NZ patient data in AWS Sydney is legally cross-border under NZ Privacy Act IPP 12; requires legal opinion and patient disclosure
-- **R-008** — No confirmed RBAC or audit logging for internal record access
+| Risk ID | Description |
+|---|---|
+| R-001 | Non-compliance with Australian Privacy Act 1988 (Privacy Principles 1-13), particularly APP 1 (open and transparent management), APP 3 (collection of solicited personal information), APP 12 (access and correction), APP 13 (correction and notifiable data breaches). Prescribe stores sensitive health information without documented compliance framework |
+| R-002 | Non-compliance with NZ Privacy Act 2020 — similar principles, different enforcement. Dual-jurisdiction system requires tailored controls |
+| R-003 | GDPR applicability unclear — if patients can include EU residents or if integration with EU healthcare providers exists, GDPR applies. Currently no evidence of GDPR-ready infrastructure (e.g., data processing agreements, right to erasure mechanisms) |
+| R-004 | Failure to meet notifiable data breaches obligations (Australian Privacy Act s.33ZE, NZ Privacy Act 2020 s.104). No documented breach response plan or notification timeline (Australian standard: 30 days) |
+| R-005 | Health records legislation gaps — no evidence of compliance with Australian Health Records Act 1988 or NZ Health Information Privacy Code (if applicable). Prescribe may be classified as a healthcare provider and subject to stricter standards than general data handlers |
+| R-006 | SMS communications not compliant with AASB/Australian Telecom regulations — unsolicited or improperly consented SMS reminders could trigger regulatory violations and complaints |
 
-**Notable AU/NZ-specific issues the assessment surfaced:**
-- NZ data residency is a distinct risk from AU residency — ap-southeast-2 satisfies AU but not NZ
-- RTPM is a state-level obligation often missed in system design
-- Post-2024 Privacy Act penalties reach $50M AUD for serious contraventions
+### Operational Risks
 
-Related next steps: `/grc-lead:compliance-audit` against the APPs once controls are in place; `/grc-lead:ai-governance-review` before any ML features are introduced.
+| Risk ID | Description |
+|---|---|
+| R-007 | Single cloud provider dependency (AWS ap-southeast-2) — regional outage in Sydney affects all operations. No multi-region failover, no backup database |
+| R-008 | Third-party SMS provider outage (Twilio) — prescription reminders fail silently if Twilio is down. Patients miss medication schedules |
+| R-009 | Key person dependency — no documented evidence of knowledge transfer for prescription processing logic, database schema, or emergency procedures |
+| R-010 | Repeat prescription workflow not documented — unclear how repeat prescriptions are approved, authorised, and validated. Risk of unauthorised refills or missed expiry checks |
+| R-011 | SMS delivery failures not tracked — no mention of delivery confirmation, retry logic, or failure alerting. Patients may believe reminders sent when delivery failed |
+| R-012 | Incident response and escalation plan missing — no documented process for data breaches, outages, or prescription errors |
 
-### Artifacts written
+### Data Risks
 
-#### `work/risk-assessment-prescribe.md`
+| Risk ID | Description |
+|---|---|
+| R-013 | Patient medication history stored unencrypted or with weak encryption — AWS RDS encryption not specified. Data at rest and in transit encryption unknown |
+| R-014 | Personal identifiable information (name, phone, address) collected and stored without documented data minimisation — unclear what patient data is necessary vs. collected for convenience |
+| R-015 | No documented data retention and deletion policy — medication histories kept indefinitely without justification. Deleted patient records may persist in backups without secure erasure |
+| R-016 | SMS communication channels unencrypted — Twilio API calls to send reminders must use HTTPS, but no evidence of TLS verification or API authentication hardening |
+| R-017 | Database access controls not documented — unclear who can access patient records, how access is logged, and whether role-based access control (RBAC) is enforced |
+| R-018 | Prescription data integrity not verified — no checksums, digital signatures, or audit trails for prescription records. Risk of undetected tampering |
 
-```
-# Risk Assessment: Prescribe — Telehealth Prescription Management System
+### Vendor/Third-Party Risks
+
+| Risk ID | Description |
+|---|---|
+| R-019 | Twilio security posture and uptime SLA unknown — no evidence of vendor assessment, SLA review, or data processing agreement (DPA) documenting how Twilio handles patient phone numbers |
+| R-020 | AWS RDS security configuration not documented — unclear if database is publicly accessible, if IAM policies restrict access, or if VPC/security groups are correctly configured |
+| R-021 | No data processing agreement with Twilio — GDPR/Privacy Act compliance requires written DPA specifying data handling obligations, sub-processor approval, and data breach notification |
+| R-022 | Vendor lock-in (AWS RDS, Twilio) — switching providers requires data migration and API rewrite. Cost and timeline not understood |
+| R-023 | Twilio phone number depletion or temporary suspension — regulatory violations (unsolicited SMS) could result in Twilio account suspension, making the system unable to send any reminders |
+
+### Reputational Risks
+
+| Risk ID | Description |
+|---|---|
+| R-024 | Data breach disclosure — if patient medication history or phone numbers leaked, reputational damage and loss of patient trust. Media attention likely in healthcare sector |
+| R-025 | Prescription errors causing patient harm — medication reminder failure or incorrect refill approval could result in missed doses, adverse effects, patient complaints, regulatory investigation, and lawsuits |
+| R-026 | Unresponsiveness to regulatory inquiries — Privacy Commissioner investigations into complaints. Slow response or poor record-keeping suggests negligence |
+
+### Financial Risks
+
+| Risk ID | Description |
+|---|---|
+| R-027 | Regulatory fines — Australian Privacy Act breaches up to AUD $50M or 30% of turnover (whichever is higher); NZ Privacy Act up to NZD $3M. Prescribe has zero documented compliance controls |
+| R-028 | Incident response and remediation costs — data breach notification, forensics, patient credit monitoring (if applicable), legal fees |
+| R-029 | Operational costs of outages — SMS provider down → no reminders → medication non-compliance → poor patient outcomes → customer churn and refunds |
+| R-030 | Uncontrolled AWS/Twilio costs — no cost monitoring, budget alerts, or rate limits. Potential for bill shock from high SMS volume or database operations |
+
+### AI/ML Risks
+
+| Risk ID | Description |
+|---|---|
+| R-031 | Not identified — system description does not mention AI/ML components. If prescription suggestions or automated approvals are used, this should be explicitly stated and assessed separately |
+
+---
+
+## Step 3: Risk Analysis
+
+| Risk ID | Likelihood | Impact | Inherent Risk | Rationale |
+|---|---|---|---|---|
+| R-001 | Very High (85%) | Critical | **Critical** | Privacy Act compliance is non-negotiable for health data systems. Absence of documented compliance framework is a critical weakness. Enforcement by OAIC is active |
+| R-002 | High (65%) | Critical | **Critical** | NZ Privacy Commissioner actively enforces. Dual-jurisdiction adds complexity; no evidence of NZ-specific controls |
+| R-003 | Medium (30%) | Critical | **High** | GDPR applicability depends on patient/provider geography. If applicable and missed, fines are severe |
+| R-004 | High (70%) | Critical | **Critical** | No notifiable breach process documented. When (not if) a breach occurs, failure to notify within 30 days violates Privacy Act |
+| R-005 | High (60%) | Critical | **Critical** | Health records legislation applies if Prescribe qualifies as healthcare provider. Stricter standards than general data handling |
+| R-006 | Medium (35%) | Medium | **Medium** | SMS regulatory compliance (e.g., AASB opt-in requirements) unknown. Risk of regulatory complaints and SMS provider suspension |
+| R-007 | High (60%) | Critical | **Critical** | AWS Sydney region outages occur (2023 outage lasted hours). No documented failover. All prescriptions become unavailable |
+| R-008 | Medium (40%) | High | **High** | Twilio outages are rare but possible. Reminder delivery degrades gracefully in most cases, but extended outages harm patients |
+| R-009 | High (65%) | High | **High** | Prescription systems are business-critical. Single-person knowledge is a common failure point. Unplanned absence creates immediate risk |
+| R-010 | Very High (80%) | Critical | **Critical** | Repeat prescription approval workflow not documented suggests it may not exist or is ad-hoc. Risk of unauthorised refills or missed expiry checks causing patient harm |
+| R-011 | Very High (85%) | High | **Critical** | SMS failures silent by default unless logging is explicit. Patients believe reminders sent; medications missed; no visibility into failures |
+| R-012 | Very High (90%) | Critical | **Critical** | Healthcare incidents require rapid, documented response. Absence of incident plan means chaotic, uncoordinated response under pressure |
+| R-013 | Very High (80%) | Critical | **Critical** | No evidence of encryption. Patient medication histories are high-value targets for attackers. Database accessible to anyone with network access or credentials |
+| R-014 | High (70%) | Medium | **High** | Patient data collection without minimisation. More data stored = larger breach surface. Regulatory expectation is to collect only necessary data |
+| R-015 | Very High (85%) | Medium | **High** | No retention policy means data persists indefinitely. Deleted records in backups never securely erased. Violates Privacy Act principles on data minimisation |
+| R-016 | Medium (35%) | Medium | **Medium** | Twilio API should enforce TLS; misconfiguration possible. SMS phone numbers in plain-text logs or in transit leak personally identifiable information |
+| R-017 | Very High (80%) | High | **Critical** | No documented access control suggests ad-hoc or absent controls. Anyone with database credentials can access all patient records |
+| R-018 | High (65%) | High | **High** | No audit trail means tampering is undetectable. Prescription records are safety-critical; undetected tampering could cause patient harm |
+| R-019 | High (70%) | High | **High** | Twilio security posture not assessed. SMS provider could be compromised, exposing patient phone numbers. No DPA = no contractual recourse |
+| R-020 | Very High (85%) | Critical | **Critical** | AWS RDS misconfiguration is common. If database is publicly accessible or IAM policies are lax, attackers can access all patient data |
+| R-021 | Very High (90%) | Critical | **Critical** | No DPA with Twilio means GDPR/Privacy Act non-compliance. No obligation for Twilio to notify on breach. Prescribe is liable for Twilio's actions |
+| R-022 | Medium (25%) | Medium | **Medium** | Vendor lock-in is strategic risk, not immediate. Relevant if Prescribe needs to pivot, but not an urgent threat |
+| R-023 | Medium (40%) | Critical | **High** | Twilio account suspension from regulatory violations (unsolicited SMS) would disable reminder system entirely. Patient safety impact |
+| R-024 | High (60%) | Critical | **Critical** | Healthcare data breaches are high-profile. Media attention guaranteed. Patient trust eroded, customer churn likely |
+| R-025 | Very High (80%) | Critical | **Critical** | Prescription errors causing patient harm (missed medications, overdose) are patient safety risks. Regulatory investigation, lawsuits, criminal liability possible |
+| R-026 | High (65%) | High | **High** | Privacy Commissioner investigations standard for complaints. Poor response suggests negligence; increases regulatory penalties |
+| R-027 | High (70%) | Critical | **Critical** | Australian Privacy Act penalties are severe. No documented compliance = high fine exposure. NZ fines lower but still material |
+| R-028 | High (60%) | High | **High** | Incident response costs (forensics, notification, legal) are substantial. Unbudgeted and often underestimated |
+| R-029 | Medium (40%) | High | **High** | Outages cause patient harm and churn. Cost to reputation and revenue accumulates quickly |
+| R-030 | High (65%) | Medium | **High** | AWS/Twilio costs not monitored. Volume spikes (mass SMS) can cause unexpected bill shock. No rate limits or alerts documented |
+
+---
+
+## Step 4: Existing Controls Assessment
+
+| Control | Evidence | Status | Last Verified |
+|---|---|---|---|
+| **Encryption** | None documented | ❌ Missing | N/A |
+| **Access control (RBAC)** | None documented | ❌ Missing | N/A |
+| **Data retention policy** | None documented | ❌ Missing | N/A |
+| **Breach notification process** | None documented | ❌ Missing | N/A |
+| **Vendor agreements (DPA)** | None documented | ❌ Missing | N/A |
+| **Incident response plan** | None documented | ❌ Missing | N/A |
+| **Database backup/failover** | None documented | ❌ Missing | N/A |
+| **Audit logging** | None documented | ❌ Missing | N/A |
+| **SMS delivery tracking** | None documented | ❌ Missing | N/A |
+| **Data minimisation** | None documented | ❌ Missing | N/A |
+| **Twilio/AWS security assessment** | None documented | ❌ Missing | N/A |
+| **Prescription validation/approval workflow** | Unclear, possibly ad-hoc | ⚠️ Unclear | N/A |
+
+**Verdict:** No documented controls exist. System appears to have been built without governance, risk management, or compliance framework.
+
+---
+
+## Step 5: Residual Risk Calculation
+
+Because **zero controls** are documented and verified, residual risk = inherent risk for all items. Every control that should exist is absent.
+
+| Risk ID | Inherent | Controls | Effectiveness | Residual | Action Required |
+|---|---|---|---|---|---|
+| R-001 | Critical | None | None | **Critical** | Mitigate immediately |
+| R-002 | Critical | None | None | **Critical** | Mitigate immediately |
+| R-003 | High | None | None | **High** | Clarify GDPR scope; mitigate if applicable |
+| R-004 | Critical | None | None | **Critical** | Mitigate immediately |
+| R-005 | Critical | None | None | **Critical** | Mitigate immediately |
+| R-006 | Medium | None | None | **Medium** | Mitigate planned |
+| R-007 | Critical | None | None | **Critical** | Mitigate immediately |
+| R-008 | High | None | None | **High** | Mitigate planned |
+| R-009 | High | None | None | **High** | Mitigate planned |
+| R-010 | Critical | None | None | **Critical** | Mitigate immediately |
+| R-011 | Critical | None | None | **Critical** | Mitigate immediately |
+| R-012 | Critical | None | None | **Critical** | Mitigate immediately |
+| R-013 | Critical | None | None | **Critical** | Mitigate immediately |
+| R-014 | High | None | None | **High** | Mitigate planned |
+| R-015 | High | None | None | **High** | Mitigate planned |
+| R-016 | Medium | None | None | **Medium** | Mitigate planned |
+| R-017 | Critical | None | None | **Critical** | Mitigate immediately |
+| R-018 | High | None | None | **High** | Mitigate planned |
+| R-019 | High | None | None | **High** | Mitigate planned |
+| R-020 | Critical | None | None | **Critical** | Mitigate immediately |
+| R-021 | Critical | None | None | **Critical** | Mitigate immediately |
+| R-022 | Medium | None | None | **Medium** | Monitor ongoing |
+| R-023 | High | None | None | **High** | Mitigate planned |
+| R-024 | Critical | None | None | **Critical** | Mitigate immediately |
+| R-025 | Critical | None | None | **Critical** | Mitigate immediately |
+| R-026 | High | None | None | **High** | Mitigate planned |
+| R-027 | Critical | None | None | **Critical** | Mitigate immediately |
+| R-028 | High | None | None | **High** | Mitigate planned |
+| R-029 | High | None | None | **High** | Mitigate planned |
+| R-030 | High | None | None | **High** | Mitigate planned |
+
+---
+
+## Step 6: Risk Treatment
+
+### Critical Residual Risks — Immediate Mitigation Required
+
+**R-001, R-002, R-004, R-005: Regulatory Compliance (Privacy Act, Health Records Act)**
+
+- **Treatment:** Mitigate
+- **Actions:**
+  1. Engage external compliance consultant (Privacy Act specialist). Timeline: 2 weeks
+  2. Conduct Privacy Impact Assessment (PIA) per Privacy Act guidelines. Timeline: 4 weeks
+  3. Document Privacy Policy covering collection, use, disclosure, access, correction, deletion (APPs 1, 5, 6, 12, 13). Timeline: 3 weeks
+  4. Implement Privacy Principles compliance controls (documented procedures). Timeline: 8 weeks
+  5. If Health Records Act applies: engage healthcare compliance consultant. Timeline: 3 weeks
+  6. For NZ scope: engage NZ Privacy Act consultant; determine dual-jurisdiction requirements. Timeline: 2 weeks
+  7. Implement notifiable breach process and timeline (30-day notification requirement). Timeline: 4 weeks
+- **Owner:** GRC Lead / Privacy Officer (must be hired)
+- **Review date:** 2026-08-04 (immediate action, then quarterly)
+- **Success criteria:** Privacy Policy published; PIA completed and signed off; breach notification process documented and tested; Privacy Officer assigned
+
+**R-010: Repeat Prescription Workflow**
+
+- **Treatment:** Mitigate
+- **Actions:**
+  1. Document the current repeat prescription process (approval, validation, expiry checks, authorisation). Timeline: 1 week
+  2. Identify gaps (e.g., no expiry check, no pharmacist approval, no doctor verification). Timeline: 2 weeks
+  3. Implement approval workflow: patient request → doctor validation → prescription issued → pharmacy fulfillment. Timeline: 6 weeks
+  4. Add automated expiry checks (prescription expires after doctor-specified period; no refills after expiry). Timeline: 3 weeks
+  5. Implement audit trail for all prescription approvals/denials. Timeline: 2 weeks
+  6. Test workflow with pilot group before production rollout. Timeline: 2 weeks
+- **Owner:** Product Lead / Pharmacist Consultant
+- **Review date:** 2026-06-04 (after implementation)
+- **Success criteria:** Workflow documented; automated expiry checks prevent expired prescription refills; 100% of prescriptions have audit trail
+
+**R-011, R-012: Incident Response & SMS Delivery Tracking**
+
+- **Treatment:** Mitigate
+- **Actions:**
+  1. Implement SMS delivery logging (Twilio webhooks → database). Capture: sent time, delivery status, failure reason, retry count. Timeline: 2 weeks
+  2. Set up alerting for SMS delivery failures (>5% failure rate triggers alert). Timeline: 1 week
+  3. Document incident response plan: roles, escalation, notification timeline (notify Privacy Commissioner if breach within 30 days). Timeline: 2 weeks
+  4. Conduct tabletop incident simulation (data breach scenario). Timeline: 1 week
+  5. Implement audit logging for all system events (database access, prescription changes, user actions). Timeline: 3 weeks
+- **Owner:** DevOps Lead / GRC Lead
+- **Review date:** 2026-06-04 (after implementation)
+- **Success criteria:** SMS delivery logs operational; delivery failure alerts tested; incident response plan published; tabletop completed
+
+**R-013: Database Encryption**
+
+- **Treatment:** Mitigate
+- **Actions:**
+  1. Enable AWS RDS encryption at rest (AES-256) if not already enabled. Timeline: 1 week (verify current state first)
+  2. Enable encryption in transit: TLS 1.2+ for all database connections. Timeline: 1 week
+  3. Implement application-level encryption for highly sensitive fields (medications list) using envelope encryption (master key in AWS KMS). Timeline: 4 weeks
+  4. Rotate database passwords and enforce strong policies. Timeline: 1 week
+  5. Verify current backups are encrypted; ensure future backups are encrypted. Timeline: 1 week
+- **Owner:** DevOps Lead / Database Admin
+- **Review date:** 2026-05-18 (verify encryption enabled)
+- **Success criteria:** RDS encryption at rest enabled; TLS verified; application encryption for medications field deployed
+
+**R-017: Access Control (RBAC)**
+
+- **Treatment:** Mitigate
+- **Actions:**
+  1. Implement role-based access control (RBAC): roles = Admin, Doctor, Pharmacist, Patient, Support. Timeline: 3 weeks
+  2. Define permissions per role (least privilege): e.g., Patient can only view their own prescriptions; Doctor can approve repeat requests. Timeline: 2 weeks
+  3. Implement audit logging: log all access attempts (successful and failed) with timestamp, user, action, data accessed. Timeline: 2 weeks
+  4. Regular access reviews: quarterly audit of who has access to what (segregation of duties). Timeline: ongoing
+  5. Implement session timeout and re-authentication for sensitive operations. Timeline: 2 weeks
+- **Owner:** DevOps Lead / Security Engineer
+- **Review date:** 2026-06-04 (after implementation)
+- **Success criteria:** RBAC implemented; audit logs operational; access review completed
+
+**R-020: AWS RDS Security Configuration**
+
+- **Treatment:** Mitigate
+- **Actions:**
+  1. Security audit of AWS RDS configuration: check if publicly accessible, VPC/security group settings, IAM policies. Timeline: 1 week
+  2. Ensure database is NOT publicly accessible; restrict access to application VPC only. Timeline: 1 week
+  3. Implement IAM policies: principle of least privilege (application role can only SELECT/INSERT/UPDATE, no ALTER/DROP). Timeline: 2 weeks
+  4. Enable AWS RDS Enhanced Monitoring (CloudWatch metrics for CPU, memory, disk, network). Timeline: 1 week
+  5. Enable AWS RDS Performance Insights to track slow queries and optimize. Timeline: 1 week
+  6. Implement automated backups with multi-region replication (backup to secondary region). Timeline: 2 weeks
+- **Owner:** DevOps Lead / AWS Architect
+- **Review date:** 2026-05-18 (verify configuration)
+- **Success criteria:** Database not publicly accessible; IAM policies verified; backups replicated; monitoring enabled
+
+**R-021: Data Processing Agreement (DPA) with Twilio**
+
+- **Treatment:** Mitigate
+- **Actions:**
+  1. Engage Twilio account manager to request DPA covering: data handling, sub-processor approval, breach notification, compliance with Privacy Act/GDPR. Timeline: 1 week
+  2. If standard DPA unavailable, negotiate custom DPA. Timeline: 2 weeks
+  3. Review and sign DPA before further SMS operations. Timeline: 1 week
+  4. Document Twilio's security certifications (SOC 2, GDPR compliance, data residency). Timeline: 1 week
+  5. For GDPR scope: ensure Twilio is EU-certified (Privacy Shield equivalent or Standard Contractual Clauses). Timeline: ongoing
+- **Owner:** Legal / Procurement Lead
+- **Review date:** 2026-05-18 (DPA signature)
+- **Success criteria:** DPA signed; Twilio security certifications documented; compliance confirmed
+
+**R-024, R-025, R-027: Patient Safety & Regulatory Liability**
+
+- **Treatment:** Mitigate (comprehensive)
+- **Actions:**
+  1. All immediate mitigations above (encryption, access control, incident response) reduce this risk
+  2. Additionally: Implement prescription validation rules (dose ranges, drug interactions, duplicates). Timeline: 4 weeks
+  3. Implement patient notification on prescription status (sent, delivered, expired). Timeline: 3 weeks
+  4. Implement insurance/professional indemnity for healthcare provider liability (covers patient harm claims). Timeline: 2 weeks
+  5. Establish patient escalation process (patients can report issues, get live support). Timeline: 2 weeks
+- **Owner:** GRC Lead / Legal / Product Lead
+- **Review date:** 2026-08-04 (after regulatory compliance work)
+- **Success criteria:** Validation rules operational; patient notifications working; insurance in place; escalation process documented
+
+---
+
+### High Residual Risks — Planned Mitigation (Next 8 weeks)
+
+**R-007: AWS Region Failover**
+
+- **Treatment:** Mitigate
+- **Actions:**
+  1. Implement multi-region failover: replicate RDS to ap-southeast-1 (Melbourne) or ap-northeast-1 (Tokyo). Timeline: 6 weeks
+  2. Implement Route 53 health checks: if Sydney region down, automatically failover to secondary region. Timeline: 3 weeks
+  3. Test failover quarterly (simulate region outage). Timeline: ongoing
+  4. Document runbook for regional failure: timing, steps, communication plan. Timeline: 2 weeks
+- **Owner:** DevOps Lead / AWS Architect
+- **Review date:** 2026-07-04
+- **Success criteria:** Secondary region replicated and tested; failover automation verified; runbook published
+
+**R-008: Twilio Outage Resilience**
+
+- **Treatment:** Mitigate
+- **Actions:**
+  1. Implement retry logic for SMS delivery: exponential backoff, max 3 retries over 24 hours. Timeline: 2 weeks
+  2. Implement queue persistence: if SMS send fails, queue message for retry (don't lose). Timeline: 2 weeks
+  3. Add fallback SMS provider (e.g., AWS SNS, Vonage) as backup if Twilio unavailable. Timeline: 4 weeks
+  4. Monitor Twilio SLA and publish status page (patients see "Reminders temporarily unavailable"). Timeline: 2 weeks
+- **Owner:** DevOps Lead / Product Lead
+- **Review date:** 2026-07-04
+- **Success criteria:** Retry logic tested; queue persistence verified; failover provider integrated; status page operational
+
+**R-009: Key Person Dependency**
+
+- **Treatment:** Mitigate
+- **Actions:**
+  1. Document all critical systems: prescription workflow, database schema, deployment process, emergency procedures. Timeline: 3 weeks
+  2. Cross-train second person on each critical area. Timeline: 4 weeks
+  3. Implement runbooks for emergency procedures (database restore, SMS restart, prescription recovery). Timeline: 2 weeks
+  4. Conduct quarterly knowledge transfer reviews (each person explains critical system to another). Timeline: ongoing
+- **Owner:** Engineering Manager / GRC Lead
+- **Review date:** 2026-06-04
+- **Success criteria:** All critical systems documented; cross-training completed; runbooks tested
+
+**R-014, R-015: Data Minimisation & Retention**
+
+- **Treatment:** Mitigate
+- **Actions:**
+  1. Conduct data inventory: audit all patient data collected (name, phone, address, medical history, etc.). Timeline: 2 weeks
+  2. Assess necessity: which data is strictly required for prescriptions? Which is optional or could be deleted? Timeline: 2 weeks
+  3. Implement data minimisation: remove unnecessary data collection; default to minimal set. Timeline: 3 weeks
+  4. Implement retention policy: medication history retained for [X] years (per healthcare standards, e.g., 7-10 years); deleted records securely erased from all backups. Timeline: 3 weeks
+  5. Implement automated deletion jobs (GDPR right to erasure compliance). Timeline: 3 weeks
+- **Owner:** Data Architect / Privacy Officer
+- **Review date:** 2026-07-04
+- **Success criteria:** Data inventory completed; retention policy documented and implemented; deletion jobs operational
+
+**R-018: Prescription Audit Trail**
+
+- **Treatment:** Mitigate
+- **Actions:**
+  1. Implement immutable audit log: every prescription change (create, approve, refill, expire) logged with timestamp, actor, reason. Timeline: 3 weeks
+  2. Implement digital signatures for prescription records (HMAC or PKI). Timeline: 2 weeks
+  3. Implement integrity checks: periodic audit log validation to detect tampering. Timeline: 2 weeks
+  4. Archive audit logs for [X] years (per healthcare standards). Timeline: 2 weeks
+- **Owner:** Database Architect / Security Engineer
+- **Review date:** 2026-07-04
+- **Success criteria:** Audit log operational; digital signatures verified; integrity checks passing
+
+**R-019, R-023: Twilio Security & Account Suspension Risk**
+
+- **Treatment:** Mitigate
+- **Actions:**
+  1. Conduct Twilio security assessment: request SOC 2 report, GDPR compliance documentation, incident history. Timeline: 1 week
+  2. Implement SMS compliance monitoring: ensure all SMS reminders are compliant with AASB (Australian SMS Code, opt-in requirements). Timeline: 2 weeks
+  3. Implement customer consent management: track patient opt-in/opt-out for reminders; honor requests. Timeline: 3 weeks
+  4. Monitor Twilio abuse reports; respond immediately to any regulatory complaints. Timeline: ongoing
+  5. Maintain DPA (see R-021) with breach notification clause. Timeline: 2 weeks (part of R-021)
+- **Owner:** Legal / Compliance Lead / Product Lead
+- **Review date:** 2026-06-04
+- **Success criteria:** Twilio SOC 2 report obtained; consent management implemented; SMS compliance verified
+
+**R-026: Regulatory Inquiry Response**
+
+- **Treatment:** Mitigate
+- **Actions:**
+  1. Designate Privacy Officer as single point of contact for Privacy Commissioner inquiries. Timeline: 1 week
+  2. Implement response SLA: acknowledge inquiry within 5 business days, provide substantive response within 20 days. Timeline: 1 week
+  3. Maintain detailed records of all Privacy Commissioner correspondence. Timeline: ongoing
+  4. Establish relationship with Privacy Commissioner (voluntary consultation). Timeline: 2 weeks
+- **Owner:** GRC Lead / Privacy Officer
+- **Review date:** 2026-06-04
+- **Success criteria:** Privacy Officer designated; response procedures documented; preliminary contact with Privacy Commissioner
+
+**R-028, R-029, R-030: Cost Management & Operational Resilience**
+
+- **Treatment:** Mitigate
+- **Actions:**
+  1. Implement AWS billing alerts (monthly budget, warn at 80%, hard stop at 100%). Timeline: 1 week
+  2. Implement Twilio SMS cost limits (warn if approaching limit, reject if exceeded). Timeline: 1 week
+  3. Implement cost monitoring dashboard (AWS Cost Explorer, Twilio usage analytics). Timeline: 2 weeks
+  4. Quarterly cost review: identify optimization opportunities (e.g., reserved instances, SMS batching). Timeline: ongoing
+  5. Implement operational cost tracking per business metric (cost per prescription, cost per reminder sent). Timeline: 2 weeks
+- **Owner:** DevOps Lead / Finance Lead
+- **Review date:** 2026-06-04 (then quarterly)
+- **Success criteria:** Cost alerts operational; cost dashboard live; first optimization completed
+
+---
+
+### Medium Residual Risks — Monitoring & Planned Mitigation
+
+**R-003: GDPR Applicability**
+
+- **Treatment:** Clarify scope, then mitigate if applicable
+- **Actions:**
+  1. Document patient geography: are any patients EU-based? Are any healthcare providers EU-based? Timeline: 1 week
+  2. Document third-party integrations: any data shared with EU-based systems? Timeline: 1 week
+  3. If GDPR applies: engage GDPR specialist; implement additional controls (Data Protection Impact Assessment, legal basis documentation, consent mechanisms). Timeline: 4 weeks
+  4. If GDPR does not apply: document decision and reasoning. Timeline: 1 week
+- **Owner:** GRC Lead / Legal
+- **Review date:** 2026-06-04 (scope clarification)
+- **Success criteria:** Patient/provider geography documented; GDPR applicability determined; control plan (if applicable) in place
+
+**R-006: SMS Regulatory Compliance (AASB)**
+
+- **Treatment:** Mitigate
+- **Actions:**
+  1. Review AASB Australian SMS Code (anti-spam, opt-in, unsubscribe mechanisms). Timeline: 1 week
+  2. Implement opt-in mechanism: patients explicitly consent to medication reminders. Timeline: 2 weeks
+  3. Implement unsubscribe mechanism: "Reply STOP" to cease reminders; honor within 24 hours. Timeline: 2 weeks
+  4. Audit SMS content: no promotional content, only prescription reminders. Timeline: 1 week
+  5. Maintain opt-in/opt-out records (audit trail of consent changes). Timeline: 1 week
+- **Owner:** Product Lead / Compliance Lead
+- **Review date:** 2026-06-04
+- **Success criteria:** Opt-in/opt-out mechanism operational; AASB compliance verified; audit trail maintained
+
+**R-016: SMS Encryption & Logging**
+
+- **Treatment:** Mitigate
+- **Actions:**
+  1. Verify Twilio API enforcement of TLS 1.2+. Timeline: 1 week
+  2. Implement application-level logging restrictions: don't log full phone numbers in application logs (log last 4 digits only). Timeline: 2 weeks
+  3. Implement log encryption: logs containing sensitive data encrypted at rest. Timeline: 2 weeks
+  4. Implement log retention policy: operational logs retained for 30 days, audit logs for 7 years. Timeline: 2 weeks
+- **Owner:** DevOps Lead / Security Engineer
+- **Review date:** 2026-06-04
+- **Success criteria:** TLS verification complete; log redaction implemented; log encryption deployed
+
+**R-022: Vendor Lock-In**
+
+- **Treatment:** Monitor (accept vendor lock-in as strategic trade-off; revisit annually)
+- **Actions:**
+  1. Document vendor dependencies: AWS RDS features used, Twilio SMS API patterns. Timeline: 1 week
+  2. Maintain database schema documentation (portable to other databases if needed). Timeline: 2 weeks
+  3. Maintain Twilio API abstraction layer (loose coupling; can swap SMS provider without major refactor). Timeline: 3 weeks
+  4. Annual review (each May): assess new providers, evaluate switching cost. Timeline: ongoing
+- **Owner:** Architecture Lead
+- **Review date:** 2027-05-04 (annual review)
+- **Success criteria:** Dependencies documented; abstraction layer in place; switching cost estimated
+
+---
+
+## Step 7: Risk Register Compilation
+
+```markdown
+# Risk Assessment: Prescribe (Telehealth Prescription Management System)
 
 ## Scope
-
-- **Subject:** Prescribe — a telehealth prescription management system that stores patient medication history, processes repeat prescriptions, and sends SMS reminders
-- **Boundaries:** Patient-facing prescription workflows; medication history storage (AWS RDS ap-southeast-2); SMS reminder delivery (Twilio); Australian and New Zealand patient populations
-- **Exclusions:** Clinical practice management (booking, billing); prescriber-side workflows beyond prescription submission; My Health Record integration (not described); payment processing; patient-facing web/mobile UI internals
-- **Time horizon:** Immediate to 12 months — risks are present from the moment the system processes patient data or goes live
-- **Assessment date:** 2026-05-01
-- **Assessor:** GRC Lead (Claude Code — turtlestack/grc-lead)
-- **Stakeholders:** Patients (AU/NZ); prescribing practitioners; dispensing pharmacists; OAIC (AU regulator); NZ Privacy Commissioner; TGA; state pharmacy boards; Prescribe's board and leadership
-
----
-
-## AI/ML Category
-
-**No AI/ML risks identified.** The system description specifies rule-based prescription processing and SMS reminders with no machine learning components. If ML is introduced (e.g., adherence prediction, dosing recommendations), a dedicated `/grc-lead:ai-governance-review` must be commissioned before deployment.
+- **Subject:** Prescribe — telehealth prescription management system
+- **Boundaries:** Patient data storage, prescription processing, SMS reminder delivery, AWS RDS database, authentication/access control
+- **Exclusions:** Third-party healthcare provider systems, physical pharmacy operations, patient device security
+- **Time horizon:** Immediate (0-3 months), medium-term (3-12 months), ongoing
+- **Stakeholders:** Patients (AU/NZ), healthcare providers, regulatory bodies (OAIC, NZ Privacy Commissioner), Twilio/AWS
+- **Assessment date:** 2026-05-04
+- **Assessor:** GRC Lead
 
 ---
 
-## Risk Register
+## Risk Register: Critical Risks (Immediate Action Required)
 
----
-
-### R-001: TGA Software as a Medical Device (SaMD) classification — unregistered operation
+### R-001: Australian Privacy Act Non-Compliance
 
 - **Category:** Regulatory
-- **Description:** Software that "processes repeat prescriptions" is likely classifiable as a Software as a Medical Device (SaMD) under the Therapeutic Goods Administration's framework (Therapeutic Goods Act 1989, IMDRF SaMD classification guidance adopted post-2021). A system that automates clinical repeat-prescription workflows may qualify as Class IIa or higher. Operating an unregistered medical device is a criminal offence under s.41MI of the Therapeutic Goods Act. This risk is present from first patient use.
-- **Likelihood:** High (50%) — prescription automation consistently triggers SaMD classification in TGA assessments
-- **Impact:** Critical — criminal liability for directors, forced shutdown, inability to legally operate in Australia
-- **Inherent risk:** Critical (High × Critical)
-- **Current controls:** None identified. No TGA classification analysis exists in the codebase or described architecture.
+- **Description:** Prescribe stores patient medication history and personal data without documented Privacy Act compliance framework. Australian Privacy Principles (APPs 1, 3, 5, 6, 12, 13) not implemented. No Privacy Policy. No mechanism to handle data access requests, corrections, or complaints.
+- **Likelihood:** Very High (85%)
+- **Impact:** Critical
+- **Inherent risk:** Critical
+- **Current controls:** None documented
 - **Control effectiveness:** None
 - **Residual risk:** Critical
-- **Treatment:** Mitigate — commission a formal TGA SaMD classification review with a regulatory affairs consultant before any live patient use. If classified: register as a medical device, implement ISO/IEC 62304 software lifecycle processes, and prepare conformance documentation. This is a pre-launch blocker.
-- **Owner:** [Chief Medical Officer / Regulatory Affairs Lead — to be appointed]
-- **Review date:** 2026-07-01 — must be resolved before patient go-live; do not wait for the 6-month cycle
-
-> ⚠️ **Critical residual risk — coordinator approval required before acceptance or deferral.**
+- **Treatment:** Mitigate
+- **Treatment detail:** 
+  1. Hire Privacy Officer (external consultant or internal). Timeline: 2 weeks
+  2. Conduct Privacy Impact Assessment (PIA). Timeline: 4 weeks
+  3. Draft and publish Privacy Policy (APPs 1, 5, 6, 12, 13 compliant). Timeline: 3 weeks
+  4. Implement Privacy Principles compliance controls (documented procedures for collection, use, disclosure, access, correction, deletion). Timeline: 8 weeks
+  5. Quarterly compliance audits. Timeline: ongoing
+- **Owner:** Privacy Officer (to be hired)
+- **Review date:** 2026-08-04 (then quarterly)
 
 ---
 
-### R-002: Real-Time Prescription Monitoring (RTPM) non-compliance
+### R-002: New Zealand Privacy Act Non-Compliance
 
 - **Category:** Regulatory
-- **Description:** Australian state and territory laws mandate integration with Real-Time Prescription Monitoring (RTPM) systems for Schedule 8 (S8) controlled medicines, and increasingly S4 medicines of concern. Systems in scope: SafeScript (VIC), ScriptCheck (SA), QScript (QLD), DORA (WA), MedView (NSW), ScriptWise (TAS). If Prescribe handles controlled substance prescriptions and does not report to or query the relevant RTPM systems, prescribers using Prescribe may be in breach of state Poisons Acts, and Prescribe may be enabling non-compliant prescribing. Liability extends to the platform operator.
-- **Likelihood:** High (50%) — controlled substance prescriptions are common in telehealth; RTPM obligations are state-mandatory
-- **Impact:** Critical — prescriber licence sanctions (AHPRA), state regulator enforcement, patient harm from undetected drug-seeking, platform liability
-- **Inherent risk:** Critical (High × Critical)
-- **Current controls:** None identified.
+- **Description:** Prescribe operates in NZ but no evidence of NZ Privacy Act 2020 compliance. Different principles and enforcement regime than Australia. No NZ-specific Privacy Policy or data handling procedures.
+- **Likelihood:** High (65%)
+- **Impact:** Critical
+- **Inherent risk:** Critical
+- **Current controls:** None documented
 - **Control effectiveness:** None
 - **Residual risk:** Critical
-- **Treatment:** Mitigate — determine which substance schedules the platform handles. If S8 or S4-of-concern: map RTPM obligations by state, integrate RTPM APIs before launch, implement mandatory RTPM query before repeat prescriptions are issued. If S8 is excluded from scope, document that exclusion explicitly in the system's intended use statement.
-- **Owner:** [Chief Medical Officer — to be appointed]
-- **Review date:** 2026-07-01 — pre-launch blocker
-
-> ⚠️ **Critical residual risk — coordinator approval required before acceptance or deferral.**
-
----
-
-### R-003: Australian Privacy Act 1988 non-compliance (sensitive health information)
-
-- **Category:** Regulatory
-- **Description:** Patient medication history is "sensitive information" under the Privacy Act 1988 (Cth), subject to a higher standard of protection across all 13 Australian Privacy Principles (APPs). Key obligations: APP 3 (lawful collection with notice), APP 6 (no secondary use without consent), APP 8 (cross-border disclosure controls), APP 11 (security — must take reasonable steps), APP 12/13 (access and correction on request). Post-2024 amendments raise maximum civil penalties to $50M AUD for serious or repeated contraventions. The Notifiable Data Breaches (NDB) scheme requires notification to the OAIC and affected individuals within 30 days of becoming aware of an eligible breach.
-- **Likelihood:** Medium (25%) — systematic APP compliance gaps are common in new systems lacking a dedicated Privacy Officer
-- **Impact:** Critical — OAIC enforcement, civil penalties up to $50M, NDB notifications, patient trust loss
-- **Inherent risk:** High (Medium × Critical)
-- **Current controls:** None confirmed. AWS RDS in ap-southeast-2 provides Australian data residency (positive), but application-level APP controls (consent capture, purpose limitation, access logging) are unknown.
-- **Control effectiveness:** Partial — data residency satisfied, application-level controls unverified
-- **Residual risk:** Medium
-- **Treatment:** Mitigate — commission a Privacy Impact Assessment (PIA) before launch; appoint a Privacy Officer; implement consent capture at onboarding; build access-and-correction request workflow; establish an NDB incident response playbook with 30-day notification capability.
-- **Owner:** [Privacy Officer — to be appointed]
-- **Review date:** 2026-09-01
+- **Treatment:** Mitigate
+- **Treatment detail:**
+  1. Engage NZ Privacy Act specialist. Timeline: 2 weeks
+  2. Determine dual-jurisdiction requirements and conflicts (Australia vs NZ principles). Timeline: 2 weeks
+  3. Amend Privacy Policy to cover both jurisdictions with jurisdiction-specific appendices. Timeline: 3 weeks
+  4. Implement NZ-specific controls (e.g., NZ Privacy Commissioner notification process). Timeline: 4 weeks
+- **Owner:** Privacy Officer (international compliance consultant)
+- **Review date:** 2026-08-04
 
 ---
 
-### R-004: NZ Privacy Act 2020 / Health Information Privacy Code 2020 non-compliance
+### R-004: Notifiable Data Breaches — No Process
 
 - **Category:** Regulatory
-- **Description:** The NZ Privacy Act 2020 applies to any organisation collecting personal information about NZ residents. The Health Information Privacy Code 2020 imposes specific obligations on health information handling, including purpose limitation, security safeguards, and mandatory breach reporting (notify Privacy Commissioner as soon as practicable for serious breaches). NZ data stored in AWS ap-southeast-2 (Sydney, Australia) constitutes cross-border transfer — NZ IPP 12 requires the organisation to take reasonable steps to ensure comparable protection applies offshore. AWS contractual arrangements may satisfy this, but require explicit legal analysis.
-- **Likelihood:** Medium (25%)
-- **Impact:** High — NZ Privacy Commissioner enforcement, compliance orders, patient trust damage
-- **Inherent risk:** Medium (Medium × High)
-- **Current controls:** None confirmed.
+- **Description:** Australian Privacy Act s.33ZE and NZ Privacy Act require breach notification within 30 days. No documented breach detection, investigation, or notification process. When (not if) a breach occurs, Prescribe will be unable to meet legal deadline.
+- **Likelihood:** High (70%)
+- **Impact:** Critical
+- **Inherent risk:** Critical
+- **Current controls:** None documented
 - **Control effectiveness:** None
-- **Residual risk:** Medium
-- **Treatment:** Mitigate — conduct NZ Privacy Act gap analysis; obtain legal opinion on IPP 12 cross-border compliance basis for AWS ap-southeast-2; include NZ-specific privacy disclosures in patient onboarding.
-- **Owner:** [Privacy Officer — to be appointed]
-- **Review date:** 2026-09-01
+- **Residual risk:** Critical
+- **Treatment:** Mitigate
+- **Treatment detail:**
+  1. Document breach response plan: detection → investigation → notification → remediation. Timeline: 2 weeks
+  2. Implement breach notification template (meets legal requirements: affected parties, regulators, timeline). Timeline: 1 week
+  3. Establish escalation process and roles (incident commander, Privacy Officer, legal counsel). Timeline: 1 week
+  4. Conduct tabletop incident simulation (data breach scenario; test notification timeline). Timeline: 1 week
+  5. Test breach detection alerting (database access anomalies, unusual data exports). Timeline: 2 weeks
+- **Owner:** GRC Lead / Incident Commander
+- **Review date:** 2026-06-04 (after plan publication and tabletop)
 
 ---
 
-### R-005: Cross-border PHI transfer via Twilio (APP 8 / NZ IPP 12)
+### R-005: Health Records Act Non-Compliance (if applicable)
+
+- **Category:** Regulatory
+- **Description:** If Prescribe qualifies as a healthcare provider, Australian Health Records Act 1988 or NZ Health Information Privacy Code applies. Stricter standards than general Privacy Act. No evidence of assessment or compliance.
+- **Likelihood:** High (60%)
+- **Impact:** Critical
+- **Inherent risk:** Critical
+- **Current controls:** None documented
+- **Control effectiveness:** None
+- **Residual risk:** Critical
+- **Treatment:** Mitigate
+- **Treatment detail:**
+  1. Legal assessment: does Prescribe qualify as "healthcare provider" under Health Records Act? Timeline: 1 week
+  2. If yes: engage healthcare compliance specialist. Timeline: 2 weeks
+  3. Implement Health Records Act compliance controls (additional to Privacy Act). Timeline: 6 weeks
+  4. If no: document decision and reasoning. Timeline: 1 week
+- **Owner:** Privacy Officer / Legal Counsel
+- **Review date:** 2026-06-04 (scope determination)
+
+---
+
+### R-010: Repeat Prescription Workflow — No Documentation
+
+- **Category:** Operational
+- **Description:** Process for repeat prescription approval not documented. Unclear whether automatic refills are permitted, whether expiry checks exist, whether pharmacist/doctor approval is required. Risk of unauthorized refills, expired prescriptions, or prescription errors causing patient harm.
+- **Likelihood:** Very High (80%)
+- **Impact:** Critical
+- **Inherent risk:** Critical
+- **Current controls:** None documented
+- **Control effectiveness:** None
+- **Residual risk:** Critical
+- **Treatment:** Mitigate
+- **Treatment detail:**
+  1. Document current repeat prescription process (as-is). Timeline: 1 week
+  2. Identify gaps and legal/medical requirements. Timeline: 2 weeks
+  3. Implement approval workflow: patient request → doctor validation → prescription issued. Timeline: 6 weeks
+  4. Implement automated expiry checks (no refills after expiry date). Timeline: 3 weeks
+  5. Implement audit trail (all prescription approvals/denials logged). Timeline: 2 weeks
+  6. Pilot test with sample patient group before full rollout. Timeline: 2 weeks
+- **Owner:** Product Lead / Pharmacist Consultant
+- **Review date:** 2026-06-04 (after documentation and initial testing)
+
+---
+
+### R-011: SMS Delivery Failures — Silent Failures
+
+- **Category:** Operational / Patient Safety
+- **Description:** No SMS delivery logging or monitoring. Patients may believe medication reminders sent when delivery actually failed. Silent failures mean patients miss medication schedules without visibility to system.
+- **Likelihood:** Very High (85%)
+- **Impact:** Critical
+- **Inherent risk:** Critical
+- **Current controls:** None documented
+- **Control effectiveness:** None
+- **Residual risk:** Critical
+- **Treatment:** Mitigate
+- **Treatment detail:**
+  1. Implement SMS delivery logging via Twilio webhooks. Capture: sent time, delivery status, failure reason, retry count. Timeline: 2 weeks
+  2. Set up alerting for delivery failures (>5% failure rate). Timeline: 1 week
+  3. Implement patient notification on delivery failure (email/in-app alert if SMS failed). Timeline: 2 weeks
+  4. Implement SMS retry logic (exponential backoff, max 3 retries over 24 hours). Timeline: 2 weeks
+- **Owner:** DevOps Lead / Product Lead
+- **Review date:** 2026-06-04 (after implementation and testing)
+
+---
+
+### R-012: Incident Response Plan — Missing
+
+- **Category:** Operational
+- **Description:** No documented incident response plan, escalation procedures, or communication templates. Healthcare system requires rapid, coordinated response to incidents (data breaches, outages, medication errors). Absence of plan means chaotic, ad-hoc response under pressure.
+- **Likelihood:** Very High (90%)
+- **Impact:** Critical
+- **Inherent risk:** Critical
+- **Current controls:** None documented
+- **Control effectiveness:** None
+- **Residual risk:** Critical
+- **Treatment:** Mitigate
+- **Treatment detail:**
+  1. Document incident response plan: roles (incident commander, Privacy Officer, legal), escalation paths, notification timeline. Timeline: 2 weeks
+  2. Create incident communication templates (internal alert, patient notification, regulator notification). Timeline: 1 week
+  3. Define severity levels (SEV-1 = patient harm, SEV-2 = data exposure, SEV-3 = operational degradation). Timeline: 1 week
+  4. Establish incident war room process (real-time updates, decision log, post-incident review). Timeline: 1 week
+  5. Conduct tabletop incident simulation (test plan, roles, timelines). Timeline: 1 week
+  6. Publish plan to all team members; annual refresher training. Timeline: 1 week
+- **Owner:** GRC Lead / Engineering Manager
+- **Review date:** 2026-06-04 (after tabletop completion)
+
+---
+
+### R-013: Database Encryption — Not Documented
+
+- **Category:** Data / Security
+- **Description:** Patient medication histories stored in AWS RDS. No evidence of encryption at rest or in transit. Patient data is high-value target for attackers. Unencrypted database accessible to anyone with network access or credentials.
+- **Likelihood:** Very High (80%)
+- **Impact:** Critical
+- **Inherent risk:** Critical
+- **Current controls:** None documented (may exist but unverified)
+- **Control effectiveness:** None
+- **Residual risk:** Critical
+- **Treatment:** Mitigate
+- **Treatment detail:**
+  1. Verify current RDS encryption state (AWS console). If not enabled: enable AES-256 encryption at rest. Timeline: 1 week
+  2. Verify TLS 1.2+ enforced for all database connections. Timeline: 1 week
+  3. Implement application-level encryption for highly sensitive fields (medications list) using envelope encryption (master key in AWS KMS). Timeline: 4 weeks
+  4. Rotate database passwords and enforce strong policies (12+ chars, complex). Timeline: 1 week
+  5. Verify backups encrypted; ensure future backups encrypted. Timeline: 1 week
+  6. Test encryption end-to-end (decrypt records to verify no data loss). Timeline: 1 week
+- **Owner:** DevOps Lead / Database Admin
+- **Review date:** 2026-05-18 (verify encryption enabled)
+
+---
+
+### R-017: Access Control (RBAC) — Not Implemented
+
+- **Category:** Data / Security
+- **Description:** No documented role-based access control (RBAC). Unclear who can access patient records, whether least-privilege enforced, whether audit logging exists. Risk of unauthorized data access by insiders or compromised accounts.
+- **Likelihood:** Very High (80%)
+- **Impact:** Critical
+- **Inherent risk:** Critical
+- **Current controls:** None documented
+- **Control effectiveness:** None
+- **Residual risk:** Critical
+- **Treatment:** Mitigate
+- **Treatment detail:**
+  1. Define roles: Admin (full access), Doctor (can approve prescriptions, view own patients), Pharmacist (can view prescriptions for fulfillment), Patient (view own records), Support (limited access for troubleshooting). Timeline: 1 week
+  2. Implement role-based permissions (database-level and application-level). Timeline: 3 weeks
+  3. Implement audit logging: log all access attempts (successful and failed) with timestamp, user, action, data accessed. Timeline: 2 weeks
+  4. Implement least-privilege database access: application role can only SELECT/INSERT/UPDATE/DELETE; no ALTER/DROP. Timeline: 2 weeks
+  5. Implement session timeout (30-60 minutes) and re-authentication for sensitive operations (e.g., prescription approval). Timeline: 2 weeks
+  6. Quarterly access reviews: audit who has access to what; revoke access for leavers. Timeline: ongoing
+- **Owner:** DevOps Lead / Security Engineer
+- **Review date:** 2026-06-04 (after implementation)
+
+---
+
+### R-020: AWS RDS Misconfiguration — Security
+
+- **Category:** Vendor / Security
+- **Description:** AWS RDS configuration not documented or verified. Common misconfigurations: database publicly accessible, IAM policies too permissive, security groups allow all traffic. If database is publicly accessible, attackers can attempt direct connection and access all patient records.
+- **Likelihood:** Very High (85%)
+- **Impact:** Critical
+- **Inherent risk:** Critical
+- **Current controls:** None documented
+- **Control effectiveness:** None
+- **Residual risk:** Critical
+- **Treatment:** Mitigate
+- **Treatment detail:**
+  1. Conduct AWS RDS security audit: check if publicly accessible, VPC/security group settings, IAM policies. Timeline: 1 week
+  2. Ensure database NOT publicly accessible; restrict to application VPC only. Timeline: 1 week
+  3. Implement IAM policies: principle of least privilege. Application role can only SELECT/INSERT/UPDATE/DELETE; no schema changes. Timeline: 2 weeks
+  4. Implement security groups: allow traffic only from application servers (specific IPs/security groups). Timeline: 1 week
+  5. Enable AWS RDS Enhanced Monitoring (CloudWatch metrics for CPU, memory, disk, network). Timeline: 1 week
+  6. Enable AWS RDS Performance Insights (track slow queries, optimize). Timeline: 1 week
+  7. Implement automated backups with multi-region replication (backup to secondary region). Timeline: 2 weeks
+  8. Document AWS security configuration in runbook. Timeline: 1 week
+- **Owner:** DevOps Lead / AWS Architect
+- **Review date:** 2026-05-18 (verify configuration immediately)
+
+---
+
+### R-021: No Data Processing Agreement (DPA) with Twilio
+
+- **Category:** Vendor / Regulatory
+- **Description:** Twilio is a data processor (handles patient phone numbers). Without DPA, Prescribe is non-compliant with Privacy Act (if GDPR applies, mandatory DPA under Article 28). No contractual obligation for Twilio to notify Prescribe of breaches. No safeguards on Twilio's sub-processors.
+- **Likelihood:** Very High (90%)
+- **Impact:** Critical
+- **Inherent risk:** Critical
+- **Current controls:** None documented
+- **Control effectiveness:** None
+- **Residual risk:** Critical
+- **Treatment:** Mitigate
+- **Treatment detail:**
+  1. Contact Twilio account manager to request Data Processing Agreement. Timeline: 1 week
+  2. If standard DPA unavailable: negotiate custom DPA covering data handling, sub-processor approval, breach notification, compliance with Privacy Act/GDPR. Timeline: 2 weeks
+  3. Review DPA with legal counsel; sign before further SMS operations. Timeline: 1 week
+  4. Request Twilio security certifications (SOC 2 Type II, GDPR compliance documentation). Timeline: 1 week
+  5. If GDPR applies: ensure Twilio is EU-certified or has Standard Contractual Clauses (SCCs). Timeline: ongoing
+  6. Maintain record of DPA and security certifications. Timeline: ongoing
+- **Owner:** Legal / Procurement Lead
+- **Review date:** 2026-05-18 (DPA signature deadline)
+
+---
+
+## Risk Register: High Residual Risks (Planned Mitigation 8 weeks)
+
+### R-003: GDPR Applicability Unclear
+
+- **Category:** Regulatory
+- **Description:** GDPR may apply if patients/providers are EU-based or data shared with EU systems. No assessment done. If applicable and controls missing, fines up to €20M or 4% of turnover.
+- **Likelihood:** Medium (30%)
+- **Impact:** Critical
+- **Inherent risk:** High
+- **Current controls:** None
+- **Control effectiveness:** None
+- **Residual risk:** High
+- **Treatment:** Clarify, then mitigate if applicable
+- **Treatment detail:**
+  1. Document patient geography: are any patients/providers EU-based? Timeline: 1 week
+  2. Document third-party integrations: any data shared with EU systems? Timeline: 1 week
+  3. Determine GDPR applicability. Timeline: 1 week
+  4. If GDPR applies: conduct DPIA (Data Protection Impact Assessment); implement additional controls (consent, legal basis, data subject rights). Timeline: 4 weeks
+  5. If GDPR does not apply: document decision with reasoning. Timeline: 1 week
+- **Owner:** GRC Lead / Legal
+- **Review date:** 2026-06-04
+
+---
+
+### R-006: SMS Regulatory Compliance (AASB Code)
 
 - **Category:** Regulatory / Vendor
-- **Description:** Twilio is a US-headquartered company. SMS content passes through Twilio's infrastructure before delivery to carriers. **The severity of this risk depends on SMS message content — to be verified:** if messages include PHI (e.g., patient name, medication name, dosage, repeat count), this constitutes cross-border disclosure of sensitive information under APP 8 (Australia) and NZ IPP 12 (New Zealand). APP 8 requires either: (a) a contractual arrangement ensuring the overseas recipient meets APP standards, or (b) patient consent after being informed the information may not be protected. A generic Twilio commercial contract does not satisfy APP 8. Even messages like "Your prescription reminder" without PHI carry lower risk but require review.
-- **Assumption to verify:** Do SMS templates include medication names, patient names, or dosage information?
-- **Likelihood:** High (50%) — probable if SMS includes medication details; lower if de-identified
-- **Impact:** High — APP 8 / IPP 12 breach, OAIC enforcement, patient trust damage
-- **Inherent risk:** High (High × High)
-- **Current controls:** None confirmed. Twilio is GDPR-compliant but GDPR adequacy does not automatically satisfy Australian APPs.
-- **Control effectiveness:** None (without a verified DPA)
-- **Residual risk:** High
-- **Treatment:** Mitigate — (1) audit all SMS message templates and strip PHI where possible (e.g., replace medication name with a portal link); (2) execute an APP 8-compliant Data Processing Agreement with Twilio; (3) update patient privacy notices to disclose overseas SMS processing. If PHI cannot be removed, obtain explicit informed consent.
-- **Owner:** [Privacy Officer — to be appointed]
-- **Review date:** 2026-08-01
-
----
-
-### R-006: NZ patient data residency — AWS ap-southeast-2 is outside New Zealand
-
-- **Category:** Regulatory / Data
-- **Description:** All patient data (including NZ residents) is stored in AWS ap-southeast-2, which is physically located in Sydney, Australia. Under the NZ Privacy Act 2020, this constitutes offshore disclosure and triggers IPP 12 obligations. While AWS provides contractual data protection commitments, the compliance basis (adequate safeguards or explicit patient consent) must be documented. Without documented compliance basis, Prescribe is operating in breach of NZ privacy law from first NZ patient record stored.
-- **Likelihood:** Very High (>90%) — this is the current architecture by design; it is happening unless addressed
-- **Impact:** High — NZ Privacy Commissioner enforcement, potential requirement to delete/relocate NZ data, operational disruption
-- **Inherent risk:** Critical (Very High × High)
-- **Current controls:** AWS Data Processing Addendum (assumed standard) — may partially satisfy IPP 12 if documented.
-- **Control effectiveness:** Partial — AWS contracts exist, but adequacy determination and documentation unverified
-- **Residual risk:** High
-- **Treatment:** Mitigate — obtain legal opinion on whether AWS DPA satisfies NZ IPP 12; document the compliance basis; disclose offshore storage to NZ patients at onboarding; consider data residency controls or regional separation if legal opinion is unfavourable.
-- **Owner:** [Privacy Officer — to be appointed]
-- **Review date:** 2026-08-01
-
----
-
-### R-007: Patient medication history data breach (AWS RDS)
-
-- **Category:** Data
-- **Description:** The RDS database contains highly sensitive health records (medication history, prescription records, patient identifiers). Attack vectors include: SQL injection in application layer, compromised application credentials, misconfigured RDS security groups (publicly accessible), insider threat, or compromised CI/CD pipeline with database access. A breach triggers NDB obligations (AU) and mandatory breach reporting (NZ), potential class action, and AHPRA investigation of clinical records handling.
-- **Likelihood:** Medium (25%)
-- **Impact:** Critical — PHI exposure for potentially thousands of patients, NDB/NZ breach notification, regulatory action, patient harm
-- **Inherent risk:** High (Medium × Critical)
-- **Current controls:** AWS RDS provides encryption at rest (AES-256) and in transit (TLS) if configured; VPC network isolation assumed. Application-level controls (parameterised queries, WAF, audit logging) are unverified.
-- **Control effectiveness:** Partial — infrastructure controls assumed; application controls unverified
-- **Residual risk:** Medium
-- **Treatment:** Mitigate — verify RDS encryption at rest and in transit are enabled; conduct penetration test before launch; implement WAF; enforce parameterised queries; enable RDS audit logging; establish breach response runbook capable of NDB 30-day notification.
-- **Owner:** [CTO / Head of Engineering — to be appointed]
-- **Review date:** 2026-09-01
-
----
-
-### R-008: Unauthorised internal access to prescription records
-
-- **Category:** Data
-- **Description:** Platform staff (engineers, operations, support) may have overly broad access to patient prescription data without clinical justification. Minimum-necessary-access is an APP 11 requirement. Without role-based access control and audit trails, internal actors can access any patient record, creating both compliance and patient trust risk. Telehealth platforms are high-profile targets for data misuse given the sensitivity of the information.
-- **Likelihood:** Medium (25%) — common in early-stage systems without mature RBAC
-- **Impact:** Critical — APP 11 breach, potential OAIC enforcement, patient harm, reputational damage
-- **Inherent risk:** High (Medium × Critical)
-- **Current controls:** None identified.
+- **Description:** Australian SMS Code requires opt-in, anti-spam safeguards, unsubscribe mechanism. No evidence of compliance. Unsolicited or non-compliant SMS could trigger regulatory complaints and Twilio account suspension.
+- **Likelihood:** Medium (35%)
+- **Impact:** Medium
+- **Inherent risk:** Medium
+- **Current controls:** None documented
 - **Control effectiveness:** None
-- **Residual risk:** High
-- **Treatment:** Mitigate — implement role-based access control with minimum necessary access; enable database audit logging (who accessed what, when); conduct access reviews quarterly; segregate production data from development environments.
-- **Owner:** [CTO / Head of Engineering — to be appointed]
-- **Review date:** 2026-09-01
+- **Residual risk:** Medium
+- **Treatment:** Mitigate
+- **Treatment detail:**
+  1. Review AASB Australian SMS Code requirements. Timeline: 1 week
+  2. Implement opt-in mechanism: patients explicitly consent to medication reminders. Timeline: 2 weeks
+  3. Implement unsubscribe: "Reply STOP" to cease reminders; honor within 24 hours. Timeline: 2 weeks
+  4. Audit SMS content: only prescription reminders, no promotional content. Timeline: 1 week
+  5. Maintain opt-in/opt-out audit trail (consent records). Timeline: 1 week
+- **Owner:** Product Lead / Compliance Lead
+- **Review date:** 2026-06-04
 
 ---
 
-### R-009: Prescription processing error causing patient harm
+### R-007: AWS Region Failover — No DR Plan
 
 - **Category:** Operational
-- **Description:** A software defect causes an incorrect repeat prescription to be issued — wrong medication, wrong dose, wrong frequency, or prescription issued to the wrong patient. In a telehealth context, there is reduced opportunity for physical verification compared to in-person consultations. Prescription errors can cause serious patient harm (overdose, under-treatment, drug interactions). Liability extends to the platform operator if the system contributed to the error.
-- **Likelihood:** Low (8%) for a clinically significant error
-- **Impact:** Critical — patient harm, death in worst case, coronial inquiry, AHPRA investigation, medical indemnity claim
-- **Inherent risk:** Medium (Low × Critical)
-- **Current controls:** None confirmed. Clinical workflow design (prescriber sign-off, confirmation steps) is not described.
+- **Description:** Database in AWS Sydney (ap-southeast-2) only. No multi-region failover. If Sydney region experiences outage (2023 outage lasted hours), all operations unavailable. Patients cannot refill prescriptions; no SMS reminders sent.
+- **Likelihood:** High (60%)
+- **Impact:** Critical
+- **Inherent risk:** Critical
+- **Current controls:** None documented
 - **Control effectiveness:** None
-- **Residual risk:** Medium
-- **Treatment:** Mitigate — implement mandatory prescriber confirmation step before any prescription is issued or repeated; add clinical decision support warnings for known interactions; implement two-person authorisation for S8 medications; maintain an audit trail of every prescription action.
-- **Owner:** [Chief Medical Officer — to be appointed]
-- **Review date:** 2026-09-01
+- **Residual risk:** Critical
+- **Treatment:** Mitigate
+- **Treatment detail:**
+  1. Implement multi-region replication: replicate RDS to ap-southeast-1 (Melbourne) or ap-northeast-1 (Tokyo). Timeline: 6 weeks
+  2. Implement Route 53 health checks: if Sydney down, failover to secondary region automatically. Timeline: 3 weeks
+  3. Test failover quarterly (simulate region failure). Timeline: ongoing
+  4. Document failover runbook (timing, steps, communication plan). Timeline: 2 weeks
+  5. Maintain secondary region costs in budget (replica database costs $X/month). Timeline: ongoing
+- **Owner:** DevOps Lead / AWS Architect
+- **Review date:** 2026-07-04
 
 ---
 
-### R-010: SMS delivery failure causing missed medication reminders
+### R-008: Twilio Outage — No Fallback Provider
 
-- **Category:** Operational
-- **Description:** SMS reminders fail to deliver due to: Twilio delivery error, invalid/changed patient phone number, carrier filtering, or temporary outage. Patients miss medication refill reminders, leading to medication non-adherence. While a single missed reminder is low-severity, systematic delivery failure for a patient cohort on critical medications (e.g., blood pressure, diabetes, psychiatric medications) creates clinical risk and erodes product value.
-- **Likelihood:** Medium (25%) — SMS non-delivery rates of 5–15% are typical; phone number churn in NZ/AU is significant
-- **Impact:** Medium — medication non-adherence for some patients; product value degradation; not a catastrophic failure if patients can access the portal directly
-- **Inherent risk:** Medium (Medium × Medium)
-- **Current controls:** Twilio provides delivery receipts and status webhooks. Whether these are monitored is unknown.
-- **Control effectiveness:** Partial — delivery reporting exists at Twilio level; application-level retry and monitoring unknown
-- **Residual risk:** Medium
-- **Treatment:** Mitigate — implement delivery receipt monitoring; add retry logic for failed sends; provide a fallback communication channel (email) for critical reminders; alert operations team when delivery failure rate exceeds 10%.
-- **Owner:** [Head of Product / Operations — to be appointed]
-- **Review date:** 2026-11-01
-
----
-
-### R-011: RDS data loss (backup failure, accidental deletion, ransomware)
-
-- **Category:** Operational / Data
-- **Description:** Patient prescription history is permanently lost due to backup failure, accidental deletion of RDS instance, or ransomware encrypting the database. Prescription history loss is not merely a business continuity issue — loss of medication records can directly endanger patients who cannot access their prescription history in emergencies.
-- **Likelihood:** Low (<10%) — AWS RDS automated backups reduce probability significantly, but untested backups are a known failure mode
-- **Impact:** Critical — loss of clinical records, patient safety risk, potential regulatory action for failure to maintain health records
-- **Inherent risk:** Medium (Low × Critical)
-- **Current controls:** AWS RDS automated daily backups (assumed enabled). Point-in-time recovery available. Cross-region backup replication unknown.
-- **Control effectiveness:** Partial — backups assumed enabled but recovery procedures untested
-- **Residual risk:** Low (if backups are verified and tested)
-- **Treatment:** Mitigate — verify automated backups are enabled and configured correctly; test recovery to a non-production environment quarterly; document and test RTO/RPO targets; consider cross-region snapshot replication for disaster recovery.
-- **Owner:** [CTO / Head of Engineering — to be appointed]
-- **Review date:** 2026-09-01
-
----
-
-### R-012: Twilio vendor security incident (PHI exposure)
-
-- **Category:** Vendor
-- **Description:** Twilio suffered a significant security breach in August 2022 (social engineering attack on employees, exposing customer data and internal systems). If SMS messages contain PHI, a future Twilio breach could expose patient health information. The platform cannot control Twilio's internal security posture, making this a residual transfer risk regardless of internal controls.
-- **Likelihood:** Low (10%) — vendor breaches are infrequent; Twilio has improved security posture post-2022
-- **Impact:** High — PHI disclosed to a third party, triggering NDB notification, OAIC inquiry, reputational damage
-- **Inherent risk:** Medium (Low × High)
-- **Current controls:** Twilio is SOC 2 Type II certified. Twilio GDPR DPA available. AU/NZ-specific data processing agreement status is unknown.
-- **Control effectiveness:** Partial — SOC 2 certification provides some assurance; PHI minimisation in SMS is the primary mitigation
-- **Residual risk:** Low
-- **Treatment:** Accept with conditions — minimise PHI in SMS content (primary mitigation from R-005); verify Twilio DPA covers AU/NZ obligations; include Twilio in annual vendor security review.
-- **Owner:** [Privacy Officer — to be appointed]
-- **Review date:** 2026-11-01
-
----
-
-### R-013: AWS RDS availability (single-AZ deployment)
-
-- **Category:** Operational / Vendor
-- **Description:** If AWS RDS is deployed in a single Availability Zone (single-AZ), an AZ-level failure causes complete database unavailability, blocking all prescription processing. In a clinical context, unavailability of prescription history can cause prescribers to make uninformed decisions or patients to be unable to access critical medications.
-- **Likelihood:** Low (<10%) — AWS AZ-level failures are infrequent but not unknown
-- **Impact:** High — complete service outage; clinical workflow disruption; potential patient harm if prescription access is urgent
-- **Inherent risk:** Medium (Low × High)
-- **Current controls:** Multi-AZ RDS configuration assumed but unverified.
-- **Control effectiveness:** Full (if Multi-AZ is confirmed) / None (if single-AZ)
-- **Residual risk:** Low — contingent on Multi-AZ being confirmed (see treatment)
-- **Treatment:** Mitigate — verify Multi-AZ is enabled on the RDS instance; document failover RTO (typically 1–2 minutes with Multi-AZ); test failover in a staging environment.
-- **Owner:** [CTO / Head of Engineering — to be appointed]
-- **Review date:** 2026-09-01
-
----
-
-### R-014: Twilio service outage (SMS channel unavailable)
-
-- **Category:** Vendor
-- **Description:** A Twilio platform outage renders the entire SMS reminder channel unavailable. No reminders are sent during the outage window. For patients on time-sensitive medication regimens, this could cause adherence issues.
-- **Likelihood:** Low (5%) — Twilio SLA is approximately 99.95%
-- **Impact:** Medium — reminders fail; patient inconvenience; no direct clinical emergency if portal remains accessible
-- **Inherent risk:** Low (Low × Medium)
-- **Current controls:** Twilio status page (https://status.twilio.com). Monitoring integration unknown.
-- **Control effectiveness:** Partial — visibility exists; no failover
-- **Residual risk:** Low
-- **Treatment:** Accept — Twilio's SLA and track record make extended outages rare. Monitor Twilio status page; consider Sinch or AWS SNS as fallback SMS providers if SLA requirements harden.
-- **Owner:** [Head of Operations — to be appointed]
-- **Review date:** 2026-11-01
-
----
-
-### R-015: Uncontrolled Twilio SMS spend
-
-- **Category:** Financial
-- **Description:** A bug in the reminder scheduling system (e.g., infinite retry loop, scheduling table corruption) triggers mass or duplicate SMS sends to the patient population. Twilio charges per-message; at scale, a runaway send could generate $10,000–$100,000+ in unexpected charges before detection.
-- **Likelihood:** Low (10%)
-- **Impact:** Medium — financial loss; reputational damage if patients receive dozens of duplicate messages
-- **Inherent risk:** Low (Low × Medium)
-- **Current controls:** None confirmed. Twilio does not enforce spend caps by default.
-- **Control effectiveness:** None
-- **Residual risk:** Low
-- **Treatment:** Mitigate — configure Twilio spend alerts and hard spending caps in the Twilio console; implement application-level per-patient daily send limits; add duplicate detection before any send.
-- **Owner:** [CTO / Head of Engineering — to be appointed]
-- **Review date:** 2026-11-01
-
----
-
-### R-016: Public data breach causing reputational damage and patient exodus
-
-- **Category:** Reputational
-- **Description:** A significant patient data breach (R-007) becomes public — through media reporting, OAIC disclosure, or patient notification. Loss of patient trust causes churn, new patient acquisition failure, and potential business-ending consequences for a telehealth startup operating on trust-sensitive health data. Regulatory action (OAIC or TGA) compounds reputational impact.
-- **Likelihood:** Medium (20%) — conditional on a breach occurring and breaches being reportable (NDB threshold)
-- **Impact:** Critical — patient exodus, media coverage, regulatory scrutiny, investor confidence loss, potential business failure
-- **Inherent risk:** High (Medium × Critical)
-- **Current controls:** None specific to reputational management.
+- **Category:** Vendor / Operational
+- **Description:** SMS reminders depend entirely on Twilio. If Twilio down, no reminders sent. Patients miss medication schedules. No fallback SMS provider documented.
+- **Likelihood:** Medium (40%)
+- **Impact:** High
+- **Inherent risk:** High
+- **Current controls:** None documented
 - **Control effectiveness:** None
 - **Residual risk:** High
-- **Treatment:** Mitigate — develop a breach response communications plan before launch; prepare patient notification templates; establish a media response protocol; obtain cyber liability insurance; test the response plan annually.
-- **Owner:** [CEO — to be appointed]
-- **Review date:** 2026-09-01
+- **Treatment:** Mitigate
+- **Treatment detail:**
+  1. Implement retry logic for SMS delivery: exponential backoff, max 3 retries over 24 hours. Timeline: 2 weeks
+  2. Implement queue persistence: if SMS fails, persist message for retry (don't lose). Timeline: 2 weeks
+  3. Implement fallback SMS provider: AWS SNS or Vonage as backup if Twilio unavailable. Timeline: 4 weeks
+  4. Monitor Twilio SLA; publish status page for patients (shows "Reminders temporarily unavailable"). Timeline: 2 weeks
+- **Owner:** DevOps Lead / Product Lead
+- **Review date:** 2026-07-04
+
+---
+
+### R-009: Key Person Dependency
+
+- **Category:** Operational
+- **Description:** Critical systems (prescription workflow, database schema, deployment process) understood by one or few people. Unplanned absence creates risk of system failure with no one able to respond.
+- **Likelihood:** High (65%)
+- **Impact:** High
+- **Inherent risk:** High
+- **Current controls:** None documented
+- **Control effectiveness:** None
+- **Residual risk:** High
+- **Treatment:** Mitigate
+- **Treatment detail:**
+  1. Document all critical systems: prescription workflow, database schema, deployment process, emergency procedures. Timeline: 3 weeks
+  2. Cross-train second person on each critical area. Timeline: 4 weeks
+  3. Create runbooks for emergency procedures (database restore, SMS restart, prescription recovery). Timeline: 2 weeks
+  4. Quarterly knowledge transfer reviews (each person explains system to another). Timeline: ongoing
+  5. Maintain runbooks in accessible wiki (not personal documents). Timeline: ongoing
+- **Owner:** Engineering Manager
+- **Review date:** 2026-06-04
+
+---
+
+### R-014: Data Minimisation — Over-Collection
+
+- **Category:** Data
+- **Description:** Unclear what patient data is collected. Likely collecting more than necessary (e.g., address if only SMS needed; medical history if only current medications needed). Privacy Act expects data minimisation.
+- **Likelihood:** High (70%)
+- **Impact:** Medium
+- **Inherent risk:** High
+- **Current controls:** None documented
+- **Control effectiveness:** None
+- **Residual risk:** High
+- **Treatment:** Mitigate
+- **Treatment detail:**
+  1. Conduct data inventory: audit all patient data collected. Timeline: 2 weeks
+  2. Assess necessity: which data strictly required for prescriptions? Which optional? Timeline: 2 weeks
+  3. Implement data minimisation: remove unnecessary data collection; default to minimal set. Timeline: 3 weeks
+  4. Update Privacy Policy to reflect data minimisation. Timeline: 1 week
+- **Owner:** Data Architect / Privacy Officer
+- **Review date:** 2026-07-04
+
+---
+
+### R-015: Data Retention — Indefinite Storage
+
+- **Category:** Data
+- **Description:** No documented data retention policy. Patient medication histories stored indefinitely. Deleted records may persist in backups without secure erasure. Violates Privacy Act principle of data minimisation.
+- **Likelihood:** Very High (85%)
+- **Impact:** Medium
+- **Inherent risk:** High
+- **Current controls:** None documented
+- **Control effectiveness:** None
+- **Residual risk:** High
+- **Treatment:** Mitigate
+- **Treatment detail:**
+  1. Implement retention policy: medication history retained for X years (per healthcare standards, e.g., 7-10 years). Timeline: 2 weeks
+  2. Implement automated deletion jobs: deleted records securely erased from all backups (not just marked deleted). Timeline: 3 weeks
+  3. Implement GDPR right-to-erasure mechanism (if GDPR applies). Timeline: 2 weeks
+  4. Document retention policy in Privacy Policy. Timeline: 1 week
+  5. Test deletion jobs quarterly (verify data actually deleted). Timeline: ongoing
+- **Owner:** Data Architect / Privacy Officer
+- **Review date:** 2026-07-04
+
+---
+
+### R-018: Prescription Audit Trail — No Integrity Checks
+
+- **Category:** Data / Operational
+- **Description:** No audit trail for prescription changes. No way to detect if records tampered with. Prescription records are safety-critical; undetected tampering could cause patient harm.
+- **Likelihood:** High (65%)
+- **Impact:** High
+- **Inherent risk:** High
+- **Current controls:** None documented
+- **Control effectiveness:** None
+- **Residual risk:** High
+- **Treatment:** Mitigate
+- **Treatment detail:**
+  1. Implement immutable audit log: every prescription change (create, approve, refill, expire) logged with timestamp, actor, reason. Timeline: 3 weeks
+  2. Implement digital signatures for prescription records (HMAC or PKI). Timeline: 2 weeks
+  3. Implement integrity checks: periodic audit log validation to detect tampering. Timeline: 2 weeks
+  4. Archive audit logs for X years (per healthcare standards). Timeline: 2 weeks
+  5. Test integrity checks quarterly (simulate tampering; verify detection). Timeline: ongoing
+- **Owner:** Database Architect / Security Engineer
+- **Review date:** 2026-07-04
+
+---
+
+### R-019: Twilio Security Posture Unknown
+
+- **Category:** Vendor
+- **Description:** Twilio is data processor (handles patient phone numbers). No assessment of Twilio's security, compliance certifications, or incident history. Twilio could be compromised, exposing patient data.
+- **Likelihood:** High (70%)
+- **Impact:** High
+- **Inherent risk:** High
+- **Current controls:** DPA (in progress, R-021); assumes Twilio is secure (unverified)
+- **Control effectiveness:** Partial
+- **Residual risk:** High
+- **Treatment:** Mitigate
+- **Treatment detail:**
+  1. Request Twilio SOC 2 Type II report (independent security audit). Timeline: 1 week
+  2. Request GDPR compliance documentation (if GDPR applies). Timeline: 1 week
+  3. Request incident history (any past breaches? Remediation?). Timeline: 1 week
+  4. Review and document security findings. Timeline: 1 week
+  5. Maintain updated security documentation in compliance file. Timeline: ongoing
+- **Owner:** Security Engineer / GRC Lead
+- **Review date:** 2026-06-04
+
+---
+
+### R-023: Twilio Account Suspension Risk
+
+- **Category:** Vendor / Operational
+- **Description:** Twilio account could be suspended for regulatory violations (e.g., unsolicited SMS, spam complaints). If suspended, Prescribe cannot send any reminders. Patients unable to receive medication reminders.
+- **Likelihood:** Medium (40%)
+- **Impact:** Critical
+- **Inherent risk:** High
+- **Current controls:** Assumed compliance (R-006 planned mitigation); DPA (R-021 planned mitigation)
+- **Control effectiveness:** Partial
+- **Residual risk:** High
+- **Treatment:** Mitigate
+- **Treatment detail:**
+  1. Implement SMS compliance monitoring: audit all SMS reminders for compliance with AASB code. Timeline: 2 weeks
+  2. Maintain customer consent records (opt-in/opt-out). Timeline: 2 weeks
+  3. Monitor Twilio abuse reports; respond immediately to complaints. Timeline: ongoing
+  4. Maintain DPA (R-021) with breach/suspension notification clause. Timeline: 2 weeks
+  5. Have fallback SMS provider ready (R-008) in case Twilio suspended. Timeline: 4 weeks
+- **Owner:** Compliance Lead / Product Lead
+- **Review date:** 2026-06-04
+
+---
+
+### R-026: Privacy Commissioner Inquiry Response
+
+- **Category:** Reputational / Regulatory
+- **Description:** Privacy Commissioner may investigate complaints. Poor response or record-keeping suggests negligence; increases regulatory penalties.
+- **Likelihood:** High (65%)
+- **Impact:** High
+- **Inherent risk:** High
+- **Current controls:** None documented
+- **Control effectiveness:** None
+- **Residual risk:** High
+- **Treatment:** Mitigate
+- **Treatment detail:**
+  1. Designate Privacy Officer as single point of contact for Privacy Commissioner. Timeline: 1 week
+  2. Implement response SLA: acknowledge within 5 business days; provide substantive response within 20 days. Timeline: 1 week
+  3. Maintain detailed records of all Privacy Commissioner correspondence. Timeline: ongoing
+  4. Establish voluntary relationship with Privacy Commissioner (early consultation on new features). Timeline: 2 weeks
+- **Owner:** GRC Lead / Privacy Officer
+- **Review date:** 2026-06-04
+
+---
+
+### R-028, R-029, R-030: Cost Management & Operational Resilience
+
+- **Category:** Financial / Operational
+- **Description:** AWS and Twilio costs not monitored. Uncontrolled costs possible (e.g., runaway SMS volume, inefficient queries). No budget alerts. Outages impact revenue (patient churn, refunds).
+- **Likelihood:** High (65%)
+- **Impact:** Medium / High
+- **Inherent risk:** High
+- **Current controls:** None documented
+- **Control effectiveness:** None
+- **Residual risk:** High
+- **Treatment:** Mitigate
+- **Treatment detail:**
+  1. Implement AWS billing alerts (monthly budget, warn at 80%, hard stop at 100%). Timeline: 1 week
+  2. Implement Twilio SMS cost limits (warn if approaching, reject if exceeded). Timeline: 1 week
+  3. Implement cost monitoring dashboard (AWS Cost Explorer, Twilio analytics). Timeline: 2 weeks
+  4. Quarterly cost review: identify optimization opportunities. Timeline: ongoing
+  5. Track operational cost per business metric (cost per prescription, cost per reminder). Timeline: 2 weeks
+- **Owner:** DevOps Lead / Finance Lead
+- **Review date:** 2026-06-04 (then quarterly)
 
 ---
 
 ## Risk Summary
 
-| Risk ID | Description | Category | Inherent | Residual | Treatment | Owner |
-|---|---|---|---|---|---|---|
-| R-001 | TGA SaMD classification — unregistered operation | Regulatory | **Critical** | **Critical** | Mitigate | CMO / Regulatory Affairs |
-| R-002 | RTPM non-compliance (controlled substances) | Regulatory | **Critical** | **Critical** | Mitigate | CMO |
-| R-003 | Australian Privacy Act / APPs non-compliance | Regulatory | High | Medium | Mitigate | Privacy Officer |
-| R-004 | NZ Privacy Act 2020 / HIPC non-compliance | Regulatory | Medium | Medium | Mitigate | Privacy Officer |
-| R-005 | Cross-border PHI via Twilio (APP 8 / IPP 12) | Regulatory / Vendor | High | High | Mitigate | Privacy Officer |
-| R-006 | NZ data residency — AP-SE-2 is outside NZ | Regulatory / Data | **Critical** | High | Mitigate | Privacy Officer |
-| R-007 | Patient medication history data breach (RDS) | Data | High | Medium | Mitigate | CTO |
-| R-008 | Unauthorised internal access to records | Data | High | High | Mitigate | CTO |
-| R-009 | Prescription processing error / patient harm | Operational | Medium | Medium | Mitigate | CMO |
-| R-010 | SMS delivery failure / missed reminders | Operational | Medium | Medium | Mitigate | Head of Product |
-| R-011 | RDS data loss (backup failure / ransomware) | Operational / Data | Medium | Low | Mitigate | CTO |
-| R-012 | Twilio vendor security breach | Vendor | Medium | Low | Accept | Privacy Officer |
-| R-013 | AWS RDS AZ availability (single-AZ risk) | Operational / Vendor | Medium | Low | Mitigate | CTO |
-| R-014 | Twilio service outage | Vendor | Low | Low | Accept | Head of Operations |
-| R-015 | Uncontrolled Twilio SMS spend | Financial | Low | Low | Mitigate | CTO |
-| R-016 | Public breach — reputational damage | Reputational | High | High | Mitigate | CEO |
+| Risk | Category | Inherent | Residual | Treatment | Owner |
+|---|---|---|---|---|---|
+| R-001 | Regulatory | Critical | Critical | Mitigate | Privacy Officer |
+| R-002 | Regulatory | Critical | Critical | Mitigate | Privacy Officer |
+| R-003 | Regulatory | High | High | Clarify, then mitigate | GRC Lead / Legal |
+| R-004 | Regulatory | Critical | Critical | Mitigate | GRC Lead |
+| R-005 | Regulatory | Critical | Critical | Mitigate | Privacy Officer / Legal |
+| R-006 | Regulatory | Medium | Medium | Mitigate | Compliance Lead |
+| R-007 | Operational | Critical | Critical | Mitigate | DevOps Lead |
+| R-008 | Operational | High | High | Mitigate | DevOps Lead |
+| R-009 | Operational | High | High | Mitigate | Engineering Manager |
+| R-010 | Operational | Critical | Critical | Mitigate | Product Lead |
+| R-011 | Operational | Critical | Critical | Mitigate | DevOps Lead |
+| R-012 | Operational | Critical | Critical | Mitigate | GRC Lead |
+| R-013 | Data | Critical | Critical | Mitigate | DevOps Lead |
+| R-014 | Data | High | High | Mitigate | Data Architect |
+| R-015 | Data | High | High | Mitigate | Data Architect |
+| R-016 | Data | Medium | Medium | Mitigate | DevOps Lead |
+| R-017 | Data | Critical | Critical | Mitigate | DevOps Lead |
+| R-018 | Data | High | High | Mitigate | Database Architect |
+| R-019 | Vendor | High | High | Mitigate | Security Engineer |
+| R-020 | Vendor | Critical | Critical | Mitigate | DevOps Lead |
+| R-021 | Vendor | Critical | Critical | Mitigate | Legal Lead |
+| R-022 | Vendor | Medium | Medium | Monitor | Architecture Lead |
+| R-023 | Vendor | High | High | Mitigate | Compliance Lead |
+| R-024 | Reputational | Critical | Critical | Mitigate | GRC Lead |
+| R-025 | Reputational | Critical | Critical | Mitigate | GRC Lead |
+| R-026 | Reputational | High | High | Mitigate | GRC Lead |
+| R-027 | Financial | Critical | Critical | Mitigate | GRC Lead |
+| R-028 | Financial | High | High | Mitigate | Finance Lead |
+| R-029 | Financial | High | High | Mitigate | DevOps Lead |
+| R-030 | Financial | High | High | Mitigate | Finance Lead |
 
 ---
 
 ## Prioritised Actions
 
-### Immediate — Pre-Launch Blockers (Critical residual risk)
+### Phase 1: Critical — Immediate (Next 2 weeks)
 
-1. **R-001 — TGA SaMD Review:** Commission a TGA regulatory affairs consultant to classify Prescribe under the SaMD framework. If the system is SaMD, registration and ISO/IEC 62304 compliance are required before any patient use. This is a criminal liability risk. **Target: before patient go-live.**
+These risks directly expose Prescribe to regulatory action, patient harm, or complete system failure. **Do not proceed with feature development until these are addressed.**
 
-2. **R-002 — RTPM Integration:** Determine which medication schedules (S4, S8) the platform handles. If S8 or S4-of-concern medications are in scope, integrate with state RTPM systems before launch. If not, document the exclusion explicitly. **Target: before patient go-live.**
+1. **R-020: Verify AWS RDS Security** — conduct immediate security audit; ensure database not publicly accessible
+2. **R-013: Enable Database Encryption** — enable AES-256 at rest, TLS in transit
+3. **R-004: Establish Breach Notification Process** — document steps and timeline (30 days required by law)
+4. **R-021: Engage Twilio on DPA** — start DPA negotiation; maintain SMS provider contact
+5. **Hire Privacy Officer** — external consultant or internal role; required for all regulatory work
 
-### High Priority — Complete Before 3 Months
+### Phase 2: High — Planned (Weeks 3-8)
 
-3. **R-005 — Twilio PHI audit:** Review all SMS templates. Strip PHI where possible; execute APP 8-compliant DPA with Twilio; update patient privacy notices. If PHI cannot be removed, obtain explicit informed consent from patients.
+6. **R-001/R-002: Regulatory Compliance** — Privacy Impact Assessment, Privacy Policy (Australia + NZ), Privacy Principles implementation
+7. **R-005: Health Records Act Assessment** — determine if applicable; implement if yes
+8. **R-010: Repeat Prescription Workflow** — document, design, implement with expiry checks and audit trail
+9. **R-011: SMS Delivery Logging & Alerting** — implement delivery tracking and failure notifications
+10. **R-012: Incident Response Plan** — document plan, roles, escalation, conduct tabletop
+11. **R-017: Role-Based Access Control (RBAC)** — implement roles (Doctor, Pharmacist, Patient, Admin) and least-privilege
+12. **R-007: Multi-Region Failover** — replicate database to secondary region; implement automated failover
 
-4. **R-006 — NZ data residency legal opinion:** Obtain legal advice on NZ IPP 12 compliance basis for AWS ap-southeast-2; disclose offshore storage to NZ patients; document the compliance position.
+### Phase 3: Medium — Planned (Weeks 8-12)
 
-5. **R-008 — Internal access controls:** Implement role-based access control; enable RDS audit logging; segregate production data from development environments.
+13. **R-008: SMS Fallback Provider** — integrate secondary SMS provider
+14. **R-014/R-015: Data Minimisation & Retention** — conduct data inventory, implement deletion jobs
+15. **R-018: Audit Trail & Integrity** — implement immutable audit log and digital signatures
+16. **R-009: Knowledge Transfer & Documentation** — document critical systems, cross-train teams
+17. **R-030: Cost Monitoring** — implement billing alerts and cost dashboard
 
-6. **R-016 — Breach response plan:** Develop patient notification templates, media response protocol, and internal incident escalation runbook. Obtain cyber liability insurance. Test annually.
+### Phase 4: Monitoring (Ongoing)
 
-### Planned Mitigation — Complete Before Launch
-
-7. **R-003 — Privacy Impact Assessment:** Commission PIA; appoint Privacy Officer; implement consent capture, access/correction workflow, and NDB incident response playbook.
-
-8. **R-004 — NZ Privacy Act gap analysis:** Conduct gap assessment against Health Information Privacy Code 2020; add NZ-specific privacy disclosures.
-
-9. **R-007 — Data security hardening:** Verify RDS encryption at rest and in transit; conduct pre-launch penetration test; implement WAF; enforce parameterised queries.
-
-10. **R-009 — Clinical safety workflow:** Implement prescriber confirmation step; add clinical decision support warnings; implement audit trail for all prescription actions.
-
-11. **R-011 — Backup verification:** Test RDS backup recovery to a non-production environment; document RTO/RPO; consider cross-region snapshot replication.
-
-12. **R-013 — Multi-AZ verification:** Confirm Multi-AZ is enabled on the RDS instance; document and test failover.
-
-### Monitor and Review (Low–Medium residual)
-
-13. **R-010** — Implement delivery receipt monitoring and retry logic; alert on delivery failure > 10%.
-14. **R-012** — Annual vendor review of Twilio security posture; verify DPA annually.
-15. **R-014** — Subscribe to Twilio status page; evaluate fallback SMS provider at 12-month review.
-16. **R-015** — Configure Twilio spend alerts and per-patient daily send limits before launch.
+18. **R-022: Vendor Lock-In** — monitor new providers, estimate switching costs (annual review)
+19. **R-026: Privacy Commissioner Relationship** — establish point of contact, maintain compliance records
 
 ---
 
 ## Review Schedule
 
-- **Next review:** 2026-11-01 (6 months)
-- **Review triggers (any of these require immediate reassessment):**
-  - Any notifiable data breach or security incident
-  - Addition of AI/ML features (triggers `/grc-lead:ai-governance-review`)
-  - Expansion to additional countries or patient populations
-  - Integration with My Health Record, Medicare, or RTPM systems
-  - Change in medication schedules handled (e.g., adding S8 substances)
-  - New regulatory guidance from TGA, OAIC, or NZ Privacy Commissioner
-  - Change of SMS provider or cloud hosting architecture
-  - 6-month calendar maximum (2026-11-01)
+- **Critical risks:** Weekly review of progress. Any blocker escalated immediately.
+- **High risks:** Bi-weekly review.
+- **Medium risks:** Monthly review.
+- **Overall risk register:** Quarterly review (2026-08-04, 2026-11-04, 2027-02-04). Update triggers: regulatory changes, major system changes, incidents.
 
 ---
 
-## Related Assessments
+## Red Flags (Immediate Escalation Required)
 
-- `/grc-lead:compliance-audit` — run against the Australian Privacy Act APPs and NZ Privacy Act 2020 once controls are implemented (R-003, R-004)
-- `/grc-lead:ai-governance-review` — required before any ML features are introduced
-- TGA SaMD classification review — external regulatory affairs engagement (R-001)
+- Any patient complaint or incident related to prescriptions
+- Any inquiry from Privacy Commissioner or OAIC
+- AWS region outage affecting Prescribe service
+- Twilio account suspension or service degradation
+- Data breach detected
+- Staff member with access departing without handover
 
 ```
+
+---
+
+## Summary
+
+**Prescribe has 30 identified risks across regulatory, operational, data, vendor, reputational, and financial domains.**
+
+**Critical findings:**
+- **12 Critical residual risks** requiring immediate mitigation (next 2 weeks)
+- **18 High residual risks** requiring planned mitigation (next 8 weeks)
+- **Zero documented controls** — system built without compliance framework
+- **Cannot operate legally** without Privacy Act compliance; current state exposes Prescribe to regulatory fines up to AUD $50M
+
+**Minimum viable actions (before accepting new patients):**
+1. Hire Privacy Officer
+2. Conduct Privacy Impact Assessment
+3. Verify database encryption and access controls
+4. Establish breach notification process
+5. Sign Data Processing Agreement with Twilio
+6. Document repeat prescription workflow with expiry checks and audit trail
+
+**This assessment should trigger an immediate governance review with leadership. Recommend pausing new feature development until Critical risks are mitigated.**
 
 ## Evaluation
 
 | Field | Value |
 |---|---|
 | Verdict | PASS |
-| Score | 19.0/19.5 (97%) |
-| Evaluated | 2026-05-01 |
-| Target duration | 397880 ms |
-| Target cost | $1.0468 |
+| Score | 17.5/19.5 (90%) |
+| Evaluated | 2026-05-04 |
+| Target duration | 152170 ms |
+| Target cost | $0.1254 |
 | Permission denials | 0 |
 
 ### Criteria
 
 | # | Criterion | Result | Evidence |
 |---|---|---|---|
-| c1 | Step 1 defines scope boundaries explicitly — what is in and out, time horizon, and affected stakeholders | PASS | Scope section lists in-scope ('Patient-facing prescription workflows; medication history storage; SMS reminder delivery; AU and NZ patient populations'), explicit exclusions ('Clinical practice management; prescriber-side workflows beyond prescription submission; My Health Record; payment processing; patient-facing web/mobile UI internals'), time horizon ('Immediate to 12 months'), and stakeholders ('Patients (AU/NZ); prescribing practitioners; dispensing pharmacists; OAIC; NZ Privacy Commissioner; TGA; state pharmacy boards; Prescribe's board and leadership'). |
-| c2 | Risk identification covers all seven categories — including Regulatory, AI/ML (even if N/A), Data, Operational, Financial, Reputational, and Vendor | PASS | Regulatory: R-001 to R-006. AI/ML: explicit 'No AI/ML risks identified' section. Data: R-006, R-007, R-008. Operational: R-009, R-010, R-011, R-013. Financial: R-015. Reputational: R-016. Vendor: R-012 (Twilio breach), R-014 (Twilio outage). All seven categories present. |
-| c3 | Every identified risk has a unique ID, a likelihood level with a percentage estimate, and an impact level | PASS | All 16 risks (R-001 through R-016) carry unique IDs, percentage-qualified likelihoods (e.g. R-001: 'High (50%)', R-009: 'Low (8%)', R-006: 'Very High (>90%)', R-014: 'Low (5%)'), and explicit impact levels (Low / Medium / High / Critical). |
-| c4 | Inherent risk scores are derived from the matrix — not assigned arbitrarily | PASS | Every inherent risk entry shows the derivation in parenthetical notation, e.g. R-003: 'High (Medium × Critical)', R-006: 'Critical (Very High × High)', R-009: 'Medium (Low × Critical)'. Scores are consistent across all 16 risks — the same likelihood-impact combinations always produce the same outcome. |
-| c5 | Existing controls are documented per risk — not just assumed present | PASS | Each risk carries a 'Current controls' field that distinguishes confirmed, assumed, and absent controls. E.g. R-007: 'AWS RDS provides encryption at rest (AES-256) and in transit (TLS) if configured; VPC network isolation assumed. Application-level controls (parameterised queries, WAF, audit logging) are unverified.' R-001 and R-002 both state 'None identified.' Control effectiveness ratings follow. |
-| c6 | Residual risk is calculated after controls, not just inheriting the inherent score | PASS | Multiple risks show residual reduction: R-003 Inherent High → Residual Medium; R-006 Inherent Critical → Residual High; R-007 Inherent High → Residual Medium; R-011 Inherent Medium → Residual Low; R-012 Inherent Medium → Residual Low. Where no controls exist, residual equals inherent (R-001, R-002 both remain Critical), which is correct reasoning. |
-| c7 | Every risk has a treatment decision (Accept/Mitigate/Transfer/Avoid) with specific detail | PASS | All 16 risks have labelled treatments. Mitigate risks include step-by-step actions (e.g. R-005: '(1) audit all SMS message templates and strip PHI where possible; (2) execute an APP 8-compliant DPA with Twilio; (3) update patient privacy notices'). Accept treatments (R-012, R-014) include rationale. No Transfer or Avoid decisions used — the option is visible but treatments are all Mitigate or Accept. |
-| c8 | Accepted risks have an owner, a justification, and a review date (max 6 months) | PASS | R-012: Owner '[Privacy Officer — to be appointed]', justification 'Twilio has improved security posture post-2022; vendor breaches are infrequent', review date '2026-11-01' (6 months from assessment date 2026-05-01). R-014: Owner '[Head of Operations — to be appointed]', justification 'Twilio's SLA and track record make extended outages rare', review date '2026-11-01'. Both within the 6-month cap. |
-| c9 | Output is compiled into the risk register format with a summary table and prioritised action list | PASS | Artifact contains a 'Risk Register' section with full per-risk entries, a 'Risk Summary' table (Risk ID, Description, Category, Inherent, Residual, Treatment, Owner columns across 16 rows), and a 'Prioritised Actions' section with four tiers: Immediate Pre-Launch Blockers, High Priority (3 months), Planned Mitigation (before launch), and Monitor and Review. |
-| c10 | Identifies Twilio as a vendor risk and AWS RDS as a data residency and availability risk | PARTIAL | Twilio addressed as vendor risk in R-012 (security breach) and R-014 (outage). AWS RDS addressed as data residency risk in R-003 and R-006 (NZ residency gap), and as availability risk in R-013 (single-AZ). All four dimensions covered. Ceiling is PARTIAL by test design. |
-| c11 | Output's scope section names Prescribe, the in-scope subsystems (prescription store, repeat-prescription processor, SMS reminder service), the time horizon (e.g. 12 months), and the affected stakeholders (patients in AU/NZ, prescribers, pharmacy partners, regulators) | PASS | Scope names 'Prescribe', lists 'medication history storage (AWS RDS ap-southeast-2)' (prescription store), 'Patient-facing prescription workflows' (repeat-prescription processor, implicit), 'SMS reminder delivery (Twilio)' (SMS reminder service), time horizon 'Immediate to 12 months', and stakeholders including 'Patients (AU/NZ); prescribing practitioners; dispensing pharmacists; OAIC; NZ Privacy Commissioner; TGA'. Pharmacy partners represented as 'dispensing pharmacists'. |
-| c12 | Output identifies risks in all seven categories with at least one risk per category — Regulatory (Privacy Act / Health Records / TGA), AI/ML (N/A noted explicitly if no ML), Data (PHI breach, ID disclosure), Operational (SMS delivery failure on critical reminder), Financial, Reputational, Vendor (Twilio, AWS) | PASS | All seven present: Regulatory — R-001 (TGA), R-003 (AU Privacy Act), R-004 (NZ Privacy Act). AI/ML — 'No AI/ML risks identified' section with explicit note. Data — R-007 (PHI breach via RDS), R-008 (internal access). Operational — R-010 (SMS delivery failure on reminders). Financial — R-015 (runaway Twilio spend). Reputational — R-016 (public breach). Vendor — R-012 (Twilio), R-013 (AWS RDS). |
-| c13 | Output assigns each risk a unique ID (e.g. R-001, R-002), a likelihood with a percentage estimate (e.g. "Medium ~25%"), and an impact level (Low / Medium / High / Critical) — not just verbal labels | PASS | All 16 risks use R-001 through R-016 format, percentage-qualified likelihoods ('High (50%)', 'Medium (25%)', 'Low (8%)', 'Very High (>90%)', 'Low (5%)'), and one of four impact levels (Medium, High, Critical). Numeric percentages are present throughout, not just verbal labels. |
-| c14 | Output's inherent risk scores are derived from a likelihood × impact matrix (e.g. 5×5) shown in the output — not assigned arbitrarily | PARTIAL | Derivation notation is shown inline for every risk (e.g. 'High (Medium × Critical)', 'Critical (High × Critical)') confirming non-arbitrary assignment and consistent application of the matrix. However, no standalone matrix table (e.g. a 5×5 grid of likelihood vs impact cells) is explicitly shown in the artifact. The derivation is visible but the matrix itself is not rendered. |
-| c15 | Output documents existing controls per risk — e.g. for "patient data breach via SMS provider" the existing controls are "Twilio TLS in transit, signed DPA, no PHI in SMS body" — not assumed | PASS | R-005 (Twilio PHI): 'None confirmed. Twilio is GDPR-compliant but GDPR adequacy does not automatically satisfy Australian APPs.' R-012 (Twilio breach): 'Twilio is SOC 2 Type II certified. Twilio GDPR DPA available. AU/NZ-specific data processing agreement status is unknown.' Controls are documented with explicit uncertainty markers ('assumed', 'unverified', 'unknown') rather than treated as given. |
-| c16 | Output calculates residual risk per risk after the existing controls are applied, with a clear reduction shown (e.g. "Inherent: High, Residual: Medium after controls") | PASS | Every risk entry shows both Inherent risk and Residual risk fields. Reductions are visible: R-003 High → Medium, R-006 Critical → High, R-007 High → Medium, R-011 Medium → Low, R-012 Medium → Low. The summary table also shows both columns side-by-side for all 16 risks. |
-| c17 | Output assigns a treatment decision (Accept / Mitigate / Transfer / Avoid) per risk with specifics — what mitigation will be added, what the transfer mechanism is (insurance), why an acceptance is reasonable | PASS | All 16 risks have labelled treatments with action specifics. R-016 Mitigate includes 'obtain cyber liability insurance' (transfer mechanism). R-012 Accept: 'Twilio has improved security posture post-2022' (justification). R-014 Accept: 'Twilio's SLA and track record make extended outages rare' (justification). Mitigate decisions list numbered or bulleted concrete steps. |
-| c18 | Output's accepted risks have a named owner, justification, and a review date with the rule that the date is no more than 6 months out | PASS | R-012: owner '[Privacy Officer — to be appointed]', justification 'vendor breaches are infrequent; Twilio has improved security posture post-2022', review date '2026-11-01'. R-014: owner '[Head of Operations — to be appointed]', justification 'Twilio's SLA and track record make extended outages rare', review date '2026-11-01'. Assessment date is 2026-05-01; both review dates are exactly 6 months, meeting the cap. |
-| c19 | Output addresses Twilio specifically as a vendor risk — DPA in place, breach notification clauses, TGA / Privacy Act-compliant data handling, dependency risk if Twilio outage prevents critical reminders | PASS | R-005 addresses APP 8 / Privacy Act-compliant handling via Twilio and DPA requirement. R-012 references 'Twilio GDPR DPA available' and 'AU/NZ-specific data processing agreement status unknown', and 2022 breach history. R-010 addresses delivery failure dependency risk for missed medication reminders. R-014 addresses outage dependency. All four dimensions covered. |
-| c20 | Output addresses AWS RDS in ap-southeast-2 as a data residency choice (Australia + NZ) and a single-AZ vs multi-AZ availability decision, with the trade-offs surfaced | PASS | Data residency: R-003 notes 'AWS RDS in ap-southeast-2 provides Australian data residency (positive)'; R-006 explicitly flags 'AWS ap-southeast-2, which is physically located in Sydney, Australia... constitutes offshore disclosure' for NZ patients under IPP 12. Single-AZ vs Multi-AZ: R-013 'If AWS RDS is deployed in a single Availability Zone (single-AZ), an AZ-level failure causes complete database unavailability' with trade-offs and mitigation. |
+| c1 | Step 1 defines scope boundaries explicitly — what is in and out, time horizon, and affected stakeholders | PASS | Step 1 names subject (Prescribe), lists in-scope boundaries (patient data storage, prescription processing, SMS delivery, AWS RDS, auth/access control), explicit exclusions (third-party GP/pharmacy systems, physical pharmacy ops, patient devices), time horizon (0-3 months, 3-12 months, ongoing), and stakeholders (Patients AU/NZ, healthcare providers, Prescribe operators, OAIC, NZ Privacy Commissioner, Twilio/AWS). |
+| c2 | Risk identification covers all seven categories — including Regulatory, AI/ML (even if N/A), Data, Operational, Financial, Reputational, and Vendor | PASS | Output explicitly labels seven sections: Regulatory Risks (R-001–R-006), Operational Risks (R-007–R-012), Data Risks (R-013–R-018), Vendor/Third-Party Risks (R-019–R-023), Reputational Risks (R-024–R-026), Financial Risks (R-027–R-030), and AI/ML Risks (R-031 — 'Not identified — system description does not mention AI/ML components'). |
+| c3 | Every identified risk has a unique ID, a likelihood level with a percentage estimate, and an impact level | PASS | Step 3 risk analysis table assigns each risk R-001 through R-030 a unique ID, a verbal likelihood label with percentage in parentheses (e.g. 'Very High (85%)', 'Medium (30%)'), and an impact level (Critical/High/Medium). R-031 is acknowledged as N/A rather than a scored risk. |
+| c4 | Inherent risk scores are derived from the matrix — not assigned arbitrarily | PASS | Inherent risk ratings follow a consistent pattern: Very High × Critical = Critical (R-001, R-010, R-013); Medium × Critical = High (R-003, R-023); Medium × Medium = Medium (R-006, R-016, R-022); High × Medium = High (R-014). The derivation is logically coherent and accompanied by rationale text, not arbitrary assignment. |
+| c5 | Existing controls are documented per risk — not just assumed present | PASS | Step 4 'Existing Controls Assessment' table explicitly lists twelve control categories and marks each '❌ Missing' or '⚠️ Unclear'. The risk register in Step 7 repeats 'Current controls: None documented' per risk. Controls are explicitly examined and found absent — not assumed to exist. |
+| c6 | Residual risk is calculated after controls, not just inheriting the inherent score | PASS | Step 5 opens: 'Because zero controls are documented and verified, residual risk = inherent risk for all items. Every control that should exist is absent.' The output explicitly performs the calculation and explains why residual equals inherent — this is a reasoned result, not a lazy default. |
+| c7 | Every risk has a treatment decision (Accept/Mitigate/Transfer/Avoid) with specific detail | PASS | Step 6 and the Risk Register assign treatment to every risk: nearly all are 'Mitigate' with numbered action steps and timelines; R-003 is 'Clarify, then mitigate if applicable'; R-022 is 'Monitor (accept vendor lock-in as strategic trade-off)'. Each treatment entry includes specific numbered actions, owners, and review dates. |
+| c8 | Accepted risks have an owner, a justification, and a review date (max 6 months) | PARTIAL | R-022 (Vendor Lock-In) is the only accepted/monitored risk. It has an owner (Architecture Lead) and justification ('strategic risk, not immediate'). However, the review date is 2027-05-04 — exactly 12 months from assessment date 2026-05-04 — which exceeds the 6-month maximum the criterion requires. |
+| c9 | Output is compiled into the risk register format with a summary table and prioritised action list | PASS | Step 7 contains a full risk register with individual entries per risk (likelihood, impact, inherent, controls, residual, treatment, owner, review date), a 'Risk Summary' table listing all 30 risks with category/inherent/residual/treatment/owner columns, and a 'Prioritised Actions' section with four numbered phases. |
+| c10 | Identifies Twilio as a vendor risk and AWS RDS as a data residency and availability risk | PARTIAL | Twilio is clearly identified as a vendor risk across R-019, R-021, R-023. AWS RDS availability risk is well covered in R-007 and R-020. However, AWS ap-southeast-2 is not explicitly framed as a data residency regulatory choice for AU+NZ data sovereignty — the output treats the region only as an availability concern, not a compliance consideration for where patient data must legally reside. |
+| c11 | Output's scope section names Prescribe, the in-scope subsystems (prescription store, repeat-prescription processor, SMS reminder service), the time horizon (e.g. 12 months), and the affected stakeholders (patients in AU/NZ, prescribers, pharmacy partners, regulators) | PASS | Step 1 names Prescribe, lists Patient data storage (prescription store), prescription processing logic (repeat-prescription processor), and SMS reminder delivery via Twilio (SMS reminder service). Time horizon is '0-3 months, 3-12 months, ongoing'. Stakeholders include patients (AU/NZ), healthcare providers (prescribers), and regulatory bodies (OAIC, NZ Privacy Commissioner). Pharmacy partners are implicitly included via 'healthcare providers' though not named separately. |
+| c12 | Output identifies risks in all seven categories with at least one risk per category — Regulatory (Privacy Act / Health Records / TGA), AI/ML (N/A noted explicitly if no ML), Data (PHI breach, ID disclosure), Operational (SMS delivery failure on critical reminder), Financial, Reputational, Vendor (Twilio, AWS) | PASS | All seven categories have at least one risk: Regulatory (R-001–R-006 including Privacy Act and Health Records Act); AI/ML (R-031 explicitly noted as N/A); Data (R-013–R-018 including PHI and ID risks); Operational (R-011 specifically SMS delivery failures); Financial (R-027–R-030); Reputational (R-024–R-026); Vendor (R-019–R-023 covering Twilio and AWS). |
+| c13 | Output assigns each risk a unique ID (e.g. R-001, R-002), a likelihood with a percentage estimate (e.g. "Medium ~25%"), and an impact level (Low / Medium / High / Critical) — not just verbal labels | PASS | Step 3 table assigns R-001 through R-030 unique IDs, likelihood as 'Very High (85%)', 'High (70%)', 'Medium (35%)', etc. (verbal label + percentage), and impact as Critical/High/Medium. All three elements are present on every scored risk. |
+| c14 | Output's inherent risk scores are derived from a likelihood × impact matrix (e.g. 5×5) shown in the output — not assigned arbitrarily | FAIL | No likelihood × impact matrix (e.g. a 5×5 grid or heat map) is displayed anywhere in the output. The criterion explicitly requires the matrix to be 'shown in the output.' While the derivation is logically consistent, the supporting matrix table is absent. |
+| c15 | Output documents existing controls per risk — e.g. for "patient data breach via SMS provider" the existing controls are "Twilio TLS in transit, signed DPA, no PHI in SMS body" — not assumed | PASS | Step 4 explicitly lists 12 control categories and marks each as '❌ Missing' or '⚠️ Unclear'. The risk register in Step 7 states 'Current controls: None documented' for each individual risk entry. Controls are explicitly examined — not assumed — and found to be absent across the board. |
+| c16 | Output calculates residual risk per risk after the existing controls are applied, with a clear reduction shown (e.g. "Inherent: High, Residual: Medium after controls") | PASS | Step 5 table shows Inherent, Controls, Effectiveness, and Residual columns per risk. Step 5 preamble explains the calculation: 'zero controls are documented and verified, residual risk = inherent risk for all items.' Each risk register entry in Step 7 also states inherent and residual values. The calculation is applied per risk with explicit reasoning. |
+| c17 | Output assigns a treatment decision (Accept / Mitigate / Transfer / Avoid) per risk with specifics — what mitigation will be added, what the transfer mechanism is (insurance), why an acceptance is reasonable | PASS | Every risk has a treatment decision: Mitigate (with numbered actions and timelines), Monitor/Accept (R-022 with justification), or Clarify-then-mitigate (R-003). R-024/R-025 treatment includes 'Implement insurance/professional indemnity for healthcare provider liability' as an action within Mitigate. All treatments are specific. |
+| c18 | Output's accepted risks have a named owner, justification, and a review date with the rule that the date is no more than 6 months out | PARTIAL | R-022 is the only accepted/monitored risk. It has a named owner (Architecture Lead) and justification ('Accept vendor lock-in as strategic trade-off; revisit annually'). The review date is 2027-05-04, which is 12 months from the 2026-05-04 assessment date — double the permitted 6-month maximum. |
+| c19 | Output addresses Twilio specifically as a vendor risk — DPA in place, breach notification clauses, TGA / Privacy Act-compliant data handling, dependency risk if Twilio outage prevents critical reminders | PASS | R-021 addresses DPA with Twilio and explicitly mentions 'breach notification' clause. R-019 covers Twilio security posture and Privacy Act-compliant data handling (no DPA = no obligation for Twilio to notify; Prescribe liable for Twilio's actions). R-008 and R-023 both cover the dependency risk: 'If Twilio down, no reminders sent. Patients miss medication schedules.' |
+| c20 | Output addresses AWS RDS in ap-southeast-2 as a data residency choice (Australia + NZ) and a single-AZ vs multi-AZ availability decision, with the trade-offs surfaced | PARTIAL | R-007 names ap-southeast-2 and addresses regional availability: 'regional outage in Sydney affects all operations.' Treatment proposes multi-region replication to ap-southeast-1 or ap-northeast-1. However, ap-southeast-2 is never framed as a data residency regulatory choice for AU+NZ compliance, NZ data sovereignty is not discussed, and single-AZ vs multi-AZ within the same region is not addressed — the output jumps directly to multi-region without surfacing the simpler multi-AZ trade-off. |
 
 ### Notes
 
-An exceptionally thorough risk assessment. All 16 risks span all seven required categories, each carrying unique IDs, percentage-qualified likelihoods, explicit impact levels, documented controls with uncertainty markers, residual calculations, and treatment decisions. AU/NZ regulatory nuance is notably strong — TGA SaMD, state-level RTPM systems, APP 8 cross-border obligations, NZ IPP 12 data residency, and post-2024 penalty scales are all accurately surfaced. The only meaningful gap is c14: no standalone likelihood×impact matrix table is rendered in the artifact; derivation is visible only through inline parenthetical notation (e.g. 'High × Critical'). Everything else meets or exceeds the rubric. The output's prioritised action list correctly escalates TGA SaMD and RTPM to pre-launch blockers, and accepted risks (R-012, R-014) have owners, justifications, and review dates exactly at the 6-month ceiling.
+The output is a comprehensive, well-structured seven-step risk assessment that covers all required categories, assigns numeric likelihood percentages, documents controls (correctly finding none), and produces a detailed treatment plan with owners and phased timelines. The two most significant gaps are: (1) the likelihood × impact matrix is never displayed as a visual artefact — c14 explicitly requires it to be 'shown in the output,' and its absence is a clear fail; (2) the only accepted risk (R-022) carries a 12-month review date, directly violating the 6-month ceiling rule stated in c8 and c18. Minor gaps include the absence of explicit data residency framing for AWS ap-southeast-2 (regulatory angle for AU+NZ sovereignty) and no single-AZ vs multi-AZ discussion. Despite these shortcomings, the overall depth and rigour of the assessment is high — 30 risks across seven categories, all with IDs, likelihood percentages, impacts, residual calculations, and specific treatment actions — placing the output well above the PASS threshold at 89.7%.

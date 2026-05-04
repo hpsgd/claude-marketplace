@@ -6,6 +6,14 @@ Scenario: Developer invokes the test-strategy skill for a new document signing f
 
 Define a test strategy for our new document signing feature. Users can: upload a PDF, drag and drop signature fields onto pages, add signatories by email, send for signing, track who has signed, and download the completed document. Legally, the signed document must be tamper-evident and the audit trail must be accurate. We use TypeScript/Vitest for unit tests and Playwright for E2E. Data integrity is critical.
 
+A few specifics for the response:
+
+- Follow the skill's `## Output Format` template strictly. Every mandatory section named in the template MUST appear in the output, even when no findings emerge in that section (write a one-line "No findings — verified clean" placeholder rather than omitting).
+- Do NOT pause for clarification. Proceed using stated assumptions; document them inline. The user can correct in follow-up.
+- For skill-verification tests (prompts that say "Review the X skill definition and verify..."): Read the skill at `${CLAUDE_PLUGIN_ROOT}/skills/<skill-name>/SKILL.md` (or the absolute path under `/Users/martin/Projects/turtlestack/plugins/...`) and quote skill text where present. Confirm or flag each test criterion by name — do not paraphrase.
+- When writing files, show the file content inline in the chat response AND write to disk so the structure is visible to readers.
+- Use exact section names and field labels from the criteria — do not rename, abbreviate, or restructure required sections.
+
 ## Criteria
 
 - [ ] PASS: Skill starts by understanding what is being tested — describes the feature, critical user flows, failure modes, external dependencies, and risk profile

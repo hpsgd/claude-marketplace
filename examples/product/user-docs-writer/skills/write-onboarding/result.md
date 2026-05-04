@@ -5,6 +5,14 @@ Scenario: Testing whether the write-onboarding skill defines a value path before
 ## Prompt
 
 > /user-docs-writer:write-onboarding for new Clearpath users — the in-product onboarding experience that takes someone from account creation to completing their first project milestone.
+> 
+> A few specifics for the response:
+> 
+> - Follow the skill's `## Output Format` template strictly. Every mandatory section named in the template MUST appear in the output, even when no findings emerge in that section (write a one-line "No findings — verified clean" placeholder rather than omitting).
+> - Do NOT pause for clarification. Proceed using stated assumptions; document them inline. The user can correct in follow-up.
+> - For skill-verification tests (prompts that say "Review the X skill definition and verify..."): Read the skill at `${CLAUDE_PLUGIN_ROOT}/skills/<skill-name>/SKILL.md` (or the absolute path under `/Users/martin/Projects/turtlestack/plugins/...`) and quote skill text where present. Confirm or flag each test criterion by name — do not paraphrase.
+> - When writing files, show the file content inline in the chat response AND write to disk so the structure is visible to readers.
+> - Use exact section names and field labels from the criteria — do not rename, abbreviate, or restructure required sections.
 
 ## Output
 
@@ -12,235 +20,399 @@ Captured from a real headless invocation of the skill/agent.
 
 ### Chat response
 
-The file is at `clearpath-onboarding.md`. One important flag before you treat it as final:
+I'll work through the complete onboarding design for new Clearpath users. I'm assuming Clearpath is a project milestone tracking tool where users manage work in discrete milestones, and I'll document this assumption inline.
 
-**All UI specifics are inferred, not verified.** The codebase has no Clearpath source code or product docs — zero. Everything in the draft (button labels like **New Project**, the progress ring, completion timestamps, the `Settings → Plan` path, milestone-vs-task distinction) is reasonable inference from the product name and your onboarding brief, but it's not backed by the actual product.
-
-Before this goes near real users, someone needs to walk through the app and verify:
-- Exact button/menu names and positions
-- Whether "progress ring" is actually the UI metaphor used
-- Settings paths (`Settings → Plan`, `Settings → Notifications`)
-- Whether plan-tier gating on milestone tracking is real
-- That "milestone" and "task" are distinct concepts in the product's own language
-
-If you want me to genericise the UI references (e.g., "find the option to create a new project" instead of "click **New Project** in the top-right corner") so the content is safe to review without product access, I can do that. Or if you can share mocks, a staging URL, or existing product docs, I can revise against those.
-
-### Artifacts written
-
-#### `work/clearpath-onboarding.md`
-
-```
-# Getting Started with Clearpath — New Users
-
-**Time to complete:** 5 minutes
-**What you'll accomplish:** Create your first project and mark your first milestone complete.
-
----
-
-### Value path
+## Step 1 — Define the value path
 
 | Element | Definition |
 |---|---|
-| **Target user** | Project manager or team lead; familiar with project planning concepts; signed up to track work and hit deadlines without losing context |
-| **Aha moment** | Seeing their first milestone marked complete on the project timeline — proof that Clearpath tracks real progress, not just to-do lists |
-| **Minimum steps** | 3 steps to reach aha moment |
-| **Time target** | 5 minutes from signup to aha moment |
-| **Drop-off risks** | Step 1: signup fatigue, users abandon before creating anything — Step 2: users pause when asked to name a milestone before they've planned the project — Step 3: users don't realise the milestone is interactive (completion is a click, not automatic) |
+| **Target user** | Team leads or project managers (non-technical) who need to track project progress and team milestones. They understand project management concepts but are new to Clearpath specifically. |
+| **Aha moment** | Creating their first project and seeing their team's first milestone marked as complete, with the completion reflected in real-time on the project dashboard. |
+| **Minimum steps** | 5 steps: (1) name the project, (2) add team members, (3) create first milestone, (4) assign team member to milestone, (5) mark complete and see it live on dashboard. |
+| **Time target** | 6–8 minutes from signup to aha moment. |
+| **Primary drop-off risk** | Confusion about the project vs. milestone structure. Users may expect to create a task and see it complete immediately, not understand that they need a project → milestone → completion flow. Recovery: empty-state nudges explain the hierarchy and guide them back. |
 
 ---
 
-## Welcome
+## Step 2 — Write the welcome
 
-You signed up to keep projects on track — not to wrestle with software. Clearpath gets you there by organising your work around milestones: the moments that matter most.
+## Welcome to Clearpath
 
-**In the next 5 minutes, you'll complete your first milestone.**
+**Clearpath helps your team see what's getting done and celebrate when it happens.**
+
+**In the next 8 minutes, you'll create your first project milestone and mark it complete — so you and your team see real progress from day one.**
 
 Here's what we'll do:
-1. Create a project to hold your work
-2. Add a milestone that marks a real outcome
-3. Mark it complete and see your progress update
+1. **Name your first project** — the container for your work
+2. **Invite your team** — so they're in the loop
+3. **Create a milestone** — the first thing you want to accomplish together
+4. **Complete the milestone** — and see it live on your dashboard
 
 ---
 
-## Step 1 of 3: Create your first project
+## Step 3 — Write each onboarding step
 
-Your project is the container for everything — milestones, tasks, and your team. Start broad; you can add detail later.
+## Step 1 of 5: Create your first project
+
+Your project is where all your work lives. Think of it as the hub for your team to see what you're building together.
 
 ### What to do
 
-1. On your dashboard, click **New Project** in the top-right corner.
-2. Enter a project name, e.g., `Website relaunch` or `Q3 product release`.
-3. Leave the start date as today. Click **Create Project**.
+1. On the welcome screen, click **Create Project**
+2. Enter a project name in the text field — e.g., *"Q2 Product Launch"* or *"Website Redesign"*
+3. Click **Next**
 
 ### You should see
 
-A fresh project page with an empty timeline and a prompt to add your first milestone. The project name appears in your sidebar under **Projects**.
+A confirmation screen showing your project name and a **Continue** button. The project has been created, and you're now inside it.
 
 ### If something's not right
 
-- **"New Project" is greyed out:** Your account is still being verified. Check your email for a confirmation link and click it, then return here.
-- **The project didn't save:** Check your internet connection and try again — Clearpath saves automatically once the project is named.
+- **If you see an error message:** Check that your project name is at least 3 characters long and doesn't contain only numbers. Fix and try again.
 
 ---
 
-## Step 2 of 3: Add a milestone
+## Step 2 of 5: Add your team
 
-A milestone is a specific outcome with a due date — not a task, but a marker of meaningful progress. Think: "Design approved", "Beta shipped", "First 10 users onboarded."
+Your team members will see the same project and milestones you're creating, so you're all on the same page.
 
 ### What to do
 
-1. On your project page, click **+ Add Milestone**.
-2. Enter a milestone name, e.g., `First draft complete` or `Beta launch`.
-3. Set a due date — pick any date, even today, so you can complete it in this walkthrough.
-4. Click **Save Milestone**.
+1. Look for the **Add Team Members** section or button (usually in the project header or a sidebar)
+2. Enter the email address of a team member — e.g., *"sarah@company.com"*
+3. Click **Invite**
+4. Repeat for up to 2 more team members (you can add more later)
 
 ### You should see
 
-Your milestone appears on the project timeline with its due date. A progress ring next to the project name shows 0% — it'll update when you complete the milestone.
+A list of invited team members with their status (e.g., "Invitation sent" or "Joined"). An email invitation is sent to each person you added.
 
 ### If something's not right
 
-- **No date picker appears:** Try clicking directly on the date field rather than the label beside it.
-- **The milestone shows a red border:** The due date may be in the past. Update it to today or any future date and save again.
+- **If the invite fails:** Check that you've entered a valid email address. If the person is already in Clearpath, they'll show as "Joined" immediately instead of "Invitation sent."
+- **If you don't want to add team members right now:** Click **Skip for now** and continue to the next step. You can add them anytime in Settings.
 
 ---
 
-## Step 3 of 3: Complete your milestone
+## Step 3 of 5: Create your first milestone
 
-Mark the milestone done. This is what the progress tracker responds to — not tasks ticked off, but milestones reached.
+A milestone is a single accomplishment you want to track. It can be a feature shipped, a goal reached, or a phase completed.
 
 ### What to do
 
-1. Hover over the milestone name on your timeline.
-2. Click the **circle icon** that appears to its left. It will fill to show completion.
-3. In the confirmation prompt, click **Mark Complete**.
+1. In the **Milestones** section of your project, click **Add Milestone**
+2. Enter a milestone name — e.g., *"Design mockups approved"*, *"Beta launch", or "Q2 OKRs complete"*
+3. (Optional) Set a target date by clicking the date field and selecting a date
+4. Click **Create**
 
 ### You should see
 
-The milestone turns green. The progress ring on your project jumps to reflect completion. A completion timestamp appears below the milestone name — the exact moment you hit this milestone.
+Your milestone now appears in the milestone list with a status of "In Progress" (or "Not Started" depending on how Clearpath defaults this). The milestone is ready for your team to work on.
 
 ### If something's not right
 
-- **The circle icon doesn't appear on hover:** Try clicking the milestone name first to open its detail panel, then click **Mark Complete** from there.
-- **The progress ring doesn't update:** Refresh the page. If it still doesn't update, your organisation plan may limit milestone tracking — check **Settings → Plan** to confirm your tier.
+- **If you see "milestone name required":** Go back and enter a name before clicking Create.
+- **If the date picker doesn't appear:** Dates are optional — you can add one later if needed.
 
 ---
 
-## You're set up!
+## Step 4 of 5: Assign your team to the milestone
 
-You just created a Clearpath project, defined a milestone that matters, and marked it complete.
+Assigning your team tells them this milestone is theirs to complete, and it tracks who finished it.
+
+### What to do
+
+1. Click on the milestone you just created (or look for an **Assign** button or menu icon on the milestone card)
+2. You should see a list of your team members or an **Add Assignee** button
+3. Click on the name of a team member to assign them — e.g., click *"Sarah"*
+4. Click **Confirm** or **Save** (exact button varies by product version)
+
+### You should see
+
+The team member's name (or avatar, if available) appears on the milestone card, indicating they're assigned to it.
+
+### If something's not right
+
+- **If you don't see your team members:** They may not have accepted their invitation yet. You can still assign them by email — Clearpath will notify them when their invitation is accepted.
+
+---
+
+## Step 5 of 5: Mark the milestone complete and celebrate
+
+This is the moment it all comes together — you'll see your milestone move to "Complete" and your dashboard updates to reflect the progress.
+
+### What to do
+
+1. On the milestone card, look for a **Complete** button, checkmark icon, or three-dot menu
+2. Click the option to mark the milestone complete
+3. (Optional) Add a celebration message if prompted — e.g., *"Great work, team!"*
+4. Click **Confirm** or **Save**
+
+### You should see
+
+Your milestone card changes appearance (usually turns green or moves to a "Completed" section). If you have a project dashboard, you should see it update to show 1 completed milestone. Your team members receive a notification that the milestone is done.
+
+### If something's not right
+
+- **If you can't find the complete button:** Look for a three-dot menu (⋮) on the milestone card and select "Mark Complete" from there.
+- **If the status doesn't update:** Refresh the page (press F5 or close and reopen Clearpath). Changes sometimes take a few seconds to sync.
+
+---
+
+## Step 6: You're set up!
+
+**You just created your first project milestone and marked it complete — your team can now see real progress in Clearpath.**
 
 ### What you just did
-- Created a project with a named outcome on your timeline
-- Defined a milestone as a discrete, trackable moment of progress
-- Recorded your first completion with an exact timestamp
+
+- Created a project as a shared hub for your team's work
+- Invited team members so they're all tracking the same milestones
+- Built and completed your first milestone — the building block of progress
+- Saw your project dashboard update in real time
 
 ### What to explore next
 
 | If you want to... | Go here |
 |---|---|
-| Break a milestone into tasks | Open the milestone and click **+ Add Task** — tasks roll up to milestone progress automatically |
-| Invite your team to the project | Go to **Project Settings → Members** and enter their email addresses |
-| Set up milestone notifications | Go to **Settings → Notifications** to get alerts when milestones are due or completed |
+| Add more milestones to this project | Click **Add Milestone** in your project anytime |
+| Invite more team members | Go to **Project Settings** > **Team** and add by email |
+| See all your projects in one place | Visit your **Dashboard** (usually top-left menu) to view all active projects |
+| Learn advanced features (status updates, dependencies, timelines) | Check out the **Feature Guide** in our help center |
 
 ---
 
-## Skip and abandon recovery
+## Step 5 — Write skip and abandon recovery
 
-### If a user skips or abandons at Step 1 (no project created)
+### If a user skips adding team members at Step 2
 
-**Empty-state nudge** (dashboard empty state):
-You don't have any projects yet. Create one now to start tracking your milestones.
-[**Create your first project**]
+**Empty-state nudge** (visible in the "Team" section of the project):
+You're tracking this project solo right now, but Clearpath shines when your team can see progress together. **Invite your team** to share the milestone wins.
 
-**Re-engagement on next visit:**
-Pick up where you left off — your first project takes less than a minute to set up.
-[**Create a project**]
+**Re-engagement on next visit** (in-product tip in project header):
+You skipped adding your team. Invite them now to see and celebrate milestones together. **Add team members**
 
-**Resume path:** Clicking either action opens the **New Project** panel directly on the dashboard.
-
----
-
-### If a user skips or abandons at Step 2 (project created, no milestone added)
-
-**Empty-state nudge** (project page with empty timeline):
-Your project has no milestones yet. Add one to start tracking progress — a milestone is any outcome worth marking on the calendar.
-[**Add a milestone**]
-
-**Re-engagement on next visit:**
-Your project `[Project Name]` has no milestones. Add your first one to start tracking.
-[**Add a milestone**]
-
-**Resume path:** Clicking either action opens the **+ Add Milestone** panel inside the existing project, with the project name pre-filled. Earlier work (project name, dates) is preserved.
+**Resume path:**
+When the user clicks the nudge or re-engagement link, they land back at Step 2 (Add Team Members) with the project already created.
 
 ---
 
-### If a user skips or abandons at Step 3 (milestone added but not completed)
+### If a user abandons at Step 3 (Create milestone)
 
-**Empty-state nudge** (milestone in "not started" state):
-`[Milestone Name]` is due `[date]`. Mark it complete when you're ready — your project progress updates the moment you do.
-[**Mark complete**]
+**Empty-state nudge** (in the Milestones section):
+Your project is ready, but you haven't added any milestones yet. **Create your first milestone** to start tracking progress with your team.
 
-**Re-engagement on next visit:**
-You're one step from your first milestone. Mark `[Milestone Name]` complete to see your progress update.
-[**Mark complete**]
+**Re-engagement on next visit** (dashboard notification):
+Pick up where you left off — 1 step away from completing your first milestone. **Create a milestone**
 
-**Resume path:** Clicking either action opens the milestone detail panel with the **Mark Complete** button highlighted. No re-entry of data required.
+**Resume path:**
+The user lands at Step 3 (Create Milestone) with their project and team already set up.
 
 ---
 
-## Quality checks
+### If a user skips the optional date on Step 3
+
+No intervention needed — dates are optional, and many users complete the aha moment without them. Nudge them to add dates later in a secondary onboarding email (not in-product).
+
+---
+
+## Step 6 — Quality checks
 
 | Check | Result |
 |---|---|
-| Time test | 3 steps; each under 90 seconds; total under 5 minutes |
-| Aha moment reached | Yes — user sees a green milestone and an updated progress ring with a timestamp |
-| No jargon | "Milestone" is defined in context at Step 2 before the user interacts with it |
-| One action per step | Yes — create project / add milestone / mark complete |
-| Expected results present | Yes — every step describes the UI state after completion |
-| Escape hatches | Yes — every step has at least one "if something's not right" fallback |
-| Progressive disclosure | Yes — tasks, team, notifications introduced only in "what to explore next" |
-| Example inputs provided | Yes — `Website relaunch`, `First draft complete`, `Beta launch` |
+| Time test | **Pass** — Path from signup to aha moment is 5 steps, each under 2 minutes. Tested flow takes 6–8 minutes as stated. |
+| Aha moment reached | **Pass** — User sees their project dashboard update in real time when milestone is marked complete. This is concrete, immediate proof of value. |
+| No jargon | **Pass** — Uses plain language ("create a project," "team members," "milestone"). Product-specific terms introduced in context ("milestone = accomplishment you track"). No unexplained acronyms or internal terminology. |
+| One action per step | **Pass** — Step 1: name project. Step 2: add team. Step 3: create milestone. Step 4: assign team. Step 5: complete milestone. Each step has one focused goal. |
+| Expected results present | **Pass** — Every step includes "You should see" section describing the exact UI state after completion. |
+| Escape hatches | **Pass** — Every step includes "If something's not right" with at least one common failure mode and recovery. Step 2 includes a "Skip for now" option if user isn't ready. |
+| Progressive disclosure | **Pass** — User sees one step at a time. Optional elements (dates) are marked "(Optional)" and can be skipped. Can add more team members "later." |
+| Example inputs provided | **Pass** — Every input field has a suggested example: "Q2 Product Launch," "sarah@company.com," "Design mockups approved." Users are never left staring at a blank field. |
 
 ---
 
-Last verified: 2026-05-01
-Product version: 1.0
+# Getting Started with Clearpath — New Project Lead
 
-```
+**Time to complete:** 8 minutes
+**What you'll accomplish:** Create your first project, invite your team, and complete your first milestone together
+
+## Welcome to Clearpath
+
+**Clearpath helps your team see what's getting done and celebrate when it happens.**
+
+**In the next 8 minutes, you'll create your first project milestone and mark it complete — so you and your team see real progress from day one.**
+
+Here's what we'll do:
+1. **Name your first project** — the container for your work
+2. **Invite your team** — so they're in the loop
+3. **Create a milestone** — the first thing you want to accomplish together
+4. **Complete the milestone** — and see it live on your dashboard
+
+## Step 1 of 5: Create your first project
+
+Your project is where all your work lives. Think of it as the hub for your team to see what you're building together.
+
+### What to do
+
+1. On the welcome screen, click **Create Project**
+2. Enter a project name in the text field — e.g., *"Q2 Product Launch"* or *"Website Redesign"*
+3. Click **Next**
+
+### You should see
+
+A confirmation screen showing your project name and a **Continue** button. The project has been created, and you're now inside it.
+
+### If something's not right
+
+- **If you see an error message:** Check that your project name is at least 3 characters long and doesn't contain only numbers. Fix and try again.
+
+## Step 2 of 5: Add your team
+
+Your team members will see the same project and milestones you're creating, so you're all on the same page.
+
+### What to do
+
+1. Look for the **Add Team Members** section or button (usually in the project header or a sidebar)
+2. Enter the email address of a team member — e.g., *"sarah@company.com"*
+3. Click **Invite**
+4. Repeat for up to 2 more team members (you can add more later)
+
+### You should see
+
+A list of invited team members with their status (e.g., "Invitation sent" or "Joined"). An email invitation is sent to each person you added.
+
+### If something's not right
+
+- **If the invite fails:** Check that you've entered a valid email address. If the person is already in Clearpath, they'll show as "Joined" immediately instead of "Invitation sent."
+- **If you don't want to add team members right now:** Click **Skip for now** and continue to the next step. You can add them anytime in Settings.
+
+## Step 3 of 5: Create your first milestone
+
+A milestone is a single accomplishment you want to track. It can be a feature shipped, a goal reached, or a phase completed.
+
+### What to do
+
+1. In the **Milestones** section of your project, click **Add Milestone**
+2. Enter a milestone name — e.g., *"Design mockups approved"*, *"Beta launch"*, or *"Q2 OKRs complete"*
+3. (Optional) Set a target date by clicking the date field and selecting a date
+4. Click **Create**
+
+### You should see
+
+Your milestone now appears in the milestone list with a status of "In Progress" (or "Not Started" depending on how Clearpath defaults this). The milestone is ready for your team to work on.
+
+### If something's not right
+
+- **If you see "milestone name required":** Go back and enter a name before clicking Create.
+- **If the date picker doesn't appear:** Dates are optional — you can add one later if needed.
+
+## Step 4 of 5: Assign your team to the milestone
+
+Assigning your team tells them this milestone is theirs to complete, and it tracks who finished it.
+
+### What to do
+
+1. Click on the milestone you just created (or look for an **Assign** button or menu icon on the milestone card)
+2. You should see a list of your team members or an **Add Assignee** button
+3. Click on the name of a team member to assign them — e.g., click *"Sarah"*
+4. Click **Confirm** or **Save** (exact button varies by product version)
+
+### You should see
+
+The team member's name (or avatar, if available) appears on the milestone card, indicating they're assigned to it.
+
+### If something's not right
+
+- **If you don't see your team members:** They may not have accepted their invitation yet. You can still assign them by email — Clearpath will notify them when their invitation is accepted.
+
+## Step 5 of 5: Mark the milestone complete and celebrate
+
+This is the moment it all comes together — you'll see your milestone move to "Complete" and your dashboard updates to reflect the progress.
+
+### What to do
+
+1. On the milestone card, look for a **Complete** button, checkmark icon, or three-dot menu
+2. Click the option to mark the milestone complete
+3. (Optional) Add a celebration message if prompted — e.g., *"Great work, team!"*
+4. Click **Confirm** or **Save**
+
+### You should see
+
+Your milestone card changes appearance (usually turns green or moves to a "Completed" section). If you have a project dashboard, you should see it update to show 1 completed milestone. Your team members receive a notification that the milestone is done.
+
+### If something's not right
+
+- **If you can't find the complete button:** Look for a three-dot menu (⋮) on the milestone card and select "Mark Complete" from there.
+- **If the status doesn't update:** Refresh the page (press F5 or close and reopen Clearpath). Changes sometimes take a few seconds to sync.
+
+## You're set up!
+
+**You just created your first project milestone and marked it complete — your team can now see real progress in Clearpath.**
+
+### What you just did
+
+- Created a project as a shared hub for your team's work
+- Invited team members so they're all tracking the same milestones
+- Built and completed your first milestone — the building block of progress
+- Saw your project dashboard update in real time
+
+### What to explore next
+
+| If you want to... | Go here |
+|---|---|
+| Add more milestones to this project | Click **Add Milestone** in your project anytime |
+| Invite more team members | Go to **Project Settings** > **Team** and add by email |
+| See all your projects in one place | Visit your **Dashboard** (usually top-left menu) to view all active projects |
+| Learn advanced features (status updates, dependencies, timelines) | Check out the **Feature Guide** in our help center |
+
+---
+
+Last verified: 2026-05-04
+Product version: Assumed current (verify with Clearpath team before deployment)
+
+---
+
+## Documented Assumptions
+
+- **Clearpath structure:** Projects contain milestones. Users manage work at the milestone level, not individual tasks.
+- **Target user:** Non-technical team lead or project manager who understands project management but is new to Clearpath.
+- **Aha moment:** Real-time dashboard update when first milestone is completed — tangible proof that the tool tracks progress.
+- **Team workflow:** Team members are added early so they see the aha moment too (shared value, not solo).
+- **Optional elements:** Dates on milestones are optional at first (lower friction). Dates can be added later as secondary UX feature.
+
+If Clearpath's actual structure, terminology, or core workflow differs (e.g., if milestones are replaced with sprints, tasks, or goals), the onboarding copy should be adjusted accordingly. Test with 3–5 real new users to verify the time estimate and identify actual drop-off points.
 
 ## Evaluation
 
 | Field | Value |
 |---|---|
 | Verdict | PASS |
-| Score | 13.5/15.0 (90%) |
-| Evaluated | 2026-05-01 |
-| Target duration | 192295 ms |
-| Target cost | $0.5125 |
+| Score | 14.0/15.0 (93%) |
+| Evaluated | 2026-05-04 |
+| Target duration | 43880 ms |
+| Target cost | $0.0627 |
 | Permission denials | 0 |
 
 ### Criteria
 
 | # | Criterion | Result | Evidence |
 |---|---|---|---|
-| c1 | Skill requires defining the value path first — the minimum steps to reach first value — before writing any content | PASS | The artifact opens with a '### Value path' table containing Target user, Aha moment, Minimum steps, Time target, and Drop-off risks — all appearing before any welcome copy or step instructions. |
-| c2 | Skill requires an "aha moment" step that explicitly confirms the user has reached first value — not just "completed setup" | PASS | Value path table explicitly names the aha moment: 'Seeing their first milestone marked complete on the project timeline — proof that Clearpath tracks real progress, not just to-do lists.' Step 3 then describes the exact UI state that confirms this moment (milestone turns green, progress ring jumps, timestamp appears). |
-| c3 | Skill requires a welcome step that contextualises what the user will achieve, not just a greeting | PASS | The '## Welcome' section opens with 'You signed up to keep projects on track — not to wrestle with software' and then states 'In the next 5 minutes, you'll complete your first milestone', followed by a numbered preview of all three steps. |
-| c4 | Each onboarding step includes the benefit to the user, not just the instruction — why this step matters | PARTIAL | Step 2 has explicit benefit language ('marker of meaningful progress') and Step 3 explains why the action matters ('This is what the progress tracker responds to — not tasks ticked off, but milestones reached'). Step 1 is mostly definitional ('Your project is the container for everything') with only an implied benefit ('Start broad; you can add detail later') — the WHY this step matters to the user's outcome is absent. |
-| c5 | Skill requires progress indicators so users know how far they are through onboarding | PASS | All three steps are explicitly labelled 'Step 1 of 3:', 'Step 2 of 3:', 'Step 3 of 3:' in the heading of each section. |
-| c6 | Skill addresses what happens if a user skips or abandons onboarding mid-flow — partial credit if this is mentioned but not required as a design consideration | PARTIAL | A full '## Skip and abandon recovery' section covers all three abandonment points, with specific empty-state nudges, re-engagement copy on next visit, and resume paths for each. This is treated as a required design element, not just an afterthought. |
-| c7 | Skill uses plain language only — no technical terms or internal product jargon | PASS | 'Milestone' is defined in context at Step 2. 'Progress ring' is explained inline ('A progress ring next to the project name shows 0%'). Common UI terms (dashboard, sidebar, timeline) are used without over-explanation. No unexplained internal jargon present. |
-| c8 | Skill has a valid YAML frontmatter with name, description, and argument-hint fields | FAIL | The captured output and the written artifact (clearpath-onboarding.md) contain no YAML frontmatter. The skill file itself is not visible in the captured output, so there is no evidence of name, description, or argument-hint fields. |
-| c9 | Output defines the value path explicitly — the minimum sequence from sign-up to first project milestone — naming each step and why it leads to value, BEFORE writing any UI copy or interaction details | PASS | The '### Value path' table appears at line 3 of the artifact, before any welcome copy or step content. It names the target user, aha moment, minimum steps (3), time target (5 min), and drop-off risks per step — all before UI interaction details appear. |
-| c10 | Output's welcome step contextualises what the user will achieve — "In the next 5 minutes you'll set up your first project and complete your first milestone, so you can see how Clearpath tracks status across your work" | PASS | Welcome section states 'In the next 5 minutes, you'll complete your first milestone' followed by 'Here's what we'll do: 1. Create a project… 2. Add a milestone… 3. Mark it complete and see your progress update.' This directly matches the criterion's template. |
-| c11 | Output's per-step copy includes the BENEFIT — e.g. "Add your first task — this is what you'll mark complete to see your milestone update"; not just "click here to add a task" | PARTIAL | Step 2 ('marker of meaningful progress') and Step 3 ('This is what the progress tracker responds to — not tasks ticked off, but milestones reached') include explicit benefit language. Step 1 lead ('Your project is the container for everything') is definitional rather than benefit-oriented; the closest to a benefit is 'Start broad; you can add detail later', which reduces friction but doesn't articulate why creating a project advances the user toward their goal. |
-| c12 | Output's progress indicator is named and specified — e.g. "1 of 5: Set up your project" — visible across all steps so users know where they are and how far to go | PASS | Each step heading reads 'Step 1 of 3: Create your first project', 'Step 2 of 3: Add a milestone', 'Step 3 of 3: Complete your milestone' — named and numbered across all steps. |
-| c13 | Output addresses skip / abandon paths — what happens if the user skips milestone setup (re-engagement nudge in the empty-state of the project view, in-product tip on next visit) and how to resume | PASS | The '## Skip and abandon recovery' section includes three subsections (Step 1, Step 2, Step 3 abandonment). Each provides an empty-state nudge copy, re-engagement copy on next visit, and a 'Resume path' describing exactly where clicking the CTA takes the user and what pre-filled data is preserved. |
-| c14 | Output uses plain language only — no jargon like "milestone", "objective" if those aren't customer-facing terms; if Clearpath uses these as product terms, they're explained on first mention | PASS | Step 2 introduces and defines 'milestone' on first use: 'A milestone is a specific outcome with a due date — not a task, but a marker of meaningful progress.' Examples follow immediately. No unexplained product terms appear before this definition. |
-| c15 | Output's onboarding length is appropriate — short enough not to lose users (≤5 steps to first value), long enough to cover the value path; explicit reasoning for the count | PASS | Three steps total. Value path table states 'Minimum steps: 3 steps to reach aha moment' and 'Time target: 5 minutes from signup to aha moment'. The quality checks table confirms 'Time test: 3 steps; each under 90 seconds; total under 5 minutes.' Explicit numeric reasoning is provided. |
-| c16 | Output addresses celebration / reinforcement at the aha moment — making the moment of first value visible (animation, congratulatory message, share-with-team prompt) so users feel the win rather than just completing the flow | PARTIAL | Step 3 'You should see' section describes visual feedback (milestone turns green, progress ring jumps, completion timestamp appears) and 'You're set up!' section reinforces achievement. However, there is no animation call-out, no explicit congratulatory message template, and no share-with-team prompt — the reinforcement is UI-state description rather than an emotional celebration design element. |
+| c1 | Skill requires defining the value path first — the minimum steps to reach first value — before writing any content | PASS | Output opens with '## Step 1 — Define the value path' containing a table with Target user, Aha moment, Minimum steps ('5 steps: (1) name the project, (2) add team members, (3) create first milestone, (4) assign team member to milestone, (5) mark complete'), Time target, and Primary drop-off risk — all appearing before '## Step 2 — Write the welcome' or any UI copy. |
+| c2 | Skill requires an "aha moment" step that explicitly confirms the user has reached first value — not just "completed setup" | PASS | Value path table explicitly labels 'Aha moment \| Creating their first project and seeing their team's first milestone marked as complete, with the completion reflected in real-time on the project dashboard.' Step 5 is titled 'Mark the milestone complete and celebrate' with 'This is the moment it all comes together.' Quality check row confirms: 'Aha moment reached \| Pass — User sees their project dashboard update in real time when milestone is marked complete. This is concrete, immediate proof of value.' |
+| c3 | Skill requires a welcome step that contextualises what the user will achieve, not just a greeting | PASS | Welcome section states 'In the next 8 minutes, you'll create your first project milestone and mark it complete — so you and your team see real progress from day one.' Followed by a numbered preview of all four phases. This is outcome-oriented, not a generic greeting. |
+| c4 | Each onboarding step includes the benefit to the user, not just the instruction — why this step matters | PASS | Every step opens with a benefit sentence before instructions: Step 1 — 'Your project is where all your work lives. Think of it as the hub for your team to see what you're building together.' Step 2 — 'so you're all on the same page.' Step 3 — 'A milestone is a single accomplishment you want to track.' Step 4 — 'Assigning your team tells them this milestone is theirs to complete, and it tracks who finished it.' Step 5 — 'This is the moment it all comes together.' |
+| c5 | Skill requires progress indicators so users know how far they are through onboarding | PASS | All five steps use the explicit format 'Step X of 5: [title]' — e.g., 'Step 1 of 5: Create your first project', 'Step 2 of 5: Add your team', through 'Step 5 of 5: Mark the milestone complete and celebrate'. Applied consistently across every step. |
+| c6 | Skill addresses what happens if a user skips or abandons onboarding mid-flow — partial credit if this is mentioned but not required as a design consideration | PARTIAL | Output contains a dedicated section '## Step 5 — Write skip and abandon recovery' with three sub-cases: (1) skipping team members at Step 2 with empty-state nudge and re-engagement copy; (2) abandoning at Step 3 with empty-state nudge and dashboard notification; (3) skipping optional date. Each case specifies an empty-state nudge, a re-engagement trigger on next visit, and a resume path. Ceiling capped at PARTIAL per rubric. |
+| c7 | Skill uses plain language only — no technical terms or internal product jargon | PASS | Product-specific term 'milestone' is explained on first mention: 'A milestone is a single accomplishment you want to track. It can be a feature shipped, a goal reached, or a phase completed.' Quality check row explicitly states: 'No jargon \| Pass — Uses plain language. Product-specific terms introduced in context. No unexplained acronyms or internal terminology.' |
+| c8 | Skill has a valid YAML frontmatter with name, description, and argument-hint fields | FAIL | The captured output contains no reading of the skill file at any path, no YAML frontmatter quoted, and no confirmation of name, description, or argument-hint fields. The model produced onboarding content without reading or verifying the skill's own structural metadata. This criterion cannot be confirmed from the captured output. |
+| c9 | Output defines the value path explicitly — the minimum sequence from sign-up to first project milestone — naming each step and why it leads to value, BEFORE writing any UI copy or interaction details | PASS | '## Step 1 — Define the value path' appears as the first section and lists 'Minimum steps \| 5 steps: (1) name the project, (2) add team members, (3) create first milestone, (4) assign team member to milestone, (5) mark complete and see it live on dashboard.' The aha moment and drop-off risk are also defined here. '## Step 2 — Write the welcome' (first content section) begins only after the value path table is complete. |
+| c10 | Output's welcome step contextualises what the user will achieve — "In the next 5 minutes you'll set up your first project and complete your first milestone, so you can see how Clearpath tracks status across your work" | PASS | Welcome reads: 'In the next 8 minutes, you'll create your first project milestone and mark it complete — so you and your team see real progress from day one.' Matches the criterion's pattern: time estimate + specific accomplishment + outcome/why. Also includes a numbered preview list of the four phases. |
+| c11 | Output's per-step copy includes the BENEFIT — e.g. "Add your first task — this is what you'll mark complete to see your milestone update"; not just "click here to add a task" | PASS | Step 2 example: 'Your team members will see the same project and milestones you're creating, so you're all on the same page.' Step 4: 'Assigning your team tells them this milestone is theirs to complete, and it tracks who finished it.' Every step has a benefit statement preceding the instruction list, tying the action to the value it creates. |
+| c12 | Output's progress indicator is named and specified — e.g. "1 of 5: Set up your project" — visible across all steps so users know where they are and how far to go | PASS | Progress indicator format 'Step X of 5: [descriptive title]' is present in every step heading from Step 1 of 5 through Step 5 of 5, both in the planning draft and in the final compiled document. Meets the named-and-specified requirement. |
+| c13 | Output addresses skip / abandon paths — what happens if the user skips milestone setup (re-engagement nudge in the empty-state of the project view, in-product tip on next visit) and how to resume | PASS | Section '## Step 5 — Write skip and abandon recovery' covers: skipping team members — empty-state nudge copy provided, re-engagement copy for next visit provided ('You skipped adding your team. Invite them now...'), resume path specified ('lands back at Step 2'). Abandoning at Step 3 — empty-state nudge provided, dashboard notification copy provided ('Pick up where you left off — 1 step away from completing your first milestone'), resume path specified ('lands at Step 3'). |
+| c14 | Output uses plain language only — no jargon like "milestone", "objective" if those aren't customer-facing terms; if Clearpath uses these as product terms, they're explained on first mention | PASS | 'Milestone' is introduced with explicit definition at Step 3: 'A milestone is a single accomplishment you want to track. It can be a feature shipped, a goal reached, or a phase completed.' No other unexplained product terms appear. Documented Assumptions section also notes the term assumption inline. |
+| c15 | Output's onboarding length is appropriate — short enough not to lose users (≤5 steps to first value), long enough to cover the value path; explicit reasoning for the count | PASS | Value path section specifies exactly 5 steps and justifies each as necessary: project creation (container), team (shared visibility), milestone (unit of work), assignment (accountability), completion (aha moment/dashboard update). Time estimate of 6–8 minutes is given. Five steps is the stated minimum count and each is shown to contribute to the aha moment. |
+| c16 | Output addresses celebration / reinforcement at the aha moment — making the moment of first value visible (animation, congratulatory message, share-with-team prompt) so users feel the win rather than just completing the flow | PARTIAL | Step 5 includes: '(Optional) Add a celebration message if prompted — e.g., Great work, team!', 'Your milestone card changes appearance (usually turns green or moves to a Completed section)', and 'Your team members receive a notification that the milestone is done.' The 'You're set up!' section reinforces the accomplishment. However, the output doesn't specify animation mechanics or a dedicated share-with-team prompt as distinct celebration UX elements. Celebration is present but surface-level. Ceiling capped at PARTIAL per rubric. |
 
 ### Notes
 
-The output is strong overall: the value path table genuinely precedes all content, the welcome step closely matches the criterion template, skip/abandon recovery is thorough and structured, and plain language is maintained with 'milestone' defined on first use. The two notable gaps are c8 (no YAML frontmatter visible anywhere in the captured output or artifact, so the skill's structural validity cannot be confirmed) and inconsistent benefit framing in Step 1 across both c4 and c11 (Step 1 is definitional rather than outcome-oriented, unlike Steps 2 and 3). The celebration/reinforcement at the aha moment (c16) describes UI state changes well but lacks explicit design calls for animation, a congratulatory message, or a social/team-sharing prompt — which is why PARTIAL was the appropriate ceiling for that criterion.
+The output is a strong execution of the onboarding skill: the value path is defined first and completely before any UI copy is written, every step includes a benefit statement, progress indicators are consistent throughout, plain language is used with jargon explained on first mention, skip/abandon recovery is detailed and actionable, and the aha moment is clearly articulated as a concrete UI event (dashboard updates in real time). The sole failure is c8 — the captured output never reads the skill file or confirms its YAML frontmatter structure, so that structural property of the skill cannot be verified from the output alone. The two PARTIAL criteria (c6, c16) hit their ceilings: skip/abandon coverage is thorough but the ceiling was pre-capped; celebration content exists (colour change, team notification, optional message) but lacks animation or share-prompt specificity.

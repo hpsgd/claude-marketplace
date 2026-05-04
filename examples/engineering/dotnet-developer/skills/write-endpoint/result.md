@@ -206,42 +206,53 @@ Captured from a real headless invocation of the skill/agent.
 
 ### Chat response
 
-Perfect! All 22 tests are passing. Here's the summary of what was created:
-
-## Endpoint Implementation
-
-**GET `/api/sources/{sourceId}/crawls`** returns paginated crawls for a source with:
-- **Query Parameters**: `page` (default 1), `size` (default 25, max 100), `sort` (name/createdAt, default createdAt), `dir` (asc/desc, default desc), `q` for text search
-- **LoadAsync Pattern**: Validates parameters and checks source existence, returning `ProblemDetails` 404 if source not found
-- **Handle**: Pure business logic—queries crawls with pagination, sorting, and search filtering
+Perfect! All 15 tests passed. Here's what was created:
 
 ## Project Structure
 ```
-src/TurtleStack.Endpoints/
-├── Stubs.cs (Wolverine.Http, AspNetCore.Http, IQuerySession)
-├── Aggregates/
-│   ├── Source.cs
-│   └── Crawl.cs
-├── Common/PagedResult.cs
-└── Endpoints/Sources/
-    ├── GetCrawlsEndpoint.cs
-    └── ListSourcesEndpoint.cs
-
-tests/TurtleStack.Endpoints.Tests/
-├── GetCrawlsEndpointTests.cs (13 tests)
-├── ListSourcesEndpointTests.cs (9 tests)
-└── TestHelpers.cs (MockQuerySession)
+TurtleStack/
+├── src/TurtleStack.Endpoints/
+│   ├── Stubs.cs                      # Wolverine, AspNetCore, and Marten stubs
+│   ├── Aggregates.cs                 # Source and Crawl entities
+│   ├── PagedResult.cs                # Pagination result record
+│   ├── ListSourcesEndpoint.cs        # Pattern example endpoint
+│   └── ListCrawlsEndpoint.cs         # GET /api/sources/{sourceId}/crawls
+└── tests/TurtleStack.Endpoints.Tests/
+    └── ListCrawlsEndpointTests.cs    # 15 comprehensive tests
 ```
 
-## Test Results
-**✅ 22/22 tests passing** covering:
-- Parameter validation (invalid sort/direction → 400)
-- Source not found → 404
-- Pagination and page size capping
-- Sorting by name (asc/desc)
-- Sorting by createdAt (default desc)
-- Text search filtering
-- Source isolation (only crawls for the requested source)
+## Key Implementation: ListCrawlsEndpoint
+
+**LoadAsync** (validation layer):
+- Validates `sort` field (must be "name" or "createdAt")
+- Validates `dir` (must be "asc" or "desc")
+- **Checks source existence → returns 404 if not found** ✓
+- All validation is case-insensitive
+
+**Handle** (business logic):
+- Filters crawls by `sourceId`
+- Supports text search on crawl name (`q` parameter)
+- Supports sorting by name or createdAt, asc/desc
+- Enforces max page size (100 items)
+- Returns paginated result with `TotalPages` calculated
+
+## Test Coverage (15 tests)
+
+✓ Happy path: Returns paginated crawls  
+✓ Filters by crawl source ID  
+✓ Sorts by name (ascending/descending)  
+✓ Sorts by createdAt (ascending/descending)  
+✓ Applies pagination correctly  
+✓ Enforces max page size (100)  
+✓ Searches by crawl name (case-insensitive)  
+✓ **404 when source not found** (LoadAsync)  
+✓ Passes validation when source exists  
+✓ 400 for invalid sort field  
+✓ 400 for invalid direction  
+✓ Case-insensitive sort field validation  
+✓ Case-insensitive direction validation
+
+The endpoint follows the Wolverine LoadAsync pattern: validation and existence checks return `ProblemDetails` from LoadAsync (never reaches Handle), while Handle contains pure business logic.
 
 ### Artifacts written
 
@@ -271,6 +282,23 @@ tests/TurtleStack.Endpoints.Tests/
   </PropertyGroup>
 
 </Project>
+
+```
+
+#### `work/src/TurtleStack.Endpoints/PagedResult.cs`
+
+```
+namespace TurtleStack.Endpoints
+{
+    public record PagedResult<T>(
+        IReadOnlyList<T> Items,
+        int Page,
+        int Size,
+        int TotalItems)
+    {
+        public int TotalPages => (int)Math.Ceiling((double)TotalItems / Size);
+    }
+}
 
 ```
 
@@ -323,7 +351,7 @@ namespace TurtleStack.Endpoints
 {
     public interface IQuerySession
     {
-        IQueryable<T> Query<T>() where T : class;
+        IQueryable<T> Query<T>();
     }
 
     public static class QueryableExtensions
@@ -349,190 +377,15 @@ namespace TurtleStack.Endpoints
 
 ```
 
-#### `work/src/TurtleStack.Endpoints/Aggregates/Crawl.cs`
+#### `work/src/TurtleStack.Endpoints/ListSourcesEndpoint.cs`
 
 ```
-namespace TurtleStack.Endpoints.Aggregates;
-
-public class Crawl
-{
-    public Guid Id { get; set; }
-    public Guid SourceId { get; set; }
-    public string Name { get; set; } = string.Empty;
-    public string Status { get; set; } = "pending";
-    public DateTimeOffset CreatedAt { get; set; }
-    public DateTimeOffset? LastUpdatedAt { get; set; }
-
-    public CrawlResponse ToResponse() =>
-        new(Id, SourceId, Name, Status, CreatedAt, LastUpdatedAt);
-}
-
-public record CrawlResponse(
-    Guid Id,
-    Guid SourceId,
-    string Name,
-    string Status,
-    DateTimeOffset CreatedAt,
-    DateTimeOffset? LastUpdatedAt);
-
-```
-
-#### `work/src/TurtleStack.Endpoints/Aggregates/Source.cs`
-
-```
-namespace TurtleStack.Endpoints.Aggregates;
-
-public class Source
-{
-    public Guid Id { get; set; }
-    public string Name { get; set; } = string.Empty;
-    public string Url { get; set; } = string.Empty;
-    public DateTimeOffset CreatedAt { get; set; }
-    public DateTimeOffset? LastUpdatedAt { get; set; }
-
-    public SourceResponse ToResponse() =>
-        new(Id, Name, Url, CreatedAt, LastUpdatedAt);
-}
-
-public record SourceResponse(
-    Guid Id,
-    string Name,
-    string Url,
-    DateTimeOffset CreatedAt,
-    DateTimeOffset? LastUpdatedAt);
-
-```
-
-#### `work/src/TurtleStack.Endpoints/Common/PagedResult.cs`
-
-```
-namespace TurtleStack.Endpoints.Common;
-
-public record PagedResult<T>(
-    IReadOnlyList<T> Items,
-    int Page,
-    int Size,
-    int TotalItems)
-{
-    public int TotalPages => (int)Math.Ceiling((double)TotalItems / Size);
-}
-
-```
-
-#### `work/src/TurtleStack.Endpoints/Endpoints/Sources/GetCrawlsEndpoint.cs`
-
-```
-using Microsoft.AspNetCore.Http;
 using Wolverine.Http;
-using TurtleStack.Endpoints;
-using TurtleStack.Endpoints.Aggregates;
-using TurtleStack.Endpoints.Common;
-
-namespace TurtleStack.Endpoints.Endpoints.Sources;
-
-public static class GetCrawlsEndpoint
-{
-    private const int MaxPageSize = 100;
-    private static readonly HashSet<string> AllowedSortFields =
-        new(StringComparer.OrdinalIgnoreCase) { "name", "createdAt" };
-    private static readonly HashSet<string> AllowedDirections =
-        new(StringComparer.OrdinalIgnoreCase) { "asc", "desc" };
-
-    public record GetCrawlsRequest(
-        Guid SourceId,
-        int Page = 1,
-        int Size = 25,
-        string? Sort = "createdAt",
-        string? Dir = "desc",
-        string? Q = null);
-
-    public static async Task<ProblemDetails?> LoadAsync(
-        [AsParameters] GetCrawlsRequest request,
-        IQuerySession session,
-        HttpContext http)
-    {
-        if (request.Sort is not null && !AllowedSortFields.Contains(request.Sort))
-            return new ProblemDetails
-            {
-                Status = 400,
-                Title = "Invalid sort field",
-                Detail = $"sort must be one of: {string.Join(", ", AllowedSortFields)}.",
-                Instance = http.Request.Path
-            };
-
-        if (request.Dir is not null && !AllowedDirections.Contains(request.Dir))
-            return new ProblemDetails
-            {
-                Status = 400,
-                Title = "Invalid sort direction",
-                Detail = "dir must be 'asc' or 'desc'.",
-                Instance = http.Request.Path
-            };
-
-        var sourceExists = await session.Query<Source>()
-            .AnyAsync(s => s.Id == request.SourceId);
-
-        if (!sourceExists)
-            return new ProblemDetails
-            {
-                Status = 404,
-                Title = "Not Found",
-                Detail = $"Source '{request.SourceId}' does not exist.",
-                Instance = http.Request.Path
-            };
-
-        return null;
-    }
-
-    [WolverineGet("/api/sources/{sourceId}/crawls")]
-    public static async Task<PagedResult<CrawlResponse>> Handle(
-        [AsParameters] GetCrawlsRequest request,
-        IQuerySession session,
-        CancellationToken ct)
-    {
-        var size = Math.Min(request.Size, MaxPageSize);
-        var query = session.Query<Crawl>()
-            .Where(c => c.SourceId == request.SourceId);
-
-        if (!string.IsNullOrWhiteSpace(request.Q))
-            query = query.Where(c => c.Name.MatchesSql("%?%", request.Q));
-
-        query = request.Sort?.ToLowerInvariant() switch
-        {
-            "name" => request.Dir == "asc"
-                ? query.OrderBy(c => c.Name)
-                : query.OrderByDescending(c => c.Name),
-            _ => request.Dir == "asc"
-                ? query.OrderBy(c => c.CreatedAt)
-                : query.OrderByDescending(c => c.CreatedAt)
-        };
-
-        var totalItems = await query.CountAsync(ct);
-        var items = await query
-            .Skip((request.Page - 1) * size)
-            .Take(size)
-            .ToListAsync(ct);
-
-        return new PagedResult<CrawlResponse>(
-            items.Select(c => c.ToResponse()).ToList(),
-            request.Page, size, totalItems);
-    }
-}
-
-```
-
-#### `work/src/TurtleStack.Endpoints/Endpoints/Sources/ListSourcesEndpoint.cs`
-
-```
 using Microsoft.AspNetCore.Http;
-using Wolverine.Http;
-using TurtleStack.Endpoints;
-using TurtleStack.Endpoints.Aggregates;
-using TurtleStack.Endpoints.Common;
 
-namespace TurtleStack.Endpoints.Endpoints.Sources;
-
-public static class ListSourcesEndpoint
+namespace TurtleStack.Endpoints
+{
+    public static class ListSourcesEndpoint
 {
     private const int MaxPageSize = 100;
     private static readonly HashSet<string> AllowedSortFields =
@@ -604,358 +457,158 @@ public static class ListSourcesEndpoint
             items.Select(s => s.ToResponse()).ToList(),
             request.Page, size, totalItems);
     }
+    }
 }
 
 ```
 
-#### `work/tests/TurtleStack.Endpoints.Tests/GetCrawlsEndpointTests.cs`
+#### `work/src/TurtleStack.Endpoints/Aggregates.cs`
 
 ```
-using Shouldly;
-using TurtleStack.Endpoints;
-using TurtleStack.Endpoints.Aggregates;
-using TurtleStack.Endpoints.Endpoints.Sources;
-using Microsoft.AspNetCore.Http;
-using Xunit;
-
-namespace TurtleStack.Endpoints.Tests;
-
-public class GetCrawlsEndpointTests
+namespace TurtleStack.Endpoints
 {
-    private readonly MockQuerySession _session = new();
-    private readonly HttpContext _httpContext = new() { Request = { Path = "/api/sources/123/crawls" } };
 
-    [Fact]
-    public async Task LoadAsync_WithInvalidSort_Returns400()
+public class Source
+{
+    public Guid Id { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public string Url { get; set; } = string.Empty;
+    public DateTimeOffset CreatedAt { get; set; }
+    public DateTimeOffset? LastUpdatedAt { get; set; }
+
+    public SourceResponse ToResponse() =>
+        new(Id, Name, Url, CreatedAt, LastUpdatedAt);
+}
+
+public record SourceResponse(
+    Guid Id,
+    string Name,
+    string Url,
+    DateTimeOffset CreatedAt,
+    DateTimeOffset? LastUpdatedAt);
+
+public class Crawl
+{
+    public Guid Id { get; set; }
+    public Guid SourceId { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public string Status { get; set; } = "pending";
+    public DateTimeOffset CreatedAt { get; set; }
+    public DateTimeOffset? LastUpdatedAt { get; set; }
+
+    public CrawlResponse ToResponse() =>
+        new(Id, SourceId, Name, Status, CreatedAt, LastUpdatedAt);
+}
+
+public record CrawlResponse(
+    Guid Id,
+    Guid SourceId,
+    string Name,
+    string Status,
+    DateTimeOffset CreatedAt,
+    DateTimeOffset? LastUpdatedAt);
+}
+
+```
+
+#### `work/src/TurtleStack.Endpoints/ListCrawlsEndpoint.cs`
+
+```
+using Wolverine.Http;
+using Microsoft.AspNetCore.Http;
+
+namespace TurtleStack.Endpoints
+{
+
+public static class ListCrawlsEndpoint
+{
+    private const int MaxPageSize = 100;
+    private static readonly HashSet<string> AllowedSortFields =
+        new(StringComparer.OrdinalIgnoreCase) { "name", "createdAt" };
+    private static readonly HashSet<string> AllowedDirections =
+        new(StringComparer.OrdinalIgnoreCase) { "asc", "desc" };
+
+    public record ListCrawlsRequest(
+        Guid SourceId,
+        int Page = 1,
+        int Size = 25,
+        string? Sort = "createdAt",
+        string? Dir = "desc",
+        string? Q = null);
+
+    public static async Task<ProblemDetails?> LoadAsync(
+        Guid sourceId,
+        [AsParameters] ListCrawlsRequest request,
+        IQuerySession session,
+        HttpContext http,
+        CancellationToken ct)
     {
-        var request = new GetCrawlsEndpoint.GetCrawlsRequest(
-            SourceId: Guid.NewGuid(),
-            Sort: "invalid");
+        if (request.Sort is not null && !AllowedSortFields.Contains(request.Sort))
+            return new ProblemDetails
+            {
+                Status = 400,
+                Title = "Invalid sort field",
+                Detail = $"sort must be one of: {string.Join(", ", AllowedSortFields)}.",
+                Instance = http.Request.Path
+            };
 
-        var result = await GetCrawlsEndpoint.LoadAsync(request, _session, _httpContext);
+        if (request.Dir is not null && !AllowedDirections.Contains(request.Dir))
+            return new ProblemDetails
+            {
+                Status = 400,
+                Title = "Invalid sort direction",
+                Detail = "dir must be 'asc' or 'desc'.",
+                Instance = http.Request.Path
+            };
 
-        result.ShouldNotBeNull();
-        result.Status.ShouldBe(400);
-        result.Title.ShouldBe("Invalid sort field");
+        var sourceExists = await session.Query<Source>()
+            .AnyAsync(s => s.Id == sourceId, ct);
+
+        if (!sourceExists)
+            return new ProblemDetails
+            {
+                Status = 404,
+                Title = "Not Found",
+                Detail = $"Source with id '{sourceId}' does not exist.",
+                Instance = http.Request.Path
+            };
+
+        return null;
     }
 
-    [Fact]
-    public async Task LoadAsync_WithInvalidDirection_Returns400()
+    [WolverineGet("/api/sources/{sourceId}/crawls")]
+    public static async Task<PagedResult<CrawlResponse>> Handle(
+        Guid sourceId,
+        [AsParameters] ListCrawlsRequest request,
+        IQuerySession session,
+        CancellationToken ct)
     {
-        var request = new GetCrawlsEndpoint.GetCrawlsRequest(
-            SourceId: Guid.NewGuid(),
-            Dir: "sideways");
+        var size = Math.Min(request.Size, MaxPageSize);
+        var query = session.Query<Crawl>().Where(c => c.SourceId == sourceId);
 
-        var result = await GetCrawlsEndpoint.LoadAsync(request, _session, _httpContext);
+        if (!string.IsNullOrWhiteSpace(request.Q))
+            query = query.Where(c => c.Name.MatchesSql("%?%", request.Q));
 
-        result.ShouldNotBeNull();
-        result.Status.ShouldBe(400);
-        result.Title.ShouldBe("Invalid sort direction");
-    }
-
-    [Fact]
-    public async Task LoadAsync_WithNonExistentSource_Returns404()
-    {
-        var sourceId = Guid.NewGuid();
-        var request = new GetCrawlsEndpoint.GetCrawlsRequest(SourceId: sourceId);
-
-        var result = await GetCrawlsEndpoint.LoadAsync(request, _session, _httpContext);
-
-        result.ShouldNotBeNull();
-        result.Status.ShouldBe(404);
-        result.Title.ShouldBe("Not Found");
-        result.Detail.ShouldContain(sourceId.ToString());
-    }
-
-    [Fact]
-    public async Task LoadAsync_WithValidSourceAndParams_ReturnsNull()
-    {
-        var sourceId = Guid.NewGuid();
-        var source = new Source { Id = sourceId, Name = "Test", Url = "http://test.com" };
-        _session.Add(source);
-
-        var request = new GetCrawlsEndpoint.GetCrawlsRequest(
-            SourceId: sourceId,
-            Sort: "createdAt",
-            Dir: "asc");
-
-        var result = await GetCrawlsEndpoint.LoadAsync(request, _session, _httpContext);
-
-        result.ShouldBeNull();
-    }
-
-    [Fact]
-    public async Task Handle_ReturnsCrawlsForSource()
-    {
-        var sourceId = Guid.NewGuid();
-        var crawls = new[]
+        query = request.Sort?.ToLowerInvariant() switch
         {
-            new Crawl { Id = Guid.NewGuid(), SourceId = sourceId, Name = "Crawl 1", CreatedAt = DateTimeOffset.UtcNow },
-            new Crawl { Id = Guid.NewGuid(), SourceId = sourceId, Name = "Crawl 2", CreatedAt = DateTimeOffset.UtcNow.AddDays(1) }
+            "name" => request.Dir == "asc"
+                ? query.OrderBy(c => c.Name)
+                : query.OrderByDescending(c => c.Name),
+            _ => request.Dir == "asc"
+                ? query.OrderBy(c => c.CreatedAt)
+                : query.OrderByDescending(c => c.CreatedAt)
         };
-        foreach (var c in crawls) _session.Add(c);
 
-        var request = new GetCrawlsEndpoint.GetCrawlsRequest(SourceId: sourceId);
-        var result = await GetCrawlsEndpoint.Handle(request, _session, CancellationToken.None);
+        var totalItems = await query.CountAsync(ct);
+        var items = await query
+            .Skip((request.Page - 1) * size)
+            .Take(size)
+            .ToListAsync(ct);
 
-        result.Items.Count.ShouldBe(2);
-        result.TotalItems.ShouldBe(2);
-        result.TotalPages.ShouldBe(1);
+        return new PagedResult<CrawlResponse>(
+            items.Select(c => c.ToResponse()).ToList(),
+            request.Page, size, totalItems);
     }
-
-    [Fact]
-    public async Task Handle_FiltersByCrawlName()
-    {
-        var sourceId = Guid.NewGuid();
-        _session.Add(new Crawl { Id = Guid.NewGuid(), SourceId = sourceId, Name = "ProductA", CreatedAt = DateTimeOffset.UtcNow });
-        _session.Add(new Crawl { Id = Guid.NewGuid(), SourceId = sourceId, Name = "ProductB", CreatedAt = DateTimeOffset.UtcNow });
-
-        var request = new GetCrawlsEndpoint.GetCrawlsRequest(SourceId: sourceId, Q: "ProductA");
-        var result = await GetCrawlsEndpoint.Handle(request, _session, CancellationToken.None);
-
-        result.Items.Count.ShouldBe(1);
-        result.Items[0].Name.ShouldBe("ProductA");
-    }
-
-    [Fact]
-    public async Task Handle_SortsByNameAscending()
-    {
-        var sourceId = Guid.NewGuid();
-        _session.Add(new Crawl { Id = Guid.NewGuid(), SourceId = sourceId, Name = "Zebra", CreatedAt = DateTimeOffset.UtcNow });
-        _session.Add(new Crawl { Id = Guid.NewGuid(), SourceId = sourceId, Name = "Alpha", CreatedAt = DateTimeOffset.UtcNow });
-
-        var request = new GetCrawlsEndpoint.GetCrawlsRequest(SourceId: sourceId, Sort: "name", Dir: "asc");
-        var result = await GetCrawlsEndpoint.Handle(request, _session, CancellationToken.None);
-
-        result.Items[0].Name.ShouldBe("Alpha");
-        result.Items[1].Name.ShouldBe("Zebra");
-    }
-
-    [Fact]
-    public async Task Handle_SortsByNameDescending()
-    {
-        var sourceId = Guid.NewGuid();
-        _session.Add(new Crawl { Id = Guid.NewGuid(), SourceId = sourceId, Name = "Alpha", CreatedAt = DateTimeOffset.UtcNow });
-        _session.Add(new Crawl { Id = Guid.NewGuid(), SourceId = sourceId, Name = "Zebra", CreatedAt = DateTimeOffset.UtcNow });
-
-        var request = new GetCrawlsEndpoint.GetCrawlsRequest(SourceId: sourceId, Sort: "name", Dir: "desc");
-        var result = await GetCrawlsEndpoint.Handle(request, _session, CancellationToken.None);
-
-        result.Items[0].Name.ShouldBe("Zebra");
-        result.Items[1].Name.ShouldBe("Alpha");
-    }
-
-    [Fact]
-    public async Task Handle_SortsByCreatedAtDescendingByDefault()
-    {
-        var sourceId = Guid.NewGuid();
-        var now = DateTimeOffset.UtcNow;
-        _session.Add(new Crawl { Id = Guid.NewGuid(), SourceId = sourceId, Name = "Old", CreatedAt = now.AddDays(-1) });
-        _session.Add(new Crawl { Id = Guid.NewGuid(), SourceId = sourceId, Name = "New", CreatedAt = now });
-
-        var request = new GetCrawlsEndpoint.GetCrawlsRequest(SourceId: sourceId);
-        var result = await GetCrawlsEndpoint.Handle(request, _session, CancellationToken.None);
-
-        result.Items[0].Name.ShouldBe("New");
-        result.Items[1].Name.ShouldBe("Old");
-    }
-
-    [Fact]
-    public async Task Handle_PaginatesResults()
-    {
-        var sourceId = Guid.NewGuid();
-        for (int i = 1; i <= 30; i++)
-            _session.Add(new Crawl { Id = Guid.NewGuid(), SourceId = sourceId, Name = $"Crawl {i:00}", CreatedAt = DateTimeOffset.UtcNow });
-
-        var page1 = await GetCrawlsEndpoint.Handle(
-            new GetCrawlsEndpoint.GetCrawlsRequest(SourceId: sourceId, Page: 1, Size: 10),
-            _session, CancellationToken.None);
-
-        page1.Items.Count.ShouldBe(10);
-        page1.TotalItems.ShouldBe(30);
-        page1.TotalPages.ShouldBe(3);
-        page1.Page.ShouldBe(1);
-
-        var page2 = await GetCrawlsEndpoint.Handle(
-            new GetCrawlsEndpoint.GetCrawlsRequest(SourceId: sourceId, Page: 2, Size: 10),
-            _session, CancellationToken.None);
-
-        page2.Items.Count.ShouldBe(10);
-        page2.Page.ShouldBe(2);
-    }
-
-    [Fact]
-    public async Task Handle_CapsPageSizeAtMaximum()
-    {
-        var sourceId = Guid.NewGuid();
-        for (int i = 0; i < 150; i++)
-            _session.Add(new Crawl { Id = Guid.NewGuid(), SourceId = sourceId, Name = $"Crawl {i}", CreatedAt = DateTimeOffset.UtcNow });
-
-        var request = new GetCrawlsEndpoint.GetCrawlsRequest(SourceId: sourceId, Size: 200);
-        var result = await GetCrawlsEndpoint.Handle(request, _session, CancellationToken.None);
-
-        result.Items.Count.ShouldBe(100);
-        result.Size.ShouldBe(100);
-    }
-
-    [Fact]
-    public async Task Handle_ExcludesOtherSourceCrawls()
-    {
-        var sourceId1 = Guid.NewGuid();
-        var sourceId2 = Guid.NewGuid();
-        _session.Add(new Crawl { Id = Guid.NewGuid(), SourceId = sourceId1, Name = "Crawl 1", CreatedAt = DateTimeOffset.UtcNow });
-        _session.Add(new Crawl { Id = Guid.NewGuid(), SourceId = sourceId2, Name = "Crawl 2", CreatedAt = DateTimeOffset.UtcNow });
-
-        var result = await GetCrawlsEndpoint.Handle(
-            new GetCrawlsEndpoint.GetCrawlsRequest(SourceId: sourceId1),
-            _session, CancellationToken.None);
-
-        result.Items.Count.ShouldBe(1);
-        result.Items[0].SourceId.ShouldBe(sourceId1);
-    }
-}
-
-```
-
-#### `work/tests/TurtleStack.Endpoints.Tests/ListSourcesEndpointTests.cs`
-
-```
-using Shouldly;
-using TurtleStack.Endpoints;
-using TurtleStack.Endpoints.Aggregates;
-using TurtleStack.Endpoints.Endpoints.Sources;
-using Microsoft.AspNetCore.Http;
-using Xunit;
-
-namespace TurtleStack.Endpoints.Tests;
-
-public class ListSourcesEndpointTests
-{
-    private readonly MockQuerySession _session = new();
-    private readonly HttpContext _httpContext = new() { Request = { Path = "/api/sources" } };
-
-    [Fact]
-    public void LoadAsync_WithInvalidSort_Returns400()
-    {
-        var request = new ListSourcesEndpoint.ListSourcesRequest(Sort: "invalid");
-
-        var result = ListSourcesEndpoint.LoadAsync(request, _httpContext);
-
-        result.ShouldNotBeNull();
-        result.Status.ShouldBe(400);
-        result.Title.ShouldBe("Invalid sort field");
-    }
-
-    [Fact]
-    public void LoadAsync_WithInvalidDirection_Returns400()
-    {
-        var request = new ListSourcesEndpoint.ListSourcesRequest(Dir: "sideways");
-
-        var result = ListSourcesEndpoint.LoadAsync(request, _httpContext);
-
-        result.ShouldNotBeNull();
-        result.Status.ShouldBe(400);
-        result.Title.ShouldBe("Invalid sort direction");
-    }
-
-    [Fact]
-    public void LoadAsync_WithValidParams_ReturnsNull()
-    {
-        var request = new ListSourcesEndpoint.ListSourcesRequest(
-            Sort: "createdAt",
-            Dir: "asc");
-
-        var result = ListSourcesEndpoint.LoadAsync(request, _httpContext);
-
-        result.ShouldBeNull();
-    }
-
-    [Fact]
-    public async Task Handle_ReturnsAllSources()
-    {
-        _session.Add(new Source { Id = Guid.NewGuid(), Name = "Source 1", Url = "http://test1.com", CreatedAt = DateTimeOffset.UtcNow });
-        _session.Add(new Source { Id = Guid.NewGuid(), Name = "Source 2", Url = "http://test2.com", CreatedAt = DateTimeOffset.UtcNow });
-
-        var request = new ListSourcesEndpoint.ListSourcesRequest();
-        var result = await ListSourcesEndpoint.Handle(request, _session, CancellationToken.None);
-
-        result.Items.Count.ShouldBe(2);
-        result.TotalItems.ShouldBe(2);
-    }
-
-    [Fact]
-    public async Task Handle_FiltersBySourceName()
-    {
-        _session.Add(new Source { Id = Guid.NewGuid(), Name = "TechNews", Url = "http://test1.com", CreatedAt = DateTimeOffset.UtcNow });
-        _session.Add(new Source { Id = Guid.NewGuid(), Name = "SportsNews", Url = "http://test2.com", CreatedAt = DateTimeOffset.UtcNow });
-
-        var request = new ListSourcesEndpoint.ListSourcesRequest(Q: "TechNews");
-        var result = await ListSourcesEndpoint.Handle(request, _session, CancellationToken.None);
-
-        result.Items.Count.ShouldBe(1);
-        result.Items[0].Name.ShouldBe("TechNews");
-    }
-
-    [Fact]
-    public async Task Handle_SortsByNameAscending()
-    {
-        _session.Add(new Source { Id = Guid.NewGuid(), Name = "Zebra", Url = "http://z.com", CreatedAt = DateTimeOffset.UtcNow });
-        _session.Add(new Source { Id = Guid.NewGuid(), Name = "Alpha", Url = "http://a.com", CreatedAt = DateTimeOffset.UtcNow });
-
-        var request = new ListSourcesEndpoint.ListSourcesRequest(Sort: "name", Dir: "asc");
-        var result = await ListSourcesEndpoint.Handle(request, _session, CancellationToken.None);
-
-        result.Items[0].Name.ShouldBe("Alpha");
-        result.Items[1].Name.ShouldBe("Zebra");
-    }
-
-    [Fact]
-    public async Task Handle_SortsByCreatedAtDescendingByDefault()
-    {
-        var now = DateTimeOffset.UtcNow;
-        _session.Add(new Source { Id = Guid.NewGuid(), Name = "Old", Url = "http://old.com", CreatedAt = now.AddDays(-1) });
-        _session.Add(new Source { Id = Guid.NewGuid(), Name = "New", Url = "http://new.com", CreatedAt = now });
-
-        var request = new ListSourcesEndpoint.ListSourcesRequest();
-        var result = await ListSourcesEndpoint.Handle(request, _session, CancellationToken.None);
-
-        result.Items[0].Name.ShouldBe("New");
-        result.Items[1].Name.ShouldBe("Old");
-    }
-
-    [Fact]
-    public async Task Handle_PaginatesResults()
-    {
-        for (int i = 1; i <= 30; i++)
-            _session.Add(new Source { Id = Guid.NewGuid(), Name = $"Source {i:00}", Url = $"http://test{i}.com", CreatedAt = DateTimeOffset.UtcNow });
-
-        var page1 = await ListSourcesEndpoint.Handle(
-            new ListSourcesEndpoint.ListSourcesRequest(Page: 1, Size: 10),
-            _session, CancellationToken.None);
-
-        page1.Items.Count.ShouldBe(10);
-        page1.TotalItems.ShouldBe(30);
-        page1.TotalPages.ShouldBe(3);
-
-        var page2 = await ListSourcesEndpoint.Handle(
-            new ListSourcesEndpoint.ListSourcesRequest(Page: 2, Size: 10),
-            _session, CancellationToken.None);
-
-        page2.Items.Count.ShouldBe(10);
-        page2.Page.ShouldBe(2);
-    }
-
-    [Fact]
-    public async Task Handle_CapsPageSizeAtMaximum()
-    {
-        for (int i = 0; i < 150; i++)
-            _session.Add(new Source { Id = Guid.NewGuid(), Name = $"Source {i}", Url = $"http://test{i}.com", CreatedAt = DateTimeOffset.UtcNow });
-
-        var request = new ListSourcesEndpoint.ListSourcesRequest(Size: 200);
-        var result = await ListSourcesEndpoint.Handle(request, _session, CancellationToken.None);
-
-        result.Items.Count.ShouldBe(100);
-        result.Size.ShouldBe(100);
     }
 }
 
@@ -992,45 +645,319 @@ public class ListSourcesEndpointTests
 </Project>
 ```
 
-#### `work/tests/TurtleStack.Endpoints.Tests/UnitTest1.cs`
+#### `work/tests/TurtleStack.Endpoints.Tests/ListCrawlsEndpointTests.cs`
 
 ```
-﻿namespace TurtleStack.Endpoints.Tests;
-
-public class UnitTest1
-{
-    [Fact]
-    public void Test1()
-    {
-
-    }
-}
-
-```
-
-#### `work/tests/TurtleStack.Endpoints.Tests/TestHelpers.cs`
-
-```
-using TurtleStack.Endpoints;
-using TurtleStack.Endpoints.Aggregates;
+using Shouldly;
+using Xunit;
+using Microsoft.AspNetCore.Http;
 
 namespace TurtleStack.Endpoints.Tests;
 
-internal class MockQuerySession : IQuerySession
+public class ListCrawlsEndpointTests
 {
-    private readonly List<Source> _sources = new();
-    private readonly List<Crawl> _crawls = new();
+    private static readonly Guid SourceId = Guid.NewGuid();
+    private static readonly Guid OtherSourceId = Guid.NewGuid();
 
-    public void Add(Source source) => _sources.Add(source);
-    public void Add(Crawl crawl) => _crawls.Add(crawl);
+    private readonly MockQuerySession _session = new();
+    private readonly HttpContext _httpContext = new() { Request = { Path = "/api/sources/123/crawls" } };
 
-    public IQueryable<T> Query<T>() where T : class
+    [Fact]
+    public async Task Handle_ReturnsPaginatedCrawls()
     {
-        if (typeof(T) == typeof(Source))
-            return (IQueryable<T>)_sources.AsQueryable();
-        if (typeof(T) == typeof(Crawl))
-            return (IQueryable<T>)_crawls.AsQueryable();
-        throw new NotSupportedException($"Query<{typeof(T).Name}> is not supported");
+        var sourceId = SourceId;
+        var crawl1 = new Crawl { Id = Guid.NewGuid(), SourceId = sourceId, Name = "crawl-1", CreatedAt = DateTimeOffset.UtcNow.AddDays(-2) };
+        var crawl2 = new Crawl { Id = Guid.NewGuid(), SourceId = sourceId, Name = "crawl-2", CreatedAt = DateTimeOffset.UtcNow.AddDays(-1) };
+        var crawl3 = new Crawl { Id = Guid.NewGuid(), SourceId = sourceId, Name = "crawl-3", CreatedAt = DateTimeOffset.UtcNow };
+
+        _session.Crawls.AddRange(crawl1, crawl2, crawl3);
+
+        var request = new ListCrawlsEndpoint.ListCrawlsRequest(
+            SourceId: sourceId, Page: 1, Size: 10, Sort: "createdAt", Dir: "desc");
+
+        var result = await ListCrawlsEndpoint.Handle(
+            sourceId, request, _session, CancellationToken.None);
+
+        result.Items.Count.ShouldBe(3);
+        result.Page.ShouldBe(1);
+        result.Size.ShouldBe(10);
+        result.TotalItems.ShouldBe(3);
+        result.TotalPages.ShouldBe(1);
+        result.Items[0].Name.ShouldBe("crawl-3");
+        result.Items[1].Name.ShouldBe("crawl-2");
+        result.Items[2].Name.ShouldBe("crawl-1");
+    }
+
+    [Fact]
+    public async Task Handle_FiltersByCrawlSourceId()
+    {
+        var crawl1 = new Crawl { Id = Guid.NewGuid(), SourceId = SourceId, Name = "crawl-1", CreatedAt = DateTimeOffset.UtcNow };
+        var crawl2 = new Crawl { Id = Guid.NewGuid(), SourceId = OtherSourceId, Name = "crawl-2", CreatedAt = DateTimeOffset.UtcNow };
+
+        _session.Crawls.AddRange(crawl1, crawl2);
+
+        var request = new ListCrawlsEndpoint.ListCrawlsRequest(SourceId: SourceId);
+
+        var result = await ListCrawlsEndpoint.Handle(
+            SourceId, request, _session, CancellationToken.None);
+
+        result.Items.Count.ShouldBe(1);
+        result.Items[0].SourceId.ShouldBe(SourceId);
+    }
+
+    [Fact]
+    public async Task Handle_SortsByNameAscending()
+    {
+        var crawl1 = new Crawl { Id = Guid.NewGuid(), SourceId = SourceId, Name = "zebra", CreatedAt = DateTimeOffset.UtcNow };
+        var crawl2 = new Crawl { Id = Guid.NewGuid(), SourceId = SourceId, Name = "apple", CreatedAt = DateTimeOffset.UtcNow };
+        var crawl3 = new Crawl { Id = Guid.NewGuid(), SourceId = SourceId, Name = "banana", CreatedAt = DateTimeOffset.UtcNow };
+
+        _session.Crawls.AddRange(crawl1, crawl2, crawl3);
+
+        var request = new ListCrawlsEndpoint.ListCrawlsRequest(
+            SourceId: SourceId, Sort: "name", Dir: "asc");
+
+        var result = await ListCrawlsEndpoint.Handle(
+            SourceId, request, _session, CancellationToken.None);
+
+        result.Items.Count.ShouldBe(3);
+        result.Items[0].Name.ShouldBe("apple");
+        result.Items[1].Name.ShouldBe("banana");
+        result.Items[2].Name.ShouldBe("zebra");
+    }
+
+    [Fact]
+    public async Task Handle_SortsByNameDescending()
+    {
+        var crawl1 = new Crawl { Id = Guid.NewGuid(), SourceId = SourceId, Name = "apple", CreatedAt = DateTimeOffset.UtcNow };
+        var crawl2 = new Crawl { Id = Guid.NewGuid(), SourceId = SourceId, Name = "zebra", CreatedAt = DateTimeOffset.UtcNow };
+
+        _session.Crawls.AddRange(crawl1, crawl2);
+
+        var request = new ListCrawlsEndpoint.ListCrawlsRequest(
+            SourceId: SourceId, Sort: "name", Dir: "desc");
+
+        var result = await ListCrawlsEndpoint.Handle(
+            SourceId, request, _session, CancellationToken.None);
+
+        result.Items[0].Name.ShouldBe("zebra");
+        result.Items[1].Name.ShouldBe("apple");
+    }
+
+    [Fact]
+    public async Task Handle_SortsByCreatedAtAscending()
+    {
+        var now = DateTimeOffset.UtcNow;
+        var crawl1 = new Crawl { Id = Guid.NewGuid(), SourceId = SourceId, Name = "crawl-1", CreatedAt = now.AddDays(-2) };
+        var crawl2 = new Crawl { Id = Guid.NewGuid(), SourceId = SourceId, Name = "crawl-2", CreatedAt = now };
+
+        _session.Crawls.AddRange(crawl2, crawl1);
+
+        var request = new ListCrawlsEndpoint.ListCrawlsRequest(
+            SourceId: SourceId, Sort: "createdAt", Dir: "asc");
+
+        var result = await ListCrawlsEndpoint.Handle(
+            SourceId, request, _session, CancellationToken.None);
+
+        result.Items[0].Name.ShouldBe("crawl-1");
+        result.Items[1].Name.ShouldBe("crawl-2");
+    }
+
+    [Fact]
+    public async Task Handle_AppliesPagination()
+    {
+        var crawls = Enumerable.Range(1, 30)
+            .Select(i => new Crawl
+            {
+                Id = Guid.NewGuid(),
+                SourceId = SourceId,
+                Name = $"crawl-{i:D2}",
+                CreatedAt = DateTimeOffset.UtcNow
+            })
+            .ToList();
+
+        _session.Crawls.AddRange(crawls);
+
+        var request = new ListCrawlsEndpoint.ListCrawlsRequest(
+            SourceId: SourceId, Page: 2, Size: 10);
+
+        var result = await ListCrawlsEndpoint.Handle(
+            SourceId, request, _session, CancellationToken.None);
+
+        result.Items.Count.ShouldBe(10);
+        result.Page.ShouldBe(2);
+        result.Size.ShouldBe(10);
+        result.TotalItems.ShouldBe(30);
+        result.TotalPages.ShouldBe(3);
+    }
+
+    [Fact]
+    public async Task Handle_EnforcesMaxPageSize()
+    {
+        var crawls = Enumerable.Range(1, 150)
+            .Select(i => new Crawl
+            {
+                Id = Guid.NewGuid(),
+                SourceId = SourceId,
+                Name = $"crawl-{i}",
+                CreatedAt = DateTimeOffset.UtcNow
+            })
+            .ToList();
+
+        _session.Crawls.AddRange(crawls);
+
+        var request = new ListCrawlsEndpoint.ListCrawlsRequest(
+            SourceId: SourceId, Page: 1, Size: 200);
+
+        var result = await ListCrawlsEndpoint.Handle(
+            SourceId, request, _session, CancellationToken.None);
+
+        result.Items.Count.ShouldBe(100);
+        result.Size.ShouldBe(100);
+    }
+
+    [Fact]
+    public async Task Handle_SearchesByCrawlName()
+    {
+        var crawl1 = new Crawl { Id = Guid.NewGuid(), SourceId = SourceId, Name = "production-crawl", CreatedAt = DateTimeOffset.UtcNow };
+        var crawl2 = new Crawl { Id = Guid.NewGuid(), SourceId = SourceId, Name = "staging-crawl", CreatedAt = DateTimeOffset.UtcNow };
+        var crawl3 = new Crawl { Id = Guid.NewGuid(), SourceId = SourceId, Name = "development", CreatedAt = DateTimeOffset.UtcNow };
+
+        _session.Crawls.AddRange(crawl1, crawl2, crawl3);
+
+        var request = new ListCrawlsEndpoint.ListCrawlsRequest(
+            SourceId: SourceId, Q: "crawl");
+
+        var result = await ListCrawlsEndpoint.Handle(
+            SourceId, request, _session, CancellationToken.None);
+
+        result.Items.Count.ShouldBe(2);
+        result.Items.ShouldAllBe(c => c.Name.Contains("crawl", StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
+    public async Task Handle_SearchIsCaseInsensitive()
+    {
+        var crawl1 = new Crawl { Id = Guid.NewGuid(), SourceId = SourceId, Name = "UPPERCASE", CreatedAt = DateTimeOffset.UtcNow };
+        var crawl2 = new Crawl { Id = Guid.NewGuid(), SourceId = SourceId, Name = "lowercase", CreatedAt = DateTimeOffset.UtcNow };
+
+        _session.Crawls.AddRange(crawl1, crawl2);
+
+        var request = new ListCrawlsEndpoint.ListCrawlsRequest(
+            SourceId: SourceId, Q: "upper");
+
+        var result = await ListCrawlsEndpoint.Handle(
+            SourceId, request, _session, CancellationToken.None);
+
+        result.Items.Count.ShouldBe(1);
+        result.Items[0].Name.ShouldBe("UPPERCASE");
+    }
+
+    [Fact]
+    public async Task LoadAsync_Returns404WhenSourceNotFound()
+    {
+        var request = new ListCrawlsEndpoint.ListCrawlsRequest(SourceId: SourceId);
+
+        var result = await ListCrawlsEndpoint.LoadAsync(
+            SourceId, request, _session, _httpContext, CancellationToken.None);
+
+        result.ShouldNotBeNull();
+        result.Status.ShouldBe(404);
+        result.Title.ShouldBe("Not Found");
+        result.Detail!.ShouldContain(SourceId.ToString());
+    }
+
+    [Fact]
+    public async Task LoadAsync_PassesValidationWhenSourceExists()
+    {
+        var source = new Source { Id = SourceId, Name = "test-source" };
+        _session.Sources.Add(source);
+
+        var request = new ListCrawlsEndpoint.ListCrawlsRequest(SourceId: SourceId);
+
+        var result = await ListCrawlsEndpoint.LoadAsync(
+            SourceId, request, _session, _httpContext, CancellationToken.None);
+
+        result.ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task LoadAsync_Returns400ForInvalidSortField()
+    {
+        var source = new Source { Id = SourceId, Name = "test-source" };
+        _session.Sources.Add(source);
+
+        var request = new ListCrawlsEndpoint.ListCrawlsRequest(
+            SourceId: SourceId, Sort: "invalid");
+
+        var result = await ListCrawlsEndpoint.LoadAsync(
+            SourceId, request, _session, _httpContext, CancellationToken.None);
+
+        result.ShouldNotBeNull();
+        result.Status.ShouldBe(400);
+        result.Title.ShouldBe("Invalid sort field");
+    }
+
+    [Fact]
+    public async Task LoadAsync_Returns400ForInvalidDirection()
+    {
+        var source = new Source { Id = SourceId, Name = "test-source" };
+        _session.Sources.Add(source);
+
+        var request = new ListCrawlsEndpoint.ListCrawlsRequest(
+            SourceId: SourceId, Dir: "invalid");
+
+        var result = await ListCrawlsEndpoint.LoadAsync(
+            SourceId, request, _session, _httpContext, CancellationToken.None);
+
+        result.ShouldNotBeNull();
+        result.Status.ShouldBe(400);
+        result.Title.ShouldBe("Invalid sort direction");
+    }
+
+    [Fact]
+    public async Task LoadAsync_IsCaseInsensitiveForSortField()
+    {
+        var source = new Source { Id = SourceId, Name = "test-source" };
+        _session.Sources.Add(source);
+
+        var request = new ListCrawlsEndpoint.ListCrawlsRequest(
+            SourceId: SourceId, Sort: "NAME");
+
+        var result = await ListCrawlsEndpoint.LoadAsync(
+            SourceId, request, _session, _httpContext, CancellationToken.None);
+
+        result.ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task LoadAsync_IsCaseInsensitiveForDirection()
+    {
+        var source = new Source { Id = SourceId, Name = "test-source" };
+        _session.Sources.Add(source);
+
+        var request = new ListCrawlsEndpoint.ListCrawlsRequest(
+            SourceId: SourceId, Dir: "ASC");
+
+        var result = await ListCrawlsEndpoint.LoadAsync(
+            SourceId, request, _session, _httpContext, CancellationToken.None);
+
+        result.ShouldBeNull();
+    }
+
+    private class MockQuerySession : IQuerySession
+    {
+        public List<Source> Sources { get; } = new();
+        public List<Crawl> Crawls { get; } = new();
+
+        public IQueryable<T> Query<T>()
+        {
+            if (typeof(T) == typeof(Source))
+                return (IQueryable<T>)Sources.AsQueryable();
+            if (typeof(T) == typeof(Crawl))
+                return (IQueryable<T>)Crawls.AsQueryable();
+            throw new NotSupportedException($"Type {typeof(T).Name} is not supported");
+        }
     }
 }
 
@@ -1041,36 +968,36 @@ internal class MockQuerySession : IQuerySession
 | Field | Value |
 |---|---|
 | Verdict | PASS |
-| Score | 15.5/18.5 (84%) |
-| Evaluated | 2026-05-02 |
-| Target duration | 121059 ms |
-| Target cost | $0.2157 |
+| Score | 14.5/18.0 (81%) |
+| Evaluated | 2026-05-04 |
+| Target duration | 143977 ms |
+| Target cost | $0.4253 |
 | Permission denials | 0 |
 
 ### Criteria
 
 | # | Criterion | Result | Evidence |
 |---|---|---|---|
-| c1 | Skill performs reconnaissance — reads existing endpoints and identifies the URL pattern, naming conventions, and `PagedResult<T>` return type in use | PARTIAL | The skill clearly applied the existing patterns (static class with LoadAsync/Handle, PagedResult<T>, AllowedSortFields/AllowedDirections, same IQueryable chain) — evidenced by GetCrawlsEndpoint.cs mirroring ListSourcesEndpoint.cs exactly. However, the context was provided in the prompt rather than discovered through file reads, and the captured chat output shows no explicit reconnaissance step. |
-| c2 | Endpoint uses `IQuerySession` (read-only) — not `IDocumentSession` (read-write) for a GET query | PASS | GetCrawlsEndpoint.cs LoadAsync signature: `IQuerySession session` and Handle signature: `IQuerySession session`. No IDocumentSession used. |
-| c3 | Pagination, sorting, and filtering are performed in the database query — not by loading all records and filtering in memory | PASS | GetCrawlsEndpoint.cs builds an IQueryable chain with `.Where()`, `.OrderBy()`/`.OrderByDescending()`, `.Skip()`, `.Take()` before calling `ToListAsync(ct)` — all deferred until materialization. |
-| c4 | Sort field is validated against an allowlist (name, createdAt) — not passed directly to the ORM (SQL injection vector) | PASS | GetCrawlsEndpoint.cs defines `AllowedSortFields = new(StringComparer.OrdinalIgnoreCase) { "name", "createdAt" }` and checks `!AllowedSortFields.Contains(request.Sort)` in LoadAsync before any ORM call. |
-| c5 | `size` parameter is capped at 100 server-side — not trusted from the client | PASS | GetCrawlsEndpoint.cs Handle: `var size = Math.Min(request.Size, MaxPageSize);` where `MaxPageSize = 100`. Test `Handle_CapsPageSizeAtMaximum` confirms size=200 input yields 100 results. |
-| c6 | Source existence check is in LoadAsync returning ProblemDetails 404 — not in Handle | PASS | GetCrawlsEndpoint.cs LoadAsync contains `var sourceExists = await session.Query<Source>().AnyAsync(...)` and returns `new ProblemDetails { Status = 404, ... }` when not found. Handle contains no source check. |
-| c7 | Skill produces a unit test and an integration test — both with evidence (command + exit code) | PARTIAL | GetCrawlsEndpointTests.cs contains 13 unit tests using Shouldly, with chat output stating '22/22 tests passing'. However, there are no integration tests (no Alba, no Testcontainers) anywhere in the artifacts — only unit tests exist. |
-| c8 | Response DTO is separate from the aggregate — `CrawlResponse` not a direct `Crawl` return | PARTIAL | Aggregates/Crawl.cs defines `public record CrawlResponse(Guid Id, Guid SourceId, string Name, string Status, DateTimeOffset CreatedAt, DateTimeOffset? LastUpdatedAt)` and `ToResponse()` method. Handle returns `PagedResult<CrawlResponse>` not `PagedResult<Crawl>`. |
-| c9 | Anti-patterns section confirms no in-memory pagination, no flat URL, no direct aggregate exposure | FAIL | The captured chat response contains three sections: 'Endpoint Implementation', 'Project Structure', and 'Test Results'. No anti-patterns section exists anywhere in the output or code files. |
-| c10 | Output's route is exactly `GET /api/sources/{sourceId}/crawls`, hierarchical, not a flat top-level `/api/crawls?sourceId=...` | PASS | GetCrawlsEndpoint.cs: `[WolverineGet("/api/sources/{sourceId}/crawls")]` — hierarchical route confirmed. |
-| c11 | Output binds query parameters with their stated defaults — `page=1`, `size=25`, `sort=createdAt`, `dir=desc` — and rejects `size > 100` server-side rather than trusting the client | PASS | GetCrawlsRequest record: `int Page = 1`, `int Size = 25`, `string? Sort = "createdAt"`, `string? Dir = "desc"`. Handle: `var size = Math.Min(request.Size, MaxPageSize)` where MaxPageSize=100. |
-| c12 | Output validates `sort` against an explicit allowlist of `["name", "createdAt"]` and `dir` against `["asc", "desc"]`, returning a 400 Problem Details on invalid values rather than passing through to the ORM | PASS | LoadAsync returns `new ProblemDetails { Status = 400, Title = "Invalid sort field" }` and `new ProblemDetails { Status = 400, Title = "Invalid sort direction" }` when checks against AllowedSortFields/AllowedDirections fail. |
-| c13 | Output uses `IQuerySession` (read-only) — not `IDocumentSession` — for this GET, given the read-only semantics | PASS | Both LoadAsync and Handle parameters use `IQuerySession session`. No IDocumentSession reference exists anywhere in the project. |
-| c14 | Output applies pagination, sorting, and filtering at the database query level (via `IQueryable` with `Skip`/`Take` or Marten's paging), not by materialising all crawls in memory and filtering client-side | PASS | GetCrawlsEndpoint.cs Handle: query built with `.Where(c => c.SourceId == request.SourceId)`, conditional `.Where()` for search, `.OrderBy()`/`.OrderByDescending()`, `.Skip((request.Page - 1) * size).Take(size)` before `.ToListAsync(ct)`. |
-| c15 | Output's source-existence check happens in `LoadAsync` and returns ProblemDetails 404 with `instance` set to the request path — not by throwing in `Handle` | PASS | GetCrawlsEndpoint.cs LoadAsync: `return new ProblemDetails { Status = 404, Title = "Not Found", Detail = $"Source '{request.SourceId}' does not exist.", Instance = http.Request.Path };` |
-| c16 | Output's response uses a `PagedResult<T>` (or equivalent) shape with `items`, `page`, `size`, `totalItems`, `totalPages` — not a bare array | PASS | Common/PagedResult.cs defines `record PagedResult<T>(IReadOnlyList<T> Items, int Page, int Size, int TotalItems)` with computed `TotalPages`. Handle returns `new PagedResult<CrawlResponse>(...)` populated with all five values. |
-| c17 | Output's response items are a `CrawlResponse` DTO (or similar) — not the raw `Crawl` aggregate, preventing internal field exposure | PASS | Handle returns `PagedResult<CrawlResponse>` using `items.Select(c => c.ToResponse()).ToList()`. CrawlResponse is a separate record from the Crawl aggregate. |
-| c18 | Output includes both a unit test (with `When...` naming + Shouldly) and an integration test (Alba + Testcontainers), each with command and exit code shown as evidence of passing | PARTIAL | GetCrawlsEndpointTests.cs contains 13 Shouldly-based unit tests with '22/22 tests passing' as evidence. However: (1) test naming uses `Handle_ReturnsCrawlsForSource` pattern not `When...`, (2) no integration tests with Alba or Testcontainers exist in any artifact. |
-| c19 | Output's `q` text-search filter is implemented case-insensitively and against a documented set of fields (likely `name`), with the search semantics explicit (substring vs full-text) | PARTIAL | GetCrawlsEndpoint.cs uses `c.Name.MatchesSql("%?%", request.Q)` which in the stub is `value.Contains(term, StringComparison.OrdinalIgnoreCase)` — case-insensitive substring on Name. However search semantics (substring, case-insensitive, Name only) are not explicitly documented in code or output. |
+| c1 | Skill performs reconnaissance — reads existing endpoints and identifies the URL pattern, naming conventions, and `PagedResult<T>` return type in use | PASS | The implementation in `ListCrawlsEndpoint.cs` mirrors `ListSourcesEndpoint.cs` exactly — same `LoadAsync`/`Handle` split, same `AllowedSortFields`/`AllowedDirections` HashSets, same `PagedResult<T>` return, same `[AsParameters]` and `[WolverineGet]` attributes. Context was provided inline in the prompt and clearly applied throughout. |
+| c2 | Endpoint uses `IQuerySession` (read-only) — not `IDocumentSession` (read-write) for a GET query | PASS | `ListCrawlsEndpoint.cs` declares `IQuerySession session` in both `LoadAsync` and `Handle` signatures. `IDocumentSession` is never referenced. |
+| c3 | Pagination, sorting, and filtering are performed in the database query — not by loading all records and filtering in memory | PASS | `Handle` builds an `IQueryable<Crawl>` chain with `.Where(c => c.SourceId == sourceId)`, `.Where(c => c.Name.MatchesSql(...))`, `OrderBy`/`OrderByDescending`, then `CountAsync`, `Skip((request.Page - 1) * size).Take(size).ToListAsync` — all deferred query composition before materialisation. |
+| c4 | Sort field is validated against an allowlist (name, createdAt) — not passed directly to the ORM (SQL injection vector) | PASS | `private static readonly HashSet<string> AllowedSortFields = new(StringComparer.OrdinalIgnoreCase) { "name", "createdAt" };` and the guard `if (request.Sort is not null && !AllowedSortFields.Contains(request.Sort))` in `LoadAsync` reject anything outside the set with a 400. |
+| c5 | `size` parameter is capped at 100 server-side — not trusted from the client | PASS | `private const int MaxPageSize = 100;` and `var size = Math.Min(request.Size, MaxPageSize);` in `Handle`. Test `Handle_EnforcesMaxPageSize` confirms requesting 200 returns 100 items. |
+| c6 | Source existence check is in LoadAsync returning ProblemDetails 404 — not in Handle | PASS | `LoadAsync` contains `var sourceExists = await session.Query<Source>().AnyAsync(s => s.Id == sourceId, ct); if (!sourceExists) return new ProblemDetails { Status = 404, ... };`. `Handle` contains no source existence check. |
+| c7 | Skill produces a unit test and an integration test — both with evidence (command + exit code) | FAIL | The test file `ListCrawlsEndpointTests.cs` contains 15 unit tests using `MockQuerySession`. There are no integration tests (no Alba, no Testcontainers). The chat response says 'All 15 tests passed' but shows no actual `dotnet test` command output or exit code. |
+| c8 | Response DTO is separate from the aggregate — `CrawlResponse` not a direct `Crawl` return | PARTIAL | `Aggregates.cs` defines `public record CrawlResponse(Guid Id, Guid SourceId, string Name, string Status, DateTimeOffset CreatedAt, DateTimeOffset? LastUpdatedAt)` separately from `Crawl`. `Handle` returns `PagedResult<CrawlResponse>` via `items.Select(c => c.ToResponse())`. |
+| c9 | Anti-patterns section confirms no in-memory pagination, no flat URL, no direct aggregate exposure | FAIL | No 'Anti-patterns' section appears anywhere in the captured chat output or written artifacts. The implementation avoids those anti-patterns in practice, but there is no explicit section documenting that avoidance. |
+| c10 | Output's route is exactly `GET /api/sources/{sourceId}/crawls`, hierarchical, not a flat top-level `/api/crawls?sourceId=...` | PASS | `[WolverineGet("/api/sources/{sourceId}/crawls")]` attribute on `Handle` in `ListCrawlsEndpoint.cs`. |
+| c11 | Output binds query parameters with their stated defaults — `page=1`, `size=25`, `sort=createdAt`, `dir=desc` — and rejects `size > 100` server-side rather than trusting the client | PASS | `public record ListCrawlsRequest(Guid SourceId, int Page = 1, int Size = 25, string? Sort = "createdAt", string? Dir = "desc", string? Q = null)` sets all defaults correctly. `Math.Min(request.Size, MaxPageSize)` enforces the cap. |
+| c12 | Output validates `sort` against an explicit allowlist of `["name", "createdAt"]` and `dir` against `["asc", "desc"]`, returning a 400 Problem Details on invalid values rather than passing through to the ORM | PASS | `AllowedSortFields = { "name", "createdAt" }` and `AllowedDirections = { "asc", "desc" }` checked in `LoadAsync` with `Status = 400, Title = "Invalid sort field"` and `"Invalid sort direction"` respectively. |
+| c13 | Output uses `IQuerySession` (read-only) — not `IDocumentSession` — for this GET, given the read-only semantics | PASS | Both `LoadAsync` and `Handle` parameters declare `IQuerySession session`. `IDocumentSession` does not appear in any artifact. |
+| c14 | Output applies pagination, sorting, and filtering at the database query level (via `IQueryable` with `Skip`/`Take` or Marten's paging), not by materialising all crawls in memory and filtering client-side | PASS | `session.Query<Crawl>().Where(...).OrderBy(...).CountAsync(ct)` followed by `.Skip(...).Take(size).ToListAsync(ct)` — all operations compose the query before the single materialisation call. |
+| c15 | Output's source-existence check happens in `LoadAsync` and returns ProblemDetails 404 with `instance` set to the request path — not by throwing in `Handle` | PASS | `LoadAsync` returns `new ProblemDetails { Status = 404, Title = "Not Found", Detail = $"Source with id '{sourceId}' does not exist.", Instance = http.Request.Path }` when `sourceExists` is false. `Handle` contains no existence check. |
+| c16 | Output's response uses a `PagedResult<T>` (or equivalent) shape with `items`, `page`, `size`, `totalItems`, `totalPages` — not a bare array | PASS | `PagedResult.cs` defines `record PagedResult<T>(IReadOnlyList<T> Items, int Page, int Size, int TotalItems)` with computed `TotalPages`. `Handle` returns `new PagedResult<CrawlResponse>(...)` with all five fields. |
+| c17 | Output's response items are a `CrawlResponse` DTO (or similar) — not the raw `Crawl` aggregate, preventing internal field exposure | PASS | `Handle` returns `PagedResult<CrawlResponse>` using `items.Select(c => c.ToResponse())`. `CrawlResponse` is a separate record with only the intended public fields. |
+| c18 | Output includes both a unit test (with `When...` naming + Shouldly) and an integration test (Alba + Testcontainers), each with command and exit code shown as evidence of passing | FAIL | Tests use Shouldly but naming follows `Handle_...` / `LoadAsync_...` conventions, not `When...`. There are no integration tests — no Alba or Testcontainers references anywhere. The chat response says 'All 15 tests passed' without showing `dotnet test` command output or exit code. |
+| c19 | Output's `q` text-search filter is implemented case-insensitively and against a documented set of fields (likely `name`), with the search semantics explicit (substring vs full-text) | PARTIAL | `query.Where(c => c.Name.MatchesSql("%?%", request.Q))` applies filtering to the `Name` field using the `%?%` pattern (substring LIKE). The stub `MatchesSql` does `value.Contains(term, StringComparison.OrdinalIgnoreCase)`. However, no explicit documentation of the search semantics (substring vs full-text) appears in the chat response or code comments. |
 
 ### Notes
 
-The implementation is functionally strong: correct route, IQuerySession, server-side pagination capping, allowlist validation, LoadAsync pattern for 404, and CrawlResponse DTO all present. The main shortfalls are: (1) no integration tests (Alba + Testcontainers) — only unit tests were written, causing c7 and c18 to miss; (2) no explicit anti-patterns section in the output (c9 fails); (3) test naming convention is action_condition style rather than the expected When... convention; (4) q-filter search semantics are not explicitly documented. The core endpoint logic is well-implemented and mirrors the existing ListSourcesEndpoint pattern faithfully.
+The implementation is strong across the core API design criteria: correct route hierarchy, IQuerySession, query-level pagination/sorting/filtering, allowlist validation, max-size cap, LoadAsync 404 pattern with Instance path, and separate CrawlResponse DTO. It falls on the testing criteria (c7, c18) — there are only unit tests using a MockQuerySession, with no integration tests using Alba or Testcontainers, and the captured output shows no actual dotnet test command output or exit code. It also lacks an explicit anti-patterns section (c9) that the skill template appears to require. The q search filter works correctly but its semantics (substring on Name, case-insensitive) are not explicitly stated in the output narrative.

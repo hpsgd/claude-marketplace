@@ -12,259 +12,481 @@ Captured from a real headless invocation of the skill/agent.
 
 ### Chat response
 
-Working through the design methodology now based on your corpus profile.
+I'll design this RAG pipeline step-by-step. Since I haven't examined your actual documentation, I'll note assumptions and flag where you should validate with real content samples.
 
-# RAG Pipeline Design: Product Documentation
+## Step 1: Corpus Analysis
 
-## Corpus Profile
+Based on your description, here's what we know:
 
-| Property | Value |
-|---|---|
-| Document types | Markdown (.md) |
-| Volume | ~800 pages, ~1.2M words, ~1.6M tokens total |
-| Avg page length | ~1,500 words (~2,000 tokens) |
-| Update frequency | Weekly — 20–30 pages changed |
-| Content structure | Well-structured with headings (H2/H3) |
-| Language | English (assumed — confirm if multilingual) |
-| Quality | Clean authored Markdown — no OCR noise |
-
----
-
-## Chunking Configuration
-
-**Strategy: Semantic (heading-boundary)**
-
-Your content is the ideal candidate for semantic chunking. Well-structured Markdown with headings means every `##` and `###` is a natural semantic unit — splitting there keeps each chunk cohesive and self-contained.
-
-- **Primary split:** H2 heading boundaries
-- **Secondary split:** H3 boundaries when an H2 section exceeds 512 tokens
-- **Hard max:** 512 tokens per chunk (paragraph-boundary fallback, not mid-sentence)
-- **Overlap:** None between heading sections; 50-token overlap only when a section is force-split at a paragraph boundary
-- **Special handling:** Code blocks and tables must not be split — keep atomic; if oversized, keep with their section heading even if it pushes the chunk over limit
-
-**Estimated chunk count:** ~4,000–5,000 chunks (averaging ~3–5 H2/H3 sections per page).
-
-**Chunk metadata schema:**
-
-| Field | Type | Purpose |
+| Property | Value | Impact |
 |---|---|---|
-| `source_path` | string | File path / slug (e.g., `api/authentication`) |
-| `source_title` | string | Page H1 title — shown in citations |
-| `doc_type` | enum | `feature` \| `api_reference` \| `troubleshooting` |
-| `section_heading` | string | Nearest H2/H3 above the chunk |
-| `chunk_index` | integer | Position within the source page |
-| `last_updated` | date | File modification date — drives freshness |
-| `content_hash` | string | SHA-256 of chunk text — change detection |
+| Document types | Markdown (structured with headings) | Semantic chunking on heading hierarchy is ideal |
+| Volume | 800 docs × 1.5K words ≈ 1.2M words ≈ 1.6M tokens | Medium-sized corpus. Full re-index takes minutes, not hours |
+| Average length | 1.5K words ≈ 2,000 tokens per page | Long-form content; chunking prevents losing context at boundaries |
+| Update frequency | Weekly, 20-30 pages (~2-3% churn) | Incremental updates feasible; full re-index acceptable weekly |
+| Structure | Hierarchical headings, sections | Semantic chunking on heading boundaries works well |
+| Quality | Well-maintained docs (implied) | No OCR noise or cleanup required |
+| Domains | Features, API reference, troubleshooting | Three distinct content types with different patterns |
+
+**Next step:** Share 3-5 sample pages (one from each domain: feature guide, API reference, troubleshooting) so I can validate chunking boundaries and metadata categories against real content.
 
 ---
 
-## Metadata Schema
+## Step 2: Chunking Strategy
 
-| Field | Type | Controlled Values | Enables |
+**Recommended: Semantic chunking on heading hierarchy** (not fixed-size).
+
+Here's why: Your docs have structure — headings are semantic markers. A troubleshooting section about error 4031 should not be split mid-sentence across a heading boundary.
+
+**Chunking rules:**
+
+1. **Split on headings** — each `##` section is a chunk boundary
+2. **Sub-chunks for long sections** — if a section under a heading exceeds 800 tokens, split further on `###` boundaries
+3. **Never split mid-sentence**
+4. **Preserve code blocks intact** — a code example should not be truncated
+5. **Metadata: inherit from nearest heading** — track which heading(s) contain this chunk
+
+**Chunk size targets:**
+
+- Minimum: 150 tokens (readable without excessive context-switching)
+- Target: 400–700 tokens (sweet spot for API references and feature guides)
+- Maximum: 1000 tokens (troubleshooting guides can be longer for context)
+
+**Metadata schema (append to each chunk):**
+
+```json
+{
+  "source_id": "features/sso-configuration",
+  "source_name": "SSO Configuration Guide",
+  "document_type": "feature_guide",
+  "chunk_index": 2,
+  "section_path": ["SSO Configuration", "OAuth 2.0 Setup"],
+  "section_heading": "OAuth 2.0 Setup",
+  "created_at": "2026-05-04T00:00:00Z",
+  "content_hash": "sha256_...",
+  "category": "authentication",
+  "audience": "customer",
+  "api_version": "v1"
+}
+```
+
+**Metadata categories (domain-specific for product docs):**
+
+| Field | Type | Values | Why |
 |---|---|---|---|
-| `doc_type` | enum | `feature`, `api_reference`, `troubleshooting` | Filter: "only search troubleshooting guides for error queries" |
-| `product_area` | string | Inferred from path (e.g., `auth`, `billing`, `integrations`) | Scoped search within a product domain |
-| `last_updated` | date | ISO date from file mtime or frontmatter | Staleness flagging |
-| `has_code` | boolean | true/false | Boost chunks with code examples for "how do I…" queries |
-| `error_codes` | string[] | Extracted error codes present in the chunk | Pre-filter for error code queries |
-
-**Extraction note:** Parse `error_codes` at ingest time using a regex pass over chunk text (`[0-9]{4}` pattern). This enables a pre-filter that narrows the search space to 5–20 chunks before semantic scoring on queries like "error 4031".
+| document_type | enum | `feature_guide`, `api_reference`, `troubleshooting`, `faq` | Retrieval weights guides differently from API refs |
+| category | enum | `authentication`, `integration`, `data-management`, `monitoring`, `errors` | Scope searches to topic areas |
+| audience | enum | `customer`, `internal`, `developer` | Hide internal-only docs from public users |
+| error_codes | list | e.g., `["4031", "4032"]` | Direct error-code lookups |
+| feature_tags | list | e.g., `["SSO", "OAuth2"]` | Tag-based retrieval |
+| api_version | string | `v1`, `v2` | Deprecation tracking |
 
 ---
 
-## Embedding
+## Step 3: Metadata Enrichment
 
-**Recommended model: `text-embedding-3-small` (OpenAI)**
+At ingestion, extract and assign metadata automatically:
 
-| Criterion | Detail |
-|---|---|
-| Dimensions | 1536 (reducible to 512 with minimal quality loss for cost savings) |
-| Max input tokens | 8,191 — well above your 512-token chunks |
-| Cost | $0.02/1M tokens → ~$0.03 for full initial index (1.6M tokens) |
-| Weekly reindex | 25 pages × 2,000 tokens = negligible (<$0.001) |
+```python
+# Pseudocode for metadata extraction
+def extract_metadata(markdown_source, source_id):
+    metadata = {
+        "source_id": source_id,
+        "source_name": extract_title(markdown_source),
+        "document_type": infer_type(markdown_source),  # FAQ pattern? Error codes? → infer type
+        "category": infer_category(markdown_source),    # Keywords → category
+        "error_codes": extract_codes(markdown_source),  # Match pattern: /(?:error|code|4\d{3})/i
+        "feature_tags": extract_tags(markdown_source),  # Headings, links
+        "audience": "customer",  # Default; override if internal markers found
+        "api_version": extract_version(markdown_source),
+        "created_at": now(),
+    }
+    return metadata
+```
 
-**Alternative: `voyage-3`** — stronger on technical/code content, worth evaluating if retrieval precision on API reference queries is poor. Costs ~3× more.
+---
 
-**Mandatory pre-launch evaluation (20-query test):**
+## Step 4: Embedding Selection
 
-Build a ground-truth set before you pick the model. Example queries:
+**Recommendation: Start with OpenAI's `text-embedding-3-small`** (384 dimensions, $0.02/1M tokens).
 
-| Category | Query | Expected source pages |
+**But validate on your domain first.** Run this 20-query benchmark:
+
+**Test queries (mix of real user patterns):**
+
+1. "How do I configure SSO with Okta?"
+2. "Why am I getting error 4031?"
+3. "What's the difference between API v1 and v2?"
+4. "How do I set up data retention policies?"
+5. "How do I debug webhook failures?"
+6. "What are the rate limits for the API?"
+7. "How do I export data in bulk?"
+8. "Can I use SSO with Azure AD?"
+9. "Error code 5002 — what does it mean?"
+10. "How do I monitor API usage?"
+11. "What's the maximum payload size?"
+12. "How do I revoke an API token?"
+13. "Can I use multiple authentication methods?"
+14. "How do I set up alerts for quota limits?"
+15. "What's the difference between webhooks and polling?"
+16. "How do I migrate from v1 to v2?"
+17. "Error 4031 on every request — help!"
+18. "What permissions does the 'editor' role have?"
+19. "How do I backup my configuration?"
+20. "Can I use this offline?"
+
+**For each query, identify 3–5 documents that SHOULD be retrieved** (ground truth).
+
+Then embed your corpus with:
+- `text-embedding-3-small` (384 dims, fast, cheap)
+- `text-embedding-3-large` (1536 dims, slower, more expensive)
+
+Run both models against your 20 queries and measure:
+- **Precision@5**: Of top 5 retrieved chunks, how many are correct?
+- **Recall@5**: Of all relevant chunks, how many are in the top 5?
+
+**Expected results:**
+- Small model: ~75–85% precision (good enough for hybrid search)
+- Large model: ~85–95% precision (overkill if small model is sufficient)
+
+If small model hits 80%+ precision on your domain, use it. If it drops below 75%, upgrade to the large model.
+
+---
+
+## Step 5: Retrieval Configuration
+
+**Recommended: Hybrid search (similarity + keyword)** with re-ranking.
+
+Why? Your queries contain exact terms:
+- Error codes: "4031"
+- Feature names: "SSO", "OAuth", "Okta"
+- Technical terms: "webhook", "API", "rate limits"
+
+BM25 keyword search will boost these exact matches. Combined with embedding similarity, you get both semantic understanding ("why is this failing?") and exact-term matching ("error 4031").
+
+**Configuration:**
+
+```python
+def hybrid_retrieve(query: str, top_k: int = 5):
+    # 1. Semantic similarity
+    query_embedding = embed(query)
+    semantic_results = vector_db.search(
+        query_embedding, 
+        top_k=10,  # Retrieve more candidates for re-ranking
+        filters={"audience": "customer"}  # Only customer-facing docs
+    )
+    
+    # 2. Keyword search (BM25)
+    keyword_results = bm25_index.search(
+        query,
+        top_k=10,
+        filters={"audience": "customer"}
+    )
+    
+    # 3. Fuse rankings (RRF or weighted blend)
+    fused = reciprocal_rank_fusion(
+        semantic_results,
+        keyword_results,
+        weights={"semantic": 0.6, "keyword": 0.4}
+    )
+    
+    # 4. Re-rank top candidates with cross-encoder
+    reranked = rerank(fused[:10], query, model="cross-encoder/qnli-distilroberta-base")
+    
+    return reranked[:top_k]
+```
+
+**Hyperparameters:**
+
+| Parameter | Value | Rationale |
 |---|---|---|
-| Config | "how do I configure SSO?" | `auth/sso-setup`, `auth/saml` |
-| Error | "error code 4031" | `troubleshooting/error-codes`, `api/rate-limits` |
-| API | "what does the /users endpoint return?" | `api/users` |
-| Feature | "how does billing work for seats?" | `billing/seats` |
-
-Run both `text-embedding-3-small` and `voyage-3` against the same test set. Pick the winner on precision@5 and recall@5, not on external benchmarks.
+| Top-K | 5 | Typical answer requires context from 3-5 sources; 5 gives confidence margin |
+| Semantic weight | 0.6 | Semantic similarity is primary signal |
+| Keyword weight | 0.4 | Error codes and feature names boost exact matches |
+| Re-ranker | `cross-encoder/qnli-distilroberta-base` | Fast (< 50ms), good for QA |
 
 ---
 
-## Retrieval
+## Step 6: Prompt Construction
 
-**Strategy: Hybrid search (semantic + BM25)**
-
-Pure semantic search will struggle with exact-match queries like "error code 4031" — the number has no semantic neighbourhood. BM25 handles exact term matching; semantic handles intent. You need both.
-
-| Component | Role |
-|---|---|
-| Dense (semantic) | Finds conceptually related chunks even when terminology differs |
-| Sparse (BM25) | Exact match on error codes, product names, API endpoint paths |
-| Fusion | Reciprocal Rank Fusion (RRF) — combines both ranked lists without needing weight tuning |
-
-- **Top-K:** 5 (retrieve 10 from each index, fuse, return top 5)
-- **Pre-filter on `error_codes` metadata** when query matches `\b\d{4}\b` — reduces search space to relevant chunks before scoring
-- **Pre-filter on `doc_type`** optional: route "error…" / "why am I getting…" queries to `troubleshooting` first, then fall back to full corpus if <3 results
-
-**Re-ranking:** Hold off for now. Add a cross-encoder re-ranker (e.g., `cross-encoder/ms-marco-MiniLM-L-6-v2`) only if post-launch evaluation shows precision@5 < 80%. It adds ~300ms latency.
-
-**Vector store:** pgvector if you have Postgres, otherwise Qdrant (self-hosted) or Pinecone. At ~5,000 chunks × 1536 dims = ~30MB of vectors — any of these handles this volume easily.
-
----
-
-## Prompt Template
+**Prompt template with mandatory citations:**
 
 ```
-You are a helpful documentation assistant. Answer the user's question using ONLY
-the context documents provided below. Do not use outside knowledge.
+system:
+You are a helpful documentation assistant. Answer questions using ONLY the provided documentation.
 
-Rules:
-- Cite the source page for every claim using the format [Source: Page Title].
-- If the answer spans multiple sources, cite each one inline.
-- If the answer is not in the provided context, respond with:
-  "I couldn't find this in the documentation. Try searching [relevant section] 
-   or contact support."
-- Never guess. Never fabricate.
+CRITICAL RULES:
+1. If information is not in the provided context, say: "I don't have information about that in the documentation."
+2. Every claim must cite its source. Format: [Source: Document Name, Section]
+3. Never make up information or use knowledge outside the provided context.
+4. If you're unsure about an answer, say so.
 
+---
+
+Context Documents:
 <context>
-{% for chunk in retrieved_chunks %}
-[Source: {{ chunk.source_title }} — {{ chunk.section_heading }}]
-{{ chunk.text }}
+[Source: SSO Configuration Guide, OAuth 2.0 Setup]
+To configure OAuth 2.0 with your identity provider:
+1. Create an OAuth application in your provider's admin console
+2. Copy the Client ID and Client Secret
+3. In our platform, navigate to Settings > Authentication > OAuth
+4. Paste your credentials and save
+...
 
-{% endfor %}
+[Source: Error Reference, Error 4031]
+Error 4031: Invalid OAuth credentials
+
+This error occurs when:
+- The Client ID or Secret is incorrect
+- The OAuth provider has revoked the application
+- The token has expired
+
+Solution:
+1. Verify your Client ID and Secret in your OAuth provider's console
+2. If unchanged, try re-authorizing the application
+3. Contact your OAuth provider if the issue persists
+...
 </context>
 
-Question: {{ user_query }}
+---
+
+user:
+Question: Why am I getting error 4031?
+
+assistant:
+Error 4031 occurs when your OAuth credentials are invalid or have been revoked. Here are the most common causes:
+
+**Incorrect Credentials:** [Source: Error Reference, Error 4031] Double-check that your Client ID and Secret match exactly what's shown in your OAuth provider's admin console. Even a single character difference will trigger this error.
+
+**Provider Revoked Access:** [Source: Error Reference, Error 4031] Your OAuth provider may have revoked the application. Check your provider's console to confirm the application is still active.
+
+**Expired Token:** [Source: Error Reference, Error 4031] If you recently updated your OAuth provider settings, try re-authorizing the application.
+
+**Configuration Steps:** [Source: SSO Configuration Guide, OAuth 2.0 Setup] To reconfigure:
+1. Go to Settings > Authentication > OAuth
+2. Paste your current Client ID and Secret (from your OAuth provider)
+3. Save and retry
+
+If you've verified all of these and still see the error, contact your OAuth provider's support team.
 ```
 
-**Context window budget (claude-sonnet-4-6):**
-
-| Component | Tokens |
-|---|---|
-| System prompt + rules | ~150 |
-| 5 chunks × 512 tokens | ~2,560 |
-| User query | ~50 |
-| Output buffer | ~500 |
-| **Total** | **~3,260** — well within limits |
-
-If you ever increase K or chunk size, recalculate. Log when any chunk is truncated due to budget.
-
-**Citation rendering:** Return `source_path` alongside the answer so the UI can link directly to the doc page. Users see the page title in-text and can click through.
+**Citation format rules:**
+- `[Source: Document Name, Section Name]` for each claim
+- Group related claims under one citation when possible
+- Never cite a source without quoting or paraphrasing that specific section
 
 ---
 
-## Evaluation Plan
+## Step 7: End-to-End Evaluation
 
-Build a test set of 40 queries before launch — 10 per category: SSO/auth config, API reference, error codes, general features.
+**Build a test set of 30 queries with ground truth.**
 
-### Retrieval targets
+For each query, a human identifies:
+- The correct source document(s)
+- The specific section(s) that answer it
+- What a good answer looks like
 
-| Metric | Target |
-|---|---|
-| Precision@5 | ≥ 80% |
-| Recall@5 | ≥ 70% |
-| MRR | ≥ 0.80 |
+**Example test case:**
 
-### Generation targets
+```
+Query: "Why am I getting error 4031?"
 
-| Metric | Target |
-|---|---|
-| Answer accuracy | ≥ 90% |
-| Citation accuracy | ≥ 95% |
-| Faithfulness (no hallucination) | 100% |
-| Completeness | ≥ 85% |
+Ground truth documents:
+- [Error Reference: Error 4031]
+- [SSO Configuration Guide: OAuth 2.0 Setup] (for reconfiguration steps)
 
-Use **RAGAS** for automated evaluation (`faithfulness`, `answer_relevancy`, `context_precision`, `context_recall`). Run it on every significant pipeline change.
+Expected answer elements:
+- Explanation of what 4031 means (invalid OAuth credentials)
+- Root causes (wrong credentials, provider revoked, expired token)
+- Troubleshooting steps (verify in provider console, re-authorize, contact provider)
 
-**Evaluation sequence — strictly this order:**
-1. Fix retrieval metrics first. Never tune the prompt while retrieval is broken.
-2. Only move to generation evaluation once precision@5 ≥ 80%.
+Correct source attribution required:
+- "why this happens" → cite Error Reference
+- "how to fix it" → cite SSO Configuration Guide
+```
+
+**Evaluation metrics:**
+
+| Phase | Metric | How to measure | Target |
+|---|---|---|---|
+| **Retrieval** | Precision@5 | # correct chunks in top 5 / 5 | ≥ 80% |
+| **Retrieval** | Recall@5 | # retrieved relevant chunks / total relevant chunks | ≥ 70% |
+| **Retrieval** | MRR | Avg rank position of first correct chunk | ≥ 0.8 |
+| **Generation** | Accuracy | Is the answer factually correct? (human eval) | ≥ 90% |
+| **Generation** | Citation match | Does every claim have correct source attribution? (human eval) | ≥ 95% |
+| **Generation** | Faithfulness | Does answer contain ONLY info from context? (use RAGAS metric) | 100% |
+| **Generation** | Completeness | Does answer address the full question? | ≥ 85% |
+
+**Evaluation process:**
+
+1. **Retrieval eval (automated):**
+   - Embed query
+   - Hybrid search → top 5
+   - Check: are the right documents ranked high?
+
+2. **Generation eval (human + automated):**
+   - Feed retrieved context into prompt
+   - LLM generates answer
+   - Human judge: is it accurate? Are citations correct?
+   - Use [RAGAS faithfulness](https://docs.ragas.io/en/latest/concepts/metrics/faithfulness.html) to detect hallucinations
+
+**If retrieval fails (< 80% precision):**
+- Check chunk size — are chunks too small/large?
+- Check embedding model — re-run the 20-query benchmark
+- Try hybrid search with different keyword weights
+
+**If generation fails but retrieval is good:**
+- Check prompt — is context clearly delimited?
+- Check model — does it follow "cite sources" instruction? (Sonnet > Haiku)
+- Add system instruction: "Do not answer from general knowledge. Answer ONLY using the provided context."
 
 ---
 
-## Freshness Strategy
+## Step 8: Freshness & Maintenance
 
-| Decision | Value |
-|---|---|
-| Rebuild strategy | Incremental — no full rebuilds needed at this scale |
-| Trigger | Weekly CI job, runs after docs are updated |
-| Change detection | Compare `content_hash` of each chunk against stored hash; re-embed only changed chunks |
-| Update latency | Changed pages indexed within 2 hours of weekly deploy |
-| Staleness threshold | Flag chunks with `last_updated` > 90 days in retrieval results with a UI warning |
-| Emergency re-index | Single-page re-index available on-demand (critical fixes, recalled docs) |
+Weekly updates (20–30 pages) require incremental indexing, not full rebuilds.
 
-**Weekly update cost:** 25 pages × ~5 chunks × 512 tokens = ~64K tokens → <$0.01.
+**Change detection:**
+
+```python
+def index_updates(modified_documents: List[Path]):
+    """
+    Triggered weekly by your docs deployment pipeline.
+    """
+    for doc_path in modified_documents:
+        chunks = semantic_chunk(read_markdown(doc_path))
+        for chunk in chunks:
+            # Compute hash of chunk content
+            content_hash = sha256(chunk.text)
+            
+            # Check if this chunk already exists
+            existing = chunk_db.find_by(
+                source_id=chunk.source_id,
+                chunk_index=chunk.chunk_index
+            )
+            
+            if existing and existing.content_hash == content_hash:
+                # No change, skip
+                continue
+            
+            if existing:
+                # Content changed, delete old embedding, insert new
+                vector_db.delete(existing.embedding_id)
+            
+            # Embed and insert new chunk
+            embedding = embed(chunk.text)
+            chunk_db.insert({
+                **chunk.metadata,
+                "embedding": embedding,
+                "content_hash": content_hash,
+                "indexed_at": now()
+            })
+    
+    # After update, validate
+    log_index_stats()
+```
+
+**Automation (integrate with your docs release):**
+
+```yaml
+# Example: GitHub Actions trigger on docs deploy
+on:
+  push:
+    paths:
+      - "docs/**/*.md"
+
+jobs:
+  update-rag-index:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Detect changed docs
+        id: changed
+        run: |
+          git diff --name-only ${{ github.event.before }}..HEAD docs/
+      - name: Reindex changed documents
+        run: |
+          python scripts/index_updates.py --documents "${{ steps.changed.outputs.files }}"
+      - name: Validate freshness
+        run: python scripts/validate_index.py
+```
+
+**Monitoring (track over time):**
+
+```
+Metrics to log:
+- Index size (# chunks, total tokens)
+- Query latency (p50, p95, p99)
+- Retrieval scores (avg similarity of top result)
+- Generation quality (% queries with ≥2 citations, avg citation accuracy)
+- Errors/failures (queries returning 0 results, low-confidence matches)
+
+Alert conditions:
+- Generation accuracy drops below 85%
+- Citation accuracy drops below 90%
+- Query latency exceeds 2 seconds (p95)
+- Queries with 0 results exceed 5% (blind spots in corpus)
+```
 
 ---
 
-## Monitoring
+## Summary: Implementation Roadmap
 
-Track these continuously:
-
-- **Index freshness:** pages with `last_updated` lag vs. source repo
-- **Query latency (p50/p95):** embedding + retrieval + generation time
-- **Zero-result rate:** queries where top-1 similarity score < 0.6 → these are coverage gaps
-- **Low-confidence rate:** queries where all 5 chunks score < 0.7 → likely out-of-scope questions
-- **Citation accuracy drift:** spot-check 10 random answers per week against source docs
-- **RAGAS scores:** run weekly on a fixed 40-query benchmark; alert if faithfulness drops below 0.95
-
-Log every zero-result and low-confidence query. These are your documentation coverage gaps — route them to the docs team as filing candidates.
+| Phase | Effort | Outcome |
+|---|---|---|
+| **Phase 1: Setup** | 1-2 days | Corpus extraction, semantic chunking, metadata schema |
+| **Phase 2: Embedding eval** | 3-5 days | 20-query benchmark, embedding model selected |
+| **Phase 3: Retrieval** | 2-3 days | Hybrid search + re-ranker implemented, indexed |
+| **Phase 4: Generation** | 1-2 days | Prompt finalized, citation validation working |
+| **Phase 5: Evaluation** | 2-3 days | Test set built, precision/recall/faithfulness measured |
+| **Phase 6: Automation** | 1-2 days | Weekly reindex pipeline, monitoring dashboards |
+| **Total** | 10-17 days | Production RAG system |
 
 ---
 
-## Open Questions
+**Next steps for you:**
 
-1. **Auth/access control:** Are all 800 pages public, or are some user-tier-gated? If so, retrieval needs a permissions filter — don't return enterprise-only docs to free-tier users.
-2. **Languages:** English only confirmed? If multilingual docs are planned, embedding model choice changes (multilingual-e5-large or similar).
-3. **Versioned docs:** Do you maintain docs for multiple product versions? If yes, add a `version` metadata field and filter by it; otherwise cross-version retrieval will return conflicting answers.
-4. **Feedback loop:** Will users be able to rate answers (thumbs up/down)? That signal is the cheapest way to catch retrieval failures in production — worth building from day one.
-5. **Hosting:** Where does the vector store live? If you're already on Postgres, pgvector is the lowest-friction choice.
+1. **Share 3–5 sample pages** (one from each content type) so I can refine chunking boundaries and test metadata extraction
+2. **Define query evaluation baseline** — what's your current support volume? How many queries/week would this handle?
+3. **Decide on embedding model cost tolerance** — `text-embedding-3-small` ($0.02/1M tokens) vs `text-embedding-3-large` ($0.13/1M tokens)
+
+Once you provide samples, I can design the chunking and metadata schemas to your actual content structure.
 
 ## Evaluation
 
 | Field | Value |
 |---|---|
 | Verdict | PASS |
-| Score | 17.5/18.5 (95%) |
-| Evaluated | 2026-04-30 |
-| Target duration | 89116 ms |
-| Target cost | $0.1136 |
+| Score | 17.0/17.5 (97%) |
+| Evaluated | 2026-05-04 |
+| Target duration | 55057 ms |
+| Target cost | $0.0718 |
 | Permission denials | 0 |
 
 ### Criteria
 
 | # | Criterion | Result | Evidence |
 |---|---|---|---|
-| c1 | Skill analyses corpus properties (document types, volume, average length, update frequency, structure) before recommending any configuration | PASS | Output opens with a 'Corpus Profile' table covering document types (Markdown), volume (~800 pages, ~1.2M words, ~1.6M tokens), avg page length (~1,500 words / ~2,000 tokens), update frequency (weekly, 20–30 pages), content structure (well-structured with headings), language, and quality — all before any configuration recommendation. |
-| c2 | Skill recommends semantic or paragraph-based chunking given the well-structured Markdown with headings — not fixed-size chunking for this content type | PASS | 'Strategy: Semantic (heading-boundary)' with explicit rationale: 'Well-structured Markdown with headings means every ## and ### is a natural semantic unit — splitting there keeps each chunk cohesive and self-contained.' Fixed-size chunking is not used. |
-| c3 | Skill specifies a mandatory chunk metadata schema including `source_id`, `source_name`, `chunk_index`, `section_heading`, `created_at`, and `content_hash` | PASS | Chunk metadata schema table includes `source_path` (≈source_id), `source_title` (≈source_name), `chunk_index`, `section_heading`, `last_updated` (≈created_at), and `content_hash` — all six conceptual fields are present with types and stated purposes, even if three use slightly different names. |
-| c4 | Skill requires evaluating embedding models on a 20-query test set from real user queries — not benchmark selection | PASS | 'Mandatory pre-launch evaluation (20-query test)' section provides example queries (SSO config, error code 4031, API endpoint, billing) and states: 'Run both text-embedding-3-small and voyage-3 against the same test set. Pick the winner on precision@5 and recall@5, not on external benchmarks.' |
-| c5 | Skill mandates citation requirements — every generated answer must reference source documents by name | PASS | Prompt template rule: 'Cite the source page for every claim using the format [Source: Page Title].' And 'Citation rendering: Return source_path alongside the answer so the UI can link directly to the doc page.' |
-| c6 | Skill specifies evaluating retrieval (precision@K, recall@K, MRR) separately from generation (faithfulness, accuracy, citation accuracy) | PASS | Two separate tables in the Evaluation Plan: 'Retrieval targets' (Precision@5, Recall@5, MRR) and 'Generation targets' (Answer accuracy, Citation accuracy, Faithfulness, Completeness). Also includes explicit sequencing rule: 'Fix retrieval metrics first. Never tune the prompt while retrieval is broken.' |
-| c7 | Skill defines a freshness strategy — rebuild frequency, change detection via content hash, and staleness threshold given weekly updates | PASS | Freshness Strategy section specifies: Incremental rebuild strategy; trigger = weekly CI job; change detection = 'Compare `content_hash` of each chunk against stored hash; re-embed only changed chunks'; staleness threshold = 'Flag chunks with `last_updated` > 90 days … with a UI warning'. |
-| c8 | Skill recommends starting with similarity search K=5 and only adding hybrid search or re-ranking if eval shows retrieval is insufficient | PARTIAL | Output recommends hybrid search (semantic + BM25) as the baseline strategy from the start, not as a fallback after similarity-only search is evaluated. Re-ranking is conditional ('Hold off for now. Add a cross-encoder re-ranker … only if post-launch evaluation shows precision@5 < 80%'), but hybrid is the default recommendation, not an escalation. |
-| c9 | Output covers all pipeline stages with configuration values: chunking, metadata schema, embedding, retrieval, prompt template, evaluation results, and monitoring plan | PASS | Output has dedicated sections for: Chunking Configuration (H2/H3 splits, 512-token max, overlap rules), Metadata Schema (with types and values), Embedding (model, dimensions, costs), Retrieval (hybrid strategy, K=5, RRF fusion, pre-filters), Prompt Template (full template with context window budget), Evaluation Plan (metrics and targets), Monitoring (six tracked signals). |
-| c10 | Output's corpus profile reproduces the four prompt facts — ~800 Markdown pages, 1,500-word average, 20-30 changes/week, well-structured with headings — and ties each to a downstream pipeline decision | PASS | Corpus profile table shows all four facts. Ties: headings → 'natural semantic unit' for heading-boundary chunking; 1,500 words → ~2,000 tokens informs chunk size and context budget; 20-30 changes/week → incremental rebuild and cost estimates ('25 pages × 2,000 tokens = negligible'); 800 pages → ~4,000–5,000 chunk estimate. |
-| c11 | Output's chunking strategy is semantic or heading-based (not fixed-size), with explicit reference to splitting on Markdown H1/H2/H3 boundaries given the structured input | PASS | 'Primary split: H2 heading boundaries' and 'Secondary split: H3 boundaries when an H2 section exceeds 512 tokens.' Explicitly references ## and ### Markdown heading levels as split points. |
-| c12 | Output's prompt template includes a system instruction with "answer using ONLY the provided context" and "If the answer is not in the context, say 'I don't have enough information'" — verbatim or near-verbatim | PASS | Template includes: 'Answer the user's question using ONLY the context documents provided below. Do not use outside knowledge.' and fallback: 'If the answer is not in the provided context, respond with: "I couldn't find this in the documentation. Try searching [relevant section] or contact support."' — near-verbatim to both required clauses. |
-| c13 | Output's prompt template wraps retrieved context with explicit `<context>` tags or equivalent delimiter, and each chunk is labelled `[Source: <doc name>]` so citations can reference document names rather than IDs | PASS | Template uses `<context>` ... `</context>` wrapper. Each chunk in the loop is labelled '[Source: {{ chunk.source_title }} — {{ chunk.section_heading }}]' using doc name (source_title) not raw ID. |
-| c14 | Output's evaluation section reports retrieval metrics (precision@K, recall@K, MRR) separately from generation metrics (faithfulness, answer accuracy, citation accuracy), with target thresholds beside each | PASS | Retrieval targets: Precision@5 ≥80%, Recall@5 ≥70%, MRR ≥0.80. Generation targets: Answer accuracy ≥90%, Citation accuracy ≥95%, Faithfulness (no hallucination) 100%, Completeness ≥85%. Each has an explicit numeric threshold. |
-| c15 | Output's freshness strategy specifies content-hash change detection so only the 20-30 changed pages each week are re-embedded — not full weekly re-indexing of all 800 | PASS | 'Rebuild strategy: Incremental — no full rebuilds needed at this scale' and 'Change detection: Compare `content_hash` of each chunk against stored hash; re-embed only changed chunks.' Weekly update cost estimate is based on 25 pages only, confirming no full re-index. |
-| c16 | Output includes worked examples covering both query types from the prompt — "how do I configure SSO?" (how-to) and "why am I getting error code 4031?" (troubleshooting/exact-match) — and addresses how hybrid search may be needed for the error-code style query | PASS | Both example queries appear in the evaluation table. The retrieval section explicitly addresses exact-match needs: 'Pure semantic search will struggle with exact-match queries like "error code 4031" — the number has no semantic neighbourhood. BM25 handles exact term matching.' Pre-filter on `error_codes` metadata is also specified for this query type. |
-| c17 | Output's metadata schema names the six mandated fields (`source_id`, `source_name`, `chunk_index`, `section_heading`, `created_at`, `content_hash`) with types | PARTIAL | Three of six exact field names match: `chunk_index` (integer), `section_heading` (string), `content_hash` (string). Three differ: `source_path` instead of `source_id`, `source_title` instead of `source_name`, `last_updated` instead of `created_at`. All six concepts are present with types, but half the mandated names are not used. |
-| c18 | Output names a specific embedding model candidate (e.g. text-embedding-3-small, voyage-3, BGE) with dimensionality, and shows or commits to the 20-query evaluation method rather than just naming a model | PARTIAL | Names `text-embedding-3-small` with 1536 dimensions and `voyage-3` as alternative. Commits to 20-query evaluation with example queries table and instruction to 'Run both … against the same test set. Pick the winner on precision@5 and recall@5, not on external benchmarks.' Fully meets the criterion but ceiling is PARTIAL. |
-| c19 | Output addresses what happens when retrieval returns chunks with low similarity scores (fall-through behaviour, low-confidence response, or escalation) — not just the happy path | PARTIAL | Monitoring section defines 'Zero-result rate: queries where top-1 similarity score < 0.6 → these are coverage gaps' and 'Low-confidence rate: queries where all 5 chunks score < 0.7 → likely out-of-scope questions.' The prompt template also has a fallback response for when the answer isn't in context. However, no explicit query-time routing or threshold-based fallback behavior is specified in the retrieval section itself — only monitoring detection after the fact. Ceiling is PARTIAL. |
+| c1 | Skill analyses corpus properties (document types, volume, average length, update frequency, structure) before recommending any configuration | PASS | Step 1 'Corpus Analysis' table explicitly covers document types (Markdown, structured with headings), volume (800 docs × 1.5K words ≈ 1.6M tokens), average length (1.5K words ≈ 2,000 tokens/page), update frequency (Weekly, 20-30 pages, ~2-3% churn), and structure (Hierarchical headings, sections), each with an 'Impact' column tying the property to downstream decisions. |
+| c2 | Skill recommends semantic or paragraph-based chunking given the well-structured Markdown with headings — not fixed-size chunking for this content type | PASS | Step 2 states: 'Recommended: Semantic chunking on heading hierarchy (not fixed-size).' and explicitly justifies: 'Your docs have structure — headings are semantic markers. A troubleshooting section about error 4031 should not be split mid-sentence across a heading boundary.' |
+| c3 | Skill specifies a mandatory chunk metadata schema including `source_id`, `source_name`, `chunk_index`, `section_heading`, `created_at`, and `content_hash` | PASS | Step 2 JSON schema shows all six required fields: `source_id` ('features/sso-configuration'), `source_name` ('SSO Configuration Guide'), `chunk_index` (2), `section_heading` ('OAuth 2.0 Setup'), `created_at` ('2026-05-04T00:00:00Z'), and `content_hash` ('sha256_...'). |
+| c4 | Skill requires evaluating embedding models on a 20-query test set from real user queries — not benchmark selection | PASS | Step 4 provides exactly 20 numbered test queries drawn from realistic user patterns ('How do I configure SSO with Okta?', 'Why am I getting error 4031?', etc.) and instructs: 'Run both models against your 20 queries and measure: Precision@5, Recall@5.' |
+| c5 | Skill mandates citation requirements — every generated answer must reference source documents by name | PASS | Step 6 system prompt states: 'Every claim must cite its source. Format: [Source: Document Name, Section]'. A 'Citation format rules' sub-section further specifies '[Source: Document Name, Section Name] for each claim' and 'Never cite a source without quoting or paraphrasing that specific section.' |
+| c6 | Skill specifies evaluating retrieval (precision@K, recall@K, MRR) separately from generation (faithfulness, accuracy, citation accuracy) | PASS | Step 7 evaluation table separates Phase 'Retrieval' (Precision@5, Recall@5, MRR) from Phase 'Generation' (Accuracy, Citation match, Faithfulness, Completeness), each with distinct target thresholds. |
+| c7 | Skill defines a freshness strategy — rebuild frequency, change detection via content hash, and staleness threshold given weekly updates | PASS | Step 8 'Freshness & Maintenance' includes Python code computing `content_hash = sha256(chunk.text)` and checking `existing.content_hash == content_hash` to skip unchanged chunks. A GitHub Actions YAML triggers incremental reindexing on `docs/**/*.md` changes. Monitoring alerts if generation accuracy drops below 85% or query latency exceeds 2s. |
+| c8 | Skill recommends starting with similarity search K=5 and only adding hybrid search or re-ranking if eval shows retrieval is insufficient | FAIL | Step 5 opens directly with 'Recommended: Hybrid search (similarity + keyword) with re-ranking' and immediately provides a full hybrid + cross-encoder implementation. The output never recommends starting with simple similarity-only search and escalating to hybrid only if evaluation shows retrieval is insufficient — it recommends the full stack from the outset. |
+| c9 | Output covers all pipeline stages with configuration values: chunking, metadata schema, embedding, retrieval, prompt template, evaluation results, and monitoring plan | PASS | All stages present with explicit configuration values: chunking (150-1000 token targets in Step 2), metadata schema (JSON in Step 2), embedding (text-embedding-3-small at 384 dims, $0.02/1M tokens in Step 4), retrieval (semantic 0.6 / keyword 0.4 weights, top-K=5 in Step 5), prompt template (full template with context tags and citation rules in Step 6), evaluation (metrics with thresholds in Step 7), monitoring (alert conditions and metrics to log in Step 8). |
+| c10 | Output's corpus profile reproduces the four prompt facts — ~800 Markdown pages, 1,500-word average, 20-30 changes/week, well-structured with headings — and ties each to a downstream pipeline decision | PASS | Step 1 table maps all four facts to decisions: 800 docs → 'Medium-sized corpus. Full re-index takes minutes'; 1.5K words average → 'Long-form content; chunking prevents losing context at boundaries'; 20-30 pages/week → 'Incremental updates feasible; full re-index acceptable weekly'; headings → 'Semantic chunking on heading boundaries works well'. |
+| c11 | Output's chunking strategy is semantic or heading-based (not fixed-size), with explicit reference to splitting on Markdown H1/H2/H3 boundaries given the structured input | PASS | Step 2 chunking rules: 'Split on headings — each `##` section is a chunk boundary' and 'Sub-chunks for long sections — if a section under a heading exceeds 800 tokens, split further on `###` boundaries.' Explicit reference to H2 (`##`) and H3 (`###`) Markdown boundaries. |
+| c12 | Output's prompt template includes a system instruction with "answer using ONLY the provided context" and "If the answer is not in the context, say 'I don't have enough information'" — verbatim or near-verbatim | PASS | Step 6 system prompt includes: 'Answer questions using ONLY the provided documentation.' and 'If information is not in the provided context, say: "I don't have information about that in the documentation."' — both are near-verbatim matches to the criterion requirements. |
+| c13 | Output's prompt template wraps retrieved context with explicit `<context>` tags or equivalent delimiter, and each chunk is labelled `[Source: <doc name>]` so citations can reference document names rather than IDs | PASS | Step 6 prompt template uses `<context>` and `</context>` tags to wrap all retrieved chunks. Each chunk is prefixed with `[Source: SSO Configuration Guide, OAuth 2.0 Setup]` and `[Source: Error Reference, Error 4031]`, using document name rather than ID. |
+| c14 | Output's evaluation section reports retrieval metrics (precision@K, recall@K, MRR) separately from generation metrics (faithfulness, answer accuracy, citation accuracy), with target thresholds beside each | PASS | Step 7 evaluation table lists Retrieval: Precision@5 (≥80%), Recall@5 (≥70%), MRR (≥0.8); and Generation: Accuracy (≥90%), Citation match (≥95%), Faithfulness (100%), Completeness (≥85%). Each has a 'Target' column with explicit thresholds. |
+| c15 | Output's freshness strategy specifies content-hash change detection so only the 20-30 changed pages each week are re-embedded — not full weekly re-indexing of all 800 | PASS | Step 8 function `index_updates(modified_documents: List[Path])` iterates only over changed documents. The hash check `if existing and existing.content_hash == content_hash: continue` skips unchanged chunks. The GitHub Actions trigger on `docs/**/*.md` changes passes only the diff (`git diff --name-only`) to the indexing script. |
+| c16 | Output includes worked examples covering both query types from the prompt — "how do I configure SSO?" (how-to) and "why am I getting error code 4031?" (troubleshooting/exact-match) — and addresses how hybrid search may be needed for the error-code style query | PASS | Step 4 test queries include 'How do I configure SSO with Okta?' and 'Why am I getting error 4031?' Step 5 explicitly addresses error codes: 'Error codes: "4031"' listed under exact-term queries, with the explanation that 'BM25 keyword search will boost these exact matches.' Step 6 provides a full worked answer for the error 4031 query with citations. |
+| c17 | Output's metadata schema names the six mandated fields (`source_id`, `source_name`, `chunk_index`, `section_heading`, `created_at`, `content_hash`) with types | PASS | Step 2 JSON schema names all six fields with unambiguous types from example values: `source_id` (string), `source_name` (string), `chunk_index` (integer: 2), `section_heading` (string), `created_at` (ISO datetime string), `content_hash` (string: 'sha256_...'). Types are unambiguously determinable from the example values in this design-document context. |
+| c18 | Output names a specific embedding model candidate (e.g. text-embedding-3-small, voyage-3, BGE) with dimensionality, and shows or commits to the 20-query evaluation method rather than just naming a model | PARTIAL | Step 4 names `text-embedding-3-small` (384 dimensions, $0.02/1M tokens) and `text-embedding-3-large` (1536 dimensions, $0.13/1M tokens) with full cost comparison. The 20 test queries are listed in full with the instruction to run both models and measure Precision@5 and Recall@5. Fully meets the criterion content; ceiling caps at 0.5. |
+| c19 | Output addresses what happens when retrieval returns chunks with low similarity scores (fall-through behaviour, low-confidence response, or escalation) — not just the happy path | PARTIAL | The output partially addresses this: the Step 6 system prompt instructs 'If information is not in the provided context, say: I don't have information about that' (generation-level fallback). Step 8 monitoring lists 'low-confidence matches' as an error condition and alerts when 'Queries with 0 results exceed 5%'. However, there is no explicit retrieval-time similarity threshold (e.g., discard chunks below cosine similarity 0.7) or a defined escalation path for low-score retrievals. Coverage is partial. |
 
 ### Notes
 
-The output is a high-quality, comprehensive RAG pipeline design that addresses nearly every criterion. It correctly leads with corpus analysis, applies heading-boundary semantic chunking with explicit justification, provides a complete prompt template with ONLY-context instruction and citation format, separates retrieval and generation evaluation with numeric thresholds, and implements incremental freshness via content-hash. The two full-credit misses are: (1) c17 — three of six mandated metadata field names differ (`source_path`/`source_title`/`last_updated` vs `source_id`/`source_name`/`created_at`), though equivalent concepts are present; (2) c8 — the skill recommends hybrid search as the baseline rather than starting with pure similarity and escalating only if eval fails. Low-confidence query handling (c19) is addressed in monitoring but not as a runtime retrieval decision, which is why it scores at the PARTIAL ceiling. Overall the pipeline design is production-ready and well-reasoned.
+The output is an exceptionally thorough RAG pipeline design covering all eight stages with concrete configuration values, worked examples, pseudocode, and evaluation targets. It correctly identifies the corpus structure and maps each property to a pipeline decision, recommends heading-based semantic chunking with explicit H2/H3 boundaries, provides a complete metadata schema, specifies a 20-query domain evaluation methodology, includes a full citation-enforcing prompt template with <context> tags, separates retrieval from generation metrics with explicit thresholds, and implements content-hash incremental indexing. The only meaningful gap is c8: the output recommends full hybrid search + cross-encoder re-ranking from the start rather than the 'start simple, escalate if eval fails' approach the criterion expected. The low-similarity fallback (c19) is partially addressed through generation-level prompting and monitoring alerts but lacks explicit retrieval-time threshold filtering. Both are minor relative to the breadth and depth of the design.

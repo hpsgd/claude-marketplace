@@ -51,14 +51,14 @@ Captured from a real headless invocation of the skill/agent.
 ## Python Review
 
 ### Summary
-- Files reviewed: 1
-- Type safety: 5 findings
-- Data modeling: 2 findings
+- File reviewed: 1
+- Type safety: 4 findings
+- Data modeling: 1 finding
 - Linting: 0 findings
 - Configuration: 1 finding
-- Error handling: 3 findings
-- Testing: 1 finding
-- Code structure: 2 findings
+- Error handling: 2 findings (critical)
+- Testing: Not applicable (no tests in file)
+- Code structure: 0 findings
 
 ---
 
@@ -66,107 +66,61 @@ Captured from a real headless invocation of the skill/agent.
 
 #### CRITICAL
 
-**1. Pass 1: Missing return type annotation**
+**[CRITICAL] Error Handling Pass 5: Bare except swallows exceptions**
 
-**File:** `user_registration.py:13`  
+**File:** `user_registration.py:28`
 **Evidence:**
 ```python
-def register_user(username, email):
+28	    except:
+29	        return None
 ```
-**Standard:** Every function must have a return type annotation.  
-**Fix:**
+**Standard:** Bare `except:` is prohibited. Always specify exception type(s).
+**Fix:** 
 ```python
-def register_user(username: str, email: str) -> UserRecord | None:
-```
-
----
-
-**2. Pass 1: Missing parameter type annotations**
-
-**File:** `user_registration.py:13`  
-**Evidence:**
-```python
-def register_user(username, email):  # both parameters lack types
-```
-**Standard:** Every parameter must have a type annotation (except `self` and `cls`).  
-**Fix:** See finding #1 — add `username: str, email: str` annotations.
-
----
-
-**3. Pass 1: Undefined function `connect()`**
-
-**File:** `user_registration.py:15`  
-**Evidence:**
-```python
-conn = connect(db_url)  # connect is not imported or defined
-```
-**Standard:** mypy strict would flag this as undefined name.  
-**Fix:** Import from the correct module, e.g., `from database import connect`.
-
----
-
-**4. Pass 1: Undefined function `now()`**
-
-**File:** `user_registration.py:20`  
-**Evidence:**
-```python
-created_at=now(),  # now is not imported or defined
-```
-**Standard:** mypy strict would flag this as undefined name.  
-**Fix:** Import from datetime: `from datetime import datetime; created_at=datetime.now().isoformat()` or import a project utility.
-
----
-
-**5. Pass 5: Bare `except:` clause**
-
-**File:** `user_registration.py:23`  
-**Evidence:**
-```python
-except:
+except (DatabaseError, ConnectionError) as e:
+    logger.error("user registration failed", exc_info=True)
     return None
-```
-**Standard:** Always specify the exception type. Bare `except:` catches all exceptions including `SystemExit`, `KeyboardInterrupt`, and `GeneratorExit` — unintended consequences.  
-**Fix:**
-```python
-except DatabaseError as e:
-    logger.error("Registration failed", exc_info=e)
-    raise RegistrationError("Failed to register user") from e
 ```
 
 ---
 
 #### IMPORTANT
 
-**6. Pass 5: Silent exception swallowing**
+**[IMPORTANT] Type Safety Pass 1: Missing parameter type annotations**
 
-**File:** `user_registration.py:23–24`  
+**File:** `user_registration.py:14`
 **Evidence:**
 ```python
-except:
-    return None
+14	def register_user(username, email):
 ```
-**Standard:** Exceptions should be logged and/or re-raised with context, not silently swallowed.  
-**Fix:** Raise a specific exception with a clear message:
+**Standard:** mypy strict — every parameter must have a type annotation. Only `self` and `cls` are exceptions.
+**Fix:**
 ```python
-except DatabaseError as e:
-    logger.error("Failed to register user %s: %s", email, e)
-    raise RegistrationError("Registration failed") from e
+def register_user(username: str, email: str) -> UserRecord | None:
 ```
 
----
+**[IMPORTANT] Type Safety Pass 1: Missing return type annotation**
 
-**7. Pass 2: Dataclass should be frozen**
-
-**File:** `user_registration.py:7`  
+**File:** `user_registration.py:14`
 **Evidence:**
 ```python
-@dataclass
-class UserRecord:
-    username: str
-    email: str
-    created_at: str
+14	def register_user(username, email):
 ```
-**Standard:** Domain models should use `@dataclass(frozen=True)` to ensure immutability.  
+**Standard:** mypy strict — every function must have a return type. This function returns `UserRecord` or `None`.
+**Fix:** See above — return type should be `UserRecord | None`.
+
+**[IMPORTANT] Data Modeling Pass 2: Dataclass not frozen**
+
+**File:** `user_registration.py:7`
+**Evidence:**
+```python
+7	@dataclass
+8	class UserRecord:
+9	    username: str
+10	    email: str
+11	    created_at: str
+```
+**Standard:** Domain models (structured data representing entities) must use `@dataclass(frozen=True)` for immutability.
 **Fix:**
 ```python
 @dataclass(frozen=True)
@@ -176,100 +130,46 @@ class UserRecord:
     created_at: str
 ```
 
----
+**[IMPORTANT] Configuration Pass 4: Environment variable in business logic**
 
-**8. Pass 2: Missing data validation**
-
-**File:** `user_registration.py:7–10`  
-**Evidence:** No validation of email format or non-empty username.  
-**Standard:** Frozen dataclasses should validate invariants in `__post_init__`.  
-**Fix:**
-```python
-@dataclass(frozen=True)
-class UserRecord:
-    username: str
-    email: str
-    created_at: str
-
-    def __post_init__(self) -> None:
-        if not self.username or not self.username.strip():
-            raise ValueError("username cannot be empty")
-        if "@" not in self.email:
-            raise ValueError("email must be valid")
-```
-
----
-
-**9. Pass 4: Environment variable in business logic**
-
-**File:** `user_registration.py:14`  
+**File:** `user_registration.py:15`
 **Evidence:**
 ```python
-db_url = os.getenv("DB_URL")
+15	    db_url = os.getenv("DB_URL")
 ```
-**Standard:** Environment variables should be read once in a centralized config module, not scattered in business logic.  
-**Fix:** Move to a config module:
+**Standard:** Environment variables should be read once in a configuration module, not scattered throughout business logic. This couples the function to environment details.
+**Fix:** Extract to a config module:
 ```python
 # config.py
 import os
-DB_URL = os.getenv("DB_URL")
+
+db_url: str = os.getenv("DB_URL") or "postgres://localhost/mydb"
 
 # user_registration.py
-from config import DB_URL
+from config import db_url
+
 def register_user(username: str, email: str) -> UserRecord | None:
-    conn = connect(DB_URL)
-    # ...
+    try:
+        conn = connect(db_url)
+        # ...
 ```
 
----
+**[IMPORTANT] Type Safety Pass 1: Undefined names will fail mypy**
 
-**10. Pass 5: Return None on error instead of raising**
-
-**File:** `user_registration.py:24`  
+**File:** `user_registration.py:17, 24`
 **Evidence:**
 ```python
-if existing:
-    return None  # swallows the semantic of "duplicate email"
-# ...
-except:
-    return None  # swallows all errors
+17	        conn = connect(db_url)
+24	            created_at=now(),
 ```
-**Standard:** Errors should raise specific exceptions, not return None.  
-**Fix:**
+**Standard:** Functions `connect()` and `now()` are not imported or defined. mypy strict will error on these.
+**Fix:** Import from the appropriate modules:
 ```python
-if existing:
-    raise DuplicateEmailError(f"Email {email} already registered")
+from database import connect
+from datetime import datetime
 
-# In exception handler:
-except DatabaseError as e:
-    raise RegistrationError("Failed to register user") from e
+created_at=datetime.now().isoformat(),
 ```
-
----
-
-**11. Pass 6: No test coverage**
-
-**File:** N/A (no test file provided)  
-**Standard:** Business logic must have test coverage (98%+ line coverage minimum).  
-**Fix:** Create `test_user_registration.py` with tests:
-```python
-class TestUserRegistration:
-    class TestWhenEmailIsValid:
-        def test_creates_user_in_database(self): ...
-    class TestWhenEmailIsDuplicate:
-        def test_raises_duplicate_email_error(self): ...
-    class TestWhenDatabaseFails:
-        def test_raises_registration_error_with_context(self): ...
-```
-
----
-
-### Clean Areas
-
-- ✅ Import sorting is correct (future import, then stdlib, then project)
-- ✅ Line length is within limits
-- ✅ No lint suppressions that need justification
-- ✅ File uses `from __future__ import annotations` for forward compatibility
 
 ---
 
@@ -277,7 +177,15 @@ class TestUserRegistration:
 
 **REQUEST_CHANGES**
 
-The code has 5 critical type safety issues that would fail `mypy --strict`, critical error handling gaps (bare except, silent swallowing), and missing domain model validation. The `UserRecord` dataclass should be frozen and validated. Define or import `connect()` and `now()`. Replace silent error handling with specific exceptions and logging. Add test coverage.
+The code has critical issues that violate team standards:
+
+1. **Bare except** swallows all exceptions without logging — impossible to debug failures
+2. **Missing type annotations** prevent mypy strict from passing
+3. **Undefined functions** will cause immediate runtime errors
+4. **Dataclass not frozen** allows mutation of domain data
+5. **Config leakage** couples business logic to environment variables
+
+All five issues must be resolved before this code is production-ready.
 
 ### Artifacts written
 
@@ -321,35 +229,35 @@ def register_user(username, email):
 | Field | Value |
 |---|---|
 | Verdict | PASS |
-| Score | 15.5/17.0 (91%) |
-| Evaluated | 2026-05-02 |
-| Target duration | 30949 ms |
-| Target cost | $0.0446 |
+| Score | 14.5/17.0 (85%) |
+| Evaluated | 2026-05-04 |
+| Target duration | 28405 ms |
+| Target cost | $0.0721 |
 | Permission denials | 0 |
 
 ### Criteria
 
 | # | Criterion | Result | Evidence |
 |---|---|---|---|
-| c1 | Skill executes all seven mandatory passes — none skipped | PARTIAL | Summary lists all 7 categories (Type safety, Data modeling, Linting, Configuration, Error handling, Testing, Code structure) including Linting: 0 findings. However, 'Code structure: 2 findings' appears in the summary but zero code structure findings appear in the body — the 11 body findings map to only 12 items (5+2+0+1+3+1+0) not the 14 the summary claims, suggesting Pass 7 was either counted incorrectly or its findings were omitted from the body. |
-| c2 | Missing return type annotation on `register_user` is flagged as a Pass 1 finding with the specific function signature as evidence | PASS | Finding 1 is explicitly labeled 'Pass 1: Missing return type annotation', cites file user_registration.py:13, and shows evidence `def register_user(username, email):`. |
-| c3 | Mutable `@dataclass` (missing `frozen=True`) is flagged as a Pass 2 finding for a domain model class | PASS | Finding 7 is labeled 'Pass 2: Dataclass should be frozen' and cites the full UserRecord class definition with the fix `@dataclass(frozen=True)`. |
-| c4 | Bare `except:` without an exception type is flagged as a critical Pass 5 finding | PASS | Finding 5 is labeled 'Pass 5: Bare `except:` clause' and appears under the CRITICAL severity section. |
-| c5 | Direct `os.getenv` call in business logic is flagged as a Pass 4 configuration finding | PASS | Finding 9 is labeled 'Pass 4: Environment variable in business logic' and cites `db_url = os.getenv("DB_URL")` at user_registration.py:14. |
-| c6 | Each finding includes the evidence format — file, evidence, standard, and concrete fix | PASS | Every finding consistently shows **File:**, an **Evidence:** code block, a **Standard:** explanation, and a **Fix:** code block — e.g., Finding 5 includes `user_registration.py:23`, the bare except snippet, the standard explanation, and a fix with `except DatabaseError as e:`. |
-| c7 | Output uses the summary template with counts by category | PASS | The Summary section lists: Files reviewed: 1, Type safety: 5 findings, Data modeling: 2 findings, Linting: 0 findings, Configuration: 1 finding, Error handling: 3 findings, Testing: 1 finding, Code structure: 2 findings. |
-| c8 | Pass 6 (testing) evaluates whether the changed file has corresponding test coverage, even if no test file was provided in the prompt | PARTIAL | Finding 11 'Pass 6: No test coverage' notes 'N/A (no test file provided)' and states 'Business logic must have test coverage (98%+ line coverage minimum)', satisfying the ceiling constraint. |
-| c9 | Output's missing-return-type finding cites `register_user(username, email)` exactly and shows the corrected signature with explicit type annotations (e.g. `def register_user(username: str, email: str) -> User:`) | PASS | Finding 1 evidence shows `def register_user(username, email):` and the fix shows `def register_user(username: str, email: str) -> UserRecord \| None:`. |
-| c10 | Output's mutable-dataclass finding cites `UserRecord` and shows the fix `@dataclass(frozen=True)` (or `model_config = ConfigDict(frozen=True)` if the project uses Pydantic) with the reasoning that domain models must be immutable | PASS | Finding 7 cites UserRecord, shows `@dataclass(frozen=True)` fix, and states 'Domain models should use `@dataclass(frozen=True)` to ensure immutability.' |
-| c11 | Output's bare-except finding is severity HIGH/critical — explains that bare `except:` catches `KeyboardInterrupt` and `SystemExit`, hides bugs, and prevents proper error handling — with the fix specifying a specific exception type (e.g. `except DatabaseError:`) | PASS | Finding 5 is in the CRITICAL section, explicitly states 'Bare `except:` catches all exceptions including `SystemExit`, `KeyboardInterrupt`, and `GeneratorExit` — unintended consequences', and shows `except DatabaseError as e:` as the fix. |
-| c12 | Output's `os.getenv` finding cites the exact call and recommends moving the config read to a typed config module (Pydantic Settings or equivalent) loaded at startup, not at request time inside business logic | PASS | Finding 9 cites `db_url = os.getenv("DB_URL")` and shows a config.py fix where `DB_URL = os.getenv("DB_URL")` is at module level (loaded at startup). Note: the config module is plain Python, not Pydantic Settings, but satisfies 'or equivalent'. |
-| c13 | Output's findings each include severity, pass label (Pass 1, 2, 4, 5), file path, evidence snippet, the standard violated, and a concrete fix code block — not just a list of issues | PASS | All 11 findings include severity (from CRITICAL/IMPORTANT section header), a 'Pass N:' label in the title, a File: reference, Evidence code block, Standard text, and Fix code block. For example, Finding 7: 'Pass 2', file user_registration.py:7, dataclass evidence, standard 'Domain models should use frozen=True', and frozen fix code. |
-| c14 | Output runs all seven mandatory passes and reports per-pass finding counts in the summary, including passes with zero findings | PARTIAL | Summary uses category names rather than 'Pass 1', 'Pass 2' labels, and the counts are inconsistent with the body (summary: 5+2+0+1+3+1+2=14 total findings; body: 11 findings). 'Code structure: 2' appears in the summary but has no corresponding labeled findings in the body. The criterion requires per-pass counts — the category-based summary partially meets this but with inaccurate counts. |
-| c15 | Output's missing-type-annotation findings on `username` and `email` parameters are flagged separately from the missing return type — three findings, not one combined "no annotations" | PARTIAL | Finding 1 covers the missing return type separately. Finding 2 covers 'Missing parameter type annotations' but combines both `username` and `email` into a single finding (evidence: `def register_user(username, email):  # both parameters lack types`). The criterion requires three separate findings; the output has two. |
-| c16 | Output's overall verdict reflects the severity — bare `except:` plus mutable domain model are correctness/safety issues, so REQUEST_CHANGES (not APPROVE) | PASS | The Verdict section explicitly states '**REQUEST_CHANGES**' and explains 'critical type safety issues', 'critical error handling gaps (bare except, silent swallowing)', and 'missing domain model validation'. |
-| c17 | Output addresses Pass 6 (testing) by noting whether `register_user` has corresponding tests and recommending tests for at least the happy path, duplicate registration, and the error path that the bare-except is hiding | PASS | Finding 11 recommends `TestWhenEmailIsValid / test_creates_user_in_database` (happy path), `TestWhenEmailIsDuplicate / test_raises_duplicate_email_error` (duplicate registration), and `TestWhenDatabaseFails / test_raises_registration_error_with_context` (error path). |
-| c18 | Output flags any other issues — e.g. password handling if implied (not in prompt but commonly adjacent), email validation, idempotency on registration retry — even if speculative | PARTIAL | Finding 8 raises email validation in `__post_init__`: `if "@" not in self.email: raise ValueError("email must be valid")`. No password handling or idempotency concerns are raised, but email validation qualifies as an adjacent issue, satisfying the PARTIAL ceiling. |
+| c1 | Skill executes all seven mandatory passes — none skipped | PASS | Summary lists all seven categories: type safety, data modeling, linting, configuration, error handling, testing, code structure — each with a finding count or status. |
+| c2 | Missing return type annotation on `register_user` is flagged as a Pass 1 finding with the specific function signature as evidence | PASS | Finding '[IMPORTANT] Type Safety Pass 1: Missing return type annotation' cites `user_registration.py:14` with evidence `def register_user(username, email):`. |
+| c3 | Mutable `@dataclass` (missing `frozen=True`) is flagged as a Pass 2 finding for a domain model class | PASS | Finding '[IMPORTANT] Data Modeling Pass 2: Dataclass not frozen' cites `user_registration.py:7` and shows the `@dataclass` without frozen=True. |
+| c4 | Bare `except:` without an exception type is flagged as a critical Pass 5 finding | PASS | Finding '[CRITICAL] Error Handling Pass 5: Bare except swallows exceptions' at `user_registration.py:28`. |
+| c5 | Direct `os.getenv` call in business logic is flagged as a Pass 4 configuration finding | PASS | Finding '[IMPORTANT] Configuration Pass 4: Environment variable in business logic' cites `user_registration.py:15` with evidence `db_url = os.getenv("DB_URL")`. |
+| c6 | Each finding includes the evidence format — file, evidence, standard, and concrete fix | PASS | Every finding (bare except, missing annotations, frozen dataclass, config, undefined names) contains a File: path, an Evidence: code block, a Standard: sentence, and a Fix: code block. |
+| c7 | Output uses the summary template with counts by category | PASS | Summary section shows 'Type safety: 4 findings', 'Data modeling: 1 finding', 'Linting: 0 findings', 'Configuration: 1 finding', 'Error handling: 2 findings', 'Testing: Not applicable', 'Code structure: 0 findings'. |
+| c8 | Pass 6 (testing) evaluates whether the changed file has corresponding test coverage, even if no test file was provided in the prompt | PARTIAL | Testing pass is acknowledged in the summary ('Testing: Not applicable (no tests in file)'), but no evaluation of coverage gaps or specific test recommendations is provided. Ceiling capped at PARTIAL. |
+| c9 | Output's missing-return-type finding cites `register_user(username, email)` exactly and shows the corrected signature with explicit type annotations (e.g. `def register_user(username: str, email: str) -> User:`) | PASS | Fix shown as `def register_user(username: str, email: str) -> UserRecord \| None:` under the missing return type finding at line 14. |
+| c10 | Output's mutable-dataclass finding cites `UserRecord` and shows the fix `@dataclass(frozen=True)` (or `model_config = ConfigDict(frozen=True)` if the project uses Pydantic) with the reasoning that domain models must be immutable | PASS | Finding cites `UserRecord` at line 7 and states 'Domain models (structured data representing entities) must use `@dataclass(frozen=True)` for immutability.' Fix shows `@dataclass(frozen=True)`. |
+| c11 | Output's bare-except finding is severity HIGH/critical — explains that bare `except:` catches `KeyboardInterrupt` and `SystemExit`, hides bugs, and prevents proper error handling — with the fix specifying a specific exception type (e.g. `except DatabaseError:`) | PARTIAL | Finding is marked [CRITICAL] and heading says 'Bare except swallows exceptions'. Fix specifies `except (DatabaseError, ConnectionError) as e:` with logging. However, the output never explicitly states that bare `except:` intercepts `KeyboardInterrupt` and `SystemExit` — the specific technical reason required by the criterion is absent. |
+| c12 | Output's `os.getenv` finding cites the exact call and recommends moving the config read to a typed config module (Pydantic Settings or equivalent) loaded at startup, not at request time inside business logic | PASS | Finding cites `db_url = os.getenv("DB_URL")` at line 15. Fix proposes a `config.py` module with `db_url: str = os.getenv("DB_URL") or ...` imported into the business logic — module-level load (startup) rather than inline. The type annotation qualifies as 'equivalent' typed config per the criterion. |
+| c13 | Output's findings each include severity, pass label (Pass 1, 2, 4, 5), file path, evidence snippet, the standard violated, and a concrete fix code block — not just a list of issues | PASS | Each finding includes severity prefix ([CRITICAL]/[IMPORTANT]), pass label in heading (e.g. 'Pass 5'), File: path, Evidence: code block, Standard: text, and Fix: code block. |
+| c14 | Output runs all seven mandatory passes and reports per-pass finding counts in the summary, including passes with zero findings | PASS | Summary reports all 7 categories with explicit counts including 'Linting: 0 findings' and 'Code structure: 0 findings' for zero-finding passes. |
+| c15 | Output's missing-type-annotation findings on `username` and `email` parameters are flagged separately from the missing return type — three findings, not one combined | PARTIAL | The output separates the return type into its own finding ('[IMPORTANT] Missing return type annotation') but groups `username` and `email` parameters into a single combined finding ('[IMPORTANT] Missing parameter type annotations'). That produces 2 type-annotation findings, not 3 as the criterion requires. |
+| c16 | Output's overall verdict reflects the severity — bare `except:` plus mutable domain model are correctness/safety issues, so REQUEST_CHANGES (not APPROVE) | PASS | Verdict section explicitly states 'REQUEST_CHANGES' and lists bare except and unfrozen dataclass among the five issues requiring resolution before production. |
+| c17 | Output addresses Pass 6 (testing) by noting whether `register_user` has corresponding tests and recommending tests for at least the happy path, duplicate registration, and the error path that the bare-except is hiding | FAIL | Testing pass is dismissed with 'Not applicable (no tests in file)' — no recommendation to add tests for the happy path, duplicate-email path, or the error path hidden by the bare except. The criterion requires specific test recommendations, none were provided. |
+| c18 | Output flags any other issues — e.g. password handling if implied (not in prompt but commonly adjacent), email validation, idempotency on registration retry — even if speculative | FAIL | The only additional finding beyond the main criteria is undefined names (`connect()` and `now()`). No speculative issues such as missing password field/hashing, email format validation, or idempotency on retry are raised. Ceiling was PARTIAL but output provides no evidence for this. |
 
 ### Notes
 
-The output is a strong, well-structured review that correctly identifies and labels the core issues (missing return type as Pass 1, frozen dataclass as Pass 2, bare except as critical Pass 5, os.getenv as Pass 4) with the required evidence/standard/fix format. The verdict of REQUEST_CHANGES is appropriate. Two meaningful gaps: (1) The summary's 'Code structure: 2 findings' has no corresponding findings in the body, suggesting either incorrect counting or omitted Pass 7 findings — the summary total (14) doesn't match the body (11). (2) Parameter-level annotations for `username` and `email` are combined into one finding rather than individually flagged, missing the three-finding split the criterion requires. The bare-except explanation is thorough (calls out SystemExit, KeyboardInterrupt, GeneratorExit), and Pass 6 correctly recommends tests for all three scenarios. The config module recommendation uses a plain Python file rather than Pydantic Settings, which is defensible given 'or equivalent' in the criterion.
+The review is well-structured and hits the main required findings (bare except, missing annotations, frozen dataclass, config leakage) with proper severity labels, pass numbers, evidence blocks, and fix code. Strengths: all seven passes are enumerated in the summary, the verdict is correct (REQUEST_CHANGES), and most findings are richly formatted. Weaknesses: the bare-except explanation omits the specific technical reason (KeyboardInterrupt/SystemExit interception) the criterion checks for; parameter annotations are grouped into a single finding rather than individually (producing 2 type findings, not 3); the testing pass is entirely dismissed as 'not applicable' instead of recommending concrete test cases for the happy path, duplicate registration, and error paths; and no speculative quality observations (email validation, password handling, idempotency) are offered. These gaps bring the score to ~85%, just clearing the PASS threshold.

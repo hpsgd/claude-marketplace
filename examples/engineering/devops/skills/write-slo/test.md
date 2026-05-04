@@ -6,6 +6,14 @@ Scenario: The DevOps engineer invokes the write-slo skill for a live API that cu
 
 /devops:write-slo for the Payments API — it processes Stripe charges and refunds for a B2B SaaS platform. Key facts: current error rate 0.08% over the last 30 days (measured at the load balancer); current p99 latency 340ms; on-call is currently paged on raw HTTP 5xx count spikes which produces 2–3 false alarms per week; the service has no formal SLO yet. "Down" for users means the payment button returns an error or the charge never appears in their billing dashboard.
 
+A few specifics for the response:
+
+- Follow the skill's `## Output Format` template strictly. Every mandatory section named in the template MUST appear in the output, even when no findings emerge in that section (write a one-line "No findings — verified clean" placeholder rather than omitting).
+- Do NOT pause for clarification. Proceed using stated assumptions; document them inline. The user can correct in follow-up.
+- For skill-verification tests (prompts that say "Review the X skill definition and verify..."): Read the skill at `${CLAUDE_PLUGIN_ROOT}/skills/<skill-name>/SKILL.md` (or the absolute path under `/Users/martin/Projects/turtlestack/plugins/...`) and quote skill text where present. Confirm or flag each test criterion by name — do not paraphrase.
+- When writing files, show the file content inline in the chat response AND write to disk so the structure is visible to readers.
+- Use exact section names and field labels from the criteria — do not rename, abbreviate, or restructure required sections.
+
 ## Criteria
 
 - [ ] PASS: Service profile identifies what "down" means from the user's perspective — payment fails or times out for the customer making a purchase — not an infrastructure metric like server CPU or memory

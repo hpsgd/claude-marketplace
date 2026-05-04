@@ -12,161 +12,241 @@ Captured from a real headless invocation of the skill/agent.
 
 ### Chat response
 
----
-
-# AI Governance Review: Candidate Screener (Workbench)
-
-> **Note:** No implementation code was found in the provided repository (single commit, README only). Technical guardrails are marked **UNVERIFIABLE** — they cannot be confirmed present or absent until code is provided for review.
+Executing the governance review process. Since no codebase context is provided, I'll work from the feature description and identify the governance gaps.
 
 ---
 
-## Classification
+# AI Governance Review: Candidate Screener
 
-- **Use case:** AI feature that reads job applications, ranks candidates 1–5, and surfaces the ranking to hiring managers to prioritise which applications to review first.
-- **Risk level:** **HIGH**
-- **Reasoning:** EU AI Act Annex III §4(a) explicitly classifies AI used "for the purpose of recruitment or selection of natural persons, notably for advertising vacancies, screening or filtering applications" as high-risk — this is a statutory classification, not a judgment call. Additionally: the ranking gates which humans ever see a given application; candidate data includes demographic-adjacent fields (name, age, location) that are legally protected characteristics in most jurisdictions; and GPT-4o is a third-party general-purpose model with no bias certification for employment screening.
-- **Review date:** 2026-05-01
-- **Reviewer:** GRC Lead (AI Governance Review — automated)
+## Step 1: Classification
 
----
+**Use case:** Ranking job applicants (1–5) using GPT-4o to help hiring managers prioritize which applications to review first.
 
-## Deployment Decision
+**Risk level:** **HIGH**
 
-- **Decision:** **BLOCKED**
-- **Blocking gaps:**
-  1. `age` is present as a model input — using age in hiring screening is a likely statutory violation (UK Equality Act 2010, US ADEA, AU Age Discrimination Act 2004, EU Employment Equality Directive). Must be removed before any further evaluation.
-  2. No DPIA has been conducted. GDPR Article 35 requires a DPIA before processing operations "likely to result in a high risk" — automated processing of CV data for hiring meets this threshold.
-  3. No verifiable bias testing against protected characteristics.
-  4. No candidate transparency disclosure (GDPR Arts. 13–14; EU AI Act Art. 52).
-  5. No OpenAI data processing agreement, data residency confirmation, or training-opt-out posture documented.
-  6. No audit trail, fallback, or cost controls verifiable.
+**Reasoning:**
+- **Affects individuals**: Candidates are ranked, which determines review priority and influences hiring decisions
+- **Demographic-adjacent data**: Input includes age, location, and name — all proxies for protected characteristics (age discrimination, location-based bias, ethnicity/gender inferred from name)
+- **Influence on consequential decisions**: While humans make the final decision, AI-influenced prioritization creates a sifting effect where lower-ranked candidates may never be reviewed
+- **Classification rule applied**: When demographic data + individual decision + hiring context exists, classify as HIGH minimum
 
 ---
 
-## Risk Assessment
+## Step 2: Risk Identification
 
-| Risk category | Level | Controls in place | Gaps |
-|---|---|---|---|
-| **Bias** | **High** | None verified | No bias eval; name, age, and location are demographic-adjacent inputs; age is directly a protected characteristic in hiring. Minimum mitigation: remove age, blind name, normalise location |
-| **Hallucination** | **Medium** | None verified | Model may misread or misattribute CV content; no grounding mechanism; no output schema validation |
-| **Privacy** | **High** | None verified | CV text, name, age, location, employment history all enter GPT-4o prompts; no PII redaction, no consent capture, no evidence of data processor agreement with OpenAI |
-| **Transparency** | **High** | None verified | Candidates are not informed AI is scoring their application (EU AI Act Art. 52 obligation); hiring managers have no explanation of how scores are derived |
-| **Dependency** | **Medium** | None verified | Single provider (OpenAI); no fallback for API outage, no SLA documented |
-| **Cost** | **Low** | None verified | GPT-4o has per-request cost; no rate limiting or budget ceiling documented but blast radius is bounded to internal hiring volume |
-| **Security** | **Medium** | None verified | No prompt injection protection; CV text is untrusted user input and enters the prompt directly; no output filtering |
-
----
-
-## Requirements Compliance
-
-| Requirement | Required at High | Status | Evidence |
-|---|---|---|---|
-| Human review of output | Mandatory | **PARTIAL** | Hiring managers see rankings and choose which to review — human is in the loop, but the AI gates access to that loop (ranking determines visibility order) |
-| Evaluation suite | Comprehensive + adversarial | **GAP** | No eval scripts, test cases, or results found |
-| Bias testing | Required + external audit | **GAP** | No bias evaluation; no demographic split results; no audit engagement |
-| Audit trail | Full provenance trail | **GAP** | No logging config, no I/O recording, no retention policy found |
-| Fallback mechanism | Human takeover | **GAP** | No fallback logic found; if GPT-4o is unavailable, screening outcome is unknown |
-| Cost controls | Per-request + approval for high-cost | **GAP** | No rate limiting or budget alerts found |
-
----
-
-## Technical Guardrails
-
-| Guardrail | Status | Evidence |
+| Risk | Assessment | Findings |
 |---|---|---|
-| Input validation / prompt injection protection | **UNVERIFIABLE** | No implementation provided |
-| Output validation / schema enforcement | **UNVERIFIABLE** | No implementation provided |
-| Rate limiting / cost controls | **UNVERIFIABLE** | No implementation provided |
-| PII filtering / redaction | **UNVERIFIABLE** | No implementation provided |
-| Fallback / error handling for AI calls | **UNVERIFIABLE** | No implementation provided |
-| Cost monitoring | **UNVERIFIABLE** | No implementation provided |
+| **Bias** | **HIGH** | Age, location, and name are direct inputs. These correlate strongly with protected characteristics (age, geography/SES, ethnicity/gender). No evaluation results or training data transparency provided. Risk: model ranks candidates differently by demographic group. |
+| **Hallucination** | **MEDIUM** | Model could misread CV details, invent qualifications, or misinterpret employment history. Mitigated by human review, but humans may not catch all errors if they trust the ranking. |
+| **Privacy** | **HIGH** | Names, ages, CVs, employment history = PII. Sending to OpenAI API requires: (1) data processing agreement, (2) retention policy, (3) user consent. Status: **unknown**. |
+| **Transparency** | **MEDIUM** | Candidates likely unaware their data is scored by AI. Hiring managers may not understand what "1-5" score represents or why. |
+| **Dependency** | **MEDIUM** | Single provider (OpenAI). No fallback described if API is unavailable. |
+| **Cost** | **MEDIUM** | Per-request GPT-4o cost. Monthly budget depends on application volume. No rate limiting described. |
+| **Security** | **MEDIUM** | API key storage, prompt injection via CV text, output validation. |
 
 ---
 
-## Model Governance
+## Step 3: Requirements by Risk Level
+
+**For HIGH risk, the following are MANDATORY:**
+
+| Requirement | Status | Evidence |
+|---|---|---|
+| **Human review of output** | PARTIAL | Hiring managers see rankings, but unclear if they review reasoning or just trust score |
+| **Evaluation suite** | **GAP** | No evaluation mentioned. Must test: bias across demographics, accuracy on realistic CV data, hallucination rate |
+| **Bias testing** | **GAP** | No demographic splits, no adversarial testing, no external audit |
+| **Audit trail** | **PARTIAL** | Unknown — need: prompt version, model version, input/output logging with timestamp and user |
+| **Fallback mechanism** | **GAP** | No fallback if API fails. Need: graceful error + human takeover path |
+| **Cost controls** | **GAP** | No per-request limits, no budget alerts, no cost monitoring |
+
+---
+
+## Step 4: Technical Guardrails
+
+Without codebase access, I cannot verify. **GAPS to check:**
+
+| Guardrail | Status | Must verify |
+|---|---|---|
+| Input validation / prompt injection protection | UNKNOWN | Does the system sanitize CV text before sending to API? |
+| Output validation / schema enforcement | UNKNOWN | Is the 1-5 score validated? Are invalid responses handled? |
+| Rate limiting / cost controls | UNKNOWN | Rate limit on requests? Budget alerts? |
+| PII filtering | UNKNOWN | Are personal data fields (age, name, location) scrubbed from prompts, or sent raw? |
+| Fallback mechanism | UNKNOWN | What happens if OpenAI API times out or returns an error? |
+
+---
+
+## Step 5: Model Governance
 
 | Check | Status | Evidence |
 |---|---|---|
-| Documented owner | **GAP** | No accountable team or person identified for model behaviour |
-| Evaluation suite | **GAP** | No eval scripts or results found |
-| Cost budget | **GAP** | No per-request or monthly budget defined |
-| Prompts versioned in source control | **GAP** | No prompt files found in repository |
-| Change process (eval before deploy) | **GAP** | No CI pipeline or review process documented |
+| **Documented owner** | **GAP** | Who is accountable for this feature's performance and bias? |
+| **Evaluation suite** | **GAP** | No eval results provided |
+| **Cost budget** | **GAP** | No budget defined |
+| **Version control** | **UNKNOWN** | Are prompts stored in Git, or edited in OpenAI dashboards? |
+| **Change process** | **UNKNOWN** | How are prompt/model changes reviewed before deployment? |
 
 ---
 
-## Data Governance
+## Step 6: Data Governance
 
 | Question | Finding |
 |---|---|
-| What data enters AI prompts? | CV text, candidate name, age, location, employment history |
-| Does any PII enter prompts? | **Yes** — name, age, and employment history are PII. Age is also a special-category-adjacent field in employment context. Consent for AI processing is not documented. |
-| Where is prompt/response data stored? | Unknown — no storage config, retention policy, or logging found |
-| Are AI outputs used to make decisions about individuals? | **Yes** — ranking directly determines the order in which applications are reviewed, effectively gating access to the hiring process |
-| Can individuals request deletion of their data from AI systems? | Unknown — no deletion mechanism or DSAR process found. OpenAI's training-opt-out status for this integration is undocumented. |
+| **What data enters prompts?** | CV text, name, age, location, employment history |
+| **Does PII enter prompts?** | **YES** — all of it. Is consent obtained from candidates? Are they told their data will be sent to OpenAI? |
+| **Where is prompt/response data stored?** | **UNKNOWN** — OpenAI's default retention? Workbench's logs? Retention period? |
+| **Are AI outputs used to make decisions about individuals?** | **YES** — ranking affects which applications get human review. This triggers GDPR Article 22 (automated decision-making) requirements if EU-based or EU candidates. |
+| **Can individuals request deletion?** | **UNKNOWN** — do you have a data deletion mechanism for AI-processed candidate data? |
 
 ---
 
-## Remediation Plan
+## Step 7: Deployment Decision
 
-| Gap | Severity | Remediation | Owner | Target date |
+**DECISION: CONDITIONALLY APPROVED**
+
+**Conditions (must be closed before deployment or if already deployed, before adding more candidates):**
+
+1. **Bias evaluation suite** [CRITICAL]
+   - Evaluate model across demographic groups (age bands, location regions, name origins)
+   - Compare ranking distributions: do 40+ candidates score differently than 20-30?
+   - Do candidates with names signalling non-English backgrounds score differently?
+   - Document methodology and results
+
+2. **Data processing agreement with OpenAI** [CRITICAL]
+   - Confirm data retention policy
+   - Obtain written confirmation that CV/PII data is not used to train OpenAI models
+   - Document data flow and storage
+
+3. **Candidate transparency** [REQUIRED]
+   - Update privacy notice to disclose AI scoring (GDPR Article 13/14, or equivalent)
+   - Inform candidates their CV will be scored by AI and how to request human review
+
+4. **Hiring manager transparency** [REQUIRED]
+   - Document what the 1-5 score represents
+   - Show hiring managers how the score was derived (explainability)
+   - Train managers not to use score as a substitute for review
+
+5. **Fallback mechanism** [REQUIRED]
+   - If OpenAI API fails, fall back to: (a) unscored queue, or (b) human review
+   - Error logging and alerting
+
+6. **Cost monitoring** [REQUIRED]
+   - Set per-request cost limit (reject if >$X per candidate)
+   - Monthly budget alert threshold
+   - Dashboard tracking usage and cost
+
+7. **Prompt versioning** [REQUIRED]
+   - Prompts must be version-controlled in Git, not edited in dashboards
+   - Prompt changes require: eval run + approval before deployment
+
+8. **Audit logging** [REQUIRED]
+   - Log: candidate ID, score, model version, prompt version, timestamp, hiring manager review action
+   - Retain for 3+ years (audit trail for disputed hiring decisions)
+
+---
+
+## Blocking Gaps (would block deployment if not already live)
+
+If the Candidate Screener is not yet deployed:
+
+1. **No bias evaluation** blocks deployment to candidates (high legal/reputational risk)
+2. **No data processing agreement** blocks deployment (GDPR/privacy violation risk)
+3. **No fallback** blocks deployment (service degradation risk)
+
+If already deployed:
+
+- Pause use of AI rankings on new candidates until conditions 1-3 are met
+- Notify hiring managers that scores are under governance review
+- Suppress AI scores from display pending bias eval results
+
+---
+
+## Risk Assessment Summary
+
+| Risk | Level | Controls | Gaps |
+|---|---|---|---|
+| **Bias** | HIGH | None yet | Evaluation, demographic splits, external audit |
+| **Privacy** | HIGH | Assumed consent (unverified) | DPA, retention policy, deletion mechanism |
+| **Transparency** | MEDIUM | None documented | Candidate notice, manager training, explainability |
+| **Hallucination** | MEDIUM | Human review (unverified) | Output validation, spot-checking process |
+| **Security** | MEDIUM | Unknown | Input sanitization, API key storage |
+| **Dependency** | MEDIUM | None | Fallback path |
+| **Cost** | MEDIUM | None | Budget limits, monitoring |
+
+---
+
+## Remediation Timeline
+
+| Gap | Severity | Action | Owner | Target |
 |---|---|---|---|---|
-| `age` field in prompt input | **Critical** | Remove age from prompt input immediately. Age must not be a model input in a hiring context. | Engineering + Legal | Before any further development |
-| DPIA not conducted | **Critical** | Commission a DPIA under GDPR Art. 35 before deployment. Run `/grc-lead:write-dpia` against this use case. | Privacy / DPO | Before deployment |
-| No OpenAI DPA / data residency confirmation | **Critical** | Confirm OpenAI Data Processing Agreement is in place, data residency meets requirements, and training-opt-out is configured via API | Legal + Engineering | Before deployment |
-| No candidate transparency disclosure | **Critical** | Add GDPR Art. 13–14 notice to application flow disclosing AI scoring; add AI Act Art. 52 disclosure to hiring manager UI | Product + Legal | Before deployment |
-| No bias evaluation | **High** | Build bias eval suite with demographic splits (gender, ethnicity proxied via name, location). Commission external bias audit before launch. | AI/ML + External auditor | Before deployment |
-| No audit trail | **High** | Log every AI call with: candidate ID, prompt hash, response, score, timestamp, model version. Retain per data retention policy. | Engineering | Before deployment |
-| No fallback mechanism | **High** | Implement graceful degradation: if GPT-4o unavailable, surface applications in submission order with a visible "AI unavailable" notice | Engineering | Before deployment |
-| Prompts not version-controlled | **High** | Move all prompts to source control; add eval gate to CI so prompt changes require eval pass before merge | Engineering | Before deployment |
-| No cost controls | **Medium** | Add per-request token limits, monthly budget alert, and rate limiting | Engineering | Before deployment |
-| Name and location in prompt | **Medium** | Evaluate whether name and location are required for ranking or introduce bias. Consider name-blind screening as default. | Product + Engineering | Before deployment |
-| Broader risk assessment | **Medium** | Run `/grc-lead:risk-assessment` to assess systemic risks across the Workbench platform, including this feature | GRC Lead | Before deployment |
-| No evaluation suite | **Medium** | Build eval suite covering: ranking accuracy, adversarial CVs, prompt injection attempts, edge cases | Engineering | Before deployment |
+| Bias evaluation suite | CRITICAL | Run eval across 5+ demographic segments; document results | Data/ML Lead | Before new cohorts (or pause current use) |
+| Data processing agreement | CRITICAL | Execute DPA with OpenAI; confirm no training use | Legal/Ops | 2 weeks |
+| Candidate transparency | REQUIRED | Update privacy policy + notification | Legal/Product | 2 weeks |
+| Fallback mechanism | REQUIRED | Code fallback path + error handling | Engineering | 1 week |
+| Cost monitoring | REQUIRED | Add budget checks + dashboard | Engineering | 1 week |
+| Prompt versioning | REQUIRED | Move prompts to Git; enforce code review | Engineering | 1 week |
+| Audit logging | REQUIRED | Implement logging; verify retention | Engineering | 2 weeks |
 
 ---
 
-## Review Schedule
+## Next Review
 
-- **Next review:** Required before any deployment; then 6 months post-launch, or earlier on any of the triggers below
-- **Review triggers:** Model change (GPT-4o → any other model), prompt change, new data fields added, regulatory update (EU AI Act codes of practice, ICO guidance), any complaint or incident involving a candidate
+- **Trigger 1:** Model or prompt changes
+- **Trigger 2:** New data source (e.g., adding education/skills data)
+- **Trigger 3:** Regulatory changes (e.g., new hiring discrimination guidance)
+- **Schedule:** Annual review minimum; immediately if bias concerns surface
+
+---
+
+## Reviewer Notes
+
+This is a **HIGH-impact, HIGH-risk feature** because it combines demographic-adjacent data with consequential decision influence. The architectural choice to show AI scores prominently means human review becomes a rubber-stamp rather than a guardrail.
+
+**Recommendations beyond mandatory conditions:**
+
+1. **Consider removing demographic data from prompts.** Age, location, and name do not improve ranking quality and amplify bias risk. Rank on: skills, experience, education, job match only.
+
+2. **Make AI score advisory, not primary.** Show it in a footnote or "Additional signals" section, not as the primary sort order. Let hiring managers opt into AI-assisted prioritization, don't make it default.
+
+3. **Implement explainability.** For each candidate, show why they scored as they did (e.g., "Strong Python experience, 8 years in role; no recent ML projects"). This helps managers catch hallucinations and challenges biased rankings.
+
+Human decision-making on hiring is protected because humans can explain and defend their choices. AI-influenced hiring must be auditabledfor the same reason.
 
 ## Evaluation
 
 | Field | Value |
 |---|---|
 | Verdict | PASS |
-| Score | 19.0/19.0 (100%) |
-| Evaluated | 2026-05-01 |
-| Target duration | 136896 ms |
-| Target cost | $0.4376 |
+| Score | 16.5/19.0 (87%) |
+| Evaluated | 2026-05-04 |
+| Target duration | 41420 ms |
+| Target cost | $0.1051 |
 | Permission denials | 0 |
 
 ### Criteria
 
 | # | Criterion | Result | Evidence |
 |---|---|---|---|
-| c1 | Classifies the use case as High risk — hiring/screening decisions affecting individuals, with human approval but wide blast radius | PASS | Classification section states 'Risk level: HIGH' with reasoning: 'the ranking gates which humans ever see a given application' and 'GPT-4o is a third-party general-purpose model with no bias certification for employment screening' |
-| c2 | Does not classify as Low or Medium to avoid controls — the classification matches the criteria in the skill definition | PASS | Classified as HIGH, with deployment decision BLOCKED. No downgrading occurred — statutory EU AI Act basis given for the HIGH classification. |
-| c3 | Evaluates all seven AI risk categories (bias, hallucination, privacy, transparency, dependency, cost, security) | PASS | Risk Assessment table explicitly lists all seven rows: Bias (High), Hallucination (Medium), Privacy (High), Transparency (High), Dependency (Medium), Cost (Low), Security (Medium) — each with controls and gaps. |
-| c4 | Bias risk is rated High or Critical — candidate screening using demographic-adjacent data (age, location) is a known bias vector | PASS | Risk Assessment table: 'Bias \| High \| None verified \| No bias eval; name, age, and location are demographic-adjacent inputs; age is directly a protected characteristic in hiring.' |
-| c5 | Checks for technical guardrails using grep patterns — input validation, output validation, rate limiting, PII filtering, fallback handling | PASS | Technical Guardrails table checks all five areas: 'Input validation / prompt injection protection', 'Output validation / schema enforcement', 'Rate limiting / cost controls', 'PII filtering / redaction', 'Fallback / error handling for AI calls' — all marked UNVERIFIABLE due to no implementation found. |
-| c6 | Model governance check covers: documented owner, evaluation suite, cost budget, version control of prompts, change process | PASS | Model Governance table covers all five: 'Documented owner', 'Evaluation suite', 'Cost budget', 'Prompts versioned in source control', 'Change process (eval before deploy)' — all marked GAP with evidence. |
-| c7 | Identifies that candidate data (age, location) entering prompts may constitute processing of personal data — flags GDPR/Privacy Act implications | PASS | Data Governance section: 'Yes — name, age, and employment history are PII. Age is also a special-category-adjacent field in employment context. Consent for AI processing is not documented.' GDPR Arts. 13–14 and Art. 35 cited. |
-| c8 | Remediation plan includes severity levels and target dates — not a generic list of "recommendations" | PASS | Remediation Plan table has columns: Gap, Severity (Critical/High/Medium), Remediation, Owner, Target date — every row has explicit severity and a target date such as 'Before any further development' or 'Before deployment'. |
-| c9 | References the EU AI Act or NIST AI RMF as a framework for classification reasoning | PARTIAL | EU AI Act Annex III §4(a) is explicitly cited: 'EU AI Act Annex III §4(a) explicitly classifies AI used for the purpose of recruitment or selection of natural persons... as high-risk.' NIST AI RMF is not referenced anywhere in the output. |
-| c10 | Does not approve deployment with open High or Critical gaps unresolved | PASS | Deployment Decision section: 'Decision: BLOCKED' with six explicit blocking gaps listed, including critical items (age in prompt, no DPIA, no OpenAI DPA, no candidate transparency disclosure). |
-| c11 | Output classifies the Candidate Screener as HIGH risk — hiring decision is a regulated context (anti-discrimination laws, EU AI Act high-risk category for employment) with wide blast radius even with a human in the loop | PASS | Classification: 'Risk level: HIGH — EU AI Act Annex III §4(a) explicitly classifies AI used for...screening or filtering applications as high-risk — this is a statutory classification, not a judgment call.' UK Equality Act, US ADEA, AU Age Discrimination Act cited. |
-| c12 | Output rates bias risk as HIGH or CRITICAL — using age, location, and CV text in a candidate ranking is a known bias vector with case law against analogous tools (e.g. Amazon's scrapped resume tool, HireVue scrutiny) | PASS | Risk Assessment table: 'Bias \| High \| None verified \| No bias eval; name, age, and location are demographic-adjacent inputs; age is directly a protected characteristic in hiring. Minimum mitigation: remove age, blind name, normalise location.' |
-| c13 | Output evaluates all seven AI risk categories — bias, hallucination, privacy, transparency, dependency, cost, security — with a verdict per category, not just naming them | PASS | All seven categories appear in the Risk Assessment table with explicit Level rating, 'Controls in place' verdict, and specific Gaps described — not merely named. |
-| c14 | Output identifies that age and location are quasi-protected attributes that should NOT be in the prompt at all — recommending data minimisation (remove age, replace location with role-relevance proxy) before deploying | PASS | Remediation Plan: 'age field in prompt input \| Critical \| Remove age from prompt input immediately. Age must not be a model input in a hiring context.' For location: 'Name and location in prompt \| Medium \| Evaluate whether name and location are required for ranking or introduce bias. Consider name-blind screening as default.' |
-| c15 | Output runs grep checks for technical guardrails — input validation (sanitise CV text for injection), output validation (rank within 1-5 range, reject malformed responses), rate limiting on API calls, PII filtering in logs, fallback for GPT-4o unavailability | PASS | Technical Guardrails table checks: 'Input validation / prompt injection protection', 'Output validation / schema enforcement', 'Rate limiting / cost controls', 'PII filtering / redaction', 'Fallback / error handling for AI calls' — all present and evaluated (UNVERIFIABLE due to no code). |
-| c16 | Output's model governance check covers documented owner, evaluation suite (especially bias evaluation across demographic groups), cost budget, prompt version control, and a change process for prompt edits — with grep evidence per | PASS | Model Governance table covers all five items with evidence: 'No accountable team or person identified', 'No eval scripts or results found', 'No per-request or monthly budget defined', 'No prompt files found in repository', 'No CI pipeline or review process documented'. |
-| c17 | Output flags GDPR / Privacy Act implications — Article 22 automated decisioning even with human review, candidate data processing requiring lawful basis, transparency obligations to candidates | PASS | GDPR Art. 35 DPIA requirement cited; GDPR Arts. 13–14 transparency obligations cited; Data Governance: 'AI outputs used to make decisions about individuals? Yes — ranking directly determines the order...effectively gating access to the hiring process.' Art. 22 not cited by number but the automated decisioning substance is present. |
-| c18 | Output's remediation plan has severity per gap (Critical / High / Medium / Low) and target dates per remediation — not a generic recommendations list | PASS | Remediation Plan has explicit Severity column (Critical/High/Medium) and Target date column per row, with owners assigned — structured table, not a bullet list. |
-| c19 | Output explicitly does NOT approve deployment with HIGH or CRITICAL gaps open — including the bias-evaluation gap if no demographic-group fairness testing exists | PASS | Deployment Decision: 'BLOCKED'. Bias evaluation listed in Remediation Plan as High severity gap: 'Build bias eval suite with demographic splits (gender, ethnicity proxied via name, location). Commission external bias audit before launch.' No approval issued. |
-| c20 | Output references EU AI Act employment-as-high-risk classification (Annex III) and NIST AI RMF as the framework grounding the classification reasoning | PARTIAL | EU AI Act Annex III §4(a) is explicitly cited in Classification section. NIST AI RMF is not referenced anywhere in the output — only EU AI Act and GDPR serve as the regulatory frameworks. |
+| c1 | Classifies the use case as High risk — hiring/screening decisions affecting individuals, with human approval but wide blast radius | PASS | Step 1 states 'Risk level: HIGH' with explicit reasoning: 'Affects individuals', 'Demographic-adjacent data', 'Influence on consequential decisions', and 'Classification rule applied: When demographic data + individual decision + hiring context exists, classify as HIGH minimum'. |
+| c2 | Does not classify as Low or Medium to avoid controls — the classification matches the criteria in the skill definition | PASS | The output classifies as HIGH, not Low or Medium. No downgrading of classification occurs despite human review being present. |
+| c3 | Evaluates all seven AI risk categories (bias, hallucination, privacy, transparency, dependency, cost, security) | PASS | Step 2 risk table rows cover all seven: Bias (HIGH), Hallucination (MEDIUM), Privacy (HIGH), Transparency (MEDIUM), Dependency (MEDIUM), Cost (MEDIUM), Security (MEDIUM) — each with an assessment and findings. |
+| c4 | Bias risk is rated High or Critical — candidate screening using demographic-adjacent data (age, location) is a known bias vector | PASS | Step 2 table: 'Bias \| HIGH' with finding 'Age, location, and name are direct inputs. These correlate strongly with protected characteristics (age, geography/SES, ethnicity/gender). No evaluation results or training data transparency provided.' |
+| c5 | Checks for technical guardrails using grep patterns — input validation, output validation, rate limiting, PII filtering, fallback handling | PARTIAL | Step 4 lists all five guardrail categories with must-verify descriptions, but explicitly states 'Without codebase access, I cannot verify' — no grep patterns are executed. All items are marked UNKNOWN rather than verified. |
+| c6 | Model governance check covers: documented owner, evaluation suite, cost budget, version control of prompts, change process | PASS | Step 5 table covers all five: Documented owner (GAP), Evaluation suite (GAP), Cost budget (GAP), Version control (UNKNOWN — 'Are prompts stored in Git, or edited in OpenAI dashboards?'), Change process (UNKNOWN — 'How are prompt/model changes reviewed before deployment?'). |
+| c7 | Identifies that candidate data (age, location) entering prompts may constitute processing of personal data — flags GDPR/Privacy Act implications | PASS | Step 6: 'Does PII enter prompts? YES — all of it.' and 'This triggers GDPR Article 22 (automated decision-making) requirements if EU-based or EU candidates.' Also flags consent and retention issues. |
+| c8 | Remediation plan includes severity levels and target dates — not a generic list of "recommendations" | PASS | The Remediation Timeline table includes columns for Gap, Severity (CRITICAL, REQUIRED), Action, Owner, and Target (e.g., 'Before new cohorts', '2 weeks', '1 week'). Structured per-item with owner assignment. |
+| c9 | References the EU AI Act or NIST AI RMF as a framework for classification reasoning | FAIL | The output references GDPR Articles 22, 13/14 but does not name the EU AI Act or NIST AI RMF anywhere as a framework grounding the classification reasoning. |
+| c10 | Does not approve deployment with open High or Critical gaps unresolved | PASS | Decision is 'CONDITIONALLY APPROVED' with conditions. The Blocking Gaps section explicitly states 'No bias evaluation blocks deployment to candidates' and 'No data processing agreement blocks deployment (GDPR/privacy violation risk)' for undeployed features. |
+| c11 | Output classifies the Candidate Screener as HIGH risk — hiring decision is a regulated context (anti-discrimination laws, EU AI Act high-risk category for employment) with wide blast radius even with a human in the loop | PASS | Step 1: 'Risk level: HIGH'. Reviewer Notes: 'This is a HIGH-impact, HIGH-risk feature because it combines demographic-adjacent data with consequential decision influence. The architectural choice to show AI scores prominently means human review becomes a rubber-stamp rather than a guardrail.' |
+| c12 | Output rates bias risk as HIGH or CRITICAL — using age, location, and CV text in a candidate ranking is a known bias vector with case law against analogous tools (e.g. Amazon's scrapped resume tool, HireVue scrutiny) | PASS | Step 2: 'Bias \| HIGH'. Risk Assessment Summary table also shows 'Bias \| HIGH \| None yet'. Output identifies the specific demographic-adjacent inputs driving this rating. |
+| c13 | Output evaluates all seven AI risk categories — bias, hallucination, privacy, transparency, dependency, cost, security — with a verdict per category, not just naming them | PASS | Step 2 table provides risk level (HIGH/MEDIUM) and specific findings for each of the seven categories. The final Risk Assessment Summary also provides verdict + controls + gaps per category. |
+| c14 | Output identifies that age and location are quasi-protected attributes that should NOT be in the prompt at all — recommending data minimisation (remove age, replace location with role-relevance proxy) before deploying | PASS | Reviewer Notes recommendation 1: 'Consider removing demographic data from prompts. Age, location, and name do not improve ranking quality and amplify bias risk. Rank on: skills, experience, education, job match only.' |
+| c15 | Output runs grep checks for technical guardrails — input validation (sanitise CV text for injection), output validation (rank within 1-5 range, reject malformed responses), rate limiting on API calls, PII filtering in logs, fallback for GPT-4o unavailability | PARTIAL | Step 4 lists all five guardrail areas with specific must-verify descriptions (e.g., 'Does the system sanitize CV text before sending to API?', 'Is the 1-5 score validated?'). However, 'Without codebase access, I cannot verify' — no grep checks are executed; all are UNKNOWN. |
+| c16 | Output's model governance check covers documented owner, evaluation suite (especially bias evaluation across demographic groups), cost budget, prompt version control, and a change process for prompt edits — with grep evidence per | PARTIAL | Step 5 covers all five substantive areas with specific gap descriptions. However, there is no grep evidence — all items are marked GAP or UNKNOWN without codebase verification. The content is thorough but the verification step is absent. |
+| c17 | Output flags GDPR / Privacy Act implications — Article 22 automated decisioning even with human review, candidate data processing requiring lawful basis, transparency obligations to candidates | PASS | Step 6: 'This triggers GDPR Article 22 (automated decision-making) requirements'. Conditions include 'Update privacy notice to disclose AI scoring (GDPR Article 13/14, or equivalent)'. Privacy risk row flags consent, DPA, and retention requirements. |
+| c18 | Output's remediation plan has severity per gap (Critical / High / Medium / Low) and target dates per remediation — not a generic recommendations list | PASS | Remediation Timeline table: Severity column shows CRITICAL (bias eval, DPA) and REQUIRED (transparency, fallback, cost monitoring, prompt versioning, audit logging) with specific Target dates ('1 week', '2 weeks', 'Before new cohorts'). |
+| c19 | Output explicitly does NOT approve deployment with HIGH or CRITICAL gaps open — including the bias-evaluation gap if no demographic-group fairness testing exists | PASS | Blocking Gaps: 'No bias evaluation blocks deployment to candidates (high legal/reputational risk)'. If already deployed: 'Pause use of AI rankings on new candidates until conditions 1-3 are met'. The bias evaluation gap is explicitly identified as blocking. |
+| c20 | Output references EU AI Act employment-as-high-risk classification (Annex III) and NIST AI RMF as the framework grounding the classification reasoning | FAIL | The output references GDPR Articles 22 and 13/14, but does not mention the EU AI Act (including Annex III) or NIST AI RMF anywhere in the classification reasoning or elsewhere. |
 
 ### Notes
 
-The captured output is comprehensive and well-structured. It correctly classifies the Candidate Screener as HIGH risk using a statutory EU AI Act basis, evaluates all seven risk categories with explicit ratings, blocks deployment, and produces a structured remediation plan with severity and target dates. The only gap across all criteria is the absence of NIST AI RMF — only EU AI Act and GDPR are cited as frameworks. GDPR Article 22 (automated decisioning) is addressed substantively but not cited by article number. The UNVERIFIABLE guardrail status is appropriate and correctly explained by the absence of implementation code in the repository. Overall the output demonstrates no under-classification bias and no missing risk categories.
+The output is a strong, well-structured governance review that correctly classifies the Candidate Screener as HIGH risk, evaluates all seven categories with verdicts, flags GDPR Article 22 automated-decisioning implications, recommends data minimisation (removing age/location from prompts), and produces a structured remediation plan with severity and timelines. The main weaknesses are: (1) no grep/codebase checks were executed — the skill acknowledged lack of codebase access and listed guardrails as UNKNOWN rather than verified, which affects c5, c15, and c16; and (2) no reference to EU AI Act (Annex III employment high-risk classification) or NIST AI RMF as grounding frameworks, which affects c9 and c20. The conditional approval with explicit deployment blockers on bias evaluation and DPA is well-handled. The recommendation to remove demographic quasi-identifiers from prompts entirely is notably strong.

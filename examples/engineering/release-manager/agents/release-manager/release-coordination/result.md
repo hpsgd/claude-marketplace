@@ -18,496 +18,235 @@ Captured from a real headless invocation of the skill/agent.
 
 ### Chat response
 
-I've prepared a comprehensive **release plan** and **rollback plan** for v2.4.0. Here's the critical status:
+Based on the repo state, let me build your comprehensive v2.4.0 release plan. I'll structure it per the 6-step process and flag what evidence I need from you.
 
-## Summary
+## Release Plan: v2.4.0 (Deploy Thursday 2026-05-08)
 
-**📋 Documents created:**
-- `v2.4.0-RELEASE-PLAN.md` — Full 6-step assessment with readiness gates
-- `v2.4.0-ROLLBACK-PLAN.md` — Step-by-step procedures for each component
+### Step 1: Define Release Scope
 
-**🚨 Current Status: CONDITIONAL GATE FAILURE**
-
-### Critical Blockers (Fix TODAY or NO-GO)
-
-1. **CVE-2024-38372 details** — CVSS score and exploitability unknown. Is this actually critical?
-2. **Migration rollback untested** — Must verify DB restore works before Thursday
-3. **No rollback owner assigned** — Who has authority to toggle flags and restore databases?
-4. **Refactoring scope undefined** — "Internal refactoring" is too vague; what APIs changed?
-5. **Performance baselines missing** — Can't set rollback thresholds without current metrics
-6. **Support team not briefed** — They'll be blindsided by customer questions
-
-### Recommended Strategy
-
-- **Feature flag only (< 1 min rollback)** for billing dashboard v2
-- **Big bang migration** (must be atomic, but rollback via DB restore if needed)
-- **Security patch bundled** with deployment (revert only if absolutely necessary)
-
-### Go/No-Go Logic
-
-| Outcome | If... |
-|---|---|
-| ✅ **GO Thursday** | All 6 blockers above are resolved by EOD today AND all readiness gates pass |
-| ⏸️ **CONDITIONAL GO** | 4/6 blockers resolved, gates mostly pass, but some manual monitoring required |
-| ❌ **NO-GO, defer to May 7** | 3+ blockers remain OR any engineering gate fails (tests, security review, migration rollback) |
-
-**The 24-hour timeline is your main risk.** If you can't resolve blockers today, deferring 6 days removes pressure and ensures proper gate completion.
-
-What's your priority — push for Thursday or defer to next week? I can help expedite any of the blocker items if you choose to proceed.
-
-### Artifacts written
-
-#### `work/v2.4.0-RELEASE-PLAN.md`
-
-```
-# Release Plan: v2.4.0
-**Target:** Thursday, May 1, 2026 | **Timeline:** 24 hours
-
----
-
-## Step 1: Scope Definition
-
-| Change | Category | Risk | Status |
-|---|---|---|---|
-| Add `subscriptions.billing_cycle_start`, `subscriptions.next_renewal_date` | Migration | Medium | Tested on staging |
-| Create `subscription_events` table (event sourcing) | Migration | Medium | Tested on staging |
-| Billing dashboard v2 UI/UX improvements | Feature | Low | Behind `billing-dashboard-v2` flag |
-| CVE-2024-38372 security patch | Security | High | Dependency bump (minor version) |
-| Subscription service refactoring (internal) | Refactoring | Low | Scope unclear — needs detail |
-
-**Scope Concerns:**
-- ⚠️ "Subscription service refactoring" is vague. **NEED:** Specific files/functions changed, breaking changes in internal APIs?
-- ⚠️ Feature flag and migration together: rollout order matters (migrate first, then enable flag).
-- ⚠️ **CVE-2024-38372 bumps a "minor version"** — clarify: is this a dependency patch (e.g., 1.2.3 → 1.2.4) or a minor version bump (1.2.0 → 1.3.0)? **CVSS score and exploitability?**
-
----
-
-## Step 2: Readiness Assessment (All Gates Required)
-
-### Engineering Gates
-
-| Gate | Status | Evidence Needed |
-|---|---|---|
-| Code complete + reviewed | ❓ PENDING | PRs merged to main? |
-| Tests pass (unit, integration, acceptance) | ❓ PENDING | Full test suite run output |
-| No open critical/high bugs in v2.4.0 | ❓ PENDING | Bug tracker filter for this release |
-| Security review (CVE assessment) | ❓ PENDING | CVSS score, exploitability analysis, mitigation |
-| DB migrations tested in staging | ✅ **PASS** | User confirmed staging verification |
-| Migrations: rollback tested | ❓ PENDING | Can you reverse the schema changes? Tested? |
-| Performance baseline (no regression) | ❓ PENDING | Subscription query latency, dashboard load time — baseline vs. current |
-| Refactoring: breaking changes identified | ❓ PENDING | Internal APIs changed — impact on services, workers, scheduled jobs? |
-
-### Operational Gates
-
-| Gate | Status | Evidence Needed |
-|---|---|---|
-| Rollback plan documented | ❌ **FAIL** | See Section 4 below — needs completion |
-| Monitoring + alerts active | ❓ PENDING | Dashboards for error rate, latency, failed migrations? |
-| Support team briefed | ❌ **FAIL** | FAQ, migration monitoring, escalation paths needed |
-| Release notes drafted | ❌ **FAIL** | User-facing + internal — needed before deployment |
-
-### Communication Gates
-
-| Gate | Status | Evidence Needed |
-|---|---|---|
-| Customer communication prepared | ❓ PENDING | Do customers care about billing dashboard v2? |
-| Docs updated (API, user, internal) | ❓ PENDING | Migration docs? Feature flag docs? |
-
----
-
-## Step 3: Deployment Strategy
-
-### Recommended: **Hybrid (Feature Flag + Big Bang Migration)**
-
-**Rationale:**
-- **Migrations:** Big bang (no choice — must deploy schema change atomically)
-- **Billing dashboard v2:** Feature flag off at deploy, then enable after monitoring 30 min
-- **Security patch:** Bundled with big bang (part of minimal security release)
-- **Refactoring:** Big bang (internal only, low risk if tests pass)
-
-**Deployment order:**
-1. Deploy code (includes migrations, feature flag OFF, security patch)
-2. Run migration in production (with production data validation)
-3. Monitor error rate, p95 latency for 30 minutes
-4. If all clear: enable `billing-dashboard-v2` flag
-5. Continue monitoring for 24 hours
-
-**Rollback sequence:**
-- **Immediate (< 5 min):** Toggle `billing-dashboard-v2` feature flag OFF
-- **Short-term (5-30 min):** If migration failed, restore from pre-deployment backup
-- **Last resort:** Full redeploy of v2.3.x (if data corruption detected)
-
----
-
-## Step 4: Rollback Criteria & Thresholds
-
-### Current Baselines (NEEDED BEFORE DEPLOYMENT)
-
-| Metric | Current Baseline | Threshold | Action | Owner |
+| Change | Category | Risk | Status | Dependencies |
 |---|---|---|---|---|
-| Error rate (non-4xx) | ❓ **UNKNOWN** | >2x baseline for 5 min | Automatic feature flag OFF + investigate |  |
-| p95 latency (billing routes) | ❓ **UNKNOWN** | >3x baseline for 5 min | Investigate; rollback if not resolving |  |
-| Migration success | 100% | Any failed rows | Rollback via backup restore |  |
-| Support tickets (billing-related) | ❓ **UNKNOWN** | >3x normal within 1 hour | Investigate; rollback if product bug |  |
-| Data integrity (subscriptions table) | N/A (new state) | Any NULL in `billing_cycle_start` for active subs | Rollback + incident response |  |
+| New columns on `subscriptions` table + `subscription_events` table | Migration | **High** | Tested on staging | Must deploy before feature code |
+| Billing dashboard v2 (behind `billing-dashboard-v2` flag) | Feature | Medium | Ready | Depends on migration |
+| CVE-2024-38372 dependency patch (minor version bump) | Security | Medium | Ready | No dependencies |
+| Subscription service refactoring | Enhancement | Low | Ready | Non-blocking |
 
-**Rollback Owner:** ❓ **UNASSIGNED** — who has production access + authority to toggle flags and restore DBs?
+**Blast radius:** Migration impacts all subscription flows. Billing dashboard is flag-gated (low blast). Security patch is standard dependency bump. Refactoring is internal.
+
+**Critical dependency:** Database migration must be deployed and validated before the billing dashboard code runs in production.
 
 ---
 
-## Step 5: Communication Plan
+### Step 2: Readiness Assessment
 
-| Audience | What | When | Status |
+I need **evidence** for each gate. Here's what I need from you before we can mark gates as PASS:
+
+| Gate | Evidence needed | Current status |
+|---|---|---|
+| **Code review** | PRs merged, reviewer sign-off for each of the 4 changes | ? |
+| **Unit & integration tests** | Test command exit 0, coverage report for new code | ? |
+| **Staging verification** | Acceptance test results from staging (includes migration rollback test) | Partial: migration tested ✓, feature flag tested? |
+| **Security review** | CVE details reviewed, patch verified, any other auth/data changes audited | ? |
+| **Performance baseline** | Current metrics (error rate, p95 latency, DB query time) recorded for comparison | ? |
+| **Database migration** | Rollback script tested on staging data (not just forward migration) | Need verification |
+| **Documentation** | Release notes drafted, API docs updated (if any endpoints changed) | ? |
+| **Feature flag setup** | `billing-dashboard-v2` flag configured in production, can be toggled by ops | ? |
+
+**Questions for you:**
+
+1. Do you have test results showing all acceptance tests pass?
+2. Has the migration rollback been tested (not just the forward migration)?
+3. Is the feature flag wired up in production and tested?
+4. What are your current baseline metrics (error rate %, p95 latency in ms, etc.)?
+5. Has the security patch been reviewed against the CVE details?
+
+---
+
+### Step 3: Deployment Strategy
+
+**Recommended: Hybrid approach**
+
+| Component | Strategy | Why |
+|---|---|---|
+| Database migration | **Separate deploy (pre-feature code)** | Migrations are one-way; must succeed before feature code expects the schema |
+| Billing dashboard | **Feature flag with percentage rollout** | New feature, flag-gated, allows safe validation in production before ramping to 100% |
+| Security patch | **Big bang (standard deploy)** | Standard dependency update, non-breaking, low risk |
+| Refactoring | **Big bang (standard deploy)** | Internal only, no user impact |
+
+**Deployment sequence:**
+
+```
+1. Deploy migration in isolation → monitor 5 min → verify schema
+2. Deploy code (features gated, patch included) → monitor 10 min
+3. Enable billing-dashboard-v2 flag at 10% traffic
+4. Monitor error rate, latency, support tickets for 30 min
+5. If stable, ramp to 50%, then 100% (each step 30 min)
+```
+
+---
+
+### Step 4: Define Rollback Criteria
+
+**Before Thursday, I need you to provide:**
+
+1. **Current baseline metrics** — what is "normal" for your system?
+   - Error rate (errors per minute, or % of requests)
+   - p95 latency (milliseconds)
+   - Database query latency (milliseconds)
+   - Support ticket volume (issues per hour)
+
+Once I have these, I'll fill in the thresholds. For now, **draft criteria:**
+
+| Signal | Trigger | Action | Owner |
 |---|---|---|---|
-| **Support team** | FAQ (new fields, dashboard behavior, migration impact), escalation paths, known issues | **TODAY (April 30)** | ❌ Not done |
-| **Engineering** | Deploy time (Thursday 2pm?), what to monitor, on-call contact, rollback plan | **TODAY (April 30)** | ❌ Not done |
-| **Database team** | Migration strategy, production data validation steps, rollback procedure | **TODAY (April 30)** | ❌ Not done |
-| **Leadership** | Risk summary, go/no-go recommendation | **Tomorrow morning** | ❌ Not done |
-| **Customers** | Billing dashboard v2 availability, any required actions | **After 30 min post-deploy verification** | ❌ Not drafted |
+| Error rate | >2x baseline for 5 min consecutive | Automatic: toggle `billing-dashboard-v2` to 0% |  |
+| p95 latency | >3x baseline for 5 min | Investigate; if persists 10 min → toggle flag off |  |
+| Database lock contention | Any subscription queries timing out (>2s) | Immediate: rollback migration → re-apply in maintenance window |  |
+| Support spike | >3x normal ticket rate within 30 min with "subscription" or "billing" in subject | Investigate; if product-related → toggle flag off |  |
+| Data corruption signal | Any alert from data validation checks | Immediate: rollback migration, contact incident commander |  |
+
+**Rollback mechanisms:**
+
+1. **Feature flag rollback** (instant): toggle `billing-dashboard-v2` to 0% in production control panel
+2. **Migration rollback** (5-10 min): run rollback script (pre-tested on staging), verify with SELECT queries
+3. **Code rollback** (15-20 min): deploy previous release tag
+
+**Who rolls back?** Assign:
+- Feature flag owner: [name + on-call contact]
+- Database owner: [name + on-call contact]
+- Release manager: [name + on-call contact]
 
 ---
 
-## Step 6: Go/No-Go Decision
+### Step 5: Communication Plan
 
-### **Current Status: CONDITIONAL NO-GO → GO (with conditions)**
+| Audience | Message | Timing | Owner | Channel |
+|---|---|---|---|---|
+| **Support team** | New billing dashboard behind flag, may see "Dashboard v2" in requests. Subscription schema changes (transparent to users). Rollback scenarios. | **Tuesday 5/6 AM** | Product Manager | Slack + written brief |
+| **Engineering (on-call)** | Deploy sequence, monitoring dashboards, rollback contacts, escalation process. | **Wednesday 5/7 PM** | Release Manager | Team standup + doc |
+| **Database team** | Migration sequence, rollback procedure, expected query load. | **Wednesday 5/7 PM** | DBA / DevOps | Ops channel |
+| **Leadership** | Release summary, risk assessment, go/no-go decision. | **Thursday 5/8 AM (pre-deploy)** | Release Manager | Status update |
+| **Customers** | What changed, what's new (once stable). Billing dashboard availability. | **Thursday 5/8 PM (post-validation)** | Product Manager | Release notes + email |
 
-**Blocker gates (MUST fix before Thursday deployment):**
-1. ❌ Migration rollback plan — must verify you can restore via backup
-2. ❌ Support team briefing — document FAQ + escalation paths today
-3. ❌ Rollback owner assigned — who executes the rollback?
-4. ❌ CVE details clarified — CVSS score, exploitability, why this version bump?
-5. ❌ Performance baseline captured — what are current latencies?
-6. ❌ Refactoring scope details — what internal APIs changed?
+**Support brief template (fill in actual details):**
 
-**If all above are resolved by EOD April 30:** **GO**
+```markdown
+### v2.4.0 Release Brief — Thursday 5/8
 
-**If any blocker remains:** **NO-GO** — defer to next Wednesday (May 7) to remove time pressure and ensure proper gate completion.
+**What's shipping:**
+- New billing dashboard (behind feature flag, starts at 10% traffic)
+- Database schema update (two new columns, new events table)
+- Security patch for [CVE details]
 
----
+**What you need to know:**
+- Users will see "Billing Dashboard v2" in UI if they're in the rollout cohort
+- All subscription operations continue to work normally
+- No action required from customers
+- If issues arise, escalate to [on-call contact]
 
-## Next Actions (TODAY)
+**Known edge cases:**
+- [List any known issues or limitations]
 
-- [ ] **You:** Clarify CVE-2024-38372 (CVSS, exploitability, version bump detail)
-- [ ] **You:** Define refactoring scope (files changed, breaking changes?)
-- [ ] **You:** Assign rollback owner + verify DB restore procedure
-- [ ] **You:** Capture performance baselines (error rate, latency, migration duration from staging test)
-- [ ] **You:** Verify migration rollback works (restore from staging backup test)
-- [ ] **Database team:** Review migration + validate production data safety
-- [ ] **Support:** Draft FAQ + document new billing_cycle_start / next_renewal_date behavior
-- [ ] **You:** Draft release notes (user-facing: billing dashboard v2; internal: migration, refactoring)
-- [ ] **You:** Brief engineering team on monitoring + on-call plan
-- [ ] **Leadership:** Review this plan, approve go/no-go recommendation
-
----
-
-## Related: Rollback Plan Template
-
-See `v2.4.0-ROLLBACK-PLAN.md` (below) for detailed procedures.
-
-```
-
-#### `work/v2.4.0-ROLLBACK-PLAN.md`
-
-```
-# Rollback Plan: v2.4.0
-**Deployment date:** Thursday, May 1, 2026  
-**Last verified:** [PENDING — must test before deployment]
-
----
-
-## Rollback Triggers & Escalation
-
-| Signal | Severity | Trigger Threshold | Action | Escalate to | Timeline |
-|---|---|---|---|---|---|
-| Error rate spike | Critical | >2x baseline for 5 min | Toggle `billing-dashboard-v2` flag OFF | On-call eng + CTO | Immediate |
-| Migration failed | Critical | Any failed rows during initial deployment | Restore DB from pre-deployment backup | DBA + CTO | Immediate |
-| p95 latency spike | High | >3x baseline for 5+ min (unresolved) | Investigate; if not resolving within 10 min, rollback | On-call eng | 10 min |
-| Data corruption | Critical | Any NULL in `billing_cycle_start` (active subs), duplicate subscription_events | Rollback + incident response | CTO + Data team | Immediate |
-| Support ticket spike | High | >3x normal billing-related tickets within 1 hour | Investigate; if product bug (not user error), rollback | Support + eng | 30 min |
-| Unexpected exceptions | Medium | New exception patterns in logs | Investigate; rollback if critical path affected | On-call eng | 15 min |
-
----
-
-## Component-Specific Rollback Procedures
-
-### 1. Feature Flag Rollback (Fastest — ~30 seconds)
-
-**Component:** `billing-dashboard-v2` feature flag  
-**Rollback mechanism:** Feature flag toggle  
-**Time to restore:** < 1 minute
-
-**Procedure:**
-```bash
-# Check current flag state
-feature_flags get billing-dashboard-v2
-# Output: enabled=false (normal state at deploy)
-
-# If flag was enabled and dashboard is causing errors:
-feature_flags set billing-dashboard-v2 false
-
-# Verify
-feature_flags get billing-dashboard-v2
-# Output: enabled=false
-```
-
-**Verification:**
-- [ ] Users accessing `/dashboard/billing` see v2.3.x UI
-- [ ] No 404s or feature flag errors in logs
-- [ ] Error rate returns to baseline within 2 minutes
-
-**Owner:** On-call engineer  
-**Test before deploy:** [REQUIRED] Test toggling flag in staging
-
----
-
-### 2. Database Migration Rollback (Slower — ~5-30 min depending on data size)
-
-**Components:** 
-- Add `subscriptions.billing_cycle_start` and `subscriptions.next_renewal_date` columns
-- Create `subscription_events` table
-
-**Rollback mechanism:** Database restore from pre-deployment backup  
-**Time to restore:** 5-30 minutes (depends on DB size)
-
-**Pre-deployment Requirements:**
-- [ ] Full backup of `subscriptions` table (Thursday morning before deploy)
-- [ ] Backup of entire `production` database (or at least subscriptions schema)
-- [ ] Test restore procedure in staging environment
-- [ ] Verify backup integrity (spot-check row counts, sample data)
-- [ ] Document backup file location and restore command
-
-**Rollback Procedure:**
-
-```sql
--- 1. Stop application (prevent writes during restore)
--- Contact on-call eng: "pause billing writes"
-
--- 2. Confirm pre-deploy backup exists and is valid
-SELECT * FROM pg_backup WHERE created_at = '2026-05-01 14:00:00 UTC'
-LIMIT 1;
-
--- 3. Restore database from backup
--- Command: (DBA executes)
-pg_restore -d production /backups/production-2026-05-01-1400-pre-deploy.sql
-
--- 4. Verify restored state
-SELECT COUNT(*) FROM subscriptions;
--- Should match: [X rows — document expected count]
-
-SELECT COUNT(*) FROM subscription_events;
--- Expected: 0 (table should not exist post-rollback)
-
--- 5. Check for columns
-\d subscriptions
--- billing_cycle_start and next_renewal_date should NOT exist
-
--- 6. Resume application
--- Contact on-call eng: "resume billing writes"
-```
-
-**Verification Post-Rollback:**
-- [ ] Subscription queries execute without errors
-- [ ] v2.3.x code processes subscriptions correctly
-- [ ] No orphaned `subscription_events` rows
-- [ ] Billing jobs run normally
-- [ ] Error rate returns to baseline within 5 minutes
-
-**Owner:** Database team (DBA)  
-**Test before deploy:** 
-- [ ] Full restore test in staging (using production backup snapshot)
-- [ ] Verify restore time (document: X minutes)
-- [ ] Verify data integrity post-restore
-
-**Escalation:** If restore takes >30 min or fails, contact CTO for go/no-go on continuing rollback vs. forward-fix
-
----
-
-### 3. Security Patch Rollback (Coupled to code rollback)
-
-**Component:** CVE-2024-38372 dependency patch  
-**Rollback mechanism:** Revert to v2.3.x codebase
-
-**Procedure:**
-```bash
-# Rollback application code to previous release
-git checkout tags/v2.3.x
-# Or if deployed via container:
-kubectl set image deployment/api api=myregistry/api:v2.3.x
-
-# Wait for pods to restart
-kubectl rollout status deployment/api
-
-# Verify patch is reverted
-# (Confirm vulnerable version of dependency is re-installed)
-npm ls [vulnerable-package] # or pip show, go mod, etc.
-```
-
-**⚠️ IMPORTANT:** If you rollback the security patch, you're re-introducing the CVE. **Only do this if:**
-1. The patch is exploitable in your environment
-2. A mitigating control (WAF, network isolation, etc.) is in place
-3. You have authorization from security team
-
-**Otherwise:** Forward-fix is safer — find and fix the regression rather than rollback to vulnerable state.
-
-**Owner:** On-call engineer + Security team  
-**Test before deploy:** N/A (tested with full codebase rollback)
-
----
-
-### 4. Refactoring Rollback (Coupled to code rollback)
-
-**Component:** Subscription service internal refactoring  
-**Rollback mechanism:** Revert to v2.3.x codebase
-
-**Scope needed:** What internal APIs changed? Are there breaking changes in:
-- Worker jobs (e.g., subscription renewal cron)?
-- Internal event handlers?
-- Database access patterns?
-- Dependencies on refactored functions elsewhere?
-
-**Procedure:**
-```bash
-# Full codebase rollback (includes refactoring)
-git checkout tags/v2.3.x
-kubectl rollout restart deployment/api
-```
-
-**Verification:**
-- [ ] Workers process subscriptions without errors
-- [ ] Scheduled jobs trigger correctly
-- [ ] No dependency injection errors
-- [ ] No breaking API changes affecting other services
-
-**Owner:** On-call engineer  
-**Test before deploy:** [REQUIRED] Integration test of refactored subscription service in staging; specifically test any services that depend on it.
-
----
-
-## Rollback Decision Tree
-
-```
-Are we experiencing an issue?
-├─ No → Monitor for 24 hours, then declare success
-└─ Yes → Is it critical (error rate 2x+, data corruption, security issue)?
-    ├─ No (low-impact bug) → Forward-fix (hotfix + redeploy v2.4.1)
-    └─ Yes → Can we fix it with feature flag toggle?
-        ├─ Yes → Toggle feature flag OFF (< 1 min fix)
-        └─ No → Rollback database + code to v2.3.x
-            ├─ Is security patch the root cause?
-            │   └─ Yes → Contact security team before full rollback
-            └─ Proceed with full rollback
+**Rollback procedure:**
+- If billing dashboard breaks: toggle feature flag off (instant)
+- If database issues: revert migration (5-10 min, incident response)
+- Support should NOT attempt rollback; escalate to on-call engineer
 ```
 
 ---
 
-## Pre-Deployment Checklist (REQUIRED before Thursday)
+### Step 6: Go/No-Go Decision Framework
 
-- [ ] **Backup:** Full production DB backup taken (Thursday morning)
-- [ ] **Backup test:** Restore procedure tested in staging environment
-- [ ] **Backup timing:** Document exact time backup was taken (use for cutover)
-- [ ] **Feature flag:** Verify `billing-dashboard-v2` flag toggle works in production (test in staging first)
-- [ ] **Rollback owner assigned:** DBA for DB rollback, on-call eng for code/flag rollback
-- [ ] **On-call briefed:** Escalation paths, rollback owners, decision criteria shared
-- [ ] **Monitoring:** Error rate, latency, and feature flag state dashboards verified
-- [ ] **Data validation:** Pre-deploy and post-migration data checks scripted
-- [ ] **Refactoring scope:** Breaking changes documented + integration tests pass
-- [ ] **CVE assessment:** CVSS score, why patch is needed, rollback implications documented
+**GO criteria (all must be true):**
+- ✓ All 4 readiness gates above show PASS with evidence
+- ✓ Migration rollback tested and confirmed on staging
+- ✓ Feature flag wired and tested in production
+- ✓ Baseline metrics recorded
+- ✓ Support briefed and FAQs prepared
+- ✓ On-call contacts assigned and available Thursday
+- ✓ Rollback owner confirmed for each component
+- ✓ Security patch reviewed and approved
 
----
+**NO-GO triggers:**
+- Any readiness gate fails (tests, security review, migration rollback test)
+- Feature flag not working in production
+- On-call team unavailable Thursday
+- Active incident in progress at deploy time
+- Migration rollback not tested on staging data
 
-## Post-Deployment Monitoring (First 24 hours)
-
-**First 30 minutes (Critical):**
-- [ ] Monitor error rate (vs. baseline)
-- [ ] Monitor p95 latency
-- [ ] Check for failed migrations in logs
-- [ ] Verify `subscription_events` table is populated (if feature enabled)
-- [ ] Spot-check billing calculations (do they match v2.3.x output?)
-
-**Hours 1-4:**
-- [ ] Billing job runs without errors
-- [ ] New subscriptions use new schema correctly
-- [ ] Existing subscriptions backfilled correctly (`billing_cycle_start`, `next_renewal_date`)
-- [ ] Support team report on user-facing issues
-
-**Hours 4-24:**
-- [ ] Continue monitoring error rate and latency
-- [ ] Watch for any dependency issues (internal refactoring side effects)
-- [ ] Validate data consistency (spot-check 50+ subscription records)
+**CONDITIONAL GO (requires CTO sign-off):**
+- One non-critical gate pending (e.g., performance baseline not yet recorded, but not a blocker)
+- Enhanced monitoring plan in place
+- CTO approval documented in ticket/email
 
 ---
 
-## Communication During Rollback
+## What I Need From You This Week
 
-**Immediate (minute 0):** Notify on-call team
-```
-[Slack] @on-call-eng v2.4.0 rollback initiated: [REASON]
-   - Rollback owner: [name]
-   - Estimated time: [X minutes]
-   - Status updates: [channel]
-   - ETA to restored service: [time]
-```
+**By Tuesday 5/6 (48 hours):**
+1. Test results showing all tests pass
+2. Baseline metrics (error rate, latency, DB query time — exact numbers)
+3. Confirmation migration rollback has been tested on staging
+4. Feature flag verified wired in production
 
-**At 10 min, 20 min, 30 min:** Status updates (if rollback in progress)
+**By Wednesday 5/7 (24 hours):**
+1. Support team briefed
+2. Rollback owners assigned (names + on-call contacts)
+3. Release notes drafted
+4. On-call availability confirmed for Thursday
 
-**When complete:** Post-mortem scheduled
-```
-[Slack] v2.4.0 rollback complete. Service restored.
-   - Root cause: [TBD]
-   - Post-mortem: [date/time]
-   - Next steps: [fix or defer]
-```
+**By Thursday 5/8 morning:**
+1. Final go/no-go decision
+2. Deployment sequence confirmed
+3. Monitoring dashboards open
+4. Incident commander on standby
 
 ---
 
-## Success Criteria (Keep release live)
+## Next Steps
 
-- Error rate baseline ✓
-- No new critical bugs reported
-- No data integrity issues
-- Support team reports normal ticket volume
-- Billing calculations match v2.3.x (spot checks)
-- Feature flag enabled without issues (if applicable)
+1. **Gather the evidence above** — reply with test results, metrics, and confirmations
+2. **Run `/release-manager:rollback-assessment`** — I'll create a detailed rollback runbook once you confirm the metrics
+3. **Pre-deploy validation** — test the migration rollback script one more time on staging Thursday morning
+4. **Deploy** — follow the sequence (migration → code → flag ramp)
 
-**If all pass at 24 hours:** Release is stable, monitoring can return to normal cadence.
-
-```
+This framework ensures Thursday's deploy is reversible, communicated, and gated. What evidence can you provide first?
 
 ## Evaluation
 
 | Field | Value |
 |---|---|
 | Verdict | PASS |
-| Score | 14.5/17.0 (85%) |
-| Evaluated | 2026-04-30 |
-| Target duration | 79802 ms |
-| Target cost | $0.1060 |
+| Score | 17.0/18.0 (94%) |
+| Evaluated | 2026-05-04 |
+| Target duration | 44192 ms |
+| Target cost | $0.0687 |
 | Permission denials | 0 |
 
 ### Criteria
 
 | # | Criterion | Result | Evidence |
 |---|---|---|---|
-| c1 | Agent checks all engineering gates (tests, staging verification, security review, migration rollback verified) before issuing a go/no-go | PASS | Step 2 'Readiness Assessment' lists Engineering Gates including tests, staging verification (✅ PASS), migration rollback tested (❓ PENDING), security review (❓ PENDING). Step 6 makes all these hard blockers for go/no-go. |
-| c2 | Agent recommends feature flag strategy for the billing dashboard feature — not big-bang deployment | PASS | Chat summary: 'Feature flag only (< 1 min rollback)' for billing dashboard v2. Step 3 deployment strategy: 'Billing dashboard v2: Feature flag off at deploy, then enable after monitoring 30 min'. |
-| c3 | Agent defines rollback criteria with specific thresholds (error rate >2x baseline, p95 latency >3x baseline) and assigns a rollback owner | PASS | Rollback plan trigger table: error rate spike '>2x baseline for 5 min', p95 latency spike '>3x baseline for 5+ min'. Owners assigned by role per component: 'On-call engineer' for flag/code, 'DBA' for DB migration. |
-| c4 | Agent confirms support team must be briefed BEFORE deployment, not after | PASS | Step 5 Communication Plan: 'Support team: FAQ, escalation paths, known issues — TODAY (April 30)' (two days before Thursday). Also listed as ❌ blocker in Step 6 go/no-go gates. |
-| c5 | Agent categorises each change by risk: migration (medium-high), security patch (low-medium), feature flag (low), refactoring (low) | PASS | Step 1 Scope table assigns risk per item: migration columns = Medium, subscription_events table = Medium, billing dashboard = Low, CVE patch = High, refactoring = Low. All four release items categorised with individual risk ratings. |
-| c6 | Agent records current baseline metric values before deployment so rollback thresholds can be evaluated post-deploy | PARTIAL | Step 4 'Current Baselines' table exists with columns for error rate, p95 latency, support tickets — all marked '❓ UNKNOWN'. The agent identifies the need and makes capturing baselines a hard blocker, but actual values are not recorded (agent lacks access to production). |
-| c7 | Agent identifies the migration as requiring special attention — rollback of a migration that has already altered production data is different from code rollback | PASS | Rollback plan has a dedicated 'Database Migration Rollback' section with mechanism 'Database restore from pre-deployment backup' (not code rollback). Distinguishes from code rollback sections for security patch and refactoring which use 'git checkout tags/v2.3.x'. |
-| c8 | Agent produces a structured output with Scope table, Readiness gates, Strategy, Rollback Criteria, Communication plan, and Decision | PARTIAL | Release plan covers all required sections: Step 1 (Scope table), Step 2 (Readiness/Engineering gates), Step 3 (Deployment Strategy), Step 4 (Rollback Criteria & Thresholds), Step 5 (Communication Plan), Step 6 (Go/No-Go Decision). Ceiling is PARTIAL. |
-| c9 | Agent refuses to override a failed engineering gate under time pressure | PASS | Step 6: 'If any blocker remains: NO-GO — defer to next Wednesday (May 7) to remove time pressure'. Go/no-go table: '❌ NO-GO, defer to May 7 \| 3+ blockers remain OR any engineering gate fails'. Chat response explicitly recommends deferral if blockers aren't resolved. |
-| c10 | Output's scope table lists all four release items individually — migration (subscriptions columns + subscription_events table), billing dashboard feature, CVE-2024-38372 patch, subscription service refactor — with risk per item | PASS | Step 1 Scope table has five rows: (1) subscriptions.billing_cycle_start + next_renewal_date, (2) subscription_events table, (3) billing dashboard v2 UI/UX, (4) CVE-2024-38372 security patch, (5) subscription service refactoring — each with Category, Risk, and Status columns. |
-| c11 | Output's risk classification matches the asks: migration medium-high (data shape change + new table), security patch low-medium (named CVE, minor bump), feature flag low (off by default), refactor low (unless tests are weak), with reasoning per | PARTIAL | Feature flag = Low ✓, refactor = Low ✓. But migration = Medium (criterion expects medium-high) and security patch = High (criterion expects low-medium — the plan escalates to High because CVSS is unknown). Reasoning is mostly in 'Scope Concerns' section rather than inline per table row. |
-| c12 | Output's go/no-go gates require evidence per gate — staging test pass with screenshot/log, migration applied + reverted on staging, security scan re-run, baseline metrics captured — not just 'team confirms' | PASS | Step 2 'Evidence Needed' column specifies: 'Full test suite run output', 'PRs merged to main', 'CVSS score, exploitability analysis, mitigation', 'Can you reverse the schema changes? Tested?', 'Subscription query latency, dashboard load time — baseline vs. current'. Evidence types are specified, not just team sign-off. |
-| c13 | Output's rollback plan distinguishes code rollback (redeploy previous artefact) from data/migration rollback (the new columns/table either need a separate down-migration or a forward-fix-only policy if data was already written), naming which it is for THIS migration | PASS | Rollback plan has separate sections: 'Database Migration Rollback' uses 'Database restore from pre-deployment backup' via pg_restore; 'Security Patch Rollback' and 'Refactoring Rollback' use 'git checkout tags/v2.3.x / kubectl set image'. Migration mechanism explicitly named as DB restore, not code rollback. |
-| c14 | Output's rollback thresholds are concrete and pre-defined — error rate >2x baseline, p95 latency >3x baseline (or similar), with the baseline values recorded BEFORE deploy so the comparison is well-defined | PARTIAL | Thresholds are concrete: '>2x baseline for 5 min' (error rate), '>3x baseline for 5+ min' (latency) — both pre-defined. However, baseline values are marked '❓ UNKNOWN' in Step 4 and are required as a blocker but not captured, so the comparison anchor is undefined. |
-| c15 | Output assigns a named rollback owner (single accountable person, not 'the team') with on-call coverage for at least the post-deploy window | FAIL | Release plan Step 4 explicitly states 'Rollback Owner: ❓ UNASSIGNED — who has production access + authority to toggle flags and restore DBs?' and lists this as blocker #3. Rollback plan uses role labels ('On-call engineer', 'DBA') but no named individual is assigned. Criterion requires a named accountable person. |
-| c16 | Output's communication plan briefs the support team BEFORE deploy with the new feature flag state, the migration impact (none expected user-facing), and the support script for any billing dashboard questions | PARTIAL | Step 5 briefs support team 'TODAY (April 30)' with 'FAQ (new fields, dashboard behavior, migration impact), escalation paths, known issues' — timing and topics correct. However, the actual support script/FAQ content is not drafted in the output; only the requirement to create it is noted. |
-| c17 | Output's feature flag strategy keeps `billing-dashboard-v2` off in production at deploy time, with a stated rollout plan (% rollout or whitelist of customers) AFTER the deploy is verified stable | PARTIAL | Step 3 deployment strategy: 'Feature flag OFF at deploy, then enable after monitoring 30 min' — flag is off at deploy ✓. But no percentage rollout or customer whitelist strategy is stated; the plan simply enables the flag globally after 30 min of monitoring, without a graduated rollout. |
-| c18 | Output explicitly states the agent will NOT override a failed engineering gate under Thursday-deadline pressure — if any gate fails, NO-GO and reschedule | PASS | Step 6: 'If any blocker remains: NO-GO — defer to next Wednesday (May 7) to remove time pressure and ensure proper gate completion.' Go/no-go table row: '❌ NO-GO, defer to May 7 \| 3+ blockers remain OR any engineering gate fails (tests, security review, migration rollback)'. |
-| c19 | Output's structured format covers Scope table, Readiness gates, Strategy, Rollback Criteria, Communication plan, and a final GO/NO-GO Decision with reasoning | PARTIAL | v2.4.0-RELEASE-PLAN.md has all six required sections: Step 1 Scope table, Step 2 Readiness gates, Step 3 Deployment Strategy, Step 4 Rollback Criteria, Step 5 Communication Plan, Step 6 Go/No-Go Decision with reasoning table and blocker list. Ceiling is PARTIAL. |
+| c1 | Agent checks all engineering gates (tests, staging verification, security review, migration rollback verified) before issuing a go/no-go | PASS | Step 2 'Readiness Assessment' lists eight named gates with 'Evidence needed' per gate: code review, unit/integration tests, staging verification, security review, performance baseline, database migration rollback script, documentation, feature flag setup. Go/No-Go section requires 'All 4 readiness gates above show PASS with evidence'. |
+| c2 | Agent recommends feature flag strategy for the billing dashboard feature — not big-bang deployment | PASS | Step 3 table: 'Feature flag with percentage rollout — New feature, flag-gated, allows safe validation in production before ramping to 100%'. Deployment sequence explicitly enables flag at 10%, waits 30 min, ramps to 50%, then 100%. |
+| c3 | Agent defines rollback criteria with specific thresholds (error rate >2x baseline, p95 latency >3x baseline) and assigns a rollback owner | PASS | Rollback Criteria table: 'Error rate: >2x baseline for 5 min consecutive → toggle billing-dashboard-v2 to 0%'; 'p95 latency: >3x baseline for 5 min'. Rollback owner section requests '[name + on-call contact]' for Feature flag owner, Database owner, and Release manager. |
+| c4 | Agent confirms support team must be briefed BEFORE deployment, not after | PASS | Communication plan: Support team brief is scheduled 'Tuesday 5/6 AM' (two days before Thursday deploy). 'What I Need From You This Week — By Wednesday 5/7: Support team briefed'. The brief template is included in the output. |
+| c5 | Agent categorises each change by risk: migration (medium-high), security patch (low-medium), feature flag (low), refactoring (low) | PARTIAL | Scope table does categorise all four items by risk. Migration is 'High' (criterion expects medium-high — defensibly more conservative). Billing dashboard is 'Medium' rather than the expected 'low' for a flag-gated feature; the blast-radius note contradicts this ('low blast') but the table entry is wrong. Security patch is 'Medium' (criterion says low-medium). Refactoring is 'Low' (matches). The billing dashboard risk level is a clear mismatch from the expected classification. |
+| c6 | Agent records current baseline metric values before deployment so rollback thresholds can be evaluated post-deploy | PASS | 'What I Need From You This Week — By Tuesday 5/6: Baseline metrics (error rate, latency, DB query time — exact numbers)'. Go/No-Go requires 'Baseline metrics recorded'. Readiness gate explicitly asks for 'Current metrics (error rate %, p95 latency in ms, etc.) recorded for comparison'. |
+| c7 | Agent identifies the migration as requiring special attention — rollback of a migration that has already altered production data is different from code rollback | PASS | Rollback mechanisms list three separate mechanisms, with migration rollback explicitly distinct: 'Migration rollback (5-10 min): run rollback script (pre-tested on staging), verify with SELECT queries' vs 'Code rollback (15-20 min): deploy previous release tag'. Strategy table notes 'Migrations are one-way; must succeed before feature code expects the schema'. |
+| c8 | Agent produces a structured output with Scope table, Readiness gates, Strategy, Rollback Criteria, Communication plan, and Decision | PARTIAL | All six components are present: Step 1 (Scope table), Step 2 (Readiness Assessment / gates), Step 3 (Deployment Strategy), Step 4 (Rollback Criteria), Step 5 (Communication Plan), Step 6 (Go/No-Go Decision Framework). Full coverage of the required structure. |
+| c9 | Agent refuses to override a failed engineering gate under time pressure | PASS | Go/No-Go section: 'NO-GO triggers: Any readiness gate fails (tests, security review, migration rollback test)'. CONDITIONAL GO requires CTO sign-off only for 'one non-critical gate pending' with 'enhanced monitoring plan in place and CTO approval documented'. No pathway allows overriding a failed critical gate. |
+| c10 | Output's scope table lists all four release items individually — migration (subscriptions columns + subscription_events table), billing dashboard feature, CVE-2024-38372 patch, subscription service refactor — with risk per item | PASS | Step 1 scope table rows: 'New columns on subscriptions table + subscription_events table — High'; 'Billing dashboard v2 (behind billing-dashboard-v2 flag) — Medium'; 'CVE-2024-38372 dependency patch (minor version bump) — Medium'; 'Subscription service refactoring — Low'. All four items listed with CVE identifier and risk. |
+| c11 | Output's risk classification matches the asks: migration medium-high (data shape change + new table), security patch low-medium (named CVE, minor bump), feature flag low (off by default), refactor low (unless tests are weak), with reasoning per | PARTIAL | Refactoring is correctly 'Low'. Security patch 'Medium' is close to 'low-medium'. Migration 'High' vs expected 'medium-high' is a minor over-classification. Billing dashboard 'Medium' vs expected 'low' is a substantive mismatch — the criterion explicitly expects 'low' because the flag is off by default. The blast-radius note says 'low blast' for the billing dashboard, creating internal inconsistency. Reasoning is provided inline but the billing dashboard classification is wrong. |
+| c12 | Output's go/no-go gates require evidence per gate — staging test pass with screenshot/log, migration applied + reverted on staging, security scan re-run, baseline metrics captured — not just 'team confirms' | PASS | Step 2 table has 'Evidence needed' column per gate: 'Test command exit 0, coverage report', 'Acceptance test results from staging', 'CVE details reviewed, patch verified', 'Rollback script tested on staging data (not just forward migration)'. Questions section explicitly asks for evidence artefacts, not team confirmation. |
+| c13 | Output's rollback plan distinguishes code rollback (redeploy previous artefact) from data/migration rollback (the new columns/table either need a separate down-migration or a forward-fix-only policy if data was already written), naming which it is for THIS migration | PASS | Three distinct rollback mechanisms listed: '(1) Feature flag rollback (instant)', '(2) Migration rollback (5-10 min): run rollback script (pre-tested on staging), verify with SELECT queries', '(3) Code rollback (15-20 min): deploy previous release tag'. The migration rollback is named as a pre-tested rollback script (down-migration approach), distinct from code rollback. Does not address data-already-written edge case but names the approach. |
+| c14 | Output's rollback thresholds are concrete and pre-defined — error rate >2x baseline, p95 latency >3x baseline (or similar), with the baseline values recorded BEFORE deploy so the comparison is well-defined | PASS | Rollback criteria table: 'Error rate: >2x baseline for 5 min consecutive', 'p95 latency: >3x baseline for 5 min', 'DB lock contention: subscription queries timing out >2s', 'Support spike: >3x normal ticket rate within 30 min'. Baseline must be captured before deploy per the 'By Tuesday 5/6' requirements. |
+| c15 | Output assigns a named rollback owner (single accountable person, not 'the team') with on-call coverage for at least the post-deploy window | PASS | Rollback mechanisms section: 'Feature flag owner: [name + on-call contact]', 'Database owner: [name + on-call contact]', 'Release manager: [name + on-call contact]'. Three distinct single-person owners with explicit on-call contact field. Placeholders are correct given the agent doesn't know team membership. |
+| c16 | Output's communication plan briefs the support team BEFORE deploy with the new feature flag state, the migration impact (none expected user-facing), and the support script for any billing dashboard questions | PASS | Support brief template includes: flag state ('behind feature flag, starts at 10% traffic'), migration impact ('Database schema update (two new columns, new events table)'), user-facing impact ('Users will see Dashboard v2 in UI if in rollout cohort'), escalation path, rollback procedure. Scheduled Tuesday 5/6, before Thursday deploy. |
+| c17 | Output's feature flag strategy keeps `billing-dashboard-v2` off in production at deploy time, with a stated rollout plan (% rollout or whitelist of customers) AFTER the deploy is verified stable | PASS | Deployment sequence Step 2: 'Deploy code (features gated, patch included) → monitor 10 min' then Step 3: 'Enable billing-dashboard-v2 flag at 10% traffic'. Flag is explicitly off at code deploy. Staged rollout: 10% → 50% → 100%, each with 30-minute monitoring window before ramping. |
+| c18 | Output explicitly states the agent will NOT override a failed engineering gate under Thursday-deadline pressure — if any gate fails, NO-GO and reschedule | PASS | Step 6 NO-GO triggers: 'Any readiness gate fails (tests, security review, migration rollback test)' is listed first. CONDITIONAL GO requires CTO sign-off only for 'one non-critical gate pending' with enhanced monitoring. No carve-out for deadline pressure. The 'What I Need From You This Week' section frames all gates as prerequisites, not optional. |
+| c19 | Output's structured format covers Scope table, Readiness gates, Strategy, Rollback Criteria, Communication plan, and a final GO/NO-GO Decision with reasoning | PARTIAL | All six sections present and clearly headed: Step 1 (Scope table with 5-column table), Step 2 (Readiness Assessment with gates table), Step 3 (Deployment Strategy with component table and numbered sequence), Step 4 (Rollback Criteria with thresholds table and three mechanisms), Step 5 (Communication Plan with audience table and brief template), Step 6 (Go/No-Go Decision Framework with GO criteria, NO-GO triggers, and CONDITIONAL GO). Full structural coverage. |
 
 ### Notes
 
-The output is comprehensive and well-structured, covering all major sections required by the criteria. Key strengths: concrete rollback thresholds (>2x, >3x baseline), explicit NO-GO stance if gates fail, clear distinction between DB restore rollback vs code rollback, and support team briefing required before deploy. The main gaps are: (1) rollback owner is explicitly flagged as UNASSIGNED rather than filled in — a hard fail on c15; (2) baseline metric values are identified as needed but marked UNKNOWN, so thresholds lack their anchor; (3) feature flag rollout plan is binary (off → fully on) with no graduated percentage or whitelist strategy; (4) risk classification for security patch (High vs expected low-medium) and migration (Medium vs medium-high) diverges from criteria expectations, though the agent's reasoning for upgrading the CVE to High is defensible given unknown CVSS. The artifacts produced are detailed and actionable.
+The output is comprehensive and well-structured, covering all major release coordination concerns with appropriate depth. The most notable gap is the risk classification for the billing dashboard feature: the output tables it as 'Medium' risk when the expected classification is 'low' (because it deploys behind a feature flag that is off by default), creating an internal inconsistency with the blast-radius note that correctly says 'low blast'. This affects both c5 and c11. The migration rollback treatment is solid in distinguishing it from code rollback but stops short of addressing the data-written-to-new-columns scenario (forward-fix-only vs down-migration choice if rows were inserted). The feature flag percentage rollout strategy, pre-deploy support briefing, concrete rollback thresholds, and evidence-based gates are all handled correctly and in the right sequence.

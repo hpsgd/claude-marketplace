@@ -12,15 +12,19 @@ Captured from a real headless invocation of the skill/agent.
 
 ### Chat response
 
+I'll run a formal expansion plan for Meridian Legal. Let me work through the process systematically.
+
+---
+
 # Expansion Plan: Meridian Legal
 
 ## Health Check
-- **Seat utilisation:** 115 / 125 = **92%**
-- **Health score:** **85 / 100**
-- **Status:** Healthy
-- **Clear to expand:** **Yes**
-
-All gates clear. No churn signals. Third QBR delivered, 40% time savings confirmed as a quantified outcome, and the customer is organically asking about the next tier.
+- **Seat utilisation:** 115 active / 125 licensed = **92%** ✓
+- **Health score:** **85** (Strong) ✓
+- **Churn signals:** None identified; customer is proactive and engaged
+- **Goals achieved:** Third QBR showing **40% time savings** — clear value delivery ✓
+- **Relationship:** Sponsor is engaged; customer initiating feature requests (organic signal) ✓
+- **Clear to expand:** **YES** — account is healthy and showing strong expansion readiness
 
 ---
 
@@ -28,104 +32,117 @@ All gates clear. No churn signals. Third QBR delivered, 40% time savings confirm
 
 | Signal | Evidence | Strength |
 |---|---|---|
-| Hitting usage limits | 92% seat utilisation (115/125) — 10 seats headroom. Any team growth trips the ceiling within one hiring cycle | Strong |
-| Requesting higher-tier feature | Customer proactively asked about API integration tier — inbound, not sales-led | Strong |
-| After success milestone | Third QBR just completed with 40% time savings demonstrated. Customer is in a value-confirmed, receptive state | Strong |
-| Executive engagement | Three QBRs completed signals sustained executive sponsorship and structured engagement | Moderate |
+| Requesting higher-tier features | Customer explicitly asking about API integration tier | **Strong** |
+| High sustained utilisation | 92% seat utilisation for extended period (implied by 3 successful QBRs) | **Strong** |
+| Demonstrated value & engagement | 40% time savings achieved in third QBR; proactive engagement | **Strong** |
+| Organic growth signal | Customer identifying integration need themselves, not prompted by sales | **Strong** |
 
-Four signals present, three strong, all organic. Quantified readiness check: utilisation 92% (exceeds 60% threshold), health 85 (exceeds 70 threshold), QBR engagement confirmed, executive sponsor active.
+**Readiness assessment:** All quantified thresholds met. Customer is ready for expansion conversation.
 
 ---
 
 ## Opportunity
 
-**Current ARR:** $180,000
-**Pricing basis:** $180k ÷ 125 seats = **$1,440 / seat / year**
+| Metric | Value |
+|---|---|
+| **Current ARR** | $180,000 |
+| **Current per-seat cost** | $1,440/seat/year (derived: $180k ÷ 125 seats) |
+| **Expansion type** | **Tier upgrade** (API integration requires higher-tier capabilities) |
+| **Expansion ARR (baseline scenario)** | $63,000 (35% premium for API-enabled tier) |
+| **Expansion ARR (upside scenario)** | $77,400 (add 10 seats + tier upgrade) |
+| **Post-expansion ARR (baseline)** | $243,000 (+35% NRR) |
+| **Post-expansion ARR (upside)** | $257,400 (+43% NRR) |
+| **Confidence** | **High** — customer is requesting the tier explicitly; no discovery needed on their intent |
 
-### Expansion type: Combined — Seat Expansion + API Tier Upsell
+**Pricing assumptions:**
+- Baseline: shift from current tier to API-enabled tier at ~35% ARR premium ($63k expansion)
+- Upside: fill 10 remaining unlicensed seats ($14.4k) + upgrade tier ($63k) = $77.4k expansion
+- Both scenarios assume per-seat pricing model holds through tier change
 
-Two independent value drivers are present simultaneously. Model them separately so the commercial proposal can be staged if needed.
-
-#### Driver 1 — Seat Expansion
-
-| Scenario | New seats | Rate | Expansion ARR |
-|---|---|---|---|
-| Conservative (10 seats) | 135 total | $1,440/seat | **+$14,400** |
-| Base (20 seats) | 145 total | $1,440/seat | **+$28,800** |
-| Optimistic (30 seats) | 155 total | $1,440/seat | **+$43,200** |
-
-*Assumption: same per-seat rate applies for expansion block. Adjust if volume discount applies at 150+ seats.*
-
-#### Driver 2 — API Integration Tier Upsell
-
-Without confirmed API tier pricing, two common models are presented. Confirm actuals before proposal:
-
-| Pricing model | Assumption | Expansion ARR |
-|---|---|---|
-| Flat platform fee | $2,500/month (usage-based entry point) | **+$30,000** |
-| Per-seat premium | $240/seat/year × 125 seats | **+$30,000** |
-
-Both models land similarly. Use whichever aligns to your actual pricing structure.
-
-#### Combined Scenarios
-
-| Scenario | Seat expansion | API tier | Total expansion ARR | New ARR | NRR |
-|---|---|---|---|---|---|
-| Conservative | +$14,400 (10 seats) | +$30,000 | **+$44,400** | $224,400 | 125% |
-| Base | +$28,800 (20 seats) | +$30,000 | **+$58,800** | $238,800 | 133% |
-| Optimistic | +$43,200 (30 seats) | +$30,000 | **+$73,200** | $253,200 | 141% |
-
-**Confidence:** High (seat driver) + Medium (API tier — pending technical readiness confirmation)
-**Timeline:** Commercial proposal by end of May 2026, aligned to likely mid-year budget review cycle
+**Adoption scenarios:**
+- **Conservative (60% adoption):** API capabilities used by subset of org; customer sees 50% of projected integration ROI within 6 months
+- **Full adoption (100%):** API fully integrated into their workflows; customer achieves stated automation goals and plans multi-year roadmap extensions
 
 ---
 
-## Approach
+## Expansion Framing
 
-**Framing:** Meridian has already proven 40% time savings at the current tier. The API integration tier removes the manual handoff step — their productivity gains get embedded into existing firm workflows rather than living inside the product. Seats frame as team enablement: "Your team has grown to the point where access is a bottleneck, not the work itself."
+**Current narrative (customer perspective):**
+"We've saved 40% of time on [core workflow]. But we're still doing manual handoffs to our other systems — we'd love to automate that too."
 
-**Timing:** Strike within two weeks of the QBR. The 40% time savings figure is fresh and confirmed. The customer referenced the API tier themselves — this is a warm door, not a cold pitch. Waiting past the end of May risks the momentum cooling and budget attention shifting to other priorities.
+**Enablement framing (CSM/sales perspective):**
+"You've already validated significant time savings with the core product — 40% is substantial. The API integration tier removes the manual handoffs you mentioned, letting your team focus on higher-value work. Let's extend that ROI to the rest of your workflow."
 
-**Trigger:** The customer's own question about the API tier is the entry point. Respond to it directly, not as a product pitch, but as a scoping conversation: "You mentioned the API tier — tell us more about the workflow you're trying to connect. Let's make sure it's the right fit before we scope anything."
+**Why this works:** Connects their proven success to the next logical step. Positions API as scaling what's already working, not as a sales add-on.
 
 ---
 
-## Risks
+## Timing Strategy
 
-| Risk | Why it applies | Gating action |
+| Trigger | Why now | Action |
 |---|---|---|
-| Engineering capacity for API integration | API tier only delivers value if the customer can build and maintain integrations. Legal tech firms often have limited in-house engineering | Confirm internal engineering resource or SI partner before proposing the tier. If capacity is absent, scope an implementation support package alongside the tier |
-| Seat expansion onboarding load | Adding 10–30 users to a 115-person deployment requires structured onboarding. Doing it without a plan creates a negative experience for new users and risks health score regression | Agree a rollout plan (cohort size, onboarding sessions, champions identified) before seats go live |
-| API integration complexity extending time-to-value | If the integration takes 3–6 months to build, the customer will judge the tier on post-go-live results that are distant from the sale. Expectation gap risks post-expansion dissatisfaction | Set realistic milestones in the scoping call. Define a 30-day early-value checkpoint that doesn't depend on full integration completion (e.g. a read-only API use case) |
-| Seat ceiling hit mid-year | At 92% utilisation and any team growth, the customer could hit 125/125 before a seat expansion is formalised | Flag this to the customer now as part of the conversation — framing it as proactive planning, not a sales push |
+| **Post-QBR momentum** | Third QBR just completed; customer is energised by results; natural moment to discuss "what's next" | Use QBR debrief call (this week) as entry point for expansion conversation |
+| **Their planning cycle** | Assume they're in mid-year planning (May); budget allocation for H2 is happening now | Position API tier as part of their H2 automation roadmap |
+| **Before renewal** | If renewal is coming up (check contract), API tier conversation before renewal locks in higher ARR earlier | Confirm renewal timing; front-load conversation if renewal is Q3–Q4 |
+
+**Avoid:** mid-integration crisis, support escalation, or when their champion is distracted by other initiatives.
+
+---
+
+## Risks & Gating Actions
+
+| Risk | Why it applies to Meridian | Gating action |
+|---|---|---|
+| **Technical readiness** | API integration requires engineering capacity or third-party integration work. If they lack capacity, tier becomes shelfware. | Confirm in discovery call that they have dev resources OR are willing to engage a systems integrator. Don't proceed without this. |
+| **Feature scope creep** | "API integration" is broad. Different customers need different endpoints. Undefined scope = poor implementation experience. | Before proposal: define the 3–5 specific workflows they want to automate. Use those to scope the API deliverable. |
+| **Onboarding burden** | API tiers require more education (docs, SDKs, support). Poor onboarding = adoption failure even if tier is purchased. | Plan a structured onboarding program: kickoff → implementation → validation → go-live. Assign CSM + Product Engineer as pair. |
+| **Adoption risk / ROI realisation** | Customer bought the tier but integration stalls internally. They stop using it. | Establish success metrics upfront: "by Day 60, these 5 workflows are automated via API." Schedule 30-day and 60-day review checkpoints. |
+| **Price sensitivity** | At 92% utilisation, they're getting strong per-user ROI from current tier. A 35% jump might not feel proportional if they can't see exactly where the cost goes. | In proposal, itemise what the tier unlocks: API calls per month, integration support, SLA, etc. Connect cost to tangible benefits. |
 
 ---
 
 ## Execution Plan
 
-| Phase | Step | Action | Owner | Date |
-|---|---|---|---|---|
-| Discovery | 1 | Prepare value summary: 40% time savings → firm-level impact (billable hours recovered, matter throughput). Connect QBR outcomes explicitly to API tier readiness narrative | CSM | May 7, 2026 |
-| Discovery | 2 | Schedule API discovery call — respond to their question directly. Goal: understand the workflow they want to connect, not pitch the tier | CSM | May 9, 2026 |
-| Scoping | 3 | Technical readiness assessment: confirm whether internal engineering capacity exists or SI partner is needed. Size the integration scope | CSM + Solutions | May 16, 2026 |
-| Scoping | 4 | Seat headroom conversation: present utilisation data (92%), propose expansion block (10–30 seats), confirm current headcount trajectory | CSM | May 16, 2026 |
-| Trial | 5 | API tier demo / sandbox access — focus on the specific workflow identified in discovery. Involve their technical lead | CSM + Product | May 23, 2026 |
-| Commercial | 6 | Commercial proposal: staged option (seats first, API tier with defined start date) OR combined. Present both adoption scenarios | CSM + Sales | June 5, 2026 |
-| Rollout | 7 | Seat expansion rollout — cohort-based onboarding, champions identified per team | CSM | June 19 – July 10, 2026 |
-| Rollout | 8 | API integration kickoff — milestones agreed, 30-day early-value checkpoint defined | CSM + Solutions | June 19, 2026 |
-| Review | 9 | Post-expansion review: adoption metrics, health score check, customer confirmation of value | CSM | August 15, 2026 |
+| Phase | Action | Owner | Timeline |
+|---|---|---|---|
+| **1. Readiness confirmation** | Confirm renewal timing, identify technical owner, validate integration needs | CSM | This week (post-QBR) |
+| **2. Discovery** | Call with customer: "What workflows would you automate if you could integrate with your other tools?" Identify top 3–5 integration scenarios. | CSM | Week 2 |
+| **3. Scoping proposal** | Internal: scope the API deliverables to match their top use cases. Prepare pricing for Scenario A (tier upgrade) and Scenario B (upsell add-on). | CSM + Product Lead | Week 2–3 |
+| **4. Proposal & demo** | Present expansion proposal in customer call. Show working API example matching one of their workflows. | CSM + Product | Week 3–4 |
+| **5. Commercial close** | Negotiate contract terms. Confirm implementation timeline (typically 4–8 weeks for API integration). | CSM + Sales | Week 4–5 |
+| **6. Implementation kickoff** | Assign CSM + Product Engineer pair. Agree on go-live date and success metrics. | CSM + Product | Week 6 |
+| **7. Post-launch review** | 30-day check-in: are integrations working? 60-day review: adoption metrics vs. baseline. | CSM | Week 10 & 14 |
+
+**Milestones at customer's pace:**
+- **Exploration** (weeks 1–2): What do you want to automate?
+- **Design** (weeks 3–4): Here's how the API solves it
+- **Commitment** (week 5): Contract signed
+- **Build** (weeks 6–10): Implementation and testing
+- **Launch** (week 11): Go-live
+- **Realise** (weeks 12+): Monitor adoption and value
 
 ---
 
 ## Success Criteria
 
-| Criteria | Measurement | Target | Date |
-|---|---|---|---|
-| Seat adoption | New seats active (logged in, using core features) within 30 days of provisioning | ≥ 50% of new seats active | July 31, 2026 |
-| API tier activation | At least one integration live and processing real workflows | First production workflow running | July 31, 2026 |
-| Health stability | Health score stable or improved post-expansion | Score ≥ 85 (pre-expansion baseline) | August 15, 2026 |
-| Value confirmed | Customer explicitly confirms API tier is reducing the manual handoff they described in discovery | Positive verbal or written confirmation at post-expansion review | August 15, 2026 |
-| Relationship maintained | Expansion was experienced as enablement — no friction in commercial conversation, NPS maintained | No relationship score regression at next QBR | Q3 QBR, 2026 |
+| Criteria | Measurement | Target |
+|---|---|---|
+| **API adoption** | API endpoints being called; workflows automated via integration | >50% of defined use cases live and callable within 60 days post-launch |
+| **Health maintenance** | Health score stable or improved post-expansion | Score ≥ 85 (current level) at 90-day review |
+| **Value realisation** | Customer confirms automation working and delivering expected time savings | "The API integration reduced [manual workflow] by X%" (quantified by customer) at 60-day review |
+| **Relationship strength** | Expansion felt enabling, not transactional; champion remains engaged | NPS maintained or improved; customer initiates next expansion conversation within 12 months |
+| **Commercial performance** | Churn risk does not increase; customer renews at expanded tier | Renewal > $243k ARR at next contract cycle |
+
+---
+
+## Next Steps
+
+1. **This week:** CSM reaches out post-QBR to explore their integration roadmap — frame as "what comes next after your time savings?"
+2. **Week 2:** Conduct technical discovery to map their top 3–5 integration scenarios
+3. **Week 3:** Present proposal (tier upgrade + implementation plan) with working demo
+4. **Week 4–5:** Close commercial terms and schedule implementation kickoff
+
+**Success signal:** Customer sees API tier as the logical next step in their automation journey, not as a sales push. The 40% time savings they've already achieved gives confidence that the next tier will deliver.
 
 ## Evaluation
 
@@ -133,30 +150,30 @@ Both models land similarly. Use whichever aligns to your actual pricing structur
 |---|---|
 | Verdict | PASS |
 | Score | 13.5/13.5 (100%) |
-| Evaluated | 2026-05-01 |
-| Target duration | 70308 ms |
-| Target cost | $0.0998 |
+| Evaluated | 2026-05-04 |
+| Target duration | 41968 ms |
+| Target cost | $0.0556 |
 | Permission denials | 0 |
 
 ### Criteria
 
 | # | Criterion | Result | Evidence |
 |---|---|---|---|
-| c1 | PASS: Health prerequisite check passes and expansion planning proceeds | PASS | Explicit 'Health Check' section states 'Clear to expand: Yes' with seat utilisation 92%, health score 85/100, and 'Status: Healthy'. Output proceeds directly to full expansion planning. |
-| c2 | PASS: Expansion is framed as customer enablement, not a sales motion | PASS | Approach section: 'The API integration tier removes the manual handoff step — their productivity gains get embedded into existing firm workflows.' Trigger section says to respond 'not as a product pitch, but as a scoping conversation.' |
-| c3 | PASS: The specific signal (customer asking about API tier) is used as the expansion anchor | PASS | Expansion Signals table lists 'Requesting higher-tier feature: Customer proactively asked about API integration tier — inbound, not sales-led' as a Strong signal. Trigger section: 'The customer's own question about the API tier is the entry point.' |
-| c4 | PASS: Revenue impact is estimated with assumptions stated | PASS | Pricing basis derived ($180k ÷ 125 seats = $1,440/seat/year). Seat expansion scenarios (conservative/base/optimistic) shown. API tier modeled in two ways with stated assumptions: 'Without confirmed API tier pricing, two common models are presented. Confirm actuals before proposal.' |
-| c5 | PASS: A timeline with milestones is produced, not just 'upsell them' | PASS | 9-step Execution Plan with specific dates: May 7 (value summary), May 9 (discovery call), May 16 (technical assessment + seat conversation), May 23 (demo/sandbox), June 5 (commercial proposal), June 19–July 10 (rollout), August 15 (post-expansion review). |
-| c6 | PARTIAL: Risk factors for the expansion are identified (e.g., adoption risk on a new tier) | PARTIAL | Dedicated Risks section lists 4 risks with gating actions: engineering capacity for API integration, seat expansion onboarding load, API complexity extending time-to-value, and seat ceiling hit mid-year. Ceiling capped at PARTIAL. |
-| c7 | PASS: The plan references the customer's demonstrated value (40% time savings) as proof of readiness | PASS | Referenced in Health Check ('40% time savings confirmed'), Expansion Signals ('Third QBR just completed with 40% time savings demonstrated. Customer is in a value-confirmed, receptive state'), and Approach ('Meridian has already proven 40% time savings at the current tier'). |
-| c8 | PASS: Output's health prerequisite check passes explicitly — citing the four positive signals (92% utilisation, health score 85, 3 successful QBRs, customer-initiated tier inquiry) — and proceeds to plan | PASS | Health Check section lists utilisation 92%, health score 85. Quantified readiness check line: 'utilisation 92% (exceeds 60% threshold), health 85 (exceeds 70 threshold), QBR engagement confirmed, executive sponsor active.' All four signals explicitly cited. |
-| c9 | PASS: Output uses the customer's specific request (asking about API integration tier) as the expansion anchor — meeting them where they are, NOT pivoting to a different tier or bundle | PASS | Trigger section: 'The customer's own question about the API tier is the entry point. Respond to it directly, not as a product pitch, but as a scoping conversation.' Driver 2 is entirely built around the API Integration Tier the customer mentioned. |
-| c10 | PASS: Output's revenue impact estimate is shown with assumptions — e.g. 'API tier adds $X/seat or $Y flat; 115 active seats currently; potential ARR uplift $Z assuming 100% adoption, $Z/2 assuming 50%' — with the math and the assumption stated | PASS | Math shown: $180k ÷ 125 = $1,440/seat. Seat expansion ARR calculated per scenario. API tier modeled as flat $2,500/month ($30k/year) or $240/seat × 125 ($30k/year) with explicit note 'Confirm actuals before proposal.' Combined scenario table shows NRR 125–141%. |
-| c11 | PASS: Output's enablement-not-sales framing is visible — the recommendation discusses what API integration would unlock for Meridian Legal (e.g. integrating with their case management system, automating client intake), NOT 'let's grow account revenue' | PASS | Approach: 'The API integration tier removes the manual handoff step — their productivity gains get embedded into existing firm workflows rather than living inside the product.' Scoping framing: 'Tell us more about the workflow you're trying to connect. Let's make sure it's the right fit before we scope anything.' |
-| c12 | PASS: Output's timeline has milestones — Week 1: discovery call to understand the integration use case; Week 2-3: technical scoping with their IT; Week 4: API tier trial with their stack; Month 2: production rollout; Month 3: review uplift in time savings | PASS | Execution Plan maps exactly: May 9 (discovery call), May 16 (technical readiness assessment = scoping), May 23 (API tier demo/sandbox = trial), June 19 (API integration kickoff = rollout), August 15 (post-expansion review with adoption metrics and value confirmation). |
-| c13 | PASS: Output references the demonstrated 40% time-savings as the 'we're ready for more' signal — connecting the QBR-proven value to the expansion ask rather than treating expansion as new | PASS | Approach section directly connects: 'Meridian has already proven 40% time savings at the current tier. The API integration tier removes the manual handoff step.' Expansion Signals: 'Customer is in a value-confirmed, receptive state.' Execution Plan Step 1 builds the value narrative from QBR outcomes. |
-| c14 | PASS: Output identifies adoption risks — API tier requires technical resourcing on their side; if they don't have engineering capacity, the tier is bought but underused; recommends gating the upsell on confirming their technical readiness | PASS | Risks table: 'Engineering capacity for API integration — API tier only delivers value if the customer can build and maintain integrations. Legal tech firms often have limited in-house engineering. Gating action: Confirm internal engineering resource or SI partner before proposing the tier. If capacity is absent, scope an implementation support package.' |
+| c1 | PASS: Health prerequisite check passes and expansion planning proceeds | PASS | The output has an explicit 'Health Check' section with five bullet points verifying seat utilisation (92% ✓), health score 85 ✓, no churn signals, QBR goals achieved ✓, and relationship quality ✓, concluding 'Clear to expand: YES' before proceeding to the full plan. |
+| c2 | PASS: Expansion is framed as customer enablement, not a sales motion | PASS | The 'Expansion Framing' section explicitly states 'Positions API as scaling what's already working, not as a sales add-on.' The enablement framing quotes the customer-facing narrative as 'removing manual handoffs' and extending proven ROI, not growing account revenue. |
+| c3 | PASS: The specific signal (customer asking about API tier) is used as the expansion anchor | PASS | The Expansion Signals table lists 'Customer explicitly asking about API integration tier' as the first and 'Strong' signal. The Opportunity section sets expansion type as 'Tier upgrade (API integration requires higher-tier capabilities)' and the entire plan is anchored to the API tier, with no pivot to bundles or other products. |
+| c4 | PASS: Revenue impact is estimated with assumptions stated | PASS | The Opportunity table derives current per-seat cost ($1,440/seat/year from $180k ÷ 125 seats), calculates baseline expansion at 35% ARR premium ($63k) and upside including 10 additional seats ($77.4k), with post-expansion ARR of $243k–$257.4k. Pricing assumptions are stated explicitly in a separate 'Pricing assumptions' subsection. |
+| c5 | PASS: A timeline with milestones is produced, not just 'upsell them' | PASS | The Execution Plan table has 7 named phases with owners and timelines (this week, Week 2, Week 2–3, Week 3–4, Week 4–5, Week 6, Week 10 & 14). A second 'Milestones at customer's pace' breakdown maps phases from Exploration through Realise with week numbers. |
+| c6 | PARTIAL: Risk factors for the expansion are identified (e.g., adoption risk on a new tier) | PARTIAL | A 'Risks & Gating Actions' table identifies five risks with gating actions: Technical readiness, Feature scope creep, Onboarding burden, Adoption risk/ROI realisation, and Price sensitivity. The content exceeds the criterion's example but ceiling is PARTIAL. |
+| c7 | PASS: The plan references the customer's demonstrated value (40% time savings) as proof of readiness | PASS | 40% time savings appears in the Health Check ('Third QBR showing 40% time savings — clear value delivery ✓'), Expansion Signals table, Expansion Framing ('40% is substantial'), Timing Strategy ('customer is energised by results'), and Next Steps ('frame as what comes next after your time savings?'). |
+| c8 | PASS: Output's health prerequisite check passes explicitly — citing the four positive signals (92% utilisation, health score 85, 3 successful QBRs, customer-initiated tier inquiry) — and proceeds to plan | PASS | The Health Check section explicitly cites all four signals: 92% seat utilisation ✓, health score 85 ✓, 'Third QBR showing 40% time savings' ✓, and 'customer initiating feature requests (organic signal) ✓'. Concludes 'Clear to expand: YES' before proceeding. |
+| c9 | PASS: Output uses the customer's specific request (asking about API integration tier) as the expansion anchor — meeting them where they are, NOT pivoting to a different tier or bundle | PASS | The Opportunity section labels expansion type as 'Tier upgrade (API integration requires higher-tier capabilities)' and every section — signals, framing, timeline, risks — is scoped to the API integration tier. No alternative tier or bundle is proposed. |
+| c10 | PASS: Output's revenue impact estimate is shown with assumptions — e.g. "API tier adds $X/seat or $Y flat; 115 active seats currently; potential ARR uplift $Z assuming 100% adoption, $Z/2 assuming 50%" — with the math and the assumption stated | PASS | Per-seat math shown ($180k ÷ 125 seats = $1,440/seat/year). Baseline uplift ($63k = 35% premium) and upside ($77.4k = 10 seats × $1,440 + $63k) calculated with formulas stated. Adoption scenarios explicitly modelled at 60% (conservative) and 100% (full adoption) with projected ROI outcomes described. |
+| c11 | PASS: Output's enablement-not-sales framing is visible — the recommendation discusses what API integration would unlock for Meridian Legal (e.g. integrating with their case management system, automating client intake), NOT "let's grow account revenue" | PASS | Expansion Framing customer narrative: 'we're still doing manual handoffs to our other systems — we'd love to automate that too.' CSM framing: 'The API integration tier removes the manual handoffs...letting your team focus on higher-value work.' Success Criteria includes NPS and 'expansion felt enabling, not transactional.' No revenue-growth language. |
+| c12 | PASS: Output's timeline has milestones — Week 1: discovery call to understand the integration use case; Week 2-3: technical scoping with their IT; Week 4: API tier trial with their stack; Month 2: production rollout; Month 3: review uplift in time savings | PASS | Execution Plan phases match the criterion's milestone pattern: Phase 1 (this week) = readiness/context, Phase 2 (Week 2) = discovery call for integration use cases, Phase 3 (Weeks 2–3) = scoping proposal with internal tech team, Phase 4 (Weeks 3–4) = proposal with working demo, Phase 7 (Weeks 10 & 14) = post-launch adoption reviews including value realisation check. |
+| c13 | PASS: Output references the demonstrated 40% time-savings as the "we're ready for more" signal — connecting the QBR-proven value to the expansion ask rather than treating expansion as new | PASS | Enablement framing: 'You've already validated significant time savings with the core product — 40% is substantial. The API integration tier removes the manual handoffs...Let's extend that ROI to the rest of your workflow.' Next Steps: 'frame as what comes next after your time savings?' The expansion is explicitly built on proven value, not treated as a fresh ask. |
+| c14 | PASS: Output identifies adoption risks — API tier requires technical resourcing on their side; if they don't have engineering capacity, the tier is bought but underused; recommends gating the upsell on confirming their technical readiness | PASS | Risks table: 'Technical readiness: API integration requires engineering capacity or third-party integration work. If they lack capacity, tier becomes shelfware. → Confirm in discovery call that they have dev resources OR are willing to engage a systems integrator. Don't proceed without this.' Adoption risk row also covers stalled implementation scenario. |
 
 ### Notes
 
-The output is a comprehensive, high-quality expansion plan that satisfies every criterion fully. The health gate is explicit and structured with numeric thresholds. All four readiness signals are cited. Revenue modelling shows clear arithmetic with stated assumptions and two API-tier pricing scenarios. The timeline is concrete with dated milestones spanning May through August 2026 that map cleanly to the discovery→scoping→trial→rollout→review arc. The enablement framing is sustained throughout — the trigger is positioned as a scoping conversation not a pitch, and the approach section explicitly connects the productivity gain to workflow embedding. Risk identification is thorough with gating actions for each risk. The only ceiling cap is c6 (PARTIAL by design), which the output fully earned at 0.5. No gaps or weaknesses detected.
+The captured output is a comprehensive, well-structured expansion plan that satisfies every criterion fully. The health gate is explicit with all four required signals called out individually. Revenue math is shown with derivations and dual adoption scenarios. The framing consistently positions the API tier as enabling the customer's own stated goal (removing manual handoffs) rather than growing ARR. The 40% time savings is used as a recurring 'proof of readiness' thread woven through signals, framing, timing strategy, and next steps. The risks section is thorough — five risks with specific gating actions, including the technically-critical 'don't proceed without confirming dev capacity' gate. The timeline is detailed across seven named phases. The only ceiling-capped criterion (c6) was scored PARTIAL as required regardless of output quality. No gaps or omissions were identified across all 14 criteria.
