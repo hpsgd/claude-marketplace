@@ -14,6 +14,8 @@ Review Python code against team standards covering type safety, data modeling, t
 
 Execute all seven passes. Do not skip.
 
+**File not on disk:** If Read returns "not found" for the target file(s), check whether code is provided inline in the prompt. If so, apply all seven passes to that code, treating it as the file under review. Do not skip passes because the file is absent from the workspace.
+
 ### Pass 1: Type Safety — mypy Strict
 
 The project runs `mypy --strict`. Code must pass without exceptions.
@@ -220,6 +222,9 @@ Tests follow a BDD-style hierarchy: describe the context, then the behavior.
 
 ### Clean Areas
 [what was done well]
+
+### Verdict
+REQUEST_CHANGES / APPROVE
 ```
 
 ## Zero-Finding Gate

@@ -20,6 +20,19 @@ Analyse conversation transcripts to extract learnings. Use `$ARGUMENTS` to contr
 
 This skill is also triggered automatically by the SessionStart hook, which runs the analysis scripts on the previous session. Use this skill manually when you want to run analysis mid-session, review metrics, or trigger pattern detection and rule proposals.
 
+## Path resolution
+
+All learnings and rules paths are overridable via environment variables. Test harnesses set these to redirect writes outside permission-gated `.claude/` paths. Users will almost never set them.
+
+```bash
+LEARNINGS_DIR="${LEARNINGS_DIR:-.claude/learnings}"
+GLOBAL_LEARNINGS_DIR="${GLOBAL_LEARNINGS_DIR:-$HOME/.claude/learnings}"
+RULES_DIR="${RULES_DIR:-.claude/rules}"
+GLOBAL_RULES_DIR="${GLOBAL_RULES_DIR:-$HOME/.claude/rules}"
+```
+
+Run those four lines first in each shell invocation, then use `"$LEARNINGS_DIR"`, `"$GLOBAL_LEARNINGS_DIR"`, `"$RULES_DIR"`, `"$GLOBAL_RULES_DIR"` everywhere that follows.
+
 ## Step 1: Locate transcript
 
 Claude stores transcripts at `~/.claude/projects/-{PATH_HASH}/` where PATH_HASH replaces all non-alphanumeric characters with `-`. Worktree sessions get a different hash than the main project, so you need to check all of them, including worktrees that have been removed.
@@ -70,9 +83,11 @@ For `summary` or `patterns`: skip to Step 3 or Step 4.
 Run the analysis script:
 
 ```bash
+LEARNINGS_DIR="${LEARNINGS_DIR:-.claude/learnings}"
+GLOBAL_LEARNINGS_DIR="${GLOBAL_LEARNINGS_DIR:-$HOME/.claude/learnings}"
 python3 ${CLAUDE_PLUGIN_ROOT}/scripts/analyse-session.py <transcript.jsonl> \
-    --project-dir .claude/learnings \
-    --global-dir ~/.claude/learnings \
+    --project-dir "$LEARNINGS_DIR" \
+    --global-dir "$GLOBAL_LEARNINGS_DIR" \
     --json
 ```
 
@@ -87,12 +102,13 @@ Read the JSON output and present the results.
 
 ## Step 3: Classify queued signals (mandatory)
 
-The `UserPromptSubmit` hook captures every user message and classifies obvious cases via regex. Messages that are ambiguous are queued as `"type": "unclassified"` in `.claude/learnings/signals/pending.jsonl`.
+The `UserPromptSubmit` hook captures every user message and classifies obvious cases via regex. Messages that are ambiguous are queued as `"type": "unclassified"` in `$LEARNINGS_DIR/signals/pending.jsonl`.
 
 Read the pending signals file:
 
 ```bash
-cat .claude/learnings/signals/pending.jsonl
+LEARNINGS_DIR="${LEARNINGS_DIR:-.claude/learnings}"
+cat "$LEARNINGS_DIR/signals/pending.jsonl"
 ```
 
 For each `unclassified` signal, read the `prompt_preview` and classify it yourself:
@@ -108,7 +124,7 @@ This is why the system doesn't need an external AI API — you ARE the AI doing 
 
 ### Update the regex patterns (mandatory after classifying)
 
-For each message you classified that the regex missed, **extract a pattern that would catch similar messages in the future** and add it to `.claude/learnings/signals/patterns.json`.
+For each message you classified that the regex missed, **extract a pattern that would catch similar messages in the future** and add it to `$LEARNINGS_DIR/signals/patterns.json`.
 
 The patterns file has this structure:
 
@@ -172,11 +188,14 @@ Only record successes that are non-obvious — approaches that worked but might 
 
 ### Path 1: Write local learned rules (immediate effect)
 
-For every HIGH severity correction and every recurring pattern, write a **learned rule** to `.claude/rules/` so it takes effect immediately (next session, or even mid-session if Claude Code hot-reloads rules).
+For every HIGH severity correction and every recurring pattern, write a **learned rule** to `$RULES_DIR` so it takes effect immediately (next session, or even mid-session if Claude Code hot-reloads rules).
 
 ```bash
-# Check existing learned rules
-ls .claude/rules/learned--*.md 2>/dev/null
+RULES_DIR="${RULES_DIR:-.claude/rules}"
+GLOBAL_RULES_DIR="${GLOBAL_RULES_DIR:-$HOME/.claude/rules}"
+
+# Check existing learned rules in both locations
+find "$RULES_DIR" "$GLOBAL_RULES_DIR" -maxdepth 1 -name 'learned--*.md' -type f 2>/dev/null
 ```
 
 Write the rule file:
@@ -196,16 +215,18 @@ alwaysApply: true
 **Evidence:** [session ID, date, correction summary]
 ```
 
-File naming: `.claude/rules/learned--{kebab-case-topic}.md`
+File naming: `$RULES_DIR/learned--{kebab-case-topic}.md` for project-specific, `$GLOBAL_RULES_DIR/learned--{kebab-case-topic}.md` for universal.
 
-Examples:
+Examples (project-specific defaults shown):
+
 - `.claude/rules/learned--verify-before-declaring-complete.md`
 - `.claude/rules/learned--route-multi-agent-through-coordinator.md`
 - `.claude/rules/learned--check-installed-plugins-not-cache.md`
 
 **Scope determines location:**
-- **Project-specific** → `.claude/rules/learned--{topic}.md` (project root)
-- **Universal** → `~/.claude/rules/learned--{topic}.md` (global, applies to all projects)
+
+- **Project-specific** → `$RULES_DIR/learned--{topic}.md` (default `.claude/rules/`)
+- **Universal** → `$GLOBAL_RULES_DIR/learned--{topic}.md` (default `~/.claude/rules/`)
 
 **Rules for writing learned rules:**
 - One rule per file. Don't combine multiple learnings into one rule.
@@ -218,11 +239,14 @@ Examples:
 
 ## Step 5: Check for patterns (mandatory for `patterns` mode)
 
-Read all session analysis files from `.claude/learnings/sessions/` and `~/.claude/learnings/sessions/`.
+Read all session analysis files from `$LEARNINGS_DIR/sessions/` and `$GLOBAL_LEARNINGS_DIR/sessions/`.
 
 ```bash
+LEARNINGS_DIR="${LEARNINGS_DIR:-.claude/learnings}"
+GLOBAL_LEARNINGS_DIR="${GLOBAL_LEARNINGS_DIR:-$HOME/.claude/learnings}"
+
 # Count learnings by type across all sessions
-find .claude/learnings/sessions ~/.claude/learnings/sessions -name '*.json' 2>/dev/null
+find "$LEARNINGS_DIR/sessions" "$GLOBAL_LEARNINGS_DIR/sessions" -name '*.json' 2>/dev/null
 ```
 
 For each learning type, count occurrences across sessions. When the same kind of correction appears 3+ times:
@@ -239,7 +263,7 @@ For each learning type, count occurrences across sessions. When the same kind of
 **Status:** pending_review
 ```
 
-Save the pattern to `.claude/learnings/patterns/{pattern-id}.json`.
+Save the pattern to `$LEARNINGS_DIR/patterns/{pattern-id}.json`.
 
 **Output:** Pattern table with proposed changes.
 
@@ -256,7 +280,7 @@ Determine what needs to change in the marketplace:
 | Repeated correction about approach | New rule in the relevant plugin's `rules/` directory |
 | Pattern in a specific agent's domain | Update to the agent definition or skill |
 | Regex pattern that catches a new class of correction | Update to `scripts/classify-message.py` seed patterns |
-| Learned rule that should be shared | Move from `.claude/rules/learned--*.md` to the marketplace plugin's `rules/` |
+| Learned rule that should be shared | Move from `$RULES_DIR/learned--*.md` to the marketplace plugin's `rules/` |
 
 ### 6b. Present to user for approval
 
@@ -264,7 +288,7 @@ Determine what needs to change in the marketplace:
 ### Proposed upstream change
 
 **Pattern:** [name] (observed [N] times across [M] sessions)
-**Local rule:** `.claude/rules/learned--{topic}.md` (already active locally)
+**Local rule:** `$RULES_DIR/learned--{topic}.md` (already active locally)
 **Change type:** [new marketplace rule | skill update | agent update | script update]
 **Target file in marketplace:** [path relative to marketplace repo root]
 **Evidence:**
@@ -310,7 +334,7 @@ If approved:
 
    **Pattern:** {description}
    **Instances:** {N} across {M} sessions (first seen: {date}, last seen: {date})
-   **Local rule:** Has been active locally as `.claude/rules/learned--{topic}.md`
+   **Local rule:** Has been active locally as `$RULES_DIR/learned--{topic}.md`
 
    ## Evidence
 
@@ -326,7 +350,7 @@ If approved:
    )"
    ```
 
-4. Update the pattern status in `.claude/learnings/patterns/{pattern-id}.json`:
+4. Update the pattern status in `$LEARNINGS_DIR/patterns/{pattern-id}.json`:
    - Set `"status": "pr_submitted"`
    - Record the PR URL
 
@@ -339,7 +363,7 @@ If approved:
 - **The script does extraction, you do interpretation.** The Python script (`analyse-session.py`) handles JSONL parsing and pattern matching. This skill reads the structured output and applies judgment — classifying scope, filtering noise, detecting patterns.
 - **Not every reversal is a mistake.** Files touched 3+ times during a planned multi-pass operation are normal iterative refinement. Check the context before flagging.
 - **Not every correction is a learning.** "No, use tabs not spaces" in a project with a `.editorconfig` is a config issue, not a learning. Only record corrections that reveal a gap in understanding or process.
-- **Universal vs project-specific.** "Don't declare completion without running the audit" is universal. "The config file is at `src/config.ts` not `config/index.ts`" is project-specific. Classify correctly — universal learnings go to `~/.claude/learnings/`, project-specific to `.claude/learnings/`.
+- **Universal vs project-specific.** "Don't declare completion without running the audit" is universal. "The config file is at `src/config.ts` not `config/index.ts`" is project-specific. Classify correctly — universal learnings go to `$GLOBAL_LEARNINGS_DIR` (default `~/.claude/learnings/`), project-specific to `$LEARNINGS_DIR` (default `.claude/learnings/`).
 - **Patterns are more valuable than incidents.** One correction is an event. Three corrections about the same thing are a pattern. Patterns become rules.
 - **Never record user-specific information.** Learnings capture what went wrong and how to fix it, not personal details about the user.
 - **The 1-hour rule.** The SessionStart hook analyses the previous session, which gives at least a session-gap delay. This is intentional — it allows delayed corrections (where the user realises later something was wrong) to be captured in the same transcript.

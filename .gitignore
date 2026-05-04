@@ -4,6 +4,7 @@ TODO.md
 # Runtime data (per-project, not marketplace content)
 .claude/settings.local.json
 .claude/rules/
+.claude/scheduled_tasks.lock
 
 # Learnings: sessions, signals, and patterns contain user prompt text
 .claude/learnings/sessions/

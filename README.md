@@ -41,6 +41,7 @@ A plugin marketplace for Claude Code. Agents, skills, rules, and conventions tha
   - [Engineering](#engineering)
     - [AI Engineer](#ai-engineer)
     - [Architect](#architect)
+    - [Billing Engineer](#billing-engineer)
     - [Code Reviewer](#code-reviewer)
     - [Data Engineer](#data-engineer)
     - [DevOps](#devops)
@@ -148,6 +149,7 @@ Browse the full [plugin list](#plugins) below to see what else is available.
     "grc-lead@turtlestack": true,
     "cto@turtlestack": true,
     "architect@turtlestack": true,
+    "billing-engineer@turtlestack": true,
     "react-developer@turtlestack": true,
     "dotnet-developer@turtlestack": true,
     "python-developer@turtlestack": true,
@@ -224,6 +226,7 @@ TypeScript, .NET, Python conventions, git workflow, testing, architecture, AI st
 | [review-dotnet](plugins/practices/coding-standards/skills/review-dotnet/SKILL.md) | .NET/C# code review | [.NET review](examples/practices/coding-standards/skills/review-dotnet/result.md) |
 | [review-python](plugins/practices/coding-standards/skills/review-python/SKILL.md) | Python code review | [Python review](examples/practices/coding-standards/skills/review-python/result.md) |
 | [review-git](plugins/practices/coding-standards/skills/review-git/SKILL.md) | Git conventions review | [Git review](examples/practices/coding-standards/skills/review-git/result.md) |
+| [review-go](plugins/practices/coding-standards/skills/review-go/SKILL.md) | Go code review | — |
 | [review-standards](plugins/practices/coding-standards/skills/review-standards/SKILL.md) | Cross-cutting quality review | [Standards review](examples/practices/coding-standards/skills/review-standards/result.md) |
 
 #### [Plugin Curator](plugins/practices/plugin-curator/agents/plugin-curator.md)
@@ -322,6 +325,7 @@ Structured reasoning, learning system, project health checks. See [Thinking and 
 | [review-settings](plugins/practices/thinking/skills/review-settings/SKILL.md) | Settings.json audit | [Settings audit](examples/practices/thinking/skills/review-settings/result.md) |
 | [reconcile-rules](plugins/practices/thinking/skills/reconcile-rules/SKILL.md) | Deduplicate learned vs marketplace rules | [Rule reconciliation](examples/practices/thinking/skills/reconcile-rules/result.md) |
 | [propose-improvement](plugins/practices/thinking/skills/propose-improvement/SKILL.md) | PR against marketplace from learned pattern | [Improvement PR](examples/practices/thinking/skills/propose-improvement/result.md) |
+| [handoff](plugins/practices/thinking/skills/handoff/SKILL.md) | Write or resume a session handoff doc | — |
 
 #### Tooling
 
@@ -668,6 +672,20 @@ System design, ADRs, technology evaluation, API strategy. See [system design exa
 | [evaluate-technology](plugins/engineering/architect/skills/evaluate-technology/SKILL.md) | Technology evaluation with scoring | [Tech evaluation](examples/engineering/architect/skills/evaluate-technology/result.md) |
 | [system-design](plugins/engineering/architect/skills/system-design/SKILL.md) | System design document | [System design](examples/engineering/architect/skills/system-design/result.md) |
 | [api-design](plugins/engineering/architect/skills/api-design/SKILL.md) | API contract design | [API design](examples/engineering/architect/skills/api-design/result.md) |
+
+#### [Billing Engineer](plugins/engineering/billing-engineer/agents/billing-engineer.md)
+
+Subscription billing logic, invoicing, payment gateway integration (Stripe, PayPal), dunning management, and revenue recognition workflows. See [payment processing example](examples/engineering/billing-engineer/agents/billing-engineer/payment-processing/result.md).
+
+```
+/plugin install billing-engineer@turtlestack
+```
+
+| Skill | Description | Example |
+|---|---|---|
+| [payment-integration](plugins/engineering/billing-engineer/skills/payment-integration/SKILL.md) | Payment gateway integration design | Coming soon |
+| [dunning-workflow](plugins/engineering/billing-engineer/skills/dunning-workflow/SKILL.md) | Dunning and retry strategy | Coming soon |
+| [revenue-recognition](plugins/engineering/billing-engineer/skills/revenue-recognition/SKILL.md) | Revenue recognition mapping | Coming soon |
 
 #### [Code Reviewer](plugins/engineering/code-reviewer/agents/code-reviewer.md)
 

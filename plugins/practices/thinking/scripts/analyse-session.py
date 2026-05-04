@@ -474,8 +474,12 @@ def save_results(results: dict, project_dir: str | None, global_dir: str | None)
 def main():
     parser = argparse.ArgumentParser(description="Analyse a Claude Code session transcript")
     parser.add_argument("jsonl_path", help="Path to the session JSONL file")
-    parser.add_argument("--project-dir", help="Project learnings directory (.claude/learnings/)")
-    parser.add_argument("--global-dir", help="Global learnings directory (~/.claude/learnings/)")
+    parser.add_argument("--project-dir",
+                        default=os.environ.get("LEARNINGS_DIR"),
+                        help="Project learnings directory (default: $LEARNINGS_DIR or .claude/learnings/)")
+    parser.add_argument("--global-dir",
+                        default=os.environ.get("GLOBAL_LEARNINGS_DIR"),
+                        help="Global learnings directory (default: $GLOBAL_LEARNINGS_DIR or ~/.claude/learnings/)")
     parser.add_argument("--json", action="store_true", help="Output raw JSON to stdout")
     args = parser.parse_args()
 

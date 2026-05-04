@@ -80,7 +80,7 @@ def load_patterns(project_dir: str) -> dict[str, list[re.Pattern]]:
     """
     learned = {"correction": [], "praise": [], "approach_change": [], "not_correction": []}
 
-    patterns_file = Path(project_dir) / ".claude" / "learnings" / "signals" / "patterns.json"
+    patterns_file = _learnings_dir(project_dir) / "signals" / "patterns.json"
     if patterns_file.exists():
         try:
             with open(patterns_file) as f:
@@ -125,9 +125,17 @@ def classify(prompt: str, patterns: dict[str, list[re.Pattern]]) -> dict | None:
     return None
 
 
+def _learnings_dir(project_dir: str) -> Path:
+    """Resolve the learnings directory, honouring LEARNINGS_DIR env override."""
+    override = os.environ.get("LEARNINGS_DIR")
+    if override:
+        return Path(override)
+    return Path(project_dir) / ".claude" / "learnings"
+
+
 def write_signal(signal: dict, project_dir: str):
     """Append a classified signal to the pending signals file."""
-    signals_dir = Path(project_dir) / ".claude" / "learnings" / "signals"
+    signals_dir = _learnings_dir(project_dir) / "signals"
     signals_dir.mkdir(parents=True, exist_ok=True)
 
     signals_file = signals_dir / "pending.jsonl"

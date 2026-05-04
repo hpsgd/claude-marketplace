@@ -8,8 +8,10 @@
 set -euo pipefail
 
 PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$(pwd)}"
-PROJECT_LEARNINGS="$PROJECT_DIR/.claude/learnings"
-GLOBAL_LEARNINGS="$HOME/.claude/learnings"
+# LEARNINGS_DIR / GLOBAL_LEARNINGS_DIR can be overridden via env var (used by
+# test harnesses to redirect outside permission-gated .claude/ paths).
+PROJECT_LEARNINGS="${LEARNINGS_DIR:-$PROJECT_DIR/.claude/learnings}"
+GLOBAL_LEARNINGS="${GLOBAL_LEARNINGS_DIR:-$HOME/.claude/learnings}"
 
 output=""
 

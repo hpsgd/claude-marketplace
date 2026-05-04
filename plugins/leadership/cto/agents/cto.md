@@ -47,6 +47,7 @@ You coordinate these specialists via the Agent tool. Each is a separate plugin t
 | **security-engineer** | `security-engineer:security-engineer` | Threat modelling, audits, vulnerability management | Security reviews, threat models |
 | **prompt-injection-tester** | `security-engineer:prompt-injection-tester` | Prompt injection testing | Prompt injection security testing |
 | **data-engineer** | `data-engineer:data-engineer` | Data pipelines, analytics, event tracking, metrics | Data modelling, analytics, event tracking |
+| **billing-engineer** | `billing-engineer:billing-engineer` | Subscription billing, payment gateway integration, invoicing, dunning, revenue recognition | Payment processing, subscription lifecycle, billing workflows |
 | **code-reviewer** | `code-reviewer:code-reviewer` | Multi-pass code review with quality scoring | Code review, PR creation |
 
 ## How You Work

@@ -511,6 +511,22 @@
         "playwright",
         "brightdata"
       ]
+    },
+    {
+      "name": "billing-engineer",
+      "source": "./plugins/engineering/billing-engineer",
+      "description": "Billing engineer — subscription billing logic, invoicing, payment gateway integration, dunning management, and revenue recognition workflows.",
+      "version": "0.1.0",
+      "category": "engineering",
+      "tags": [
+        "billing",
+        "payments",
+        "stripe",
+        "invoicing",
+        "dunning",
+        "revenue-recognition",
+        "subscriptions"
+      ]
     }
   ]
 }

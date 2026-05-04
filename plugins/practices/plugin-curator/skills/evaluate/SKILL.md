@@ -1,133 +1,178 @@
+---
+name: evaluate
+description: "Run rubric-style tests against skill and agent plugins by invoking them headlessly, capturing real output and artifacts, and judging against test criteria. Replaces the prior simulation-based evaluator. Use to verify a single test, a directory of tests, or every test in the marketplace."
+argument-hint: "[test path or directory; default: all of examples/]"
+user-invocable: true
+allowed-tools: Read, Write, Edit, Bash, Glob
+---
+
 # Evaluate
 
-Run test cases against their plugin definitions. Works at three levels:
+Run rubric tests against plugin definitions. Each run invokes the skill or agent in a real headless `claude -p` session, captures the chat response and any files written, then asks a judge model to score against the test's criteria.
 
-- `/evaluate` — run all tests in `examples/`
-- `/evaluate examples/research` — run all tests under a directory
-- `/evaluate examples/research/analyst/skills/company-lookup` — run a single test
+This skill **does not simulate**. Earlier versions wrote `result.md` files containing imagined output. That was unreliable — fixes against simulated weaknesses didn't always change real-run behaviour. The runner now executes targets for real.
 
-## Steps
+## Modes
 
-1. **Discover test files.** Based on the argument:
-   - No argument: glob for all `test.md` files under `examples/`
-   - Directory path: glob for `test.md` files within that directory
-   - If the argument points to a specific test directory (contains `test.md`), use that single test
-   - Skip `REPORT.md` when globbing
+`$ARGUMENTS` selects the scope:
 
-2. **For each test directory:**
+| Mode | Trigger | Action |
+|---|---|---|
+| Empty / `all` | `/evaluate` | Run every `test.md` under `examples/` |
+| Directory | `/evaluate examples/research` | Run every `test.md` under that subtree |
+| Single test | `/evaluate examples/practices/thinking/skills/handoff` | Run only that one test |
 
-   a. Parse the path to determine test type: `/skills/` → skill test, `/agents/` → agent test
+## Step 1: Resolve runner
 
-   b. Read `test.md` from the test directory. It contains the scenario, prompt, and rubric. The rubric may have one or both of `## Criteria` (scored against the definition) and `## Output expectations` (scored against the simulated output). Both contribute to a single combined verdict.
+The runner script lives at:
 
-   c. Resolve the plugin source path:
-      - Skill: replace `examples/` prefix with `plugins/`, walk up to the skill name directory, find `SKILL.md` (e.g. `examples/.../skills/company-lookup/test.md` → `plugins/.../skills/company-lookup/SKILL.md`)
-      - Agent: replace `examples/` prefix with `plugins/`, find `agents/<name>.md` by walking up from the test directory
-      - Skip any test with no corresponding plugin source. Report as missing definition.
+```bash
+RUNNER="${CLAUDE_PLUGIN_ROOT}/scripts/run-test.py"
+```
 
-   d. Dispatch to the evaluator agent with the test case details
+If the script doesn't exist, stop and tell the user to install or update the `plugin-curator` plugin.
 
-   e. The evaluator generates the simulated output and evaluation, then writes `result.md` in the same directory as `test.md`. The `result.md` is a **standalone showcase document** with this structure:
+## Step 2: Discover tests
 
-      ```markdown
-      # [Plugin/Agent]: [test name]
+Find every `test.md` under the requested scope:
 
-      [One-line scenario description]
+```bash
+SCOPE="${ARGUMENTS:-examples}"
+find "$SCOPE" -type f -name 'test.md' 2>/dev/null | sort
+```
 
-      ## Prompt
+If `$SCOPE` is itself a test directory (contains `test.md`), use that single test.
 
-      > [The prompt, blockquoted]
+If no `test.md` files exist, report that plainly and stop.
 
-      ## Output
+## Step 3: Resolve plugin source per test
 
-      [One-line routing/context note, e.g. "The content analyst routes this to the `/analyst:content-analysis` skill."]
+For each `test.md`, derive the plugin under test:
 
-      [Full simulated output demonstrating what the skill/agent would
-       actually produce for this prompt. This is the most valuable part
-       of the test — it shows what quality output looks like. Must be
-       realistic and substantial, not a summary or stub.]
+- **Skill test:** path matches `examples/<category>/<plugin>/skills/<name>/test.md` → plugin source is `plugins/<category>/<plugin>` (the directory containing `.claude-plugin/plugin.json`)
+- **Agent test:** path matches `examples/<category>/<plugin>/agents/<role>/<scenario>/test.md` → plugin source is `plugins/<category>/<plugin>`
 
-      ## Evaluation
+Verify the plugin source has `.claude-plugin/plugin.json` before invoking the runner. If missing, skip the test and record `missing-plugin` in the report.
 
-      | Field | Value |
-      |---|---|
-      | Verdict | PASS/PARTIAL/FAIL |
-      | Score | X/Y (Z%) |
-      | Evaluated | [date] |
+## Step 4: Invoke the runner
 
-      [Per-criterion results with evidence]
+For each (test, plugin) pair, run:
 
-      ### Notes
-      [Notable findings]
-      ```
+```bash
+"$RUNNER" \
+  --test-dir "<test_dir>" \
+  --plugin-dir "<plugin_dir>" \
+  --target-model claude-haiku-4-5-20251001 \
+  --judge-model claude-sonnet-4-6
+```
 
-      **Formatting rules for result.md:**
-      - The `## Output` section is MANDATORY. An evaluation without a simulated output is incomplete.
-      - All key-value metadata (verdict/score/date, content metadata like dates/word counts) must be in **tables**, not consecutive `**Label:** value` lines (which collapse into a single paragraph in GitHub).
-      - Headings in the output section are bumped down one level from the source (### becomes ####) since they're nested under ## Output.
-      - The scenario and prompt are repeated from test.md so result.md reads as a standalone document. Someone landing on result.md from a README link should understand what was asked and what was produced without needing to read test.md.
-      - The routing/context line should be one sentence ("The architect routes this to the `system-design` skill."), not the evaluator's internal narration about how the agent processes the request.
+The runner emits a JSON summary on stdout. Capture that. The runner also writes `result.md` to `<test_dir>` for inspection.
 
-   f. Collect the verdict and score
+Exit code reflects the verdict:
 
-3. **Write summary report** to `examples/REPORT.md` (overwrites previous):
+- `0` PASS (≥ 80%)
+- `1` PARTIAL (≥ 60%)
+- `2` FAIL (< 60%)
+- `3+` infrastructure error (workspace setup, claude invocation, judge response unparseable)
 
-   ```markdown
-   # Evaluation report
+Treat exit codes ≥ 3 as failures of the harness, not the skill — record them as `infra-error` in the report and continue.
 
-   | Field | Value |
-   |---|---|
-   | Run date | [date] |
-   | Total | N tests |
-   | Passed | N |
-   | Partial | N |
-   | Failed | N |
+For long batches, run sequentially. Parallel runs are safe in principle (each gets its own tmp workspace) but cost-of-debugging outweighs the speed-up for now.
 
-   ## Results
+## Step 5: Aggregate results
 
-   | Test | Type | Description | Verdict | Score |
-   |---|---|---|---|---|
-   | research/analyst/skills/company-lookup | skill | Research a company's structure, financials, and market position | PASS | 7/7 (100%) |
-   ```
+For directory or all-tests mode, collect every JSON summary into a single report at `examples/REPORT.md`:
 
-4. Print the summary table and flag any failures for follow-up. For single-test runs, skip the report file and just print the result inline.
+```markdown
+# Evaluation report
 
-## What gets reported
+| Field | Value |
+|---|---|
+| Run date | <YYYY-MM-DD> |
+| Total | N tests |
+| Passed | N |
+| Partial | N |
+| Failed | N |
+| Infra errors | N |
+| Score range | X%–Y% |
+| Average | Z% |
+| Median | M% |
+| Total cost | $X.XX |
+| Total duration | XmYs |
 
-After evaluation, report:
+## Results
 
-- Verdict (PASS / PARTIAL / FAIL)
-- Score (N/M, X%)
-- Any notable issues from the Notes section
-- Path to the test directory
+| Test | Type | Verdict | Score | Cost | Duration |
+|---|---|---|---|---|---|
+| <relative-path> | skill\|agent | PASS\|PARTIAL\|FAIL | X/Y (Z%) | $0.XX | XX s |
+```
 
-## Scoring rules
+Sort the table by score ascending so the lowest-scoring tests surface first. Verdicts under PASS deserve attention before the high scorers.
 
-- PASS criterion = 1 point, PARTIAL = 0.5, FAIL = 0, SKIP = excluded from denominator
-- Verdict: PASS if score >= 80%, PARTIAL if >= 60%, FAIL if < 60%
+For single-test mode, skip the report file and just print the runner's JSON output along with the `result.md` path.
 
-## Criterion prefix rules
+## Step 6: Report back
 
-The prefix on each criterion (`PASS:`, `PARTIAL:`, `SKIP:`) sets the **ceiling**, not the expected result:
+Print a summary table and flag anything that needs attention:
 
-- `PASS:` — can score PASS, PARTIAL, or FAIL based on evidence
-- `PARTIAL:` — **maximum score is 0.5 points.** Even if the definition fully satisfies it, score it as PARTIAL. The test author set this ceiling deliberately. Never upgrade a PARTIAL-prefixed criterion to PASS.
-- `SKIP:` — excluded from scoring entirely
+- Tests with `FAIL` verdict
+- Tests with `infra-error`
+- Tests with `PARTIAL` that previously passed (regression)
+- Tests where target cost or duration is significantly above the median (suggests the skill is wandering)
 
-## Evaluator calibration
+Don't suggest fixes here — that's a separate workflow. Just surface the data.
 
-These rules govern how the evaluator assesses criteria against plugin definitions:
+## Argument matrix
 
-**Evaluate the definition, not your own output.** The simulated output exists to demonstrate what the definition would produce. The evaluation must assess whether the plugin definition (SKILL.md or agent.md) explicitly requires, enforces, or guides each criterion. "The output I generated matches" is not evidence. "The definition's Step 3 requires X with template Y" is evidence.
+| Argument | Behaviour |
+|---|---|
+| (empty) | Run all of `examples/`, write `REPORT.md` |
+| `examples/research` | Run all tests under that subtree, write `REPORT.md` |
+| `examples/practices/thinking/skills/handoff` | Run that single test, no report |
+| `path/that/doesnt/exist` | Report missing path, stop |
+| Anything else | Treat as a path, glob for `test.md` underneath |
 
-**PASS requires explicit support.** The definition must contain a specific instruction, template field, required step, or enforcement mechanism for the criterion. "The definition doesn't contradict this" is not a PASS. "The definition is consistent with this" is not a PASS. The criterion must be traceable to a specific part of the definition.
+## Rules
 
-**PARTIAL is for partial coverage.** Give PARTIAL when the definition addresses the criterion but incompletely: mentioned but not required, suggested but not enforced, covered by implication but not by explicit instruction.
+- **Real execution only.** Never write a `result.md` containing simulated output. If the runner can't fire (e.g. `claude` not in PATH, no auth), report the infrastructure failure — don't fabricate a score.
+- **One test, one workspace.** The runner creates a fresh tmp workspace per test. Never reuse workspaces across tests — cross-contamination invalidates results.
+- **Sort by score ascending.** The bottom of the table is what matters. Don't bury low scorers.
+- **Don't tune until you've measured.** If a test scores below 80%, surface it. Don't immediately edit the skill — first confirm the gap is real (re-run if judge variance is plausible), then fix.
+- **Treat infra errors as bugs in the harness, not the skill.** Don't downgrade a skill verdict because the runner couldn't authenticate or the workspace got wedged. Fix the harness first.
 
-**FAIL is a valid outcome.** If the definition contains no instruction, template, or mechanism that addresses a criterion, score it FAIL. Zero failures across a full test suite is a signal that the evaluator is too lenient, not that every definition is perfect.
+## Output format
 
-**Simulated outputs should be realistic, not perfect.** When generating the simulated output, reflect the definition's actual coverage. If the definition has a gap that would affect a criterion, the output should show that gap. Do not generate output that compensates for missing definition guidance.
+### Single-test mode
 
-**Independence between criteria.** Evaluate each criterion independently. Do not let a strong result on one criterion influence your assessment of another.
+```markdown
+## Evaluated: <test path>
 
-**Source citation quality in simulated outputs.** For research-related tests (anything under `examples/research/`), simulated output source citations must use specific deep links, not generic homepages. `linkedin.com/company/safetyculture` not `linkedin.com`. `crt.sh/?q=example.com` not `crt.sh`. When a registry doesn't support deep linking, state the exact search path used. Every source gets an access date. If the plugin definition has a `rules/source-citations.md` rule installed, the simulated output must follow it.
+**Verdict:** <PASS|PARTIAL|FAIL>
+**Score:** X/Y (Z%)
+**Target cost:** $0.XX
+**Target duration:** XX s
+**Result file:** `<test_dir>/result.md`
+
+<one paragraph summary of any criteria that didn't pass, or notes from the judge>
+```
+
+### Multi-test mode
+
+Print the full `REPORT.md` table to the chat, then point at the file:
+
+```markdown
+Wrote evaluation report to `examples/REPORT.md` — N tests, X passed, Y partial, Z failed.
+Total cost $X.XX, total duration XmYs.
+
+<sub-90% tests listed inline so they're impossible to miss>
+```
+
+## Related skills
+
+- `/plugin-curator:create-skill` — scaffolds new skills with a `test.md` ready to evaluate
+- `/plugin-curator:audit-skill` — structural audit (separate from rubric evaluation)
+- `/plugin-curator:audit-agent` — same, for agents
+
+## Downstream usage
+
+The runner is portable and has no marketplace-specific assumptions. To use the same harness in a downstream repo, copy `scripts/run-test.py` and `scripts/judge-prompt.md` into the target project. See `${CLAUDE_PLUGIN_ROOT}/scripts/README.md` for full vendoring instructions.

@@ -1,0 +1,19 @@
+{
+  "name": "billing-engineer",
+  "description": "Billing engineer — subscription billing logic, invoicing, payment gateway integration, dunning management, and revenue recognition workflows.",
+  "version": "0.1.0",
+  "author": {
+    "name": "hps.gd"
+  },
+  "repository": "https://github.com/turtlestack/plugins",
+  "license": "Unlicense",
+  "keywords": [
+    "billing",
+    "payments",
+    "stripe",
+    "invoicing",
+    "dunning",
+    "revenue-recognition",
+    "subscriptions"
+  ]
+}

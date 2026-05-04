@@ -38,7 +38,11 @@ if [[ -z "$MARKETPLACE" || "$MARKETPLACE" == "cache" ]]; then
 fi
 
 # --- Set up rules directory ---
-RULES_DIR="${PROJECT_DIR}/.claude/rules"
+# RULES_DIR can be overridden via env var (used by test harnesses to redirect
+# writes outside the permission-gated .claude/ path). Default: project's .claude/rules.
+if [[ -z "${RULES_DIR:-}" ]]; then
+  RULES_DIR="${PROJECT_DIR}/.claude/rules"
+fi
 mkdir -p "$RULES_DIR"
 
 # --- Collect enabled plugins ---

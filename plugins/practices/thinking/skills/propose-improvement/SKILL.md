@@ -10,6 +10,19 @@ allowed-tools: Read, Write, Edit, Bash, Glob, Grep
 
 Stage a change to a marketplace repo based on $ARGUMENTS. This skill handles the full Path 2 workflow: identify the right upstream, create a branch, apply changes, review with the user, and raise a PR.
 
+## Path resolution
+
+All learnings and rules paths are overridable via environment variables. Test harnesses set these to redirect writes outside permission-gated `.claude/` paths. Users will almost never set them.
+
+```bash
+LEARNINGS_DIR="${LEARNINGS_DIR:-.claude/learnings}"
+GLOBAL_LEARNINGS_DIR="${GLOBAL_LEARNINGS_DIR:-$HOME/.claude/learnings}"
+RULES_DIR="${RULES_DIR:-.claude/rules}"
+GLOBAL_RULES_DIR="${GLOBAL_RULES_DIR:-$HOME/.claude/rules}"
+```
+
+Run those four lines first in each shell invocation, then use the variables everywhere that follows.
+
 ## Step 1: Enumerate known marketplaces
 
 Discover all marketplaces from settings and the current project:
@@ -142,7 +155,7 @@ If the user says **change target**, let them specify the correct marketplace and
 
 ### From a pattern ID
 
-Read the pattern file from `.claude/learnings/patterns/{pattern-id}.json` or `~/.claude/learnings/patterns/`.
+Read the pattern file from `$LEARNINGS_DIR/patterns/{pattern-id}.json` or `$GLOBAL_LEARNINGS_DIR/patterns/`.
 
 Check:
 - `count` >= 3 (minimum for a proposal)
@@ -151,7 +164,7 @@ Check:
 
 ### From a learned rule
 
-If the user has a local learned rule (`.claude/rules/learned--{topic}.md`) that they want to upstream:
+If the user has a local learned rule (`$RULES_DIR/learned--{topic}.md`) that they want to upstream:
 - Read the rule content
 - The target plugin was already resolved in Step 2
 
@@ -244,7 +257,7 @@ Present the diff to the user with context:
 **Diff:**
 [git diff output — or summarise if large]
 
-**Local rule:** `.claude/rules/learned--{topic}.md` has been active since [date]
+**Local rule:** `$RULES_DIR/learned--{topic}.md` has been active since [date]
 
 Approve and create PR? (Y/n/edit)
 ```
@@ -291,7 +304,7 @@ Proposed by the learning system based on observed patterns.
 **Pattern:** {description}
 **Instances:** {N} across {M} sessions
 **First seen:** {date} | **Last seen:** {date}
-**Local rule:** Active as `.claude/rules/learned--{topic}.md` since {date}
+**Local rule:** Active as `$RULES_DIR/learned--{topic}.md` since {date}
 
 ## Evidence
 
@@ -318,7 +331,7 @@ git checkout main
 
 After the PR is created:
 
-1. Update the pattern file (`.claude/learnings/patterns/{pattern-id}.json`):
+1. Update the pattern file (`$LEARNINGS_DIR/patterns/{pattern-id}.json`):
    ```json
    {
      "status": "pr_submitted",
@@ -334,7 +347,7 @@ After the PR is created:
    <!-- Upstream PR: {pr_url} ({org}/{repo}) — remove this rule after PR is merged -->
    ```
 
-3. Log the proposal in `.claude/learnings/proposals/`:
+3. Log the proposal in `$LEARNINGS_DIR/proposals/`:
    ```json
    {
      "pattern_id": "pat-...",
@@ -358,7 +371,7 @@ After the PR is created:
 - **Evidence is mandatory.** Every PR must include the session IDs and correction summaries that justify the change. A rule without evidence is an opinion.
 - **Minimal changes.** Only modify what the learning requires. Don't refactor surrounding code or "improve" adjacent content.
 - **Clean branch hygiene.** Always branch from a fresh `main`. Delete the branch locally after PR creation. If the PR is rejected, note the reason in the pattern file.
-- **Local rule stays until merge.** The `.claude/rules/learned--*.md` file remains active locally until the upstream PR is merged. Don't remove it prematurely.
+- **Local rule stays until merge.** The `$RULES_DIR/learned--*.md` file (default `.claude/rules/`) remains active locally until the upstream PR is merged. Don't remove it prematurely.
 - **Return to main.** Always `git checkout main` at the end, regardless of outcome. Never leave a repo on a feature branch.
 - **Same org = owned, different org = third-party.** Org comparison uses the GitHub org of the repo where this skill resides vs the target marketplace's repo. No config flags needed.
 - **Third-party learnings stay local by default.** Don't raise PRs against repos you don't own without explicit user instruction.
