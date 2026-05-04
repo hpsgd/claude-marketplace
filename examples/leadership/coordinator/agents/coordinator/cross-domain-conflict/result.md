@@ -20,65 +20,95 @@ Captured from a real headless invocation of the skill/agent.
 
 ### Chat response
 
-## Escalation Rationale
+This is a genuine cross-domain conflict, and it lands at the coordinator level because the resolution requires alignment between CPO and CTO, plus clarity to the board. Neither party is wrong — security can't be deferred indefinitely, and OKRs are board commitments — but the false binary is "ship vulnerable" vs "rebuild auth." The real work is sequencing and scope.
 
-This conflict needs cross-domain coordination because the CPO and CTO are both correct, but the constraints appear mutually exclusive. **Security controls are non-negotiable** — shipping a known CVSS 7.8 vulnerability sets a precedent that security flags can be deferred, and a breach exposes both the company and individual executives to liability. **OKRs are board commitments** — missing Q2 activation targets affects investor confidence and revenue forecast, and slipping signals planning failure. The CPO can't unilaterally reduce scope (that's a business outcome miss), and the CTO can't unilaterally block the feature (that's removing a board commitment from the table). This requires a third party to find a path that satisfies both constraints, or explicitly escalate to the board if no path exists.
+## Sequencing Plan: Three Paths Forward
+
+**Today is May 4. EOM is May 31. ~27 days.**
+
+### Option 1: Parallel + Scoped (Recommended)
+Highest probability of hitting OKR *and* remediating vulnerability.
+
+| Phase | Owner | Work | Deadline | Success Criteria |
+|-------|-------|------|----------|------------------|
+| **Week 1 (May 4–10)** | CTO + Security | Scope CVSS 7.8 vuln; propose compensating control path (rate limit, IP gate, MFA requirement for onboarding) OR fast patch | May 10 | Decision: control or patch; estimate effort |
+| **Week 1 (May 4–10)** | CPO + CTO | Right-size onboarding flow; identify which features touch vulnerable auth; map scoped version (70–80% of target) that avoids it | May 10 | Scoped spec, activation target for reduced feature set |
+| **Week 2–3 (May 10–24)** | CPO (scoped onboarding) + CTO (compensating control \| patch) | **Parallel**: CPO ships onboarding (avoiding vulnerable surface); CTO ships control or patch | May 24 | Onboarding live; vulnerability mitigated or patched |
+| **Week 4+ (May 24+)** | CTO | Full auth rebuild / security hardening (post-OKR) | June 30 | Auth system hardened; technical debt cleared |
+
+**Accountability:**
+- **CPO** retains ownership of activation OKR. Scope can shrink, target cannot. Success = activation numbers meet board expectations for scoped feature.
+- **CTO** retains ownership of auth security. Vulnerability must be remediated (patch or compensating control) before EOM; full rebuild post-OKR is a separate commitment.
+- **Coordinator** ensures dependencies flow (CTO security clarity unblocks CPO scope decisions), escalates if trade-offs deadlock.
 
 ---
 
-## Deadline Options
+### Option 2: Security First (Safe, Likely Misses OKR)
+Auth rebuild on the critical path; onboarding follows.
 
-**Option A: Scoped onboarding by end of month + compensating control** (recommended)
-- CPO owns the onboarding OKR with reduced scope (identified in Week 1)
-- CTO owns the auth security fix, ships a compensating control by Week 1 Friday (or isolates the vulnerable surface)
-- Onboarding flow avoids the vulnerable auth surface
-- Ships by EOM; activates X% of the original OKR target (TBD after Week 1 scope analysis)
-- **Trade-off:** Onboarding is incomplete, but the OKR is hit with a realistic target. Security risk is mitigated. Full auth rebuild deferred post-OKR.
+| Phase | Owner | Work | Deadline |
+|-------|-------|------|----------|
+| **Week 1–2 (May 4–17)** | CTO | Scope CVSS 7.8 fix; estimate rebuild effort | May 10 (decision) |
+| **Week 2–3 (May 10–24)** | CTO | Ship auth fix or rebuild | May 24 |
+| **Week 3–4 (May 24–31)** | CPO | Ship full onboarding flow on fixed auth | May 31 (likely miss) |
 
-**Option B: Auth fix first, OKR slip by ~2 weeks**
-- CTO owns the auth security fix; ships the full rebuild by end of Week 2
-- CPO owns the onboarding OKR with full scope; ships by mid-May (slip of ~2 weeks from EOM)
-- Onboarding launches on top of a secure auth system
-- **Trade-off:** OKR misses the stated deadline (board communication required), but the scope is complete and security is resolved. Higher confidence in the shipped product.
+**Trade-off:** OKR slips by 1–2 weeks into June. Board conversation required: "We're shipping secure; accepting a slip to avoid a known vulnerability."
 
 ---
 
-## Proposed Sequencing Plan (Option A)
+### Option 3: Compensating Control (Fast, Carries Risk)
+Patch the vulnerability with a temporary control; ship onboarding; permanent fix post-OKR.
 
-| Week | Owner | Task | Deadline | Success Criteria |
-|---|---|---|---|---|
-| **Week 1** | CTO | Scope auth vulnerability: (a) Does it block the auth flow? (b) Can a compensating control isolate it? (c) If not, what's the minimal fix? | Fri 5/9 | Vulnerability severity assessed; mitigation path identified |
-| **Week 1** | CPO + CTO | Scope onboarding: Which user journeys can launch without touching vulnerable auth surface? Which OKR targets are reachable within this scope? | Fri 5/9 | Scoped onboarding roadmap agreed; revised OKR target stated (e.g., 60% of original activation target) |
-| **Week 1** | CTO | Ship compensating control or minimal auth patch | Fri 5/9 | Vulnerability risk reduced to acceptable level; onboarding can proceed |
-| **Week 2–3** | CPO | Ship scoped onboarding flow | Fri 5/23 | Activation target hit within scoped bounds; onboarding live in production |
-| **Week 3+** | CTO | Begin full auth system rebuild (post-OKR) | Mon 5/26 | Full auth rebuild scheduled and resourced; no blocking of other work |
+| Phase | Owner | Work | Deadline |
+|-------|-------|------|----------|
+| **Week 1 (May 4–10)** | CTO + Security | Implement compensating control (rate limiting + MFA gate on onboarding flow) | May 10 |
+| **Week 1–3 (May 4–24)** | CPO | Ship onboarding with control in place | May 24 |
+| **Week 3–4 (May 24–31)** | CTO | Ship permanent auth fix | May 31 |
 
-**Owners:**
-- **CPO** owns onboarding delivery and activation OKR (with revised scope)
-- **CTO** owns auth security fix and full auth rebuild sequencing
-- **Coordinator** owns the decision point in Week 1: if no scoped path exists, escalates to CEO for Option B decision
+**Trade-off:** Leaves CVSS 7.8 in the codebase (mitigated, not patched) until permanent fix. Security must sign off on risk profile. Board conversation: "We're shipping with a temporary control; permanent fix lands post-OKR."
+
+---
+
+## Why This Needed Coordination
+
+The tension is **not** security vs. speed in the abstract. It's three live constraints: (1) board OKR commitment, (2) known vulnerability that security flagged, (3) the false assumption that "onboarding flow" means "full auth overhaul." The coordinator's job is to decompose the binary into scope (can you ship 70% of the feature and hit activation targets?), parallel work (can security and product work simultaneously?), and risk acceptance (is a compensating control acceptable until the permanent fix ships?). Only cross-domain visibility reveals these moves. A pure security decision says "no features until auth is rebuilt." A pure product decision says "ship and patch later." Coordination asks: "What's the minimum surface you must rebuild, what can ship in parallel, and where do we accept temporary risk?"
+
+---
+
+## Deadline Options: Explicit Trade-Offs
+
+**Option A: Hit OKR on Time (May 31), Accept Scoped Feature**
+- Onboarding ships with 70–80% of planned scope (still hits activation target? must verify with CPO)
+- Auth vulnerability mitigated (compensating control or patch) by May 24
+- Full auth rebuild deferred to June (post-OKR)
+- **What you win:** OKR date, vulnerability remediated, product ships. **What you give up:** some planned features, permanent auth fix is deferred.
+
+**Option B: Slip OKR by 2 Weeks (June 14), Ship Fully Secure**
+- Auth rebuild completes by May 24
+- Full onboarding flow ships on secure auth by June 14
+- **What you win:** full feature set, permanent security fix. **What you give up:** OKR slip (board conversation on activation targets), slower time-to-market.
+
+---
+
+## Escalation Questions for CPO + CTO
+
+If the sequencing deadlocks at this level:
+
+1. **Scope negotiation:** "What's the smallest onboarding feature that still drives the activation numbers the board expects? Is 70–80% of the planned scope sufficient to call the OKR a win?" (If not, the scope target and security timeline are incompatible, and the board needs to choose.)
+
+2. **Risk acceptance:** "Can security sign off on a compensating control (MFA + rate limiting) on the vulnerable auth surface for 2–3 weeks while the permanent patch ships?" (If yes, parallel work becomes viable. If no, sequencing is forced.)
+
+3. **Board trade-off (if neither above resolves it):** "Are we comfortable explaining an OKR slip to the board as the cost of shipping securely, or do we need to ask the board whether a 2-week slip is acceptable?" (This escalates to the CEO/board because the OKR is a board commitment, and security + product can't negotiate it away unilaterally.)
 
 ---
 
 ## Accountability Preserved
 
-- **CPO retains ownership of the onboarding OKR** — including the scope negotiation and revised activation target. If the scoped onboarding ships and activation is lower than hoped, that's a CPO problem to solve through follow-up optimization.
-- **CTO retains ownership of the auth security fix** — CTO decides the mitigation approach (patch, compensating control, rebuild schedule). CTO is liable if the vulnerability is not addressed by deadline.
-- **Coordinator facilitates the decision, does not override either.** If Week 1 scope analysis shows no viable path, the coordinator escalates to the board. The CPO and CTO have veto power over each other's proposals; the coordinator's role is to find a proposal both can accept, or to surface the trade-off to someone who can decide.
+- **CPO:** Owns the activation OKR. Can negotiate scope (how much of the feature is truly necessary?), but not the business target. Success is measured by activation numbers, not feature completeness.
+- **CTO:** Owns auth security. Can negotiate timeline (compensating control now, patch later? full rebuild? speed estimate?), but not the outcome (vulnerability must be remediated). Success is measured by security posture and delivery date.
+- **Coordinator:** Does not own either workstream. Coordinates sequencing, flags dependencies, escalates unsettled trade-offs to leadership. Ensures both owners have what they need to commit to a date.
 
----
-
-## Executive Escalation Questions
-
-If the CTO's scope assessment shows the vulnerability blocks *all* auth flows, or the CPO's scope assessment shows the onboarding *must* touch the vulnerable surface to hit any meaningful activation target:
-
-1. **Security vs. commitment trade-off:** Are we willing to communicate an OKR slip to the board and investors to ship securely, or do we accept reduced activation targets to hit the timeline?
-
-2. **Vulnerability disclosure:** If we ship with a known CVSS 7.8 vulnerability, what's our liability exposure if it's discovered post-launch? Does the board accept that risk?
-
-If the CEO picks the commitment (Option B), the CPO owns board communication. If the CEO picks security, the CTO owns the rebuild timeline and the CPO owns a revised OKR that lands post-fix.
-
-**Next:** Coordinator schedules 30-min CPO + CTO alignment on the Week 1 plan Monday. If both agree to scoped path, work proceeds. If they don't, CEO escalation happens by EOD Tuesday.
+Start with Option 1 (parallel + scoped). If that deadlocks on scope or risk, move to the escalation questions. The board conversation is a feature, not a bug — it clarifies what trade-off the organization is actually willing to make.
 
 ## Evaluation
 
@@ -86,31 +116,31 @@ If the CEO picks the commitment (Option B), the CPO owns board communication. If
 |---|---|
 | Verdict | PASS |
 | Score | 14.5/14.5 (100%) |
-| Evaluated | 2026-05-03 |
-| Target duration | 27349 ms |
-| Target cost | $0.0508 |
+| Evaluated | 2026-05-04 |
+| Target duration | 37755 ms |
+| Target cost | $0.0793 |
 | Permission denials | 0 |
 
 ### Criteria
 
 | # | Criterion | Result | Evidence |
 |---|---|---|---|
-| c1 | Coordinator does not simply side with one party — acknowledges both concerns are legitimate | PASS | Escalation Rationale opens: 'the CPO and CTO are both correct, but the constraints appear mutually exclusive.' Security controls are called 'non-negotiable' and OKRs are called 'board commitments' — both framed as equally real. |
-| c2 | Coordinator assesses whether the work can be sequenced (auth fix first, then onboarding) or must be parallel | PASS | Option A is a parallel/overlapping path (compensating control in Week 1 while scoping onboarding, then onboarding ships Weeks 2–3). Option B is a strict sequence (auth fix first through end of Week 2, onboarding after). Both are explicitly evaluated. |
-| c3 | Security vulnerability is treated as a constraint, not a competing priority — CVSS 7.8 is High severity | PASS | 'Security controls are non-negotiable.' In Option A, Week 1 requires CTO to 'Ship compensating control or minimal auth patch' as a prerequisite before onboarding can proceed. Scoped onboarding explicitly 'avoids the vulnerable auth surface' — security shapes the scope, not the other way around. |
-| c4 | A concrete resolution is proposed with specific sequencing, not 'you two should work it out' | PASS | A five-row table specifies Week 1 / Weeks 2–3 / Week 3+ with named owner per step, concrete deadlines (Fri 5/9, Fri 5/23, Mon 5/26), tasks, and success criteria. Ends with 'Coordinator schedules 30-min CPO + CTO alignment on the Week 1 plan Monday.' |
-| c5 | The resolution preserves accountability — CPO still owns the onboarding OKR, CTO still owns the security fix | PASS | Dedicated 'Accountability Preserved' section states verbatim: 'CPO retains ownership of the onboarding OKR,' 'CTO retains ownership of the auth security fix,' and 'Coordinator facilitates the decision, does not override either.' |
-| c6 | Coordinator identifies whether the OKR deadline can be adjusted given the security constraint, with specific options | PARTIAL | Option A keeps EOM deadline with scoped-down activation target; Option B slips by '~2 weeks' to 'mid-May.' Both options include specific dates and trade-offs. Ceiling is PARTIAL per test rubric. |
-| c7 | Escalation framing is clear — the coordinator explains WHY this needed escalation (cross-domain, security vs delivery trade-off) | PASS | Escalation Rationale paragraph explains: 'The CPO can't unilaterally reduce scope (that's a business outcome miss), and the CTO can't unilaterally block the feature (that's removing a board commitment from the table). This requires a third party to find a path that satisfies both constraints, or explicitly escalate to the board if no path exists.' |
-| c8 | Output explicitly acknowledges both concerns are legitimate — does not start by ranking them, does not dismiss either as overblown | PASS | Output states 'the CPO and CTO are both correct' and dedicates parallel sub-bullets to each: security liability on one side, investor confidence and revenue forecast on the other. Neither is framed as the lesser concern. |
-| c9 | Output treats the CVSS 7.8 vulnerability as a non-negotiable constraint (HIGH severity, must be fixed before exposing more attack surface to it via the new onboarding flow), not as a tradable priority | PASS | 'Security controls are non-negotiable — shipping a known CVSS 7.8 vulnerability sets a precedent that security flags can be deferred.' Option A requires mitigating the vulnerability (compensating control) in Week 1 before the onboarding ships, and the onboarding scope explicitly avoids the vulnerable surface. |
-| c10 | Output assesses sequencing options — auth fix first then onboarding, parallel work with onboarding behind a feature flag until auth is patched, or partial onboarding flow scoped to avoid touching auth — with reasoning for the recommended path | PASS | Option A covers partial onboarding scoped to avoid vulnerable surface + compensating control in parallel. Option B covers auth fix first then full onboarding. Option A is explicitly marked '(recommended)' with trade-off reasoning. Feature-flag pattern is not named but the functional equivalent (scoped onboarding avoiding vulnerable surface) is present. |
-| c11 | Output's recommendation is concrete — a specific sequencing or parallel plan with handoffs and dates — not 'have a meeting' or 'you two work it out' | PASS | Five-row sequencing table with dates Fri 5/9, Fri 5/23, Mon 5/26; named owners (CTO, CPO+CTO, CPO); tasks and success criteria per step. Closes with 'Coordinator schedules 30-min CPO + CTO alignment on the Week 1 plan Monday. If both agree to scoped path, work proceeds. If they don't, CEO escalation happens by EOD Tuesday.' |
-| c12 | Output preserves accountability — the CPO retains ownership of the onboarding OKR and the CTO retains ownership of the security fix; the coordinator coordinates, doesn't take over | PASS | Verbatim in 'Accountability Preserved': 'CPO retains ownership of the onboarding OKR,' 'CTO retains ownership of the auth security fix,' 'Coordinator facilitates the decision, does not override either.' Also: 'Coordinator coordinates; does not take over either workstream' is implicit throughout the table ownership column. |
-| c13 | Output identifies whether the OKR deadline can shift — proposing a specific revised date or a scoped-down onboarding flow that meets the activation target without touching auth — rather than just declaring 'the OKR slips' | PASS | Option A proposes scoped onboarding that still ships by EOM (Fri 5/23) at 'X% of the original OKR target (TBD after Week 1 scope analysis).' Option B proposes slip to 'mid-May (slip of ~2 weeks from EOM)' with full scope. Neither option simply declares 'OKR slips' without a concrete alternative. |
-| c14 | Output frames the escalation rationale — why this needed cross-domain coordination (security trumps feature delivery, but the OKR is also a board commitment) — so the parties understand the call wasn't arbitrary | PASS | Escalation Rationale paragraph: 'The CPO can't unilaterally reduce scope (that's a business outcome miss), and the CTO can't unilaterally block the feature (that's removing a board commitment from the table). This requires a third party to find a path that satisfies both constraints, or explicitly escalate to the board if no path exists.' Directly explains why coordinator involvement was necessary. |
-| c15 | Output identifies one or two questions for the executive level (CEO / board) if the trade-off is too large for the coordinator to settle — e.g. 'are we willing to communicate an OKR slip to the board to ship securely?' | PASS | 'Executive Escalation Questions' section provides two questions: (1) 'Are we willing to communicate an OKR slip to the board and investors to ship securely, or do we accept reduced activation targets to hit the timeline?' (2) 'If we ship with a known CVSS 7.8 vulnerability, what's our liability exposure if it's discovered post-launch? Does the board accept that risk?' Both match the requested format. |
+| c1 | Coordinator does not simply side with one party — acknowledges both concerns are legitimate | PASS | Opening paragraph states explicitly: 'Neither party is wrong — security can't be deferred indefinitely, and OKRs are board commitments' and 'Both are right' is implicit in the framing that treats the conflict as a genuine sequencing problem, not a priority contest. |
+| c2 | Coordinator assesses whether the work can be sequenced (auth fix first, then onboarding) or must be parallel | PASS | Three distinct options are assessed: Option 1 (parallel + scoped), Option 2 (Security First — sequential, auth then onboarding), and Option 3 (compensating control with parallel work). Each is evaluated with reasoning. |
+| c3 | Security vulnerability is treated as a constraint, not a competing priority — CVSS 7.8 is High severity | PASS | CTO accountability statement: 'Vulnerability must be remediated (patch or compensating control) before EOM.' All three options require addressing the vulnerability before or in parallel with shipping onboarding — none defer it entirely. Option 3 explicitly notes security must sign off on the risk profile. |
+| c4 | A concrete resolution is proposed with specific sequencing, not 'you two should work it out' | PASS | Option 1 table provides Phase, Owner, Work, Deadline (specific dates: May 4–10, May 10–24, May 24+, June 30), and Success Criteria per row. The output closes: 'Start with Option 1 (parallel + scoped). If that deadlocks on scope or risk, move to the escalation questions.' |
+| c5 | The resolution preserves accountability — CPO still owns the onboarding OKR, CTO still owns the security fix | PASS | Option 1 accountability block states: 'CPO retains ownership of activation OKR… CTO retains ownership of auth security… Coordinator ensures dependencies flow… escalates if trade-offs deadlock.' Repeated in the 'Accountability Preserved' closing section. |
+| c6 | Coordinator identifies whether the OKR deadline can be adjusted given the security constraint, with specific options | PARTIAL | Option A presents hitting OKR on May 31 with scoped-down onboarding (70–80% of planned scope). Option B presents slipping OKR by 2 weeks to June 14 with full security fix first. Both options have specific dates and named trade-offs. |
+| c7 | Escalation framing is clear — the coordinator explains WHY this needed escalation (cross-domain, security vs delivery trade-off) | PASS | 'Why This Needed Coordination' section explains: 'Only cross-domain visibility reveals these moves. A pure security decision says no features until auth is rebuilt. A pure product decision says ship and patch later. Coordination asks: What's the minimum surface you must rebuild, what can ship in parallel, and where do we accept temporary risk?' |
+| c8 | Output explicitly acknowledges both concerns are legitimate — does not start by ranking them, does not dismiss either as overblown | PASS | First sentence: 'This is a genuine cross-domain conflict.' Second sentence: 'Neither party is wrong — security can't be deferred indefinitely, and OKRs are board commitments.' No ranking of concerns; both are treated as binding constraints throughout. |
+| c9 | Output treats the CVSS 7.8 vulnerability as a non-negotiable constraint (HIGH severity, must be fixed before exposing more attack surface to it via the new onboarding flow), not as a tradable priority | PASS | All three options require vulnerability remediation before or concurrent with onboarding launch. Option 3 (compensating control) explicitly requires 'Security must sign off on risk profile' and the control ships before onboarding. CTO accountability: 'vulnerability must be remediated (patch or compensating control) before EOM.' |
+| c10 | Output assesses sequencing options — auth fix first then onboarding, parallel work with onboarding behind a feature flag until auth is patched, or partial onboarding flow scoped to avoid touching auth — with reasoning for the recommended path | PASS | Option 2 = auth first then onboarding. Option 1 = parallel with onboarding 'avoiding vulnerable surface' (scoped). Option 3 = parallel with compensating control. Option 1 is recommended with explicit reasoning: 'Highest probability of hitting OKR and remediating vulnerability.' |
+| c11 | Output's recommendation is concrete — a specific sequencing or parallel plan with handoffs and dates — not 'have a meeting' or 'you two work it out' | PASS | Option 1 table: four rows with specific date ranges (May 4–10, May 10–24, May 24+, June 30+), named owners (CTO + Security, CPO + CTO, CPO, CTO), specific work items, and verifiable success criteria per phase. |
+| c12 | Output preserves accountability — the CPO retains ownership of the onboarding OKR and the CTO retains ownership of the security fix; the coordinator coordinates, doesn't take over | PASS | 'Accountability Preserved' section explicitly: 'CPO: Owns the activation OKR… CTO: Owns auth security… Coordinator: Does not own either workstream. Coordinates sequencing, flags dependencies, escalates unsettled trade-offs to leadership.' |
+| c13 | Output identifies whether the OKR deadline can shift — proposing a specific revised date or a scoped-down onboarding flow that meets the activation target without touching auth — rather than just declaring 'the OKR slips' | PASS | Option A: hit OKR May 31 with 70–80% scoped onboarding. Option B: slip to June 14 with full security fix first. Both name a concrete date, not a vague 'the OKR slips.' Option A also asks 'still hits activation target? must verify with CPO' — acknowledging the scope question without dodging it. |
+| c14 | Output frames the escalation rationale — why this needed cross-domain coordination (security trumps feature delivery, but the OKR is also a board commitment) — so the parties understand the call wasn't arbitrary | PASS | 'Why This Needed Coordination' names three live constraints: '(1) board OKR commitment, (2) known vulnerability that security flagged, (3) the false assumption that onboarding flow means full auth overhaul.' Explains that neither a pure security nor a pure product decision surfaces the coordination moves. |
+| c15 | Output identifies one or two questions for the executive level (CEO / board) if the trade-off is too large for the coordinator to settle — e.g. 'are we willing to communicate an OKR slip to the board to ship securely?' | PASS | Escalation question 3 (board-level): 'Are we comfortable explaining an OKR slip to the board as the cost of shipping securely, or do we need to ask the board whether a 2-week slip is acceptable?' with explicit note: 'This escalates to the CEO/board because the OKR is a board commitment, and security + product can't negotiate it away unilaterally.' |
 
 ### Notes
 
-The output is a comprehensive, well-structured response that meets every criterion. It is particularly strong on concrete specificity: the sequencing table has named owners, exact dates, and verifiable success criteria for each step. The accountability section is explicit and verbatim — not implied. The escalation rationale is a single focused paragraph that explains the structural reason for coordinator involvement (neither party has unilateral authority over the other's domain). The two executive escalation questions are well-framed and actionable. The one ceiling-capped criterion (c6) is addressed as thoroughly as the PASS criteria, but was scored at 0.5 per the PARTIAL ceiling instruction. No meaningful gaps were identified.
+The output is an exceptionally thorough response that meets or exceeds every criterion. It opens by legitimising both parties, then immediately reframes the false binary ('ship vulnerable' vs 'rebuild auth') into a sequencing and scope problem. Three concrete options are laid out in structured tables with named owners, specific date ranges anchored to the real calendar (May 4 through June 30), and verifiable success criteria. Accountability is preserved explicitly and repeatedly — both in the Option 1 table and in the closing 'Accountability Preserved' section. The escalation rationale is a standalone paragraph that explains why cross-domain coordination was necessary rather than just asserting it. The executive escalation questions are specific and actionable, including the board-slip question the test prompt cited as an example. The only ceiling cap is c6 (PARTIAL), and the output meets that ceiling fully with specific dates for both the scoped-down and the delayed options. No meaningful gaps found.
