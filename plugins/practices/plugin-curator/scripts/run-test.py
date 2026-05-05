@@ -601,12 +601,40 @@ def write_result_md(test: TestCase, target: TargetRun, judge: JudgeOutput) -> Pa
     result_path = test.test_dir / "result.md"
     today = time.strftime("%Y-%m-%d")
 
+    # Resolve binary artifact filenames up-front — same scheme used below when
+    # writing them to disk. Lets us surface the links prominently near the top
+    # of result.md (above the long prompt blockquote) so readers landing here
+    # from the README can click straight through to the produced files.
+    binary_targets: dict[str, str] = {}
+    used_names: set[str] = set()
+    for path, data in target.binary_artifacts.items():
+        base = Path(path).name
+        target_name = base
+        counter = 1
+        while target_name in used_names:
+            stem = Path(base).stem
+            suffix = Path(base).suffix
+            target_name = f"{stem}-{counter}{suffix}"
+            counter += 1
+        used_names.add(target_name)
+        binary_targets[path] = target_name
+
     lines: list[str] = []
     title = test.test_dir.name.replace("-", " ").title()
     lines.append(f"# {title}")
     lines.append("")
     if test.scenario:
         lines.append(test.scenario)
+        lines.append("")
+    if binary_targets:
+        # GitHub renders PDFs and images inline when the link target is a blob,
+        # so a markdown link here is directly clickable on the rendered page.
+        labels = []
+        for path, target_name in binary_targets.items():
+            data = target.binary_artifacts[path]
+            size_kb = max(1, len(data) // 1024)
+            labels.append(f"[{target_name}](./{target_name}) ({size_kb}KB)")
+        lines.append("**Output files:** " + " · ".join(labels))
         lines.append("")
     lines.append("## Prompt")
     lines.append("")
@@ -631,21 +659,12 @@ def write_result_md(test: TestCase, target: TargetRun, judge: JudgeOutput) -> Pa
             lines.append("```")
             lines.append("")
         # Binary artifacts: write next to result.md, link rather than embed.
-        # Filename collisions across multiple binaries with the same basename
-        # are resolved by appending a numeric suffix.
-        used_names: set[str] = set()
-        for path, data in target.binary_artifacts.items():
-            base = Path(path).name
-            target_name = base
-            counter = 1
-            while target_name in used_names or (test.test_dir / target_name).exists() and target_name != base:
-                stem = Path(base).stem
-                suffix = Path(base).suffix
-                target_name = f"{stem}-{counter}{suffix}"
-                counter += 1
-            used_names.add(target_name)
+        # Filenames were resolved at the top of this function (see binary_targets)
+        # so the same name is used in both the up-front summary and here.
+        for path, target_name in binary_targets.items():
+            data = target.binary_artifacts[path]
             (test.test_dir / target_name).write_bytes(data)
-            size_kb = len(data) // 1024
+            size_kb = max(1, len(data) // 1024)
             lines.append(f"#### `{path}`")
             lines.append("")
             lines.append(f"Binary artifact ({size_kb}KB) — see [`{target_name}`](./{target_name})")
