@@ -82,7 +82,7 @@ class JudgeOutput:
 @dataclass
 class RunConfig:
     test_dir: Path
-    plugin_dir: Path
+    plugin_dirs: list[Path]
     target_model: str
     judge_model: str
     judge_prompt_path: Path
@@ -91,6 +91,7 @@ class RunConfig:
     keep_workspace: bool = False
     timeout_sec: int = 300
     isolate_config: bool = False
+    project_dir: Path | None = None
 
 
 def parse_test_md(test_dir: Path) -> TestCase:
@@ -165,6 +166,7 @@ def make_workspace(root: Path | None) -> Path:
     subprocess.run(["git", "add", "."], cwd=work, check=True)
     subprocess.run(
         ["git", "-c", "user.email=eval@local", "-c", "user.name=eval",
+         "-c", "commit.gpgsign=false",
          "commit", "-qm", "initial"],
         cwd=work, check=True,
     )
@@ -191,27 +193,45 @@ def env_for_run(workspace: Path, extra: dict[str, str], isolate_config: bool) ->
 def _resolve_plugin_dirs(cfg: RunConfig, test: TestCase) -> list[Path]:
     """Return the list of --plugin-dir paths to pass to claude.
 
-    When cfg.plugin_dir is a root directory (no plugin.json), try to derive
-    the specific plugin directory from the test path:
-      examples/<category>/<plugin>/... -> cfg.plugin_dir/<category>/<plugin>
+    Each entry in cfg.plugin_dirs is processed independently:
+      - If the entry has .claude-plugin/plugin.json, use it as-is.
+      - Otherwise (marketplace root), try to derive the specific plugin
+        from the test path: examples/<category>/<plugin>/... ->
+        <root>/<category>/<plugin>. Keep the root too so marketplace.json /
+        settings-based plugins still apply alongside the derived plugin.
 
-    Keeps the root as a fallback so marketplace.json / settings-based plugins
-    still apply alongside the derived specific plugin.
+    Multiple --plugin-dir entries let a test load a plugin plus its
+    declared dependencies (e.g. a downstream plugin and its upstream).
     """
-    plugin_json = cfg.plugin_dir / ".claude-plugin" / "plugin.json"
-    if plugin_json.exists():
-        return [cfg.plugin_dir]
+    resolved: list[Path] = []
+    for plugin_dir in cfg.plugin_dirs:
+        plugin_json = plugin_dir / ".claude-plugin" / "plugin.json"
+        if plugin_json.exists():
+            resolved.append(plugin_dir)
+            continue
 
-    # Root-style path: try to find the specific plugin from test path
-    parts = test.test_dir.parts
-    for i, part in enumerate(parts):
-        if part == "examples" and i + 2 < len(parts):
-            candidate = cfg.plugin_dir / parts[i + 1] / parts[i + 2]
-            if (candidate / ".claude-plugin" / "plugin.json").exists():
-                return [cfg.plugin_dir, candidate]
-            break
+        # Root-style path: try to find the specific plugin from test path
+        parts = test.test_dir.parts
+        derived = None
+        for i, part in enumerate(parts):
+            if part == "examples" and i + 2 < len(parts):
+                candidate = plugin_dir / parts[i + 1] / parts[i + 2]
+                if (candidate / ".claude-plugin" / "plugin.json").exists():
+                    derived = candidate
+                break
 
-    return [cfg.plugin_dir]
+        resolved.append(plugin_dir)
+        if derived is not None:
+            resolved.append(derived)
+
+    # Preserve order, drop duplicates
+    seen: set[Path] = set()
+    out: list[Path] = []
+    for p in resolved:
+        if p not in seen:
+            seen.add(p)
+            out.append(p)
+    return out
 
 
 def run_target(cfg: RunConfig, test: TestCase, workspace: Path) -> TargetRun:
@@ -231,7 +251,7 @@ def run_target(cfg: RunConfig, test: TestCase, workspace: Path) -> TargetRun:
         "--model", cfg.target_model,
         test.prompt,
     ]
-    work = workspace / "work"
+    work = cfg.project_dir if cfg.project_dir is not None else workspace / "work"
     env = env_for_run(workspace, cfg.extra_env, cfg.isolate_config)
 
     proc = subprocess.run(
@@ -470,8 +490,11 @@ def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     p.add_argument("--test-dir", required=True, type=Path,
                    help="Path to a test directory (containing test.md)")
-    p.add_argument("--plugin-dir", required=True, type=Path,
-                   help="Path to the plugin directory under test (contains .claude-plugin/plugin.json)")
+    p.add_argument("--plugin-dir", required=True, action="append", type=Path,
+                   help="Path to a plugin directory to load for the test session "
+                        "(contains .claude-plugin/plugin.json). Repeatable — "
+                        "pass once for the plugin under test, again for any "
+                        "dependencies it declares.")
     p.add_argument("--target-model", default="claude-haiku-4-5-20251001",
                    help="Model to invoke for the skill/agent under test")
     p.add_argument("--judge-model", default="claude-sonnet-4-6",
@@ -492,6 +515,11 @@ def parse_args() -> argparse.Namespace:
                    help="Set CLAUDE_CONFIG_DIR to the workspace (full vanilla global state). "
                         "Requires ANTHROPIC_API_KEY in the environment — keychain auth "
                         "will not resolve through the redirected config dir.")
+    p.add_argument("--project-dir", type=Path,
+                   help="Run the target with this directory as cwd (default: a tmp "
+                        "workspace dir). Use to pick up project-scoped plugins from "
+                        "the marketplace under test, so the test session sees the "
+                        "plugins you've installed against that project.")
     p.add_argument("--write-result", action="store_true", default=True,
                    help="Write result.md to the test directory (default: true)")
     p.add_argument("--no-write-result", dest="write_result", action="store_false",
@@ -512,7 +540,7 @@ def main() -> int:
 
     cfg = RunConfig(
         test_dir=args.test_dir.resolve(),
-        plugin_dir=args.plugin_dir.resolve(),
+        plugin_dirs=[p.resolve() for p in args.plugin_dir],
         target_model=args.target_model,
         judge_model=args.judge_model,
         judge_prompt_path=args.judge_prompt.resolve(),
@@ -521,6 +549,7 @@ def main() -> int:
         keep_workspace=args.keep_workspace,
         timeout_sec=args.timeout,
         isolate_config=args.isolate_config,
+        project_dir=args.project_dir.resolve() if args.project_dir else None,
     )
 
     print(f"[run-test] reading {cfg.test_dir}/test.md", file=sys.stderr)

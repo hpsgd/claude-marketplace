@@ -58,12 +58,42 @@ plugins/practices/plugin-curator/scripts/run-test.py \
   --test-dir ... --plugin-dir ... --keep-workspace
 ```
 
+Test a plugin that declares dependencies on other plugins (e.g. `manda` depends on `analyst@turtlestack`):
+
+Two ways to satisfy the dep, depending on whether the dep declaration is qualified by marketplace.
+
+**Unqualified deps** — pass the dependency directory as another `--plugin-dir`:
+
+```bash
+plugins/practices/plugin-curator/scripts/run-test.py \
+  --test-dir examples/research/manda/skills/company-assessment/partnership-eval \
+  --plugin-dir plugins/research/manda \
+  --plugin-dir ../turtlestack/plugins/research/analyst
+```
+
+**Marketplace-qualified deps** (`"dependencies": ["analyst@turtlestack"]`) — `--plugin-dir` loads plugins as `@inline`, which doesn't satisfy `@turtlestack`-qualified deps. Install the dependency at project scope and use `--project-dir` so the test session sees it:
+
+```bash
+# One-time bootstrap in the project under test
+cd /path/to/your/marketplace
+claude plugin marketplace add hpsgd/turtlestack
+claude plugin install --project analyst@turtlestack
+
+# Then run tests with --project-dir
+.../run-test.py \
+  --test-dir examples/research/manda/skills/company-assessment/partnership-eval \
+  --plugin-dir plugins/research/manda \
+  --project-dir /path/to/your/marketplace
+```
+
+The plugin under test still loads from `--plugin-dir` (live working tree), but its declared dependency resolves through the project-scoped install.
+
 ## Arguments
 
 | Flag | Default | Purpose |
 |---|---|---|
 | `--test-dir` | required | Test directory containing `test.md` |
-| `--plugin-dir` | required | Plugin under test (the dir holding `.claude-plugin/plugin.json`) |
+| `--plugin-dir` | required | Plugin under test (the dir holding `.claude-plugin/plugin.json`). Repeatable — pass once for the plugin under test, again for any dependencies it declares. |
 | `--target-model` | `claude-haiku-4-5-20251001` | Model that runs the skill/agent |
 | `--judge-model` | `claude-sonnet-4-6` | Model that scores the output |
 | `--judge-prompt` | `judge-prompt.md` (sibling) | Override the judge system prompt |
@@ -72,6 +102,7 @@ plugins/practices/plugin-curator/scripts/run-test.py \
 | `--env KEY=VALUE` | none | Extra env var for the target run (repeatable) |
 | `--timeout` | 300 | Seconds per invocation (target and judge) |
 | `--isolate-config` | off | Set `CLAUDE_CONFIG_DIR` to the workspace. Requires `ANTHROPIC_API_KEY` (keychain auth doesn't resolve through the redirect) |
+| `--project-dir` | tmp workspace | Run the target with this directory as cwd, so project-scoped plugins from that project apply (default: a fresh workspace dir) |
 | `--no-write-result` | off | Skip writing `result.md`; still emits JSON to stdout |
 
 ## Test.md format
