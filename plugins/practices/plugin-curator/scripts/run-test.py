@@ -66,6 +66,9 @@ class TargetRun:
     permission_denials: list[dict]
     raw_json: dict
     artifacts: dict[str, str] = field(default_factory=dict)
+    binary_artifacts: dict[str, bytes] = field(default_factory=dict)
+    """Binary files captured during the run (by workspace-relative path).
+    Written next to result.md by write_result_md and linked from there."""
 
 
 @dataclass
@@ -387,7 +390,7 @@ def run_target(cfg: RunConfig, test: TestCase, workspace: Path) -> TargetRun:
     except json.JSONDecodeError as e:
         raise RuntimeError(f"target returned non-JSON output: {e}\n{proc.stdout[:1000]}")
 
-    artifacts = _snapshot_artifacts(workspace)
+    text_artifacts, binary_artifacts = _snapshot_artifacts(workspace)
 
     return TargetRun(
         result_text=data.get("result", ""),
@@ -396,8 +399,21 @@ def run_target(cfg: RunConfig, test: TestCase, workspace: Path) -> TargetRun:
         tool_uses=int(data.get("num_turns", 0)),
         permission_denials=data.get("permission_denials", []),
         raw_json=data,
-        artifacts=artifacts,
+        artifacts=text_artifacts,
+        binary_artifacts=binary_artifacts,
     )
+
+
+_BINARY_EXTENSIONS = {
+    ".pdf", ".png", ".jpg", ".jpeg", ".gif", ".webp", ".ico", ".bmp", ".tiff",
+    ".zip", ".tar", ".gz", ".bz2", ".xz", ".7z", ".rar",
+    ".woff", ".woff2", ".ttf", ".otf", ".eot",
+    ".mp3", ".mp4", ".mov", ".avi", ".webm", ".wav", ".ogg",
+    ".pyc", ".so", ".dylib", ".exe", ".bin", ".o", ".a",
+}
+"""File extensions treated as binary artifacts. These get copied next to
+result.md and linked from it, instead of being embedded as garbled text in
+the artifacts section. Add new extensions here as new artifact types appear."""
 
 
 _HOOK_ARTIFACT_PATHS = {
@@ -417,18 +433,36 @@ _HOOK_ARTIFACT_PATHS = {
 Including these in snapshots adds ~1500 lines of noise to every result.md and obscures the skill's actual output. Skill output to learnings/global-learnings goes to other paths (memory files written by the /thinking:learning skill), which we still capture."""
 
 
-def _snapshot_artifacts(workspace: Path) -> dict[str, str]:
+def _snapshot_artifacts(workspace: Path) -> tuple[dict[str, str], dict[str, bytes]]:
     """Read every file the target wrote into the workspace's path-override dirs.
 
-    The judge needs to see the actual artifacts the skill produced, not just the
-    chat response. A skill that writes a 200-line handoff doc to disk and prints
-    a one-line confirmation would otherwise be judged on the confirmation alone.
+    Returns a (text_artifacts, binary_artifacts) pair. Text artifacts get
+    embedded inline in result.md; binary artifacts (PDFs, images, archives)
+    get written next to result.md and linked from it.
 
     Files written by hooks (rule installer, message classifier) are excluded —
-    they're session bootstrap, not skill output, and including them adds ~1500
-    lines of noise to every result.md.
+    they're session bootstrap, not skill output.
     """
-    artifacts: dict[str, str] = {}
+    text_artifacts: dict[str, str] = {}
+    binary_artifacts: dict[str, bytes] = {}
+
+    def _capture(path: Path, rel: Path) -> None:
+        rel_str = str(rel)
+        if path.suffix.lower() in _BINARY_EXTENSIONS:
+            try:
+                binary_artifacts[rel_str] = path.read_bytes()
+            except OSError:
+                pass
+            return
+        try:
+            text = path.read_text(errors="replace")
+            text = text.replace("\x00", "")
+        except (UnicodeDecodeError, OSError):
+            return
+        if len(text) > 50_000:
+            text = text[:50_000] + "\n\n[truncated — over 50KB]"
+        text_artifacts[rel_str] = text
+
     for sub in ("handoff", "learnings", "global-learnings"):
         root = workspace / sub
         if not root.exists():
@@ -440,18 +474,12 @@ def _snapshot_artifacts(workspace: Path) -> dict[str, str]:
             rel_str = str(rel)
             if any(rel_str == hp or rel_str.startswith(hp + "/") for hp in _HOOK_ARTIFACT_PATHS):
                 continue
-            try:
-                text = path.read_text()
-            except (UnicodeDecodeError, OSError):
-                continue
-            if len(text) > 50_000:
-                text = text[:50_000] + "\n\n[truncated — over 50KB]"
-            artifacts[rel_str] = text
+            _capture(path, rel)
+
     _SKIP_DIRS = {".git", ".claude", ".venv", "venv", "node_modules", "__pycache__",
                   ".tox", ".pytest_cache", "dist", "build", ".mypy_cache",
                   "bin", "obj", ".nuget", "packages", ".gradle", "target"}
-    work_files = (workspace / "work").rglob("*")
-    for path in work_files:
+    for path in (workspace / "work").rglob("*"):
         if not path.is_file():
             continue
         rel = path.relative_to(workspace)
@@ -459,15 +487,9 @@ def _snapshot_artifacts(workspace: Path) -> dict[str, str]:
             continue
         if rel.name == "README.md" and rel.parent.name == "work":
             continue
-        try:
-            text = path.read_text(errors="replace")
-            text = text.replace("\x00", "")
-        except (UnicodeDecodeError, OSError):
-            continue
-        if len(text) > 50_000:
-            text = text[:50_000] + "\n\n[truncated]"
-        artifacts[str(rel)] = text
-    return artifacts
+        _capture(path, rel)
+
+    return text_artifacts, binary_artifacts
 
 
 def run_judge(cfg: RunConfig, test: TestCase, target: TargetRun, workspace: Path) -> JudgeOutput:
@@ -479,7 +501,7 @@ def run_judge(cfg: RunConfig, test: TestCase, target: TargetRun, workspace: Path
     criteria_block = "\n".join(criteria_lines)
 
     artifacts_block = ""
-    if target.artifacts:
+    if target.artifacts or target.binary_artifacts:
         parts = ["## ARTIFACTS WRITTEN\n"]
         parts.append(
             "Files the target wrote to disk during execution. Judge against these "
@@ -487,6 +509,13 @@ def run_judge(cfg: RunConfig, test: TestCase, target: TargetRun, workspace: Path
         )
         for path, text in target.artifacts.items():
             parts.append(f"\n### `{path}`\n\n```\n{text}\n```\n")
+        for path, data in target.binary_artifacts.items():
+            size_kb = len(data) // 1024
+            parts.append(
+                f"\n### `{path}` (binary, {size_kb}KB)\n\n"
+                "Binary file — contents not shown. Treat its existence and size as evidence; "
+                "do not judge structural details that would require reading the binary.\n"
+            )
         artifacts_block = "\n".join(parts) + "\n"
 
     user_msg = (
@@ -591,7 +620,7 @@ def write_result_md(test: TestCase, target: TargetRun, judge: JudgeOutput) -> Pa
     lines.append("")
     lines.append(target.result_text)
     lines.append("")
-    if target.artifacts:
+    if target.artifacts or target.binary_artifacts:
         lines.append("### Artifacts written")
         lines.append("")
         for path, text in target.artifacts.items():
@@ -600,6 +629,26 @@ def write_result_md(test: TestCase, target: TargetRun, judge: JudgeOutput) -> Pa
             lines.append("```")
             lines.append(text)
             lines.append("```")
+            lines.append("")
+        # Binary artifacts: write next to result.md, link rather than embed.
+        # Filename collisions across multiple binaries with the same basename
+        # are resolved by appending a numeric suffix.
+        used_names: set[str] = set()
+        for path, data in target.binary_artifacts.items():
+            base = Path(path).name
+            target_name = base
+            counter = 1
+            while target_name in used_names or (test.test_dir / target_name).exists() and target_name != base:
+                stem = Path(base).stem
+                suffix = Path(base).suffix
+                target_name = f"{stem}-{counter}{suffix}"
+                counter += 1
+            used_names.add(target_name)
+            (test.test_dir / target_name).write_bytes(data)
+            size_kb = len(data) // 1024
+            lines.append(f"#### `{path}`")
+            lines.append("")
+            lines.append(f"Binary artifact ({size_kb}KB) — see [`{target_name}`](./{target_name})")
             lines.append("")
     lines.append("## Evaluation")
     lines.append("")
