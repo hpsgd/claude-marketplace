@@ -15,7 +15,7 @@ A few specifics for the response:
 - **Sequence QA twice**: `qa-lead:qa-lead` in Phase 2 (test strategy + acceptance criteria), AND `qa-engineer:qa-engineer` BEFORE development to write the acceptance tests (Phase 2 or early Phase 3, not Phase 4 only).
 - **Use the explicit terms "Definition of Ready" and "Definition of Done"** as named gate checkpoints — DoR before development starts, DoD before shipping.
 - **Open Questions section**: even though the user said "do not ask for clarification", surface the questions you would normally ask (outcome definition, appetite, deadline meaning, commercial signals) as a labelled "Assumptions / Open Questions" block — don't unilaterally infer.
-- **Marketplace enablement hints**: for any `plugin:agent` referenced that may not be enabled, append the enablement hint `"<plugin>@hpsgd": true` so the user knows what to enable.
+- **Marketplace enablement hints**: for any `plugin:agent` referenced that may not be enabled, append the enablement hint `"<plugin>@turtlestack": true` so the user knows what to enable.
 - **CPO/CTO trade-offs**: surface scope-vs-deadline, build-vs-buy for invitations/email infrastructure, and security-review timing as explicit tensions to watch — without picking a side.
 
 ## Criteria
@@ -39,7 +39,7 @@ A few specifics for the response:
 - [ ] PASS: Output sequences QA twice — QA Lead in the planning/3-amigos phase and QA Engineer writing acceptance tests before development
 - [ ] PASS: Output names specific edge cases or anti-requirements relevant to roles/permissions (e.g., role downgrade behaviour, last-admin removal, invite expiry, viewer write-attempt handling)
 - [ ] PASS: Output flags data-engineering and analytics work (event tracking for invites accepted, role changes, workspace activation) rather than treating it as implicit
-- [ ] PARTIAL: Output flags any agents referenced in the plan that exist in the marketplace but may not be enabled, with the `\"<plugin>@hpsgd\": true` enablement hint
+- [ ] PARTIAL: Output flags any agents referenced in the plan that exist in the marketplace but may not be enabled, with the `\"<plugin>@turtlestack\": true` enablement hint
 - [ ] PARTIAL: Output distinguishes Definition of Ready (gate before development) from Definition of Done (gate before shipping) as separate checkpoints in the plan
 - [ ] PARTIAL: Output surfaces likely CPO/CTO trade-offs to watch for (scope vs deadline, build-vs-buy for invitations/email, security review timing) without picking a side
 - [ ] PARTIAL: Output names a release/launch coordination step distinct from "done" — go/no-go, GTM content readiness, support FAQ — rather than collapsing launch into development

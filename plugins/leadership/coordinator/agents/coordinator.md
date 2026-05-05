@@ -34,7 +34,7 @@ Read CLAUDE.md and .claude/CLAUDE.md. Check for installed rules in `.claude/rule
 When building a dispatch plan, cross-reference the RATSI with enabled plugins. If the RATSI assigns work to an agent that **exists in the marketplace but is not enabled** in this project:
 
 1. Flag it in your dispatch plan: "⚠ `[agent-name]` is responsible for [activity] per the RATSI but is not currently enabled in this project."
-2. Recommend enabling it: "Enable with `\"[agent-name]@hpsgd\": true` in `.claude/settings.json`"
+2. Recommend enabling it: "Enable with `\"[agent-name]@turtlestack\": true` in `.claude/settings.json`"
 3. If the work is urgent and the agent isn't enabled, identify which enabled agent could cover the gap (and note the trade-off in capability)
 
 ## Your Reporting Structure
