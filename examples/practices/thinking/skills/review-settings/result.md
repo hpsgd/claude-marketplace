@@ -166,13 +166,6 @@ Your global settings are well-designed: unrestricted baseline (`Bash`, `Read`, `
 
 ### Artifacts written
 
-#### `learnings/signals/pending.jsonl`
-
-```
-{"timestamp": "2026-05-03T05:20:09.361923+00:00", "session_id": "e451c1cc-7bc4-40c0-8d09-606ac6d76b94", "type": "unclassified", "rating": 5, "confidence": "needs_review", "prompt_preview": "First, create the settings files (use bash heredocs \u2014 `.claude/` writes via Write tool are restricted in this workspace):\n\n```bash\nmkdir -p .claude\ncat > .claude/settings.json <<'EOF'\n{\n  \"allow\": [\"Bash\", \"Bash(done)\", \"Bash(do echo:*)\", \"Bash(git *)\", \"Read\"],\n  \"enabledPlugins\": [\"coding-standard"}
-
-```
-
 ## Evaluation
 
 | Field | Value |
