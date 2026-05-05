@@ -400,15 +400,36 @@ def run_target(cfg: RunConfig, test: TestCase, workspace: Path) -> TargetRun:
     )
 
 
+_HOOK_ARTIFACT_PATHS = {
+    "rules",
+    "global-rules",
+    "learnings/signals",
+    "learnings/sessions",
+    "global-learnings/signals",
+    "global-learnings/sessions",
+}
+"""Workspace-relative paths populated entirely by hooks, not by skills.
+
+- `rules/` and `global-rules/` come from the SessionStart rule installer (~20 files per session)
+- `learnings/signals/pending.jsonl` comes from the UserPromptSubmit message classifier (one entry per prompt)
+- `learnings/sessions/<SESSION_ID>.json` comes from the SessionStart learning analyser
+
+Including these in snapshots adds ~1500 lines of noise to every result.md and obscures the skill's actual output. Skill output to learnings/global-learnings goes to other paths (memory files written by the /thinking:learning skill), which we still capture."""
+
+
 def _snapshot_artifacts(workspace: Path) -> dict[str, str]:
     """Read every file the target wrote into the workspace's path-override dirs.
 
     The judge needs to see the actual artifacts the skill produced, not just the
     chat response. A skill that writes a 200-line handoff doc to disk and prints
     a one-line confirmation would otherwise be judged on the confirmation alone.
+
+    Files written by hooks (rule installer, message classifier) are excluded —
+    they're session bootstrap, not skill output, and including them adds ~1500
+    lines of noise to every result.md.
     """
     artifacts: dict[str, str] = {}
-    for sub in ("handoff", "learnings", "rules", "global-learnings", "global-rules"):
+    for sub in ("handoff", "learnings", "global-learnings"):
         root = workspace / sub
         if not root.exists():
             continue
@@ -416,13 +437,16 @@ def _snapshot_artifacts(workspace: Path) -> dict[str, str]:
             if not path.is_file():
                 continue
             rel = path.relative_to(workspace)
+            rel_str = str(rel)
+            if any(rel_str == hp or rel_str.startswith(hp + "/") for hp in _HOOK_ARTIFACT_PATHS):
+                continue
             try:
                 text = path.read_text()
             except (UnicodeDecodeError, OSError):
                 continue
             if len(text) > 50_000:
                 text = text[:50_000] + "\n\n[truncated — over 50KB]"
-            artifacts[str(rel)] = text
+            artifacts[rel_str] = text
     _SKIP_DIRS = {".git", ".claude", ".venv", "venv", "node_modules", "__pycache__",
                   ".tox", ".pytest_cache", "dist", "build", ".mypy_cache",
                   "bin", "obj", ".nuget", "packages", ".gradle", "target"}
