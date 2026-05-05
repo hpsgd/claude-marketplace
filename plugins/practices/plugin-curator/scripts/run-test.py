@@ -91,6 +91,8 @@ class RunConfig:
     keep_workspace: bool = False
     timeout_sec: int = 300
     isolate_config: bool = False
+    isolate_plugins: bool = False
+    marketplace_sources: dict[str, str] = field(default_factory=dict)
     project_dir: Path | None = None
 
 
@@ -173,7 +175,12 @@ def make_workspace(root: Path | None) -> Path:
     return ws
 
 
-def env_for_run(workspace: Path, extra: dict[str, str], isolate_config: bool) -> dict[str, str]:
+def env_for_run(
+    workspace: Path,
+    extra: dict[str, str],
+    isolate_config: bool,
+    isolate_plugins: bool,
+) -> dict[str, str]:
     env = os.environ.copy()
     # CLAUDE_CONFIG_DIR isolates the global ~/.claude state — but it also
     # isolates auth (keychain reads target the real path, the redirect breaks
@@ -181,6 +188,11 @@ def env_for_run(workspace: Path, extra: dict[str, str], isolate_config: bool) ->
     # has explicitly opted in via --isolate-config.
     if isolate_config:
         env["CLAUDE_CONFIG_DIR"] = str(workspace / "config")
+    # CLAUDE_CODE_PLUGIN_CACHE_DIR isolates only plugin state (marketplaces +
+    # installed_plugins.json + plugin code). Auth stays where it is, so
+    # keychain-based subscription auth keeps working without an API key.
+    if isolate_plugins:
+        env["CLAUDE_CODE_PLUGIN_CACHE_DIR"] = str(workspace / "plugins")
     env["LEARNINGS_DIR"] = str(workspace / "learnings")
     env["RULES_DIR"] = str(workspace / "rules")
     env["GLOBAL_LEARNINGS_DIR"] = str(workspace / "global-learnings")
@@ -188,6 +200,113 @@ def env_for_run(workspace: Path, extra: dict[str, str], isolate_config: bool) ->
     env["HANDOFF_DIR"] = str(workspace / "handoff")
     env.update(extra)
     return env
+
+
+def _read_plugin_deps(plugin_dirs: list[Path]) -> list[str]:
+    """Collect marketplace-qualified dependencies (`name@marketplace`) from each
+    --plugin-dir's plugin.json. Skip entries without an `@` qualifier — they're
+    not marketplace deps and don't need an install step."""
+    deps: list[str] = []
+    seen: set[str] = set()
+    for plugin_dir in plugin_dirs:
+        plugin_json = plugin_dir / ".claude-plugin" / "plugin.json"
+        if not plugin_json.exists():
+            continue
+        try:
+            data = json.loads(plugin_json.read_text())
+        except (json.JSONDecodeError, OSError):
+            continue
+        for dep in data.get("dependencies") or []:
+            if isinstance(dep, str) and "@" in dep and dep not in seen:
+                seen.add(dep)
+                deps.append(dep)
+    return deps
+
+
+def setup_isolated_plugins(cfg: RunConfig, workspace: Path) -> None:
+    """When --isolate-plugins is set, populate the isolated plugin cache with
+    the marketplace deps declared in the plugin-under-test's plugin.json.
+
+    Steps:
+      1. Read marketplace-qualified deps from each --plugin-dir/plugin.json.
+      2. For each unique marketplace name, look up the source in
+         cfg.marketplace_sources and run `claude plugin marketplace add`.
+      3. Run `claude plugin install` for each dep.
+      4. Verify by reading installed_plugins.json — `claude plugin install`
+         exits 0 even on failure, so exit code is not enough.
+
+    Raises RuntimeError on any setup failure."""
+    if not cfg.isolate_plugins:
+        return
+
+    cache_dir = workspace / "plugins"
+    cache_dir.mkdir(exist_ok=True)
+
+    deps = _read_plugin_deps(cfg.plugin_dirs)
+    if not deps:
+        print("[run-test] --isolate-plugins: no marketplace deps detected, "
+              "skipping setup", file=sys.stderr)
+        return
+
+    marketplaces = sorted({dep.split("@", 1)[1] for dep in deps})
+    missing = [m for m in marketplaces if m not in cfg.marketplace_sources]
+    if missing:
+        raise RuntimeError(
+            f"--isolate-plugins detected marketplace deps that have no "
+            f"--marketplace-source mapping: {', '.join(missing)}. "
+            f"Detected deps: {deps}. "
+            f"Pass --marketplace-source <name>=<source> for each."
+        )
+
+    env = os.environ.copy()
+    env["CLAUDE_CODE_PLUGIN_CACHE_DIR"] = str(cache_dir)
+
+    for name in marketplaces:
+        source = cfg.marketplace_sources[name]
+        print(f"[run-test] --isolate-plugins: marketplace add {name}={source}",
+              file=sys.stderr)
+        proc = subprocess.run(
+            ["claude", "plugin", "marketplace", "add", source],
+            env=env, capture_output=True, text=True, timeout=180,
+        )
+        if proc.returncode != 0:
+            raise RuntimeError(
+                f"marketplace add failed for {name}={source} (exit "
+                f"{proc.returncode})\nstdout: {proc.stdout[:500]}\n"
+                f"stderr: {proc.stderr[:500]}"
+            )
+
+    for dep in deps:
+        print(f"[run-test] --isolate-plugins: plugin install {dep}",
+              file=sys.stderr)
+        proc = subprocess.run(
+            ["claude", "plugin", "install", dep],
+            env=env, capture_output=True, text=True, timeout=180,
+        )
+        # Exit code is unreliable — verify via installed_plugins.json below.
+        if proc.returncode != 0:
+            raise RuntimeError(
+                f"plugin install failed for {dep} (exit {proc.returncode})\n"
+                f"stdout: {proc.stdout[:500]}\nstderr: {proc.stderr[:500]}"
+            )
+
+    installed_path = cache_dir / "installed_plugins.json"
+    if not installed_path.exists():
+        raise RuntimeError(
+            f"plugin install left no installed_plugins.json at {installed_path}"
+        )
+    try:
+        installed_data = json.loads(installed_path.read_text())
+    except (json.JSONDecodeError, OSError) as e:
+        raise RuntimeError(f"could not read {installed_path}: {e}")
+    installed_keys = set(installed_data.get("plugins", {}).keys())
+    missing_after = [d for d in deps if d not in installed_keys]
+    if missing_after:
+        raise RuntimeError(
+            f"plugin install reported success but these deps are not in "
+            f"installed_plugins.json: {missing_after}. Installed: "
+            f"{sorted(installed_keys)}"
+        )
 
 
 def _resolve_plugin_dirs(cfg: RunConfig, test: TestCase) -> list[Path]:
@@ -252,7 +371,7 @@ def run_target(cfg: RunConfig, test: TestCase, workspace: Path) -> TargetRun:
         test.prompt,
     ]
     work = cfg.project_dir if cfg.project_dir is not None else workspace / "work"
-    env = env_for_run(workspace, cfg.extra_env, cfg.isolate_config)
+    env = env_for_run(workspace, cfg.extra_env, cfg.isolate_config, cfg.isolate_plugins)
 
     proc = subprocess.run(
         cmd, cwd=work, env=env,
@@ -373,6 +492,8 @@ def run_judge(cfg: RunConfig, test: TestCase, target: TargetRun, workspace: Path
     judge_env = os.environ.copy()
     if cfg.isolate_config:
         judge_env["CLAUDE_CONFIG_DIR"] = str(workspace / "config")
+    if cfg.isolate_plugins:
+        judge_env["CLAUDE_CODE_PLUGIN_CACHE_DIR"] = str(workspace / "plugins")
 
     proc = subprocess.run(
         cmd, cwd=judge_workspace, env=judge_env,
@@ -515,6 +636,20 @@ def parse_args() -> argparse.Namespace:
                    help="Set CLAUDE_CONFIG_DIR to the workspace (full vanilla global state). "
                         "Requires ANTHROPIC_API_KEY in the environment — keychain auth "
                         "will not resolve through the redirected config dir.")
+    p.add_argument("--isolate-plugins", action="store_true",
+                   help="Set CLAUDE_CODE_PLUGIN_CACHE_DIR to a workspace subdir, "
+                        "isolating marketplaces and plugin installs from ~/.claude/plugins. "
+                        "Auth still works via keychain (no API key needed). When enabled, "
+                        "the runner reads marketplace-qualified deps from each --plugin-dir's "
+                        "plugin.json and pre-populates the isolated cache via `claude plugin "
+                        "marketplace add` + `claude plugin install`. Requires "
+                        "--marketplace-source for each marketplace name referenced.")
+    p.add_argument("--marketplace-source", action="append", default=[],
+                   metavar="NAME=SOURCE",
+                   help="Map a marketplace name to its source for `claude plugin "
+                        "marketplace add` (e.g., turtlestack=hpsgd/turtlestack). Repeatable. "
+                        "Required for each unique marketplace referenced in the deps of "
+                        "any --plugin-dir under --isolate-plugins.")
     p.add_argument("--project-dir", type=Path,
                    help="Run the target with this directory as cwd (default: a tmp "
                         "workspace dir). Use to pick up project-scoped plugins from "
@@ -538,6 +673,15 @@ def main() -> int:
         k, v = kv.split("=", 1)
         extra_env[k.strip()] = v
 
+    marketplace_sources: dict[str, str] = {}
+    for kv in args.marketplace_source:
+        if "=" not in kv:
+            print(f"Invalid --marketplace-source value (expected NAME=SOURCE): {kv}",
+                  file=sys.stderr)
+            return EXIT_INFRA
+        k, v = kv.split("=", 1)
+        marketplace_sources[k.strip()] = v.strip()
+
     cfg = RunConfig(
         test_dir=args.test_dir.resolve(),
         plugin_dirs=[p.resolve() for p in args.plugin_dir],
@@ -549,6 +693,8 @@ def main() -> int:
         keep_workspace=args.keep_workspace,
         timeout_sec=args.timeout,
         isolate_config=args.isolate_config,
+        isolate_plugins=args.isolate_plugins,
+        marketplace_sources=marketplace_sources,
         project_dir=args.project_dir.resolve() if args.project_dir else None,
     )
 
@@ -560,6 +706,8 @@ def main() -> int:
     print(f"[run-test] workspace: {workspace}", file=sys.stderr)
 
     try:
+        setup_isolated_plugins(cfg, workspace)
+
         print("[run-test] invoking target...", file=sys.stderr)
         target = run_target(cfg, test, workspace)
         print(f"[run-test] target done in {target.duration_ms}ms, "

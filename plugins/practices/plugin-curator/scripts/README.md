@@ -71,22 +71,17 @@ plugins/practices/plugin-curator/scripts/run-test.py \
   --plugin-dir ../turtlestack/plugins/research/analyst
 ```
 
-**Marketplace-qualified deps** (`"dependencies": ["analyst@turtlestack"]`) — `--plugin-dir` loads plugins as `@inline`, which doesn't satisfy `@turtlestack`-qualified deps. Install the dependency at project scope and use `--project-dir` so the test session sees it:
+**Marketplace-qualified deps** (`"dependencies": ["analyst@turtlestack"]`) — `--plugin-dir` loads plugins as `@inline`, which doesn't satisfy `@turtlestack`-qualified deps. Use `--isolate-plugins` to set up a per-run isolated plugin cache, then point `--marketplace-source` at the upstream source for each marketplace referenced. The runner reads `dependencies` from each `--plugin-dir`'s `plugin.json`, registers each marketplace in the isolated cache, and installs the deps before invoking the test:
 
 ```bash
-# One-time bootstrap in the project under test
-cd /path/to/your/marketplace
-claude plugin marketplace add hpsgd/turtlestack
-claude plugin install --project analyst@turtlestack
-
-# Then run tests with --project-dir
 .../run-test.py \
   --test-dir examples/research/manda/skills/company-assessment/partnership-eval \
   --plugin-dir plugins/research/manda \
-  --project-dir /path/to/your/marketplace
+  --isolate-plugins \
+  --marketplace-source turtlestack=hpsgd/turtlestack
 ```
 
-The plugin under test still loads from `--plugin-dir` (live working tree), but its declared dependency resolves through the project-scoped install.
+The isolated cache lives under the workspace and is torn down with it. Nothing under `~/.claude/plugins/` is touched. Auth still works through keychain — no `ANTHROPIC_API_KEY` needed because `CLAUDE_CONFIG_DIR` is left alone.
 
 ## Arguments
 
@@ -102,6 +97,8 @@ The plugin under test still loads from `--plugin-dir` (live working tree), but i
 | `--env KEY=VALUE` | none | Extra env var for the target run (repeatable) |
 | `--timeout` | 300 | Seconds per invocation (target and judge) |
 | `--isolate-config` | off | Set `CLAUDE_CONFIG_DIR` to the workspace. Requires `ANTHROPIC_API_KEY` (keychain auth doesn't resolve through the redirect) |
+| `--isolate-plugins` | off | Set `CLAUDE_CODE_PLUGIN_CACHE_DIR` to a workspace subdir, isolating marketplaces and plugin installs from `~/.claude/plugins`. Auth keeps working via keychain. The runner pre-populates the isolated cache from each `--plugin-dir`'s declared deps. |
+| `--marketplace-source NAME=SOURCE` | none | Map a marketplace name to its source for `claude plugin marketplace add` (e.g. `turtlestack=hpsgd/turtlestack`). Repeatable. Required under `--isolate-plugins` for each marketplace referenced in deps. |
 | `--project-dir` | tmp workspace | Run the target with this directory as cwd, so project-scoped plugins from that project apply (default: a fresh workspace dir) |
 | `--no-write-result` | off | Skip writing `result.md`; still emits JSON to stdout |
 
@@ -193,7 +190,7 @@ The runner makes no assumptions about your test/plugin layout — there's no `ex
 
 ## Caveats
 
-- **Auth and config bleed:** without `--isolate-config`, the test session inherits the user's global `~/.claude/` rules and enabled plugins. This can colour skill behaviour. Use `--isolate-config` plus `ANTHROPIC_API_KEY` for fully clean runs.
+- **Auth and config bleed:** without `--isolate-config` or `--isolate-plugins`, the test session inherits the user's global `~/.claude/` rules and enabled plugins. This can colour skill behaviour. `--isolate-plugins` keeps plugin state hermetic without touching auth (no API key needed) — usually what you want. `--isolate-config` is heavier (full vanilla state) but requires `ANTHROPIC_API_KEY` because `CLAUDE_CONFIG_DIR` redirects break keychain auth.
 - **Permission gates on `.claude/`:** Claude Code hard-blocks writes to `.claude/` even under `--dangerously-skip-permissions`. The path env overrides exist specifically to dodge this. New skills that write state should adopt the same override pattern.
 - **Judge non-determinism:** the judge is a model call, not a deterministic checker. Re-runs vary by ±2–3 percentage points. The runner does not currently re-run for stability — that's left to the caller.
 - **Hooks fire during runs:** `--plugin-dir` loads SessionStart hooks too. If a hook writes to `.claude/`, it will silently fail without an env override. Add overrides to the hook scripts as needed.
