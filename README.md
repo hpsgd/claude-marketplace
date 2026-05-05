@@ -465,6 +465,9 @@ Human (CEO/Founder)
 | [decompose-initiative](plugins/leadership/coordinator/skills/decompose-initiative/SKILL.md) | Break an initiative into team workstreams with dependencies | [Initiative breakdown](examples/leadership/coordinator/skills/decompose-initiative/result.md) |
 | [define-okrs](plugins/leadership/coordinator/skills/define-okrs/SKILL.md) | Company OKRs cascading to team objectives | [OKR definition](examples/leadership/coordinator/skills/define-okrs/result.md) |
 | [write-spec](plugins/leadership/coordinator/skills/write-spec/SKILL.md) | Cross-team spec with Gherkin acceptance criteria | [Spec authoring](examples/leadership/coordinator/skills/write-spec/result.md) |
+| [write-meeting-agenda](plugins/leadership/coordinator/skills/write-meeting-agenda/SKILL.md) | Synthesise the session discussion into a structured meeting agenda | [Agenda writing](examples/leadership/coordinator/skills/write-meeting-agenda/result.md) |
+| [write-meeting-qanda](plugins/leadership/coordinator/skills/write-meeting-qanda/SKILL.md) | Expand an agenda into a Q-and-A document with talking points, questions, notes capture | [Q-and-A writing](examples/leadership/coordinator/skills/write-meeting-qanda/result.md) |
+| [write-meeting-pdf](plugins/leadership/coordinator/skills/write-meeting-pdf/SKILL.md) | Render the Q-and-A document as a printable PDF for tablet note-taking (Remarkable Paper Pro) | [PDF rendering](examples/leadership/coordinator/skills/write-meeting-pdf/result.md) |
 | bootstrap-project | Scaffold docs via installed agents | N/A |
 
 #### [CPO](plugins/leadership/cpo/agents/cpo.md)
