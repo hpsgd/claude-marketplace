@@ -32,8 +32,9 @@ Please now run:
 - [ ] PASS: Items under topics are concrete and traceable to the discussion (Q1 8% revenue beat, EBITDA margin compression, runway 14→19 months, 12/15 engineering hires, GTM hiring decision, roadmap swap, EU expansion, governance items).
 - [ ] PASS: The GTM hiring item is framed as a decision needing board steer, not as a generic discussion item — reflecting the explicit instruction in the prompt.
 - [ ] PASS: No fabricated content — does not invent attendees, financial figures, or items not present in the discussion.
-- [ ] PARTIAL: Output suggests `/coordinator:write-meeting-qa` as the next step.
+- [ ] PARTIAL: Output suggests `/coordinator:write-meeting-qanda` as the next step.
 - [ ] PASS: Slug in folder name matches the rule (lowercase, dashes, no special chars) — e.g. `q2-board-meeting`.
+- [ ] PASS: Every category heading includes a per-topic time allocation in `(N min)` form — e.g. `## Financial Performance (25 min)`. The total across categories fits within the 90-minute meeting duration with reasonable buffer.
 
 ## Output expectations
 
@@ -42,5 +43,6 @@ Please now run:
 - [ ] PASS: Output file has at least one category covering Financials/Performance (Q1 results, EBITDA, runway), one covering People (hiring), one covering Product/Strategy (roadmap swap, EU expansion), and a Governance category. Categories may be named differently but must cover these themes.
 - [ ] PASS: Output file's items reproduce the specific facts — 8% revenue beat, 2.5 point EBITDA compression, 14→19 month runway, 12/15 vs 0/3 hires, swap of analytics dashboard with workflow automation, EU H2 vs H1-next-year choice — not abstracted into generic phrasing like "review financial performance".
 - [ ] PASS: Output file flags the GTM hiring item with language indicating a decision/steer is required (e.g. "Decision:", "Board steer needed:", "DECIDE:") rather than just listing it as a topic.
-- [ ] PASS: Output file does NOT include a Q&A section, talking points, or response capture areas — those belong to the sibling skill, not this one.
+- [ ] PASS: Output file does NOT include a Q-and-A section, talking points, or response capture areas — those belong to the sibling skill, not this one.
+- [ ] PASS: Output file's category headings each carry a `(N min)` time allocation suffix and the allocations sum to ≤90 minutes. No category heading is missing the time allocation.
 - [ ] PARTIAL: Output file's summary mentions success criteria for the meeting (e.g. board acknowledgement of runway, agreement on GTM approach, roadmap swap approval, EU direction).

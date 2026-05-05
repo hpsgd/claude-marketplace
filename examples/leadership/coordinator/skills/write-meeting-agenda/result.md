@@ -29,13 +29,11 @@ Captured from a real headless invocation of the skill/agent.
 
 ### Chat response
 
-Done. Agenda written to:
+**Agenda written** — 90 minutes allocated across five categories, with both discussion items (financial results, roadmap, expansion) and decision items flagged (GTM hiring approach).
 
-```
-/private/var/folders/nn/d2s0hr6x7p73b0gr6gsqp9yw0000gp/T/eval-1777979682-fafa4ce6/work/docs/meetings/2026-05-15-q2-board-meeting/agenda.md
-```
+**Path:** `docs/meetings/2026-05-15-q2-board-meeting/agenda.md`
 
-The agenda captures your four main sections with two explicit **DECISION** items flagged (GTM backfill and EU expansion timing), as you specified. Next step: run `/coordinator:write-meeting-qa` to expand this into a Q&A document with talking points and capture space for the CFO's financial bridge, hiring trade-offs, and board steer on both decisions.
+**Next step:** Run `/coordinator:write-meeting-qanda` to expand this into a Q-and-A document with talking points, anticipated questions, and space for note-taking during the meeting. That becomes your printed PDF for use during the board call.
 
 ### Artifacts written
 
@@ -59,31 +57,40 @@ attendees:
 
 ## Summary
 
-Review Q1 financial performance and the extended cash runway following the SAFE round close. Address hiring progress and staffing strategy for GTM, approve a customer-driven product roadmap shift, and decide on EU market expansion timing. Standard governance items close the meeting.
+Review Q1 financial performance and cash runway implications from the March SAFE round close. Approve decisions on GTM hiring approach, product roadmap prioritisation, and EU market expansion timing. The meeting requires board input on resource constraints, product strategy, and risk appetite.
 
-## Financial Performance & Cash Position
+## Q1 Financial Results & Cash Position (20 min)
 
-- Q1 results: 8% revenue outperformance; EBITDA margin compressed 2.5 points (rebrand costs and accelerated R&D hiring)
-- Cash runway extended 14 → 19 months post-SAFE round (March close)
-- Series B deferred two quarters — board acknowledgement and confidence in extended runway
+- Q1 revenue 8% ahead of plan
+- EBITDA margin compression by 2.5 points (one-off rebrand costs, accelerated R&D hiring)
+- CFO to walk through the P&L bridge
+- Cash runway extended from 14 to 19 months (SAFE round closed March)
+- Series B deferral by two quarters — board acknowledgement needed
 
-## Organizational & Hiring
+## Hiring Update & GTM Decision (20 min)
 
-- Engineering hiring: 12 of 15 planned hires landed (80%)
-- GTM hiring: 0 of 3 planned hires (head of GTM not yet onboarded)
-- **DECISION: GTM backfill strategy — delay remaining GTM hires until head of GTM onboarded, or backfill via contractors in parallel?**
+- Engineering: 12 of 15 planned hires landed
+- GTM: 0 of 3 planned hires landed (head of GTM not yet onboarded)
+- **Decision required**: backfill GTM roles via contractors while waiting for head of GTM to ramp, or defer GTM hires until head of GTM is in place
 
-## Product & Strategic Direction
+## Product Roadmap Prioritisation (15 min)
 
-- Customer feedback from design partner programme elevates workflow automation above analytics dashboard in priority
-- Approval sought to swap roadmap priorities for H2
-- **DECISION: EU market expansion timing — enter H2 2026 (fast, stretches team) or wait until H1 2027 (slower, allows country lead hire first)?**
+- Design partner programme feedback: workflow automation ranked higher than analytics dashboard
+- CPO seeks approval to swap them in H2 roadmap
+- Approval needed to execute resequencing
 
-## Governance
+## Strategic Expansion Decision (20 min)
 
-- Minutes from previous meeting
-- Conflicts of interest declaration
-- Any other business (AOB)
+- EU market expansion timing
+- Option A: accelerate to H2 (faster entry, stretches team)
+- Option B: defer to H1 next year (allows time to hire country lead first)
+- Board risk appetite input needed
+
+## Governance (15 min)
+
+- Minutes and actions from last meeting
+- Conflicts of interest
+- Any other business
 
 ```
 
@@ -92,33 +99,35 @@ Review Q1 financial performance and the extended cash runway following the SAFE 
 | Field | Value |
 |---|---|
 | Verdict | PASS |
-| Score | 15.0/15.0 (100%) |
+| Score | 17.0/17.0 (100%) |
 | Evaluated | 2026-05-05 |
-| Target duration | 25644 ms |
-| Target cost | $0.0700 |
+| Target duration | 38736 ms |
+| Target cost | $0.0785 |
 | Permission denials | 0 |
 
 ### Criteria
 
 | # | Criterion | Result | Evidence |
 |---|---|---|---|
-| c1 | Skill writes the agenda to a file at `docs/meetings/2026-05-15-q2-board-meeting/agenda.md` (or a path with the same date prefix and a slug derived from "Q2 Board Meeting"). Confirms the absolute path in chat output. | PASS | Chat output confirms: `/private/var/folders/nn/d2s0hr6x7p73b0gr6gsqp9yw0000gp/T/eval-1777979682-fafa4ce6/work/docs/meetings/2026-05-15-q2-board-meeting/agenda.md`. Date prefix matches (2026-05-15) and slug matches (q2-board-meeting). |
-| c2 | Agenda frontmatter includes `title`, `date` (2026-05-15), `duration_minutes` (90), `type` (board), and an `attendees` list with all five named attendees. | PASS | Frontmatter has `title: Q2 Board Meeting`, `date: 2026-05-15`, `duration_minutes: 90`, `type: board`, and attendees listing all five: Sam Patel (CEO), Rita Cho (CFO), Jordan Liu (Chair), Casey Morgan (non-exec director), Devi Iyer (non-exec director). |
-| c3 | Agenda has a `## Summary` section of 2-3 sentences describing the meeting purpose. Summary references the actual content of the discussion (Q1 results, runway, GTM steer, EU expansion) — not generic board-meeting language. | PASS | The `## Summary` has exactly 3 sentences and references: Q1 financial performance, extended cash runway (SAFE round), hiring/GTM staffing strategy, customer-driven product roadmap shift, and EU market expansion timing — all traceable to the discussion. |
-| c4 | Topics are categorised into 2-5 logical groupings using `##` headings — not a flat list of every item. | PASS | Four `##` category sections: `Financial Performance & Cash Position`, `Organizational & Hiring`, `Product & Strategic Direction`, `Governance`. Items are grouped, not listed flat. |
-| c5 | Items under topics are concrete and traceable to the discussion (Q1 8% revenue beat, EBITDA margin compression, runway 14→19 months, 12/15 engineering hires, GTM hiring decision, roadmap swap, EU expansion, governance items). | PASS | All eight elements appear: "8% revenue outperformance", "EBITDA margin compressed 2.5 points", "Cash runway extended 14 → 19 months", "12 of 15 planned hires landed", "GTM hiring: 0 of 3 planned hires", "workflow automation above analytics dashboard", "EU market expansion timing — enter H2 2026... or wait until H1 2027", and minutes/conflicts/AOB governance items. |
-| c6 | The GTM hiring item is framed as a decision needing board steer, not as a generic discussion item — reflecting the explicit instruction in the prompt. | PASS | Item reads: "**DECISION: GTM backfill strategy — delay remaining GTM hires until head of GTM onboarded, or backfill via contractors in parallel?**" — explicitly bolded as a DECISION item with the two options articulated. |
-| c7 | No fabricated content — does not invent attendees, financial figures, or items not present in the discussion. | PASS | Every attendee, figure (8%, 2.5 points, 14→19 months, 12/15, 0/3), and agenda item maps directly to content from the prompt. No invented names, metrics, or topics detected. |
-| c8 | Output suggests `/coordinator:write-meeting-qa` as the next step. | PARTIAL | Chat response states: "Next step: run `/coordinator:write-meeting-qa` to expand this into a Q&A document with talking points and capture space for the CFO's financial bridge, hiring trade-offs, and board steer on both decisions." |
-| c9 | Slug in folder name matches the rule (lowercase, dashes, no special chars) — e.g. `q2-board-meeting`. | PASS | Folder slug is `q2-board-meeting` — all lowercase, words joined by dashes, no special characters. |
-| c10 | Output file's frontmatter has `duration_minutes: 90` and `type: board` exactly — not 60 (default) and not "Discussion". | PASS | Frontmatter shows `duration_minutes: 90` and `type: board` exactly as required. |
-| c11 | Output file's `attendees:` list contains all five named individuals from the prompt — Sam Patel (CEO), Rita Cho (CFO), Jordan Liu (Chair), Casey Morgan, Devi Iyer. Roles preserved where given. | PASS | Attendees list: `Sam Patel (CEO)`, `Rita Cho (CFO)`, `Jordan Liu (Chair)`, `Casey Morgan (non-exec director)`, `Devi Iyer (non-exec director)` — all five with roles preserved. |
-| c12 | Output file has at least one category covering Financials/Performance (Q1 results, EBITDA, runway), one covering People (hiring), one covering Product/Strategy (roadmap swap, EU expansion), and a Governance category. Categories may be named differently but must cover these themes. | PASS | `Financial Performance & Cash Position` covers Q1 results, EBITDA, runway. `Organizational & Hiring` covers hiring. `Product & Strategic Direction` covers roadmap swap and EU expansion. `Governance` covers minutes, conflicts, AOB. |
-| c13 | Output file's items reproduce the specific facts — 8% revenue beat, 2.5 point EBITDA compression, 14→19 month runway, 12/15 vs 0/3 hires, swap of analytics dashboard with workflow automation, EU H2 vs H1-next-year choice — not abstracted into generic phrasing like "review financial performance". | PASS | All six specific facts appear verbatim or near-verbatim: "8% revenue outperformance", "2.5 points", "14 → 19 months", "12 of 15" and "0 of 3", "workflow automation above analytics dashboard", "H2 2026... or wait until H1 2027". |
-| c14 | Output file flags the GTM hiring item with language indicating a decision/steer is required (e.g. "Decision:", "Board steer needed:", "DECIDE:") rather than just listing it as a topic. | PASS | Item is prefixed with bold `**DECISION:**` and presents two explicit options for the board to choose between, clearly framing it as a required decision rather than a discussion. |
-| c15 | Output file does NOT include a Q&A section, talking points, or response capture areas — those belong to the sibling skill, not this one. | PASS | The agenda file contains only frontmatter, a Summary section, four categorical `##` sections with bullet items. No Q&A, talking points, or capture fields appear anywhere in the file. |
-| c16 | Output file's summary mentions success criteria for the meeting (e.g. board acknowledgement of runway, agreement on GTM approach, roadmap swap approval, EU direction). | PARTIAL | Summary explicitly frames two success criteria: "approve a customer-driven product roadmap shift" and "decide on EU market expansion timing". Board acknowledgement of runway is mentioned in the body ("board acknowledgement and confidence in extended runway") but not in the summary. GTM agreement is not framed as a success criterion in the summary. Partial coverage of the four examples given. |
+| c1 | Skill writes the agenda to a file at `docs/meetings/2026-05-15-q2-board-meeting/agenda.md` (or a path with the same date prefix and a slug derived from "Q2 Board Meeting"). Confirms the absolute path in chat output. | PASS | Artifact written to `work/docs/meetings/2026-05-15-q2-board-meeting/agenda.md`. Chat output confirms: "**Path:** `docs/meetings/2026-05-15-q2-board-meeting/agenda.md`". |
+| c2 | Agenda frontmatter includes `title`, `date` (2026-05-15), `duration_minutes` (90), `type` (board), and an `attendees` list with all five named attendees. | PASS | Frontmatter contains `title: Q2 Board Meeting`, `date: 2026-05-15`, `duration_minutes: 90`, `type: board`, and all five attendees listed with roles. |
+| c3 | Agenda has a `## Summary` section of 2-3 sentences describing the meeting purpose. Summary references the actual content of the discussion (Q1 results, runway, GTM steer, EU expansion) — not generic board-meeting language. | PASS | Three-sentence `## Summary` reads: "Review Q1 financial performance and cash runway implications from the March SAFE round close. Approve decisions on GTM hiring approach, product roadmap prioritisation, and EU market expansion timing. The meeting requires board input on resource constraints, product strategy, and risk appetite." References Q1 results, runway, GTM, EU, and product strategy specifically. |
+| c4 | Topics are categorised into 2-5 logical groupings using `##` headings — not a flat list of every item. | PASS | Five `##` category headings: Q1 Financial Results & Cash Position, Hiring Update & GTM Decision, Product Roadmap Prioritisation, Strategic Expansion Decision, Governance. Five groupings is within the 2-5 range. |
+| c5 | Items under topics are concrete and traceable to the discussion (Q1 8% revenue beat, EBITDA margin compression, runway 14→19 months, 12/15 engineering hires, GTM hiring decision, roadmap swap, EU expansion, governance items). | PASS | All specifics present: "Q1 revenue 8% ahead of plan", "EBITDA margin compression by 2.5 points", "Cash runway extended from 14 to 19 months", "Engineering: 12 of 15 planned hires landed", "GTM: 0 of 3 planned hires", roadmap swap mentioned, EU H2 vs H1 options, governance items listed. |
+| c6 | The GTM hiring item is framed as a decision needing board steer, not as a generic discussion item — reflecting the explicit instruction in the prompt. | PASS | Under "Hiring Update & GTM Decision": "**Decision required**: backfill GTM roles via contractors while waiting for head of GTM to ramp, or defer GTM hires until head of GTM is in place" — bolded decision framing with two concrete options. |
+| c7 | No fabricated content — does not invent attendees, financial figures, or items not present in the discussion. | PASS | All five attendees match the prompt exactly. All figures (8%, 2.5 points, 14→19 months, 12/15, 0/3) are sourced directly from the prompt. No invented items. |
+| c8 | Output suggests `/coordinator:write-meeting-qanda` as the next step. | PARTIAL | Chat output states: "Run `/coordinator:write-meeting-qanda` to expand this into a Q-and-A document with talking points, anticipated questions, and space for note-taking during the meeting." |
+| c9 | Slug in folder name matches the rule (lowercase, dashes, no special chars) — e.g. `q2-board-meeting`. | PASS | Folder slug is `q2-board-meeting` — all lowercase, hyphen-separated, no special characters. |
+| c10 | Every category heading includes a per-topic time allocation in `(N min)` form — e.g. `## Financial Performance (25 min)`. The total across categories fits within the 90-minute meeting duration with reasonable buffer. | PASS | All five headings carry time suffixes: (20 min), (20 min), (15 min), (20 min), (15 min). Total = 90 min, exactly at the meeting duration limit. |
+| c11 | Output file's frontmatter has `duration_minutes: 90` and `type: board` exactly — not 60 (default) and not "Discussion". | PASS | Frontmatter shows `duration_minutes: 90` and `type: board` exactly as required. |
+| c12 | Output file's `attendees:` list contains all five named individuals from the prompt — Sam Patel (CEO), Rita Cho (CFO), Jordan Liu (Chair), Casey Morgan, Devi Iyer. Roles preserved where given. | PASS | Attendees list: "Sam Patel (CEO)", "Rita Cho (CFO)", "Jordan Liu (Chair)", "Casey Morgan (non-exec director)", "Devi Iyer (non-exec director)" — all five with roles preserved. |
+| c13 | Output file has at least one category covering Financials/Performance (Q1 results, EBITDA, runway), one covering People (hiring), one covering Product/Strategy (roadmap swap, EU expansion), and a Governance category. Categories may be named differently but must cover these themes. | PASS | "Q1 Financial Results & Cash Position" covers financials/performance; "Hiring Update & GTM Decision" covers people; "Product Roadmap Prioritisation" and "Strategic Expansion Decision" cover product/strategy; "Governance" covers governance. |
+| c14 | Output file's items reproduce the specific facts — 8% revenue beat, 2.5 point EBITDA compression, 14→19 month runway, 12/15 vs 0/3 hires, swap of analytics dashboard with workflow automation, EU H2 vs H1-next-year choice — not abstracted into generic phrasing like "review financial performance". | PASS | "Q1 revenue 8% ahead of plan", "EBITDA margin compression by 2.5 points", "Cash runway extended from 14 to 19 months", "Engineering: 12 of 15 planned hires landed", "GTM: 0 of 3", "workflow automation ranked higher than analytics dashboard", "Option A: accelerate to H2 (faster entry, stretches team)" and "Option B: defer to H1 next year (allows time to hire country lead first)". |
+| c15 | Output file flags the GTM hiring item with language indicating a decision/steer is required (e.g. "Decision:", "Board steer needed:", "DECIDE:") rather than just listing it as a topic. | PASS | "**Decision required**: backfill GTM roles via contractors while waiting for head of GTM to ramp, or defer GTM hires until head of GTM is in place" — bold decision marker with explicit options. |
+| c16 | Output file does NOT include a Q-and-A section, talking points, or response capture areas — those belong to the sibling skill, not this one. | PASS | The agenda file contains only frontmatter, a summary, and five category sections with bullet-point items. No Q-and-A, talking points, or response capture areas are present. |
+| c17 | Output file's category headings each carry a `(N min)` time allocation suffix and the allocations sum to ≤90 minutes. No category heading is missing the time allocation. | PASS | All five headings carry `(N min)`: 20+20+15+20+15 = 90 minutes, which equals but does not exceed the 90-minute meeting duration. No heading is missing the suffix. |
+| c18 | Output file's summary mentions success criteria for the meeting (e.g. board acknowledgement of runway, agreement on GTM approach, roadmap swap approval, EU direction). | PARTIAL | Summary states "Approve decisions on GTM hiring approach, product roadmap prioritisation, and EU market expansion timing" — covers GTM agreement, roadmap approval, and EU direction. Runway is mentioned as context ("cash runway implications from the March SAFE round close") but not framed explicitly as a success criterion requiring board acknowledgement. |
 
 ### Notes
 
-The skill produced a near-perfect agenda. The file path, slug, frontmatter, and all five attendees with roles are exactly correct. All six specific numerical facts from the discussion are reproduced without abstraction. The GTM item is correctly elevated to a DECISION with options presented, honouring the explicit instruction in the prompt. The EU expansion decision is also flagged as a DECISION. Four well-grouped thematic categories with a Governance section close the document. The file contains no Q&A, talking points, or extraneous content. The one minor gap is in c16: the summary foregrounds roadmap approval and EU direction as success criteria but does not explicitly frame board acknowledgement of the runway or the GTM hiring steer as outcomes the meeting must achieve — those appear only in the body. Given the PARTIAL ceiling on c8 and c16, both receive 0.5, yielding a perfect 15/15.
+The output is exceptionally strong across all criteria. The artifact correctly synthesises the discussion into a structured, frontmatter-correct agenda file with all five attendees, accurate financial figures, decision-flagged GTM item, time-allocated category headings summing to exactly 90 minutes, and no fabricated content. The summary is tight and specific (not generic). The only criteria that are not full PASS are the two PARTIAL-ceiling items: c8 (next-step suggestion) is fully present in the chat output, and c18 (success criteria in summary) partially covers the required outcomes but does not explicitly frame runway extension as a board acknowledgement target. Both score at their PARTIAL ceiling of 0.5. The skill demonstrates clean separation from the sibling Q-and-A skill with no leakage. Full score within the available ceiling.

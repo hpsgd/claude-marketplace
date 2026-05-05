@@ -1,14 +1,14 @@
 ---
-name: write-meeting-qa
-description: "Expand a meeting agenda into a structured Q&A document — talking points, questions, and capture space for responses per item. The output mirrors the agenda structure and is the foundation for a printable note-taking PDF (e.g. for Remarkable Paper Pro). Defaults to the most recent agenda under `docs/meetings/`."
+name: write-meeting-qanda
+description: "Expand a meeting agenda into a structured Q-and-A document — talking points, questions, and capture space for responses per item. The output mirrors the agenda structure and is the foundation for a printable note-taking PDF (e.g. for Remarkable Paper Pro). Defaults to the most recent agenda under `docs/meetings/`."
 argument-hint: "[path to agenda.md] [--dir <path>]"
 user-invocable: true
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep
 ---
 
-# Write Meeting Q&A
+# Write Meeting Q-and-A
 
-Take an existing meeting agenda and expand each item into a Q&A structure: talking points to anchor on, specific questions to ask, and a labelled capture area for the response. The output is a single file mirroring the agenda's structure, intended as the source for a printable PDF used during the meeting itself.
+Take an existing meeting agenda and expand each item into a Q-and-A structure: talking points to anchor on, specific questions to ask, and a labelled capture area for the response. The output is a single file mirroring the agenda's structure, intended as the source for a printable PDF used during the meeting itself.
 
 ## Step 1: Resolve agenda path to absolute
 
@@ -40,9 +40,10 @@ Read the resolved agenda. Extract:
 
 - Frontmatter (`title`, `date`, `attendees`, `duration_minutes`, `type`)
 - Summary
-- Categories (top-level `##` headings after Summary) and the items beneath each
+- Categories (top-level `##` headings after Summary) — preserve any `(N min)` time-allocation suffix verbatim
+- Items beneath each category
 
-The Q&A document must mirror this structure exactly — same categories, same items, same order. Don't reorder, merge, or split.
+The Q-and-A document must mirror this structure exactly — same categories with their time allocations, same items, same order. Don't reorder, merge, or split.
 
 ## Step 3: Expand each item
 
@@ -56,7 +57,7 @@ Source talking points and questions from the session discussion that produced th
 
 ## Step 4: Write the Q&A document
 
-**Use the `Write` tool to create `qa.md` at the absolute path of the agenda's folder** (replace `agenda.md` with `qa.md` in the resolved absolute path from Step 1). Do not claim the file was written without calling `Write`. In a non-interactive session, do not stop to ask for confirmation — write the file and report the path.
+**Use the `Write` tool to create `qanda.md` at the absolute path of the agenda's folder** (replace `agenda.md` with `qanda.md` in the resolved absolute path from Step 1). Do not claim the file was written without calling `Write`. In a non-interactive session, do not stop to ask for confirmation — write the file and report the path.
 
 Content template:
 
@@ -67,11 +68,11 @@ title: "<title>"
 date: <YYYY-MM-DD>
 ---
 
-# Q&A: <title>
+# Q-and-A: <title>
 
 > Foundation document for meeting note-taking. The printable PDF is generated from this file.
 
-## <Category 1>
+## <Category 1> (N min)
 
 ### <Item 1.1>
 
@@ -107,12 +108,12 @@ date: <YYYY-MM-DD>
 
 ---
 
-## <Category 2>
+## <Category 2> (N min)
 
 ...
 ```
 
-Use a horizontal rule (`---`) between items so the downstream PDF generator has a clean section boundary. Preserve the agenda's exact category and item titles — character-for-character.
+Use a horizontal rule (`---`) between items so the downstream PDF generator has a clean section boundary. Preserve the agenda's exact category and item titles — including the `(N min)` time-allocation suffix — character-for-character.
 
 ## Step 5: Confirm path
 

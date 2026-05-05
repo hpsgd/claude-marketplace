@@ -1,6 +1,6 @@
 ---
 name: write-meeting-agenda
-description: "Synthesise the preceding session discussion into a structured meeting agenda — high-level summary, categorised topics, and specific items per topic. Defaults to writing under `docs/meetings/<YYYY-MM-DD>-<slug>/agenda.md`. Pair with `/coordinator:write-meeting-qa` to produce the supporting Q&A document used to generate a printable note-taking PDF."
+description: "Synthesise the preceding session discussion into a structured meeting agenda — high-level summary, categorised topics, and specific items per topic. Defaults to writing under `docs/meetings/<YYYY-MM-DD>-<slug>/agenda.md`. Pair with `/coordinator:write-meeting-qanda` to produce the supporting Q-and-A document used to generate a printable note-taking PDF."
 argument-hint: "[meeting title hint] [--dir <path>]"
 user-invocable: true
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep
@@ -10,7 +10,7 @@ allowed-tools: Read, Write, Edit, Bash, Glob, Grep
 
 Generate a meeting agenda from the discussion that has happened in this session. The agenda captures what to cover at the meeting — a high-level summary, categorised topics, and specific items under each topic.
 
-The agenda is the foundation document. The companion Q&A document (built by `/coordinator:write-meeting-qa`) expands each item into talking points, questions, and capture space for responses, which is then converted into a printable PDF for note-taking during the meeting.
+The agenda is the foundation document. The companion Q-and-A document (built by `/coordinator:write-meeting-qanda`) expands each item into talking points, questions, and capture space for responses, which is then converted into a printable PDF for note-taking during the meeting.
 
 ## Step 1: Resolve target directory to an absolute path
 
@@ -52,13 +52,14 @@ If running in an interactive session and any field is genuinely ambiguous, ask t
 
 ## Step 4: Synthesise the agenda
 
-Read back over the relevant session discussion. Extract three things:
+Read back over the relevant session discussion. Extract four things:
 
 1. **High-level summary** — 2-3 sentences. What the meeting is for. What success looks like at the end.
 2. **Categorised topics** — 2-5 logical groupings. Each becomes a top-level section heading.
 3. **Items per topic** — concrete things to discuss within each. Specific, not abstract.
+4. **Per-topic time allocations** — for each category, an estimate in minutes. Total across categories should fit within the overall meeting duration with some buffer (typically 10-15% reserved for transitions and overruns).
 
-Source content from the session, not from training knowledge. If the discussion is too thin to support a real agenda, stop and tell the user — don't pad with generic prompts.
+Source content from the session, not from training knowledge. If the discussion is too thin to support a real agenda, stop and tell the user — don't pad with generic prompts. If time allocations weren't discussed explicitly, allocate proportionally to the depth/importance of each topic and note them as inferred.
 
 ## Step 5: Write the agenda
 
@@ -72,7 +73,7 @@ If the discussion centred on different content (e.g. Q1 financial results) but t
 
 **Use the `Write` tool to create the agenda file at the absolute path `<BASE>/<YYYY-MM-DD>-<slug>/agenda.md`** (where `<BASE>` is the resolved absolute directory from Step 1). Do not claim the file was written without calling `Write`. The `Write` tool creates parent folders automatically.
 
-Agenda content:
+Agenda content. Each category heading must include the inline time allocation `(N min)` — this is the source of truth for the downstream Q-and-A document and the printed PDF cover page:
 
 ```markdown
 ---
@@ -90,12 +91,12 @@ attendees:
 
 <2-3 sentence summary>
 
-## <Category 1>
+## <Category 1> (N min)
 
 - <item>
 - <item>
 
-## <Category 2>
+## <Category 2> (N min)
 
 - <item>
 - <item>
@@ -103,7 +104,7 @@ attendees:
 
 ## Step 6: Confirm path
 
-Output the absolute path to the agenda. Suggest `/coordinator:write-meeting-qa` as the next step if the user wants the supporting Q&A document.
+Output the absolute path to the agenda. Suggest `/coordinator:write-meeting-qanda` as the next step if the user wants the supporting Q-and-A document.
 
 ## Rules
 
@@ -112,7 +113,8 @@ Output the absolute path to the agenda. Suggest `/coordinator:write-meeting-qa` 
 - **One agenda per meeting.** If two unrelated meetings surfaced in the discussion, write two agendas via separate invocations.
 - **Preserve the user's framing.** If the discussion used specific terminology, carry it through. Don't translate into consulting-speak.
 - **Don't invent attendees.** Empty list is better than wrong names.
+- **Always include `(N min)` on every category heading.** The downstream Q-and-A skill and the PDF generator parse this from the heading. A category without a time allocation breaks the chain.
 
 ## Related Skills
 
-- `/coordinator:write-meeting-qa` — expand the agenda into a Q&A document with talking points, questions, and capture space for responses. Run this after the agenda exists.
+- `/coordinator:write-meeting-qanda` — expand the agenda into a Q-and-A document with talking points, questions, and capture space for responses. Run this after the agenda exists.
