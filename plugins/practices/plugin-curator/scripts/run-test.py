@@ -20,7 +20,11 @@ Exit codes:
   0  PASS (>= 80%)
   1  PARTIAL (>= 60%)
   2  FAIL (< 60%)
-  3+ infrastructure error (workspace setup, claude invocation, judge failure)
+  3  infrastructure error (workspace setup, claude crash, judge failure)
+  4  target API error (content filter block, invalid_request_error, rate limit) —
+     the target invocation produced a structured error response, not an
+     infra crash. Distinct so callers can decide whether to retry, soften
+     the prompt, or escalate to Anthropic.
 """
 
 from __future__ import annotations
@@ -41,6 +45,13 @@ EXIT_PASS = 0
 EXIT_PARTIAL = 1
 EXIT_FAIL = 2
 EXIT_INFRA = 3
+EXIT_TARGET_API_ERROR = 4
+
+
+class TargetAPIError(RuntimeError):
+    """Target claude invocation returned a structured error response (e.g. content
+    filter block, rate limit, invalid request). Distinct from a runner-side
+    infrastructure failure — the runner did its job, the API rejected the call."""
 
 
 @dataclass
@@ -379,15 +390,59 @@ def run_target(cfg: RunConfig, test: TestCase, workspace: Path) -> TargetRun:
         cmd, cwd=work, env=env,
         capture_output=True, text=True, timeout=cfg.timeout_sec,
     )
-    if proc.returncode != 0:
-        raise RuntimeError(
-            f"claude target invocation failed (exit {proc.returncode})\n"
-            f"stderr: {proc.stderr[:2000]}"
+
+    # Persist raw stdout/stderr unconditionally — most useful exactly when the
+    # invocation failed and the operator needs to see what claude returned.
+    # Survives only if --keep-workspace is set; the inline error message below
+    # is the primary signal for the cleanup-on-exit case.
+    debug_dir = workspace / "target-debug"
+    debug_dir.mkdir(exist_ok=True)
+    (debug_dir / "stdout.json").write_text(proc.stdout or "")
+    (debug_dir / "stderr.txt").write_text(proc.stderr or "")
+
+    # Parse stdout BEFORE checking exit code. claude reports API/policy errors
+    # (content filter blocks, invalid_request_error, rate limits) as structured
+    # JSON in stdout while exiting non-zero. Checking returncode first hides
+    # these as opaque "infrastructure errors" and discards the actionable detail.
+    data: dict | None = None
+    parse_err: json.JSONDecodeError | None = None
+    if proc.stdout.strip():
+        try:
+            data = json.loads(proc.stdout)
+        except json.JSONDecodeError as e:
+            parse_err = e
+
+    if data is not None and data.get("is_error"):
+        result = data.get("result", "") or "(no result text in response)"
+        request_id = data.get("request_id") or "unknown"
+        raise TargetAPIError(
+            f"target returned an error response (exit {proc.returncode}, "
+            f"request_id={request_id}): {result[:1500]}\n"
+            f"raw stdout/stderr saved to {debug_dir} "
+            "(use --keep-workspace to retain after run)"
         )
-    try:
-        data = json.loads(proc.stdout)
-    except json.JSONDecodeError as e:
-        raise RuntimeError(f"target returned non-JSON output: {e}\n{proc.stdout[:1000]}")
+
+    if proc.returncode != 0:
+        # No structured error from the target — genuine runner-side failure
+        # (claude crashed, bad flags, missing binary, etc.).
+        stdout_state = "empty" if not proc.stdout.strip() else "unparseable JSON"
+        msg = (
+            f"claude target invocation failed (exit {proc.returncode}); "
+            f"stdout was {stdout_state}\n"
+            f"stderr: {proc.stderr[:2000]}\n"
+            f"raw stdout/stderr saved to {debug_dir} "
+            "(use --keep-workspace to retain after run)"
+        )
+        if parse_err is not None:
+            msg += f"\nstdout parse error: {parse_err}"
+        raise RuntimeError(msg)
+
+    if data is None:
+        raise RuntimeError(
+            f"target returned non-JSON output ({parse_err})\n"
+            f"raw stdout saved to {debug_dir / 'stdout.json'} "
+            "(use --keep-workspace to retain after run)"
+        )
 
     text_artifacts, binary_artifacts = _snapshot_artifacts(workspace)
 
@@ -867,6 +922,9 @@ def main() -> int:
 if __name__ == "__main__":
     try:
         sys.exit(main())
+    except TargetAPIError as e:
+        print(f"[run-test] target API error: {e}", file=sys.stderr)
+        sys.exit(EXIT_TARGET_API_ERROR)
     except Exception as e:
         print(f"[run-test] infrastructure error: {e}", file=sys.stderr)
         sys.exit(EXIT_INFRA)

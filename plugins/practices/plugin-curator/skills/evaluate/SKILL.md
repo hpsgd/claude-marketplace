@@ -73,9 +73,10 @@ Exit code reflects the verdict:
 - `0` PASS (≥ 80%)
 - `1` PARTIAL (≥ 60%)
 - `2` FAIL (< 60%)
-- `3+` infrastructure error (workspace setup, claude invocation, judge response unparseable)
+- `3` infrastructure error (workspace setup, claude crash, judge response unparseable)
+- `4` target API error — the target invocation returned a structured error response (content-filter block, `invalid_request_error`, rate limit). Not an infra failure: the runner did its job, the API rejected the call. The error message includes the API error text and `request_id`.
 
-Treat exit codes ≥ 3 as failures of the harness, not the skill — record them as `infra-error` in the report and continue.
+Treat exit codes ≥ 3 as failures of the harness, not the skill — record them as `infra-error` (3) or `api-error` (4) in the report and continue. For exit 4, capture the API error message and `request_id` so the operator can decide whether to retry, soften the prompt, switch model, or escalate to Anthropic.
 
 For long batches, run sequentially. Parallel runs are safe in principle (each gets its own tmp workspace) but cost-of-debugging outweighs the speed-up for now.
 
