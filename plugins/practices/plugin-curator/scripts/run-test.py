@@ -32,7 +32,6 @@ import re
 import shutil
 import subprocess
 import sys
-import tempfile
 import time
 import uuid
 from dataclasses import dataclass, field
@@ -119,7 +118,7 @@ def parse_test_md(test_dir: Path) -> TestCase:
     sections[current] = "\n".join(buf).strip()
 
     scenario = sections.get("_preamble", "").strip()
-    scenario_lines = [l for l in scenario.splitlines() if l.strip() and not l.startswith("#")]
+    scenario_lines = [line for line in scenario.splitlines() if line.strip() and not line.startswith("#")]
     scenario_text = " ".join(scenario_lines).strip()
 
     prompt = sections.get("prompt", "").strip()
