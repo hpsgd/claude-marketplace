@@ -553,20 +553,44 @@ def run_judge(cfg: RunConfig, test: TestCase, target: TargetRun, workspace: Path
         input=user_msg,
         capture_output=True, text=True, timeout=cfg.timeout_sec,
     )
+    debug_dir = judge_workspace / "debug"
     if proc.returncode != 0:
+        debug_dir.mkdir(exist_ok=True)
+        (debug_dir / "stdout.json").write_text(proc.stdout)
+        (debug_dir / "stderr.txt").write_text(proc.stderr)
         raise RuntimeError(
-            f"judge invocation failed (exit {proc.returncode})\n"
-            f"stderr: {proc.stderr[:2000]}"
+            f"judge invocation failed (exit {proc.returncode}) — "
+            f"raw stdout/stderr saved to {debug_dir}"
         )
     try:
         outer = json.loads(proc.stdout)
     except json.JSONDecodeError as e:
-        raise RuntimeError(f"judge returned non-JSON wrapper: {e}\n{proc.stdout[:500]}")
+        debug_dir.mkdir(exist_ok=True)
+        (debug_dir / "stdout.json").write_text(proc.stdout)
+        raise RuntimeError(
+            f"judge returned non-JSON wrapper ({e}) — "
+            f"raw stdout saved to {debug_dir / 'stdout.json'}"
+        ) from e
 
     raw_text = outer.get("result", "").strip()
     inner_json = _extract_json_block(raw_text)
     if inner_json is None:
-        raise RuntimeError(f"judge response did not contain a JSON object:\n{raw_text[:1000]}")
+        debug_dir.mkdir(exist_ok=True)
+        (debug_dir / "stdout.json").write_text(proc.stdout)
+        (debug_dir / "result.txt").write_text(raw_text)
+        # If the raw text doesn't end with a closing brace, the judge response
+        # was almost certainly cut off by the model's output token cap — flag
+        # that explicitly so the failure mode is recognisable.
+        truncated = not raw_text.rstrip().endswith("}")
+        hint = (
+            " (response does not end with '}' — likely truncated by output token cap; "
+            "consider shortening evidence per criterion or splitting criteria into batches)"
+            if truncated else ""
+        )
+        raise RuntimeError(
+            f"judge response did not contain a JSON object{hint} — "
+            f"raw output saved to {debug_dir}"
+        )
 
     return JudgeOutput(
         verdict=inner_json["verdict"],

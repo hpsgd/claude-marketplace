@@ -67,3 +67,10 @@ Respond with **only** a JSON object, no surrounding prose, no code fences:
 The `id` is sequential (c1, c2, ...). The `text` repeats the criterion verbatim. The
 `evidence` field is mandatory and must reference specific content from the captured
 output — not "the output covers this." Quote a phrase, name a section, point to a step.
+
+Keep `evidence` to **200 characters max per criterion**. One short quote or one
+specific pointer is enough — do not summarise the whole output. Long evidence
+strings cause the response to hit the output token cap on tests with many
+criteria, which truncates the JSON mid-write and loses the entire score.
+
+Keep `notes` to **two sentences max**. Same reason.
