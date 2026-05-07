@@ -11,6 +11,8 @@ TODO.md
 .claude/learnings/signals/
 .claude/learnings/patterns/
 .claude/learnings/metrics/
+.claude/learnings/manifest.json
+.claude/handoff/
 
 tmp/
 __pycache__/
