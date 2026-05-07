@@ -14,9 +14,10 @@ Usage:
   render-meeting-pdf.py --qanda <path> --out <path.pdf>
   render-meeting-pdf.py --qanda <path> --refresh-assets
 
-Branding assets are vendored under scripts/assets/. With network available the
-script can refresh them from hps.gd via --refresh-assets; otherwise the vendored
-copies are used (sandbox-safe).
+Branding assets are vendored in the publishing plugin under
+plugins/practices/publishing/assets/. With network available the script can
+refresh them from hps.gd via --refresh-assets; otherwise the vendored copies
+are used (sandbox-safe).
 """
 
 from __future__ import annotations
@@ -43,7 +44,7 @@ except ImportError as e:
 
 
 # Brand fonts (matches hps.gd: Mona Sans for display, Inter for body).
-# Both fonts vendored under scripts/assets/fonts/. Registration happens once at
+# Both fonts vendored under publishing/assets/fonts/. Registration happens once at
 # import time; if a TTF is missing or unreadable we fall back to Helvetica so
 # the script still produces a usable PDF.
 FONT_DISPLAY = "Helvetica-Bold"
@@ -86,7 +87,10 @@ PAGE_H = 679.0
 # Toolbar reservation on the left edge (left-handed users would mirror).
 TOOLBAR_PT = 38.0
 
-# Header/footer bands.
+# Header/footer bands. The bands reserve vertical space for the section title
+# (top) and brand icon + page indicator (bottom). No rule lines are drawn —
+# the actions block's ruled rows on each item already give the page its
+# horizontal visual structure.
 HEADER_H = 28.0
 FOOTER_H = 22.0
 
@@ -96,10 +100,33 @@ FOOTER_H = 22.0
 ITEMS_PER_PAGE = 2
 ACTIONS_ROWS = 5
 
-# Branding assets. PNGs are the render source (ReportLab's native image format,
-# zero extra deps). SVGs are also vendored so the originals can be inspected
-# and the source-of-truth shape is preserved alongside.
-ASSET_DIR = Path(__file__).resolve().parent / "assets"
+# Branding assets live in the publishing plugin (single source of truth for
+# brand fonts and logos shared across PDF renderers). PNGs are the render
+# source; SVGs are vendored alongside as the source-of-truth shape.
+#
+# This is a hard cross-plugin dependency: coordinator@turtlestack will not
+# render correctly without publishing@turtlestack installed. The path resolves
+# relative to the script's location in the marketplace tree:
+#   plugins/leadership/coordinator/scripts/  →  parents[3] = plugins/
+#   then /practices/publishing/assets        →  the consolidated asset dir.
+ASSET_DIR = Path(__file__).resolve().parents[3] / "practices" / "publishing" / "assets"
+
+
+def _verify_assets_available() -> None:
+    """Fail loud if the publishing plugin's assets dir is missing.
+
+    Without this check, missing assets degrade silently: fonts fall back to
+    Helvetica and logos are skipped, producing a structurally valid but
+    visually wrong PDF that nobody notices until a customer sees it.
+    """
+    if ASSET_DIR.is_dir():
+        return
+    sys.stderr.write(
+        f"Brand assets not found at {ASSET_DIR}.\n"
+        "This usually means the publishing plugin is not installed alongside\n"
+        "coordinator. Install it with: /plugin install publishing@turtlestack\n"
+    )
+    sys.exit(2)
 LOGO_URL = "https://hps.gd/img/logos/hps.gd%20-%20logo.svg"
 ICON_URL = "https://hps.gd/img/logos/hps.gd%20-%20icon.svg"
 
@@ -292,7 +319,7 @@ def _fetch(url: str, dest: Path) -> bool:
 def resolve_assets(refresh: bool) -> tuple[Path, Path]:
     """Return (logo_png, icon_png).
 
-    PNGs are vendored at scripts/assets/{logo,icon}.png and used by the renderer.
+    PNGs are vendored at publishing/assets/{logo,icon}.png and used by the renderer.
     With --refresh-assets, the SVGs are re-fetched from hps.gd for archival; the
     PNGs are not auto-regenerated (drop new PNGs into the assets directory by
     hand when the brand changes — rare).
@@ -333,30 +360,20 @@ def _content_box() -> tuple[float, float, float, float]:
 
 
 def _draw_header(c: Canvas, section_title: str) -> None:
-    """Top band on every non-cover page: section title right-aligned. No icon,
-    no date. The icon now lives on the left side of the footer."""
+    """Top band on every non-cover page: section title right-aligned, no rule."""
     band_y = PAGE_H - HEADER_H
     c.setFillColor(HEADING_COLOR)
     c.setFont(FONT_DISPLAY, 10)
     c.drawRightString(PAGE_W - 8, band_y + 9, section_title)
-    # rule under header
-    c.setStrokeColor(RULE_COLOR)
-    c.setLineWidth(0.4)
-    c.line(TOOLBAR_PT, band_y, PAGE_W - 8, band_y)
 
 
 def _draw_footer(c: Canvas, page_num: int, total_pages: int, icon_path: Path) -> None:
+    """Bottom band on every non-cover page: brand icon left, page indicator right, no rule."""
     band_y = 0
-    # icon on the left
     _draw_image(c, icon_path, TOOLBAR_PT + 4, band_y + 3, 14, 14)
-    # page indicator on the right
     c.setFillColor(MUTED_COLOR)
     c.setFont(FONT_BODY, 7)
     c.drawRightString(PAGE_W - 8, band_y + 6, f"{page_num} / {total_pages}")
-    # rule above footer
-    c.setStrokeColor(RULE_COLOR)
-    c.setLineWidth(0.4)
-    c.line(TOOLBAR_PT, FOOTER_H, PAGE_W - 8, FOOTER_H)
 
 
 def _wrap_lines(text: str, max_chars: int) -> list[str]:
@@ -656,6 +673,8 @@ def main() -> int:
     p.add_argument("--refresh-assets", action="store_true",
                    help="Fetch fresh brand assets from hps.gd before rendering")
     args = p.parse_args()
+
+    _verify_assets_available()
 
     qanda = args.qanda.resolve()
     if not qanda.exists():

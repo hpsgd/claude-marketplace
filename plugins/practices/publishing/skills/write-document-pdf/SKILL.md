@@ -1,0 +1,100 @@
+---
+name: write-document-pdf
+description: "Render a markdown document as a brand-styled A4 PDF (hps.gd typography and palette). Optional cover page from YAML frontmatter (title, subtitle, metadata). Use --style <name> for a bundled stylesheet (default: report) or --css <path> for a project-specific CSS file. Pure-Python toolchain (xhtml2pdf + python-markdown) — no system libraries required."
+argument-hint: "<path to markdown> [--out <path>] [--style <name>] [--css <path>]"
+user-invocable: true
+allowed-tools: Read, Write, Edit, Bash, Glob, Grep
+---
+
+# Write Document PDF
+
+Render a markdown file into a brand-styled A4 PDF. Suitable for assessments, reports, briefs, and any prose document that needs a clean, brand-consistent layout. The renderer handles tables, blockquotes, code blocks, footnotes, and Unicode well.
+
+For meeting notes (cover with attendee blanks, two items per page with NOTES + ACTIONS blocks for handwritten capture), use `/coordinator:write-meeting-pdf` instead — that skill is purpose-built for the Remarkable Paper Pro form factor.
+
+## Step 1: Resolve markdown path to absolute
+
+The first non-flag argument is the markdown source. Required.
+
+```bash
+ARG="<path>"
+case "$ARG" in
+  /*) ABS="$ARG" ;;
+  *) ABS="$(pwd)/$ARG" ;;
+esac
+```
+
+If the path doesn't exist or isn't a `.md` file, stop and report.
+
+## Step 2: Resolve output path
+
+By default the PDF is written next to the markdown with the same stem (`foo.md` → `foo.pdf`). Override with `--out <path>`. If the override is relative, resolve against `pwd`.
+
+## Step 3: Resolve stylesheet selection
+
+Two flags, mutually exclusive in effect (`--css` wins if both passed):
+
+- `--style <name>` — selects a bundled stylesheet at `${CLAUDE_PLUGIN_ROOT}/assets/styles/<name>.css`. Defaults to `report` if neither flag given.
+- `--css <path>` — points at a project-specific CSS file. Resolve to absolute the same way as the markdown path. The file must exist.
+
+The bundled `report` style is brand-styled (Mona Sans display, Inter body, hps.gd palette) and is the right default for internal reports and assessments. Use `--css` when a downstream project (a client deliverable, a tortoisestack assessment with project-specific theming) needs different styling.
+
+## Step 4: Invoke the renderer
+
+The renderer is at `${CLAUDE_PLUGIN_ROOT}/scripts/render-document-pdf.sh` — a wrapper that bootstraps a venv at `~/.cache/turtlestack/publishing-document-pdf-venv` on first run (installs `xhtml2pdf` and `markdown` with `svglib<1.6` constraint, ~15s) and reuses it thereafter.
+
+```bash
+"${CLAUDE_PLUGIN_ROOT}/scripts/render-document-pdf.sh" \
+  <absolute markdown path> \
+  --out <absolute output path> \
+  [--style <name>] \
+  [--css <absolute css path>]
+```
+
+The script prints the output path on success and exits non-zero on failure. Capture stderr so any rendering errors surface back to the user.
+
+## Step 5: Confirm path
+
+Output the absolute path to the generated PDF. Don't claim success without verifying the file exists and has non-zero size — `[ -s <path> ]`.
+
+## Cover page from frontmatter
+
+If the markdown begins with a YAML frontmatter block containing a `title` field, the renderer emits a cover page before the body. Recognised keys: `title` (required to trigger the cover), `subtitle`, plus any of `date`, `author`, `client`, `subject`, `version`, `status` for the metadata table. Other keys are ignored at render time.
+
+Example markdown:
+
+```markdown
+---
+title: External Product Assessment
+subtitle: VisualCare
+date: 2026-04-24
+author: Martin Lau
+status: Draft
+---
+
+# Executive summary
+
+...
+```
+
+If there's no frontmatter or no `title`, no cover is rendered — the document starts on page 1 with the body.
+
+## Rules
+
+- **Read-only on the markdown source.** Never modify the input.
+- **Don't open the PDF for the user.** Just report the path.
+- **Don't re-render if nothing has changed.** If the output file exists and is newer than both the markdown and the chosen stylesheet, ask before overwriting.
+- **Surface bootstrap delays.** First run on a fresh machine creates a Python venv and installs xhtml2pdf + markdown (~15 seconds). Subsequent runs are sub-second. If the wrapper hangs longer than that, something is wrong — investigate, don't silently retry.
+- **Wide tables (7+ columns) may overflow.** xhtml2pdf has a known weak spot with wide tables. If the source markdown contains wide tables and the output overflows, options are (a) reduce columns, (b) write a custom CSS file with `table-layout: fixed; word-wrap: break-word; font-size: 8pt` for the affected tables, or (c) restructure the data.
+
+## Output format
+
+A single line: the absolute path to the generated PDF.
+
+```
+/path/to/document.pdf
+```
+
+## Related skills
+
+- `/coordinator:write-meeting-pdf` — purpose-built for printable meeting notes on a Remarkable Paper Pro (fillable form cover, two items per page with NOTES + ACTIONS blocks). Different output, different audience.

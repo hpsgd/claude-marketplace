@@ -133,6 +133,20 @@
       ]
     },
     {
+      "name": "publishing",
+      "source": "./plugins/practices/publishing",
+      "description": "Brand-styled markdown-to-PDF rendering — A4 documents with hps.gd typography and palette, optional cover page from frontmatter, swappable stylesheets.",
+      "version": "1.12.2",
+      "category": "practices",
+      "tags": [
+        "pdf",
+        "markdown",
+        "publishing",
+        "branding",
+        "documents"
+      ]
+    },
+    {
       "name": "coordinator",
       "source": "./plugins/leadership/coordinator",
       "description": "CEO/founder proxy — cross-team coordination, OKRs, initiative decomposition, strategic decisions spanning CPO and CTO",

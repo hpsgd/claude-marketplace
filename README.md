@@ -15,6 +15,7 @@ A plugin marketplace for Claude Code. Agents, skills, rules, and conventions tha
   - [Practices](#practices)
     - [Coding Standards](#coding-standards)
     - [Plugin Curator](#plugin-curator)
+    - [Publishing](#publishing)
     - [Security Compliance](#security-compliance)
     - [Technology Stacks](#technology-stacks)
     - [Thinking](#thinking)
@@ -135,6 +136,7 @@ Browse the full [plugin list](#plugins) below to see what else is available.
     "nextjs-stack@turtlestack": true,
     "python-stack@turtlestack": true,
     "plugin-curator@turtlestack": true,
+    "publishing@turtlestack": true,
     "coordinator@turtlestack": true,
     "cpo@turtlestack": true,
     "product-owner@turtlestack": true,
@@ -252,6 +254,22 @@ Also includes the [evaluator](plugins/practices/plugin-curator/agents/evaluator.
 | [audit-agent](plugins/practices/plugin-curator/skills/audit-agent/SKILL.md) | Audit agent against template | [Agent audit](examples/practices/plugin-curator/skills/audit-agent/result.md) |
 | [audit-skill](plugins/practices/plugin-curator/skills/audit-skill/SKILL.md) | Audit skill against template | [Skill audit](examples/practices/plugin-curator/skills/audit-skill/result.md) |
 | [evaluate](plugins/practices/plugin-curator/skills/evaluate/SKILL.md) | Run test cases against plugin definitions | N/A |
+
+#### Publishing
+
+Brand-styled markdown-to-PDF rendering for reports, assessments, and briefs. A4 with hps.gd typography (Mona Sans, Inter) and palette. Optional cover page from YAML frontmatter. Pure-Python toolchain (xhtml2pdf + python-markdown), no system libraries required.
+
+```
+/plugin install publishing@turtlestack
+```
+
+**Skills:**
+
+| Skill | Description |
+|---|---|
+| [write-document-pdf](plugins/practices/publishing/skills/write-document-pdf/SKILL.md) | Render a markdown file as a brand-styled A4 PDF. Use `--style <name>` for a bundled stylesheet or `--css <path>` for a project-specific CSS file. |
+
+The brand fonts and logos under `plugins/practices/publishing/assets/` are the single source of truth for hps.gd brand assets across PDF renderers — `/coordinator:write-meeting-pdf` reads from the same location.
 
 #### Security Compliance
 

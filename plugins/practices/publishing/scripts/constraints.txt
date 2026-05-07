@@ -1,0 +1,17 @@
+# Pin svglib<1.6 to keep the install pure-Python.
+#
+# svglib 1.6.0 added a hard dependency on rlpycairo, which depends on pycairo,
+# which needs the cairo system library — the same constraint that disqualifies
+# WeasyPrint and other native-lib renderers in the Claude sandbox.
+# svglib 1.5.x and earlier use plain reportlab and stay pure-Python.
+#
+# xhtml2pdf only loads svglib lazily when the HTML contains SVG images. Our
+# document renderer never references SVGs, so svglib is never actually loaded
+# at runtime — the pin is only there so pip's resolver doesn't try to install
+# 1.6.0 and fail at build time.
+#
+# Watch-out: a future xhtml2pdf release that bumps its svglib floor above 1.6
+# will conflict with this pin. When that happens, either find an alternative
+# pure-Python SVG path, accept the sandbox constraint and ship a different
+# renderer, or pin xhtml2pdf below the breaking version.
+svglib<1.6
